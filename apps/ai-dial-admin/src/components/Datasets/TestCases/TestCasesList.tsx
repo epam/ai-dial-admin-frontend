@@ -181,15 +181,20 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
   );
 
   const refreshGrid = useCallback(
-    (withRefreshPage?: boolean) => {
+    (withRefreshPage?: boolean, schemaOverride?: TestCaseSchema[]) => {
+      const activeSchema = schemaOverride ?? dataset.testCaseSchema;
       setIsLoading(true);
       getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
-        const rows =
-          res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content, dataset.testCaseSchema);
+        const rows = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content, activeSchema);
         turnGrid.setServerRows(rows);
         setColumnDefs([
-          ...getDatasetTestCaseColumns({ dataset, onCellChange, onToggleExpand: turnGrid.onToggleExpand, t }),
+          ...getDatasetTestCaseColumns({
+            dataset: { ...dataset, testCaseSchema: activeSchema },
+            onCellChange,
+            onToggleExpand: turnGrid.onToggleExpand,
+            t,
+          }),
           {
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
             colId: 'action-remove',
@@ -214,6 +219,9 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
 
   const onGridReady = turnGrid.onGridReady;
 
+  const refreshGridRef = useRef(refreshGrid);
+  refreshGridRef.current = refreshGrid;
+
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
       const body = new FormData();
@@ -226,16 +234,11 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
           getDataset(dataset.id as string, '').then((datasetRes) => {
             const updatedDataset = datasetRes?.response;
             if (!updatedDataset) {
-              refreshGrid();
+              refreshGridRef.current();
               return;
             }
             const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
-            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(dataset?.testCaseSchema);
-            if (!schemaChanged) {
-              refreshGrid(true);
-            } else {
-              router.refresh();
-            }
+            refreshGridRef.current(true, freshSchema);
           });
         } else {
           showNotification(getErrorNotification(t(DatasetsI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'));
