@@ -1,44 +1,30 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import ConversationDetailRail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailRail';
-import ConversationTimeline from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationTimeline';
 import ConversationTraceList from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationTraceList';
-import ConversationViewSwitch from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationViewSwitch';
 import { useConversationTraces } from '@/src/components/Analytics/ConversationsTrace/Detail/use-conversation-traces';
-import { useConversationTranscript } from '@/src/components/Analytics/ConversationsTrace/Detail/use-conversation-transcript';
-import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
-import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import {
   ConversationDetailRow,
-  ConversationDetailView as DetailView,
   ConversationFeedbackRow,
   ConversationInsightField,
   ConversationTraceCard,
   ConversationTraceGroup,
-  ConversationTranscript,
   ConversationTraceFigures,
   ConversationRatingCounts,
-  RatingCounts as RatingCountsModel,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import { attributeRatingsToTraces, traceCardTitle } from '@/src/utils/analytics/conversation-trace-groups';
-import { questionsByTurn } from '@/src/utils/analytics/conversation-transcript';
 
 interface Props {
   conversation: ConversationDetailRow;
   insightColumns: ConversationInsightField[];
   scope: SessionScope;
-  // Whether this caller can read body columns at all — a schema fact, resolved at page open, so the Chat
-  // option is gated accurately before any body read runs.
-  isTranscriptReadable: boolean;
   feedbackRows: ConversationFeedbackRow[];
   feedbackTotal: number | null;
   ratings: ConversationRatingCounts | null;
   isCommentTextReadable: boolean;
-  nowMs: number;
   onOpenTrace: (figures: ConversationTraceFigures, title?: string) => void;
 }
 
@@ -56,86 +42,25 @@ const asTraceFigures = (group: ConversationTraceGroup, card?: ConversationTraceC
   durationMs: card?.durationMs ?? null,
 });
 
-interface ChatViewProps {
-  transcript: ConversationTranscript | null;
-  isLoading: boolean;
-  traceRatings: Map<string, RatingCountsModel>;
-  turnCount: number | string | null;
-  onOpenTrace: (figures: ConversationTraceFigures, title?: string) => void;
-}
-
-// The Chat view's own loading and failure states live here rather than at the page: the transcript is read on
-// the switch, so both are local to this view and leave the Trace listing intact.
-const ChatView: FC<ChatViewProps> = ({ transcript, isLoading, traceRatings, turnCount, onOpenTrace }) => {
-  const t = useI18n();
-  // A hop chain opened from an answer is titled by that answer's question — the same thing the reader
-  // clicked. Passing the trace id instead printed it twice, once as the heading and once beneath it.
-  const questions = useMemo(() => questionsByTurn(transcript?.messages ?? []), [transcript?.messages]);
-
-  if (isLoading || !transcript) {
-    return (
-      <div className="relative flex flex-1 bg-layer-1">
-        <LoadingOverlay label={t(BasicI18nKey.Loading)} />
-      </div>
-    );
-  }
-
-  return (
-    <ConversationTimeline
-      transcript={transcript}
-      traceRatings={traceRatings}
-      turnCount={turnCount}
-      onOpenTrace={(trace) => onOpenTrace(asTraceFigures(trace), questions.get(trace.traceId))}
-    />
-  );
-};
-
+/**
+ * The conversation's traces, and the panels beside them.
+ *
+ * The exchange itself is stated nowhere here: a conversation's readable exchange is the request history of
+ * its entry span, and the trace's own Chat tab states it in the place where everything else about that trace
+ * is stated. The listing renders from the conversation's own recorded calls and needs no body read, so the
+ * page opens without one.
+ */
 const ConversationDetailBody: FC<Props> = ({
   conversation,
   insightColumns,
-  isTranscriptReadable,
   feedbackRows,
   feedbackTotal,
   ratings,
   isCommentTextReadable,
-  nowMs,
   onOpenTrace,
   scope,
 }) => {
-  const t = useI18n();
-  const isChatDisabled = !isTranscriptReadable;
-  // The trace listing renders from the conversation's own recorded calls and needs no body read, so it is the
-  // view that can always be shown.
-  const [view, setView] = useState<DetailView>(DetailView.Trace);
-
   const projectId = conversation.project_id ?? '';
-
-  const {
-    transcript,
-    isLoading: isTranscriptLoading,
-    onRequestTranscript,
-  } = useConversationTranscript({
-    scope,
-    projectId,
-    lastRequestTime: conversation.last_request_time,
-    nowMs,
-  });
-
-  // The body read is issued here — on the switch — rather than on page open, so a body-read failure states
-  // itself inside the Chat view instead of taking the page down.
-  const onSelectView = useCallback(
-    (next: DetailView) => {
-      if (next === DetailView.Chat && isChatDisabled) {
-        setView(DetailView.Trace);
-        return;
-      }
-      if (next === DetailView.Chat) {
-        void onRequestTranscript();
-      }
-      setView(next);
-    },
-    [isChatDisabled, onRequestTranscript],
-  );
 
   const { groups, hasMore, isLoading, hasLoadError, onLoadMore } = useConversationTraces({
     scope,
@@ -145,10 +70,6 @@ const ConversationDetailBody: FC<Props> = ({
   });
 
   const listingRatings = useMemo(() => attributeRatingsToTraces(groups, feedbackRows), [groups, feedbackRows]);
-  const transcriptRatings = useMemo(
-    () => attributeRatingsToTraces(transcript?.traceFigures ?? [], feedbackRows),
-    [transcript?.traceFigures, feedbackRows],
-  );
 
   // The drawer is titled by the card's own name rather than a turn ordinal: the data records no turn index,
   // and the card already names the call it describes.
@@ -159,43 +80,25 @@ const ConversationDetailBody: FC<Props> = ({
   );
 
   return (
-    <>
-      <ConversationViewSwitch
-        view={view}
-        isChatDisabled={isChatDisabled}
-        disabledReason={t(ConversationsTraceI18nKey.ViewChatUnavailable)}
-        onSelectView={onSelectView}
+    <div className="flex min-h-0 flex-1 rounded border border-primary">
+      <ConversationTraceList
+        groups={groups}
+        traceRatings={listingRatings}
+        hasMore={hasMore}
+        isLoading={isLoading}
+        hasLoadError={hasLoadError}
+        onLoadMore={onLoadMore}
+        onOpenTrace={onOpenCard}
       />
-      <div className="flex min-h-0 flex-1 rounded border border-primary">
-        {view === DetailView.Chat ? (
-          <ChatView
-            transcript={transcript}
-            isLoading={isTranscriptLoading}
-            traceRatings={transcriptRatings}
-            turnCount={conversation.turn_count}
-            onOpenTrace={onOpenTrace}
-          />
-        ) : (
-          <ConversationTraceList
-            groups={groups}
-            traceRatings={listingRatings}
-            hasMore={hasMore}
-            isLoading={isLoading}
-            hasLoadError={hasLoadError}
-            onLoadMore={onLoadMore}
-            onOpenTrace={onOpenCard}
-          />
-        )}
-        <ConversationDetailRail
-          conversation={conversation}
-          insightColumns={insightColumns}
-          feedback={feedbackRows}
-          feedbackTotal={feedbackTotal}
-          ratings={ratings}
-          isCommentTextReadable={isCommentTextReadable}
-        />
-      </div>
-    </>
+      <ConversationDetailRail
+        conversation={conversation}
+        insightColumns={insightColumns}
+        feedback={feedbackRows}
+        feedbackTotal={feedbackTotal}
+        ratings={ratings}
+        isCommentTextReadable={isCommentTextReadable}
+      />
+    </div>
   );
 };
 

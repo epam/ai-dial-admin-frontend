@@ -3,18 +3,12 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import HopInspector from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopInspector';
 import ConversationRailShell from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationRailShell';
 import SpanKindBadge from '@/src/components/Analytics/ConversationsTrace/Detail/SpanKindBadge';
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import {
-  ConversationSpanNode,
-  ConversationTranscriptAvailability,
-  McpToolCallTally,
-  SessionScope,
-} from '@/src/models/analytics/conversations-trace';
+import { ConversationSpanNode } from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
   formatHopDuration,
@@ -41,13 +35,12 @@ const DetailRow: FC<RowProps> = ({ label, value, isMono, valueClassName }) => (
 
 interface Props {
   node: ConversationSpanNode | null;
-  scope: SessionScope;
-  traceId: string;
-  bodyGrants: ConversationTranscriptAvailability;
-  mcpToolCalls: McpToolCallTally;
 }
 
-const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants, mcpToolCalls }) => {
+// The span's own facts, and nothing that has to be read from a body. The request, the response and the
+// conversation live in the section below the tree instead: those are the surface a reader works in and need
+// the width, while these are reference facts checked once per hop and read fine in a 360px rail.
+const ConversationSpanDetail: FC<Props> = ({ node }) => {
   const t = useI18n();
 
   if (!node) {
@@ -130,24 +123,13 @@ const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants, m
           </div>
         ))}
       </dl>
-      {/* Capped, because this block and the inspector were competing for the same column and the block was
-          winning: nine rows at natural height took ~280px of a ~530px rail, leaving the message history about
-          130px — one chip row and a sliver. Endpoint, upstream, parent and status are reference facts read
-          once per hop; the inspector is the surface a reader works in, so it gets the majority and this
-          scrolls within its cap. */}
-      <div tabIndex={0} className="max-h-[35%] shrink-0 overflow-y-auto rounded border border-primary bg-layer-3 px-3">
+      {/* Uncapped: these rows have the rail to themselves, so growing costs no other section its room.
+          Focusable, because it still scrolls when a hop records a long endpoint and a long upstream. */}
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto rounded border border-primary bg-layer-3 px-3">
         {facts.map((row) => (
           <DetailRow key={row.label} {...row} />
         ))}
       </div>
-      <HopInspector
-        scope={scope}
-        traceId={traceId}
-        span={span}
-        kind={kind}
-        bodyGrants={bodyGrants}
-        mcpToolCalls={mcpToolCalls}
-      />
     </ConversationRailShell>
   );
 };

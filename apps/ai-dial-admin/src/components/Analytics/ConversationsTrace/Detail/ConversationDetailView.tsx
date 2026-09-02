@@ -14,7 +14,7 @@ import {
   ConversationDetailRow,
   ConversationFeedbackPage,
   ConversationInsightField,
-  ConversationTranscriptAvailability,
+  HopBodyGrants,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 
@@ -24,21 +24,11 @@ interface Props {
   // Built there and only passed through here, so its identity is stable and the rail's memo keeps holding.
   insightColumns: ConversationInsightField[];
   feedback: ConversationFeedbackPage | null;
-  // A schema fact, resolved at page open without any body query, so the Chat option is gated accurately
-  // before the transcript itself is read.
-  isTranscriptReadable: boolean;
-  bodyGrants: ConversationTranscriptAvailability;
+  bodyGrants: HopBodyGrants;
   nowMs: number;
 }
 
-const ConversationDetailView: FC<Props> = ({
-  conversation,
-  insightColumns,
-  feedback,
-  isTranscriptReadable,
-  bodyGrants,
-  nowMs,
-}) => {
+const ConversationDetailView: FC<Props> = ({ conversation, insightColumns, feedback, bodyGrants, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
@@ -76,12 +66,10 @@ const ConversationDetailView: FC<Props> = ({
           conversation={conversation}
           insightColumns={insightColumns}
           scope={scope}
-          isTranscriptReadable={isTranscriptReadable}
           feedbackRows={rows}
           feedbackTotal={feedback?.total ?? null}
           ratings={feedback?.ratings ?? null}
           isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
-          nowMs={nowMs}
           onOpenTrace={onOpenTrace}
         />
       </div>

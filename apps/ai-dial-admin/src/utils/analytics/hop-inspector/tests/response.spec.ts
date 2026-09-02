@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
-import { ConversationEntryBodyRow, HopReadState, HopSideGrants } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationEntryBodyRow,
+  HopDialect,
+  HopReadState,
+  HopSideGrants,
+} from '@/src/models/analytics/conversations-trace';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
 import { rawBodyOf, responseEnvelopeOf } from '@/src/utils/analytics/hop-inspector/response';
@@ -15,12 +20,16 @@ const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEnt
 });
 
 describe('responseEnvelopeOf', () => {
+  // Which decoder runs is the caller's decision, taken from the request URI, not something the response row
+  // reveals about itself. Every body in this block records the chat-completions shape.
+  const envelopeOf = (source: ConversationEntryBodyRow) => responseEnvelopeOf(source, HopDialect.ChatCompletions);
+
   const assembled = JSON.stringify({
     choices: [{ finish_reason: 'stop', message: { role: 'assistant', content: 'answered' } }],
   });
 
   test('reads the assembled column and its finish reason', () => {
-    const envelope = responseEnvelopeOf(row({ assembled_response: assembled }));
+    const envelope = envelopeOf(row({ assembled_response: assembled }));
 
     expect(envelope.text).toBe('answered');
     expect(envelope.finishReason).toBe('stop');
@@ -29,21 +38,136 @@ describe('responseEnvelopeOf', () => {
   // The column is a later addition to the hop log, and an instance predating it does not persist it — so its
   // absence is handled rather than assumed away.
   test('decodes the recorded body when the assembled column is absent', () => {
-    const envelope = responseEnvelopeOf(row({ response_body: assembled }));
+    const envelope = envelopeOf(row({ response_body: assembled }));
 
     expect(envelope.text).toBe('answered');
   });
 
   test('a hop that recorded nothing is stated as empty, not as a failure', () => {
-    expect(responseEnvelopeOf(row()).state).toBe(HopReadState.NoBody);
+    expect(envelopeOf(row()).state).toBe(HopReadState.NoBody);
   });
 
-  test('names the tools a response requested', () => {
+  test('states the tools a response requested, with their arguments and ids', () => {
     const withTools = JSON.stringify({
-      choices: [{ message: { role: 'assistant', tool_calls: [{ function: { name: 'calc', arguments: '{}' } }] } }],
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            tool_calls: [{ id: 'call_1', function: { name: 'calc', arguments: '{"a":1}' } }],
+          },
+        },
+      ],
     });
 
-    expect(responseEnvelopeOf(row({ response_body: withTools })).toolCalls).toEqual(['calc']);
+    expect(envelopeOf(row({ response_body: withTools })).toolCalls).toEqual([
+      { name: 'calc', args: '{"a":1}', id: 'call_1' },
+    ]);
+  });
+
+  // The dialect is what the parameter is for. Both shapes land in the same `assembled_response` column, so
+  // handing this body to the chat-completions decoder finds no `choices` and reports "recorded nothing" while
+  // a full response sits in the column — and the reasoning summary is kept apart from the answer rather than
+  // read as part of it.
+  test('decodes the Responses shape when told that is the dialect', () => {
+    const body = row({
+      assembled_response: JSON.stringify({
+        status: 'completed',
+        output: [
+          { type: 'reasoning', summary: [{ type: 'summary_text', text: 'thought about it' }] },
+          { type: 'message', content: [{ type: 'output_text', text: 'answered' }] },
+        ],
+      }),
+    });
+
+    const envelope = responseEnvelopeOf(body, HopDialect.Responses);
+
+    expect(envelope.text).toBe('answered');
+    expect(envelope.reasoningText).toBe('thought about it');
+    expect(envelope.finishReason).toBe('completed');
+    expect(envelopeOf(body).state).toBe(HopReadState.NoBody);
+  });
+
+  // None of these is on the hop row: it carries the *deployment*, which is not the model string the upstream
+  // reports, and the token total without its split.
+  describe('the facts a response states about itself', () => {
+    test('states the upstream model, the completion id and the token split', () => {
+      const facts = envelopeOf(
+        row({
+          assembled_response: JSON.stringify({
+            model: 'gpt-4o-2024-11-20',
+            id: 'chatcmpl-123',
+            usage: { prompt_tokens: 900, completion_tokens: 42 },
+            choices: [{ message: { role: 'assistant', content: 'answered' } }],
+          }),
+        }),
+      ).facts;
+
+      expect(facts).toEqual({
+        model: 'gpt-4o-2024-11-20',
+        completionId: 'chatcmpl-123',
+        promptTokens: 900,
+        completionTokens: 42,
+        cachedTokens: null,
+      });
+    });
+
+    // Both dialects report the same facts in the same place and disagree only on the usage spelling, so
+    // reading one spelling would drop the split for whichever dialect this was not written against.
+    test('reads the input/output spelling of the same usage keys', () => {
+      const facts = envelopeOf(
+        row({
+          assembled_response: JSON.stringify({
+            model: 'claude',
+            usage: { input_tokens: 700, output_tokens: 11, input_tokens_details: { cached_tokens: 512 } },
+            choices: [{ message: { role: 'assistant', content: 'answered' } }],
+          }),
+        }),
+      ).facts;
+
+      expect(facts).toMatchObject({ promptTokens: 700, completionTokens: 11, cachedTokens: 512 });
+    });
+
+    // The one figure that explains a bill the total does not, and a reported zero is an answer — "no cache
+    // hit" — so it is kept rather than folded into "nothing reported".
+    test('keeps a reported zero cache hit', () => {
+      const facts = envelopeOf(
+        row({
+          assembled_response: JSON.stringify({
+            model: 'gpt',
+            usage: { prompt_tokens: 10, prompt_tokens_details: { cached_tokens: 0 } },
+            choices: [{ message: { role: 'assistant', content: 'answered' } }],
+          }),
+        }),
+      ).facts;
+
+      expect(facts.cachedTokens).toBe(0);
+    });
+
+    // A zero here would read as a call that used no tokens, which is a different claim from a provider that
+    // reported nothing.
+    test('states no facts rather than zeros for a body that reported no usage', () => {
+      expect(envelopeOf(row({ assembled_response: assembled })).facts).toEqual({
+        model: null,
+        completionId: null,
+        promptTokens: null,
+        completionTokens: null,
+        cachedTokens: null,
+      });
+    });
+
+    // A stream carries its usage in a late frame rather than the first, so the frame that reports one is the
+    // frame the facts come from.
+    test('recovers the usage a stream reports in a late frame', () => {
+      const stream = [
+        'data: {"model":"gpt","id":"chatcmpl-9","choices":[{"delta":{"content":"an"}}]}',
+        'data: {"choices":[],"usage":{"prompt_tokens":120,"completion_tokens":7}}',
+        'data: [DONE]',
+      ].join('\n');
+
+      const facts = envelopeOf(row({ response_body: stream })).facts;
+
+      expect(facts).toMatchObject({ promptTokens: 120, completionTokens: 7 });
+    });
   });
 });
 

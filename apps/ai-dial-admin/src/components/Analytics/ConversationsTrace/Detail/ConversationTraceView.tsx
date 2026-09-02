@@ -7,6 +7,8 @@ import { FC, useMemo } from 'react';
 
 import ConversationSpanDetail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanDetail';
 import ConversationEventStream from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationEventStream';
+import HopInspector from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopInspector';
+import SplitPane from '@/src/components/Common/SplitPane/SplitPane';
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -14,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationSpanRow,
   ConversationTraceFigures,
-  ConversationTranscriptAvailability,
+  HopBodyGrants,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -24,14 +26,20 @@ import {
   toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
 import { toNumber } from '@/src/utils/analytics/scalar';
-import { areSpansPartial, isFailedHop, mcpToolCallTallyOf, spanKindOf } from '@/src/utils/analytics/conversation-spans';
+import {
+  areSpansPartial,
+  isFailedHop,
+  mcpToolCallTallyOf,
+  spanBodyTabsOf,
+  spanKindOf,
+} from '@/src/utils/analytics/conversation-spans';
 import { buildHopTree } from '@/src/utils/analytics/conversation-span-tree';
 
 const ICON_SIZE = 16;
 
 // Which side, if either, the caller's schema withholds. Both withheld states the request first: it is the
 // side a reader opens a hop for.
-const withheldNoticeKeyOf = ({ isRequestReadable, isResponseReadable }: ConversationTranscriptAvailability) => {
+const withheldNoticeKeyOf = ({ isRequestReadable, isResponseReadable }: HopBodyGrants) => {
   if (!isRequestReadable) {
     return ConversationsTraceI18nKey.InspectorWithheldRequest;
   }
@@ -55,12 +63,12 @@ const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
 interface Props {
   scope: SessionScope;
   // What names the trace on screen. The data records no turn index, so there is no ordinal to fall back to:
-  // the caller supplies the card's own name, or the transcript's question, and the trace id stands alone when
-  // neither is available.
+  // the caller supplies the card's own name, and the trace id stands alone for a trace whose root the roots
+  // pass never returned, which leaves no card to name it.
   title?: string;
   figures: ConversationTraceFigures;
   spans: ConversationSpanRow[];
-  bodyGrants: ConversationTranscriptAvailability;
+  bodyGrants: HopBodyGrants;
   hasLoadError: boolean;
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
@@ -103,6 +111,41 @@ const ConversationTraceView: FC<Props> = ({
   const withheldKey = withheldNoticeKeyOf(bodyGrants);
   const isFailed = (toNumber(figures.failedSpans) ?? 0) > 0;
 
+  // The bodies section exists when this caller can read a body at all and the selected span offers one. A
+  // floor governs how small a section may be made, not whether one exists: half the region held open to
+  // restate what the header above already says once would cost the tree the screen it is the only remaining
+  // use for.
+  const hasBodyColumn = bodyGrants.isRequestReadable || bodyGrants.isResponseReadable;
+  const hasBodies = hasBodyColumn && (selected === null || spanBodyTabsOf(selected.span, bodyGrants).length > 0);
+
+  const stream = hasLoadError ? (
+    <div className="flex flex-1 items-center justify-center">
+      <DialNoDataContent title={t(ConversationsTraceI18nKey.TraceLoadFailed)} />
+    </div>
+  ) : (
+    <ConversationEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
+  );
+
+  const bodies =
+    selected === null ? (
+      <div className="flex flex-1 items-center justify-center p-4">
+        <p className="text-center dial-small-text text-secondary">{t(ConversationsTraceI18nKey.SpanSelected)}</p>
+      </div>
+    ) : (
+      // Tighter above than below: the tree's own bottom padding and the separator's grip strip already sit
+      // between the two sections, and a full pad here stacked into a visible void over the tab strip.
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
+        <HopInspector
+          scope={scope}
+          traceId={figures.traceId}
+          span={selected.span}
+          kind={selected.kind}
+          bodyGrants={bodyGrants}
+          mcpToolCalls={mcpToolCalls}
+        />
+      </div>
+    );
+
   return (
     <div className="flex size-full flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -110,7 +153,7 @@ const ConversationTraceView: FC<Props> = ({
           <DialGhostIconButton
             size={ElementSize.Small}
             icon={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-            aria-label={t(ConversationsTraceI18nKey.TraceBackToTranscript)}
+            aria-label={t(ConversationsTraceI18nKey.TraceBackToList)}
             onClick={onClose}
             className="shrink-0"
           />
@@ -169,22 +212,14 @@ const ConversationTraceView: FC<Props> = ({
       )}
 
       <div className="flex min-h-0 flex-1 rounded border border-primary">
-        <div className="flex min-h-0 flex-1 overflow-hidden bg-layer-1">
-          {hasLoadError ? (
-            <div className="flex flex-1 items-center justify-center">
-              <DialNoDataContent title={t(ConversationsTraceI18nKey.TraceLoadFailed)} />
-            </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-layer-1">
+          {hasBodies ? (
+            <SplitPane ariaLabel={t(ConversationsTraceI18nKey.BodiesSplitLabel)} top={stream} bottom={bodies} />
           ) : (
-            <ConversationEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
+            stream
           )}
         </div>
-        <ConversationSpanDetail
-          node={selected}
-          scope={scope}
-          traceId={figures.traceId}
-          bodyGrants={bodyGrants}
-          mcpToolCalls={mcpToolCalls}
-        />
+        <ConversationSpanDetail node={selected} />
       </div>
     </div>
   );

@@ -641,37 +641,3 @@ describe('the roots and figures passes are scoped identically', () => {
     expect(boundsOf(figures.filter)).toEqual({ fromMs: window().fromMs, toMs: window().toMs });
   });
 });
-
-// The figures pass has a second call site: the Chat view resolves figures for the traces its own transcript
-// covers, so an answer's figures never depend on how far the listing has been paged. Same builder, same
-// scoping rules — and the invariant is asserted here too, because a narrower filter at this call site would
-// reintroduce every correction the design deleted, inside the Chat view instead of the listing.
-describe('the figures pass is scoped the same way for the transcript traces', () => {
-  const TRANSCRIPT_TRACE_IDS = ['t1', 't2', 't3'];
-
-  test('carries neither the chat id nor the project', () => {
-    const built = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-    const names = namesInFilter(built.filter);
-
-    expect(names).not.toContain(UsageLogField.ChatId);
-    expect(names).not.toContain(UsageLogField.ProjectId);
-    expect(names).toContain(UsageLogField.TraceId);
-  });
-
-  test('is the same query shape the listing builds, differing only in which traces it names', () => {
-    const forTranscript = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-    const forListing = buildConversationTraceFiguresQuery(PAGE_TRACE_IDS, window(), 24);
-
-    expect(forTranscript.group_by).toEqual(forListing.group_by);
-    expect(forTranscript.select).toEqual(forListing.select);
-    expect(boundsOf(forTranscript.filter)).toEqual(boundsOf(forListing.filter));
-  });
-
-  test('reads no body column', () => {
-    const built = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-
-    for (const column of BODY_COLUMNS) {
-      expect(JSON.stringify(built)).not.toContain(column);
-    }
-  });
-});
