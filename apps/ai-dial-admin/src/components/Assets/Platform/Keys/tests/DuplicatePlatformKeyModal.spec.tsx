@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -95,6 +95,7 @@ describe('DuplicatePlatformKeyModal', () => {
 
       await user.clear(screen.getByRole('textbox'));
       await user.type(screen.getByRole('textbox'), 'new-key-name');
+      await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('new-key-name'));
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
       expect(createKey).toHaveBeenCalledWith(expect.objectContaining({ name: 'new-key-name' }));
