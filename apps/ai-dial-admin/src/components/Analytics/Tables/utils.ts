@@ -22,7 +22,11 @@ import {
   DraftSchemaForm,
   ExistingColumnNames,
 } from '@/src/models/analytics/tables-ui';
-import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
+import {
+  getAnalyticsEnumValuesError,
+  getAnalyticsIdentifierError,
+  getAnalyticsLengthError,
+} from '@/src/utils/validation/analytics-table-error';
 
 type Translate = (key: string, args?: Record<string, string | number>) => string;
 
@@ -38,6 +42,7 @@ export const createColumnRow = (): ColumnRow => ({
   name: '',
   type: AnalyticsFieldType.String,
   element_type: '',
+  enum_values: [],
   tag: '',
   display_name: '',
   description: '',
@@ -88,6 +93,7 @@ const toColumnRows = (columns: AnalyticsTableColumn[]): ColumnRow[] =>
     name: c.name,
     type: c.type,
     element_type: c.element_type ?? '',
+    enum_values: c.enum_values ?? [],
     tag: c.tag ?? '',
     display_name: c.display_name ?? '',
     description: c.description ?? '',
@@ -141,12 +147,19 @@ export const getColumnRowErrors = (
       error.element_type = t(ErrorI18nKey.RequiredField);
     }
 
+    if (row.type === AnalyticsFieldType.Enum) {
+      const enumValuesError = getAnalyticsEnumValuesError(row.enum_values, t);
+      if (enumValuesError) error.enum_values = enumValuesError.text;
+    }
+
     return error;
   });
 };
 
 export const hasColumnRowErrors = (errors: ColumnRowError[]): boolean =>
-  errors.some((e) => e.source_name || e.name || e.tag || e.display_name || e.description || e.element_type);
+  errors.some(
+    (e) => e.source_name || e.name || e.tag || e.display_name || e.description || e.element_type || e.enum_values,
+  );
 
 const normalized = (value?: string): string => (value ?? '').trim();
 
@@ -189,12 +202,17 @@ export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
     .filter((r) => r.source_name.trim() && r.name.trim())
     .map((r) => {
       const isArray = r.type === AnalyticsFieldType.Array;
+      const isEnum = r.type === AnalyticsFieldType.Enum;
       return {
         source_name: r.source_name.trim(),
         name: r.name.trim(),
         type: r.type,
         nullable: isArray ? false : r.nullable,
         ...(isArray && r.element_type ? { element_type: r.element_type } : {}),
+        // Gated on the type, so retyping a row cannot leak a domain it no longer has. Trimmed here because
+        // the service stores them trimmed — sending the untrimmed spelling would make two values it treats
+        // as equal look distinct in the request.
+        ...(isEnum && r.enum_values.length ? { enum_values: r.enum_values.map((v) => v.trim()) } : {}),
         ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
         ...(r.display_name.trim() ? { display_name: r.display_name.trim() } : {}),
         ...(r.description.trim() ? { description: r.description.trim() } : {}),

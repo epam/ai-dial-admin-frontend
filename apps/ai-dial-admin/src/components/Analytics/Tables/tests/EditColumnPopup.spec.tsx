@@ -162,4 +162,61 @@ describe('EditColumnPopup', () => {
     expect(screen.getByRole('checkbox')).toBeEnabled();
     expect(screen.queryByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).not.toBeInTheDocument();
   });
+
+  describe('an enum column', () => {
+    const ENUM_COLUMN: AnalyticsTableColumn = {
+      source_name: 'status',
+      name: 'status',
+      type: AnalyticsFieldType.Enum,
+      enum_values: ['pending', 'running', 'failed'],
+    };
+
+    // Shown through the same field the schema editor authors with, in its disabled mode — so read-only here
+    // means there is no way into the value popup at all, not merely that the values render as text.
+    test('shows the declared values with no way to edit them', () => {
+      renderPopup({ column: ENUM_COLUMN });
+
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValues)).toBeInTheDocument();
+      for (const value of ['pending', 'running', 'failed']) {
+        expect(screen.getAllByText(value).length).toBeGreaterThan(0);
+      }
+      expect(screen.queryByRole('button', { name: 'open-popup' })).toBeNull();
+    });
+
+    // Presenting the restriction is the point — without it the closed domain is invisible, and an operator
+    // would have no way to learn that widening it means dropping and re-adding the column.
+    test('says the value set cannot be changed', () => {
+      renderPopup({ column: ENUM_COLUMN });
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValuesImmutable)).toBeInTheDocument();
+    });
+
+    test('shows nothing of the kind for a column of any other type', () => {
+      renderPopup();
+
+      expect(screen.queryByRole('group', { name: AnalyticsTablesI18nKey.EnumValues })).toBeNull();
+      expect(screen.queryByText(AnalyticsTablesI18nKey.EnumValuesImmutable)).toBeNull();
+    });
+
+    // The service answers 422 for an `update` entry carrying `enum_values` rather than ignoring it.
+    test('a metadata edit submits a patch that does not carry the domain', async () => {
+      const user = userEvent.setup();
+      const { onSubmit } = renderPopup({ column: ENUM_COLUMN });
+
+      setInput(AnalyticsTablesI18nKey.DisplayName, 'Run status');
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+      expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'status', display_name: 'Run status' }] });
+      expect(JSON.stringify(onSubmit.mock.calls[0][0])).not.toContain('enum_values');
+    });
+
+    test('a rename is still offered and carries no domain either', async () => {
+      const user = userEvent.setup();
+      const { onSubmit } = renderPopup({ column: ENUM_COLUMN });
+
+      setInput(AnalyticsTablesI18nKey.ColumnName, 'run_status');
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+      expect(onSubmit).toHaveBeenCalledWith({ rename: [{ from: 'status', to: 'run_status' }] });
+    });
+  });
 });

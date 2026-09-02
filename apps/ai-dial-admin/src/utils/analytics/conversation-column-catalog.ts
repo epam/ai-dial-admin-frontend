@@ -7,6 +7,7 @@ import {
   COMPOSED_COLUMN_PROVENANCE,
   CONVERSATION_FIELD_VALUE_TYPE,
   CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
   CURATED_COMPOSED_FIELDS,
   DATE_FIELD_TYPES,
   ENRICHMENT_PROVENANCE,
@@ -167,15 +168,18 @@ export const availableSelectFields = (ordered: string[], optional: string[], sch
 //
 // Both stay sortable: ordering is expressible for either, and it is the predicate that has no translation.
 //
-// An `enum` field binds the value filter instead of either, and no floating filter: the default one is a text
-// entry and would write a text model over a value model. Enum-ness comes from the declared type alone — a
-// field an instance begins reporting as an enum gets the control with no change here.
+// An `enum` field binds the value filter instead of either, with its own floating filter: the *default*
+// floating filter is a text entry and would write a text model over a value model, so this column supplies a
+// funnel that opens the value popup instead. Opting out of the row altogether — which this did until now —
+// left the affordance in the header row, a level above every neighbouring column's filter, and reachable
+// only by hovering. Enum-ness comes from the declared type alone — a field an instance begins reporting as
+// an enum gets the control with no change here.
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
   if (NUMERIC_FIELD_TYPES.includes(type)) {
     return { ...numericColumn, ...baseNumberFilter };
   }
   if (type === AnalyticsFieldType.Enum) {
-    return { filter: CONVERSATION_VALUE_FILTER, floatingFilter: false };
+    return { filter: CONVERSATION_VALUE_FILTER, floatingFilterComponent: CONVERSATION_VALUE_FLOATING_FILTER };
   }
   if (DATE_FIELD_TYPES.includes(type)) {
     return { ...dateTimeColumn, ...UNFILTERABLE };

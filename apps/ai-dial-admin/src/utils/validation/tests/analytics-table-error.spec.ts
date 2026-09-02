@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest';
 
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
-import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import {
+  getAnalyticsEnumValuesError,
+  getAnalyticsIdentifierError,
+  getAnalyticsLengthError,
+} from '@/src/utils/validation/analytics-table-error';
 
 // Stub t() returns the key so assertions target the i18n key, not translated text.
 const t = (key: string) => key;
@@ -59,5 +64,60 @@ describe('getAnalyticsLengthError', () => {
       text: ErrorI18nKey.Length,
     });
     expect(getAnalyticsLengthError(`  ${'a'.repeat(64)}  `, 64, t)).toBeNull();
+  });
+});
+
+describe('getAnalyticsEnumValuesError', () => {
+  test('accepts a list within every rule', () => {
+    expect(getAnalyticsEnumValuesError(['pending', 'running', 'failed'], t)).toBeNull();
+    expect(getAnalyticsEnumValuesError(['a'.repeat(64)], t)).toBeNull();
+    expect(
+      getAnalyticsEnumValuesError(
+        Array.from({ length: 512 }, (_, i) => `v${i}`),
+        t,
+      ),
+    ).toBeNull();
+  });
+
+  test('requires at least one value', () => {
+    expect(getAnalyticsEnumValuesError([], t)).toEqual({
+      type: ErrorType.EMPTY,
+      text: AnalyticsTablesI18nKey.EnumValuesRequired,
+    });
+  });
+
+  test('rejects more values than the cap', () => {
+    expect(
+      getAnalyticsEnumValuesError(
+        Array.from({ length: 513 }, (_, i) => `v${i}`),
+        t,
+      ),
+    ).toEqual({
+      type: ErrorType.LENGTH,
+      text: AnalyticsTablesI18nKey.EnumValuesMax,
+    });
+  });
+
+  test('rejects a blank value, whitespace included', () => {
+    expect(getAnalyticsEnumValuesError(['ok', '   '], t)).toEqual({
+      type: ErrorType.EMPTY,
+      text: AnalyticsTablesI18nKey.EnumValueBlank,
+    });
+  });
+
+  test('rejects a value over the per-value length cap', () => {
+    expect(getAnalyticsEnumValuesError(['a'.repeat(65)], t)).toEqual({
+      type: ErrorType.LENGTH,
+      text: ErrorI18nKey.Length,
+    });
+  });
+
+  // The service stores them trimmed, so two entries differing only in surrounding whitespace collide there.
+  test('rejects values that collide after trimming', () => {
+    expect(getAnalyticsEnumValuesError(['failed', 'failed '], t)).toEqual({
+      type: ErrorType.EXISTING,
+      text: AnalyticsTablesI18nKey.EnumValueDuplicate,
+    });
+    expect(getAnalyticsEnumValuesError(['failed', 'Failed'], t)).toBeNull();
   });
 });

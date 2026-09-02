@@ -1,25 +1,35 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CustomComponentContext, CustomFilterProps } from 'ag-grid-react';
 import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationValueFilter from '@/src/components/Analytics/ConversationsTrace/List/ConversationValueFilter';
-import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationFieldValue,
   ConversationGridContext,
   ConversationRow,
   ConversationValueFilterModel,
-  ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 
 type Props = CustomFilterProps<ConversationRow, ConversationGridContext, ConversationValueFilterModel>;
 
+// A made-up column and domain. Nothing here names a field or a value that exists in a real deployment —
+// the control is driven by the declared type, so any closed set exercises it identically.
+const COLUMN_FIELD = 'widget_status';
+const COLUMN_HEADER = 'Status';
+
 const VALUES: ConversationFieldValue[] = [
-  { value: 'positive', count: 920 },
-  { value: 'negative', count: 41 },
+  { value: 'pending', count: 920 },
+  { value: 'failed', count: 41 },
 ];
+
+// Twelve values clears the search threshold of ten, which is what makes the search field render.
+const MANY_VALUES: ConversationFieldValue[] = Array.from({ length: 12 }, (_, i) => ({
+  value: i === 0 ? 'pending' : `value_${i}`,
+  count: 100 - i,
+}));
 
 const requestFieldValues = vi.fn();
 const onModelChange = vi.fn();
@@ -48,7 +58,7 @@ const renderFilter = (model: ConversationValueFilterModel | null = null) =>
         {...({
           model,
           onModelChange,
-          colDef: { field: ConversationsField.InsightSentiment, headerName: 'Sentiment' },
+          colDef: { field: COLUMN_FIELD, headerName: COLUMN_HEADER },
           context: { requestFieldValues },
         } as unknown as Props)}
       />,
@@ -63,13 +73,19 @@ const openFilter = async () => {
 
 const optionsGroup = () => screen.getByRole('group', { name: ConversationsTraceI18nKey.ValueFilterGroup });
 
+// The select-all control is a checkbox too, and it sits outside the options group — so scoping to the group
+// is what separates the value rows from it.
+const valueCheckboxes = () => within(optionsGroup()).getAllByRole('checkbox');
+
+const selectAllCheckbox = () => screen.getByRole('checkbox', { name: ConversationsTraceI18nKey.ValueFilterSelectAll });
+
 beforeEach(() => {
   vi.clearAllMocks();
   lifecycle = {};
   requestFieldValues.mockResolvedValue(VALUES);
 });
 
-describe.skip('conversation value filter', () => {
+describe('ConversationValueFilter', () => {
   test('reads the column values when the filter is opened', async () => {
     renderFilter();
 
@@ -77,55 +93,162 @@ describe.skip('conversation value filter', () => {
 
     await openFilter();
 
-    expect(requestFieldValues).toHaveBeenCalledWith(ConversationsField.InsightSentiment);
+    expect(requestFieldValues).toHaveBeenCalledWith(COLUMN_FIELD);
     await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
   });
 
-  test('renders each value with its count, most frequent first', async () => {
+  // The name is what a selection means; a name carrying the count would rename the same option every time
+  // the data moved, so the count is rendered outside the label.
+  test("names each option by its value alone, with the count outside the option's name", async () => {
     renderFilter();
     await openFilter();
 
-    await waitFor(() => expect(screen.getAllByRole('checkbox')).toHaveLength(2));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'pending' })).toBeInTheDocument());
 
-    expect(optionsGroup().textContent).toBe('positive (920)negative (41)');
-    expect(screen.getByRole('checkbox', { name: 'positive (920)' })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'negative (41)' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'failed' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'pending (920)' })).toBeNull();
+    // Still on screen, just not part of any option's accessible name.
+    expect(optionsGroup().textContent).toContain('920');
+    expect(optionsGroup().textContent).toContain('41');
+  });
+
+  test('lists the values most frequent first, as the query returned them', async () => {
+    renderFilter();
+    await openFilter();
+
+    await waitFor(() => expect(valueCheckboxes()).toHaveLength(2));
+
+    // Rendered order is the query's order; each value is followed by its own count.
+    expect(optionsGroup().textContent).toBe('pending920failed41');
   });
 
   test('selecting a value drives the model', async () => {
     renderFilter();
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'positive (920)' })));
+    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'pending' })));
 
-    expect(onModelChange).toHaveBeenCalledWith({ values: ['positive'] });
+    expect(onModelChange).toHaveBeenCalledWith({ values: ['pending'] });
   });
 
   test('adding a second value keeps the first', async () => {
-    renderFilter({ values: ['positive'] });
+    renderFilter({ values: ['pending'] });
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'negative (41)' })));
+    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'failed' })));
 
-    expect(onModelChange).toHaveBeenCalledWith({ values: ['positive', 'negative'] });
+    expect(onModelChange).toHaveBeenCalledWith({ values: ['pending', 'failed'] });
   });
 
   // A null model deactivates the column's filter — the same state a text entry left blank is in.
   test('clearing the last value contributes no filter at all', async () => {
-    renderFilter({ values: ['positive'] });
+    renderFilter({ values: ['pending'] });
     await openFilter();
 
-    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'positive (920)' })));
+    await userEvent.click(await waitFor(() => screen.getByRole('checkbox', { name: 'pending' })));
 
     expect(onModelChange).toHaveBeenCalledWith(null);
   });
 
   test('a value already selected renders checked', async () => {
-    renderFilter({ values: ['negative'] });
+    renderFilter({ values: ['failed'] });
     await openFilter();
 
-    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'negative (41)' })).toBeChecked());
-    expect(screen.getByRole('checkbox', { name: 'positive (920)' })).not.toBeChecked();
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'failed' })).toBeChecked());
+    expect(screen.getByRole('checkbox', { name: 'pending' })).not.toBeChecked();
+  });
+
+  describe('select all', () => {
+    test('selects every listed value, and clears them when activated again', async () => {
+      const { rerender } = renderFilter();
+      await openFilter();
+
+      await userEvent.click(await waitFor(() => selectAllCheckbox()));
+      expect(onModelChange).toHaveBeenCalledWith({ values: ['pending', 'failed'] });
+
+      // The model is the grid's to hold, so the "everything selected" state has to be fed back in.
+      rerender(
+        withGrid(
+          <ConversationValueFilter
+            {...({
+              model: { values: ['pending', 'failed'] },
+              onModelChange,
+              colDef: { field: COLUMN_FIELD, headerName: COLUMN_HEADER },
+              context: { requestFieldValues },
+            } as unknown as Props)}
+          />,
+        ),
+      );
+
+      expect(selectAllCheckbox()).toBeChecked();
+
+      await userEvent.click(selectAllCheckbox());
+      expect(onModelChange).toHaveBeenLastCalledWith(null);
+    });
+
+    test('reports a partial selection as mixed rather than checked', async () => {
+      renderFilter({ values: ['pending'] });
+      await openFilter();
+
+      await waitFor(() => expect(selectAllCheckbox()).toBeInTheDocument());
+
+      expect(selectAllCheckbox()).toHaveAttribute('aria-checked', 'mixed');
+    });
+  });
+
+  describe('search', () => {
+    test('is offered only once the list is long enough to be worth scanning', async () => {
+      renderFilter();
+      await openFilter();
+
+      await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+      expect(screen.queryAllByRole('textbox')).toHaveLength(0);
+
+      requestFieldValues.mockResolvedValue(MANY_VALUES);
+      await act(async () => {
+        lifecycle.afterGuiDetached?.();
+      });
+      await openFilter();
+
+      await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument());
+    });
+
+    // Presentational only: narrowing what renders must never change what is selected, or clearing the term
+    // would silently drop values the operator had already chosen.
+    test('narrows the list without changing the selection', async () => {
+      requestFieldValues.mockResolvedValue(MANY_VALUES);
+      renderFilter({ values: ['pending'] });
+      await openFilter();
+
+      const search = await waitFor(() => screen.getByRole('textbox'));
+      await userEvent.type(search, 'value_1');
+
+      await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'pending' })).toBeNull());
+      // Hiding the selected value did not deselect it.
+      expect(onModelChange).not.toHaveBeenCalled();
+
+      await userEvent.clear(search);
+
+      await waitFor(() => expect(screen.getByRole('checkbox', { name: 'pending' })).toBeChecked());
+    });
+  });
+
+  test('reset clears the selection and contributes no predicate', async () => {
+    renderFilter({ values: ['pending'] });
+    await openFilter();
+
+    await userEvent.click(await waitFor(() => screen.getByRole('button', { name: ButtonsI18nKey.Reset })));
+
+    expect(onModelChange).toHaveBeenCalledWith(null);
+  });
+
+  test('reset is disabled while nothing is selected', async () => {
+    renderFilter();
+    await openFilter();
+
+    await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Reset })).toBeDisabled();
   });
 
   test('the loading state is announced and offers nothing to select', async () => {
@@ -152,7 +275,7 @@ describe.skip('conversation value filter', () => {
 
   // Never a text entry in its place: an operator who opened one control and was handed another would enter a
   // value under the wrong operator.
-  test('a failed read says so and offers no text entry', async () => {
+  test('a failed read says so, in the error treatment, and offers no text entry', async () => {
     requestFieldValues.mockResolvedValue(null);
     renderFilter();
     await openFilter();
@@ -160,6 +283,7 @@ describe.skip('conversation value filter', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent(ConversationsTraceI18nKey.ValueFilterLoadFailed),
     );
+    expect(screen.getByRole('status')).toHaveClass('text-error');
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
     expect(onModelChange).not.toHaveBeenCalled();

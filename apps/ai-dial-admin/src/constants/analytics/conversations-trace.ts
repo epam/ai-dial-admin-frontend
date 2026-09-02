@@ -234,6 +234,7 @@ export const CONVERSATION_FIELD_VALUE_COUNT_ALIAS = 'value_count';
 // Bound by name rather than by reference so the column catalog — a pure util, read by the server actions
 // too — does not import a client component to describe a column.
 export const CONVERSATION_VALUE_FILTER = 'conversationValueFilter';
+export const CONVERSATION_VALUE_FLOATING_FILTER = 'conversationValueFloatingFilter';
 
 // A bound on the grouped count that discovers an enum's values, not a cap on a filter's meaning: an enum's
 // value set is closed and small (twenty-two on the widest field of the current schema), so this is only

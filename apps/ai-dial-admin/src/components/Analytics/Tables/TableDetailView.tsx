@@ -311,7 +311,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
             .join(' — '),
         flex: 2,
       },
-      { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', cellRenderer: TypeCellRenderer, flex: 1 },
+      {
+        headerName: t(AnalyticsTablesI18nKey.Type),
+        field: 'type',
+        cellRenderer: TypeCellRenderer,
+        // An enum column's declared domain, reachable without opening the edit modal. It rides the cell's
+        // own tooltip rather than the badge's: the badge is a non-focusable span, so a tooltip on it would
+        // be mouse-only, while the grid cell is reachable by keyboard navigation.
+        tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
+          params.data?.enum_values?.length ? params.data.enum_values.join(', ') : '',
+        flex: 1,
+      },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
       // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
       { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },

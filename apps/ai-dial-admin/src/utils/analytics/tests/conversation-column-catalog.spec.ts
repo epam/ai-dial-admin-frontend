@@ -23,7 +23,11 @@ import {
   sortableColumnFields,
   transcriptBodyFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
-import { CONVERSATION_VALUE_FILTER, OPTIONAL_USAGE_LOG_FIELDS } from '@/src/constants/analytics/conversations-trace';
+import {
+  CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
+  OPTIONAL_USAGE_LOG_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
 
 const t = (key: string) => key;
 
@@ -363,11 +367,19 @@ describe('a derived column binds a filter its type can answer', () => {
     return catalog.find((column) => column.field === name) as ColDef;
   };
 
-  test('an enum field binds the value filter and no floating filter', () => {
+  // The floating row is kept so the affordance sits level with every neighbouring column's filter, but the
+  // *default* floating filter is a text entry that would write a text model over the value model — so the
+  // column names its own, which only opens the popup.
+  test('an enum field binds the value filter and its own floating filter', () => {
     const column = derived('usage_scope', AnalyticsFieldType.Enum);
 
     expect(column.filter).toBe(CONVERSATION_VALUE_FILTER);
-    expect(column.floatingFilter).toBe(false);
+    expect(column.floatingFilterComponent).toBe(CONVERSATION_VALUE_FLOATING_FILTER);
+    expect(column.floatingFilter).not.toBe(false);
+    // The grid's own floating-filter button is deliberately left in place: it is the affordance, identical
+    // to the one every neighbouring column has. Suppressing it makes the grid fall back to a header-row
+    // icon instead, which is the misplacement this binding exists to avoid.
+    expect(column.suppressFloatingFilterButton).toBeUndefined();
   });
 
   test('an enum column stays sortable and filterable', () => {
