@@ -9,7 +9,6 @@ import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { SharingGridData } from '@/src/components/Roles/models';
-import { getDefaultPlaceholder, isResetToDefaultHidden } from '@/src/components/Roles/utils';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getResetOperation } from '@/src/constants/grid-columns/actions';
 import { RolesI18nKey } from '@/src/constants/i18n';
@@ -18,7 +17,8 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleResource } from '@/src/models/dial/resource';
-import { applySharingChange, getAssetSharingData } from './utils';
+import { platformSharingTypeLabels } from './constants';
+import { applySharingChange, getAssetSharingData, getDefaultPlaceholder, isResetToDefaultHidden } from './utils';
 
 interface Props {
   isSkipRefresh: boolean;
@@ -28,8 +28,11 @@ interface Props {
 
 /**
  * Adapted from `Entities > Roles`' `RoleSharing` (`components/Roles/View/Properties/Sharing.tsx`),
- * reusing its grid columns/placeholder/reset-visibility helpers verbatim — but sourcing rows via
- * `getAssetSharingData` and writing through `toCoreShareField` instead, since Core's own
+ * reusing its `SHARING_COLUMNS`/`getResetOperation` grid shell — but with its own
+ * `PlatformSharingType`-keyed placeholder/reset-visibility/label helpers (this folder's `utils.ts`/
+ * `constants.ts`), since Core's `Role.share` map is keyed by its uppercase `ResourceTypes.name()`
+ * (e.g. `TOOL_SET`), not the admin-backend's lowercase `SharingType` convention. Rows come from
+ * `getAssetSharingData` and writes go through `toCoreShareField`, since Core's own
  * `ShareResourceLimit` is a different shape from the admin-backend's `DialRoleShare`: its two fields
  * are snake_case (`invitation_ttl`/`max_accepted_users`), and `invitationTtl` is already in hours on
  * the wire — no ms<->hours conversion, unlike the admin-backend field of the same name.
@@ -80,7 +83,13 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
   }, [selectedRole.share]);
 
   const columns: ColDef[] = useMemo(() => {
-    const baseColumns = SHARING_COLUMNS(t, onChangeTypeSharing, getDefaultPlaceholder, isReadOnlyAdmin);
+    const baseColumns = SHARING_COLUMNS(
+      t,
+      onChangeTypeSharing,
+      getDefaultPlaceholder,
+      isReadOnlyAdmin,
+      platformSharingTypeLabels,
+    );
     const actions = isReadOnlyAdmin ? [] : [getResetOperation(onResetSharingToDefault, isResetToDefaultHidden)];
     return [...baseColumns, ...(actions.length ? [ACTION_COLUMN(actions, true)] : [])];
   }, [onChangeTypeSharing, onResetSharingToDefault, t, isReadOnlyAdmin]);
