@@ -203,11 +203,13 @@ provenance colour, which is what that distinction is for. Monospace in particula
 value: it is this feature's mark for a catalog identifier naming an entity the page queried, and a
 conversation id, a user hash or a trace id is a value of the record rather than a name in the catalog.
 
-A value in that register SHALL be rendered in full, wrapping. No insight field declares a length bound and
-most metadata fields are opaque identifiers, so a slot sized for a short value would clip exactly the part
-that identifies it — and a wrapped identifier can be read and selected, which the text behind a truncation
-tooltip cannot. Headline figures are the exception: they are short by construction and share their row with
-a second column, so one SHALL be clamped rather than allowed to reflow the panel.
+A value in that register SHALL occupy **one line** whatever its length, and a value too long for its column
+SHALL be clamped rather than allowed to reflow. Nothing bounds an insight value and most metadata values are
+opaque identifiers, so a few long fields allowed to wrap would take most of a panel whose point is that every
+field is visible at once — the row rhythm is what makes the list scannable. A clamped value's full content
+SHALL remain reachable, on hover and through the trigger's accessible name; a `title` attribute alone does
+not satisfy this. Clamping SHALL apply only where the value actually overflows, so a value that fits carries
+no dead affordance.
 
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
 activity time, the successful-request count, the conversation's **trace ids** and the deployments that served
@@ -305,7 +307,8 @@ map to a colour, so a newly added source cannot render unstyled.
 - **WHEN** the insights panel and the metadata panel both render label-and-value rows
 - **THEN** the two present their rows in the same type treatment, row rhythm and alignment
 - **AND** no value is rendered in monospace
-- **AND** a value longer than its column wraps rather than truncating
+- **AND** a value longer than its column is clamped to one line, with its full content reachable on hover
+  and exposed to assistive technology
 
 #### Scenario: The metadata panel marks what the rollup lacks
 

@@ -1,6 +1,3 @@
-No browser-verification task is included: the user declined one for this change. The scenarios are covered
-by the component and unit tests in section 5.
-
 ## 1. The schema-derived insight descriptor
 
 - [x] 1.1 Add `ConversationInsightField` — `{ name, label, hint?, type }` — to
@@ -79,10 +76,11 @@ existing monospace-and-ruled one, so two lists of the same record's fields read 
 - [x] 7.1 Add `ConversationTerm` — `{ key, label, hint?, value }` — to
       `src/models/analytics/conversations-trace.ts`, and a `ConversationTermList` component rendering the
       rail's one label-and-value register: the `dl`, the two-column row, the label with its optional
-      caveat, and the wrapping right-aligned value.
+      caveat, and the single-line right-aligned value.
 - [x] 7.2 Render `ConversationInsightsPanel`'s rows through it, dropping the panel-local `InsightTerm`.
-- [x] 7.3 Render `ConversationFieldRows`' `Rows` layout through it, dropping the monospace type and the
-      row dividers, and rendering values in full rather than clamped to a tooltip. The `Grid` layout keeps
-      its headline-figure treatment and its clamp, which `FieldValue` now takes as `isClamped`.
+- [x] 7.3 Render `ConversationFieldRows`' `Rows` layout through it, dropping the monospace type and the row
+      dividers. The register clamps every value to one line through `DialEllipsisTooltip`, which tooltips only
+      what actually overflows; the `Grid` layout keeps its headline-figure treatment and its own clamp, which
+      `FieldValue` now takes as `isClamped`.
 - [x] 7.4 Delete `ConversationFieldRows`' local `FieldHint` in favour of the identical `FieldCaveat`, so
       one control carries every caveat in the rail.

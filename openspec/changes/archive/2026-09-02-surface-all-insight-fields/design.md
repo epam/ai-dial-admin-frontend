@@ -157,11 +157,14 @@ drift apart under a later edit to one of them. `ConversationTerm.value` is a nod
 metadata field's absence is presented differently from its content — the unavailable marker and the empty
 marker are markup, and the insights panel, which omits an unvalued field outright, simply never passes one.
 
-The metadata values stop being clamped to a tooltip. Wrapping is what the insights panel does because no
-insight field declares a length bound; it is also the better answer for an identifier, which a reader wants
-to select and copy rather than hover. The usage panel keeps its clamp — its figures are short and share a
-row with a second column — which is now an explicit `isClamped` on `FieldValue` rather than an implication
-of the layout.
+The register clamps every value to one line, which is what the metadata panel already did and what the
+rewritten insights panel had dropped. Wrapping was tried first and rejected on sight: nothing bounds an
+insight value and most metadata values are opaque identifiers, so a few long fields took most of a panel
+whose whole point is that every field is visible at once, and the row rhythm that makes the list scannable
+went with them. `DialEllipsisTooltip` carries it — it clamps only where the value actually overflows, so a
+value that fits gets no dead affordance, and it exposes the clipped text through the trigger's accessible
+name rather than a `title`, which is what the rule on truncation asks for. The usage panel keeps its own
+clamp, now an explicit `isClamped` on `FieldValue` rather than an implication of the layout.
 
 ## Risks / Trade-offs
 
@@ -180,6 +183,10 @@ of the layout.
 - **Bookkeeping fields on screen could be read as a caveat on the title.** → They render in the panel's
   value register, and the header's rule against qualifying a title is restated in the spec delta so the two
   cannot be conflated later.
-- **A wrapped trace id costs a second line in a 360px rail.** → Two lines of a value the reader came for,
-  against one line ending in an ellipsis they cannot select. The rail already scrolls, and the fields that
-  wrap are the few long ones rather than the whole panel. Accepted.
+- **A clamped identifier cannot be selected from the row.** → The value stays reachable on hover and through
+  the trigger's accessible name, which is what the truncation rule requires, and the row rhythm it buys is
+  what makes a panel of this many fields readable at all. The detail header remains where a conversation id
+  is presented for copying. Accepted.
+- **`DialEllipsisTooltip` and `DialTooltip` are generation 1.0.** The ui-kit MCP reports both as superseded
+  by `EllipsisTooltip` / `Tooltip`. → Not migrated here: the app uses no 2.0 component anywhere, so a single
+  2.0 node in this rail would be the only one in the codebase. A generation migration is its own change.

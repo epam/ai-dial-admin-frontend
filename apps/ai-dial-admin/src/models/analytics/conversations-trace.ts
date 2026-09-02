@@ -1,4 +1,5 @@
 import { Icon as TablerIcon } from '@tabler/icons-react';
+import { ReactNode } from 'react';
 
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -1002,6 +1003,16 @@ export interface ResolvedConversationField {
   text: string;
   accentClassName?: string;
   hintKey?: string;
+}
+
+// One row of the rail's label-and-value register. The value is a node rather than a string because a field's
+// absence is presented differently from its content, and the panels that can render an absence carry that
+// distinction in markup rather than in the text.
+export interface ConversationTerm {
+  key: string;
+  label: string;
+  hint?: string;
+  value: ReactNode;
 }
 
 // One insight column as the entity schema reports it, reduced to what the panel renders it with. Built from
