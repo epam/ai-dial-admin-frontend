@@ -3,9 +3,6 @@ import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { toRunnerReference } from '@/src/utils/app-runners/runner-reference';
 import { AppRunnerOption, AppRunnerOrigin } from './models';
 
-export const getRunnerReference = (runner: DialApplicationScheme): string =>
-  (runner as AppRunnerOption).reference || runner.$id || '';
-
 export const getRunnerOrigin = (runner: DialApplicationScheme): AppRunnerOrigin =>
   (runner as AppRunnerOption).origin || AppRunnerOrigin.Entity;
 
