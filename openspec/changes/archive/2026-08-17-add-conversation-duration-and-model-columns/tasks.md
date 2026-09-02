@@ -21,8 +21,8 @@
       value of the same array as a substring; returns the unnarrowed array when narrowing empties it
 - [x] 2.3 Unit-test the duration formatter: sub-minute, multi-minute, `0` to marker, null to marker
 - [x] 2.4 Unit-test the narrowing helper against the shapes measured in design.md — substring-wrapped router
-      (`dial-chathub-v2-gemini-3.1-pro-preview` over `gemini-3.1-pro-preview`), undetectable orchestrator
-      (`anthropic_switchyard-model`) which must survive, application-only fallback, toolset path, embedding
+      (a router deployed as `<router>-<wrapped-model>`, over the bare model name), undetectable orchestrator
+      (a router under a plain name) which must survive, application-only fallback, toolset path, embedding
       deployment, and a single plain model left untouched
 
 ## 3. Grid columns

@@ -26,6 +26,7 @@ import {
   HopInspectorSide,
   HopReadState,
   HopSideSuppression,
+  McpToolCallTally,
   SessionScope,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
@@ -40,9 +41,13 @@ interface Props {
   span: ConversationSpanRow;
   kind: SpanKind;
   bodyGrants: ConversationTranscriptAvailability;
+  // The turn's MCP tool calls, so the response side can say which of the tools this span asked for the turn
+  // recorded no call of — and why. Carries whether the span read was complete, because that claim is only
+  // sound on a complete one.
+  mcpToolCalls: McpToolCallTally;
 }
 
-const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants }) => {
+const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpToolCalls }) => {
   const t = useI18n();
   const [side, setSide] = useState(HopInspectorSide.Request);
 
@@ -136,6 +141,7 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants }) => 
             scope={scope}
             traceId={traceId}
             span={span}
+            mcpToolCalls={mcpToolCalls}
           />
         )}
       </div>
@@ -219,13 +225,14 @@ const RequestSide: FC<SideProps & { isEmbedding: boolean; request: RequestState;
   );
 };
 
-const ResponseSide: FC<SideProps & { response: ResponseState }> = ({
+const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpToolCallTally }> = ({
   isFetchable,
   suppression,
   response,
   scope,
   traceId,
   span,
+  mcpToolCalls,
 }) => {
   if (!isFetchable) {
     return <HopStateNote state={HopReadState.ColumnWithheld} suppression={suppression} />;
@@ -242,6 +249,7 @@ const ResponseSide: FC<SideProps & { response: ResponseState }> = ({
       traceId={traceId}
       coreSpanId={span.core_span_id}
       requestTime={span.request_time}
+      mcpToolCalls={mcpToolCalls}
     />
   );
 };

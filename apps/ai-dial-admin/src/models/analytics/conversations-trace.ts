@@ -567,6 +567,10 @@ export interface ConversationSpanRow {
   operation_duration_ms: number | string | null;
   total_tokens: number | string | null;
   deployment_price: number | string | null;
+  // The chain-inclusive price. A span that metered nothing of its own carries a null `deployment_price` and a
+  // real `total_price`, so this is the only cost figure such a row has. Required, like every other column the
+  // span query always selects: optional would put `undefined` in the type and no reader wants a third empty.
+  total_price: number | string | null;
   request_time: number | string | null;
   response_body_bytes: number | string | null;
   request_body_bytes: number | string | null;
@@ -577,56 +581,66 @@ export interface ConversationSpanRow {
   execution_path?: string[] | null;
 }
 
-// What a node *is*. Failure is deliberately not a member: a failed model call and a failed tool call are
-// different problems, and one set naming both "error" reports the failure instead of the kind — losing the
-// fact the reader was about to act on. Failure travels on `HopOutcomeFilter`, beside this.
-export enum HopEventType {
-  ModelCall = 'model-call',
-  Text = 'text',
-  ToolCall = 'tool-call',
-  ToolResult = 'tool-result',
-  Thinking = 'thinking',
-  Empty = 'empty',
-  Session = 'session',
-  Embedding = 'embedding',
-  Other = 'other',
-}
-
 // The outcome axis. One member, because there is no "succeeded" control to offer: the turn's own status
 // figure already says whether anything failed, and a control marking almost every node answers nothing.
 export enum HopOutcomeFilter {
   Failed = 'failed',
 }
 
-// What the tree is currently emphasising — a kind, or the outcome axis, or nothing.
-export type HopEmphasis = HopEventType | HopOutcomeFilter;
+// What the tree is currently emphasising — a kind of call, or the outcome axis, or nothing.
+export type HopEmphasis = SpanKind | HopOutcomeFilter;
 
 export enum HopNodeKind {
   Hop = 'hop',
-  Event = 'event',
   UnrecordedRoot = 'unrecorded-root',
 }
 
-export interface HopEventSeed {
-  type: HopEventType;
-  label: string;
-  detail?: string | null;
-  span: ConversationSpanRow;
-  reasoningTokens?: number | null;
-  hasNoRecordedResult?: boolean;
+// Which figures a row has to state. The choice is made from what the hop recorded, never from what kind of
+// entity answered it: an application hop records no tokens and no price of its own while carrying a real
+// chain price, so a single token-shaped line would render it as `0 tok` and a dash and read as broken data.
+export enum HopFactsShape {
+  Metered = 'metered',
+  Unmetered = 'unmetered',
+}
+
+export interface HopMeteredFacts {
+  shape: HopFactsShape.Metered;
+  tokens: number | null;
+  requestMessages: number | null;
+  cost: number | string | null;
+}
+
+// Duration is not a member: every row states it in its own column, whatever shape its facts take, so
+// repeating it here would print it twice on exactly the rows that have least else to show.
+//
+// Neither is the upstream host. It is constant across every hop of one deployment, so as a row fact it
+// restates the row's own name once per row — and being the longest token on the line, it pushed the hop's
+// method into truncation. The detail panel states it in full, once, for the hop the reader opened.
+export interface HopUnmeteredFacts {
+  shape: HopFactsShape.Unmetered;
+  chainCost: number | string | null;
+}
+
+export type HopFacts = HopMeteredFacts | HopUnmeteredFacts;
+
+// The turn's recorded MCP tool calls per name, and whether the span read that produced them was complete.
+// The two travel together because a count read from a capped page cannot support a claim about an absence.
+export interface McpToolCallTally {
+  counts: Record<string, number>;
+  isComplete: boolean;
 }
 
 export interface HopNodeData {
   kind: HopNodeKind;
-  type: HopEventType | null;
+  type: SpanKind | null;
   label: string;
+  // What the hop did, where its kind records one — an MCP tool call or protocol method. It sits beside the
+  // label rather than replacing it, so a protocol message states both its server and its method.
   detail: string | null;
   span: ConversationSpanRow | null;
   startedAtMs: number | null;
-  tokens: number | null;
-  reasoningTokens: number | null;
-  cost: number | string | null;
-  hasNoRecordedResult: boolean;
+  durationMs: number | null;
+  facts: HopFacts | null;
   isFailed: boolean;
   position: number;
   isMatch: boolean;
@@ -640,32 +654,26 @@ export interface HopTreeRow {
   isLastChild: boolean;
 }
 
-export interface ModelCallOutput {
-  core_span_id: string;
-  text: string | null;
-  toolCalls: ModelToolRequest[];
-  isUnread: boolean;
-}
-
-export interface ModelToolRequest {
-  name: string;
-  argumentsPreview: string | null;
-}
-
 export interface ConversationSpansPage {
   spans: ConversationSpanRow[];
   total: number | null;
-  modelOutputs: ModelCallOutput[];
 }
 
 // What kind of call a hop stands for. Named as the hop log names them, and deliberately carrying no failure
 // member: a failed model call and a failed tool call are different problems, and one set naming both "error"
 // says neither. Failure travels beside the kind, never instead of it.
+//
+// It deliberately asserts nothing about *what answered* the call. An application hop and a model hop are
+// recorded as the same kind of call, and no column separates them reliably — so a call to an application's
+// chat endpoint is an `Llm` call, which is the only thing the log actually records.
 export enum SpanKind {
   Llm = 'llm',
   Mcp = 'mcp',
   Embeddings = 'embeddings',
   Route = 'route',
+  // A rating the reader left on the turn. It arrives as its own single-hop trace and records no event kind,
+  // so it is recognised by its endpoint — the same mechanism an unlabelled model call is classified by.
+  Rating = 'rating',
   Other = 'other',
 }
 
@@ -926,10 +934,6 @@ export interface TranscriptStatePresentation {
   hintKey: string;
   icon: TablerIcon;
   isError: boolean;
-}
-
-export interface ConversationModelBodyRow extends ConversationEntryBodyRow {
-  core_span_id: string;
 }
 
 export enum ConversationDetailView {

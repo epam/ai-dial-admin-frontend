@@ -1,19 +1,24 @@
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { buildTreeFromParentPointer } from '@/src/components/Common/TreeGrid/utils';
-import { FILTERABLE_EVENT_TYPES } from '@/src/constants/analytics/conversations-trace';
+import { FILTERABLE_SPAN_KINDS } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationSpanRow,
   HopEmphasis,
-  HopEventSeed,
-  HopEventType,
   HopNodeData,
   HopNodeKind,
   HopOutcomeFilter,
   HopTreeNode,
   HopTreeRow,
+  SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
-import { isFailedHop, spanLabelOf } from '@/src/utils/analytics/conversation-spans';
+import {
+  hopFactsOf,
+  isFailedHop,
+  spanKindOf,
+  spanLabelOf,
+  spanPhaseOf,
+} from '@/src/utils/analytics/conversation-spans';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
 type SpanTreeRow = TreeRow<ConversationSpanRow>;
@@ -34,30 +39,6 @@ const nodeOf = (data: HopNodeData, id: string, parentId: string | null, children
   expanded: false,
   children,
 });
-
-const eventNodesOf = (seeds: HopEventSeed[], hopId: string): HopTreeNode[] =>
-  seeds.map((seed, index) =>
-    nodeOf(
-      {
-        kind: HopNodeKind.Event,
-        type: seed.type,
-        label: seed.label,
-        detail: seed.detail ?? null,
-        span: seed.span,
-        startedAtMs: null,
-        tokens: null,
-        reasoningTokens: seed.reasoningTokens ?? null,
-        cost: null,
-        hasNoRecordedResult: seed.hasNoRecordedResult ?? false,
-        isFailed: isFailedHop(seed.span),
-        position: 0,
-        isMatch: false,
-      },
-      `${seed.span.core_span_id}:event:${index}`,
-      hopId,
-      [],
-    ),
-  );
 
 const withPositions = (tree: HopTreeNode[]): HopTreeNode[] => {
   let position = 0;
@@ -83,6 +64,8 @@ const unrecordedRootNameOf = (roots: SpanTreeRow[]): string | null => {
   return null;
 };
 
+// The one node standing for no hop, and so the one node carrying no kind: naming a kind would assert what
+// kind of call it was on no evidence. It states in words what it is instead, and it matches no filter.
 const unrecordedRootOf = (name: string, children: HopTreeNode[]): HopTreeNode =>
   nodeOf(
     {
@@ -92,10 +75,8 @@ const unrecordedRootOf = (name: string, children: HopTreeNode[]): HopTreeNode =>
       detail: null,
       span: null,
       startedAtMs: null,
-      tokens: null,
-      reasoningTokens: null,
-      cost: null,
-      hasNoRecordedResult: false,
+      durationMs: null,
+      facts: null,
       isFailed: false,
       position: 0,
       isMatch: false,
@@ -105,23 +86,35 @@ const unrecordedRootOf = (name: string, children: HopTreeNode[]): HopTreeNode =>
     children,
   );
 
-const categoryOf = (seeds: HopEventSeed[]): HopEventType => {
-  if (seeds.length === 1) {
-    return seeds[0].type;
-  }
-  if (seeds.length === 0) {
-    return HopEventType.Other;
-  }
+// One hop, one node. Nothing decoded from the hop's body reaches here: the row states what the call was and
+// what it recorded, and the inspector answers what came back from it.
+const hopNodeOf = (row: SpanTreeRow): HopTreeNode =>
+  nodeOf(
+    {
+      kind: HopNodeKind.Hop,
+      type: spanKindOf(row),
+      label: spanLabelOf(row),
+      detail: spanPhaseOf(row),
+      span: row,
+      startedAtMs: toMillis(row.request_time),
+      durationMs: toNumber(row.operation_duration_ms),
+      facts: hopFactsOf(row),
+      isFailed: isFailedHop(row),
+      position: 0,
+      isMatch: false,
+    },
+    row.id,
+    row.parentId,
+    row.children.map(hopNodeOf),
+  );
 
-  return HopEventType.ModelCall;
-};
+// No hop is excluded for the kind of call it was — `route` hops included. They sit inside conversation traces
+// and parent other hops, so excluding one hoists its children to the top level and destroys the structure the
+// reader opened the trace to see. Background route calls are roots of their own traces, which the trace-id
+// scope already keeps out.
+export const buildHopTree = (spans: ConversationSpanRow[]): HopTreeNode[] => {
+  const hops = [...spans].sort(byStartTime);
 
-export interface SpanTreeParams {
-  hops: ConversationSpanRow[];
-  seedsByHopId: Map<string, HopEventSeed[]>;
-}
-
-export const buildSpanTree = ({ hops, seedsByHopId }: SpanTreeParams): HopTreeNode[] => {
   const spanTree = sortSiblings(
     buildTreeFromParentPointer(hops, {
       getId: ({ core_span_id }) => core_span_id,
@@ -129,54 +122,15 @@ export const buildSpanTree = ({ hops, seedsByHopId }: SpanTreeParams): HopTreeNo
     }),
   );
 
-  const toHopNode = (row: SpanTreeRow): HopTreeNode => {
-    const seeds = seedsByHopId.get(row.core_span_id) ?? [];
-    const isFailed = isFailedHop(row);
-    const childHops = row.children.map(toHopNode);
-    const hop: HopNodeData = {
-      kind: HopNodeKind.Hop,
-      type: categoryOf(seeds),
-      label: spanLabelOf(row),
-      detail: null,
-      span: seeds[0]?.span ?? row,
-      startedAtMs: toMillis(row.request_time),
-      tokens: toNumber(row.total_tokens),
-      reasoningTokens: null,
-      cost: row.deployment_price,
-      hasNoRecordedResult: false,
-      isFailed,
-      position: 0,
-      isMatch: false,
-    };
-
-    const [onlySeed] = seeds;
-    if (seeds.length === 1) {
-      return nodeOf(
-        {
-          ...hop,
-          label: onlySeed.label,
-          detail: onlySeed.detail ?? null,
-          reasoningTokens: onlySeed.reasoningTokens ?? null,
-          hasNoRecordedResult: onlySeed.hasNoRecordedResult ?? false,
-        },
-        row.id,
-        row.parentId,
-        childHops,
-      );
-    }
-
-    return nodeOf(hop, row.id, row.parentId, [...eventNodesOf(seeds, row.id), ...childHops]);
-  };
-
-  const roots = spanTree.map(toHopNode);
+  const roots = spanTree.map(hopNodeOf);
 
   const name = hops.length > 0 && !hops.some(isRootHop) ? unrecordedRootNameOf(spanTree) : null;
 
   return withPositions(name === null ? roots : [unrecordedRootOf(name, roots)]);
 };
 
-// Emphasis is one of two axes: a kind, matched against the node's type, or the outcome axis, matched against
-// the node's recorded failure whatever kind it was.
+// Emphasis is one of two axes: a kind of call, matched against the node's kind, or the outcome axis, matched
+// against the node's recorded failure whatever kind it was.
 export const markMatchingNodes = (tree: HopTreeNode[], emphasis: HopEmphasis | null): HopTreeNode[] =>
   tree.map((node) => ({
     ...node,
@@ -207,8 +161,8 @@ export const countMatchingNodes = (tree: HopTreeNode[]): number =>
 export const hasFailedNodes = (tree: HopTreeNode[]): boolean =>
   tree.some(({ isFailed, children }) => isFailed || hasFailedNodes(children));
 
-export const categoriesOf = (tree: HopTreeNode[]): HopEventType[] => {
-  const present = new Set<HopEventType>();
+export const kindsOf = (tree: HopTreeNode[]): SpanKind[] => {
+  const present = new Set<SpanKind>();
 
   const walk = (nodes: HopTreeNode[]) => {
     for (const { type, children } of nodes) {
@@ -220,7 +174,7 @@ export const categoriesOf = (tree: HopTreeNode[]): HopEventType[] => {
   };
   walk(tree);
 
-  return FILTERABLE_EVENT_TYPES.filter((type) => present.has(type));
+  return FILTERABLE_SPAN_KINDS.filter((kind) => present.has(kind));
 };
 
 export const flattenHopTree = (tree: HopTreeNode[]): HopTreeRow[] => {

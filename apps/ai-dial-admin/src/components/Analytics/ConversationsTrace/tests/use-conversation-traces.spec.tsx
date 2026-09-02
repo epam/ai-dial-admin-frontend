@@ -37,7 +37,7 @@ const renderTraces = () =>
   renderHook(() =>
     useConversationTraces({
       scope,
-      projectId: 'statgpt',
+      projectId: 'demo-project',
       firstRequestTime: 1000,
       lastRequestTime: 2000,
     }),
@@ -55,7 +55,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2']);
-    expect(getConversationTracePage).toHaveBeenCalledWith(scope, 'statgpt', 1000, 2000, 0);
+    expect(getConversationTracePage).toHaveBeenCalledWith(scope, 'demo-project', 1000, 2000, 0);
   });
 
   test('appends the next page and advances the offset by what the page returned', async () => {
@@ -67,7 +67,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'statgpt', 1000, 2000, 2);
+    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, 2);
   });
 
   // A late-arriving row can lower a trace's earliest recorded time and move it across a page boundary, which
@@ -82,7 +82,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'statgpt', 1000, 2000, 2);
+    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, 2);
   });
 
   test('carries the page’s own hasMore rather than inferring one', async () => {

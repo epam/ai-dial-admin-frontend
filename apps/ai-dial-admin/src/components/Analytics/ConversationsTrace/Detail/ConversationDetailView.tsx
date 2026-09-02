@@ -37,7 +37,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
     [conversation.client_session_id, conversation.client_session_source],
   );
 
-  const { trace, isLoading, selectedSpanId, onSelectSpan, onOpenTrace, onCloseTrace } = useConversationTrace(scope);
+  const { trace, isLoading, selectedSpanId, onSelectSpan, onOpenTrace, onCloseTrace } = useConversationTrace();
 
   const isTraceOpen = trace !== null;
 
@@ -49,7 +49,6 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
           figures={trace.figures}
           title={trace.title}
           spans={trace.spans}
-          modelOutputs={trace.modelOutputs}
           bodyGrants={bodyGrants}
           hasLoadError={trace.hasLoadError}
           selectedSpanId={selectedSpanId}

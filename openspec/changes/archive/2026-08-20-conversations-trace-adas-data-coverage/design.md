@@ -240,7 +240,7 @@ add a round trip to every detail view to predict a failure the read already repo
 ### 13. Both surfaces name `deployments`; the narrowing is deleted
 
 Superseding decision 4's Model field. `narrowToModels` was measured against `turns.models` on the dev
-instance and disagrees in both directions: for `wPadkdnxdO5HilHRW2ew4` it kept three orchestrating `statgpt-*`
+instance and disagrees in both directions: for `wPadkdnxdO5HilHRW2ew4` it kept three orchestrating application
 deployments the rollup excludes and dropped two embedding deployments the rollup includes because they were
 billed — two of four values correct.
 

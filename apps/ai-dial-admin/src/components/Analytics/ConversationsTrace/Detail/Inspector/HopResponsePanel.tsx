@@ -8,11 +8,13 @@ import HopRawView from '@/src/components/Analytics/ConversationsTrace/Detail/Ins
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { unansweredToolNamesOf } from '@/src/utils/analytics/conversation-spans';
 import {
   HopInspectorSide,
   HopReadState,
   HopResponseEnvelope,
   HopResponseMode,
+  McpToolCallTally,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 
@@ -22,11 +24,19 @@ interface Props {
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
+  mcpToolCalls: McpToolCallTally;
 }
 
-const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requestTime }) => {
+const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requestTime, mcpToolCalls }) => {
   const t = useI18n();
   const [mode, setMode] = useState(HopResponseMode.Assembled);
+
+  // Which of the tools this response asked for the turn recorded no MCP call of. Resolved by count per name,
+  // because the log pairs no request to a result.
+  const unansweredToolNames = useMemo(
+    () => unansweredToolNamesOf(envelope.toolCalls, mcpToolCalls),
+    [envelope.toolCalls, mcpToolCalls],
+  );
 
   const options: SegmentedControlOption<HopResponseMode>[] = useMemo(
     () => [
@@ -100,6 +110,15 @@ const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, req
                 </div>
               )}
             </dl>
+            {/* States the cause, not just the absence. A tool the calling application implements itself never
+                crosses Core, so no hop exists to record — reporting that as a missing result would send the
+                reader looking for data that was never meant to be there. */}
+            {unansweredToolNames.length > 0 && (
+              <p className="text-secondary dial-caption-text">
+                {t(ConversationsTraceI18nKey.InspectorToolNotRecorded)}{' '}
+                <span className="font-mono text-primary">{unansweredToolNames.join(', ')}</span>
+              </p>
+            )}
           </>
         )}
       </div>

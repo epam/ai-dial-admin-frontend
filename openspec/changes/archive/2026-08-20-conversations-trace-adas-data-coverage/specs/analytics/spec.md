@@ -798,7 +798,7 @@ leaves the relative time alone, and an absent last activity renders nothing at a
 name-shaped rules — an `applications/` or `toolsets/` resource-path prefix, the substring `embedding`, and a
 value containing another value of the same conversation — and that narrowing disagrees with the authoritative
 billed set in both directions. Measured against `turns.models` on dev: for a conversation whose `deployments`
-held seven values, the narrowing kept three orchestrating `statgpt-*` deployments the rollup excludes and
+held seven values, the narrowing kept three orchestrating application deployments the rollup excludes and
 dropped two embedding deployments the rollup includes because they were billed, leaving only two of four
 correct. Deployed under a plain name, a router or application is undetectable from the array, so no refinement
 of a name heuristic can fix it. Replaced by "Conversations grid names the deployments a conversation used".

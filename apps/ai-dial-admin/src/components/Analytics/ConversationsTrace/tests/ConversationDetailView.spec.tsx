@@ -175,7 +175,7 @@ describe('ConversationDetailView', () => {
 
     await user.click(await screen.findByText('gpt-two'));
 
-    expect(getConversationSpans).toHaveBeenCalledWith({ id: 'chat-1', source: 'chat_id' }, 't2');
+    expect(getConversationSpans).toHaveBeenCalledWith('t2');
   });
 
   test('a per-turn control on a message opens the trace on that turn', async () => {
@@ -185,7 +185,7 @@ describe('ConversationDetailView', () => {
     await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
     await user.click(await screen.findByText(ConversationsTraceI18nKey.TraceOpen));
 
-    expect(getConversationSpans).toHaveBeenCalledWith({ id: 'chat-1', source: 'chat_id' }, 't1');
+    expect(getConversationSpans).toHaveBeenCalledWith('t1');
   });
 
   // A reader who reached a hop chain from the trace list should not be dropped back onto the transcript.

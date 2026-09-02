@@ -13,7 +13,6 @@ import {
   ConversationPanelLayout,
   ConversationScalarOperator,
   ConversationsField,
-  HopEventType,
   ProvenanceEntity,
   ResponseRatingsField,
   SpanKind,
@@ -65,7 +64,10 @@ export const MCP_PROTOCOL_METHODS: string[] = [
   'logging/setLevel',
 ];
 
-export const UTILITY_URI_MARKERS: string[] = ['count_tokens', '/tokenize', '/truncate_prompt'];
+// The rating endpoint. A rating records no `event_kind`, so its endpoint is the only thing that identifies
+// it — the same signal an unlabelled model call is classified by. Anchored at the end of the path because the
+// deployment name sits in the middle of it.
+export const RATE_URI_SUFFIX = '/rate';
 
 export const ROUTE_EVENT_KIND = 'route';
 
@@ -75,15 +77,9 @@ export const LLM_CALL_EVENT_KIND = 'llm_call';
 
 export const EMBEDDING_EVENT_KIND = 'embedding';
 
-export const STREAM_MODEL_BODY_LIMIT = 80;
-
-export const STREAM_MODEL_BODY_BYTE_BUDGET = 24 * 1024 * 1024;
-
-export const TOOL_ARGUMENTS_PREVIEW_LIMIT = 200;
-
-// The inspector's clamps. Kept together and beside `STREAM_MODEL_BODY_BYTE_BUDGET` because they are one
-// tuning surface: the recorded distribution is bimodal — 63% of model-call requests are under 10 KB while 21%
-// exceed 100 KB — so these are the numbers that decide how the heavy tail degrades.
+// The inspector's clamps, one tuning surface: the recorded distribution is bimodal — 63% of model-call
+// requests are under 10 KB while 21% exceed 100 KB — so these are the numbers that decide how the heavy tail
+// degrades.
 export const MESSAGE_TEXT_CLAMP = 280;
 
 // At or above this, a message is marked: on a 100 KB request, which message made it so is the first thing a
@@ -387,25 +383,23 @@ export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
 
 export const COST_TEXT_CLASS = 'text-accent-secondary';
 
-// Which node a kind corresponds to in the tree. The tree owns the palette: colour does real work there —
-// matching a filter control to the nodes it marks — so the rail derives its badge hue from it rather than
-// keeping a second set. A hop reading `accent-primary` in the tree must not read blue in the rail beside it.
-export const SPAN_KIND_EVENT_TYPE: Record<SpanKind, HopEventType> = {
-  [SpanKind.Llm]: HopEventType.ModelCall,
-  [SpanKind.Mcp]: HopEventType.ToolResult,
-  [SpanKind.Embeddings]: HopEventType.Embedding,
-  // `route` hops are excluded from the tree entirely, so this kind has no node to correspond to and takes the
-  // neutral hue rather than borrowing one that already means something else.
-  [SpanKind.Route]: HopEventType.Other,
-  [SpanKind.Other]: HopEventType.Other,
-};
+// One palette, one taxonomy. The tree's rows, its filter controls and the detail badge all read `SpanKind`,
+// so a row can no longer describe itself in one vocabulary while its own detail uses another.
+//
+// The hues also match `ConversationTraceChips`, which the same reader sees on the listing card before opening
+// the trace: embeddings teal, route amber. The tree had them crossed, because `route` carried the neutral hue
+// while it was excluded and took the free colour when it started rendering.
 
 // Filled rather than outlined — a rail badge is not a filter control — but the same hue as the kind's node.
 export const SPAN_KIND_CLASS: Record<SpanKind, string> = {
   [SpanKind.Llm]: 'bg-accent-primary-alpha text-accent-primary',
   [SpanKind.Mcp]: 'bg-accent-tertiary-alpha text-accent-tertiary',
-  [SpanKind.Embeddings]: 'bg-warning text-warning',
-  [SpanKind.Route]: 'bg-layer-4 text-secondary',
+  [SpanKind.Embeddings]: 'bg-accent-secondary-alpha text-accent-secondary',
+  [SpanKind.Route]: 'bg-warning text-warning',
+  // Rating shares the neutral hue with the generic kind, by kinship: a rating is not part of the turn's work
+  // at all — it arrives as its own single-hop trace afterwards — and the two therefore never render beside
+  // each other, so sharing costs the reader nothing. Each still states its kind in words.
+  [SpanKind.Rating]: 'bg-layer-4 text-secondary',
   [SpanKind.Other]: 'bg-layer-4 text-secondary',
 };
 
@@ -456,28 +450,22 @@ export const RESOLUTION_BADGE_CLASS: Record<string, string> = {
 
 export const EMPTY_ICON_SIZE = 24;
 
-export const HOP_EVENT_RAIL_CLASS: Record<HopEventType, string> = {
-  [HopEventType.ModelCall]: 'border-accent-primary',
-  [HopEventType.Text]: 'border-accent-secondary',
-  [HopEventType.ToolCall]: 'border-accent-tertiary',
-  [HopEventType.ToolResult]: 'border-accent-tertiary',
-  [HopEventType.Thinking]: 'border-accent-secondary',
-  [HopEventType.Empty]: 'border-primary',
-  [HopEventType.Session]: 'border-primary',
-  [HopEventType.Embedding]: 'border-warning',
-  [HopEventType.Other]: 'border-primary',
+export const SPAN_KIND_RAIL_CLASS: Record<SpanKind, string> = {
+  [SpanKind.Llm]: 'border-accent-primary',
+  [SpanKind.Mcp]: 'border-accent-tertiary',
+  [SpanKind.Embeddings]: 'border-accent-secondary',
+  [SpanKind.Route]: 'border-warning',
+  [SpanKind.Rating]: 'border-primary',
+  [SpanKind.Other]: 'border-primary',
 };
 
-export const HOP_EVENT_CHIP_CLASS: Record<HopEventType, string> = {
-  [HopEventType.ModelCall]: 'border-accent-primary text-accent-primary',
-  [HopEventType.Text]: 'border-accent-secondary text-accent-secondary',
-  [HopEventType.ToolCall]: 'border-accent-tertiary text-accent-tertiary',
-  [HopEventType.ToolResult]: 'border-accent-tertiary text-accent-tertiary',
-  [HopEventType.Thinking]: 'border-accent-secondary text-accent-secondary',
-  [HopEventType.Empty]: 'border-primary text-secondary',
-  [HopEventType.Session]: 'border-primary text-secondary',
-  [HopEventType.Embedding]: 'border-warning text-warning',
-  [HopEventType.Other]: 'border-primary text-secondary',
+export const SPAN_KIND_CHIP_CLASS: Record<SpanKind, string> = {
+  [SpanKind.Llm]: 'border-accent-primary text-accent-primary',
+  [SpanKind.Mcp]: 'border-accent-tertiary text-accent-tertiary',
+  [SpanKind.Embeddings]: 'border-accent-secondary text-accent-secondary',
+  [SpanKind.Route]: 'border-warning text-warning',
+  [SpanKind.Rating]: 'border-primary text-secondary',
+  [SpanKind.Other]: 'border-primary text-secondary',
 };
 
 export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
@@ -492,35 +480,23 @@ export const UNRECORDED_ROOT_RAIL_CLASS = 'border-primary';
 
 export const TREE_GUIDE_CLASS = 'border-primary';
 
-export const FILTERABLE_EVENT_TYPES: HopEventType[] = [
-  HopEventType.ModelCall,
-  HopEventType.Text,
-  HopEventType.ToolCall,
-  HopEventType.ToolResult,
-  HopEventType.Thinking,
-  HopEventType.Empty,
-  HopEventType.Session,
-  HopEventType.Embedding,
-  HopEventType.Other,
+// The order the filter controls appear in, and the only place that order is stated. The set actually offered
+// is this list narrowed to the kinds the turn recorded.
+export const FILTERABLE_SPAN_KINDS: SpanKind[] = [
+  SpanKind.Llm,
+  SpanKind.Mcp,
+  SpanKind.Embeddings,
+  SpanKind.Route,
+  SpanKind.Rating,
+  SpanKind.Other,
 ];
-
-export const HOP_EVENT_LABEL_KEY: Record<HopEventType, string> = {
-  [HopEventType.ModelCall]: ConversationsTraceI18nKey.EventModelCall,
-  [HopEventType.Text]: ConversationsTraceI18nKey.EventText,
-  [HopEventType.ToolCall]: ConversationsTraceI18nKey.EventToolCall,
-  [HopEventType.ToolResult]: ConversationsTraceI18nKey.EventToolResult,
-  [HopEventType.Thinking]: ConversationsTraceI18nKey.EventThinking,
-  [HopEventType.Empty]: ConversationsTraceI18nKey.EventEmpty,
-  [HopEventType.Session]: ConversationsTraceI18nKey.EventSession,
-  [HopEventType.Embedding]: ConversationsTraceI18nKey.EventEmbedding,
-  [HopEventType.Other]: ConversationsTraceI18nKey.EventOther,
-};
 
 export const SPAN_KIND_LABEL_KEY: Record<SpanKind, string> = {
   [SpanKind.Embeddings]: ConversationsTraceI18nKey.SpanEmbeddings,
   [SpanKind.Mcp]: ConversationsTraceI18nKey.SpanMcp,
   [SpanKind.Route]: ConversationsTraceI18nKey.SpanRoute,
   [SpanKind.Llm]: ConversationsTraceI18nKey.SpanLlm,
+  [SpanKind.Rating]: ConversationsTraceI18nKey.SpanRating,
   [SpanKind.Other]: ConversationsTraceI18nKey.SpanOther,
 };
 

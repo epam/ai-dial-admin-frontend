@@ -47,7 +47,7 @@ list of known router names.
 
 *Why:* a deployment name is only evidence of wrapping relative to what it wrapped in that conversation. A
 global list would need maintaining and would misfire on unrelated deployments that happen to share a name
-fragment. *Alternative rejected:* a name-pattern list (`dial-chathub-*`, `*_switchyard-*`), which encodes one
+fragment. *Alternative rejected:* a name-pattern list of known router prefixes, which encodes one
 deployment's naming convention into the frontend and rots the moment someone adds a router named differently.
 
 ### Application and toolset detection uses the resource-path prefix, not a name pattern
