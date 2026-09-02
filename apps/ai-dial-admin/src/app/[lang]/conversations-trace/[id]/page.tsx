@@ -6,12 +6,14 @@ import Page403 from '@/src/components/Page403/Page403';
 import {
   ConversationDetailRow,
   ConversationFeedbackPage,
+  ConversationInsightField,
   ConversationTranscriptAvailability,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
+import { insightColumnsOf } from '@/src/utils/analytics/conversation-insights';
 import {
   getConversationDetail,
   getConversationFeedback,
@@ -39,6 +41,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     isResponseReadable: false,
   };
   let hasLoadError = false;
+  let insightColumns: ConversationInsightField[] = [];
 
   try {
     // The rollup's field set varies by deployment and the service rejects a whole query that names a field
@@ -63,13 +66,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         };
       }),
     ]);
-    const availableFields = schema.response?.fields?.map(({ name }) => name);
+    const schemaFields = schema.response?.fields;
+    // Resolved once, here, from the schema the route already holds: the panel renders whatever the
+    // enrichment exposes, and the client has no schema of its own to derive that from.
+    insightColumns = insightColumnsOf(schemaFields);
 
     if (!schema.success) {
       errorObjLog(schema, 'Failed to fetch the conversations entity schema');
     }
 
-    const detail = await getConversationDetail(chatId, availableFields);
+    const detail = await getConversationDetail(chatId, schemaFields);
 
     hasLoadError = !detail.success;
     conversation = detail.response?.conversation ?? null;
@@ -99,6 +105,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <ConversationDetailView
       conversation={conversation}
+      insightColumns={insightColumns}
       feedback={feedback}
       isTranscriptReadable={isTranscriptReadable}
       bodyGrants={bodyGrants}

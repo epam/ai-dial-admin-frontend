@@ -21,11 +21,12 @@ import {
   ConversationDetailPanel as Panel,
   ConversationDetailRow,
   ConversationFeedbackRow,
+  ConversationInsightField,
   ConversationInsightsState,
   ConversationRatingCounts,
 } from '@/src/models/analytics/conversations-trace';
 import { resolveConversationField } from '@/src/utils/analytics/conversation-detail-fields';
-import { conversationInsightsState, resolveInsightFields } from '@/src/utils/analytics/conversation-insights';
+import { conversationInsightsState } from '@/src/utils/analytics/conversation-insights';
 
 const ICON_SIZE = 16;
 
@@ -38,6 +39,7 @@ const PANEL_ICON: Record<Panel, ReactNode> = {
 
 interface Props {
   conversation: ConversationDetailRow;
+  insightColumns: ConversationInsightField[];
   feedback: ConversationFeedbackRow[];
   feedbackTotal: number | null;
   ratings: ConversationRatingCounts | null;
@@ -46,13 +48,14 @@ interface Props {
 
 const ConversationDetailRail: FC<Props> = ({
   conversation,
+  insightColumns,
   feedback,
   feedbackTotal,
   ratings,
   isCommentTextReadable,
 }) => {
   const t = useI18n();
-  const insightsState = conversationInsightsState(conversation);
+  const insightsState = conversationInsightsState(conversation, insightColumns);
 
   return (
     <ConversationRailShell className="flex-col gap-4 overflow-y-auto">
@@ -63,7 +66,7 @@ const ConversationDetailRail: FC<Props> = ({
           title={t(CONVERSATION_INSIGHTS_PANEL.labelKey)}
           source={CONVERSATION_INSIGHTS_PANEL.sourceEntity}
         >
-          <ConversationInsightsPanel fields={resolveInsightFields(conversation)} />
+          <ConversationInsightsPanel conversation={conversation} columns={insightColumns} />
         </ConversationDetailPanel>
       ) : (
         <p className="text-secondary dial-small-text">{t(INSIGHTS_ABSENCE_KEY[insightsState])}</p>

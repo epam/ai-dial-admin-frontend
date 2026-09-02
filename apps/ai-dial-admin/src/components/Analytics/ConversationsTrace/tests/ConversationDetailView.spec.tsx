@@ -111,6 +111,7 @@ const renderView = (props: Partial<ComponentProps<typeof ConversationDetailView>
   render(
     <ConversationDetailView
       conversation={CONVERSATION}
+      insightColumns={[]}
       feedback={null}
       isTranscriptReadable
       bodyGrants={{ isReadable: true, isRequestReadable: true, isResponseReadable: true }}

@@ -46,6 +46,7 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { TimeRange } from '@/src/models/time-range';
 import {
   aggregateQuery,
@@ -73,6 +74,7 @@ import {
 } from '@/src/utils/analytics/query-build';
 import { availableSelectFields } from '@/src/utils/analytics/conversation-column-catalog';
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
+import { insightColumnsOf } from '@/src/utils/analytics/conversation-insights';
 
 const emptyString = value(QueryValueType.String, '');
 
@@ -342,17 +344,35 @@ export const buildConversationFieldValuesQuery = ({
     page: offsetPage(0, CONVERSATION_FIELD_VALUE_LIMIT),
   });
 
-export const buildConversationDetailQuery = (chatId: string, availableFields?: string[]): StructuredQuery =>
-  rowQuery({
+// The curated columns the view has always read, plus **every** column the insight enrichment exposes. The
+// second half is discovered from the schema rather than enumerated: the enrichment is provisioned per
+// instance and supersedes its own columns, so a list here would name a replaced column that comes back null
+// while never asking for the one that replaced it.
+//
+// The curated half still passes through `availableSelectFields`, which is what keeps an optional column out
+// of the select on an instance that does not report it — the service rejects a whole query for one unknown
+// field.
+export const buildConversationDetailQuery = (
+  chatId: string,
+  schemaFields?: AnalyticsEntityField[],
+): StructuredQuery => {
+  const curated = availableSelectFields(
+    Object.values(ConversationsField),
+    OPTIONAL_DETAIL_SELECT_FIELDS,
+    schemaFields?.map(({ name }) => name),
+  );
+  const named = new Set(curated);
+  const insights = insightColumnsOf(schemaFields)
+    .map(({ name }) => name)
+    .filter((name) => !named.has(name));
+
+  return rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: availableSelectFields(
-      Object.values(ConversationsField),
-      OPTIONAL_DETAIL_SELECT_FIELDS,
-      availableFields,
-    ).map((fieldName) => col(field(fieldName))),
+    select: [...curated, ...insights].map((fieldName) => col(field(fieldName))),
     filter: eq(ConversationsField.ChatId, value(QueryValueType.String, chatId)),
     page: offsetPage(0, 1, true),
   });
+};
 
 export const buildConversationFeedbackQuery = (
   chatId: string,

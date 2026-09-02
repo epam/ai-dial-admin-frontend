@@ -1,6 +1,7 @@
 import { Icon as TablerIcon } from '@tabler/icons-react';
 
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
 // Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
@@ -1003,4 +1004,12 @@ export interface ResolvedConversationField {
   hintKey?: string;
 }
 
-export type ResolvedInsightFields = Partial<Record<ConversationsField, ResolvedConversationField>>;
+// One insight column as the entity schema reports it, reduced to what the panel renders it with. Built from
+// the schema rather than declared here, so a column the enrichment gains is described without a release:
+// the label and the hint are the service's own words, and the type is what decides the value's formatting.
+export interface ConversationInsightField {
+  name: string;
+  label: string;
+  hint?: string;
+  type: AnalyticsFieldType;
+}

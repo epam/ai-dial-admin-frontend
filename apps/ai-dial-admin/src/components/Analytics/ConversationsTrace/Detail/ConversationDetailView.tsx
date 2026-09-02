@@ -13,12 +13,16 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationDetailRow,
   ConversationFeedbackPage,
+  ConversationInsightField,
   ConversationTranscriptAvailability,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 
 interface Props {
   conversation: ConversationDetailRow;
+  // Which insight columns this instance's enrichment exposes, resolved on the server from the entity schema.
+  // Built there and only passed through here, so its identity is stable and the rail's memo keeps holding.
+  insightColumns: ConversationInsightField[];
   feedback: ConversationFeedbackPage | null;
   // A schema fact, resolved at page open without any body query, so the Chat option is gated accurately
   // before the transcript itself is read.
@@ -27,7 +31,14 @@ interface Props {
   nowMs: number;
 }
 
-const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscriptReadable, bodyGrants, nowMs }) => {
+const ConversationDetailView: FC<Props> = ({
+  conversation,
+  insightColumns,
+  feedback,
+  isTranscriptReadable,
+  bodyGrants,
+  nowMs,
+}) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
@@ -63,6 +74,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
         <ConversationDetailHeader conversation={conversation} nowMs={nowMs} />
         <ConversationDetailBody
           conversation={conversation}
+          insightColumns={insightColumns}
           scope={scope}
           isTranscriptReadable={isTranscriptReadable}
           feedbackRows={rows}
