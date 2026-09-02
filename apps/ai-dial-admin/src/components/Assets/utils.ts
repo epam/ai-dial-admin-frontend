@@ -93,15 +93,12 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
-    case ApplicationRoute.PlatformKeys:
-      return isReadOnlyAdmin
-        ? []
-        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:

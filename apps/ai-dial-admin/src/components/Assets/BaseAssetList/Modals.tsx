@@ -7,7 +7,8 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import CreateKeyModal from '@/src/components/Assets/Platform/Keys/CreateKeyModal';
 import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
-import { PlatformAsset } from '@/src/models/dial/resource';
+import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
+import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
@@ -97,8 +98,17 @@ const Modals: FC<Props> = ({
           isModal
         />
       )}
+      {isModalOpen && modalType === ModalType.duplicate && view === ApplicationRoute.PlatformKeys && duplicateItem && (
+        <DuplicatePlatformKeyModal
+          isOpen={isModalOpen}
+          names={names || []}
+          entity={duplicateItem as unknown as DialKeyResource}
+          onClose={onClose}
+        />
+      )}
       {isModalOpen &&
         modalType === ModalType.duplicate &&
+        view !== ApplicationRoute.PlatformKeys &&
         (isFlatPlatformView(view) ? (
           <DuplicatePlatformAsset
             view={view}
