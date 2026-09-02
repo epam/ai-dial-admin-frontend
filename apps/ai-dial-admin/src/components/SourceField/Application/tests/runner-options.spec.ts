@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
-import {
-  buildAppRunnerOptions,
-  getRunnerOrigin,
-} from '@/src/components/SourceField/Application/utils';
+import { buildAppRunnerOptions, getRunnerOrigin } from '@/src/components/SourceField/Application/utils';
 import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
