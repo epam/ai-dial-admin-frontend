@@ -55,7 +55,13 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
+import {
+  DialAppRunnerResource,
+  DialModelResource,
+  DialPlatformApplicationResource,
+  DialPlatformToolsetResource,
+  PlatformAsset,
+} from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
@@ -362,7 +368,13 @@ export const GetAssetActionMap = {
  * falling back to `GetAssetActionMap`/`CreateAssetActionMap`/`BulkDeleteAssetActionMap` otherwise.
  */
 export const PlatformGetAssetActionMap: Partial<
-  Record<ApplicationRoute, (path: string, etag: string) => ReturnType<typeof getPlatformApplication>>
+  Record<
+    ApplicationRoute,
+    (
+      path: string,
+      etag: string,
+    ) => Promise<ServerActionResponse<DialPlatformApplicationResource | DialPlatformToolsetResource>>
+  >
 > = {
   [ApplicationRoute.AssetsApplications]: getPlatformApplication,
   [ApplicationRoute.AssetsToolsets]: getPlatformToolset,
@@ -402,10 +414,10 @@ export const CreateAssetActionMap: Record<
 export const PlatformCreateAssetActionMap: Partial<
   Record<ApplicationRoute, (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>>
 > = {
-  [ApplicationRoute.AssetsApplications]: createPlatformApplication as (
+  [ApplicationRoute.AssetsApplications]: createPlatformApplication as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsToolsets]: createPlatformToolset as (
+  [ApplicationRoute.AssetsToolsets]: createPlatformToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
