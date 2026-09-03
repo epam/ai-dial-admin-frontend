@@ -91,6 +91,7 @@ const FAILED_MCP: HopMcpFacts = {
   argumentsText: null,
   resultText: null,
   resultClamp: NO_CLAMP,
+  argumentsState: HopReadState.LoadFailed,
   resultState: HopReadState.LoadFailed,
 };
 

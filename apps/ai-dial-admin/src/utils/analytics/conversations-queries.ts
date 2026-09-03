@@ -9,10 +9,8 @@ import {
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
-  CONVERSATION_HOP_COUNT_ALIAS,
   OPTIONAL_DETAIL_SELECT_FIELDS,
   OPTIONAL_FEEDBACK_FIELDS,
-  OPTIONAL_USAGE_LOG_FIELDS,
   RATING_COUNT_EXCLUSIVE_MIN,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
@@ -20,7 +18,6 @@ import {
   ConversationArrayFilter,
   ConversationArrayValueSource,
   ConversationColumnFilter,
-  ConversationEntryHopRow,
   ConversationTraceFigureField,
   ConversationTracePageField,
   ConversationTraceWindow,
@@ -520,10 +517,6 @@ export const buildConversationTraceRootsQuery = (
 //
 // No `chat_id` here is what makes those totals correct *without correction*. Scoped by trace, the span count,
 // tokens and price are simply the trace's own — there is no root to add back and no count to increment.
-//
-// Also the second call site's shape: the Chat view resolves figures for the traces its own transcript covers
-// by passing that transcript's trace ids, so an answer's figures never depend on how far the listing has been
-// paged. Same scoping rules apply there.
 export const buildConversationTraceFiguresQuery = (
   traceIds: string[],
   window: ConversationTraceWindow,
@@ -592,77 +585,6 @@ export const buildConversationSpansQuery = (traceId: string, limit: number): Str
     sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit, true),
   });
-
-const entryHopFilter = (scope: SessionScope): QueryFilterNode =>
-  and([sessionScopePredicate(scope), isNull(UsageLogField.CoreParentSpanId)]);
-
-export const buildConversationEntryHopsQuery = (scope: SessionScope, limit: number): StructuredQuery =>
-  rowQuery({
-    entity: USAGE_LOG_ENTITY,
-    select: [
-      col(field(UsageLogField.TraceId)),
-      col(field(UsageLogField.RequestTime)),
-      col(field(UsageLogField.Deployment)),
-      col(field(UsageLogField.NumberRequestMessages)),
-      col(field(UsageLogField.RequestBodyBytes)),
-      col(field(UsageLogField.ResponseBodyBytes)),
-    ],
-    filter: entryHopFilter(scope),
-    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
-    page: offsetPage(0, limit, true),
-  });
-
-export const buildConversationHopCountQuery = (scope: SessionScope): StructuredQuery =>
-  aggregateQuery({
-    entity: USAGE_LOG_ENTITY,
-    select: [col(fn('count'), CONVERSATION_HOP_COUNT_ALIAS)],
-    filter: sessionScopePredicate(scope),
-  });
-
-// ADAS accepts a `timestamp` value only as epoch millis — an ISO-8601 string is rejected outright. And an
-// `in` list over `request_time` compiles to `has(...)`, which prunes no partitions, so the time bound has to
-// be a `ge`/`le` range.
-export const buildConversationEntryBodiesQuery = (
-  scope: SessionScope,
-  hops: ConversationEntryHopRow[],
-  schemaFieldNames?: string[],
-): StructuredQuery => {
-  const selectable = availableSelectFields(
-    [
-      UsageLogField.TraceId,
-      UsageLogField.EventKind,
-      UsageLogField.RequestBody,
-      UsageLogField.ResponseBody,
-      UsageLogField.AssembledResponse,
-    ],
-    OPTIONAL_USAGE_LOG_FIELDS,
-    schemaFieldNames,
-  );
-  const recordedMillis = hops
-    .map(({ request_time }) => toMillis(request_time))
-    .filter((ms): ms is number => ms !== null);
-
-  return rowQuery({
-    entity: USAGE_LOG_ENTITY,
-    select: selectable.map((fieldName) => col(field(fieldName))),
-    filter: and([
-      entryHopFilter(scope),
-      inValues(
-        UsageLogField.TraceId,
-        QueryValueType.String,
-        hops.map(({ trace_id }) => trace_id),
-      ),
-      ...(recordedMillis.length
-        ? [
-            ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.min(...recordedMillis)))),
-            le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.max(...recordedMillis)))),
-          ]
-        : []),
-    ]),
-    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
-    page: offsetPage(0, Math.max(hops.length, 1)),
-  });
-};
 
 // The body columns to read are supplied rather than assumed: entitlement to the request body and to the
 // response body is separate, and a caller holding one must not have the other named in their query — an

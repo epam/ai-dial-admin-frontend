@@ -7,7 +7,6 @@ import {
   getConversationHopRawBody,
   getConversationHopRequest,
   getConversationHopResponse,
-  getConversationTranscript,
   getConversations,
   getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
@@ -29,7 +28,6 @@ import {
   HopInspectorSide,
   HopReadState,
   MessageRole,
-  TranscriptState,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -848,224 +846,6 @@ describe('getConversationsSchema', () => {
   });
 });
 
-describe('getConversationTranscript', () => {
-  const PROJECT_ID = 'demo-project';
-  const CHAT_ID = 'chat-1';
-  const NOW = Date.parse('2026-08-20T00:00:00.000Z');
-  const RECENT = Date.parse('2026-08-19T00:00:00.000Z');
-  const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
-
-  const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
-
-  const schemaOf = (names: string[]) =>
-    getEntitySchema().mockResolvedValue({ fields: names.map((name) => ({ name, type: 'string', source: name })) });
-
-  const answer = (text: string) => JSON.stringify({ choices: [{ message: { role: 'assistant', content: text } }] });
-
-  const hopRow = (traceId: string, messageCount: number) => ({
-    trace_id: traceId,
-    request_time: 1787218895000,
-    deployment: 'app',
-    number_request_messages: messageCount,
-    request_body_bytes: 10,
-    response_body_bytes: 20,
-  });
-
-  const bodyRow = (traceId: string, userText: string, reply: string) => ({
-    trace_id: traceId,
-    event_kind: 'llm_call',
-    request_body: JSON.stringify({ messages: [{ role: 'user', content: userText }] }),
-    response_body: null,
-    assembled_response: answer(reply),
-  });
-
-  // The three hop-log reads are told apart by shape rather than by call order, since two of them run
-  // concurrently.
-  const stubHopLog = (hops: object[], bodies: object[], count = hops.length) =>
-    execute().mockImplementation((query: StructuredQuery) => {
-      if (query.mode === QueryMode.Aggregate) {
-        return Promise.resolve(ok([{ hop_count: count }]));
-      }
-      const names = (query.select ?? []).map((column) => (column.expr as { name?: string }).name);
-      return Promise.resolve(names.includes(UsageLogField.RequestBody) ? ok(bodies) : ok(hops));
-    });
-
-  beforeEach(() => {
-    clearEntitySchemaCache();
-    schemaOf(READABLE);
-  });
-
-  test('assembles the transcript from the entry hops', async () => {
-    stubHopLog([hopRow('t1', 1), hopRow('t2', 1)], [bodyRow('t1', 'first', 'A'), bodyRow('t2', 'second', 'B')]);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.response?.state).toBe(TranscriptState.Available);
-    expect(result.response?.messages.map(({ content }) => content)).toEqual(['first', 'A', 'second', 'B']);
-    expect(result.response?.loadedTurns).toBe(2);
-  });
-
-  test('reads the hop log schema for the caller token', async () => {
-    stubHopLog([], []);
-    await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(getEntitySchema()).toHaveBeenCalledWith('dial_usage_log', TOKEN_MOCK);
-  });
-
-  // The `sensitive` case: the service hides all three columns from a caller below FULL_ADMIN.
-  test('reports the columns unavailable when the schema reports none of them', async () => {
-    schemaOf([UsageLogField.ChatId]);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.success).toBe(true);
-    expect(result.response?.state).toBe(TranscriptState.ColumnsUnavailable);
-    expect(execute()).not.toHaveBeenCalled();
-  });
-
-  // The service-version case: an older instance never persists the assembled column, so it is missing for
-  // every caller — and naming it would cost the whole query.
-  test('never names the assembled column when the schema omits it', async () => {
-    schemaOf([UsageLogField.RequestBody, UsageLogField.ResponseBody]);
-    stubHopLog([hopRow('t1', 1)], [{ ...bodyRow('t1', 'q', 'a'), assembled_response: undefined }]);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-    const bodyQuery = execute()
-      .mock.calls.map((args) => args[0] as StructuredQuery)
-      .find((query) =>
-        (query.select ?? []).some((column) => (column.expr as { name?: string }).name === UsageLogField.RequestBody),
-      );
-
-    expect(result.response?.state).toBe(TranscriptState.Available);
-    expect(JSON.stringify(bodyQuery?.select)).not.toContain(UsageLogField.AssembledResponse);
-  });
-
-  test('reports a failure when the schema cannot be read', async () => {
-    getEntitySchema().mockResolvedValue(null);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.success).toBe(false);
-    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
-  });
-
-  // Hops exist but none entered DIAL, so nothing recorded can be attributed to the user.
-  test('reports a conversation with hops but no entry hop as not reconstructable', async () => {
-    stubHopLog([], [], 12);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
-  });
-
-  test('reports a conversation older than the retention as expired', async () => {
-    stubHopLog([], [], 0);
-    const aged = NOW - 400 * DAY_MS;
-
-    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, aged, NOW)).response?.state).toBe(
-      TranscriptState.Expired,
-    );
-  });
-
-  test('reports a recent conversation with no hops as having recorded nothing', async () => {
-    stubHopLog([], [], 0);
-
-    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW)).response?.state).toBe(
-      TranscriptState.NoMessages,
-    );
-  });
-
-  // Without the count there is no way to tell an unattributable conversation from an empty one, and stating
-  // either would say something the read does not support.
-  test('reports a failure when the hop count fails and no entry hop was read', async () => {
-    execute().mockImplementation((query: StructuredQuery) =>
-      Promise.resolve(query.mode === QueryMode.Aggregate ? failure : ok([])),
-    );
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.success).toBe(false);
-    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
-  });
-
-  test('reports a failure when the entry hop read fails', async () => {
-    execute().mockResolvedValue(failure);
-
-    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW)).response?.state).toBe(
-      TranscriptState.LoadFailed,
-    );
-  });
-
-  // The read that carries the messages themselves: without this the failure resolved to an available
-  // transcript of nothing, and the view said the conversation recorded no messages during an outage.
-  test('reports a failure when the body read fails, not an empty conversation', async () => {
-    execute().mockImplementation((query: StructuredQuery) => {
-      const names = (query.select ?? []).map((column) => (column.expr as { name?: string }).name);
-      if (names.includes(UsageLogField.RequestBody)) {
-        return Promise.resolve(failure);
-      }
-      return Promise.resolve(query.mode === QueryMode.Aggregate ? ok([{ hop_count: 1 }]) : ok([hopRow('t1', 1)]));
-    });
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.success).toBe(false);
-    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
-  });
-
-  // Rows were read and none of them yielded a message: the conversation is not empty, it could not be
-  // reconstructed — which is the state that says so.
-  test('reports entry hops whose bodies yield no message as not reconstructable', async () => {
-    stubHopLog([hopRow('t1', 1)], []);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(result.success).toBe(true);
-    expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
-  });
-
-  // Under the 2n-1 shortcut only the newest row's bodies are fetched, and the transcript is the same.
-  test('fetches one row of bodies when the newest entry hop carries the whole conversation', async () => {
-    const hops = [hopRow('t1', 1), hopRow('t2', 3)];
-    stubHopLog(hops, [
-      {
-        trace_id: 't2',
-        event_kind: 'llm_call',
-        request_body: JSON.stringify({
-          messages: [
-            { role: 'user', content: 'first' },
-            { role: 'assistant', content: 'A' },
-            { role: 'user', content: 'second' },
-          ],
-        }),
-        response_body: null,
-        assembled_response: answer('B'),
-      },
-    ]);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-    const bodyQuery = execute()
-      .mock.calls.map((args) => args[0] as StructuredQuery)
-      .find((query) =>
-        (query.select ?? []).some((column) => (column.expr as { name?: string }).name === UsageLogField.RequestBody),
-      );
-
-    expect(result.response?.messages.map(({ content }) => content)).toEqual(['first', 'A', 'second', 'B']);
-    expect(JSON.stringify(bodyQuery?.filter)).toContain('t2');
-    expect(JSON.stringify(bodyQuery?.filter)).not.toContain('t1');
-  });
-
-  // Bodies never cross to the caller: only decoded messages do.
-  test('returns decoded messages and no body value', async () => {
-    stubHopLog([hopRow('t1', 1)], [bodyRow('t1', 'q', 'a')]);
-
-    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
-
-    expect(JSON.stringify(result.response)).not.toContain('assembled_response');
-    expect(JSON.stringify(result.response)).not.toContain('request_body');
-  });
-});
-
 describe('the hop inspector reads', () => {
   const CHAT_ID = 'chat-1';
   const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
@@ -1244,7 +1024,8 @@ describe('the hop inspector reads', () => {
 
     const result = await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 0);
 
-    expect(result.response?.toolCalls).toEqual([{ name: 'calc', args: '{"a":1}' }]);
+    // The tier-2 read of one message carries the call's id for the same reason the envelope does.
+    expect(result.response?.toolCalls).toEqual([{ name: 'calc', args: '{"a":1}', id: null }]);
   });
 
   // Tier 3 clamps and states both sizes: silent truncation produces a reader who believes they read it all.

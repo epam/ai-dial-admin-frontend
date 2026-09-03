@@ -38,7 +38,7 @@ const MetaTag: FC<MetaProps> = ({ label, value, hint, title, action }) => {
   return hint ? <DialTooltip tooltip={hint}>{text}</DialTooltip> : text;
 };
 
-const Separator: FC = () => <span aria-hidden className="h-4 w-px bg-tertiary" />;
+const Separator: FC = () => <span aria-hidden className="h-4 border-l border-primary" />;
 
 interface Props {
   conversation: ConversationDetailRow;

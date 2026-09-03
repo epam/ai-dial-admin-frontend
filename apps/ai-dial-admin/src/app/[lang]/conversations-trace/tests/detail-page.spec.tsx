@@ -4,7 +4,7 @@ import Page from '@/src/app/[lang]/conversations-trace/[id]/page';
 import {
   getConversationDetail,
   getConversationFeedback,
-  getConversationTranscriptAvailability,
+  getHopBodyGrants,
   getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
 import { ConversationsField } from '@/src/models/analytics/conversations-trace';
@@ -46,7 +46,7 @@ const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.
 const detail = () => getConversationDetail as unknown as ReturnType<typeof vi.fn>;
 const feedback = () => getConversationFeedback as unknown as ReturnType<typeof vi.fn>;
 const schema = () => getConversationsSchema as unknown as ReturnType<typeof vi.fn>;
-const availability = () => getConversationTranscriptAvailability as unknown as ReturnType<typeof vi.fn>;
+const availability = () => getHopBodyGrants as unknown as ReturnType<typeof vi.fn>;
 
 const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'sessions' }));
 
@@ -57,8 +57,8 @@ const componentName = (node: Awaited<ReturnType<typeof render>>): string => {
   return type?.name ?? '';
 };
 
-const isReadableOfNode = (node: Awaited<ReturnType<typeof render>>): boolean =>
-  (node as unknown as { props: { isTranscriptReadable: boolean } }).props.isTranscriptReadable;
+const grantsOfNode = (node: Awaited<ReturnType<typeof render>>): Record<string, boolean> =>
+  (node as unknown as { props: { bodyGrants: Record<string, boolean> } }).props.bodyGrants;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -66,7 +66,10 @@ beforeEach(() => {
   detail().mockResolvedValue({ success: true, response: { conversation: DETAIL_ROW } });
   feedback().mockResolvedValue({ success: true, response: { rows: [], total: 0 } });
   schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
-  availability().mockResolvedValue({ success: true, response: { isReadable: true } });
+  availability().mockResolvedValue({
+    success: true,
+    response: { isRequestReadable: true, isResponseReadable: true },
+  });
 });
 
 describe('conversation detail route', () => {
@@ -186,29 +189,37 @@ describe('conversation detail route', () => {
     expect(detail()).toHaveBeenCalledOnce();
   });
 
-  // The transcript is one region of the page. A conversation whose header, panels, figures and trace all
-  // resolved must still render when only its messages failed — and that region has to say the read failed
-  // rather than that the conversation recorded nothing.
-  test('a failed availability probe renders the conversation with Chat gated off', async () => {
-    availability().mockResolvedValue({ success: false, response: { isReadable: false } });
+  // The bodies are one region of a trace. A conversation whose header, panels, figures and trace listing all
+  // resolved must still render when only the body-column probe failed — the trace states the withheld bodies
+  // itself rather than the page failing over them.
+  test('a failed availability probe renders the conversation with no body column granted', async () => {
+    availability().mockResolvedValue({
+      success: false,
+      response: { isRequestReadable: false, isResponseReadable: false },
+    });
     const node = await render(CHAT_ID);
 
     expect(componentName(node)).toBe('ConversationDetailView');
-    expect(isReadableOfNode(node)).toBe(false);
+    expect(grantsOfNode(node)).toEqual({ isRequestReadable: false, isResponseReadable: false });
   });
 
-  test('a rejected availability probe renders the conversation with Chat gated off', async () => {
+  test('a rejected availability probe renders the conversation with no body column granted', async () => {
     availability().mockRejectedValue(new Error('hop log unavailable'));
     const node = await render(CHAT_ID);
 
     expect(componentName(node)).toBe('ConversationDetailView');
-    expect(isReadableOfNode(node)).toBe(false);
+    expect(grantsOfNode(node)).toEqual({ isRequestReadable: false, isResponseReadable: false });
   });
 
-  // The retention split needs the conversation's own last activity, so the read cannot be issued before the
-  // detail query resolves.
-  // The body read moved behind the view switch, so the page issues only the cached schema probe — a
-  // body-read failure is the Chat view's to state, not the page's.
+  test('passes the per-side body grants and no combined transcript flag', async () => {
+    const node = await render(CHAT_ID);
+
+    expect(grantsOfNode(node)).toEqual({ isRequestReadable: true, isResponseReadable: true });
+    expect(node as unknown as { props: Record<string, unknown> }).not.toHaveProperty('props.isTranscriptReadable');
+  });
+
+  // The bodies are read on demand for the one span a reader opens, so the page issues only the cached schema
+  // probe — a body-read failure is the span's own to state, not the page's.
   test('issues the availability probe and no transcript body read', async () => {
     await render(CHAT_ID);
 

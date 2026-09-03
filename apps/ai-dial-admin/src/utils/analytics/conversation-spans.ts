@@ -12,7 +12,9 @@ import {
   HopSideSuppression,
   HopSideSuppressions,
   McpToolCallTally,
+  SpanBodyTab,
   SpanKind,
+  HopBodyGrants,
 } from '@/src/models/analytics/conversations-trace';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
@@ -184,4 +186,25 @@ export const hopSideSuppressionsOf = (span: ConversationSpanRow): HopSideSuppres
   }
 
   return { request: null, response: null };
+};
+
+// Which tabs the bodies section offers for one hop, in the order they are always presented. Decided from the
+// hop row and the caller's column grants alone — before any body read — so the tab strip, the reads it
+// enables and the panels it renders cannot disagree about what this hop has.
+//
+// Request and Response are gated by their own column and by nothing else. A *suppressed* side still gets its
+// tab: a hop that returned nothing still sent something, and the tab is where the absence is stated.
+//
+// Chat is gated by the request column, because the history is what it is made of, and is withheld from the
+// two kinds that record no history at all. The test is a deny-list, so an event kind this frontend does not
+// recognise keeps its Chat tab and states its own emptiness if the dialect turns out to carry no message.
+export const spanBodyTabsOf = (span: ConversationSpanRow, grants: HopBodyGrants): SpanBodyTab[] => {
+  const kind = spanKindOf(span);
+  const hasHistory = kind !== SpanKind.Mcp && kind !== SpanKind.Embeddings;
+
+  return [
+    ...(grants.isRequestReadable ? [SpanBodyTab.Request] : []),
+    ...(grants.isResponseReadable ? [SpanBodyTab.Response] : []),
+    ...(grants.isRequestReadable && hasHistory ? [SpanBodyTab.Chat] : []),
+  ];
 };

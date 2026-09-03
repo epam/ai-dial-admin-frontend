@@ -1,10 +1,14 @@
 'use client';
 
 import { DialLoader, Tabs } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo, useState } from 'react';
+import { FC, useMemo } from 'react';
 
+import HopChatPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopChatPanel';
 import HopEmbeddingPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopEmbeddingPanel';
-import HopMcpPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpPanel';
+import HopEmbeddingResultPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopEmbeddingResultPanel';
+import HopMcpArgumentsPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpArgumentsPanel';
+import HopMcpFactsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpFactsLine';
+import HopMcpResultPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpResultPanel';
 import HopParamsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopParamsLine';
 import HopRawView from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRawView';
 import HopRequestPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRequestPanel';
@@ -18,29 +22,36 @@ import {
   useHopRequest,
   useHopResponse,
 } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-envelope';
+import { useSpanBodyTabs } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-span-body-tabs';
+import { INSPECTOR_LOADER_SIZE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
   ConversationSpanRow,
-  ConversationTranscriptAvailability,
+  HopBodyGrants,
   HopInspectorSide,
   HopReadState,
   HopSideSuppression,
   McpToolCallTally,
   SessionScope,
+  SpanBodyTab,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 import { hopSideSuppressionsOf } from '@/src/utils/analytics/conversation-spans';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
-const LOADER_SIZE = 18;
+const TAB_LABEL_KEY: Record<SpanBodyTab, string> = {
+  [SpanBodyTab.Request]: ConversationsTraceI18nKey.InspectorRequest,
+  [SpanBodyTab.Response]: ConversationsTraceI18nKey.InspectorResponse,
+  [SpanBodyTab.Chat]: ConversationsTraceI18nKey.InspectorChat,
+};
 
 interface Props {
   scope: SessionScope;
   traceId: string;
   span: ConversationSpanRow;
   kind: SpanKind;
-  bodyGrants: ConversationTranscriptAvailability;
+  bodyGrants: HopBodyGrants;
   // The turn's MCP tool calls, so the response side can say which of the tools this span asked for the turn
   // recorded no call of — and why. Carries whether the span read was complete, because that claim is only
   // sound on a complete one.
@@ -49,7 +60,7 @@ interface Props {
 
 const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpToolCalls }) => {
   const t = useI18n();
-  const [side, setSide] = useState(HopInspectorSide.Request);
+  const { tabs, activeTab, onSelectTab } = useSpanBodyTabs({ span, bodyGrants });
 
   // Decided from the hop row, before any read: a protocol envelope answers both sides without a fetch, while
   // a zero-byte response settles only the side that recorded nothing.
@@ -61,71 +72,74 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
   const isRequestFetchable = bodyGrants.isRequestReadable && suppressions.request === null;
   const isResponseFetchable = bodyGrants.isResponseReadable && suppressions.response === null;
 
-  const tabs = [
-    ...(bodyGrants.isRequestReadable
-      ? [{ id: HopInspectorSide.Request, label: t(ConversationsTraceI18nKey.InspectorRequest) }]
-      : []),
-    ...(bodyGrants.isResponseReadable
-      ? [{ id: HopInspectorSide.Response, label: t(ConversationsTraceI18nKey.InspectorResponse) }]
-      : []),
-  ];
-
-  // The side actually on screen, and the only value anything is allowed to decide from. `side` is what the
-  // reader last chose; it means nothing until a tab exists for it, because a caller entitled to one side alone
-  // never gets to choose. Gating the read on `side` while rendering this left the response read disabled for
-  // exactly that caller — two values deciding one thing, and they drifted.
-  const activeSide = tabs.some(({ id }) => id === side) ? side : ((tabs[0]?.id as HopInspectorSide) ?? side);
-
   const request = useHopRequest({ scope, traceId, span, isEnabled: isRequestFetchable && !isMcp && !isEmbedding });
   const response = useHopResponse({
     scope,
     traceId,
     span,
-    isEnabled: isResponseFetchable && !isMcp && !isEmbedding && activeSide === HopInspectorSide.Response,
+    isEnabled:
+      isResponseFetchable &&
+      !isMcp &&
+      !isEmbedding &&
+      (activeTab === SpanBodyTab.Response || activeTab === SpanBodyTab.Chat),
   });
-  const mcp = useHopMcpFacts({ scope, traceId, span, isEnabled: isMcp && isRequestFetchable });
-  const embedding = useHopEmbeddingFacts({ scope, traceId, span, isEnabled: isEmbedding && isRequestFetchable });
+  // One read for both halves of an MCP hop, and it proceeds on either grant: the two sides are separate
+  // columns of one row, so a caller entitled to the result and not the arguments still has something to read.
+  const mcp = useHopMcpFacts({
+    scope,
+    traceId,
+    span,
+    isEnabled: isMcp && (isRequestFetchable || isResponseFetchable),
+  });
+  // Enabled on either grant, like the MCP read: the dimension count is a response-column field, so a caller
+  // holding only that column still has a Response tab, and a read that never ran would leave it loading
+  // forever.
+  const embedding = useHopEmbeddingFacts({
+    scope,
+    traceId,
+    span,
+    isEnabled: isEmbedding && (bodyGrants.isRequestReadable || bodyGrants.isResponseReadable),
+  });
 
-  // An MCP hop states a method, a tool and a toolset rather than a request and a response, so it renders as
-  // one panel: tabs would split a pair that is read together.
-  if (isMcp) {
-    if (!isRequestFetchable) {
-      return <HopStateNote state={HopReadState.ColumnWithheld} suppression={suppressions.request} />;
-    }
+  const tabItems = useMemo(() => tabs.map((tab) => ({ id: tab, label: t(TAB_LABEL_KEY[tab]) })), [tabs, t]);
 
-    return <HopMcpPanel facts={mcp.facts} isLoading={mcp.isLoading} />;
-  }
-
-  // Both sides withheld: the trace view's header states why, once, so nothing is repeated here.
+  // The trace view does not render this section for a span with no offered tab; this is the belt to that
+  // braces, and it keeps the tab strip from rendering with nothing in it.
   if (!tabs.length) {
     return null;
   }
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      {/* Only facts read from the hop row rather than from a body live above the strip, where they are visible
+          on every tab. The request's parameters are not among them: stated here they would head the Response
+          tab too, describing something else. */}
       <div className="flex min-w-0 shrink-0 flex-col gap-2">
+        {isMcp && <HopMcpFactsLine facts={mcp.facts} />}
         <Tabs
           ariaLabel={t(ConversationsTraceI18nKey.InspectorTabsLabel)}
-          tabs={tabs}
-          activeTabId={activeSide}
-          onTabChange={(id) => setSide(id as HopInspectorSide)}
+          tabs={tabItems}
+          activeTabId={activeTab}
+          onTabChange={onSelectTab}
         />
-        {request.value && (
+      </div>
+      {/* Focusable because it scrolls: a message list runs well past this height, and a scroll container
+          with no tab stop puts everything below the fold out of reach for a reader with no pointer. */}
+      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
+        {activeTab === SpanBodyTab.Request && request.value && (
           <HopParamsLine
             params={request.value.params}
             // Meaningless for an embedding probe, which records no message list.
             messageCount={isEmbedding ? null : toNumber(span.number_request_messages)}
           />
         )}
-      </div>
-      {/* Focusable because it scrolls: a message list runs well past this height, and a scroll container
-          with no tab stop puts everything below the fold out of reach for a reader with no pointer. */}
-      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
-        {activeSide === HopInspectorSide.Request && (
+        {activeTab === SpanBodyTab.Request && (
           <RequestSide
+            isMcp={isMcp}
             isEmbedding={isEmbedding}
             isFetchable={isRequestFetchable}
             suppression={suppressions.request}
+            mcp={mcp}
             embedding={embedding}
             request={request}
             scope={scope}
@@ -133,15 +147,31 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
             span={span}
           />
         )}
-        {activeSide === HopInspectorSide.Response && (
+        {activeTab === SpanBodyTab.Response && (
           <ResponseSide
+            isMcp={isMcp}
+            isEmbedding={isEmbedding}
             isFetchable={isResponseFetchable}
             suppression={suppressions.response}
+            mcp={mcp}
+            embedding={embedding}
             response={response}
             scope={scope}
             traceId={traceId}
             span={span}
             mcpToolCalls={mcpToolCalls}
+          />
+        )}
+        {activeTab === SpanBodyTab.Chat && (
+          <HopChatPanel
+            scope={scope}
+            traceId={traceId}
+            span={span}
+            request={request.value}
+            isRequestLoading={request.isLoading}
+            response={response.value}
+            isResponseLoading={response.isLoading}
+            isResponseGranted={bodyGrants.isResponseReadable}
           />
         )}
       </div>
@@ -152,10 +182,15 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
 type RequestState = ReturnType<typeof useHopRequest>;
 type ResponseState = ReturnType<typeof useHopResponse>;
 type EmbeddingState = ReturnType<typeof useHopEmbeddingFacts>;
+type McpState = ReturnType<typeof useHopMcpFacts>;
 
 interface SideProps {
+  isMcp: boolean;
+  isEmbedding: boolean;
   isFetchable: boolean;
   suppression: HopSideSuppression | null;
+  mcp: McpState;
+  embedding: EmbeddingState;
   scope: SessionScope;
   traceId: string;
   span: ConversationSpanRow;
@@ -166,21 +201,29 @@ const Loading: FC = () => {
 
   return (
     <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-      <DialLoader size={LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
+      <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
     </div>
   );
 };
 
-const RequestSide: FC<SideProps & { isEmbedding: boolean; request: RequestState; embedding: EmbeddingState }> = ({
+const RequestSide: FC<SideProps & { request: RequestState }> = ({
+  isMcp,
   isEmbedding,
   isFetchable,
   suppression,
+  mcp,
   request,
   embedding,
   scope,
   traceId,
   span,
 }) => {
+  // An MCP hop's arguments and an embedding probe's text are the request column read through their own kind's
+  // panel, so each states its own grant rather than deferring to the generic note below.
+  if (isMcp) {
+    return <HopMcpArgumentsPanel facts={mcp.facts} isLoading={mcp.isLoading} suppression={suppression} />;
+  }
+
   if (!isFetchable) {
     return <HopStateNote state={HopReadState.ColumnWithheld} suppression={suppression} />;
   }
@@ -226,14 +269,30 @@ const RequestSide: FC<SideProps & { isEmbedding: boolean; request: RequestState;
 };
 
 const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpToolCallTally }> = ({
+  isMcp,
+  isEmbedding,
   isFetchable,
   suppression,
+  mcp,
+  embedding,
   response,
   scope,
   traceId,
   span,
   mcpToolCalls,
 }) => {
+  if (isMcp) {
+    return <HopMcpResultPanel facts={mcp.facts} isLoading={mcp.isLoading} suppression={suppression} />;
+  }
+
+  // The vector is never rendered, but the dimension count is the response column's own field — so this side
+  // has a fact to state rather than only an explanation of what is missing.
+  if (isEmbedding) {
+    return (
+      <HopEmbeddingResultPanel facts={embedding.facts} isLoading={embedding.isLoading} suppression={suppression} />
+    );
+  }
+
   if (!isFetchable) {
     return <HopStateNote state={HopReadState.ColumnWithheld} suppression={suppression} />;
   }

@@ -6,6 +6,7 @@ import { getConversationHopRequest, getConversationHopResponse } from '@/src/app
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
+import { NO_FACTS } from '@/src/utils/analytics/hop-inspector/response';
 import {
   ConversationSpanRow,
   HopDialect,
@@ -18,7 +19,7 @@ import {
 const FAILED_REQUEST: HopRequestEnvelope = {
   state: HopReadState.LoadFailed,
   dialect: HopDialect.Unknown,
-  params: { stated: [], unrecognisedCount: 0 },
+  params: { stated: [] },
   messages: [],
   roleCounts: [],
   recordedBytes: null,
@@ -32,6 +33,7 @@ const FAILED_RESPONSE: HopResponseEnvelope = {
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  facts: NO_FACTS,
   recordedBytes: null,
 };
 
