@@ -10,7 +10,6 @@ import {
   messageTextOf,
   toolCallNamesOf,
   toolCallRequestsOf,
-  transcriptMessagesOf,
 } from '@/src/utils/analytics/conversation-bodies';
 
 const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEntryBodyRow => ({
@@ -63,94 +62,6 @@ describe('messageTextOf', () => {
 
   test('reports no text for a part list with nothing text-bearing', () => {
     expect(messageTextOf({ role: 'user', content: [{ type: 'image' }] })).toBeUndefined();
-  });
-});
-
-describe('transcriptMessagesOf', () => {
-  test('reads the user and assistant messages in order', () => {
-    const body = JSON.stringify({
-      messages: [
-        { role: 'user', content: 'test' },
-        { role: 'assistant', content: 'Hello!' },
-        { role: 'user', content: 'again' },
-      ],
-      stream: true,
-    });
-
-    expect(transcriptMessagesOf(body)).toEqual([
-      { role: MessageRole.User, content: 'test' },
-      { role: MessageRole.Assistant, content: 'Hello!' },
-      { role: MessageRole.User, content: 'again' },
-    ]);
-  });
-
-  // The second of two defences: a system message must not reach the transcript even if an entry hop carries
-  // one, because the cost of a single missed case is a leaked system prompt.
-  test('excludes a system message', () => {
-    const body = JSON.stringify({
-      messages: [
-        { role: 'system', content: 'You are a secure agent. Token: abc123.' },
-        { role: 'user', content: 'hello' },
-      ],
-    });
-
-    expect(transcriptMessagesOf(body)).toEqual([{ role: MessageRole.User, content: 'hello' }]);
-  });
-
-  // A dialect that carries its system prompt outside the message list is screened by never reading anything
-  // but `messages` — a role filter alone would not see it.
-  test('ignores a top-level system field', () => {
-    const body = JSON.stringify({
-      system: [{ type: 'text', text: 'Proprietary instructions.' }],
-      messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
-      tools: [{ name: 'Bash' }],
-    });
-
-    expect(transcriptMessagesOf(body)).toEqual([{ role: MessageRole.User, content: 'hi' }]);
-  });
-
-  // Modelled verbatim on a live row, because this is the shape the conservative entry-hop rule exists to keep
-  // out of the transcript: the `system` field carried an internal billing header, a 5.7 KB system prompt and a
-  // tool catalogue, and a second message carried 6.1 KB of agent definitions under a `system` role.
-  test('leaks nothing from a dialect that carries its prompt outside the message list', () => {
-    const body = JSON.stringify({
-      system: [
-        { type: 'text', text: 'x-anthropic-billing-header: cc_version=2.1.190.c2b; cc_entrypoint=sdk-cli;' },
-        { type: 'text', text: 'You are a Claude agent, built on the Agent SDK.' },
-      ],
-      tools: [{ name: 'Bash' }, { name: 'Edit' }],
-      thinking: { type: 'enabled' },
-      messages: [
-        { role: 'user', content: [{ type: 'text', text: 'Parse the log files in /app/logs.' }] },
-        { role: 'system', content: [{ type: 'text', text: 'Available agent types for the Agent tool: ...' }] },
-      ],
-    });
-
-    const messages = transcriptMessagesOf(body);
-
-    expect(messages).toEqual([{ role: MessageRole.User, content: 'Parse the log files in /app/logs.' }]);
-    const joined = messages.map(({ content }) => content ?? '').join('');
-    expect(joined).not.toContain('billing-header');
-    expect(joined).not.toContain('You are a Claude agent');
-    expect(joined).not.toContain('Available agent types');
-  });
-
-  test('excludes a tool message', () => {
-    const body = JSON.stringify({
-      messages: [
-        { role: 'user', content: 'q' },
-        { role: 'tool', content: 'tool output' },
-      ],
-    });
-
-    expect(transcriptMessagesOf(body)).toEqual([{ role: MessageRole.User, content: 'q' }]);
-  });
-
-  test('reads nothing from a null, empty or unparseable body', () => {
-    expect(transcriptMessagesOf(null)).toEqual([]);
-    expect(transcriptMessagesOf('')).toEqual([]);
-    expect(transcriptMessagesOf('not json')).toEqual([]);
-    expect(transcriptMessagesOf('[]')).toEqual([]);
   });
 });
 
@@ -338,7 +249,16 @@ describe('toolCallRequestsOf — streamed responses', () => {
       { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '"cyber"}' } }] } }] },
     );
 
-    expect(toolCallRequestsOf(body)).toEqual([{ name: 'rag_search', args: '{"q":"cyber"}' }]);
+    expect(toolCallRequestsOf(body)).toEqual([{ name: 'rag_search', args: '{"q":"cyber"}', id: null }]);
+  });
+
+  test('keeps the id the first chunk of a slot carried', () => {
+    const body = frames(
+      { choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_1', function: { name: 'rag_search' } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '{}' } }] } }] },
+    );
+
+    expect(toolCallRequestsOf(body)).toEqual([{ name: 'rag_search', args: '{}', id: 'call_1' }]);
   });
 
   // The index identifies the slot, so two concurrent requests do not merge into one.

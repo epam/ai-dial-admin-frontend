@@ -309,3 +309,20 @@ export function countDiffs(sections: ComparisonSection[]): number {
   }
   return count;
 }
+
+/**
+ * The legal height for the drawer, in pixels.
+ *
+ * The maximum is derived from the viewport, so it moves when the window does — a height chosen at one
+ * viewport height can be above the maximum at a shorter one. Clamping on read is what keeps the reported
+ * size and the enforced size the same number, rather than announcing a height the drawer is no longer at.
+ */
+export const clampDrawerHeight = (requested: number, minHeight: number, maxHeight: number): number => {
+  const ceiling = Math.max(minHeight, maxHeight);
+
+  if (!Number.isFinite(requested)) {
+    return minHeight;
+  }
+
+  return Math.min(Math.max(requested, minHeight), ceiling);
+};

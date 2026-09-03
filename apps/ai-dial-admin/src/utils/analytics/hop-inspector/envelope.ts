@@ -1,8 +1,4 @@
-import {
-  ENVELOPE_BYTE_BUDGET,
-  LARGE_MESSAGE_BYTES,
-  MESSAGE_TEXT_CLAMP,
-} from '@/src/constants/analytics/conversations-trace';
+import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/conversations-trace';
 import {
   HopClamp,
   HopDialect,
@@ -69,7 +65,39 @@ export const clampBytes = (text: string, budget: number): ClampedText => {
   return { text: new TextDecoder().decode(bytes.subarray(0, budget), { stream: true }), isClamped: true };
 };
 
-export const isLargeMessage = (bytes: number): boolean => bytes >= LARGE_MESSAGE_BYTES;
+/**
+ * Drops the blank lines at the two ends of recorded content.
+ *
+ * Content routinely opens with a newline: a templated prompt is assembled around its variables, and the
+ * template's own leading break is part of the string. Measured over one hour of `llm_call` hops, 39 of 272
+ * requests carried at least one message whose content began with one, and 20 of their assembled responses
+ * did. Rendered with `whitespace-pre-wrap` — which is what makes the rest of a prompt readable — each of those
+ * breaks costs a line, and a chat bubble that opens with an empty line reads as a rendering fault.
+ *
+ * Only lines that are **entirely** blank are dropped. `trim()` would also take the indentation of the first
+ * line that does have content, which is exactly wrong for a message opening with a code block.
+ *
+ * Byte sizes and clamps are unaffected: they are measured against the recorded JSON, not against this.
+ */
+export const withoutBlankEdges = (text: string | null): string | null => {
+  if (text === null) {
+    return null;
+  }
+
+  const lines = text.split('\n');
+  let start = 0;
+  let end = lines.length;
+
+  while (start < end && lines[start].trim() === '') {
+    start += 1;
+  }
+
+  while (end > start && lines[end - 1].trim() === '') {
+    end -= 1;
+  }
+
+  return lines.slice(start, end).join('\n');
+};
 
 interface ClampedToolCall {
   call: HopToolCall;
@@ -80,14 +108,14 @@ interface ClampedToolCall {
 // Arguments take the same clamp as the text. A call's arguments are content — they are what the assistant
 // actually said when it said nothing else — so a call carrying a whole document must not walk past the budget
 // the text respects.
-const clampToolCall = ({ name, args }: HopToolCall): ClampedToolCall => {
+const clampToolCall = ({ id, name, args }: HopToolCall): ClampedToolCall => {
   if (args === null) {
-    return { call: { name, args: null }, cost: 0, isArgsClamped: false };
+    return { call: { id, name, args: null }, cost: 0, isArgsClamped: false };
   }
 
   const { text, isClamped } = clampText(args);
 
-  return { call: { name, args: text }, cost: textByteLength(text), isArgsClamped: isClamped };
+  return { call: { id, name, args: text }, cost: textByteLength(text), isArgsClamped: isClamped };
 };
 
 const KNOWN_ROLES: Record<string, MessageRole> = {
@@ -121,10 +149,25 @@ interface EnvelopeInput {
   recordedBytes: number | null;
 }
 
+// Which tool each call id belongs to, across the whole message list. A result message carries only the id, so
+// the pairing cannot be resolved from that message alone — and resolving it here rather than on the client
+// means the tier-2 read of one message in full does not have to carry the list with it.
+const toolNamesByCallId = (messages: HopDialectMessage[]): Map<string, string> => {
+  const names = new Map<string, string>();
+
+  for (const message of messages) {
+    for (const { id, name } of message.toolCalls) {
+      if (id !== null) {
+        names.set(id, name);
+      }
+    }
+  }
+
+  return names;
+};
+
 // A per-message clamp alone does not bound what crosses the wire: the messages dialect averages 56.6 messages
-// per request, and 280 characters each still assembles into more than the rail will ever show. Once the total
-// budget is spent, later messages keep their role, position, size and properties — the numbers that let a
-// reader decide what to open — and give up only their text, which tier 2 can still fetch one at a time.
+// per request, and 280 characters each still assembles into more than the rail will ever show.
 export const buildRequestEnvelope = ({
   dialect,
   params,
@@ -133,6 +176,7 @@ export const buildRequestEnvelope = ({
 }: EnvelopeInput): HopRequestEnvelope => {
   let spent = 0;
   let isClamped = false;
+  const toolNames = toolNamesByCallId(messages);
 
   const entries: HopMessageEntry[] = messages.map((message, index) => {
     const clamped = message.text === null ? null : clampText(message.text);
@@ -149,8 +193,10 @@ export const buildRequestEnvelope = ({
       spent += cost;
     }
 
-    // Past the budget a message keeps its role, position, size and the *names* of what it called — the facts a
-    // reader decides from — and gives up only the text and the arguments, which tier 2 fetches one at a time.
+    // Past the budget a message keeps its role, position, size and the *names* and ids of what it called — the
+    // facts a reader decides from — and gives up only the text and the arguments, which tier 2 fetches one at
+    // a time. The id costs a handful of characters and is what pairs the call with its result, so withholding
+    // it would save nothing and cost the pairing.
     return {
       index,
       role: message.role,
@@ -158,10 +204,12 @@ export const buildRequestEnvelope = ({
       text: clamped && isWithinBudget ? clamped.text : null,
       toolCalls: isWithinBudget
         ? calls.map(({ call }) => call)
-        : message.toolCalls.map(({ name }) => ({ name, args: null })),
+        : message.toolCalls.map(({ id, name }) => ({ id, name, args: null })),
       isTextClamped:
         !isWithinBudget || calls.some(({ isArgsClamped }) => isArgsClamped) || (clamped?.isClamped ?? false),
-      isLarge: isLargeMessage(message.bytes),
+      // Never withheld past the budget either, for the reason above.
+      answers: message.answeredCallIds.map((callId) => ({ callId, toolName: toolNames.get(callId) ?? null })),
+      isError: message.isError,
     };
   });
 

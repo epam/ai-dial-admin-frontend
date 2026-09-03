@@ -19,11 +19,14 @@ interface Props {
   title: string;
   content: string;
   hideFullscreen?: boolean;
+  // Open on first render, for a caller whose reader has already asked for this body rather than for one of
+  // several collapsed blocks in a list.
+  defaultOpen?: boolean;
 }
 
-const CodeViewer: FC<Props> = ({ title, content, hideFullscreen }) => {
+const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = false }) => {
   const { currentTheme } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();
   const [isFullscreen, setIsFullscreen] = useState(false);
 

@@ -14,15 +14,15 @@ import {
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
-  TRANSCRIPT_REQUIRED_FIELD,
-  TRANSCRIPT_RESPONSE_FIELDS,
+  HOP_REQUEST_BODY_FIELD,
+  HOP_RESPONSE_BODY_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ColumnProvenance,
   ConversationColumnGroup,
   ConversationProjectableFields,
   ProvenanceEntity,
-  TranscriptBodyFields,
+  HopBodyFields,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
@@ -273,21 +273,12 @@ export const filterableColumnFields = (columns: ColDef[]): string[] =>
 
 // The hop-log body columns are `sensitive` in the ADAS catalog, so they are absent from the fetched schema
 // below FULL_ADMIN — and the service rejects the whole query for one unknown field.
-export const transcriptBodyFields = (schemaFieldNames: string[] = []): TranscriptBodyFields => {
+export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields => {
   const available = new Set(schemaFieldNames);
-  const responseFields = TRANSCRIPT_RESPONSE_FIELDS.filter((name) => available.has(name));
+  const responseFields = HOP_RESPONSE_BODY_FIELDS.filter((name) => available.has(name));
 
-  // The request body and the response body are separate columns, so entitlement to them is separate. The
-  // transcript genuinely needs both — it assembles a question and its answer — so `isReadable` keeps the
-  // conjunction; the inspector consumes the two sides independently, and a caller granted one column and not
-  // the other gets the tab they are entitled to rather than neither.
-  const isRequestReadable = available.has(TRANSCRIPT_REQUIRED_FIELD);
+  const isRequestReadable = available.has(HOP_REQUEST_BODY_FIELD);
   const isResponseReadable = responseFields.length > 0;
 
-  return {
-    isReadable: isRequestReadable && isResponseReadable,
-    isRequestReadable,
-    isResponseReadable,
-    responseFields,
-  };
+  return { isRequestReadable, isResponseReadable, responseFields };
 };

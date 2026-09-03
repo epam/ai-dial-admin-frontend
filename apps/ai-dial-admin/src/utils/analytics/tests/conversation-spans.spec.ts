@@ -2,8 +2,10 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ConversationSpanRow,
+  HopBodyGrants,
   HopFactsShape,
   HopSideSuppression,
+  SpanBodyTab,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -12,6 +14,7 @@ import {
   hopSideSuppressionsOf,
   isFailedHop,
   mcpToolCallTallyOf,
+  spanBodyTabsOf,
   spanKindOf,
   spanLabelOf,
   spanPhaseOf,
@@ -37,6 +40,7 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   request_body_bytes: 2048,
   number_request_messages: 3,
   reasoning_tokens: null,
+  total_price: null,
   ...overrides,
 });
 
@@ -310,5 +314,56 @@ describe('hopSideSuppressionsOf', () => {
       request: null,
       response: null,
     });
+  });
+});
+
+describe('spanBodyTabsOf', () => {
+  const grants = (isRequestReadable: boolean, isResponseReadable: boolean): HopBodyGrants => ({
+    isRequestReadable,
+    isResponseReadable,
+  });
+
+  const mcp = span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'search' });
+  const embedding = span({ event_kind: 'embedding', request_uri: '/openai/deployments/an-embedder/embeddings' });
+  const unrecognised = span({ event_kind: 'something-new', request_uri: '/openai/deployments/x/unknown' });
+
+  test('offers every tab in a fixed order for a model call the caller can read whole', () => {
+    expect(spanBodyTabsOf(span(), grants(true, true))).toEqual([
+      SpanBodyTab.Request,
+      SpanBodyTab.Response,
+      SpanBodyTab.Chat,
+    ]);
+  });
+
+  test('drops the response tab and keeps the rest in order when only the request column is granted', () => {
+    expect(spanBodyTabsOf(span(), grants(true, false))).toEqual([SpanBodyTab.Request, SpanBodyTab.Chat]);
+  });
+
+  test('offers no chat when the request column is withheld', () => {
+    expect(spanBodyTabsOf(span(), grants(false, true))).toEqual([SpanBodyTab.Response]);
+  });
+
+  test('offers nothing when no body column is granted', () => {
+    expect(spanBodyTabsOf(span(), grants(false, false))).toEqual([]);
+  });
+
+  test('offers both sides but no chat for an MCP hop', () => {
+    expect(spanBodyTabsOf(mcp, grants(true, true))).toEqual([SpanBodyTab.Request, SpanBodyTab.Response]);
+  });
+
+  test('offers both sides but no chat for an embedding probe', () => {
+    expect(spanBodyTabsOf(embedding, grants(true, true))).toEqual([SpanBodyTab.Request, SpanBodyTab.Response]);
+  });
+
+  test('offers chat for an event kind it does not recognise', () => {
+    expect(spanBodyTabsOf(unrecognised, grants(true, true))).toContain(SpanBodyTab.Chat);
+  });
+
+  test('offers the tabs a suppressed side is entitled to, since the tab is where the absence is stated', () => {
+    expect(spanBodyTabsOf(span({ response_body_bytes: 0 }), grants(true, true))).toEqual([
+      SpanBodyTab.Request,
+      SpanBodyTab.Response,
+      SpanBodyTab.Chat,
+    ]);
   });
 });
