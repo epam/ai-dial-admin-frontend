@@ -493,6 +493,16 @@ An aggregate metric whose catalog entry has `distinct_supported: true` SHALL ren
 
 The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. Each operator SHALL be shown by its full name (Equals, Not equals, Contains, Does not contain, Less than, Greater than, Less than or equal, Greater than or equal, In list) — in the selector's open list, in its collapsed trigger, and in the condition's collapsed row summary — with no short code shown anywhere, and each option SHALL expose a hover tooltip describing the operator. The two case-insensitive contains operators SHALL be named Contains / Does not contain while serializing to `ico`/`inc` (SQL ILIKE); their tooltips SHALL state that matching is case-insensitive. The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
 
+The two contains operators SHALL be **withheld** when the condition's selected field is one the schema types
+**enum**. ClickHouse defines comparison over an enum but not the string functions, so the service refuses the
+LIKE-based operators on an enum field — and it rejects the **whole** query for one bad predicate, so a single
+such condition takes the entire result down rather than degrading it. The remaining operators (`eq`, `ne`, the
+four magnitude comparisons, and `in`) SHALL stay offered, since comparison, equality, membership, grouping and
+sorting all work over an enum. The withholding SHALL key on the **declared type alone**: no list in the frontend
+names which fields are enums, so a field an instance begins reporting as an enum is guarded with no change here.
+A condition that already carries a contains operator when its field is changed to an enum-typed one SHALL be
+moved to a supported operator rather than left serializing a predicate the service will reject.
+
 #### Scenario: Nested group with a condition serializes
 
 - **WHEN** the root group is AND with one condition `field eq value` and one nested OR group
@@ -538,6 +548,18 @@ The Filter section SHALL let the user build a WHERE tree limited to two levels: 
 - **WHEN** a condition's operator is `ge` and the selector is closed
 - **THEN** the trigger shows "Greater than or equal"
 - **AND** the condition's collapsed row summary names the operator the same way
+
+#### Scenario: Contains is withheld on an enum-typed field
+
+- **WHEN** a condition's selected field is one the schema types enum and the user opens its operator selector
+- **THEN** Contains and Does not contain are not offered
+- **AND** Equals, Not equals, the magnitude comparisons and In list remain offered
+
+#### Scenario: Switching a contains condition to an enum field leaves a valid operator
+
+- **WHEN** a condition carrying Contains has its field changed to an enum-typed field
+- **THEN** the condition's operator is no longer Contains
+- **AND** the serialized query carries no LIKE-based predicate over that field
 
 ### Requirement: Row-mode projection
 
@@ -2013,6 +2035,150 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **WHEN** the schema-definition surface renders a `FAILED` source whose definition already stores `identity_column` and `version_column`
 - **THEN** both selects are seeded with those stored values
 - **AND** both are required, because omitting a member on re-post leaves the stored value unchanged rather than clearing it
+
+### Requirement: A column may be declared with an enum type and a closed, ordered value list
+
+The column-type vocabulary the schema editors offer SHALL include **enum**, a string column whose value set is
+closed. It SHALL be offered wherever a column is declared — the schema-definition surface of a `PENDING`/`FAILED`
+table and the "Add columns" popup of an `ACTIVE` one — and for both **source** and **enrichment** tables, since
+the service accepts it on either.
+
+A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
+Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+because a value's position in the list becomes its numeric id in the physical type and the column therefore
+sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
+nothing about a list of values otherwise suggests it.
+
+Each value SHALL be validated client-side against the service's rules, with a per-value message and Save
+disabled while any is violated:
+
+- at least **1** and at most **512** values
+- each value non-blank after trimming
+- each value at most **64** characters
+- values **distinct after trimming** — two entries differing only in surrounding whitespace collide
+
+Values SHALL be submitted **trimmed**, which is how the service stores and materializes them. A value MAY
+contain any characters, including commas and quotes, so the control MUST NOT treat any character as a
+separator.
+
+`enum_values` SHALL be submitted **if and only if** the column's type is enum: a column of any other type
+carrying the key is rejected (422), and an enum column without it is rejected the same way. Retyping a row away
+from enum SHALL discard the values it had collected, exactly as retyping away from Array discards its element
+type, so a stale domain can never be submitted with a column that no longer has that type.
+
+Enum SHALL NOT be offered as an Array column's **element type** — the service rejects an enum element. Enum
+SHALL NOT appear among the **Version column** or **Partition column** candidates, both of which require a
+temporal type. Enum SHALL be selectable as an **ordering key** entry, as an **Identity column**, and as an
+enrichment's **grain key**, on the same terms as any other non-nullable, non-sensitive scalar.
+
+#### Scenario: Enum is offered as a column type
+
+- **WHEN** the user opens the column-type selector on a source or an enrichment table's column row
+- **THEN** enum is among the offered types
+
+#### Scenario: Choosing enum reveals a required value list
+
+- **WHEN** the user sets a column row's type to enum
+- **THEN** the row offers a required value-list control
+- **AND** Save is disabled while the list is empty
+
+#### Scenario: Declared values are submitted in the authored order
+
+- **WHEN** the user declares an enum column with the values `low`, `medium`, `high` in that order and saves a
+  complete schema
+- **THEN** that column in the submitted payload carries `enum_values` `["low", "medium", "high"]` in that order
+
+#### Scenario: Reordering the list changes what is submitted
+
+- **WHEN** the user reorders a declared enum column's values so that `high` precedes `low`
+- **THEN** the submitted `enum_values` carries the new order
+
+#### Scenario: A blank or over-long value blocks Save
+
+- **WHEN** an enum column's value list holds a blank entry, or an entry longer than 64 characters
+- **THEN** that entry shows a validation message and Save is disabled
+- **AND** correcting the entry clears the message and re-enables Save
+
+#### Scenario: Duplicate values after trimming block Save
+
+- **WHEN** an enum column's value list holds `failed` and `failed ` (with a trailing space)
+- **THEN** a validation message reports the collision and Save is disabled
+
+#### Scenario: Values are submitted trimmed
+
+- **WHEN** the user declares an enum value as ` running ` and saves
+- **THEN** the submitted `enum_values` carries `running`
+
+#### Scenario: More than 512 values blocks Save
+
+- **WHEN** an enum column's value list exceeds 512 entries
+- **THEN** a validation message reports the cap and Save is disabled
+
+#### Scenario: Retyping away from enum drops the collected values
+
+- **WHEN** a column row typed enum with declared values is retyped to string
+- **THEN** the value-list control is no longer offered
+- **AND** the submitted column carries no `enum_values`
+
+#### Scenario: Enum is not offered as an array element type
+
+- **WHEN** a column row is typed Array and the user opens its element-type selector
+- **THEN** enum is not among the offered element types
+
+#### Scenario: An enum column is not a version-column candidate
+
+- **WHEN** a source table declares an enum column and the user opens the Version column selector
+- **THEN** that column is not offered
+- **AND** it is offered in the Ordering key and Identity column selectors
+
+#### Scenario: An enum column can be added to a materialized table
+
+- **WHEN** the user adds an enum column with a declared value list to an `ACTIVE` table and submits
+- **THEN** the schema patch's `add` entry carries the column's type and its `enum_values`
+- **AND** on success the detail view refreshes from the server
+
+### Requirement: An enum column's declared domain is immutable once the column exists
+
+The service refuses to change a column's `enum_values` after the column exists: a schema-patch `update` entry
+carrying the key is rejected with 422 rather than ignored, because widening a ClickHouse enum rewrites the
+column and fails outright on any stored row holding a value the new domain drops.
+
+The per-column **edit** modal SHALL therefore show an enum column's declared values **read-only**, and the patch
+it submits SHALL NOT carry `enum_values` under any circumstance. Presenting the domain rather than omitting it
+is the point: an operator who cannot find the values in the modal has no way to learn that the column has a
+closed domain at all, and the read-only presentation states both facts at once. The modal SHALL say that the
+domain cannot be changed and that changing it means dropping the column and adding it again — the only path the
+service supports — so the restriction does not read as a gap in the console.
+
+A **rename** SHALL remain available on an enum column on the same terms as any other column; the service keeps
+the domain and the type intact across one.
+
+The columns grid SHALL make an enum column's declared values reachable without opening the edit modal, so the
+domain is discoverable from the schema at a glance.
+
+#### Scenario: The edit modal shows the domain read-only
+
+- **WHEN** the user opens the edit modal on an enum column
+- **THEN** its declared values are shown and cannot be edited
+- **AND** the modal states that the domain cannot be changed and that a change means dropping and re-adding the
+  column
+
+#### Scenario: An edit patch never carries the domain
+
+- **WHEN** the user changes an enum column's display name in the edit modal and submits
+- **THEN** the schema patch carries the metadata `update` entry
+- **AND** it carries no `enum_values`
+
+#### Scenario: An enum column can still be renamed
+
+- **WHEN** the user renames an enum column
+- **THEN** the rename patch is sent
+- **AND** the refreshed column keeps its type and its declared values
+
+#### Scenario: The declared domain is reachable from the columns grid
+
+- **WHEN** the columns grid renders an enum column
+- **THEN** its declared values are reachable from the grid without opening the edit modal
 
 ### Requirement: Table metadata editing (description and tag order)
 
@@ -5427,6 +5593,91 @@ A column of an enum type SHALL remain sortable on the same terms as any other sc
 - **AND** no text entry is offered in its place
 - **AND** the request carries no predicate for that column
 
+### Requirement: The enum value filter is presented in the grid's own filter design language
+
+The value-selection control an enum-typed column's filter offers (see "A column of an enum type filters by
+selecting from its observed values", whose value semantics this requirement does not change) SHALL be presented
+consistently with the text and number filters in the same grid header, which are themed to the application's
+form controls. A control that applies the same kind of narrowing SHALL NOT read as a different class of thing
+because of how it was implemented.
+
+The control SHALL provide:
+
+- a **search field** that narrows the listed values, offered once the list is long enough for scanning to be the
+  slower path. The search SHALL be presentational: it SHALL NOT change which values are selected, and clearing
+  it SHALL restore the full list with the selection intact.
+- a **select-all / clear** affordance reflecting the current selection as all, none, or partial, so a
+  many-valued column does not have to be cleared one value at a time.
+- each value's **count** rendered as its own trailing element in a secondary text treatment, **not** concatenated
+  into the option's label. The count SHALL NOT form part of the option's accessible name: the name is the value,
+  which is what a selection means, and a name that changes as counts move makes the same option unrecognisable
+  between openings.
+- a **reset** action that clears the selection, matching the reset the text and number filters offer.
+
+The control's **loading**, **empty** and **failed** states SHALL each be announced through a live region and
+SHALL be visually distinguishable, with the failed state carrying the error text treatment. The live region
+SHALL remain separate from any control's own label.
+
+An enum column SHALL keep its place in the grid's **floating-filter row**, so its affordance sits level with
+every neighbouring column's filter rather than a row above it. It MUST NOT take the row's default floating
+filter, which is a free-text entry and would write a text model over the column's value model. The affordance
+SHALL be the grid's own filter button — the same control, at the same size, as the one every other column in
+that row carries — and MUST NOT be a bespoke substitute, which would differ from its neighbours for no reason
+a reader could see. Exactly one such control SHALL be offered for the column.
+
+The listed values SHALL remain keyboard-reachable and operable, and the selected state SHALL be exposed
+programmatically rather than by styling alone.
+
+#### Scenario: The filter is themed like the grid's other filters
+
+- **WHEN** the operator opens an enum column's filter
+- **THEN** its surface, spacing and controls follow the same treatment as the text and number filters in that
+  grid's header
+
+#### Scenario: Search narrows the list without changing the selection
+
+- **WHEN** the operator has two values selected and types a term matching neither
+- **THEN** the list shows only the matching values
+- **AND** the two values remain selected
+- **AND** clearing the term restores the full list with both still selected
+
+#### Scenario: Select all and clear act on the whole list
+
+- **WHEN** the operator activates select-all on an enum column's filter
+- **THEN** every listed value becomes selected
+- **AND** the affordance reports the selection as complete
+- **AND** activating it again clears the selection
+
+#### Scenario: A value's accessible name is the value alone
+
+- **WHEN** the operator reaches a listed value with assistive technology
+- **THEN** its accessible name is the value
+- **AND** the count is not part of that name
+
+#### Scenario: Reset clears the selection
+
+- **WHEN** the operator has values selected and activates reset
+- **THEN** no value is selected
+- **AND** the request carries no predicate for that column
+
+#### Scenario: The affordance sits level with the other columns' filters
+
+- **WHEN** the grid renders an enum column beside a text-filtered one
+- **THEN** both columns' filter affordances are in the floating-filter row
+- **AND** the enum column's is the grid's own filter button, not a text entry and not a bespoke one
+
+#### Scenario: Only one control opens the value list
+
+- **WHEN** the grid renders an enum column
+- **THEN** its floating-filter row offers a single filter control
+- **AND** no second control for the same column appears in the header row
+
+#### Scenario: Loading, empty and failed states are announced
+
+- **WHEN** the value query is in flight, returns nothing, or fails
+- **THEN** the corresponding message is announced through a live region
+- **AND** the failed state is rendered in the error text treatment
+
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
 
 The system SHALL expose two optional environment variables carrying the endpoints an external client would call: `ANALYTICS_PUBLIC_URL` for the REST surface and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` for the Arrow Flight SQL surface. Both SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; neither SHALL be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When a variable is unset or blank the detail view SHALL receive an empty value for it.
@@ -5556,6 +5807,7 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 - `timestamp` — a **space-separated** `YYYY-MM-DD HH:MM:SS.mmm` literal, which is what the insert path accepts; an ISO-8601 `T` separator or `Z` suffix is rejected on write
 - `object` — an empty object literal
 - `array` — a literal array of two values shaped by the column's `element_type`
+- `enum` — **one of the column's own declared values** (its first), never a generic example string: the domain is closed and the server itself refuses a value outside it, so a placeholder literal is a row the reader cannot insert
 
 A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
 
@@ -5711,6 +5963,13 @@ After the write snippets — not before them, since the generated snippet alread
 
 - **WHEN** the **Write data** tab renders
 - **THEN** the unknown-column and authorization rejections appear below the write snippets, each naming the message the caller would see
+
+#### Scenario: An enum column's write snippet uses one of its declared values
+
+- **WHEN** the Connect panel renders the write snippet for a table declaring an enum column whose values are
+  `pending`, `running`, `failed`
+- **THEN** that column's field in the generated row carries `pending`
+- **AND** it does not carry a generic example string
 
 ### Requirement: Connect panel states the authentication and role contract
 

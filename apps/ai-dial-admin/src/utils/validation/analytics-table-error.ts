@@ -1,5 +1,11 @@
-import { ANALYTICS_IDENTIFIER_MAX_LENGTH, ANALYTICS_IDENTIFIER_PATTERN } from '@/src/constants/analytics/tables';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import {
+  ANALYTICS_ENUM_VALUE_MAX_LENGTH,
+  ANALYTICS_ENUM_VALUES_MAX,
+  ANALYTICS_ENUM_VALUES_MIN,
+  ANALYTICS_IDENTIFIER_MAX_LENGTH,
+  ANALYTICS_IDENTIFIER_PATTERN,
+} from '@/src/constants/analytics/tables';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { ErrorType } from '@/src/types/error-type';
 
@@ -39,5 +45,43 @@ export const getAnalyticsLengthError = (value: string, max: number, t: Translate
   if (value.trim().length > max) {
     return { type: ErrorType.LENGTH, text: t(ErrorI18nKey.Length, { number: max }) };
   }
+  return null;
+};
+
+/**
+ * Validates an Enum column's declared value set against the backend rules (ADAS `TableColumnRules`):
+ * {@link ANALYTICS_ENUM_VALUES_MIN}-{@link ANALYTICS_ENUM_VALUES_MAX} values, each non-blank and at most
+ * {@link ANALYTICS_ENUM_VALUE_MAX_LENGTH} characters, and distinct **after trimming** — the service stores
+ * them trimmed, so two entries differing only in surrounding whitespace collide there rather than here.
+ *
+ * Reports the first violation it finds; the list is one field with one message, and a list failing several
+ * rules at once is fixed one edit at a time either way. Returns a {@link FieldError} or null.
+ */
+export const getAnalyticsEnumValuesError = (values: string[], t: Translate): FieldError | null => {
+  if (values.length < ANALYTICS_ENUM_VALUES_MIN) {
+    return { type: ErrorType.EMPTY, text: t(AnalyticsTablesI18nKey.EnumValuesRequired) };
+  }
+  if (values.length > ANALYTICS_ENUM_VALUES_MAX) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t(AnalyticsTablesI18nKey.EnumValuesMax, { number: ANALYTICS_ENUM_VALUES_MAX }),
+    };
+  }
+
+  const seen = new Set<string>();
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return { type: ErrorType.EMPTY, text: t(AnalyticsTablesI18nKey.EnumValueBlank) };
+    }
+    if (trimmed.length > ANALYTICS_ENUM_VALUE_MAX_LENGTH) {
+      return { type: ErrorType.LENGTH, text: t(ErrorI18nKey.Length, { number: ANALYTICS_ENUM_VALUE_MAX_LENGTH }) };
+    }
+    if (seen.has(trimmed)) {
+      return { type: ErrorType.EXISTING, text: t(AnalyticsTablesI18nKey.EnumValueDuplicate, { value: trimmed }) };
+    }
+    seen.add(trimmed);
+  }
+
   return null;
 };
