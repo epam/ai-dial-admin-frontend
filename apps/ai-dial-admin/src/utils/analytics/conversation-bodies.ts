@@ -1,4 +1,5 @@
 import { ConversationEntryBodyRow, HopToolCall } from '@/src/models/analytics/conversations-trace';
+import { formatJsonValue } from '@/src/utils/analytics/hop-inspector/json-text';
 
 const SSE_DATA_PREFIX = 'data:';
 const SSE_DONE = '[DONE]';
@@ -73,6 +74,30 @@ export const decodeSingleCompletion = (raw: string): string | null => {
   }
 
   return messageTextOf(message) ?? '';
+};
+
+// The `result` a JSON-RPC response carried, whichever way it was framed: MCP answers over SSE, but a plain
+// JSON body is equally valid and one instance records it that way. Distinct from `decodeJsonRpcStream` below,
+// which reads exactly one shape — `result.content[].text`, what `tools/call` returns and nothing else does;
+// reading an `initialize` or `tools/list` answer through it yields an empty string rather than an error.
+export const jsonRpcResultOf = (responseBody: string | null): unknown => {
+  const raw = responseBody?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const frames = sseFrames(raw);
+  const payloads = frames.length ? frames.map(parseJson) : [parseJson(raw)];
+
+  return payloads.filter(isRecord).find((payload) => 'result' in payload)?.result ?? null;
+};
+
+// The parameters a JSON-RPC request carried, whole. `jsonRpcArgumentsOf` answers the narrower question a tool
+// call asks — the arguments *inside* those parameters — and a protocol message has no arguments to narrow to.
+export const jsonRpcParamsOf = (requestBody: string | null): unknown => {
+  const parsed = parseJson(requestBody ?? '');
+
+  return isRecord(parsed) && 'params' in parsed ? parsed.params : null;
 };
 
 export const decodeJsonRpcStream = (raw: string): string | null => {
@@ -191,5 +216,5 @@ export const jsonRpcArgumentsOf = (requestBody: string | null): string | null =>
   const { params } = parsed;
   const args = isRecord(params.arguments) ? params.arguments : params;
 
-  return Object.keys(args).length ? JSON.stringify(args, null, 2) : null;
+  return Object.keys(args).length ? formatJsonValue(args) : null;
 };

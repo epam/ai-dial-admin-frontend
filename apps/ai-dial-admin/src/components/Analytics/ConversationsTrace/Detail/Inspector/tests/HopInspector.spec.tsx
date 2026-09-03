@@ -25,6 +25,7 @@ const getConversationHopMessage = vi.fn();
 const getConversationHopRawBody = vi.fn();
 const getConversationHopMcp = vi.fn();
 const getConversationHopEmbedding = vi.fn();
+const getConversationHopProtocol = vi.fn();
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationHopRequest: (...args: unknown[]) => getConversationHopRequest(...args),
@@ -33,6 +34,7 @@ vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationHopRawBody: (...args: unknown[]) => getConversationHopRawBody(...args),
   getConversationHopMcp: (...args: unknown[]) => getConversationHopMcp(...args),
   getConversationHopEmbedding: (...args: unknown[]) => getConversationHopEmbedding(...args),
+  getConversationHopProtocol: (...args: unknown[]) => getConversationHopProtocol(...args),
 }));
 
 const SCOPE: SessionScope = { id: 'chat-1', source: null };
@@ -88,8 +90,9 @@ const envelope = (overrides: Partial<HopRequestEnvelope> = {}): HopRequestEnvelo
       { name: 'max_tokens', value: '1024' },
       { name: 'tools', value: null },
       { name: 'stream', value: 'true' },
-      { name: 'vendor_knob', value: '7' },
+      { name: 'model', value: 'gpt-4.1' },
     ],
+    rest: ['vendor_knob'],
   },
   messages: [message(0, MessageRole.System, 'Ye be Blackbeard.'), message(1, MessageRole.User, 'who are you?')],
   roleCounts: [
@@ -113,6 +116,20 @@ const response = (overrides: Partial<HopResponseEnvelope> = {}): HopResponseEnve
   facts: NO_FACTS,
   recordedBytes: 50,
   ...overrides,
+});
+
+const protocolFacts = (overrides: Record<string, unknown> = {}) => ({
+  success: true,
+  response: {
+    state: HopReadState.Available,
+    method: 'tools/list',
+    requestText: null,
+    requestState: HopReadState.NoBody,
+    resultText: '{\n  "tools": [\n    {\n      "name": "run_code"\n    }\n  ]\n}',
+    resultClamp: NO_CLAMP,
+    responseState: HopReadState.Available,
+    ...overrides,
+  },
 });
 
 const renderInspector = (props: Partial<Parameters<typeof HopInspector>[0]> = {}) =>
@@ -193,8 +210,12 @@ describe('HopInspector — the request side', () => {
 
     expect(params).toHaveTextContent('0');
     expect(params).toHaveTextContent(ConversationsTraceI18nKey.InspectorParamTools);
-    // Named rather than counted: a parameter this frontend has never met is still one the call was made with.
-    expect(params).toHaveTextContent('vendor_knob');
+    expect(params).toHaveTextContent('gpt-4.1');
+    expect(params).toHaveTextContent('+1');
+    expect(params).not.toHaveTextContent('vendor_knob');
+    // The i18n mock answers with the key rather than the interpolated string, so what is assertable here is
+    // that the count carries the statement of names at all.
+    expect(screen.getByText(ConversationsTraceI18nKey.InspectorParamsRest)).toBeInTheDocument();
   });
 
   // Tier 2 is a whole-message read: the history is what a reader opens a hop for, and a single property of a
@@ -312,7 +333,7 @@ describe('HopInspector — the recorded bytes', () => {
   test('offers the raw switch on the request side too', async () => {
     renderInspector();
 
-    expect(await screen.findByRole('switch', { name: ConversationsTraceI18nKey.InspectorRaw })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw })).toBeInTheDocument();
   });
 
   test('reads the request body raw only once the switch is on', async () => {
@@ -330,9 +351,20 @@ describe('HopInspector — the recorded bytes', () => {
     await screen.findByText('who are you?');
     expect(getConversationHopRawBody).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('switch', { name: ConversationsTraceI18nKey.InspectorRaw }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw }));
 
     await waitFor(() => expect(screen.getByText(/"messages": \[\]/)).toBeInTheDocument());
+  });
+
+  test('the raw switch closes the facts line, at its end', async () => {
+    renderInspector();
+
+    const params = await screen.findByLabelText(ConversationsTraceI18nKey.InspectorParamsLabel);
+    const raw = screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw });
+    const message = screen.getByText('who are you?');
+
+    expect(params.compareDocumentPosition(raw) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(raw.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   // The filter narrows a list, and the bytes are not a list.
@@ -349,7 +381,7 @@ describe('HopInspector — the recorded bytes', () => {
     renderInspector();
 
     await screen.findByText('who are you?');
-    await user.click(screen.getByRole('switch', { name: ConversationsTraceI18nKey.InspectorRaw }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw }));
 
     expect(screen.queryByRole('group', { name: ConversationsTraceI18nKey.InspectorRolesLabel })).toBeNull();
   });
@@ -434,7 +466,7 @@ describe('HopInspector — the response side', () => {
     renderInspector();
 
     await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
-    await user.click(screen.getByRole('switch', { name: ConversationsTraceI18nKey.InspectorRaw }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw }));
 
     await waitFor(() => expect(getConversationHopRawBody).toHaveBeenCalled());
   });
@@ -452,7 +484,7 @@ describe('HopInspector — the response side', () => {
     renderInspector();
 
     await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
-    await user.click(screen.getByRole('switch', { name: ConversationsTraceI18nKey.InspectorRaw }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw }));
 
     await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.InspectorRawClamped)).toBeInTheDocument());
   });
@@ -460,6 +492,64 @@ describe('HopInspector — the response side', () => {
 
 // The spec requires a clamp to state itself and state by how much. Three places clamp, and two of them
 // computed the flag and rendered nothing — which no test noticed, because none asked.
+describe('HopInspector — the transport line', () => {
+  // The section used to render nothing at all for such a hop, which says "nothing happened" rather than "you
+  // are not being shown this".
+  test('a hop whose body columns are withheld still states how the call went', async () => {
+    renderInspector({ bodyGrants: { isRequestReadable: false, isResponseReadable: false } });
+
+    const transport = await screen.findByRole('group', { name: ConversationsTraceI18nKey.InspectorTransportLabel });
+
+    expect(transport).toHaveTextContent('200 OK');
+    expect(transport).toHaveTextContent('2.0 KB');
+    expect(transport).toHaveTextContent('4.0 KB');
+    expect(screen.getByText(ConversationsTraceI18nKey.InspectorWithheldStats)).toBeInTheDocument();
+  });
+
+  test('a failed hop states the status it failed with', async () => {
+    const user = userEvent.setup();
+    renderInspector({ span: span({ response_status: 502, success: false }) });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorTransportLabel })).toHaveTextContent(
+      '502 Bad Gateway',
+    );
+  });
+
+  // Stated over the request, the outcome described something the request has not done yet.
+  test('the request side states the verb, not how the call ended', async () => {
+    renderInspector();
+
+    const transport = await screen.findByRole('group', { name: ConversationsTraceI18nKey.InspectorTransportLabel });
+
+    expect(transport).toHaveTextContent('POST');
+    expect(transport).not.toHaveTextContent('200 OK');
+    expect(transport).not.toHaveTextContent('2.0 KB');
+  });
+
+  test('the response side states the outcome, not the verb', async () => {
+    const user = userEvent.setup();
+    renderInspector();
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+    const transport = screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorTransportLabel });
+
+    expect(transport).toHaveTextContent('200 OK');
+    expect(transport).not.toHaveTextContent('POST');
+  });
+
+  // Chat states a conversation, not a call, so neither half of the transport belongs to it.
+  test('the chat tab states no transport facts', async () => {
+    const user = userEvent.setup();
+    renderInspector();
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorChat/ }));
+
+    expect(screen.queryByRole('group', { name: ConversationsTraceI18nKey.InspectorTransportLabel })).toBeNull();
+  });
+});
+
 describe('HopInspector — every clamp states itself', () => {
   test('the assembled response states its clamp', async () => {
     const user = userEvent.setup();
@@ -517,6 +607,25 @@ describe('HopInspector — every clamp states itself', () => {
   });
 });
 
+describe('HopInspector — the recorded bytes keep the facts about the hop', () => {
+  // Withdrawing the response facts over the bytes made raw mode read as a different hop.
+  test('the response facts stay stated with the raw switch on', async () => {
+    const user = userEvent.setup();
+    getConversationHopRawBody.mockResolvedValue({
+      success: true,
+      response: { state: HopReadState.Available, text: '{}', clamp: NO_CLAMP },
+    });
+    renderInspector();
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.InspectorRaw }));
+
+    expect(
+      screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorResponseFactsLabel }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('HopInspector — absence and entitlement', () => {
   // The case most worth opening: a call that returned nothing still sent something.
   test('a hop that returned nothing still shows its request', async () => {
@@ -535,11 +644,18 @@ describe('HopInspector — absence and entitlement', () => {
     expect(getConversationHopResponse).not.toHaveBeenCalled();
   });
 
-  test('a protocol-envelope hop is settled without any read', async () => {
-    renderInspector({ span: span({ event_kind: 'mcp', mcp_method: 'tools/list' }), kind: SpanKind.Mcp });
+  test('a notification states that the protocol defines no response body', async () => {
+    const user = userEvent.setup();
+    getConversationHopProtocol.mockResolvedValue(protocolFacts({ requestText: null, names: [], stated: [] }));
+    renderInspector({
+      span: span({ event_kind: 'mcp', mcp_method: 'notifications/initialized', response_body_bytes: 0 }),
+      kind: SpanKind.Mcp,
+    });
 
-    expect(await screen.findByText(ConversationsTraceI18nKey.InspectorSessionSetup)).toBeInTheDocument();
-    expect(getConversationHopMcp).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(screen.getByText(ConversationsTraceI18nKey.InspectorProtocolNoBody)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.InspectorNoResponse)).toBeNull();
   });
 
   test('a caller entitled to one side is offered only that side', async () => {
@@ -649,7 +765,17 @@ describe('HopInspector — MCP and embedding hops', () => {
     expect(screen.queryByText('{ "page": "home" }')).toBeNull();
   });
 
-  // Method, tool and toolset are plain hop-row columns belonging to neither side, so they sit above the strip
+  test('the tab strip heads the section, with the hop-row facts below it', async () => {
+    getConversationHopMcp.mockResolvedValue(mcpFacts());
+    renderInspector({ span: mcpSpan, kind: SpanKind.Mcp });
+
+    const facts = await screen.findByRole('group', { name: ConversationsTraceI18nKey.InspectorMcpFactsLabel });
+    const requestTab = screen.getByRole('tab', { name: /InspectorRequest/ });
+
+    expect(requestTab.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // Method, tool and toolset are plain hop-row columns belonging to neither side, so they sit below the strip
   // rather than being duplicated onto both tabs.
   test('an MCP hop keeps its method, tool and toolset visible on both tabs', async () => {
     const user = userEvent.setup();
@@ -665,6 +791,23 @@ describe('HopInspector — MCP and embedding hops', () => {
     expect(screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorMcpFactsLabel })).toHaveTextContent(
       'docs-mcp',
     );
+  });
+
+  // Formatted server-side; what this asserts is that the panel renders it without collapsing the line breaks.
+  test('an MCP hop renders its formatted result with its line breaks intact', async () => {
+    const user = userEvent.setup();
+    const formatted = '{\n  "stdout": "one",\n  "exit_code": 0\n}';
+    getConversationHopMcp.mockResolvedValue(
+      mcpFacts({
+        resultText: formatted,
+        resultClamp: { isClamped: false, recordedBytes: 30, deliveredBytes: formatted.length },
+      }),
+    );
+    renderInspector({ span: mcpSpan, kind: SpanKind.Mcp });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(screen.getByText(formatted, { collapseWhitespace: false, trim: false })).toBeInTheDocument();
   });
 
   test('an MCP hop offers no chat tab, because a protocol message is not a conversation', async () => {
@@ -688,6 +831,41 @@ describe('HopInspector — MCP and embedding hops', () => {
     await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
 
     expect(screen.getByText(ConversationsTraceI18nKey.InspectorWithheldStats)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.InspectorNoBody)).toBeNull();
+  });
+
+  // These methods used to render blank on both tabs, on the claim that they carry no content.
+  test('a protocol hop states the result the server answered with', async () => {
+    const user = userEvent.setup();
+    getConversationHopProtocol.mockResolvedValue(protocolFacts());
+    renderInspector({ span: span({ event_kind: 'mcp', mcp_method: 'tools/list' }), kind: SpanKind.Mcp });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(
+      screen.getByText('{\n  "tools": [\n    {\n      "name": "run_code"\n    }\n  ]\n}', {
+        collapseWhitespace: false,
+        trim: false,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  test('an initialize hop states what the server answered with, not a summary of it', async () => {
+    const user = userEvent.setup();
+    const negotiated = '{\n  "protocolVersion": "2025-11-25"\n}';
+    getConversationHopProtocol.mockResolvedValue(protocolFacts({ method: 'initialize', resultText: negotiated }));
+    renderInspector({ span: span({ event_kind: 'mcp', mcp_method: 'initialize' }), kind: SpanKind.Mcp });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(screen.getByText(negotiated, { collapseWhitespace: false, trim: false })).toBeInTheDocument();
+  });
+
+  test('a protocol request carrying no parameters says so', async () => {
+    getConversationHopProtocol.mockResolvedValue(protocolFacts());
+    renderInspector({ span: span({ event_kind: 'mcp', mcp_method: 'tools/list' }), kind: SpanKind.Mcp });
+
+    expect(await screen.findByText(ConversationsTraceI18nKey.InspectorProtocolNoParams)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.InspectorNoBody)).toBeNull();
   });
 

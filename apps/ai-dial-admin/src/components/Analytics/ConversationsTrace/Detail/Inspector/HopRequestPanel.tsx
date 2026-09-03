@@ -1,15 +1,15 @@
 'use client';
 
-import { GhostButton, ElementSize, Switch } from '@epam/ai-dial-ui-kit';
+import { GhostButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconCheck } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import HopMessageRow from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMessageRow';
 import HopRawView from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRawView';
+import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import {
   FILTER_CHIP_CLASS,
-  RAW_LABEL_CLASS,
   MESSAGE_ROLE_LABEL_KEY,
   NEUTRAL_CHIP_CLASS,
   SELECTED_CHIP_CLASS,
@@ -27,18 +27,16 @@ import { useHopMessage } from '@/src/components/Analytics/ConversationsTrace/Det
 
 interface Props {
   envelope: HopRequestEnvelope;
+  isRaw: boolean;
   scope: SessionScope;
   traceId: string;
   coreSpanId: string;
   requestTime: number | string | null;
 }
 
-const HopRequestPanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requestTime }) => {
+const HopRequestPanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpanId, requestTime }) => {
   const t = useI18n();
   const [role, setRole] = useState<MessageRole | null>(null);
-  // The same switch the response side carries: "show me the bytes" is one question, so it is one control in
-  // one place on both sides rather than a mode that exists on one of them.
-  const [isRaw, setIsRaw] = useState(false);
   const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({ scope, traceId, coreSpanId, requestTime });
 
   const shown = useMemo(
@@ -55,7 +53,7 @@ const HopRequestPanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requ
   );
 
   if (!envelope.messages.length) {
-    return <p className="text-secondary dial-tiny-text">{t(ConversationsTraceI18nKey.InspectorNoMessages)}</p>;
+    return <HopStateNote messageKey={ConversationsTraceI18nKey.InspectorNoMessages} />;
   }
 
   return (
@@ -112,13 +110,6 @@ const HopRequestPanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requ
             </span>
           </div>
         )}
-        <div className="ml-auto">
-          <Switch
-            labelProps={{ label: t(ConversationsTraceI18nKey.InspectorRaw), className: RAW_LABEL_CLASS }}
-            isOn={isRaw}
-            onChange={setIsRaw}
-          />
-        </div>
       </div>
       {isRaw ? (
         <HopRawView

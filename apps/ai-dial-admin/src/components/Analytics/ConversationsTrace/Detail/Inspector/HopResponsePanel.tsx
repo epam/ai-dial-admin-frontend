@@ -1,15 +1,12 @@
 'use client';
 
-import { Switch } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo, useState } from 'react';
+import { FC, useMemo } from 'react';
 
 import HopClampNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopClampNote';
 import HopMessageCard from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMessageCard';
-import HopResponseFactsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopResponseFactsLine';
 import HopToolCalls from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopToolCalls';
 import HopRawView from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRawView';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
-import { RAW_LABEL_CLASS } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { unansweredToolNamesOf } from '@/src/utils/analytics/conversation-spans';
@@ -24,6 +21,7 @@ import {
 
 interface Props {
   envelope: HopResponseEnvelope;
+  isRaw: boolean;
   scope: SessionScope;
   traceId: string;
   coreSpanId: string;
@@ -31,9 +29,8 @@ interface Props {
   mcpToolCalls: McpToolCallTally;
 }
 
-const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, requestTime, mcpToolCalls }) => {
+const HopResponsePanel: FC<Props> = ({ envelope, isRaw, scope, traceId, coreSpanId, requestTime, mcpToolCalls }) => {
   const t = useI18n();
-  const [isRaw, setIsRaw] = useState(false);
   // Text or a call: a response that only called a tool said exactly that, and it is a message either way.
   const hasMessage = envelope.text !== null || envelope.toolCalls.length > 0;
 
@@ -49,23 +46,7 @@ const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, req
   );
 
   return (
-    // Same shape as the request panel: no row gap between the pinned control and the content, because a gap
-    // below a sticky element is a transparent band inside the scroll port.
-    <div className="flex min-w-0 flex-col">
-      {/* Pinned for the same reason the role filter is: it chooses what the pane below shows, and a raw body
-          scrolls far past this height — leaving no way back without scrolling to the top. `bg-layer-1` is
-          the section's own ground — `bg-layer-2` was the rail's, and this panel left the rail — so the body
-          passes behind it rather than through it.
-          One switch, not two modes: "assembled" was never something a reader picked, it is simply what the
-          tab shows when it is not showing bytes — and the same switch says the same thing on the request
-          side. */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-end bg-layer-1 pb-3">
-        <Switch
-          labelProps={{ label: t(ConversationsTraceI18nKey.InspectorRaw), className: RAW_LABEL_CLASS }}
-          isOn={isRaw}
-          onChange={setIsRaw}
-        />
-      </div>
+    <div className="flex min-h-0 min-w-0 flex-col">
       <div className="flex min-w-0 flex-col gap-3">
         {isRaw ? (
           <HopRawView
@@ -77,11 +58,6 @@ const HopResponsePanel: FC<Props> = ({ envelope, scope, traceId, coreSpanId, req
           />
         ) : (
           <>
-            {/* Facts about the response rather than about the message it carried, so they are not inside the
-                card — and above it rather than after it, because this tab holds exactly one answer: what
-                answered and at what cost heads the reply instead of trailing a card the reader has to scroll
-                past. */}
-            <HopResponseFactsLine facts={envelope.facts} finishReason={envelope.finishReason} />
             {/* Stated as its own block, never merged into the answer: 54% of Responses hops record a reasoning
                 summary, and reading it as the reply would misattribute the model's scratch work. */}
             {envelope.reasoningText !== null && (

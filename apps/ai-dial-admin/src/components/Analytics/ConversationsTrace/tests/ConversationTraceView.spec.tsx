@@ -284,13 +284,19 @@ describe('ConversationSpanDetail', () => {
     expect(screen.getByText(ConversationsTraceI18nKey.SpanSelected)).toBeInTheDocument();
   });
 
-  test('reports where the hop went and what came back', () => {
+  test('reports where the hop went and what it cost', () => {
     renderDetail(nodes[0]);
 
     expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
     expect(screen.getByText('https://core.dial.parts/openai/deployments/switchyard')).toBeInTheDocument();
-    expect(screen.getByText('200')).toBeInTheDocument();
     expect(screen.getByText('$0.001')).toBeInTheDocument();
+  });
+
+  // The bodies section states the recorded status now, beside the bodies it is the question about.
+  test('leaves the recorded status to the bodies section', () => {
+    renderDetail(nodes[0]);
+
+    expect(screen.queryByText('200')).toBeNull();
   });
 
   // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is

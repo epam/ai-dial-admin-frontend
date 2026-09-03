@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ARRAY_VALUE_PAGE_SIZE,
-  CHAT_ID_SESSION_SOURCE,
   CONVERSATION_ARRAY_VALUE_SOURCE,
   CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
   CONVERSATION_FIELD_VALUE_LIMIT,
@@ -21,7 +20,6 @@ import {
   FeedbackFilter,
   ResponseRatingsField,
   UsageLogField,
-  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryExprType,
@@ -752,11 +750,6 @@ describe('buildConversationRatingCountsQuery', () => {
   });
 });
 
-// A chat-origin session: its id came from a conversation header, so every hop-log read for it keeps the
-// bloom-filtered `chat_id`. `AGENT_SCOPE` is the other half of that contract.
-const CHAT_ID: SessionScope = { id: 'chat-1', source: CHAT_ID_SESSION_SOURCE };
-const AGENT_SCOPE: SessionScope = { id: 'cc-session-1', source: 'x-claude-code-session-id' };
-
 const BODY_COLUMNS = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
 
 const flatPredicates = (query: StructuredQuery): QueryPredicate[] =>
@@ -770,12 +763,11 @@ const timePredicates = (query: StructuredQuery): QueryPredicate[] =>
   flatPredicates(query).filter((node) => fieldName(node) === UsageLogField.RequestTime);
 
 describe('buildConversationHopBodyQuery', () => {
-  const query = buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', '2026-08-18T11:33:17.216Z', BODY_COLUMNS);
+  const query = buildConversationHopBodyQuery('tr1', 'sp1', '2026-08-18T11:33:17.216Z', BODY_COLUMNS);
 
   // One hop at a time, never in bulk: a measured 384-hop turn carried 99.26 MiB of request bodies, one hop of
   // it reaching 4.00 MiB.
   test('narrows to exactly one hop', () => {
-    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
     expect((predicateFor(query, UsageLogField.TraceId)?.args?.[1] as QueryValueExpr).value).toBe('tr1');
     expect((predicateFor(query, UsageLogField.CoreSpanId)?.args?.[1] as QueryValueExpr).value).toBe('sp1');
     expect((query.page as QueryOffsetPage).limit).toBe(1);
@@ -791,17 +783,14 @@ describe('buildConversationHopBodyQuery', () => {
   });
 
   test('bounds nothing when the hop records no time, rather than sending an unparseable literal', () => {
-    expect(timePredicates(buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', null, BODY_COLUMNS))).toHaveLength(0);
+    expect(timePredicates(buildConversationHopBodyQuery('tr1', 'sp1', null, BODY_COLUMNS))).toHaveLength(0);
   });
 
   test('names the assembled column only where the schema reports it', () => {
     expect(selectNames(query)).toContain(UsageLogField.AssembledResponse);
     expect(
       selectNames(
-        buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', 1, [
-          UsageLogField.RequestBody,
-          UsageLogField.ResponseBody,
-        ]),
+        buildConversationHopBodyQuery('tr1', 'sp1', 1, [UsageLogField.RequestBody, UsageLogField.ResponseBody]),
       ),
     ).not.toContain(UsageLogField.AssembledResponse);
   });
@@ -816,41 +805,21 @@ describe('buildConversationHopBodyQuery', () => {
   });
 });
 
-// A read predicated on an attribute instead of a conversation took the service down, so the chat predicate is
-// not an optimisation — it is the contract every hop-log query in this view keeps.
-describe('every hop-body query filters by the conversation', () => {
-  test.each([['hop body', buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', 1, BODY_COLUMNS)]])(
-    '%s',
-    (_name, query) => {
-      expect(JSON.stringify(query.filter)).toContain(UsageLogField.ChatId);
-      expect(JSON.stringify(query.filter)).toContain(CHAT_ID.id);
-    },
-  );
-});
+// The session predicate was once the contract every hop-log query in this view kept; it withheld the bodies of
+// hops recorded with an empty conversation header — see `buildConversationHopBodyQuery` for the full account.
+// The listing queries keep their session scope, which `conversation-detail-queries.spec.ts` holds them to.
+describe('the hop body query is addressed by the hop, not by the session', () => {
+  const filter = JSON.stringify(buildConversationHopBodyQuery('tr1', 'sp1', 1, BODY_COLUMNS).filter);
 
-// The other half of that contract. `chat_id` is bloom-filtered and the enrichment column is not, so the
-// column is chosen per session rather than unified: a chat session must keep the index, and an agent
-// session — whose hops carry no chat id at all — must not be scoped by a column that is always empty for it.
-describe("a hop-log query is scoped by the column that session's hops carry", () => {
-  const agentQueries: [string, StructuredQuery][] = [
-    ['hop body', buildConversationHopBodyQuery(AGENT_SCOPE, 'tr1', 'sp1', 1, BODY_COLUMNS)],
-  ];
-
-  test.each(agentQueries)('%s names the identity enrichment for an agent session', (_name, query) => {
-    expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
-    expect(JSON.stringify(query.filter)).toContain(AGENT_SCOPE.id);
+  test('carries neither session column, whatever the session was scoped by', () => {
+    expect(filter).not.toContain(UsageLogField.ChatId);
+    expect(filter).not.toContain(UsageLogField.ClientSessionId);
   });
 
-  test('an agent session is never scoped by the empty chat id', () => {
-    agentQueries.forEach(([, query]) => {
-      expect(predicateFor(query, UsageLogField.ChatId)).toBeUndefined();
-    });
-  });
-
-  test('a session whose source is unknown takes the enrichment column, not the index', () => {
-    const query = buildConversationHopBodyQuery({ id: 'unknown-1' }, 'tr1', 'sp1', 1, BODY_COLUMNS);
-
-    expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
+  test('keeps the trace, the span and the recorded instant', () => {
+    expect(filter).toContain(UsageLogField.TraceId);
+    expect(filter).toContain(UsageLogField.CoreSpanId);
+    expect(filter).toContain(UsageLogField.RequestTime);
   });
 });
 
