@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { DetailMode } from '../../Details/BottomDrawer/models';
 import { useDetailMode } from '../use-detail-mode';
 
@@ -19,29 +20,36 @@ vi.mock('@/src/context/AppContext', () => ({
   }),
 }));
 
+vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel', () => ({
+  default: () => null,
+}));
+
+vi.mock('@/src/components/Runs/Details/RunMetricDetailPanel', () => ({
+  default: () => null,
+}));
+
 describe('useDetailMode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('initializes with sidebar mode', () => {
+  it('initializes with drawer mode by default', () => {
     const { result } = renderHook(() => useDetailMode());
 
-    expect(result.current.detailMode).toBe(DetailMode.Sidebar);
+    expect(result.current.detailMode).toBe(DetailMode.Drawer);
     expect(result.current.selectedResultId).toBeNull();
-    expect(result.current.drawerOpen).toBe(false);
   });
 
-  it('opens sidebar on row click in sidebar mode', () => {
+  it('opens bottom panel on row click in drawer mode', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
 
     expect(result.current.selectedResultId).toBe('r1');
-    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
-  it('toggles sidebar closed on same row click', () => {
+  it('toggles closed on same row click without cell options', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
@@ -51,67 +59,38 @@ describe('useDetailMode', () => {
     expect(mockCloseSidebar).toHaveBeenCalled();
   });
 
-  it('switches to drawer mode', () => {
+  it('does not toggle closed on same-row cell click with focus field', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
-    act(() => result.current.switchToDrawer());
+    mockShowSidebar.mockClear();
+    act(() => result.current.openDetail('r1', { focusFieldKey: 'httpStatusCode' }));
 
-    expect(result.current.detailMode).toBe(DetailMode.Drawer);
-    expect(result.current.drawerOpen).toBe(true);
-    expect(result.current.pendingFocus).toBe(true);
-    expect(mockCloseSidebar).toHaveBeenCalled();
-  });
-
-  it('opens drawer on row click in drawer mode', () => {
-    const { result } = renderHook(() => useDetailMode());
-
-    // Switch to drawer mode first
-    act(() => result.current.openDetail('r1'));
-    act(() => result.current.switchToDrawer());
-
-    mockCloseSidebar.mockClear();
-
-    act(() => result.current.openDetail('r2'));
-
-    expect(result.current.selectedResultId).toBe('r2');
-    expect(result.current.drawerOpen).toBe(true);
-    // Should NOT call sidebar in drawer mode
+    expect(result.current.selectedResultId).toBe('r1');
+    expect(result.current.focusFieldKey).toBe('httpStatusCode');
     expect(mockCloseSidebar).not.toHaveBeenCalled();
+    expect(mockShowSidebar).toHaveBeenCalled();
   });
 
-  it('toggles drawer closed on same row click in drawer mode', () => {
+  it('switches to sidebar and shows RunMetricDetailPanel', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
-    act(() => result.current.switchToDrawer());
-    act(() => result.current.openDetail('r1'));
+    mockShowSidebar.mockClear();
+    act(() => result.current.switchToSidebar());
 
-    expect(result.current.selectedResultId).toBeNull();
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.detailMode).toBe(DetailMode.Sidebar);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), 'w-[750px]', SidebarPosition.Right);
   });
 
   it('closeDetail preserves mode preference', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
-    act(() => result.current.switchToDrawer());
     act(() => result.current.closeDetail());
 
     expect(result.current.detailMode).toBe(DetailMode.Drawer);
-    expect(result.current.drawerOpen).toBe(false);
-  });
-
-  it('clearPendingFocus works', () => {
-    const { result } = renderHook(() => useDetailMode());
-
-    act(() => result.current.switchToDrawer());
-
-    expect(result.current.pendingFocus).toBe(true);
-
-    act(() => result.current.clearPendingFocus());
-
-    expect(result.current.pendingFocus).toBe(false);
+    expect(result.current.selectedResultId).toBeNull();
   });
 
   it('calls closeSidebar on unmount', () => {

@@ -1,10 +1,9 @@
 import {
-  CompareRowDetailField,
-  CompareRowDetailSection,
   RowDetailDeltaFilter,
   RowDetailFieldFilter,
   RowDetailValueFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import {
   getMetricDeltaSortValue,
   MetricDeltaKind,
@@ -74,13 +73,13 @@ const matchesDeltaFilter = (delta: number | null, filter: RowDetailDeltaFilter):
   }
 };
 
-const getRowDeltaValue = (row: CompareRowDetailField): number | null => {
+const getRowDeltaValue = (row: RowDetailField): number | null => {
   if (!row.isNumeric || !row.isMetric) return null;
   return getMetricDeltaSortValue(parseNumericRaw(row.primaryRaw), parseNumericRaw(row.secondaryRaw));
 };
 
 export const filterRowDetailSections = (
-  sections: CompareRowDetailSection[],
+  sections: RowDetailSection[],
   {
     searchQuery,
     showDiffsOnly,
@@ -91,7 +90,7 @@ export const filterRowDetailSections = (
     secondarySearchQuery,
     deltaFilter,
   }: RowDetailSectionFilterOptions,
-): CompareRowDetailSection[] => {
+): RowDetailSection[] => {
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   return sections

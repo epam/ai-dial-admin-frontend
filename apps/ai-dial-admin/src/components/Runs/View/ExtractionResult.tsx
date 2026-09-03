@@ -1,7 +1,7 @@
 'use client';
 
-import { ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -9,9 +9,7 @@ import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs
 import GridView from '@/src/components/Grid/GridView/GridView';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
-import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
-import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
-import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
+import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -31,10 +29,11 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const detailMode = useDetailMode(metricBindings);
   const { openDetail } = detailMode;
-  const drawerPanel = useDrawerPanel();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const isLoading = results === null;
+  /** Suppress row-click toggle when a cell click already opened/focused detail. */
+  const cellClickHandledRef = useRef(false);
 
   useEffect(() => {
     if (!run?.id || results !== null) {
@@ -102,30 +101,27 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     [setExtractionResultState],
   );
 
-  const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
-  useEffect(() => {
-    if (resultIds.length > 0) {
-      drawerPanel.clearPinIfMissing(resultIds);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resultIds, drawerPanel.clearPinIfMissing]);
-
-  const onRowClicked = useCallback(
-    (event: RowClickedEvent) => {
-      if (!event.data) return;
-      openDetail(event.data.id);
+  const onCellClicked = useCallback(
+    (event: CellClickedEvent) => {
+      if (!event.data?.id) return;
+      cellClickHandledRef.current = true;
+      const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
+      openDetail(event.data.id, { focusFieldKey: mapGridColToPivotField(colId) });
     },
     [openDetail],
   );
 
-  useLayoutEffect(() => {
-    if (detailMode.drawerOpen && detailMode.selectedResultId) {
-      drawerPanel.open(detailMode.selectedResultId);
-    } else if (!detailMode.drawerOpen && drawerPanel.isOpen) {
-      drawerPanel.close();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detailMode.drawerOpen, detailMode.selectedResultId]);
+  const onRowClicked = useCallback(
+    (event: RowClickedEvent) => {
+      if (!event.data?.id) return;
+      if (cellClickHandledRef.current) {
+        cellClickHandledRef.current = false;
+        return;
+      }
+      openDetail(event.data.id);
+    },
+    [openDetail],
+  );
 
   const selectedResultIdRef = useRef(detailMode.selectedResultId);
   selectedResultIdRef.current = detailMode.selectedResultId;
@@ -145,18 +141,14 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     gridApiRef.current?.redrawRows();
   }, [detailMode.selectedResultId]);
 
-  const onDrawerClose = useCallback(() => {
-    detailMode.closeDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detailMode.closeDetail]);
-
   const gridOptions = useMemo(
     () => ({
       defaultColDef: { filter: false, floatingFilter: false, resizable: true, flex: 1 },
       onRowClicked,
+      onCellClicked,
       rowClassRules,
     }),
-    [onRowClicked, rowClassRules],
+    [onRowClicked, onCellClicked, rowClassRules],
   );
 
   return (
@@ -182,16 +174,6 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
           />
         )}
       </div>
-      {detailMode.detailMode === DetailMode.Drawer && detailMode.drawerOpen && (
-        <AnalyticsBottomDrawer
-          drawerPanel={drawerPanel}
-          pendingFocus={detailMode.pendingFocus}
-          clearPendingFocus={detailMode.clearPendingFocus}
-          onClose={onDrawerClose}
-          onSwitchToSidebar={detailMode.switchToSidebar}
-          metricBindings={metricBindings}
-        />
-      )}
     </div>
   );
 };

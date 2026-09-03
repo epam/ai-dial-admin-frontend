@@ -4,6 +4,7 @@ import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
 import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
@@ -62,32 +63,47 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
-    DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
+    DialLoader: ({ size }: { size: number }) => <div aria-label={`loading-${size}`} />,
   };
 });
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ additionalGridOptions }: any) => (
+  default: ({ additionalGridOptions }: { additionalGridOptions: Record<string, (e: unknown) => void> }) => (
     <div role="grid" aria-label="Analytics grid">
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
+      <button
+        onClick={() =>
+          additionalGridOptions.onCellClicked({
+            data: { id: 'r1' },
+            column: { getColId: () => 'http' },
+            colDef: { colId: 'http' },
+          })
+        }
+      >
+        Cell HTTP
+      </button>
     </div>
   ),
 }));
 
 vi.mock('@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel', () => ({
-  default: ({ toggleColumnsPanel }: any) => (
+  default: ({ toggleColumnsPanel }: { toggleColumnsPanel: () => void }) => (
     <div role="dialog" aria-label="Columns panel">
       <button onClick={toggleColumnsPanel}>Close panel</button>
     </div>
   ),
 }));
 
+vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel', () => ({
+  default: () => <div data-testid="execution-row-detail-bottom-panel" />,
+}));
+
 const mockRun = {
   id: 'run-1',
   name: 'Test Run',
   testSuiteRunId: 'tsr-1',
-} as any;
+} as never;
 
 const ControlledExtractionResultTab: FC<{ initialState?: Partial<ExtractionResultTabUiState> }> = ({
   initialState,
@@ -156,16 +172,25 @@ describe('ExtractionResultTab', () => {
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
   });
 
-  test('opens sidebar on row click in default mode', async () => {
+  test('opens bottom panel on row click by default', async () => {
     render(<ControlledExtractionResultTab />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
 
-    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
-  test('toggles sidebar closed on same row click', async () => {
+  test('opens bottom panel with focus field on cell click', async () => {
+    render(<ControlledExtractionResultTab />);
+    await waitFor(() => screen.getByRole('button', { name: 'Cell HTTP' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cell HTTP' }));
+
+    expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
+  });
+
+  test('toggles bottom panel closed on same row click', async () => {
     render(<ControlledExtractionResultTab />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
