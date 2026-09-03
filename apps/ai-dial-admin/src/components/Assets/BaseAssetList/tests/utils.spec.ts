@@ -91,23 +91,29 @@ describe('BaseAssetList', () => {
     });
   });
 
-  describe('getGridColumns — Assets Applications bucket switch', () => {
+  describe('getGridColumns — dual-bucket views', () => {
     const onChange = vi.fn();
 
-    test('uses the flat platform-entity column set (no Version column) while browsing the platform bucket', () => {
-      const columns = getGridColumns(ApplicationRoute.AssetsApplications, onChange, {}, false, 'platform/');
-      const colIds = columns.map((c) => c.colId);
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      '%s uses the flat platform-entity column set (no Version column) while browsing the platform bucket',
+      (view) => {
+        const columns = getGridColumns(view, onChange, {}, false, 'platform/');
+        const colIds = columns.map((c) => c.colId);
 
-      expect(colIds).not.toContain(FileManagerColumnKey.Version);
-      expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
-    });
+        expect(colIds).not.toContain(FileManagerColumnKey.Version);
+        expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
+      },
+    );
 
-    test('keeps the existing Version column while browsing the public bucket', () => {
-      const withPublicPath = getGridColumns(ApplicationRoute.AssetsApplications, onChange, {}, false, 'public/');
-      const withoutPath = getGridColumns(ApplicationRoute.AssetsApplications, onChange, {}, false);
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      '%s keeps the existing Version column while browsing the public bucket',
+      (view) => {
+        const withPublicPath = getGridColumns(view, onChange, {}, false, 'public/');
+        const withoutPath = getGridColumns(view, onChange, {}, false);
 
-      expect(withPublicPath.map((c) => c.colId)).toContain(FileManagerColumnKey.Version);
-      expect(withPublicPath.map((c) => c.colId)).toEqual(withoutPath.map((c) => c.colId));
-    });
+        expect(withPublicPath.map((c) => c.colId)).toContain(FileManagerColumnKey.Version);
+        expect(withPublicPath.map((c) => c.colId)).toEqual(withoutPath.map((c) => c.colId));
+      },
+    );
   });
 });

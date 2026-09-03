@@ -5,7 +5,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
@@ -35,7 +35,6 @@ export const getEntityPath = (
     case ApplicationRoute.Conversations:
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
-    case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Skills: {
       const path = version
         ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
@@ -47,17 +46,22 @@ export const getEntityPath = (
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
-    // Applications is the one view whose resources live in both buckets (design.md's
-    // `platform-applications` capability). Both share the same `/assets-applications/[id]` detail
-    // route — a platform-bucket row has no version and no folder tree, so it gets the flat
-    // `PlatformModels`-style segment below (bare name, no `?path=`); the query param's presence is
-    // exactly what the detail page uses to tell the two buckets apart.
-    case ApplicationRoute.AssetsApplications: {
+    // Applications and Toolsets are the views whose resources live in both buckets (design.md's
+    // `platform-applications`/`platform-toolsets` capabilities). Both share their existing
+    // `/assets-applications/[id]`/`/assets-toolsets/[id]` detail route — a platform-bucket row has no
+    // version and no folder tree, so it gets the flat `PlatformModels`-style segment below (bare
+    // name, no `?path=`); the query param's presence is exactly what the detail page uses to tell the
+    // two buckets apart.
+    case ApplicationRoute.AssetsApplications:
+    case ApplicationRoute.AssetsToolsets: {
       const entity = data as DialPrompt & { folderId?: string; path?: string };
 
       if (isPlatformBucketPath(entity.path || entity.folderId)) {
-        const resolvedName = entity.name || '';
-        return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
+        // `forRemove` must still resolve to the resource's storage path (`platform/{name}`) — Core
+        // has no route for a bare name — unlike the URL-segment case just below, where the bucket
+        // prefix is deliberately dropped for a readable URL (design.md D5).
+        const resolvedPath = entity.path || `${PLATFORM_ROOT_FOLDER}/${entity.name || ''}`;
+        return forRemove ? decodeURIComponent(escapePercentSign(resolvedPath)) : encodeURIComponent(entity.name || '');
       }
 
       const path = version

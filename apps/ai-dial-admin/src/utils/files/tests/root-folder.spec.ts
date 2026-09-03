@@ -5,6 +5,7 @@ import {
   getRootFolders,
   isFlatPlatformView,
   isPlatformBucketPath,
+  isPlatformDualBucketView,
   PLATFORM_ROOT_FOLDER,
 } from '../root-folder';
 
@@ -62,18 +63,42 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
 });
 
 describe('Root Folder Utils :: getRootFolders', () => {
-  test('Should return both buckets, platform first, for Assets Applications', () => {
-    expect(getRootFolders(ApplicationRoute.AssetsApplications)).toEqual(['platform', 'public']);
-  });
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return both buckets, platform first, for %s',
+    (view) => {
+      expect(getRootFolders(view)).toEqual(['platform', 'public']);
+    },
+  );
 
   test.each([
-    ApplicationRoute.AssetsToolsets,
     ApplicationRoute.Prompts,
     ApplicationRoute.Conversations,
     ApplicationRoute.Files,
     ApplicationRoute.PlatformKeys,
   ])('Should return a single-element array matching getRootFolder for %s', (view) => {
     expect(getRootFolders(view)).toEqual([getRootFolder(view)]);
+  });
+});
+
+describe('Root Folder Utils :: isPlatformDualBucketView', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'is true for %s when the current path is platform-prefixed',
+    (view) => {
+      expect(isPlatformDualBucketView(view, 'platform/')).toBe(true);
+      expect(isPlatformDualBucketView(view, 'platform/my-item')).toBe(true);
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'is false for %s for a public-prefixed path',
+    (view) => {
+      expect(isPlatformDualBucketView(view, 'public/')).toBe(false);
+    },
+  );
+
+  test('is false for an undefined path, and for a non-dual-bucket view even with a platform-prefixed path', () => {
+    expect(isPlatformDualBucketView(ApplicationRoute.AssetsApplications, undefined)).toBe(false);
+    expect(isPlatformDualBucketView(ApplicationRoute.PlatformKeys, 'platform/')).toBe(false);
   });
 });
 
