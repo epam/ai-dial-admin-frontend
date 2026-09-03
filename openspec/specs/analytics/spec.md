@@ -6498,6 +6498,38 @@ conversion is lossless.
 - **WHEN** a first-query time is returned as an ISO-8601 string
 - **THEN** the value sent as the bound is that instant in epoch milliseconds
 
+### Requirement: A hop's bodies are located by its trace and its span, never by the conversation header
+
+The read that fetches a selected hop's request and response SHALL be located by the trace the span was read
+under, the span's own id and its recorded time, and SHALL NOT be conditioned on the conversation or session
+header. That header is unpopulated on whole classes of in-turn spans — a Core-internal call recorded under the
+trace carries none — so a read requiring it matches no row for exactly those hops, and the section then
+reports that the hop recorded nothing while the log holds its body.
+
+**The bodies read and the span tree SHALL agree on which hops of one trace exist.** The tree is already
+scoped by trace id alone, for this same reason; a tree that offers a row whose every tab denies it contradicts
+itself, and the reader has no way to tell which of the two is wrong.
+
+**Entitlement is unaffected.** Which body columns a caller may read is resolved from the entity schema and
+stays the only gate on the content: a caller holding neither column SHALL still be told the column was
+withheld, rather than that the hop recorded nothing.
+
+#### Scenario: A hop recorded with no conversation header states its body
+
+- **WHEN** a span whose conversation header is empty is selected
+- **THEN** its Request and Response state what the log recorded for that span
+- **AND** neither reports that the hop recorded nothing
+
+#### Scenario: The tree and the bodies read agree
+
+- **WHEN** a trace offers a row for a span
+- **THEN** selecting that row reads that span's bodies under the same scope the row was read under
+
+#### Scenario: A withheld column is still reported as withheld
+
+- **WHEN** a caller entitled to neither body column opens a hop
+- **THEN** the section states that the column was withheld rather than that nothing was recorded
+
 ### Requirement: A turn renders as a tree of spans
 
 A turn SHALL render as a tree of spans. **A row SHALL stand for exactly one recorded span, and every
@@ -7026,10 +7058,18 @@ count its only response-column field. Each SHALL therefore render on the tab tha
 from, so a reader moving down a tree of mixed kinds keeps one layout and finds a response fact where every
 other response fact was.
 
-**A fact read from the hop row rather than from a body SHALL render above the tab strip**, where it is visible
-on every tab. An MCP hop's method, tool name and toolset are plain columns belonging to neither side, and
-duplicating them onto both tabs would state the same thing twice while leaving a reader unsure whether the
-two copies could differ. This is the slot the request's parameters already occupy.
+**The tab strip SHALL be the first element of the bodies section.** It is the control that decides what the
+section shows, so it heads the section it governs; a section opening with a row of facts puts what a reader
+reads second above what they act on first.
+
+**The strip, the hop-row facts and the body SHALL sit on one continuous opaque surface.** A transparent band
+between them shows whatever lies behind the section, and on the seam of a pinned element it is where a stale
+repaint survives; the section's own ground SHALL run from the strip to the body with no gap to see through.
+
+**A fact read from the hop row rather than from a body SHALL render directly below the tab strip**, outside
+the scrolling body, where it stays visible on every tab. An MCP hop's method, tool name and toolset are plain
+columns belonging to neither side, and duplicating them onto both tabs would state the same thing twice while
+leaving a reader unsure whether the two copies could differ.
 
 **A trace SHALL open on its entry hop** — the span whose parent is null, what the client sent to DIAL — and
 on its earliest span where it records none. That hop's request body is the only one carrying the user-visible
@@ -7068,10 +7108,16 @@ statement the rail makes for the same state.
 - **AND** the Response tab states the result it returned
 - **AND** no Chat tab is offered for it
 
+#### Scenario: The tab strip heads the bodies section
+
+- **WHEN** a span is selected
+- **THEN** the tab strip is the first element of the bodies section
+- **AND** any fact read from the hop row renders below it
+
 #### Scenario: An MCP hop's row facts stay visible on both tabs
 
 - **WHEN** an MCP hop is selected and the reader moves between its tabs
-- **THEN** its method, tool name and toolset render above the tab strip on both
+- **THEN** its method, tool name and toolset render below the tab strip on both
 
 #### Scenario: An embedding hop states its dimension count on the response side
 
@@ -7089,6 +7135,66 @@ statement the rail makes for the same state.
 
 - **WHEN** the trace opens with no span selected
 - **THEN** the bodies section states that no span is selected
+
+### Requirement: Every hop states how its call went, before any body is read
+
+**A hop SHALL state the outcome of its call from the hop row alone** — the recorded HTTP status with its
+reason phrase, the recorded size of each side, and the duration — and SHALL state it without reading a body.
+These are columns the tree already carries, so the statement costs no read and holds for a hop whose bodies
+are withheld, absent, or clamped away. Until now a hop that showed no body showed nothing at all, which
+reports a gap in what the reader may see as a gap in what happened.
+
+**The outcome SHALL be stated in the bodies section rather than on the span's facts sheet.** The status is the
+answer to "did this call work", which is the question the two bodies are read against, so it belongs where
+they are read; stating it in both places leaves one fact with two homes and two chances to disagree.
+
+**Each fact SHALL be stated on the side it describes, beside that side's own facts.** The verb heads the
+request; the status heads the response. Stated once over both tabs, the outcome of the call sits above the
+request describing something the request has not done yet.
+
+**A tab SHALL state the one fact its side owns, and not the measurements another surface already carries.**
+The duration is on the span's facts sheet, the sizes are on the messages and on the recorded bytes — a line
+that repeats them makes the reader search it for the two facts only it can give. **Where a hop offers no tab
+at all** — a caller entitled to neither body column — **the sizes and the duration SHALL be stated with both
+halves**, because that line is then the whole of what the section can show.
+
+**The conversation tab SHALL state neither half**: it presents a history rather than a call.
+
+**A failed call SHALL be marked on the line as a whole, not on the status alone.** The status states the
+failure in words; the line carries it before the reader has read anything.
+
+**Failure SHALL be decided by the same test the tree uses** — a false success flag or a status of 400 and
+above — so a hop cannot read as failed in one surface and successful in the other. A status outside that
+test, such as the 202 a notification is answered with, SHALL be stated as the success it is.
+
+#### Scenario: A hop with no readable body still states its outcome
+
+- **WHEN** a hop whose body columns are withheld is opened
+- **THEN** the section states the recorded status, the recorded sizes and the duration
+- **AND** it states separately that the bodies were withheld
+
+#### Scenario: Each side states its own half of the call
+
+- **WHEN** the reader is on the Request tab
+- **THEN** it states the verb and does not state the status
+- **AND** on the Response tab the status is stated instead
+
+#### Scenario: A failed call is marked on the line, not by the status alone
+
+- **WHEN** a hop whose call failed is opened
+- **THEN** its status states the failure in words
+- **AND** the line carrying it is marked as failed
+
+#### Scenario: The conversation tab states no transport facts
+
+- **WHEN** the reader moves to the Chat tab
+- **THEN** neither half of the transport is stated there
+
+#### Scenario: An accepted notification is not stated as a failure
+
+- **WHEN** a hop answered with a status outside the failure test is opened
+- **THEN** it is stated as successful
+- **AND** the marker the tree gives that hop agrees with it
 
 ### Requirement: A hop's request and response render as a structured inspector
 
@@ -7138,9 +7244,9 @@ is usually why a reader opened the hop, and it is a fact about the result that i
 This is stated here and not on the Chat tab: Chat leaves tool traffic out of the conversation entirely, so
 the pairing has exactly one surface.
 
-**The request's parameters SHALL be stated inside the Request tab**, not above the tab strip. Only facts read
-from the hop row belong above it: a request-body fact placed there sits over the Response tab describing
-something else.
+**The request's parameters SHALL be stated inside the Request tab**, not in the hop-row facts slot below the
+tab strip. Only facts read from the hop row belong in that slot: a request-body fact placed there is stated
+over the Response tab too, describing something else.
 
 **The system message SHALL render, labelled by its role, like any other message.** This reverses the removed
 requirement. There SHALL be no per-role setting and no separate reveal: the bodies are already behind the
@@ -7210,7 +7316,7 @@ its frame count, and frames can be counted only by a pass over the raw body.
 #### Scenario: The request's parameters are stated on the request tab alone
 
 - **WHEN** the reader moves to the Response tab
-- **THEN** the request's parameters are not stated above the tab strip
+- **THEN** the request's parameters are not stated outside the Request tab
 
 #### Scenario: No per-property size is stated
 
@@ -7258,15 +7364,18 @@ placeholder when the body carries none. An absent `temperature` is a debugging a
 deployment's default — and a parameter line that silently omits it cannot be told apart from one the reader
 did not look at carefully.
 
-**Every other member of the body SHALL be stated under the name the body gave it**, whether or not this
-frontend recognises it. The recognised names are an *ordering* — the settings a reader looks for by name come
-first, under a short label — not an allow-list. A parameter this frontend has never met is still one the call
-was made with, and the endpoint set is open by design, so any allow-list is permanently behind it.
+**The model the request asked for SHALL head the line**, and the settings a reader looks for by name SHALL
+follow it. The call was made *to* a model, and everything after it is how — a line that states the model as
+one member among ten makes the reader search for the subject of the sentence.
 
-**Unrecognised parameters SHALL NOT be collapsed into a count.** The removed rule counted them, to keep an
-unbounded list from pushing the messages off a 360px rail. The parameter line no longer lives in that rail,
-and a count told the reader that something existed while refusing to name it — the one thing they would have
-opened the hop to learn.
+**Every other member of the body SHALL be counted, with its names carried.** A parameter this frontend has
+never met is still one the call was made with, so it is never dropped; but naming every member turned the
+line into a paragraph the reader had to read through to find the four settings they came for, on hops that
+carry a dozen passthrough members. The count SHALL carry the names of what it stands for, as text a screen
+reader reaches, and the values SHALL remain one control away in the recorded bytes.
+
+This reverses the rule that replaced the original count. That rule was right that a bare count says something
+exists while refusing to name it — which is why the names travel with this one.
 
 **Only the members that carry the conversation itself SHALL be left out** — the message list, its per-dialect
 spellings, and the system prompt — because the history renders those in full and a second, counted copy of
@@ -7281,11 +7390,19 @@ that disagrees with itself.
 routes to a model whose own id and version the row never records, and the two strings differ on real traffic.
 The response states what answered; this states what was asked for.
 
-**A state envelope SHALL be stated by its size, not omitted.** The DIAL-specific envelopes are blobs, so like
-any array- or object-valued parameter they SHALL be stated by their length or their number of keys rather
-than rendered — which is what keeps a passthrough blob from becoming the line. Their presence is worth
-stating: an envelope is why a message's recorded size can run far past its visible text, and a reader
-comparing the two has no other way to see that it is there.
+**A state envelope SHALL keep its presence stated, as a name among the counted members.** The DIAL-specific
+envelopes are blobs and are never rendered; an envelope is why a message's recorded size can run far past its
+visible text, and a reader comparing the two has no other way to see that it is there.
+
+**An array among the named settings SHALL be stated by its length, and an object by the names of its
+members.** How many tools were offered is the answer for a catalogue; for a settings object it is not — a
+lone `1` under a parameter says something is set while refusing to say what, and the member names say it in
+the same space.
+
+**The request's message count SHALL be stated only where no message list states it.** The list's own "all N"
+control sits one row below, and the same number twice over two adjacent lines is noise; where the list is
+absent — a withheld column, a body that recorded none — the hop row's count is the only thing that still
+answers how long the request was.
 
 **Presence SHALL be tested as "not null", never as truthiness.** `temperature: 0` is real and common — it is
 the value a reader most often wants confirmed — and `stream: false` is the fact that explains an unframed
@@ -7310,14 +7427,15 @@ under the truncation rule in `a11y.md`.
 #### Scenario: An unrecognised parameter is named
 
 - **WHEN** a request body carries a parameter this frontend does not recognise
-- **THEN** the parameter line states it under the key the body recorded
-- **AND** no count stands in place of it
+- **THEN** the parameter line counts it among the members it does not name
+- **AND** the name it was recorded under travels with that count, reachable by a screen reader
+- **AND** its value is not stated on the line
 
 #### Scenario: The settings a reader looks for come first
 
 - **WHEN** a request body carries both a recognised parameter and an unrecognised one
-- **THEN** the always-stated four lead the line
-- **AND** the recognised parameter precedes the unrecognised one
+- **THEN** the model heads the line and the always-stated four follow it
+- **AND** the unrecognised one is counted at the end rather than stated among them
 
 #### Scenario: The tool catalogue is not confusable with the tool results
 
@@ -7339,8 +7457,20 @@ under the truncation rule in `a11y.md`.
 
 #### Scenario: A parameter carrying a blob is stated by its size
 
-- **WHEN** a request body carries a parameter whose value is an array or an object
-- **THEN** the line states its length or its number of keys rather than its content
+- **WHEN** a named setting carries an array
+- **THEN** the line states its length rather than its content
+
+#### Scenario: A named setting carrying an object states its members
+
+- **WHEN** a named setting carries an object
+- **THEN** the line states the names of its members rather than how many there are
+- **AND** it states none of their values
+
+#### Scenario: The message count is not stated twice
+
+- **WHEN** the Request tab lists the messages and offers the role filter
+- **THEN** the parameter line does not restate the message count
+- **AND** a hop whose message list is absent has it stated there
 
 ### Requirement: The inspector reads bodies in tiers, and never ships one whole
 
@@ -7402,9 +7532,16 @@ that decision SHALL be made **per tab**.
 suppressed such a hop whole. A call that returned nothing is the case a reader most wants opened, and its
 request is the only record of what it attempted; only the Response tab SHALL state the absence.
 
-**The nine MCP protocol-envelope methods SHALL remain settled without a fetch, on both tabs.** They negotiate
-a session and carry no content, and `tools/list` returns the tool catalogue this requirement withholds
-anyway.
+**A protocol-envelope method SHALL NOT be settled as having nothing to show.** The claim that the nine of
+them carry no content is measurably wrong: over the recorded log `initialize` and `tools/list` record response
+bodies reaching hundreds of kilobytes, and every protocol hop records its status, its two sizes and its
+duration whether or not it recorded a body. What that rule actually protected was the tool catalogue, which is
+a policy about what to render — stated as if it were a fact about the log, it left nine methods blank on both
+tabs. What a protocol hop states is governed by **A protocol hop states the facts its method carries**.
+
+**A side SHALL be suppressed only where the log holds nothing for it**, and the suppression SHALL say which
+case it is. A notification answered by the protocol with no body has recorded nothing to show; a method whose
+body the reader is not being shown has not.
 
 **Embedding hops SHALL no longer be suppressed.** Their request body — averaging 352 B — is the probe text,
 which is the half a reader is asking about; only the response is a vector, and it is the response side that
@@ -7428,8 +7565,20 @@ dialect turns out to carry none.
 #### Scenario: A protocol-envelope hop is settled without a fetch
 
 - **WHEN** a hop whose MCP method negotiates the session is opened
-- **THEN** no body is fetched for it
-- **AND** both tabs state why that hop has no content
+- **THEN** its status, its two sizes and its duration are stated from the hop row, with no body read
+- **AND** nothing further is claimed about it until its body is read
+
+#### Scenario: A protocol hop states how its call went
+
+- **WHEN** a hop whose MCP method negotiates the session is opened
+- **THEN** it states the status, the two sizes and the duration recorded for it
+- **AND** neither tab reports that the hop recorded nothing where the log holds a body for it
+
+#### Scenario: A notification states that the protocol defines no body
+
+- **WHEN** a hop whose method is a notification is opened
+- **THEN** its response states that the protocol defines no body for it
+- **AND** it does not state that nothing was recorded
 
 #### Scenario: An embedding hop shows its probe text
 
@@ -7597,9 +7746,24 @@ through the console's own code viewer rather than a preformatted block — and s
 not parse.
 
 **A control SHALL sit on the ground of the section it is in.** The bodies section's ground is not the rail's,
-and a pinned control row carrying the rail's background reads as a lighter stripe across the panel. The raw
-switch SHALL sit at the same end of that row on both tabs, so the control does not move when the reader
-changes tab.
+and a pinned control row carrying the rail's background reads as a lighter stripe across the panel.
+
+**The control that reaches the recorded bytes SHALL sit at the end of that side's facts line**, in the same
+place on both tabs — the line says what this half of the call was, and the last thing on it is "or show me it
+as recorded". It is therefore always in view, whatever the body below it does.
+
+**It SHALL be the same control the rest of that surface is made of, carrying its state programmatically.** A
+toggle-switch widget on a line of facts reads as a setting for the screen rather than as one more control on
+that line, and the one it replaced hid its accessible node behind a label a pointer could not reach.
+
+**Every statement that there is nothing to show SHALL be made in one treatment.** A withheld column, a body
+the protocol defines none of, a request whose method is the whole of it — these differ in what they say, not
+in what kind of thing they are, and rendering one as loose text beside another in a bordered note made the
+section look like two screens.
+
+**A fact stated about the hop SHALL remain stated over the recorded bytes.** Only a control that narrows the
+structured view is withdrawn there. What answered and at what cost describes the same response whichever form
+of it is on screen, and withdrawing it makes the raw mode read as a different hop.
 
 **The control that opens a turn in full SHALL sit inside that turn**, not beneath it: below the bubble it
 reads as a control for the conversation rather than for the turn it opens.
@@ -7617,11 +7781,20 @@ recorded in the body: the name says which tool, the arguments say what was asked
 the message answering it quotes back in the next request. Carrying the name alone discarded the other two and
 left a result unpairable.
 
-**The response's own facts SHALL be stated outside that card, and above it.** Which model answered, how the
-tokens split, what came from cache and the upstream's id for the completion are facts about the response
-rather than about the message it carried — and the tab holds exactly one answer, so they head the reply
-instead of trailing a card the reader has to scroll past. The clamp and the note about a requested tool with
-no recorded call stay with the text they qualify.
+**The response's own facts SHALL be stated outside that card, and above it.** How the tokens split and what
+came from cache are facts about the response rather than about the message it carried — and the tab holds
+exactly one answer, so they head the reply instead of trailing a card the reader has to scroll past. The clamp
+and the note about a requested tool with no recorded call stay with the text they qualify.
+
+**The model that answered SHALL be stated only where it differs from the model the request asked for.** The
+request line names the asked-for model one tab away, and repeating the same string on the response says
+nothing; a difference is the thing no other field on the screen can tell the reader, and it is exactly what
+this fact exists for.
+
+**The upstream's id for the completion SHALL NOT be stated on this line.** It is not a fact a reader scans a
+line for — it is one they copy, once, to take to the provider's own logs — and it sits in the recorded bytes
+the control at the end of this line opens. Carrying it here cost the line a third of its width for a value
+nobody reads in place.
 
 **Assembled SHALL be built from the shape its dialect records, not from one shape for all of them.** The
 Responses dialect lands in the same assembled column while recording `output[]` rather than
@@ -7687,6 +7860,17 @@ flag does not.
 - **WHEN** the raw switch is on and the recorded body parses as JSON
 - **THEN** it renders pretty-printed rather than as the single line it was recorded as
 
+#### Scenario: The raw control closes the facts line
+
+- **WHEN** either the Request or the Response tab is open
+- **THEN** the control reaching the recorded bytes is the last element of that side's facts line
+- **AND** its pressed state is exposed programmatically
+
+#### Scenario: The response's facts are stated over the recorded bytes
+
+- **WHEN** the response's raw switch is on
+- **THEN** the line stating what answered is still present
+
 #### Scenario: The role filter is not offered over the recorded bytes
 
 - **WHEN** the request's raw switch is on
@@ -7700,13 +7884,20 @@ span and were distinguishable only by it. **No session field SHALL be stated** �
 column for MCP, and a field with no source is a field that will be filled with the wrong thing.
 
 **Each of those facts SHALL be stated where the column it comes from is stated.** The method, the tool name
-and the toolset are plain hop-row columns and SHALL render above the tab strip, visible on every tab; the
+and the toolset are plain hop-row columns and SHALL render below the tab strip, visible on every tab; the
 arguments are the request column and SHALL render on the Request tab; the result is the response column and
 SHALL render on the Response tab. The hop's two halves are read in one round trip, so neither tab waits on
 the other — the split is a matter of where a fact is stated, not of when it is fetched.
 
 `tools/call` is the only MCP method the inspector opens on; it averages 5.5 KB in and 123 KB out, so its
 result SHALL be subject to the same clamp as any other raw content.
+
+**Both halves SHALL be presented as formatted JSON where what was recorded is JSON**, and exactly as recorded
+where it is not. A tool returns its result as one line, and a reader cannot pick a field out of a JSON
+document written that way; the arguments are already stated formatted, and the two halves of one hop SHALL NOT
+be formatted by different rules. **The sizes stated about a body SHALL remain the recorded ones** —
+reformatting adds whitespace that the log never held, and a clamp that counted it would report a size the hop
+does not have.
 
 **An embedding hop SHALL state the model, the number of inputs, the dimension count, the token count and the
 text that was embedded.** It SHALL NOT render the vector: 96% of recorded vectors arrive base64-encoded, so
@@ -7726,8 +7917,19 @@ walk past the payload budget every other read honours.
 #### Scenario: An MCP hop states its arguments, its result and its toolset
 
 - **WHEN** an MCP tool call is opened
-- **THEN** the method, the tool name and the toolset render above the tab strip
+- **THEN** the method, the tool name and the toolset render below the tab strip
 - **AND** the Request tab states the arguments sent and the Response tab states the result returned
+
+#### Scenario: A JSON tool result is presented as formatted JSON
+
+- **WHEN** an MCP tool call whose recorded result is a JSON document is opened
+- **THEN** the Response tab presents that result as formatted JSON
+- **AND** the size it states is the size the log recorded, not the size after formatting
+
+#### Scenario: A tool result that is not JSON is presented as recorded
+
+- **WHEN** an MCP tool call whose recorded result is not JSON is opened
+- **THEN** the Response tab presents the text exactly as it was recorded
 
 #### Scenario: No MCP session field is stated
 
@@ -7745,6 +7947,39 @@ walk past the payload budget every other read honours.
 
 - **WHEN** an embedding hop's inputs assemble into more text than the budget admits
 - **THEN** the probe text is clamped
+- **AND** the panel states the recorded size and the delivered size
+
+### Requirement: A protocol hop states the facts its method carries
+
+Beyond the outcome every hop states, an MCP protocol hop SHALL state what its own method actually recorded,
+decoded server-side into facts rather than shipped as a body.
+
+**Both halves SHALL be stated as the JSON they were recorded as, formatted** — the parameters the client sent
+on the Request tab, the result the server answered with on the Response tab. A protocol message is a request
+and a response like any other, and it is stated in the shape every other body is stated in.
+
+**They SHALL NOT be summarised into named facts.** Decoding each method into a line — a negotiated version
+here, a tool count and names there — describes a response instead of showing one, and makes two protocol
+messages read as two different screens. It also needs a decoder per method, so an unfamiliar method has
+nothing to fall back to but a blank.
+
+**The result SHALL be clamped like any other raw content.** A `tools/list` result carries every tool's schema
+and reaches hundreds of kilobytes; the clamp is what bounds it, and it states what it withheld.
+
+This does not reopen the tool-catalogue rule, which governs a **model call's** request line: that line states
+a count because the catalogue is one member of a body the reader opened for other reasons. A `tools/list` hop
+*is* the catalogue — it is what the reader selected the span to see.
+
+#### Scenario: A protocol hop states the result it was answered with
+
+- **WHEN** an `initialize` or `tools/list` hop is opened
+- **THEN** its Response states the recorded result as formatted JSON
+- **AND** a method this console has never met is stated the same way rather than left blank
+
+#### Scenario: A protocol result too large for the budget states what it withheld
+
+- **WHEN** a protocol result exceeds the delivered budget
+- **THEN** it is clamped
 - **AND** the panel states the recorded size and the delivered size
 
 ### Requirement: Each side of the inspector is gated by its own recorded column

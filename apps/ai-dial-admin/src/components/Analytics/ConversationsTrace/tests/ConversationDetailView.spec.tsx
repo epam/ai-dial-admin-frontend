@@ -112,7 +112,7 @@ beforeEach(() => {
     response: {
       state: HopReadState.Available,
       dialect: HopDialect.ChatCompletions,
-      params: { stated: [] },
+      params: { stated: [], rest: [] },
       messages: [],
       roleCounts: [],
       recordedBytes: 10,

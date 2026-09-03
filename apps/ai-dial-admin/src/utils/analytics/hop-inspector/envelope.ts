@@ -228,16 +228,25 @@ export const NO_CLAMP: HopClamp = { isClamped: false, recordedBytes: null, deliv
 
 // The one way to clamp something a reader will be told about. Returning the numbers alongside the text is what
 // makes the statement possible at the call site rather than optional.
-export const clampToBudget = (text: string | null, budget: number): { text: string | null; clamp: HopClamp } => {
+export const clampToBudget = (
+  text: string | null,
+  budget: number,
+  // What the log recorded, where that is no longer the length of the text being clamped. A caller that
+  // reformats a body before clamping supplies this: whitespace added for rendering is not a size the hop had.
+  recordedBytes?: number,
+): { text: string | null; clamp: HopClamp } => {
   if (text === null) {
     return { text: null, clamp: NO_CLAMP };
   }
 
-  const recordedBytes = textByteLength(text);
   const clamped = clampBytes(text, budget);
 
   return {
     text: clamped.text,
-    clamp: { isClamped: clamped.isClamped, recordedBytes, deliveredBytes: textByteLength(clamped.text) },
+    clamp: {
+      isClamped: clamped.isClamped,
+      recordedBytes: recordedBytes ?? textByteLength(text),
+      deliveredBytes: textByteLength(clamped.text),
+    },
   };
 };

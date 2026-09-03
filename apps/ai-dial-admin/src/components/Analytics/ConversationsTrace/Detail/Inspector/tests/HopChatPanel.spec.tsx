@@ -68,7 +68,7 @@ const message = (
 const request = (overrides: Partial<HopRequestEnvelope> = {}): HopRequestEnvelope => ({
   state: HopReadState.Available,
   dialect: HopDialect.ChatCompletions,
-  params: { stated: [] },
+  params: { stated: [], rest: [] },
   messages: [
     message(0, MessageRole.System, 'Ye be a helpful assistant.'),
     message(1, MessageRole.User, 'where is odesa?'),

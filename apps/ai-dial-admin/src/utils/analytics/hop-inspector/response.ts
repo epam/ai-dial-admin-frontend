@@ -186,6 +186,11 @@ const factsOf = (source: ResponseSource): HopResponseFacts => {
 // schema reports it — averaging 1 511 characters against 52.8 KB for the raw body. Where that column is absent
 // the same decode the response side uses recovers it from the raw body, so an instance predating it is
 // not left without a response.
+// Unstructured, not absent: on a failed hop those bytes are the error payload, and reporting them as "recorded
+// nothing" is the dead end this state exists to avoid.
+const emptyStateOf = (recordedBytes: number | null): HopReadState =>
+  (recordedBytes ?? 0) > 0 ? HopReadState.Unstructured : HopReadState.NoBody;
+
 export const responseEnvelopeOf = (row: ConversationEntryBodyRow, dialect: HopDialect): HopResponseEnvelope => {
   const source = sourceOf(row);
   const decoded = dialect === HopDialect.Responses ? responsesShapeOf(source) : chatShapeOf(row, source);
@@ -196,17 +201,18 @@ export const responseEnvelopeOf = (row: ConversationEntryBodyRow, dialect: HopDi
   // unit and so silently a different limit.
   const clamped = clampToBudget(text, RAW_BODY_BYTE_BUDGET);
   const hasContent = text !== null || reasoningText !== null || toolCalls.length > 0;
+  const recordedBytes =
+    row.response_body === null || row.response_body === undefined ? null : textByteLength(row.response_body);
 
   return {
-    state: hasContent ? HopReadState.Available : HopReadState.NoBody,
+    state: hasContent ? HopReadState.Available : emptyStateOf(recordedBytes),
     text: clamped.text,
     textClamp: clamped.clamp,
     reasoningText,
     finishReason: status,
     toolCalls,
     facts: factsOf(source),
-    recordedBytes:
-      row.response_body === null || row.response_body === undefined ? null : textByteLength(row.response_body),
+    recordedBytes,
   };
 };
 

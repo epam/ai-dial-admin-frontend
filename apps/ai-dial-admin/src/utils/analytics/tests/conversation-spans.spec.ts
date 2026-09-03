@@ -12,6 +12,7 @@ import {
   areSpansPartial,
   hopFactsOf,
   hopSideSuppressionsOf,
+  hopTransportOf,
   isFailedHop,
   mcpToolCallTallyOf,
   spanBodyTabsOf,
@@ -264,6 +265,43 @@ describe('isFailedHop', () => {
   });
 });
 
+describe('hopTransportOf', () => {
+  test('states the recorded status with the protocol phrase for it', () => {
+    const transport = hopTransportOf(span({ response_status: 200, success: true }));
+
+    expect(transport.status).toBe(200);
+    expect(transport.reason).toBe('OK');
+    expect(transport.hasFailed).toBe(false);
+  });
+
+  // 202 is outside the failure floor: reading it as anything else marks every handshake in the tree failed.
+  test('an accepted notification is a success, not a failure', () => {
+    expect(hopTransportOf(span({ response_status: 202, success: true }))).toMatchObject({
+      reason: 'Accepted',
+      hasFailed: false,
+    });
+  });
+
+  test('a status at or above the failure floor reads as failed', () => {
+    expect(hopTransportOf(span({ response_status: 502, success: true })).hasFailed).toBe(true);
+  });
+
+  // The other half of the same test the tree uses, so one hop cannot read differently in the two surfaces.
+  test('a false success flag reads as failed whatever the status says', () => {
+    expect(hopTransportOf(span({ response_status: 200, success: false })).hasFailed).toBe(true);
+  });
+
+  test('a status this console does not name still states its number', () => {
+    expect(hopTransportOf(span({ response_status: 418 }))).toMatchObject({ status: 418, reason: null });
+  });
+
+  test('carries the recorded sizes and duration, and nothing derived from a body', () => {
+    expect(
+      hopTransportOf(span({ request_body_bytes: 2048, response_body_bytes: 4096, operation_duration_ms: 89 })),
+    ).toMatchObject({ requestBytes: 2048, responseBytes: 4096, durationMs: 89 });
+  });
+});
+
 describe('hopSideSuppressionsOf', () => {
   const hop = (overrides: Partial<ConversationSpanRow> = {}) => span({ response_body_bytes: 4096, ...overrides });
 
@@ -280,15 +318,25 @@ describe('hopSideSuppressionsOf', () => {
     });
   });
 
-  test.each(['initialize', 'notifications/initialized', 'tools/list'])(
-    'the %s handshake settles both sides',
-    (method) => {
-      expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: method }))).toEqual({
-        request: HopSideSuppression.SessionSetup,
-        response: HopSideSuppression.SessionSetup,
-      });
-    },
-  );
+  // These used to settle both sides on the claim that they carry no content; they do carry it.
+  test.each(['initialize', 'tools/list'])('the %s handshake is read rather than settled', (method) => {
+    expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: method }))).toEqual({
+      request: null,
+      response: null,
+    });
+  });
+
+  // The one protocol message with no response, which is a different fact from "the log recorded nothing".
+  test('a notification states that the protocol defines no response body', () => {
+    expect(
+      hopSideSuppressionsOf(
+        hop({ event_kind: 'mcp', mcp_method: 'notifications/initialized', response_body_bytes: 0 }),
+      ),
+    ).toEqual({
+      request: null,
+      response: HopSideSuppression.ProtocolNoBody,
+    });
+  });
 
   // Only the response is a vector. The request averages 352 B and is the probe text — the half the reader is
   // actually asking about.

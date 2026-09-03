@@ -3,6 +3,7 @@
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
+import HopPanelLoader from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopPanelLoader';
 import HopChatBubble from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopChatBubble';
 import HopChatTurn from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopChatTurn';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
@@ -78,11 +79,7 @@ const HopChatPanel: FC<Props> = ({
   });
 
   if (isRequestLoading || request === null) {
-    return (
-      <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-        <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
-      </div>
-    );
+    return <HopPanelLoader />;
   }
 
   // A dialect no parser claims has no conversation to lay out. The raw body is the Request tab's answer, and
@@ -96,7 +93,7 @@ const HopChatPanel: FC<Props> = ({
   const turns = conversationTurnsOf(request.messages);
 
   if (!turns.length) {
-    return <p className="text-secondary dial-tiny-text">{t(ConversationsTraceI18nKey.InspectorChatNoMessages)}</p>;
+    return <HopStateNote messageKey={ConversationsTraceI18nKey.InspectorChatNoMessages} />;
   }
 
   const answer = response?.state === HopReadState.Available ? response.text : null;
@@ -131,9 +128,7 @@ const HopChatPanel: FC<Props> = ({
           onClose={onClose}
         />
       ))}
-      {!isResponseGranted && (
-        <p className="text-secondary dial-tiny-text">{t(ConversationsTraceI18nKey.InspectorChatAnswerWithheld)}</p>
-      )}
+      {!isResponseGranted && <HopStateNote messageKey={ConversationsTraceI18nKey.InspectorChatAnswerWithheld} />}
       {isResponseGranted && isResponseLoading && (
         <div className="flex items-center justify-center">
           <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />

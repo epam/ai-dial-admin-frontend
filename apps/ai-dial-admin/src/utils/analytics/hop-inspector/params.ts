@@ -37,18 +37,23 @@ const LABELLED = [
 // The only members left out: the ones that carry the conversation itself, which the history renders in full.
 // `input` and `instructions` are the Responses dialect's spelling of `messages` and the system prompt.
 //
-// The DIAL state envelopes are deliberately *not* among them. They are blobs, so they state their number of
-// keys rather than their content — and that is worth stating: an envelope is why a message's recorded size
+// The DIAL state envelopes are deliberately *not* among them. They are blobs, so they state the names of what
+// they carry rather than the values — and that is worth stating: an envelope is why a message's recorded size
 // can run far past its visible text, and a reader comparing the two has no other way to see that it is there.
 const STRUCTURAL = new Set(['messages', 'system', 'input', 'instructions']);
 
+// An array states how many members it had — `tools` is a catalogue, and the count is the answer. An object
+// states *which* members: a lone `1` under `stream_options` says something is set while refusing to say what,
+// which is the one thing a reader debugging a call cannot use.
 const scalarOf = (value: unknown): string | null => {
   if (Array.isArray(value)) {
     return String(value.length);
   }
 
   if (isRecord(value)) {
-    return String(Object.keys(value).length);
+    const keys = Object.keys(value);
+
+    return keys.length ? keys.join(', ') : String(keys.length);
   }
 
   return value == null ? null : String(value);
@@ -63,7 +68,7 @@ const isPresent = (body: Record<string, unknown>, name: string): boolean => name
 // `JSON.parse` twice over the same string, and 21% of request bodies are above 100 KB.
 export const paramsOf = (parsed: unknown): HopParams => {
   if (!isRecord(parsed)) {
-    return { stated: ALWAYS_STATED.map((name) => ({ name, value: null })) };
+    return { stated: ALWAYS_STATED.map((name) => ({ name, value: null })), rest: [] };
   }
 
   const stated: HopParam[] = ALWAYS_STATED.map((name) => ({
@@ -77,17 +82,13 @@ export const paramsOf = (parsed: unknown): HopParams => {
     }
   }
 
-  // Everything else the body carried, under the key it was recorded with. A parameter this frontend has never
-  // met is still a parameter the call was made with — and the endpoint set is open by design, so an allow-list
-  // is permanently behind it. Each is named rather than counted: a count says something exists while refusing
-  // to say what, which is the one thing a reader debugging a call cannot use.
+  // Everything else the body carried is counted rather than listed. A parameter this frontend has never met is
+  // still one the call was made with, so it is never dropped — but a line stating every member made the reader
+  // read a paragraph to find the four settings they came for. The names travel with the count.
   const ordered = new Set<string>([...ALWAYS_STATED, ...LABELLED]);
+  const rest = Object.keys(parsed).filter(
+    (name) => !ordered.has(name) && !STRUCTURAL.has(name) && isPresent(parsed, name),
+  );
 
-  for (const name of Object.keys(parsed)) {
-    if (!ordered.has(name) && !STRUCTURAL.has(name) && isPresent(parsed, name)) {
-      stated.push({ name, value: scalarOf(parsed[name]) });
-    }
-  }
-
-  return { stated };
+  return { stated, rest };
 };

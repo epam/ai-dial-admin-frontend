@@ -1,5 +1,6 @@
 'use client';
 
+import classNames from 'classnames';
 import { FC } from 'react';
 
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -10,6 +11,9 @@ import { formatCompactNumber } from '@/src/utils/analytics/conversation-formatti
 interface Props {
   facts: HopResponseFacts;
   finishReason: string | null;
+  // What the request asked for. The model that answered is stated only when the two differ: the request line
+  // on the same tab strip already names it, and a difference is what no other field on the screen can tell.
+  requestedModel: string | null;
 }
 
 /**
@@ -25,7 +29,7 @@ interface Props {
  * absence means the call ran on a default, an unreported token count says nothing about the call. A reported
  * zero is kept, because "no cache hit" is an answer.
  */
-const HopResponseFactsLine: FC<Props> = ({ facts, finishReason }) => {
+const HopResponseFactsLine: FC<Props> = ({ facts, finishReason, requestedModel }) => {
   const t = useI18n();
 
   // A response with nothing to state resolves to nothing here rather than at the call site. This line renders
@@ -36,8 +40,8 @@ const HopResponseFactsLine: FC<Props> = ({ facts, finishReason }) => {
     return null;
   }
 
-  const stated: { label: string; value: string }[] = [
-    ...(facts.model === null
+  const stated: { label: string; value: string; isAccented?: boolean }[] = [
+    ...(facts.model === null || facts.model === requestedModel
       ? []
       : [{ label: t(ConversationsTraceI18nKey.InspectorUpstreamModel), value: facts.model }]),
     ...(finishReason === null
@@ -65,11 +69,12 @@ const HopResponseFactsLine: FC<Props> = ({ facts, finishReason }) => {
           {
             label: t(ConversationsTraceI18nKey.InspectorCachedTokens),
             value: formatCompactNumber(facts.cachedTokens),
+            // The figure that explains a bill the total does not: a cached prompt is charged differently. The
+            // flag travels with the entry rather than being matched against its translated label, which would
+            // break the moment the copy changed.
+            isAccented: true,
           },
         ]),
-    ...(facts.completionId === null
-      ? []
-      : [{ label: t(ConversationsTraceI18nKey.InspectorCompletionId), value: facts.completionId }]),
   ];
 
   if (!stated.length) {
@@ -82,10 +87,10 @@ const HopResponseFactsLine: FC<Props> = ({ facts, finishReason }) => {
       aria-label={t(ConversationsTraceI18nKey.InspectorResponseFactsLabel)}
       className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 font-mono text-secondary dial-caption-text"
     >
-      {stated.map(({ label, value }) => (
+      {stated.map(({ label, value, isAccented }) => (
         <div key={label} className="flex min-w-0 items-center gap-1">
           <dt>{label}</dt>
-          <dd className="truncate text-primary">{value}</dd>
+          <dd className={classNames('truncate', isAccented ? 'text-accent-secondary' : 'text-primary')}>{value}</dd>
         </div>
       ))}
     </dl>

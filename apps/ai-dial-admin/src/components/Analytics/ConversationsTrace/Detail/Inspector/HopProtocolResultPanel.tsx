@@ -8,18 +8,15 @@ import HopFactBlock from '@/src/components/Analytics/ConversationsTrace/Detail/I
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { HopMcpFacts, HopReadState, HopSideSuppression } from '@/src/models/analytics/conversations-trace';
+import { HopProtocolFacts, HopReadState, HopSideSuppression } from '@/src/models/analytics/conversations-trace';
 
 interface Props {
-  facts: HopMcpFacts | null;
+  facts: HopProtocolFacts | null;
   isLoading: boolean;
   suppression: HopSideSuppression | null;
 }
 
-// The response half of an MCP hop: what the tool returned. `resultState` is the read state of the response
-// column alone, so a caller granted the arguments and not the result is told which half was withheld rather
-// than being shown a hop that appears to have recorded nothing.
-const HopMcpResultPanel: FC<Props> = ({ facts, isLoading, suppression }) => {
+const HopProtocolResultPanel: FC<Props> = ({ facts, isLoading, suppression }) => {
   const t = useI18n();
 
   if (suppression !== null) {
@@ -31,16 +28,16 @@ const HopMcpResultPanel: FC<Props> = ({ facts, isLoading, suppression }) => {
   }
 
   if (facts.resultText === null) {
-    return <HopStateNote state={facts.resultState} />;
+    return <HopStateNote state={facts.responseState} />;
   }
 
   return (
     <>
-      <HopFactBlock label={t(ConversationsTraceI18nKey.InspectorMcpResult)} text={facts.resultText} />
-      {/* A `tools/call` result averages 123 KB, so this clamp fires in practice rather than in theory. */}
+      <HopFactBlock label={t(ConversationsTraceI18nKey.InspectorProtocolResult)} text={facts.resultText} />
+      {/* A `tools/list` result carries every tool's schema and reaches hundreds of kilobytes. */}
       <HopClampNote clamp={facts.resultClamp} />
     </>
   );
 };
 
-export default HopMcpResultPanel;
+export default HopProtocolResultPanel;

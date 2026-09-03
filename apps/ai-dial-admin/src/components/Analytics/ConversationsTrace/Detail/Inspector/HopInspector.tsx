@@ -1,8 +1,10 @@
 'use client';
 
-import { DialLoader, Tabs } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo } from 'react';
+import { Tabs } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { FC, useMemo, useState } from 'react';
 
+import HopPanelLoader from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopPanelLoader';
 import HopChatPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopChatPanel';
 import HopEmbeddingPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopEmbeddingPanel';
 import HopEmbeddingResultPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopEmbeddingResultPanel';
@@ -10,20 +12,25 @@ import HopMcpArgumentsPanel from '@/src/components/Analytics/ConversationsTrace/
 import HopMcpFactsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpFactsLine';
 import HopMcpResultPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopMcpResultPanel';
 import HopParamsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopParamsLine';
+import HopProtocolRequestPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopProtocolRequestPanel';
+import HopProtocolResultPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopProtocolResultPanel';
+import HopRawSwitch from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRawSwitch';
 import HopRawView from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRawView';
 import HopRequestPanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopRequestPanel';
+import HopTransportLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopTransportLine';
+import HopResponseFactsLine from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopResponseFactsLine';
 import HopResponsePanel from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopResponsePanel';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import {
   useHopEmbeddingFacts,
   useHopMcpFacts,
+  useHopProtocolFacts,
 } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-facts';
 import {
   useHopRequest,
   useHopResponse,
 } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-envelope';
 import { useSpanBodyTabs } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-span-body-tabs';
-import { INSPECTOR_LOADER_SIZE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
@@ -37,8 +44,14 @@ import {
   SpanBodyTab,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
-import { hopSideSuppressionsOf } from '@/src/utils/analytics/conversation-spans';
+import { hopSideSuppressionsOf, hopTransportOf, isProtocolEnvelope } from '@/src/utils/analytics/conversation-spans';
 import { toNumber } from '@/src/utils/analytics/scalar';
+
+const MODEL_PARAM = 'model';
+
+// No border colour here: Tailwind settles two colour utilities by stylesheet order, not by class-attribute
+// order, so appending one to another painted the wrong border. Each call site chooses.
+const FACTS_BAR_CLASS = 'flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded border bg-layer-3 px-3 py-1.5';
 
 const TAB_LABEL_KEY: Record<SpanBodyTab, string> = {
   [SpanBodyTab.Request]: ConversationsTraceI18nKey.InspectorRequest,
@@ -61,13 +74,17 @@ interface Props {
 const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpToolCalls }) => {
   const t = useI18n();
   const { tabs, activeTab, onSelectTab } = useSpanBodyTabs({ span, bodyGrants });
+  const [isRawRequest, setIsRawRequest] = useState(false);
+  const [isRawResponse, setIsRawResponse] = useState(false);
 
   // Decided from the hop row, before any read: a protocol envelope answers both sides without a fetch, while
   // a zero-byte response settles only the side that recorded nothing.
   const suppressions = useMemo(() => hopSideSuppressionsOf(span), [span]);
+  const transport = useMemo(() => hopTransportOf(span), [span]);
 
   const isMcp = kind === SpanKind.Mcp;
   const isEmbedding = kind === SpanKind.Embeddings;
+  const isProtocol = isMcp && isProtocolEnvelope(span);
 
   const isRequestFetchable = bodyGrants.isRequestReadable && suppressions.request === null;
   const isResponseFetchable = bodyGrants.isResponseReadable && suppressions.response === null;
@@ -89,7 +106,13 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
     scope,
     traceId,
     span,
-    isEnabled: isMcp && (isRequestFetchable || isResponseFetchable),
+    isEnabled: isMcp && !isProtocol && (isRequestFetchable || isResponseFetchable),
+  });
+  const protocol = useHopProtocolFacts({
+    scope,
+    traceId,
+    span,
+    isEnabled: isProtocol && (isRequestFetchable || isResponseFetchable),
   });
   // Enabled on either grant, like the MCP read: the dimension count is a response-column field, so a caller
   // holding only that column still has a Response tab, and a read that never ran would leave it loading
@@ -101,61 +124,105 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
     isEnabled: isEmbedding && (bodyGrants.isRequestReadable || bodyGrants.isResponseReadable),
   });
 
+  const requestedModel = request.value?.params.stated.find(({ name }) => name === MODEL_PARAM)?.value ?? null;
+
   const tabItems = useMemo(() => tabs.map((tab) => ({ id: tab, label: t(TAB_LABEL_KEY[tab]) })), [tabs, t]);
 
-  // The trace view does not render this section for a span with no offered tab; this is the belt to that
-  // braces, and it keeps the tab strip from rendering with nothing in it.
+  // Rendering nothing for a caller entitled to neither column reports an entitlement as an absence of events.
   if (!tabs.length) {
-    return null;
+    return (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 bg-layer-1">
+        <HopTransportLine transport={transport} side={null} />
+        <HopStateNote state={HopReadState.ColumnWithheld} />
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-      {/* Only facts read from the hop row rather than from a body live above the strip, where they are visible
-          on every tab. The request's parameters are not among them: stated here they would head the Response
-          tab too, describing something else. */}
-      <div className="flex min-w-0 shrink-0 flex-col gap-2">
-        {isMcp && <HopMcpFactsLine facts={mcp.facts} />}
+    // One ground from strip to body: a transparent band at a pinned element's seam is where a stale repaint
+    // survives.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-layer-1">
+      {/* Below the strip — and still outside the scroll container, so the longest result cannot carry them off
+          the screen — sit only facts read from the hop row rather than from a body. The request's parameters
+          are not among them: stated here they would head the Response tab too, describing something else. */}
+      <div className="flex min-w-0 shrink-0 flex-col gap-2 bg-layer-1 pb-3">
         <Tabs
           ariaLabel={t(ConversationsTraceI18nKey.InspectorTabsLabel)}
           tabs={tabItems}
           activeTabId={activeTab}
           onTabChange={onSelectTab}
         />
+        {isMcp && <HopMcpFactsLine facts={mcp.facts} />}
       </div>
       {/* Focusable because it scrolls: a message list runs well past this height, and a scroll container
           with no tab stop puts everything below the fold out of reach for a reader with no pointer. */}
-      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
-        {activeTab === SpanBodyTab.Request && request.value && (
-          <HopParamsLine
-            params={request.value.params}
-            // Meaningless for an embedding probe, which records no message list.
-            messageCount={isEmbedding ? null : toNumber(span.number_request_messages)}
-          />
+      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto bg-layer-1">
+        {activeTab === SpanBodyTab.Request && (
+          <div className={classNames(FACTS_BAR_CLASS, 'border-primary')}>
+            <HopTransportLine transport={transport} side={HopInspectorSide.Request} />
+            {request.value && (
+              <HopParamsLine
+                params={request.value.params}
+                messageCount={request.value.messages.length ? null : toNumber(span.number_request_messages)}
+              />
+            )}
+            {/* Offered only where there is a body to swap in: an MCP or embedding hop states facts rather than
+                an envelope, and a hop that recorded no message list has nothing the bytes would replace. */}
+            {(request.value?.messages.length ?? 0) > 0 && (
+              <HopRawSwitch isRaw={isRawRequest} onChange={setIsRawRequest} />
+            )}
+          </div>
         )}
         {activeTab === SpanBodyTab.Request && (
           <RequestSide
             isMcp={isMcp}
+            isProtocol={isProtocol}
+            protocol={protocol}
             isEmbedding={isEmbedding}
             isFetchable={isRequestFetchable}
             suppression={suppressions.request}
             mcp={mcp}
             embedding={embedding}
             request={request}
+            isRaw={isRawRequest}
             scope={scope}
             traceId={traceId}
             span={span}
           />
         )}
         {activeTab === SpanBodyTab.Response && (
+          <div className={classNames(FACTS_BAR_CLASS, transport.hasFailed ? 'border-error' : 'border-primary')}>
+            <HopTransportLine transport={transport} side={HopInspectorSide.Response} />
+            {/* What answered, stated here rather than inside the panel: it describes the response whichever
+                form of it the panel is showing, so it survives the raw switch without the panel deciding. */}
+            {response.value && (
+              <>
+                <HopResponseFactsLine
+                  facts={response.value.facts}
+                  finishReason={response.value.finishReason}
+                  requestedModel={requestedModel}
+                />
+                {/* Not offered where the panel is already showing the recorded bytes: a body no parser claims
+                    has no assembled form to switch back to. */}
+                {response.value.state !== HopReadState.Unstructured && (
+                  <HopRawSwitch isRaw={isRawResponse} onChange={setIsRawResponse} />
+                )}
+              </>
+            )}
+          </div>
+        )}
+        {activeTab === SpanBodyTab.Response && (
           <ResponseSide
             isMcp={isMcp}
+            isProtocol={isProtocol}
+            protocol={protocol}
             isEmbedding={isEmbedding}
             isFetchable={isResponseFetchable}
             suppression={suppressions.response}
             mcp={mcp}
             embedding={embedding}
             response={response}
+            isRaw={isRawResponse}
             scope={scope}
             traceId={traceId}
             span={span}
@@ -183,43 +250,44 @@ type RequestState = ReturnType<typeof useHopRequest>;
 type ResponseState = ReturnType<typeof useHopResponse>;
 type EmbeddingState = ReturnType<typeof useHopEmbeddingFacts>;
 type McpState = ReturnType<typeof useHopMcpFacts>;
+type ProtocolState = ReturnType<typeof useHopProtocolFacts>;
 
 interface SideProps {
   isMcp: boolean;
+  isProtocol: boolean;
   isEmbedding: boolean;
   isFetchable: boolean;
   suppression: HopSideSuppression | null;
   mcp: McpState;
+  protocol: ProtocolState;
   embedding: EmbeddingState;
   scope: SessionScope;
   traceId: string;
   span: ConversationSpanRow;
 }
 
-const Loading: FC = () => {
-  const t = useI18n();
-
-  return (
-    <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-      <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
-    </div>
-  );
-};
-
-const RequestSide: FC<SideProps & { request: RequestState }> = ({
+const RequestSide: FC<SideProps & { request: RequestState; isRaw: boolean }> = ({
   isMcp,
+  isProtocol,
   isEmbedding,
   isFetchable,
   suppression,
   mcp,
+  protocol,
   request,
+  isRaw,
   embedding,
   scope,
   traceId,
   span,
 }) => {
-  // An MCP hop's arguments and an embedding probe's text are the request column read through their own kind's
-  // panel, so each states its own grant rather than deferring to the generic note below.
+  // An MCP hop's arguments, a protocol message's parameters and an embedding probe's text are the request
+  // column read through their own kind's panel, so each states its own grant rather than deferring to the
+  // generic note below.
+  if (isProtocol) {
+    return <HopProtocolRequestPanel facts={protocol.facts} isLoading={protocol.isLoading} suppression={suppression} />;
+  }
+
   if (isMcp) {
     return <HopMcpArgumentsPanel facts={mcp.facts} isLoading={mcp.isLoading} suppression={suppression} />;
   }
@@ -233,7 +301,7 @@ const RequestSide: FC<SideProps & { request: RequestState }> = ({
   }
 
   if (request.isLoading || request.value === null) {
-    return <Loading />;
+    return <HopPanelLoader />;
   }
 
   // A dialect no parser claims is answered with the body itself rather than with an empty panel — in an
@@ -260,6 +328,7 @@ const RequestSide: FC<SideProps & { request: RequestState }> = ({
   return (
     <HopRequestPanel
       envelope={request.value}
+      isRaw={isRaw}
       scope={scope}
       traceId={traceId}
       coreSpanId={span.core_span_id}
@@ -268,19 +337,26 @@ const RequestSide: FC<SideProps & { request: RequestState }> = ({
   );
 };
 
-const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpToolCallTally }> = ({
+const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpToolCallTally; isRaw: boolean }> = ({
   isMcp,
+  isProtocol,
   isEmbedding,
   isFetchable,
   suppression,
   mcp,
+  protocol,
   embedding,
   response,
+  isRaw,
   scope,
   traceId,
   span,
   mcpToolCalls,
 }) => {
+  if (isProtocol) {
+    return <HopProtocolResultPanel facts={protocol.facts} isLoading={protocol.isLoading} suppression={suppression} />;
+  }
+
   if (isMcp) {
     return <HopMcpResultPanel facts={mcp.facts} isLoading={mcp.isLoading} suppression={suppression} />;
   }
@@ -298,12 +374,28 @@ const ResponseSide: FC<SideProps & { response: ResponseState; mcpToolCalls: McpT
   }
 
   if (response.isLoading || response.value === null) {
-    return <Loading />;
+    return <HopPanelLoader />;
+  }
+
+  if (response.value.state === HopReadState.Unstructured) {
+    return (
+      <>
+        <HopStateNote state={HopReadState.Unstructured} />
+        <HopRawView
+          scope={scope}
+          traceId={traceId}
+          coreSpanId={span.core_span_id}
+          requestTime={span.request_time}
+          side={HopInspectorSide.Response}
+        />
+      </>
+    );
   }
 
   return (
     <HopResponsePanel
       envelope={response.value}
+      isRaw={isRaw}
       scope={scope}
       traceId={traceId}
       coreSpanId={span.core_span_id}

@@ -51,7 +51,7 @@ const HopMessageRow: FC<Props> = ({ message, opened, isLoading, onOpen, onClose 
             // A link button rather than an outlined one: the control sits inside a bordered card, and a
             // second border around it read as a nested panel. It carries no fill either, so the
             // `--bg-control-*` gap that forces a hover override on the filled 2.0 buttons does not apply.
-            textClassName="dial-caption-text"
+            textClassName="dial-caption-text text-accent-primary"
             className="self-start"
           />
         )

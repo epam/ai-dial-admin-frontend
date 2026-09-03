@@ -33,22 +33,21 @@ describe('paramsOf', () => {
     expect(paramsOf({}).stated.map(({ name }) => name)).not.toContain('top_p');
   });
 
-  test('states a parameter it does not recognise under its own recorded key', () => {
+  test('counts the parameters it does not name, and keeps their names', () => {
     const params = paramsOf({ temperature: 0, vendor_knob: 7, another_one: 'x' });
 
-    expect(params.stated).toEqual(
-      expect.arrayContaining([
-        { name: 'vendor_knob', value: '7' },
-        { name: 'another_one', value: 'x' },
-      ]),
-    );
+    expect(params.rest).toEqual(['vendor_knob', 'another_one']);
+    expect(params.stated.map(({ name }) => name)).not.toContain('vendor_knob');
+    expect(JSON.stringify(params)).not.toContain('"7"');
   });
 
-  test('states the settings a reader looks for by name before the rest', () => {
-    const names = paramsOf({ vendor_knob: 7, temperature: 0, top_p: 1 }).stated.map(({ name }) => name);
+  test('states the settings a reader looks for by name, and counts the rest', () => {
+    const params = paramsOf({ vendor_knob: 7, temperature: 0, top_p: 1 });
+    const names = params.stated.map(({ name }) => name);
 
     expect(names.slice(0, 4)).toEqual(['temperature', 'max_tokens', 'tools', 'stream']);
-    expect(names.indexOf('top_p')).toBeLessThan(names.indexOf('vendor_knob'));
+    expect(names).toContain('top_p');
+    expect(params.rest).toEqual(['vendor_knob']);
   });
 
   // The only members left out are the ones the history renders in full.
@@ -65,11 +64,24 @@ describe('paramsOf', () => {
     );
   });
 
-  // An envelope is why a message's recorded size can run far past its visible text, so its presence is
-  // stated — by its number of keys, never by its content.
-  test('states a state envelope by its size rather than its content', () => {
-    expect(paramsOf({ custom_content: { state: { a: 1 }, attachments: [] } }).stated).toEqual(
-      expect.arrayContaining([{ name: 'custom_content', value: '2' }]),
+  // An envelope is why a message's recorded size can run far past its visible text, so its presence survives
+  // — as a name in the count, never as its content.
+  test('counts a state envelope by name and states none of its content', () => {
+    const params = paramsOf({ custom_content: { state: { secret: 1 }, attachments: [] } });
+
+    expect(params.rest).toEqual(['custom_content']);
+    expect(JSON.stringify(params)).not.toContain('secret');
+  });
+
+  test('states an array among the named settings by its length', () => {
+    expect(paramsOf({ tools: [{ name: 'a' }, { name: 'b' }] }).stated).toEqual(
+      expect.arrayContaining([{ name: 'tools', value: '2' }]),
+    );
+  });
+
+  test('states a recognised object setting by what it carries', () => {
+    expect(paramsOf({ thinking: { type: 'enabled', budget_tokens: 1024 } }).stated).toEqual(
+      expect.arrayContaining([{ name: 'thinking', value: 'type, budget_tokens' }]),
     );
   });
 

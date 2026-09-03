@@ -623,6 +623,32 @@ export interface HopUnmeteredFacts {
 
 export type HopFacts = HopMeteredFacts | HopUnmeteredFacts;
 
+// Plain columns the span read already carries, so a hop whose bodies are withheld still states how it went.
+// Each field is stated on the side it describes: over both tabs, the outcome sat above the request describing
+// something the request has not done yet.
+export interface HopTransport {
+  method: string | null;
+  status: number | null;
+  // The protocol's own phrase, where this console names one; otherwise the number stands alone.
+  reason: string | null;
+  hasFailed: boolean;
+  requestBytes: number | null;
+  responseBytes: number | null;
+  durationMs: number | null;
+}
+
+// The parameters sent and the result answered with, each as the JSON it was recorded as — not a summary.
+export interface HopProtocolFacts {
+  state: HopReadState;
+  method: string | null;
+  // A notification carries none, and its method is the whole of the request.
+  requestText: string | null;
+  requestState: HopReadState;
+  resultText: string | null;
+  resultClamp: HopClamp;
+  responseState: HopReadState;
+}
+
 // The turn's recorded MCP tool calls per name, and whether the span read that produced them was complete.
 // The two travel together because a count read from a capped page cannot support a claim about an absence.
 export interface McpToolCallTally {
@@ -721,9 +747,13 @@ export enum SpanBodyTab {
 }
 
 // Why a side has no content to fetch, decided from the hop row before any body read.
+//
+// `ProtocolNoBody` is not `NoResponse` with different words: one says the log recorded nothing, the other says
+// the protocol defines nothing to record. Reporting a notification's absent body as an empty recording sends a
+// reader looking for data that never existed.
 export enum HopSideSuppression {
   NoResponse = 'no-response',
-  SessionSetup = 'session-setup',
+  ProtocolNoBody = 'protocol-no-body',
   Vector = 'vector',
 }
 
@@ -752,6 +782,8 @@ export interface HopParam {
 
 export interface HopParams {
   stated: HopParam[];
+  // The members the line does not name, carried as names so a reader can see which without their values.
+  rest: string[];
 }
 
 // What an assistant asked for, carried as part of the history rather than as metadata about it. An assistant
