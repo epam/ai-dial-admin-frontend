@@ -2465,6 +2465,8 @@ export default {
     RunFailed: 'Query execution failed.',
     WarningMissingGroupByField: 'Every group-by function needs a field.',
     WarningEmptyAggregate: 'Aggregate mode usually needs group_by and/or aggregate entries.',
+    ViewFullValue: 'View full value',
+    CopyValue: 'Copy value',
     ViewForm: 'Builder',
     ViewSql: 'SQL',
     ViewSwitcher: 'View',
