@@ -44,6 +44,30 @@ describe('Assets Modals utils', () => {
       expect(columns).toHaveLength(2);
       expect(!!columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Size)).toBeTruthy();
     });
+
+    // Regression: a platform-bucket application/toolset row has no version, so the bulk-delete
+    // confirmation grid should show Name+Author instead of Name+Version there.
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      'returns Name and Author columns for a platform-bucket %s delete',
+      (view) => {
+        const columns = getGridColumns(view, false, undefined, [{ folderId: 'platform/' } as unknown as DialFile]);
+
+        expect(columns).toEqual([
+          expect.objectContaining({ colId: FileManagerColumnKey.Name }),
+          expect.objectContaining({ colId: FileManagerColumnKey.Author }),
+        ]);
+      },
+    );
+
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      'keeps Name and Version columns for a public-bucket %s delete',
+      (view) => {
+        const columns = getGridColumns(view, false, undefined, [{ folderId: 'public/folder/' } as unknown as DialFile]);
+
+        expect(!!columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeTruthy();
+        expect(columns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Author)).toBeFalsy();
+      },
+    );
   });
 
   describe('getDeleteModalTitle', () => {

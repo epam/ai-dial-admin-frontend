@@ -84,6 +84,32 @@ describe('CreateEntity', () => {
     expect(createApp.mock.calls[0][0]).not.toHaveProperty('version');
   });
 
+  test('omits the version field and does not require it when creating a toolset into the platform bucket', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createToolset = vi.fn().mockResolvedValue({ success: true, response: { name: 'platform-toolset' } });
+    const context = () => ({ filePath: 'platform/', fetchFiles: vi.fn() });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsToolsets}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createToolset}
+        context={context as any}
+      />,
+    );
+
+    expect(screen.queryByDisplayValue('1.0.0')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createToolset).toHaveBeenCalled());
+    expect(createToolset.mock.calls[0][0]).not.toHaveProperty('version');
+  });
+
   test('seeds the default display version for AssetsModels', async () => {
     (useRouter as Mock).mockReturnValue({ push: vi.fn() });
 

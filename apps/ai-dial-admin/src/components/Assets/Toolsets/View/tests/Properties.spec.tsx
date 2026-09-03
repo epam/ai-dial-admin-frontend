@@ -51,4 +51,16 @@ describe('ToolsetAssetProperties', () => {
 
     expect(onChange).toHaveBeenCalledWith({ ...baseToolset, vendor_website: 'h' });
   });
+
+  test('renders the folder-move control for a public-bucket toolset', () => {
+    render(<ToolsetAssetProperties selectedToolset={{ ...baseToolset, folderId: 'public/' }} onChange={vi.fn()} />);
+
+    expect(screen.getByText('file-path')).toBeInTheDocument();
+  });
+
+  test('hides the folder-move control for a platform-bucket toolset — the bucket has no folders', () => {
+    render(<ToolsetAssetProperties selectedToolset={{ ...baseToolset, folderId: 'platform/' }} onChange={vi.fn()} />);
+
+    expect(screen.queryByText('file-path')).not.toBeInTheDocument();
+  });
 });

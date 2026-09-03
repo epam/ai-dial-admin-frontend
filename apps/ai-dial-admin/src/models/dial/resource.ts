@@ -274,6 +274,26 @@ export interface DialPlatformApplicationResource
   validationWarnings?: CoreValidationWarning[];
 }
 
+/**
+ * A platform-bucket toolset resource (`toolsets/platform/{name}`), as returned by Core. Core reuses
+ * the same `ToolSet` entity class for both the `public` and `platform` buckets — the bucket segment
+ * alone distinguishes them — so this carries the same snake_case content fields as
+ * `DialToolsetResource`, minus the fields that only make sense for the versioned, folder-nested
+ * `public` bucket (`version`, `nodeType`, `updatedAt` in favor of `ModifiedEntity`'s
+ * `createdAt`/`updatedAt`, `etag`). Flat and unversioned like `DialPlatformApplicationResource`.
+ */
+export interface DialPlatformToolsetResource
+  extends
+    Omit<DialToolsetResource, 'path' | 'folderId' | 'version' | 'nodeType' | 'updatedAt' | 'etag'>,
+    ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
 export type PlatformAsset =
   | DialModelResource
@@ -282,7 +302,8 @@ export type PlatformAsset =
   | DialRouteResource
   | DialRoleResource
   | DialKeyResource
-  | DialPlatformApplicationResource;
+  | DialPlatformApplicationResource
+  | DialPlatformToolsetResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',
