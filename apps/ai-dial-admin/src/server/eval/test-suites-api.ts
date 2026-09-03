@@ -27,6 +27,7 @@ export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string)
 export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
 export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
 export const METRIC_DECLARATIONS_URL = `${API}/metric-declarations`;
+export const METRIC_DECLARATIONS_LATEST_URL = `${API}/metric-declarations/versions/latest`;
 export const TEST_SUITE_DETACH_URL = (id: string) => `${TEST_SUITE_URL(id)}/detach-dataset`;
 export const TEST_SUITE_METRICS_URL = (id: string) => `${TEST_SUITE_URL(id)}/metric-definitions`;
 export const TEST_CASES_BULK_URL = (id?: string) => `${TEST_CASES_URL(id)}:bulk`;
@@ -195,6 +196,10 @@ export class TestSuitesApi extends BaseApi {
 
   getMetricDeclarations(page: number, size: number, token: Token): Promise<MetricResponse | null> {
     return this.get(`${METRIC_DECLARATIONS_URL}?page=${page}&size=${size}&includeTotalCount=true`, token);
+  }
+
+  getDetailedMetricDeclarations(token: Token): Promise<Metric[] | null> {
+    return this.get(METRIC_DECLARATIONS_LATEST_URL, token);
   }
 
   getMetricLatestVersion(id: string, token: Token): Promise<Metric | null> {

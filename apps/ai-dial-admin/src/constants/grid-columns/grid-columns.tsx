@@ -10,6 +10,8 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import ExternalUrlCellRenderer from '@/src/components/Grid/CellRenderers/ExternalUrlCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
+import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
+import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
@@ -35,6 +37,7 @@ import {
   QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
+  TestSuitesI18nKey,
 } from '@/src/constants/i18n';
 import { deriveSavedQueryEditor } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
@@ -130,6 +133,8 @@ import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpa
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
+import { Metric } from '@/src/models/evaluation/metric';
+import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
@@ -1321,6 +1326,64 @@ export const METRICS_COLUMN: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Name', hide: false },
   DESCRIPTION_COLUMN,
   CREATED_AT_COLUMN,
+];
+
+export const METRIC_NAME_COLUMN_WIDTH = 280;
+export const METRIC_DESCRIPTION_COLUMN_WIDTH = 370;
+export const METRIC_PROVIDER_COLUMN_WIDTH = 133;
+export const METRIC_OUTPUTS_COLUMN_WIDTH = 345;
+
+export const METRIC_RADIO_GROUP_NAME = 'metric-selection';
+
+export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  {
+    field: 'displayName',
+    colId: 'displayName',
+    headerName: t(TestSuitesI18nKey.Metric),
+    cellRenderer: RadioNameCellRenderer,
+    cellRendererParams: { groupName: METRIC_RADIO_GROUP_NAME },
+    tooltipValueGetter: () => undefined,
+    minWidth: METRIC_NAME_COLUMN_WIDTH,
+    valueGetter: (params) => {
+      const { name, displayName } = params.data as Metric;
+
+      return displayName || name;
+    },
+  },
+  {
+    ...DESCRIPTION_COLUMN,
+    cellRenderer: ClampedTextCellRenderer,
+    cellRendererParams: { lines: 2 },
+    wrapText: true,
+    tooltipValueGetter: () => undefined,
+    minWidth: METRIC_DESCRIPTION_COLUMN_WIDTH,
+  },
+  {
+    colId: 'outups',
+    headerName: t(TestSuitesI18nKey.Outputs),
+    cellRenderer: TagsCellRenderer,
+    valueGetter: (params) => {
+      const data = params.data as Metric;
+
+      return getMetricOutputTags(data?.latestVersion);
+    },
+    tooltipValueGetter: (params) => {
+      const data = params.data as Metric;
+
+      return getMetricOutputTags(data?.latestVersion).join(', ');
+    },
+    cellRendererParams: (params: { value: string[] }) => ({
+      items: params.value,
+      tagClassName: '!border-accent-tertiary !bg-accent-tertiary-alpha',
+    }),
+    maxWidth: METRIC_OUTPUTS_COLUMN_WIDTH,
+  },
+  {
+    field: 'providerId',
+    colId: 'providerId',
+    headerName: t(EntityFieldsI18nKey.provider),
+    maxWidth: METRIC_PROVIDER_COLUMN_WIDTH,
+  },
 ];
 
 export const TOOL_SCHEMA_COLUMNS = (t: (key: string) => string): ColDef[] => [
