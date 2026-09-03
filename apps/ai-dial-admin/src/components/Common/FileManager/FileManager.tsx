@@ -397,9 +397,9 @@ const FileManager: FC<Props> = ({
         onFilterChanged: handleGridFilterChanged,
       },
     };
-    // Applications is the only view whose action set depends on `filePath` (which bucket is being
-    // browsed — see `isPlatformApplicationsBucket`); every other view keeps the same options
-    // regardless of path, so this dependency is a no-op for them.
+    // Applications and Toolsets are the only views whose action set depends on `filePath` (which
+    // bucket is being browsed — see `isPlatformDualBucketView`); every other view keeps the same
+    // options regardless of path, so this dependency is a no-op for them.
   }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged, filePath]);
 
   return (

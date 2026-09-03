@@ -5,12 +5,16 @@ import { cookies, headers } from 'next/headers';
 import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialToolsetResource, ToolsetAuthCredentialLevel } from '@/src/models/dial/resource';
+import {
+  DialPlatformToolsetResource,
+  DialToolsetResource,
+  ToolsetAuthCredentialLevel,
+} from '@/src/models/dial/resource';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
-// import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ImportFileType } from '@/src/types/import';
 import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
@@ -74,6 +78,76 @@ export async function removeToolset(path: string, etag?: string) {
 export async function bulkDeleteToolsets(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.TOOLSET, paths);
+}
+
+/**
+ * Platform-bucket toolsets ("World B") reuse the same Core `ToolSet` entity as public-bucket ones —
+ * only the bucket segment of the path differs, and the bucket is flat (no folders, no versioning; see
+ * the `platform-toolsets` capability spec). `getToolsets`/`removeToolset`/`bulkDeleteToolsets` already
+ * take an arbitrary path and need no platform-specific logic; `createToolset`/`updateToolset` compute
+ * a `public`-defaulted, version-suffixed path, so their platform counterparts pin `folderId` to the
+ * `platform` bucket and clear `version`, letting `getVersionedName`'s existing no-op-when-absent
+ * branch (see `createToolset`/`updateToolset`) produce the flat `platform/{name}` path without a new
+ * branch there.
+ */
+export async function getPlatformToolsets(path: string) {
+  return getToolsets(path);
+}
+
+/**
+ * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+ * (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
+ * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+ * `toKeyPayload` strips extras for `Key.class`. `status`/`validationWarnings` are read-only
+ * projections Core computes, not part of the entity; `author`/`createdAt`/`updatedAt` come from the
+ * metadata node, not `ToolSet` itself; `reference` is a client-only tracking id (see `handleDuplicate`/
+ * `addNewVersion`, which already strip it before any write). None of these round-trip through the
+ * merge readers as content fields, so they must not be sent back on write.
+ */
+function toPlatformToolsetPayload(toolset: DialPlatformToolsetResource) {
+  const {
+    status: __status,
+    validationWarnings: __validationWarnings,
+    author: __author,
+    createdAt: __createdAt,
+    updatedAt: __updatedAt,
+    reference: __reference,
+    ...payload
+  } = toolset as DialPlatformToolsetResource & { reference?: string };
+
+  return payload;
+}
+
+export async function createPlatformToolset(toolset: DialPlatformToolsetResource) {
+  return createToolset({
+    ...toPlatformToolsetPayload(toolset),
+    folderId: `${PLATFORM_ROOT_FOLDER}/`,
+    version: undefined,
+  } as unknown as DialToolsetResource);
+}
+
+export async function getPlatformToolset(path: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMergedWithEtag<DialPlatformToolsetResource>(token, ResourceType.TOOLSET, path, etag);
+}
+
+export async function updatePlatformToolset(toolset: DialPlatformToolsetResource, etag: string) {
+  return updateToolset(
+    {
+      ...toPlatformToolsetPayload(toolset),
+      folderId: `${PLATFORM_ROOT_FOLDER}/`,
+      version: undefined,
+    } as unknown as AssetToolset,
+    etag,
+  );
+}
+
+export async function removePlatformToolset(path: string, etag?: string) {
+  return removeToolset(path, etag);
+}
+
+export async function bulkDeletePlatformToolsets(paths: { path: string }[]) {
+  return bulkDeleteToolsets(paths);
 }
 
 export async function moveToolsets(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {

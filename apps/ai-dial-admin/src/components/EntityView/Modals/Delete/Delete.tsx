@@ -22,6 +22,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { hasRelatedArtefacts, isAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -86,11 +87,17 @@ const DeleteConfirmationModal = <T extends Artefact>({
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
+      // For a platform-bucket application/toolset, `entityKey` is the full storage path
+      // (`platform/{name}`) the server action needs — Core has no lookup by bare name for these —
+      // but the notification should show the plain name, matching every other platform entity's
+      // flat, unversioned display (design.md's `platform-applications`/`platform-toolsets`).
+      const displayKey =
+        DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(entityKey) ? entity?.name || entityKey : entityKey;
       showNotification(
-        getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, entityKey, t)),
+        getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, displayKey, t)),
       );
     },
-    [showNotification, t, view],
+    [showNotification, t, view, entity],
   );
 
   const existingVersionOptions = useMemo(() => {

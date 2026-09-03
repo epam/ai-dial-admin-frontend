@@ -161,6 +161,21 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
     expect(createApp).not.toHaveBeenCalled();
   });
 
+  // Regression: `getPlatformAssetDuplicate` strips `folderId`/`path` from the duplicated asset
+  // (Core's platform-bucket write doesn't want them) — the post-duplicate redirect must restore a
+  // bucket signal itself, or `getEntityPath` falls through to the versioned-path branch and builds
+  // `?path=undefined{name}__` instead of a bare, no-`?path=` platform URL (design.md D5).
+  test('Confirming a duplicate of a platform-bucket asset redirects to the bare name, with no ?path=', async () => {
+    const push = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
+
+    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
+
+    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
+
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-applications/copy-of-platform-app'));
+  });
+
   test('Confirming a duplicate of a public-bucket asset calls createApp, not createPlatformApplication', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 

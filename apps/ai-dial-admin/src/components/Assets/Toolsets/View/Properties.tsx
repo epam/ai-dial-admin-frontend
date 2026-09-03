@@ -28,6 +28,7 @@ import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource
 import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   selectedToolset: DialToolsetResource;
@@ -95,7 +96,9 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
         />
         <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
 
-        {!isPublication && (
+        {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-toolsets`
+            capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
+        {!isPublication && !isPlatformBucketPath(selectedToolset.folderId) && (
           <FilePath
             value={selectedToolset.folderId}
             label={t(EntitiesI18nKey.FolderStorage)}
