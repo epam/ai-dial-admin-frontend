@@ -420,6 +420,65 @@ describe('isBuilderRepresentable — function calls', () => {
     expect(isBuilderRepresentable({ entity: 'e', mode: QueryMode.Row, filter: unserved }, TEST_FUNCTIONS)).toBe(false);
   });
 
+  // Aggregate mode rebuilds its group-by keys from the select entries, so a key the select does not
+  // carry would be dropped on hydration — and projecting it instead would add a result column the
+  // author never asked for.
+  test('a group-by key the select does not carry is not representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['deployment'],
+      select: [{ expr: { type: QueryExprType.Fn, name: 'count', args: [] } }],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a group-by key projected as a field is representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['deployment'],
+      select: [
+        { expr: { type: QueryExprType.Field, name: 'deployment' } },
+        { expr: { type: QueryExprType.Fn, name: 'count', args: [] } },
+      ],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a group-by key naming a computed column alias is representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      group_by: ['bucket'],
+      select: [
+        {
+          expr: {
+            type: QueryExprType.Fn,
+            name: 'lower',
+            args: [{ type: QueryExprType.Field, name: 'deployment' }],
+          },
+          as: 'bucket',
+        },
+      ],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a group-by key in row mode is not representable', () => {
+    const grouped: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      group_by: ['deployment'],
+      select: [{ expr: { type: QueryExprType.Field, name: 'deployment' } }],
+    };
+
+    expect(isBuilderRepresentable(grouped, TEST_FUNCTIONS)).toBe(false);
+  });
+
   // The saved-queries grid labels a query's editor without loading the catalog.
   test('with no catalog given, a function call is taken at face value', () => {
     expect(isBuilderRepresentable(call('regexp_extract', []))).toBe(true);

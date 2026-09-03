@@ -139,6 +139,25 @@ const isFilterRepresentable = (node: QueryFilterNode, depth: number, functions: 
   return (node.args || []).every((child) => isFilterRepresentable(child, depth + 1, functions));
 };
 
+// Aggregate mode rebuilds its group-by keys from the select entries — a plain column key from a field
+// entry, a function key from its alias — because that is the only shape a builder-authored query takes.
+// A key naming something the select does not carry has nowhere to land, and hydrating would drop the
+// grouping; projecting it instead would add a result column the author did not ask for. In `row` mode
+// there is no group-by section at all, so any key is unholdable.
+const isGroupByRepresentable = (query: StructuredQuery): boolean => {
+  const keys = query.group_by ?? [];
+  if (!keys.length) return true;
+  if (query.mode !== QueryMode.Aggregate) return false;
+
+  const provided = new Set<string>();
+  (query.select ?? []).forEach((col) => {
+    const alias = col.as?.trim();
+    if (alias) provided.add(alias);
+    if (col.expr.type === QueryExprType.Field) provided.add(col.expr.name);
+  });
+  return keys.every((key) => provided.has(key));
+};
+
 // Whether the visual builder can show a query without losing part of it: filter (and having) trees no
 // deeper than root + one group level, and every expression it would have to hold — projection entries
 // and condition operands — one it has an editor for. A query it cannot show stays editable and
@@ -152,7 +171,7 @@ export const isBuilderRepresentable = (query: StructuredQuery, functions: QueryF
   const filterOk = !query.filter || isFilterRepresentable(query.filter, 0, functions);
   const havingOk = !query.having || isFilterRepresentable(query.having, 0, functions);
   const selectOk = (query.select || []).every((col) => isExprRepresentable(col.expr, functions));
-  return filterOk && havingOk && selectOk;
+  return filterOk && havingOk && selectOk && isGroupByRepresentable(query);
 };
 
 const parseFilterRoot = (node?: QueryFilterNode, functions: QueryFunction[] = []): FilterGroupNode => {

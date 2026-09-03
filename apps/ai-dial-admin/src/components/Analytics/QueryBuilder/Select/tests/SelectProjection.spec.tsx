@@ -73,6 +73,22 @@ describe('QueryBuilder :: SelectProjection', () => {
     expect(screen.getByLabelText('QueryBuilder.AliasPlaceholder')).toBeInTheDocument();
   });
 
+  // The dropdown memoizes its selected set on the `selected` prop's identity, so a section that hands
+  // it a list it mutates in place leaves the open overlay showing a stale mark.
+  test('marks a column as selected in the open overlay, and unmarks it on a second pick', async () => {
+    const user = renderLive(stateWith({}), <SelectProjection />);
+
+    await user.click(screen.getByRole('button', { name: ADD_LABEL }));
+    await user.click(screen.getByRole('button', { name: /PRINCIPAL|Untagged|project_id/i }));
+    const option = screen.getByRole('option', { name: /project_id/ });
+
+    await user.click(option);
+    expect(screen.getByRole('option', { name: /project_id/ })).toHaveAttribute('aria-selected', 'true');
+
+    await user.click(screen.getByRole('option', { name: /project_id/ }));
+    expect(screen.getByRole('option', { name: /project_id/ })).toHaveAttribute('aria-selected', 'false');
+  });
+
   test('a plain column renders as a removable chip', async () => {
     const state = stateWith({ select: [createColumnRow('project_id')] });
     const user = renderLive(state, <SelectProjection />);
