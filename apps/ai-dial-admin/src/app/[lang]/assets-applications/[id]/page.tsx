@@ -5,6 +5,7 @@ import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
+import PlatformApplicationView from '@/src/components/Assets/Platform/Applications/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -20,13 +21,14 @@ import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getApp, getApps } from '../actions';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { getApp, getApps, getPlatformApplication } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
+  searchParams: Promise<{ path?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -44,18 +46,32 @@ export default async function Page(params: {
   let globalInterceptors: string[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
 
+  // A `path` query param means this is a public-bucket (versioned, folder-nested) application; its
+  // absence means a platform-bucket one — flat, identified by name alone (design.md D3/D5).
+  const rawPath = (await params.searchParams).path;
+  const isPlatformBucket = !rawPath;
+  const name = decodeURIComponent((await params.params).id);
+
   try {
-    const path = decodeURIComponent((await params.searchParams).path);
-    const name = decodeURIComponent((await params.params).id);
+    if (isPlatformBucket) {
+      const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-    app = await getApp(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as AssetApp | null;
-    });
+      app = await getPlatformApplication(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return (res?.response as unknown as AssetApp) || null;
+      });
+    } else {
+      const path = decodeURIComponent(rawPath as string);
 
-    apps = ((await getApps(app?.folderId as string))?.filter(
-      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
-    ) || []) as AssetApp[];
+      app = await getApp(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as AssetApp | null;
+      });
+
+      apps = ((await getApps(app?.folderId as string))?.filter(
+        (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
+      ) || []) as AssetApp[];
+    }
 
     models = await getModelsList();
     applications = await applicationsApi.getApplicationsList(token);
@@ -87,17 +103,30 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <AppView
-        etag={etag}
-        originalApp={app}
-        assets={apps || []}
-        models={models || []}
-        applications={applications || []}
-        schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
-        interceptors={interceptors}
-        globalInterceptors={globalInterceptors}
-        optionWarnings={optionWarnings}
-      />
+      {isPlatformBucket ? (
+        <PlatformApplicationView
+          etag={etag}
+          originalApp={app}
+          models={models || []}
+          applications={applications || []}
+          schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+          interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
+          optionWarnings={optionWarnings}
+        />
+      ) : (
+        <AppView
+          etag={etag}
+          originalApp={app}
+          assets={apps || []}
+          models={models || []}
+          applications={applications || []}
+          schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+          interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
+          optionWarnings={optionWarnings}
+        />
+      )}
     </SaveValidationContextProvider>
   );
 }

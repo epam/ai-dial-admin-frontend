@@ -3,7 +3,7 @@ import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
 import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -82,7 +82,17 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+/**
+ * Applications is the one view whose resources live in both the flat `platform` bucket and the
+ * hierarchical `public` one (see design.md D2, `platform-applications` capability). The grid never
+ * shows rows from both at once — browsing into `platform/` renders only its flat row set, browsing
+ * into `public/...` renders the public tree — so which action set applies is a property of the
+ * current path being browsed, not of an individual row.
+ */
+export const isPlatformApplicationsBucket = (view: ApplicationRoute, currentPath?: string): boolean =>
+  view === ApplicationRoute.AssetsApplications && isPlatformBucketPath(currentPath);
+
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
@@ -100,6 +110,14 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
     case ApplicationRoute.AssetsApplications:
+      if (isPlatformApplicationsBucket(view, currentPath)) {
+        return isReadOnlyAdmin
+          ? []
+          : allActionLabels.filter(
+              (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
+            );
+      }
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
@@ -113,8 +131,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
-  if (isFlatPlatformView(view)) {
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
+  if (isFlatPlatformView(view) || isPlatformApplicationsBucket(view, currentPath)) {
     return [];
   }
 
@@ -137,8 +155,12 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
       );
 };
 
-export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   if (isReadOnlyAdmin) return [];
+
+  if (isPlatformApplicationsBucket(view, currentPath)) {
+    return [{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }];
+  }
 
   switch (view) {
     case ApplicationRoute.Files:

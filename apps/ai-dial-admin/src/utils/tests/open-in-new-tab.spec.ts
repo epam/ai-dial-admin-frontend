@@ -31,6 +31,23 @@ describe('getUrnForEntity', () => {
     expect(urn).toContain(encodeURIComponent('PromptName'));
   });
 
+  test('returns the bare-name URN, with no ?path=, for a platform-bucket application', () => {
+    const entity = { name: 'my-app', path: 'platform/my-app' };
+    const urn = getUrnForEntity(ApplicationRoute.AssetsApplications, entity);
+
+    expect(urn).toBe('/assets-applications/my-app');
+    expect(urn).not.toContain('?path=');
+  });
+
+  test('returns the versioned ?path= URN, unchanged, for a public-bucket application', () => {
+    const entity = { name: 'MyApp', path: 'public/MyApp__1.0', folderId: 'public/', version: '1.0' };
+    const urn = getUrnForEntity(ApplicationRoute.AssetsApplications, entity);
+
+    expect(urn).toBe(
+      `/assets-applications/${encodeURIComponent('MyApp')}?path=${encodeURIComponent('public/MyApp__1.0')}`,
+    );
+  });
+
   test('returns correct URN for ActivityAudit', () => {
     const entity = { activityId: 'act123' };
     const urn = getUrnForEntity(ApplicationRoute.ActivityAudit, entity);

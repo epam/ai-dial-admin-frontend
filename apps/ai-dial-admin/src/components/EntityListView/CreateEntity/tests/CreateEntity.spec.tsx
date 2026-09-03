@@ -58,6 +58,32 @@ describe('CreateEntity', () => {
     expect(createApp.mock.calls[0][0]).toMatchObject({ version: '1.0.0' });
   });
 
+  test('omits the version field and does not require it when creating into the platform bucket', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createApp = vi.fn().mockResolvedValue({ success: true, response: { name: 'platform-app' } });
+    const context = () => ({ filePath: 'platform/', fetchFiles: vi.fn() });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsApplications}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createApp}
+        context={context as any}
+      />,
+    );
+
+    expect(screen.queryByDisplayValue('1.0.0')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    expect(createApp.mock.calls[0][0]).not.toHaveProperty('version');
+  });
+
   test('seeds the default display version for AssetsModels', async () => {
     (useRouter as Mock).mockReturnValue({ push: vi.fn() });
 
