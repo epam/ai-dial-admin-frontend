@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
 
 import ConversationValueFilter from '@/src/components/Analytics/ConversationsTrace/List/ConversationValueFilter';
+import ConversationValueFloatingFilter from '@/src/components/Analytics/ConversationsTrace/List/ConversationValueFloatingFilter';
 import { conversationDetailHref } from '@/src/components/Analytics/ConversationsTrace/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -16,13 +17,17 @@ import {
   CONVERSATIONS_ROW_HEIGHT,
   CONVERSATIONS_STORAGE_KEY,
   CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMN_GROUPS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { ConversationGridContext, ConversationRow } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
-const GRID_COMPONENTS = { [CONVERSATION_VALUE_FILTER]: ConversationValueFilter };
+const GRID_COMPONENTS = {
+  [CONVERSATION_VALUE_FILTER]: ConversationValueFilter,
+  [CONVERSATION_VALUE_FLOATING_FILTER]: ConversationValueFloatingFilter,
+};
 
 interface Props {
   datasource: IDatasource;

@@ -6,7 +6,7 @@ import {
   getConversationFeedback,
   getConversationSpans,
   getConversationTracePage,
-  getConversationTranscriptAvailability,
+  getHopBodyGrants,
 } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATION_FEEDBACK_LIMIT,
@@ -316,36 +316,34 @@ describe('getConversationSpans', () => {
   });
 });
 
-// The Chat option is gated on whether this caller can read body columns at all — a schema fact. Split out of
-// the transcript read so the page can still answer it at open while the body read waits for the switch.
-describe('getConversationTranscriptAvailability', () => {
+describe('getHopBodyGrants', () => {
   test('answers from the entity schema without issuing any query', async () => {
     getEntitySchema().mockResolvedValue({
       fields: [{ name: 'request_body' }, { name: 'response_body' }],
     });
 
-    const result = await getConversationTranscriptAvailability();
+    const result = await getHopBodyGrants();
 
-    expect(result.response?.isReadable).toBe(true);
+    expect(result.response).toEqual({ isRequestReadable: true, isResponseReadable: true });
     expect(execute()).not.toHaveBeenCalled();
   });
 
   test('reports the body columns unreadable when the schema names neither', async () => {
     getEntitySchema().mockResolvedValue({ fields: [{ name: 'trace_id' }] });
 
-    const result = await getConversationTranscriptAvailability();
+    const result = await getHopBodyGrants();
 
-    expect(result.response?.isReadable).toBe(false);
+    expect(result.response).toEqual({ isRequestReadable: false, isResponseReadable: false });
     expect(execute()).not.toHaveBeenCalled();
   });
 
   test('reports unreadable rather than throwing when the schema cannot be read', async () => {
     getEntitySchema().mockResolvedValue(undefined);
 
-    const result = await getConversationTranscriptAvailability();
+    const result = await getHopBodyGrants();
 
     expect(result.success).toBe(false);
-    expect(result.response?.isReadable).toBe(false);
+    expect(result.response).toEqual({ isRequestReadable: false, isResponseReadable: false });
   });
 });
 

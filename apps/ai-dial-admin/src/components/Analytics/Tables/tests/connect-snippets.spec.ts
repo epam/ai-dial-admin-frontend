@@ -30,6 +30,26 @@ const table = (columns: AnalyticsTableColumn[], overrides: Partial<AnalyticsTabl
 });
 
 describe('buildSampleRow', () => {
+  // The domain is closed and the server refuses a value outside it, so the generic sample literal would be
+  // a row the reader cannot insert.
+  test('gives an enum column one of its own declared values, not a placeholder', () => {
+    const row = buildSampleRow(
+      table([
+        column({
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['pending', 'running', 'failed'],
+        }),
+      ]),
+    );
+    expect(row).toEqual({ status: 'pending' });
+  });
+
+  test('falls back to the type sample for an enum column declaring no values', () => {
+    const row = buildSampleRow(table([column({ name: 'status', type: AnalyticsFieldType.Enum })]));
+    expect(row.status).toBe('example');
+  });
+
   test('gives every column type a literal that is valid input for that type', () => {
     const row = buildSampleRow(
       table([

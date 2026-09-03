@@ -21,9 +21,13 @@ import {
   offerableSchemaFields,
   projectableSchemaFields,
   sortableColumnFields,
-  transcriptBodyFields,
+  hopBodyFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
-import { CONVERSATION_VALUE_FILTER, OPTIONAL_USAGE_LOG_FIELDS } from '@/src/constants/analytics/conversations-trace';
+import {
+  CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
+  OPTIONAL_USAGE_LOG_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
 
 const t = (key: string) => key;
 
@@ -363,11 +367,19 @@ describe('a derived column binds a filter its type can answer', () => {
     return catalog.find((column) => column.field === name) as ColDef;
   };
 
-  test('an enum field binds the value filter and no floating filter', () => {
+  // The floating row is kept so the affordance sits level with every neighbouring column's filter, but the
+  // *default* floating filter is a text entry that would write a text model over the value model — so the
+  // column names its own, which only opens the popup.
+  test('an enum field binds the value filter and its own floating filter', () => {
     const column = derived('usage_scope', AnalyticsFieldType.Enum);
 
     expect(column.filter).toBe(CONVERSATION_VALUE_FILTER);
-    expect(column.floatingFilter).toBe(false);
+    expect(column.floatingFilterComponent).toBe(CONVERSATION_VALUE_FLOATING_FILTER);
+    expect(column.floatingFilter).not.toBe(false);
+    // The grid's own floating-filter button is deliberately left in place: it is the affordance, identical
+    // to the one every neighbouring column has. Suppressing it makes the grid fall back to a header-row
+    // icon instead, which is the misplacement this binding exists to avoid.
+    expect(column.suppressFloatingFilterButton).toBeUndefined();
   });
 
   test('an enum column stays sortable and filterable', () => {
@@ -431,12 +443,11 @@ describe('availableSelectFields', () => {
 // Two unrelated conditions remove a body column from the fetched schema, and both look identical here: the
 // `sensitive` flag hides all three from a caller below FULL_ADMIN, while `assembled_response` is simply not
 // persisted by an instance predating it — missing for every caller, full administrators included.
-describe('transcriptBodyFields', () => {
+describe('hopBodyFields', () => {
   const ALL = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
 
-  test('reads a transcript when the request body and both response columns are reported', () => {
-    expect(transcriptBodyFields(ALL)).toEqual({
-      isReadable: true,
+  test('reports both sides readable when the request body and both response columns are reported', () => {
+    expect(hopBodyFields(ALL)).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
@@ -444,10 +455,9 @@ describe('transcriptBodyFields', () => {
   });
 
   // The service-version case: an older instance carries no assembled column at all, and the decoder over the
-  // raw body is the only path. The Chat view still works.
-  test('reads a transcript from the raw body alone when the assembled column is absent', () => {
-    expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.ResponseBody])).toEqual({
-      isReadable: true,
+  // raw body is the only path. The response side still reads.
+  test('reads the response side from the raw body alone when the assembled column is absent', () => {
+    expect(hopBodyFields([UsageLogField.RequestBody, UsageLogField.ResponseBody])).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
       responseFields: [UsageLogField.ResponseBody],
@@ -455,8 +465,7 @@ describe('transcriptBodyFields', () => {
   });
 
   test('prefers the assembled column when it is the only response column reported', () => {
-    expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.AssembledResponse])).toEqual({
-      isReadable: true,
+    expect(hopBodyFields([UsageLogField.RequestBody, UsageLogField.AssembledResponse])).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse],
@@ -465,46 +474,40 @@ describe('transcriptBodyFields', () => {
 
   // The access case: `sensitive` takes all three at once, which is why the request body going missing is the
   // reliable signal that this is a rights problem rather than a version one.
-  test('reads no transcript when the schema reports none of them', () => {
-    expect(transcriptBodyFields([UsageLogField.ChatId, UsageLogField.TraceId])).toEqual({
-      isReadable: false,
+  test('reports neither side readable when the schema reports none of them', () => {
+    expect(hopBodyFields([UsageLogField.ChatId, UsageLogField.TraceId])).toEqual({
       isRequestReadable: false,
       isResponseReadable: false,
       responseFields: [],
     });
   });
 
-  // The transcript needs both a question and an answer, but the inspector offers the two sides
-  // independently — so a caller granted one column and not the other gets the tab they are entitled to.
-  test('states the two sides separately from the conjoined transcript verdict', () => {
-    const requestOnly = transcriptBodyFields([UsageLogField.RequestBody]);
+  test('states the two sides independently, with no combined verdict', () => {
+    const requestOnly = hopBodyFields([UsageLogField.RequestBody]);
 
-    expect(requestOnly.isReadable).toBe(false);
     expect(requestOnly.isRequestReadable).toBe(true);
     expect(requestOnly.isResponseReadable).toBe(false);
+    expect(requestOnly).not.toHaveProperty('isReadable');
   });
 
-  test('reads no transcript without the request body, whatever the response columns say', () => {
-    expect(transcriptBodyFields([UsageLogField.ResponseBody, UsageLogField.AssembledResponse])).toEqual({
-      isReadable: false,
+  test('reports the response side alone when the request body is not reported', () => {
+    expect(hopBodyFields([UsageLogField.ResponseBody, UsageLogField.AssembledResponse])).toEqual({
       isRequestReadable: false,
       isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
 
-  test('reads no transcript when the request body is reported but no response column is', () => {
-    expect(transcriptBodyFields([UsageLogField.RequestBody])).toEqual({
-      isReadable: false,
+  test('reports the request side alone when no response column is reported', () => {
+    expect(hopBodyFields([UsageLogField.RequestBody])).toEqual({
       isRequestReadable: true,
       isResponseReadable: false,
       responseFields: [],
     });
   });
 
-  test('reads no transcript from an unread schema', () => {
-    expect(transcriptBodyFields()).toEqual({
-      isReadable: false,
+  test('reports neither side readable from an unread schema', () => {
+    expect(hopBodyFields()).toEqual({
       isRequestReadable: false,
       isResponseReadable: false,
       responseFields: [],

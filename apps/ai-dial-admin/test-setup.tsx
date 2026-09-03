@@ -151,6 +151,18 @@ vi.mock('echarts-for-react', () => ({
   default: () => <div data-mock="echarts" />,
 }));
 
+// Monaco is heavy and renders nothing readable in jsdom, so the editor becomes the text it was given: a spec
+// asserting on a body shown through it can then find that body. Kept here rather than inline, like the
+// ECharts stub above — several specs render a viewer built on it.
+vi.mock('@monaco-editor/react', () => ({
+  __esModule: true,
+  Editor: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
+  DiffEditor: ({ modified, language }: { modified?: string; language?: string }) => (
+    <pre data-language={language}>{modified}</pre>
+  ),
+  default: ({ value, language }: { value?: string; language?: string }) => <pre data-language={language}>{value}</pre>,
+}));
+
 // ------------------ Global console ------------------
 const originalConsole = console;
 global.console = {

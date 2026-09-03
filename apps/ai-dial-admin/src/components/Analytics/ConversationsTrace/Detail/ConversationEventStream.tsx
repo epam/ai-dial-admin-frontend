@@ -15,11 +15,13 @@ import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expa
 import {
   COST_TEXT_CLASS,
   EMPTY_ICON_SIZE,
+  FILTER_CHIP_CLASS,
   HOP_FAILED_CHIP_CLASS,
   HOP_FAILED_RAIL_CLASS,
   NEUTRAL_CHIP_CLASS,
   SPAN_KIND_CHIP_CLASS,
   SPAN_KIND_LABEL_KEY,
+  SELECTED_CHIP_CLASS,
   SPAN_KIND_RAIL_CLASS,
   TREE_GUIDE_CLASS,
   UNRECORDED_ROOT_RAIL_CLASS,
@@ -63,18 +65,6 @@ const railClassOf = (kind: SpanKind | null, isFailed: boolean): string => {
 
 const RAIL_COLUMN_CLASS = 'relative w-4 shrink-0 self-stretch';
 const RAIL_LINE_CLASS = 'absolute left-1/2 border-l';
-
-// The filter controls' own metrics, matching ui-kit's small *chip* (20px tall, 6px of horizontal padding,
-// barely-rounded corners) rather than its small *button* (24px, 8px, fully rounded): a row of these reads as
-// a filter bar, not as a row of buttons.
-//
-// Every class here is important-qualified, and each for its own reason. The radius comes from ui-kit's
-// stylesheet — every 2.0 button class carries `border-radius: 9999px` — so a plain `rounded-sm` sits at equal
-// specificity against it and the winner would depend on stylesheet order. The height and padding come from
-// utilities the button puts on the element, and ui-kit concatenates the caller's `className` onto its own
-// with `classnames` rather than merging with `tailwind-merge` — so `h-[24px]` and `px-2` stay in the
-// attribute alongside these, and again only order would decide.
-const FILTER_CHIP_CLASS = 'border !h-5 !rounded-sm !px-1.5';
 
 interface RailsProps {
   ancestorHasNextSibling: boolean[];
@@ -315,7 +305,7 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
           label={t(ConversationsTraceI18nKey.StreamTabAll)}
           iconBefore={emphasis === null ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
           onClick={() => setEmphasis(null)}
-          className={classNames(FILTER_CHIP_CLASS, NEUTRAL_CHIP_CLASS, emphasis === null && 'bg-layer-4')}
+          className={classNames(FILTER_CHIP_CLASS, emphasis === null ? SELECTED_CHIP_CLASS : NEUTRAL_CHIP_CLASS)}
           textClassName="dial-tiny-text"
         />
         <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-primary" />
@@ -327,7 +317,10 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
             label={t(SPAN_KIND_LABEL_KEY[kind])}
             iconBefore={emphasis === kind ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
             onClick={() => onEmphasise(kind)}
-            className={classNames(FILTER_CHIP_CLASS, SPAN_KIND_CHIP_CLASS[kind], emphasis === kind && 'bg-layer-4')}
+            className={classNames(
+              FILTER_CHIP_CLASS,
+              emphasis === kind ? SELECTED_CHIP_CLASS : SPAN_KIND_CHIP_CLASS[kind],
+            )}
             textClassName="dial-tiny-text"
           />
         ))}
@@ -342,8 +335,7 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
             onClick={() => onEmphasise(HopOutcomeFilter.Failed)}
             className={classNames(
               FILTER_CHIP_CLASS,
-              HOP_FAILED_CHIP_CLASS,
-              emphasis === HopOutcomeFilter.Failed && 'bg-layer-4',
+              emphasis === HopOutcomeFilter.Failed ? SELECTED_CHIP_CLASS : HOP_FAILED_CHIP_CLASS,
             )}
             textClassName="dial-tiny-text"
           />

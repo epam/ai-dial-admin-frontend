@@ -7,21 +7,22 @@ import {
   COMPOSED_COLUMN_PROVENANCE,
   CONVERSATION_FIELD_VALUE_TYPE,
   CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
   CURATED_COMPOSED_FIELDS,
   DATE_FIELD_TYPES,
   ENRICHMENT_PROVENANCE,
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
-  TRANSCRIPT_REQUIRED_FIELD,
-  TRANSCRIPT_RESPONSE_FIELDS,
+  HOP_REQUEST_BODY_FIELD,
+  HOP_RESPONSE_BODY_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ColumnProvenance,
   ConversationColumnGroup,
   ConversationProjectableFields,
   ProvenanceEntity,
-  TranscriptBodyFields,
+  HopBodyFields,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
@@ -167,15 +168,18 @@ export const availableSelectFields = (ordered: string[], optional: string[], sch
 //
 // Both stay sortable: ordering is expressible for either, and it is the predicate that has no translation.
 //
-// An `enum` field binds the value filter instead of either, and no floating filter: the default one is a text
-// entry and would write a text model over a value model. Enum-ness comes from the declared type alone — a
-// field an instance begins reporting as an enum gets the control with no change here.
+// An `enum` field binds the value filter instead of either, with its own floating filter: the *default*
+// floating filter is a text entry and would write a text model over a value model, so this column supplies a
+// funnel that opens the value popup instead. Opting out of the row altogether — which this did until now —
+// left the affordance in the header row, a level above every neighbouring column's filter, and reachable
+// only by hovering. Enum-ness comes from the declared type alone — a field an instance begins reporting as
+// an enum gets the control with no change here.
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
   if (NUMERIC_FIELD_TYPES.includes(type)) {
     return { ...numericColumn, ...baseNumberFilter };
   }
   if (type === AnalyticsFieldType.Enum) {
-    return { filter: CONVERSATION_VALUE_FILTER, floatingFilter: false };
+    return { filter: CONVERSATION_VALUE_FILTER, floatingFilterComponent: CONVERSATION_VALUE_FLOATING_FILTER };
   }
   if (DATE_FIELD_TYPES.includes(type)) {
     return { ...dateTimeColumn, ...UNFILTERABLE };
@@ -269,21 +273,12 @@ export const filterableColumnFields = (columns: ColDef[]): string[] =>
 
 // The hop-log body columns are `sensitive` in the ADAS catalog, so they are absent from the fetched schema
 // below FULL_ADMIN — and the service rejects the whole query for one unknown field.
-export const transcriptBodyFields = (schemaFieldNames: string[] = []): TranscriptBodyFields => {
+export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields => {
   const available = new Set(schemaFieldNames);
-  const responseFields = TRANSCRIPT_RESPONSE_FIELDS.filter((name) => available.has(name));
+  const responseFields = HOP_RESPONSE_BODY_FIELDS.filter((name) => available.has(name));
 
-  // The request body and the response body are separate columns, so entitlement to them is separate. The
-  // transcript genuinely needs both — it assembles a question and its answer — so `isReadable` keeps the
-  // conjunction; the inspector consumes the two sides independently, and a caller granted one column and not
-  // the other gets the tab they are entitled to rather than neither.
-  const isRequestReadable = available.has(TRANSCRIPT_REQUIRED_FIELD);
+  const isRequestReadable = available.has(HOP_REQUEST_BODY_FIELD);
   const isResponseReadable = responseFields.length > 0;
 
-  return {
-    isReadable: isRequestReadable && isResponseReadable,
-    isRequestReadable,
-    isResponseReadable,
-    responseFields,
-  };
+  return { isRequestReadable, isResponseReadable, responseFields };
 };

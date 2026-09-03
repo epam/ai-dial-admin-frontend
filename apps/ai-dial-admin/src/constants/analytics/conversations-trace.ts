@@ -12,6 +12,7 @@ import {
   ConversationPanelLayout,
   ConversationScalarOperator,
   ConversationsField,
+  MessageRole,
   ProvenanceEntity,
   ResponseRatingsField,
   SpanKind,
@@ -35,8 +36,6 @@ export const INSIGHTS_ENRICHMENT = 'session_insights';
 // The rollup's `client_session_source` value meaning "this id came from a conversation header". Every other
 // value names a coding-harness header, whose hops carry no `chat_id`.
 export const CHAT_ID_SESSION_SOURCE = 'chat_id';
-
-export const CONVERSATION_ENTRY_HOP_LIMIT = 200;
 
 export const CONVERSATION_SPAN_LIMIT = 300;
 
@@ -86,10 +85,6 @@ export const EMBEDDING_EVENT_KIND = 'embedding';
 // degrades.
 export const MESSAGE_TEXT_CLAMP = 280;
 
-// At or above this, a message is marked: on a 100 KB request, which message made it so is the first thing a
-// reader wants.
-export const LARGE_MESSAGE_BYTES = 1024;
-
 // A per-message clamp alone does not bound the envelope: the messages dialect averages 56.6 messages, and
 // clamped individually they still assemble into more than the rail will show.
 export const ENVELOPE_BYTE_BUDGET = 256 * 1024;
@@ -103,18 +98,13 @@ export const MODEL_CALL_URI_MARKERS: string[] = [
   '/v1/completions',
 ];
 
-export const CONVERSATION_HOP_COUNT_ALIAS = 'hop_count';
-
 // Both body columns are named only when the fetched schema reports them: an instance can persist the
 // assembled column without `response_body`, or the reverse, and one unknown field rejects the whole query.
 export const OPTIONAL_USAGE_LOG_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
 
-export const TRANSCRIPT_REQUIRED_FIELD: UsageLogField = UsageLogField.RequestBody;
+export const HOP_REQUEST_BODY_FIELD: UsageLogField = UsageLogField.RequestBody;
 
-export const TRANSCRIPT_RESPONSE_FIELDS: UsageLogField[] = [
-  UsageLogField.AssembledResponse,
-  UsageLogField.ResponseBody,
-];
+export const HOP_RESPONSE_BODY_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
 
 export const FEEDBACK_CANDIDATE_LIMIT = 1000;
 
@@ -234,6 +224,7 @@ export const CONVERSATION_FIELD_VALUE_COUNT_ALIAS = 'value_count';
 // Bound by name rather than by reference so the column catalog — a pure util, read by the server actions
 // too — does not import a client component to describe a column.
 export const CONVERSATION_VALUE_FILTER = 'conversationValueFilter';
+export const CONVERSATION_VALUE_FLOATING_FILTER = 'conversationValueFloatingFilter';
 
 // A bound on the grouped count that discovers an enum's values, not a cap on a filter's meaning: an enum's
 // value set is closed and small (twenty-two on the widest field of the current schema), so this is only
@@ -420,6 +411,32 @@ export const INSIGHTS_ABSENCE_KEY: Record<
 
 export const EMPTY_ICON_SIZE = 24;
 
+// One size for every body panel's loader: the panels are siblings in one tab strip, and a loader that changes
+// size between tabs reads as a different kind of wait.
+export const INSPECTOR_LOADER_SIZE = 18;
+
+// A pressed-state chip's own metrics, matching ui-kit's small *chip* (20px tall, 6px of horizontal padding,
+// barely-rounded corners) rather than its small *button* (24px, 8px, fully rounded): a row of these reads as
+// a filter bar rather than as a row of buttons.
+//
+// Every class here is important-qualified, and each for its own reason. The radius comes from ui-kit's
+// stylesheet — every 2.0 button class carries `border-radius: 9999px` — so a plain `rounded-sm` sits at equal
+// specificity against it and the winner would depend on stylesheet order. The height and padding come from
+// utilities the button puts on the element, and ui-kit concatenates the caller's `className` onto its own
+// with `classnames` rather than merging with `tailwind-merge` — so `h-[24px]` and `px-2` stay in the
+// attribute alongside these, and again only order would decide.
+export const FILTER_CHIP_CLASS = 'border !h-5 !rounded-sm !px-1.5';
+
+// Every message is labelled with its own role wherever it renders, which is what makes stating a system
+// prompt safe: nothing can read as something a person typed.
+export const MESSAGE_ROLE_LABEL_KEY: Record<MessageRole, string> = {
+  [MessageRole.System]: ConversationsTraceI18nKey.InspectorRoleSystem,
+  [MessageRole.User]: ConversationsTraceI18nKey.InspectorRoleUser,
+  [MessageRole.Assistant]: ConversationsTraceI18nKey.InspectorRoleAssistant,
+  [MessageRole.Tool]: ConversationsTraceI18nKey.InspectorRoleTool,
+  [MessageRole.Other]: ConversationsTraceI18nKey.InspectorRoleOther,
+};
+
 export const SPAN_KIND_RAIL_CLASS: Record<SpanKind, string> = {
   [SpanKind.Llm]: 'border-accent-primary',
   [SpanKind.Mcp]: 'border-accent-tertiary',
@@ -439,6 +456,15 @@ export const SPAN_KIND_CHIP_CLASS: Record<SpanKind, string> = {
 };
 
 export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
+
+// A chosen filter, in the accent the console uses for an action rather than in a lighter grey box. `bg-layer-4`
+// against a `bg-layer-2` panel read as a slab of background rather than as a selection, and the row of them
+// read as disabled. Every token here is one the palette defines.
+export const SELECTED_CHIP_CLASS = 'border-accent-primary bg-accent-primary-alpha text-accent-primary';
+
+// The raw switch's label, at the weight of the controls beside it. ui-kit's own label renders in the primary
+// text colour at body size, which shouted next to a row of secondary-weight chips.
+export const RAW_LABEL_CLASS = '!text-secondary dial-caption-text';
 
 // The outcome axis carries its own colour rather than borrowing one from the kind palette, so a failure reads
 // as a failure whatever kind of call it happened to.
