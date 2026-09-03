@@ -4,7 +4,12 @@ import { cookies, headers } from 'next/headers';
 
 import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
+import {
+  DialApplicationResource,
+  DialExternalServiceAuthSettings,
+  DialPlatformApplicationResource,
+  ToolsetAuthType,
+} from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { buildApplicationsExport, importApplicationsExport } from '@/src/server/applications/exim';
@@ -18,6 +23,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { DialApplication } from '@/src/models/dial/application';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
@@ -123,6 +129,75 @@ export async function removeApp(path: string, etag?: string) {
 export async function bulkDeleteApps(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.APPLICATION, paths);
+}
+
+/**
+ * Platform-bucket applications ("World B") reuse the same Core `Application` entity as public-bucket
+ * ones — only the bucket segment of the path differs, and the bucket is flat (no folders, no
+ * versioning; see the `platform-applications` capability spec). `getApps`/`removeApp`/`bulkDeleteApps`
+ * already take an arbitrary path and need no platform-specific logic; `createApp`/`updateApp` compute
+ * a `public`-defaulted, version-suffixed path, so their platform counterparts pin `folderId` to the
+ * `platform` bucket and clear `version`, letting `getVersionedName`'s existing no-op-when-absent branch
+ * (see `createApp`/`updateApp`) produce the flat `platform/{name}` path without a new branch there.
+ */
+export async function getPlatformApplications(path: string) {
+  return getApps(path);
+}
+
+/**
+ * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+ * (the platform bucket's write path) deserializes the request body straight into `Application` via
+ * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+ * `toKeyPayload` strips extras for `Key.class`. `status`/`validationWarnings` are read-only
+ * projections Core computes, not part of the entity; `author`/`createdAt`/`updatedAt` come from the
+ * metadata node, not `Application` itself; `reference` is a client-only tracking id (see
+ * `handleDuplicate`/`addNewVersion`, which already strip it before any write). None of these round-trip
+ * through the merge readers as content fields, so they must not be sent back on write.
+ */
+function toPlatformApplicationPayload(app: DialPlatformApplicationResource) {
+  const {
+    status: __status,
+    validationWarnings: __validationWarnings,
+    author: __author,
+    createdAt: __createdAt,
+    updatedAt: __updatedAt,
+    reference: __reference,
+    ...payload
+  } = app as DialPlatformApplicationResource & { reference?: string };
+
+  return payload;
+}
+
+export async function createPlatformApplication(app: DialPlatformApplicationResource) {
+  return createApp({
+    ...toPlatformApplicationPayload(app),
+    folderId: `${PLATFORM_ROOT_FOLDER}/`,
+    version: undefined,
+  } as unknown as DialApplicationResource);
+}
+
+export async function getPlatformApplication(path: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMergedWithEtag<DialPlatformApplicationResource>(token, ResourceType.APPLICATION, path, etag);
+}
+
+export async function updatePlatformApplication(app: DialPlatformApplicationResource, etag: string) {
+  return updateApp(
+    {
+      ...toPlatformApplicationPayload(app),
+      folderId: `${PLATFORM_ROOT_FOLDER}/`,
+      version: undefined,
+    } as unknown as DialApplicationResource,
+    etag,
+  );
+}
+
+export async function removePlatformApplication(path: string, etag?: string) {
+  return removeApp(path, etag);
+}
+
+export async function bulkDeletePlatformApplications(paths: { path: string }[]) {
+  return bulkDeleteApps(paths);
 }
 
 export async function moveApps(paths: string[], newPath: string, overwrite?: boolean, duplicateName?: string) {

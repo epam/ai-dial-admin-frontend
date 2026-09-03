@@ -493,6 +493,16 @@ An aggregate metric whose catalog entry has `distinct_supported: true` SHALL ren
 
 The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. Each operator SHALL be shown by its full name (Equals, Not equals, Contains, Does not contain, Less than, Greater than, Less than or equal, Greater than or equal, In list) — in the selector's open list, in its collapsed trigger, and in the condition's collapsed row summary — with no short code shown anywhere, and each option SHALL expose a hover tooltip describing the operator. The two case-insensitive contains operators SHALL be named Contains / Does not contain while serializing to `ico`/`inc` (SQL ILIKE); their tooltips SHALL state that matching is case-insensitive. The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
 
+The two contains operators SHALL be **withheld** when the condition's selected field is one the schema types
+**enum**. ClickHouse defines comparison over an enum but not the string functions, so the service refuses the
+LIKE-based operators on an enum field — and it rejects the **whole** query for one bad predicate, so a single
+such condition takes the entire result down rather than degrading it. The remaining operators (`eq`, `ne`, the
+four magnitude comparisons, and `in`) SHALL stay offered, since comparison, equality, membership, grouping and
+sorting all work over an enum. The withholding SHALL key on the **declared type alone**: no list in the frontend
+names which fields are enums, so a field an instance begins reporting as an enum is guarded with no change here.
+A condition that already carries a contains operator when its field is changed to an enum-typed one SHALL be
+moved to a supported operator rather than left serializing a predicate the service will reject.
+
 #### Scenario: Nested group with a condition serializes
 
 - **WHEN** the root group is AND with one condition `field eq value` and one nested OR group
@@ -538,6 +548,18 @@ The Filter section SHALL let the user build a WHERE tree limited to two levels: 
 - **WHEN** a condition's operator is `ge` and the selector is closed
 - **THEN** the trigger shows "Greater than or equal"
 - **AND** the condition's collapsed row summary names the operator the same way
+
+#### Scenario: Contains is withheld on an enum-typed field
+
+- **WHEN** a condition's selected field is one the schema types enum and the user opens its operator selector
+- **THEN** Contains and Does not contain are not offered
+- **AND** Equals, Not equals, the magnitude comparisons and In list remain offered
+
+#### Scenario: Switching a contains condition to an enum field leaves a valid operator
+
+- **WHEN** a condition carrying Contains has its field changed to an enum-typed field
+- **THEN** the condition's operator is no longer Contains
+- **AND** the serialized query carries no LIKE-based predicate over that field
 
 ### Requirement: Row-mode projection
 
@@ -2014,6 +2036,150 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **THEN** both selects are seeded with those stored values
 - **AND** both are required, because omitting a member on re-post leaves the stored value unchanged rather than clearing it
 
+### Requirement: A column may be declared with an enum type and a closed, ordered value list
+
+The column-type vocabulary the schema editors offer SHALL include **enum**, a string column whose value set is
+closed. It SHALL be offered wherever a column is declared — the schema-definition surface of a `PENDING`/`FAILED`
+table and the "Add columns" popup of an `ACTIVE` one — and for both **source** and **enrichment** tables, since
+the service accepts it on either.
+
+A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
+Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+because a value's position in the list becomes its numeric id in the physical type and the column therefore
+sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
+nothing about a list of values otherwise suggests it.
+
+Each value SHALL be validated client-side against the service's rules, with a per-value message and Save
+disabled while any is violated:
+
+- at least **1** and at most **512** values
+- each value non-blank after trimming
+- each value at most **64** characters
+- values **distinct after trimming** — two entries differing only in surrounding whitespace collide
+
+Values SHALL be submitted **trimmed**, which is how the service stores and materializes them. A value MAY
+contain any characters, including commas and quotes, so the control MUST NOT treat any character as a
+separator.
+
+`enum_values` SHALL be submitted **if and only if** the column's type is enum: a column of any other type
+carrying the key is rejected (422), and an enum column without it is rejected the same way. Retyping a row away
+from enum SHALL discard the values it had collected, exactly as retyping away from Array discards its element
+type, so a stale domain can never be submitted with a column that no longer has that type.
+
+Enum SHALL NOT be offered as an Array column's **element type** — the service rejects an enum element. Enum
+SHALL NOT appear among the **Version column** or **Partition column** candidates, both of which require a
+temporal type. Enum SHALL be selectable as an **ordering key** entry, as an **Identity column**, and as an
+enrichment's **grain key**, on the same terms as any other non-nullable, non-sensitive scalar.
+
+#### Scenario: Enum is offered as a column type
+
+- **WHEN** the user opens the column-type selector on a source or an enrichment table's column row
+- **THEN** enum is among the offered types
+
+#### Scenario: Choosing enum reveals a required value list
+
+- **WHEN** the user sets a column row's type to enum
+- **THEN** the row offers a required value-list control
+- **AND** Save is disabled while the list is empty
+
+#### Scenario: Declared values are submitted in the authored order
+
+- **WHEN** the user declares an enum column with the values `low`, `medium`, `high` in that order and saves a
+  complete schema
+- **THEN** that column in the submitted payload carries `enum_values` `["low", "medium", "high"]` in that order
+
+#### Scenario: Reordering the list changes what is submitted
+
+- **WHEN** the user reorders a declared enum column's values so that `high` precedes `low`
+- **THEN** the submitted `enum_values` carries the new order
+
+#### Scenario: A blank or over-long value blocks Save
+
+- **WHEN** an enum column's value list holds a blank entry, or an entry longer than 64 characters
+- **THEN** that entry shows a validation message and Save is disabled
+- **AND** correcting the entry clears the message and re-enables Save
+
+#### Scenario: Duplicate values after trimming block Save
+
+- **WHEN** an enum column's value list holds `failed` and `failed ` (with a trailing space)
+- **THEN** a validation message reports the collision and Save is disabled
+
+#### Scenario: Values are submitted trimmed
+
+- **WHEN** the user declares an enum value as ` running ` and saves
+- **THEN** the submitted `enum_values` carries `running`
+
+#### Scenario: More than 512 values blocks Save
+
+- **WHEN** an enum column's value list exceeds 512 entries
+- **THEN** a validation message reports the cap and Save is disabled
+
+#### Scenario: Retyping away from enum drops the collected values
+
+- **WHEN** a column row typed enum with declared values is retyped to string
+- **THEN** the value-list control is no longer offered
+- **AND** the submitted column carries no `enum_values`
+
+#### Scenario: Enum is not offered as an array element type
+
+- **WHEN** a column row is typed Array and the user opens its element-type selector
+- **THEN** enum is not among the offered element types
+
+#### Scenario: An enum column is not a version-column candidate
+
+- **WHEN** a source table declares an enum column and the user opens the Version column selector
+- **THEN** that column is not offered
+- **AND** it is offered in the Ordering key and Identity column selectors
+
+#### Scenario: An enum column can be added to a materialized table
+
+- **WHEN** the user adds an enum column with a declared value list to an `ACTIVE` table and submits
+- **THEN** the schema patch's `add` entry carries the column's type and its `enum_values`
+- **AND** on success the detail view refreshes from the server
+
+### Requirement: An enum column's declared domain is immutable once the column exists
+
+The service refuses to change a column's `enum_values` after the column exists: a schema-patch `update` entry
+carrying the key is rejected with 422 rather than ignored, because widening a ClickHouse enum rewrites the
+column and fails outright on any stored row holding a value the new domain drops.
+
+The per-column **edit** modal SHALL therefore show an enum column's declared values **read-only**, and the patch
+it submits SHALL NOT carry `enum_values` under any circumstance. Presenting the domain rather than omitting it
+is the point: an operator who cannot find the values in the modal has no way to learn that the column has a
+closed domain at all, and the read-only presentation states both facts at once. The modal SHALL say that the
+domain cannot be changed and that changing it means dropping the column and adding it again — the only path the
+service supports — so the restriction does not read as a gap in the console.
+
+A **rename** SHALL remain available on an enum column on the same terms as any other column; the service keeps
+the domain and the type intact across one.
+
+The columns grid SHALL make an enum column's declared values reachable without opening the edit modal, so the
+domain is discoverable from the schema at a glance.
+
+#### Scenario: The edit modal shows the domain read-only
+
+- **WHEN** the user opens the edit modal on an enum column
+- **THEN** its declared values are shown and cannot be edited
+- **AND** the modal states that the domain cannot be changed and that a change means dropping and re-adding the
+  column
+
+#### Scenario: An edit patch never carries the domain
+
+- **WHEN** the user changes an enum column's display name in the edit modal and submits
+- **THEN** the schema patch carries the metadata `update` entry
+- **AND** it carries no `enum_values`
+
+#### Scenario: An enum column can still be renamed
+
+- **WHEN** the user renames an enum column
+- **THEN** the rename patch is sent
+- **AND** the refreshed column keeps its type and its declared values
+
+#### Scenario: The declared domain is reachable from the columns grid
+
+- **WHEN** the columns grid renders an enum column
+- **THEN** its declared values are reachable from the grid without opening the edit modal
+
 ### Requirement: Table metadata editing (description and tag order)
 
 The **catalog list's** row action menu SHALL let the user edit a table's catalog metadata — its `description` and its per-table `tag_order` — in any status, via `updateTable` (`PUT /v1/tables/{name}`). `tag_order` SHALL be presented as a reorderable list of the distinct tags currently declared on the table's columns, and the resulting ordered list of tag names SHALL be sent to the backend; an empty order SHALL clear it and an unchanged order SHALL be left as-is (merge-patch semantics). On success the catalog SHALL refresh from the server. This surface SHALL NOT be offered for system-owned tables, and SHALL NOT be offered from the table detail view.
@@ -3417,18 +3583,32 @@ column SHALL be **named explicitly**. A column the service marks `heavy` is excl
 projection, so a query that relied on the default would silently return no value for it; `traces` is such a
 column, and the detail view renders it.
 
-The query SHALL take the available field names from the caller rather than enumerating a field list of its
-own, per "A conversation query names only fields the entity's schema reports". The columns the view has
+The query SHALL take the schema's reported fields from the caller rather than enumerating a field list of
+its own, per "A conversation query names only fields the entity's schema reports". The columns the view has
 always read are required; every column added since — `traces`, the cache, cached-prompt and reasoning token
 counts, the chain cost, and the insight columns — is optional. With no schema available the query SHALL name
 the required set alone.
 
-The insight enrichment's **descriptive** fields SHALL all be named where the schema reports them, not a
-subset of them: the session's title, its summary, its sentiment, its topic and
-topics, its language and its resolution status. A descriptive insight field the query does not name is a
-field the detail view cannot render at all, and the reader has no way to tell that from a conversation the
-evaluator never reached. The enrichment's `provenance`-tagged fields are not covered by this rule — they
-are the evaluation's own bookkeeping, and the detail view reads none of them.
+The query SHALL name **every** column the insight enrichment exposes, discovered from the enrichment
+namespace the schema qualifies those columns with rather than from a field list held in the frontend. An
+enumerated list cannot follow the enrichment: a column the evaluator gains is one the detail view cannot
+render at all, and the reader has no way to tell that from a conversation the evaluator never reached. The
+failure is worse than absence when a column is *superseded* — the enumerated pair keeps being named and
+comes back null, while the pair that replaced it is never asked for, so the panel reports the evaluator as
+silent on a conversation it labelled.
+
+No column SHALL be withheld for the **kind** of column it is. The enrichment's own bookkeeping — which
+evaluator produced a row, and from what input — was previously excluded as not describing the conversation,
+and that exclusion is removed: those columns are what separate a conversation the current evaluator has not
+reached from one it labelled and found nothing in, which no descriptive column can say about itself. The
+rule's only test is the enrichment namespace, so no category of column has to be recognised for it to hold.
+
+A column the enrichment exposes that the detail view cannot render as a value SHALL be excluded — one the
+schema types as an object or an array. The exclusion SHALL be decided by what the schema reports about the
+column rather than by its name, so a column newly typed is classified with no frontend change. A sensitive
+column needs no separate treatment here: the rule against referencing one governs every column this query
+names. The enrichment exposes no column of either kind today, so this is a guard against one being added
+rather than a filter that removes anything.
 
 The selected set SHALL include the rollup's enrichment columns where the schema reports them, whose exposed
 names are qualified flat names containing a dot. The query SHALL send such a name whole rather than treating
@@ -3458,15 +3638,34 @@ field for those callers rather than being refused cleanly, making the whole view
 
 - **WHEN** the single-session query is built and the schema reports the insight columns
 - **THEN** its select names `session_insights.title`
-- **AND** it names the summary, sentiment, topic, topics, language, resolution status, activity type and activity sub-task type
-- **AND** it names no `provenance`-tagged bookkeeping field of the enrichment
+- **AND** it names every other column the schema reports under that enrichment namespace
+- **AND** it names them whether or not the frontend has a definition for them
+
+#### Scenario: An insight column the frontend has never heard of is still named
+
+- **WHEN** the schema reports an insight column no frontend list enumerates
+- **THEN** the select names it
+- **AND** naming it required no change to a frontend field list
+
+#### Scenario: No insight column is withheld for its category
+
+- **WHEN** the schema reports insight columns the enrichment stamps for its own bookkeeping rather than to
+  describe the conversation
+- **THEN** the select names them like any other column of the namespace
+- **AND** no category of insight column is excluded
 
 #### Scenario: A descriptive insight field the schema omits is not named
 
 - **WHEN** the schema reports the insight enrichment but does not report its resolution status
-- **THEN** the select names the descriptive insight fields the schema does report
+- **THEN** the select names the insight columns the schema does report
 - **AND** it does not name `session_insights.resolution_status`
 - **AND** the query returns a row
+
+#### Scenario: A non-scalar insight column is excluded
+
+- **WHEN** the schema reports an insight column typed as an array or an object
+- **THEN** the select does not name it
+- **AND** the exclusion follows the schema's own report rather than a list of column names
 
 #### Scenario: An instance without the enrichment still resolves a conversation
 
@@ -4219,10 +4418,11 @@ A panel's identifier and its colour are therefore two independent claims, and th
 from the other. Deriving the colour from the identifier would paint an enrichment-sourced panel as the
 rollup, which is the mis-attribution the two registers exist to prevent.
 
-The **insights panel** SHALL present the conversation's insight enrichment: its summary, its sentiment, its
-resolution status, its topic and topics, and its language. It SHALL take the **insight** provenance colour
-and SHALL name `sessions` as its source, per the rule above. It MUST NOT restate the conversation's
-title, which is the view's heading.
+The **insights panel** SHALL present the conversation's insight enrichment. Which of its fields the panel
+presents is fixed by the enrichment's own schema rather than enumerated here — see "The insights panel's
+field set is derived from the enrichment's schema". It SHALL take the **insight** provenance colour and
+SHALL name `sessions` as its source, per the rule above. It MUST NOT restate the conversation's title,
+which is the view's heading.
 
 The insights panel SHALL render **only where the conversation carries an insight row**. Where it does not,
 the view SHALL state in the panel's place, in text, that the conversation has not been evaluated — and MUST
@@ -4233,13 +4433,17 @@ it would state a shape the record does not have. The statement SHALL distinguish
 reached, the second is a capability the deployment does not have, and a reader cannot act on the two the
 same way.
 
-The panel's summary SHALL render as prose rather than as a label-and-value row: it is two or three sentences
-describing what happened, and a value slot sized for a figure would truncate it. The two fields whose values
-form a closed vocabulary — sentiment and resolution status — SHALL render as badges, so the reader can scan
-them rather than read them, and SHALL render their values as readable words rather than as the raw
-underscored token the evaluator emits. A value the frontend holds no styling for SHALL render as a neutral
-badge carrying that value's text, never dropped and never styled as though it were a recognised one: the
-evaluator's vocabulary is declared on the service side and can gain a value without a frontend release.
+The panel's summary SHALL render as prose rather than as a label-and-value row: it is several sentences
+describing what happened, and the schema declares no bound on its length. It SHALL carry no label of its
+own — the panel's heading already names what the panel is — and SHALL be omitted where the record carries no
+value for it. This is the one field the panel presents in a register of its own.
+
+No other field SHALL be singled out by a presentation of its own. A value whose vocabulary is closed renders
+as readable words in the same value register as every other field, and the panel MUST NOT distinguish one
+with a badge, a colour or a rank. The evaluator's vocabulary is declared on the service side and can gain a
+value, and its fields are discovered rather than enumerated — so styling two of them would leave every other
+closed-vocabulary field, and every one added later, looking like a lesser kind of value for no reason the
+record supports.
 
 The usage panel SHALL state prompt tokens, completion tokens, total tokens, total cost and the recorded
 durations from the rollup, laid out as headline figures rather than a label-and-value list. Monetary values SHALL carry the emphasis
@@ -4257,6 +4461,22 @@ not the average turn. Each SHALL state its own caveat: the two figures are wrong
 shared note would misdescribe whichever it did not name. The view MUST NOT describe either as elapsed time.
 This restates a caveat previously carried only by the conversations grid's Duration column, which no longer
 exists — the figures remain on this panel, so the statement has to as well.
+
+Every panel that presents label-and-value rows rather than headline figures SHALL render them in **one
+register** — one type treatment, one row rhythm, one alignment — regardless of which source the values came
+from. The rail's panels all list fields of the same record, so a treatment reserved for one of them states a
+difference in kind the record does not have; the panels are already distinguished by their heading and their
+provenance colour, which is what that distinction is for. Monospace in particular SHALL NOT appear in a
+value: it is this feature's mark for a catalog identifier naming an entity the page queried, and a
+conversation id, a user hash or a trace id is a value of the record rather than a name in the catalog.
+
+A value in that register SHALL occupy **one line** whatever its length, and a value too long for its column
+SHALL be clamped rather than allowed to reflow. Nothing bounds an insight value and most metadata values are
+opaque identifiers, so a few long fields allowed to wrap would take most of a panel whose point is that every
+field is visible at once — the row rhythm is what makes the list scannable. A clamped value's full content
+SHALL remain reachable, on hover and through the trigger's accessible name; a `title` attribute alone does
+not satisfy this. Clamping SHALL apply only where the value actually overflows, so a value that fits carries
+no dead affordance.
 
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
 activity time, the successful-request count, the conversation's **trace ids** and the deployments that served
@@ -4296,7 +4516,7 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The insights panel states the evaluator's reading
 
 - **WHEN** a conversation carries an insight row
-- **THEN** the insights panel states its summary, sentiment, resolution status, topic, topics and language
+- **THEN** the insights panel states what the enrichment recorded for it
 - **AND** it does not restate the conversation's title
 
 #### Scenario: An unevaluated conversation gets a statement, not a panel of dashes
@@ -4314,13 +4534,14 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: A closed-vocabulary value renders as a readable badge
 
 - **WHEN** the insights panel renders a resolution status of `partially_resolved`
-- **THEN** it renders as a badge reading readable words rather than the underscored token
+- **THEN** it reads as readable words rather than the underscored token
+- **AND** it renders in the same value register as every other field, with no badge of its own
 
 #### Scenario: An unrecognised vocabulary value still renders
 
-- **WHEN** the insights panel renders a sentiment value the frontend holds no styling for
-- **THEN** a neutral badge carrying that value's text renders
-- **AND** the value is neither dropped nor styled as a recognised one
+- **WHEN** the insights panel renders a sentiment value no frontend list enumerates
+- **THEN** its text renders as recorded
+- **AND** the value is neither dropped nor presented differently from a recognised one
 
 #### Scenario: The insights panel is coloured by the enrichment and identified by the entity
 
@@ -4348,6 +4569,14 @@ map to a colour, so a newly added source cannot render unstyled.
 - **THEN** the panel still names `sessions` as its source
 - **AND** no panel is labelled as enrichment-derived
 
+#### Scenario: The row panels share one value register
+
+- **WHEN** the insights panel and the metadata panel both render label-and-value rows
+- **THEN** the two present their rows in the same type treatment, row rhythm and alignment
+- **AND** no value is rendered in monospace
+- **AND** a value longer than its column is clamped to one line, with its full content reachable on hover
+  and exposed to assistive technology
+
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
@@ -4365,6 +4594,100 @@ map to a colour, so a newly added source cannot render unstyled.
 
 - **WHEN** the metadata panel renders
 - **THEN** its successful-request label states that a turn counts when at least one of its hops succeeded
+
+### Requirement: The insights panel's field set is derived from the enrichment's schema
+
+The insights panel SHALL present **every** field of the insight enrichment that the fetched schema reports
+and the record carries a value for — not an enumerated subset. The field set SHALL be derived from the
+schema, so a field the enrichment gains renders with no frontend release and a field it drops stops
+rendering with none either.
+
+A field's label and its explanatory hint SHALL be taken from what the schema reports for that field — its
+display name, falling back to its readable field name with the enrichment namespace dropped, and its
+description. A field this frontend has never heard of must still be labelled and explained, and no
+translation key can exist for one.
+
+The enrichment's own **bookkeeping** fields SHALL be presented alongside its descriptive ones and in the
+same register — no field is withheld for the kind of field it is. Which evaluator produced a row, and from
+what input, is what tells a reader whether an empty descriptive field means *the evaluator found nothing* or
+*this row predates that field*, which no descriptive field can say about itself. This does not reopen the
+header's rule: the header SHALL still state a title exactly as recorded and MUST NOT qualify it with a
+truncation caveat, per "Conversation detail header names the conversation and states its turn count". A
+fact stated as a field in a panel is not a caveat attached to a heading.
+
+Whether the conversation carries an insight row at all SHALL be decided over the enrichment's **namespace
+as a whole**, never over one named field. A record carrying no key for any field of the namespace has not
+been reached by the enrichment on this instance; a record carrying those keys with a value in none of them
+has been reached and produced nothing. Keying that test on a single field would make the panel's existence
+depend on that field continuing to exist, and would report a conversation whose one field happens to be
+blank as one the evaluator never reached.
+
+A value SHALL render **in full**, wrapping where it is long, rather than being clipped to a fixed value
+slot. The enrichment's fields range from a two-letter code to several sentences and the schema declares no
+length for any of them, so which values are short is not something the panel can be told in advance.
+
+A field the record carries no value for SHALL be omitted rather than rendered as an empty row. The
+enrichment retains superseded fields and leaves them null on rows a later evaluator labelled, so rendering
+every reported field unconditionally would fill the panel with blanks whose only meaning is "produced by a
+later version" — the same noise the panel's unavailable-marker rule already refuses.
+
+A value of a field the schema types as a **closed vocabulary** SHALL render as readable words rather than as
+the raw underscored token the evaluator emits. The rule follows the schema's declared type rather than a
+list of field names, so a field newly typed as a closed vocabulary reads as words with no frontend change.
+
+#### Scenario: A field the frontend has never heard of still renders
+
+- **WHEN** the schema reports an insight field no frontend list enumerates and the record carries a value
+  for it
+- **THEN** the panel renders it as a labelled value
+- **AND** rendering it required no change to a frontend field list
+
+#### Scenario: A field's label and hint come from the schema
+
+- **WHEN** the panel renders an insight field the schema reports a display name and a description for
+- **THEN** the field's label is that display name
+- **AND** its description is offered as a keyboard-reachable hint
+
+#### Scenario: A field the schema names but does not describe is still labelled
+
+- **WHEN** the schema reports an insight field with no display name
+- **THEN** the panel labels it from its field name, in readable words, without the enrichment namespace
+
+#### Scenario: The enrichment's bookkeeping is stated in the panel
+
+- **WHEN** a conversation's insight row carries the enrichment's own bookkeeping fields alongside its
+  descriptive ones
+- **THEN** the insights panel states them in the same register as the rest
+- **AND** the view's heading still states the title with no truncation caveat attached to it
+
+#### Scenario: A long value renders in full rather than clipped
+
+- **WHEN** the panel renders an insight field whose value runs long
+- **THEN** the value renders in full, wrapping, rather than clipped to a value slot
+
+#### Scenario: A superseded field left null is omitted, not rendered blank
+
+- **WHEN** a conversation's insight row carries no value for a field the schema still reports
+- **THEN** that field does not render in the panel
+- **AND** no empty or unavailable row is rendered in its place
+
+#### Scenario: The panel's presence is decided over the namespace, not one field
+
+- **WHEN** a record carries values for the enrichment's fields but none for the one the view reads as its
+  heading
+- **THEN** the insights panel renders those fields
+- **AND** the conversation is not reported as unevaluated
+
+#### Scenario: A record carrying the namespace with no values reads as unevaluated
+
+- **WHEN** a record carries the enrichment's field keys and a value in none of them
+- **THEN** the view reports the conversation as not yet evaluated
+- **AND** it does not report the enrichment as absent from the instance
+
+#### Scenario: A closed-vocabulary value row reads as words
+
+- **WHEN** the insights panel renders a value row for a field the schema types as a closed vocabulary
+- **THEN** its value reads as readable words rather than the raw underscored token
 
 ### Requirement: Conversation detail feedback reads the rating source
 
@@ -5270,6 +5593,91 @@ A column of an enum type SHALL remain sortable on the same terms as any other sc
 - **AND** no text entry is offered in its place
 - **AND** the request carries no predicate for that column
 
+### Requirement: The enum value filter is presented in the grid's own filter design language
+
+The value-selection control an enum-typed column's filter offers (see "A column of an enum type filters by
+selecting from its observed values", whose value semantics this requirement does not change) SHALL be presented
+consistently with the text and number filters in the same grid header, which are themed to the application's
+form controls. A control that applies the same kind of narrowing SHALL NOT read as a different class of thing
+because of how it was implemented.
+
+The control SHALL provide:
+
+- a **search field** that narrows the listed values, offered once the list is long enough for scanning to be the
+  slower path. The search SHALL be presentational: it SHALL NOT change which values are selected, and clearing
+  it SHALL restore the full list with the selection intact.
+- a **select-all / clear** affordance reflecting the current selection as all, none, or partial, so a
+  many-valued column does not have to be cleared one value at a time.
+- each value's **count** rendered as its own trailing element in a secondary text treatment, **not** concatenated
+  into the option's label. The count SHALL NOT form part of the option's accessible name: the name is the value,
+  which is what a selection means, and a name that changes as counts move makes the same option unrecognisable
+  between openings.
+- a **reset** action that clears the selection, matching the reset the text and number filters offer.
+
+The control's **loading**, **empty** and **failed** states SHALL each be announced through a live region and
+SHALL be visually distinguishable, with the failed state carrying the error text treatment. The live region
+SHALL remain separate from any control's own label.
+
+An enum column SHALL keep its place in the grid's **floating-filter row**, so its affordance sits level with
+every neighbouring column's filter rather than a row above it. It MUST NOT take the row's default floating
+filter, which is a free-text entry and would write a text model over the column's value model. The affordance
+SHALL be the grid's own filter button — the same control, at the same size, as the one every other column in
+that row carries — and MUST NOT be a bespoke substitute, which would differ from its neighbours for no reason
+a reader could see. Exactly one such control SHALL be offered for the column.
+
+The listed values SHALL remain keyboard-reachable and operable, and the selected state SHALL be exposed
+programmatically rather than by styling alone.
+
+#### Scenario: The filter is themed like the grid's other filters
+
+- **WHEN** the operator opens an enum column's filter
+- **THEN** its surface, spacing and controls follow the same treatment as the text and number filters in that
+  grid's header
+
+#### Scenario: Search narrows the list without changing the selection
+
+- **WHEN** the operator has two values selected and types a term matching neither
+- **THEN** the list shows only the matching values
+- **AND** the two values remain selected
+- **AND** clearing the term restores the full list with both still selected
+
+#### Scenario: Select all and clear act on the whole list
+
+- **WHEN** the operator activates select-all on an enum column's filter
+- **THEN** every listed value becomes selected
+- **AND** the affordance reports the selection as complete
+- **AND** activating it again clears the selection
+
+#### Scenario: A value's accessible name is the value alone
+
+- **WHEN** the operator reaches a listed value with assistive technology
+- **THEN** its accessible name is the value
+- **AND** the count is not part of that name
+
+#### Scenario: Reset clears the selection
+
+- **WHEN** the operator has values selected and activates reset
+- **THEN** no value is selected
+- **AND** the request carries no predicate for that column
+
+#### Scenario: The affordance sits level with the other columns' filters
+
+- **WHEN** the grid renders an enum column beside a text-filtered one
+- **THEN** both columns' filter affordances are in the floating-filter row
+- **AND** the enum column's is the grid's own filter button, not a text entry and not a bespoke one
+
+#### Scenario: Only one control opens the value list
+
+- **WHEN** the grid renders an enum column
+- **THEN** its floating-filter row offers a single filter control
+- **AND** no second control for the same column appears in the header row
+
+#### Scenario: Loading, empty and failed states are announced
+
+- **WHEN** the value query is in flight, returns nothing, or fails
+- **THEN** the corresponding message is announced through a live region
+- **AND** the failed state is rendered in the error text treatment
+
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
 
 The system SHALL expose two optional environment variables carrying the endpoints an external client would call: `ANALYTICS_PUBLIC_URL` for the REST surface and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` for the Arrow Flight SQL surface. Both SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; neither SHALL be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When a variable is unset or blank the detail view SHALL receive an empty value for it.
@@ -5399,6 +5807,7 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 - `timestamp` — a **space-separated** `YYYY-MM-DD HH:MM:SS.mmm` literal, which is what the insert path accepts; an ISO-8601 `T` separator or `Z` suffix is rejected on write
 - `object` — an empty object literal
 - `array` — a literal array of two values shaped by the column's `element_type`
+- `enum` — **one of the column's own declared values** (its first), never a generic example string: the domain is closed and the server itself refuses a value outside it, so a placeholder literal is a row the reader cannot insert
 
 A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
 
@@ -5555,6 +5964,13 @@ After the write snippets — not before them, since the generated snippet alread
 - **WHEN** the **Write data** tab renders
 - **THEN** the unknown-column and authorization rejections appear below the write snippets, each naming the message the caller would see
 
+#### Scenario: An enum column's write snippet uses one of its declared values
+
+- **WHEN** the Connect panel renders the write snippet for a table declaring an enum column whose values are
+  `pending`, `running`, `failed`
+- **THEN** that column's field in the generated row carries `pending`
+- **AND** it does not carry a generic example string
+
 ### Requirement: Connect panel states the authentication and role contract
 
 The panel SHALL instruct the user to supply a DIAL API key through a `DIAL_API_KEY` environment variable rather than pasting it into the script. Every surface the panel shows takes the same key in the same `Api-Key` header; the Flight SQL client sends it as a gRPC call header, which is why its driver option carries the lower-cased name. The panel SHALL NOT render, echo, or offer to generate an actual key; the value in every snippet SHALL be a placeholder.
@@ -5673,187 +6089,148 @@ the schema, and caching it would extend one outage over the entry's whole lifeti
 - **WHEN** a schema fetch fails and the page is loaded again
 - **THEN** the schema is fetched from the analytics service again rather than the failure being replayed
 
-### Requirement: Conversation message content is the recorded transcript
+### Requirement: A span's Chat states the conversation that span received
 
-The conversation detail view SHALL render the conversation's **recorded** message text — the words the user
-and the assistant actually exchanged, as `dial_usage_log` stored them — and MUST NOT render fabricated,
-derived or sample content in their place.
+The **Chat** tab SHALL render the selected span's own recorded request message list as a conversation, in the
+order the request carried it, followed by that span's assembled answer as the trailing turn. It answers what
+the conversation looked like **at that hop** — the history a deep hop received carries sub-agent prompts,
+tool results and intermediate turns that a conversation-level transcript never shows, and that history is
+what makes a failed hop legible.
 
-The presentation SHALL be the one the view already uses: alternating user and assistant messages, each
-assistant message carrying its turn's real token total, cost, hop count and duration, its rating counts, and
-the control that opens that turn's trace. Only the message text changes. The notice stating that the messages
-are samples SHALL be removed, because the statement it makes is no longer true.
+**Chat SHALL read no source of its own.** It SHALL be rendered from the same request envelope the Request tab
+states and the same response the Response tab states — never a third read of a body already fetched for one
+of them. Reaching Chat from the Request tab does fetch the response, because the response read is deferred
+until a tab that shows it is open; moving between Chat and Response fetches nothing.
 
-The transcript MUST NOT interleave tool calls, model steps or embeddings between the messages. The hop chain
-is the Trace view's subject, and a reader who wants it has a control on every assistant message and a view
-switch on the page.
+**Chat SHALL state the exchange, not the whole history.** A turn qualifies when its role is user or assistant
+and it carries text; everything else a hop receives is machinery — a system prompt, a tool result, an
+assistant turn that only called a tool — and the Request tab states all of it, in full, with its sizes. With
+every message rendered the tab was the Request tab in different clothes: on a nested model call, fifty
+messages became fifty bubbles, most of them tool traffic, and the exchange was not findable among them.
 
-An assistant message SHALL be bound to its turn by **trace id**, not by its position in the rendered list. A
-transcript assembled from one bounded read and a turn list assembled from another can differ in length or in
-membership, and a positional binding would then attach one turn's figures to another turn's words.
+**Role alone SHALL NOT decide it.** The messages dialect feeds a tool result back as a **user** message
+carrying `tool_result` blocks, so a filter by role would let machinery through wearing the user's role — the
+one thing this tab must never do. A message that answers a recorded call SHALL be treated as a result
+whatever role it arrived under.
 
-An assistant message whose recorded response carries no text content SHALL render the view's explicit
-unavailable placeholder rather than an empty bubble. A response with empty content is a response that put its
-output somewhere other than text — commonly in tool calls — and a blank bubble would read as an assistant
-that said nothing.
+**Every turn SHALL be labelled with its own role and its place in the history**, so a reader can point at one
+and find it on the Request tab.
 
-#### Scenario: Recorded messages render in place of sample content
+**A turn whose recorded text was clamped SHALL keep the affordance that opens the rest**, reading the one
+message in full on demand exactly as the Request tab does. A conversation view that silently truncates is
+worse than a list that admits it.
 
-- **WHEN** the detail view loads a conversation whose hop log carries its bodies
-- **THEN** the user and assistant messages show the recorded text
-- **AND** no notice claims the messages are samples
+**The trailing answer SHALL be the span's assembled response text**, and SHALL be omitted rather than faked
+where the response yields none. Where the response column is withheld from this caller, Chat SHALL still
+render the history and SHALL state that the answer is withheld — the history is the substance of the tab and
+is gated by its own column.
 
-#### Scenario: The transcript carries no machinery between messages
+**The request's tool catalogue SHALL NOT render here either**, and no reasoning summary SHALL be merged into
+the answer. Both rules already hold for the tabs Chat is rendered from, and Chat is not a way around them.
 
-- **WHEN** a turn's hop chain includes tool calls and embeddings
-- **THEN** none of them render between the messages of the transcript
-- **AND** the assistant message still offers the control that opens that turn's trace
+**A turn SHALL NOT render the blank lines a recorded body carried at either end of its text.** Content
+routinely opens with a newline — a templated prompt is assembled around its variables and the template's own
+leading break is part of the string; measured over one hour of model-call hops, 39 of 272 requests carried at
+least one message whose content began with one, and 20 of their assembled responses did. Rendered as recorded,
+each of those costs a line and a bubble opening on an empty line reads as a rendering fault. Only lines that
+are **entirely** blank SHALL be dropped, and only at the two ends: the indentation of the first line that has
+content is part of that content, and a message opening with a code block loses its shape without it. The
+strip SHALL be applied where the text is read rather than where it is rendered, so one message cannot arrive
+stripped through the envelope and unstripped through the read that opens it in full. **No stated size or
+clamp SHALL change with it** — those are measured against the recorded body, not against the rendered text.
 
-#### Scenario: An assistant message takes its figures from its own turn
+**An answer whose text is blank SHALL add no turn**, on the same terms as one that yielded no text at all.
 
-- **WHEN** the transcript carries a turn the bounded turn list does not, or lists them in a different order
-- **THEN** each assistant message shows the figures of the turn whose trace id it shares
-- **AND** no assistant message shows another turn's figures
+**A span whose history is all machinery SHALL say so.** A retrieval prompt, or a tool loop with nothing said
+in it, has no conversation to state — and saying that is the answer, where fifty bubbles of tool traffic was
+not. Whether a hop records a history at all is decided from the row before any read; whether that history
+contains an exchange can only be known after it, and is stated inside.
 
-#### Scenario: A response with no text content is stated, not blank
+**Chat SHALL be offered only for a span that records a message history.** An MCP protocol message and an
+embedding probe are not conversations, and a tab that resolves to "this hop has no conversation" on every
+such span states a fixed fact once per click.
 
-- **WHEN** a turn's recorded response carries no text content
-- **THEN** that assistant message renders the explicit unavailable placeholder
+Where the request envelope carries no message, or its dialect is one no parser claims, Chat SHALL state that
+rather than render an empty conversation; the raw body stays the Request tab's answer.
 
-### Requirement: The transcript is assembled from every entry hop of the conversation
+#### Scenario: A hop's history renders as a conversation
 
-A conversation's **entry hop** is a `dial_usage_log` row attributed to that conversation whose
-`core_parent_span_id` is null — what the client sent to DIAL. Where one exists, its request body carries the
-user-visible exchange with no system prompt and no internal planning; a child hop carries the machinery
-instead, and one sampled child held a 20 461-character system prompt. The transcript SHALL therefore be
-assembled from entry hops alone, and MUST NOT read a child hop's body for message text.
+- **WHEN** a model-call span carrying prior turns is selected and Chat is opened
+- **THEN** the request's messages render as a conversation in recorded order
+- **AND** each turn states its role
 
-The null test SHALL be a null test. The column is null for a root hop and never the empty string (measured:
-655 078 null, 0 empty), so a predicate comparing it to an empty string would match nothing.
+#### Scenario: The machinery is left to the request tab
 
-Where a conversation has entry hops at all, it has at most one per trace id, so its entry hops are its turns.
-A conversation MUST NOT be assumed to have one per trace, or any at all: observed conversations carry a full
-set of turns in the rollup and no entry hop under their session id, and that case is governed below.
+- **WHEN** the span's request carries a system prompt and tool results alongside the exchange
+- **THEN** the conversation states the user and assistant turns
+- **AND** it states neither the system prompt nor the tool results
 
-The transcript MUST NOT be taken from a single row. Reading only the newest entry hop's request body is
-correct **only** for a client that resends the whole history each turn. A DIAL **application** deployment
-keeps conversation state server-side and sends only the new message: one measured 11-turn conversation
-reported `1, 3, 1, 1, 1, 1, 1, 1, 3, 5, 5` messages across its entry hops in time order, eight of eleven
-turns carrying a single message, while a full-history client on the same instance grew monotonically
-247 → 250 → 253 → 255 → 258.
+#### Scenario: A result that arrived under the user role is still a result
 
-Entry hops SHALL be read in ascending `request_time` order and assembled in that order. For each entry hop,
-the messages its request body carries SHALL be appended to the transcript **after dropping the longest
-leading run of them that already matches the tail of the assembled transcript**, and the text decoded from
-its response body SHALL then be appended as that turn's assistant message. One rule SHALL cover both client
-shapes: a full-history client's leading run matches everything already assembled and contributes only its
-new message, and an application deployment's single message matches nothing and is appended whole.
+- **WHEN** a message answering a recorded call arrives with the user role
+- **THEN** it is not stated as part of the conversation
 
-**A message whose text was never recorded SHALL match.** Two messages with the same role SHALL be treated as
-the same message when either carries no text, because a message this view failed to decode is still that
-message. A turn that answered with tool calls alone decodes to no text while the resent copy of that same
-message carries no `content` key at all, and comparing the two strictly finds no overlap anywhere in the
-history: the match is effectively all-or-nothing, so a single mismatched message re-appends the **whole**
-conversation under the later turn — the reader sees their first question twice, and the duplicated answer
-carries the later turn's tokens, cost, hops and duration.
+#### Scenario: A history with no exchange in it says so
 
-Where the newest entry hop demonstrably carries the whole conversation, the implementation MAY fetch that one
-row's bodies instead of every row's. **The test SHALL be that every entry hop's message count is exactly
-`2k − 1` at its position `k`** — one question and one answer per turn, in order — and not merely that the
-newest hop's count reaches `2n − 1`. Where the test does not hold, every entry hop's bodies SHALL be fetched.
+- **WHEN** every message a span received is machinery
+- **THEN** the tab states that the span received no conversation
 
-This is a cost optimisation and SHALL produce the same transcript as the general rule, **including which turn
-each message belongs to**. A single body carries no turn of its own for the messages inside it, so a count
-that only reaches `2n − 1` establishes that the content is all present while saying nothing about where one
-turn ends and the next begins; attributing those messages by position under that weaker test puts the newest
-turn's figures beneath every answer in the conversation. Under the exact test the attribution is arithmetic:
-the messages at index `2i` and `2i + 1` belong to turn `i + 1`, and the newest turn's answer comes from the
-response body. Where the decoded history is not the length the test promised, the implementation SHALL fall
-back to fetching every entry hop's bodies rather than attributing by position.
+#### Scenario: The answer is the span's own response
 
-The entry-hop read SHALL be bounded by the same limit as the turn list, so the transcript and the turn list
-cannot disclose different lengths for one conversation. When the bound clips the entry hops, the view SHALL
-state both figures together exactly as the turn list already does.
+- **WHEN** the span's response yields assistant text
+- **THEN** it renders as the trailing turn of the conversation
 
-**The entry-hop test MUST NOT be relaxed.** A conversation can record hops under its session id and yet have
-no entry hop among them, because the hop that entered DIAL was logged with no session id of its own. This is
-not a rare accident: it is a routine outcome for whole classes of deployment, and observed conversations show
-it for every one of their turns. In such a conversation the hops that *are* attributed to it are inner
-agent-loop calls, and the view MUST NOT take message text from one. Sampled examples carry a system message,
-a tool-definition array, and per-turn message counts that grow with the loop rather than with the
-conversation. Specifically, the view MUST NOT fall back to a hop whose parent is merely absent from the
-result, nor to the earliest hop of each trace, nor to any hop selected by recency or depth: each of those
-would render a system prompt and a tool catalogue as though the user had typed them. A conversation with hops
-but no entry hop SHALL render the dedicated state that says the transcript cannot be reconstructed.
+#### Scenario: A response that yields no text adds no turn
 
-**Only user and assistant messages belong to the transcript.** A message whose role is neither SHALL be
-excluded, and a request body's own system field — where the dialect carries one outside the message list —
-SHALL be ignored. The exclusion is by role, applied to every entry hop, and does not depend on the entry-hop
-test having already screened the hop: two independent rules protecting one outcome is the point, because the
-consequence of a single missed case is a leaked system prompt.
+- **WHEN** the span's response yields no assistant text
+- **THEN** no trailing assistant turn renders
+- **AND** no substitute text is shown
 
-**A message's content is a string or a list of content parts.** Both SHALL be handled; a list SHALL be
-reduced to the text of its text-bearing parts, in order. A message that carries no `content` key at all is
-not a message with empty content — it is a message whose output went elsewhere, and it SHALL be treated as
-such rather than as an empty string.
+#### Scenario: A withheld response still leaves the history
 
-#### Scenario: Entry hops are selected by a null parent span
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **THEN** Chat renders the history
+- **AND** it states that the answer is withheld
 
-- **WHEN** the entry-hop query is built
-- **THEN** its filter tests that the parent span column is null
-- **AND** it does not compare that column to an empty string
+#### Scenario: Chat re-reads no body already fetched
 
-#### Scenario: A server-side-state deployment's transcript is assembled across turns
+- **WHEN** the reader switches from Response to Chat for the same span
+- **THEN** no additional body query is issued
+- **AND** reaching Chat from Request fetches the response once, as opening the Response tab would
 
-- **WHEN** a conversation's entry hops each carry only the turn's new message
-- **THEN** the transcript contains every turn's user message
-- **AND** it is not limited to the messages the newest entry hop carried
+#### Scenario: A clamped turn can be opened in full
 
-#### Scenario: A full-history client's repeated messages appear once
+- **WHEN** a turn's recorded text was clamped
+- **THEN** the turn offers the affordance that reads that message in full
 
-- **WHEN** a conversation's entry hops each resend the whole prior exchange
-- **THEN** each message renders exactly once
-- **AND** the messages are in the order the entry hops recorded them
+#### Scenario: A turn does not render the blank lines its body carried
 
-#### Scenario: A resent message whose text was never recorded is not repeated
+- **WHEN** a recorded message's content begins or ends with blank lines
+- **THEN** the turn renders without them
+- **AND** the indentation of its first line of content is preserved
+- **AND** the size stated for that message is unchanged
 
-- **WHEN** a full-history client resends a message whose text this view could not decode from its own turn
-- **THEN** that message appears once
-- **AND** the earlier turn's messages are not repeated under the later turn
+#### Scenario: A blank answer adds no turn
 
-#### Scenario: Child hop bodies are never read for message text
+- **WHEN** the span's response yields text that is blank throughout
+- **THEN** no trailing assistant turn renders
 
-- **WHEN** the transcript is assembled
-- **THEN** no body of a hop with a non-null parent span is read
+#### Scenario: A span with no conversation offers no Chat
 
-#### Scenario: A clipped entry-hop read states its bound
+- **WHEN** an MCP span or an embedding span is selected
+- **THEN** no Chat tab is offered for it
 
-- **WHEN** a conversation records more entry hops than the bound allows
-- **THEN** the view states how many of how many turns are shown
-- **AND** that disclosure is visible without interaction
+#### Scenario: A request that carried no message states so
 
-#### Scenario: A conversation with hops but no entry hop is not reconstructed from them
-
-- **WHEN** a conversation's hops all record a parent span and none is an entry hop
-- **THEN** the view renders the state that says the transcript cannot be reconstructed
-- **AND** no message text is taken from any of those hops
-- **AND** the Trace view, the header, the panels and the turn list still render
-
-#### Scenario: A system message is never part of the transcript
-
-- **WHEN** an entry hop's request body carries a system message, or a system field outside the message list
-- **THEN** neither appears in the transcript
-- **AND** only the user and assistant messages render
-
-#### Scenario: Content parts are reduced to their text
-
-- **WHEN** a message's content is a list of content parts rather than a string
-- **THEN** the message renders the text of its text-bearing parts in order
+- **WHEN** the span's request envelope carries no message
+- **THEN** Chat states that the span received no conversation
+- **AND** it does not render an empty conversation
 
 ### Requirement: Assistant text is read from the assembled response, or decoded from the raw body
 
-A request body is always plain JSON. An assistant's text has **two** possible sources, and the transcript
-SHALL treat both as first-class.
+A request body is always plain JSON. An assistant's text has **two** possible sources, and a span's response
+SHALL treat both as first-class — for the Response tab's assembled statement and for the trailing answer of
+its Chat tab alike.
 
 **Preferred source — `assembled_response`.** Where the producer persists it, this column holds the merged
 response message: a single JSON object whose first choice's message content is the readable answer, already
@@ -5861,9 +6238,9 @@ reassembled from whatever streaming the call used. Reading it avoids reassemblin
 
 **Guaranteed fallback — `response_body`.** The assembled column is not always populated. It is null for every
 row ingested before the producer began writing it, and hop rows live for a year, so a recently upgraded
-instance carries up to a year of conversations for which the raw body is the **only** source of assistant
-text. A minority of rows, current ones included, also store a value that is not JSON. The fallback is
-therefore an ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
+instance carries up to a year of spans for which the raw body is the **only** source of assistant text. A
+minority of rows, current ones included, also store a value that is not JSON. The fallback is therefore an
+ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
 
 The fallback SHALL decode `response_body` in whichever of three formats it is written:
 
@@ -5878,12 +6255,12 @@ absent, withheld or unparseable would leave the response undecodable for want of
 response already carries plainly.
 
 The fallback SHALL be used whenever the assembled value is absent, null, or not parseable as JSON — the three
-cases are indistinguishable to a reader and SHALL be indistinguishable in behaviour. A turn SHALL NOT render
+cases are indistinguishable to a reader and SHALL be indistinguishable in behaviour. A span SHALL NOT render
 as unavailable while a decodable raw body for it exists.
 
-Where neither source yields text, the turn SHALL render the view's unavailable placeholder. It MUST NOT yield
-the raw body, a partial fragment, or a fabricated substitute: a malformed body is an unknown message, and
-rendering bytes at the reader would present transport detail as conversation.
+Where neither source yields text, the response SHALL state its own read state and the Chat tab SHALL add no
+trailing turn. Neither MUST yield the raw body, a partial fragment, or a fabricated substitute: a malformed
+body is an unknown message, and rendering bytes at the reader would present transport detail as conversation.
 
 A response whose decoded content is empty, or which carries no content key at all, SHALL NOT be treated as an
 empty step. Its output is in the response's tool calls, whose names exist **only** in a response body — the
@@ -5891,30 +6268,30 @@ hop log carries no column for them.
 
 #### Scenario: The assembled response is preferred where present
 
-- **WHEN** a turn's assembled response is present and parseable
-- **THEN** the assistant message is its first choice's message content
-- **AND** the raw response body is not decoded for that turn
+- **WHEN** a span's assembled response is present and parseable
+- **THEN** the assistant text is its first choice's message content
+- **AND** the raw response body is not decoded for that span
 
 #### Scenario: A null assembled response falls back to the raw body
 
-- **WHEN** a turn's assembled response is null because the row predates the column
-- **THEN** the assistant message is decoded from the raw response body
-- **AND** the turn does not render as unavailable
+- **WHEN** a span's assembled response is null because the row predates the column
+- **THEN** the assistant text is decoded from the raw response body
+- **AND** the span does not render as unavailable
 
 #### Scenario: A non-JSON assembled response falls back to the raw body
 
-- **WHEN** a turn's assembled response is present but is not parseable as JSON
-- **THEN** the assistant message is decoded from the raw response body
+- **WHEN** a span's assembled response is present but is not parseable as JSON
+- **THEN** the assistant text is decoded from the raw response body
 
 #### Scenario: A streamed body is reassembled from its chunks
 
 - **WHEN** the fallback decodes a body that is a stream of event chunks
-- **THEN** the assistant message is the concatenation of their content deltas in arrival order
+- **THEN** the assistant text is the concatenation of their content deltas in arrival order
 
 #### Scenario: A single-object body is read from its first choice
 
 - **WHEN** the fallback decodes a body that is one JSON object
-- **THEN** the assistant message is that object's first choice's message content
+- **THEN** the assistant text is that object's first choice's message content
 
 #### Scenario: An MCP body is read from its JSON-RPC result
 
@@ -5930,15 +6307,15 @@ hop log carries no column for them.
 #### Scenario: Neither source yields a placeholder, not raw bytes
 
 - **WHEN** the assembled response is unusable and the raw body cannot be parsed in any of the three formats
-- **THEN** that message renders the unavailable placeholder
+- **THEN** the Response tab states its read-state placeholder and the Chat tab adds no trailing turn
 - **AND** no part of either raw value is rendered
 
-### Requirement: The body columns are schema-gated for two independent reasons
+### Requirement: The hop body columns are schema-gated for two independent reasons
 
 The fetched `dial_usage_log` entity schema SHALL be the sole authority on which body columns a query may
 name. Two different conditions remove a column from that schema, they are **not** interchangeable, and a
 projection that names an absent column is rejected with the whole query — so both must be handled or the
-Chat view fails outright rather than degrading.
+span's bodies fail outright rather than degrading.
 
 **Access — `sensitive`.** `request_body`, `response_body` and `assembled_response` are flagged `sensitive` in
 the analytics catalog, so the service omits them from the schema it returns to any caller below FULL_ADMIN.
@@ -5954,72 +6331,79 @@ changes it; only upgrading the service does.
 Consequently `assembled_response` SHALL be treated as an **optional** field in exactly the sense the
 conversations views already use: named only when the fetched schema reports it, through the same
 optional-field mechanism the insight columns go through. It MUST NOT be named unconditionally. Naming it on
-an instance that predates it costs the whole transcript query, which is the one failure this gate exists to
+an instance that predates it costs the whole body query, which is the one failure this gate exists to
 prevent — and it is a failure a full administrator would see, so no amount of permission masks it.
 
 **`response_body` SHALL be optional on exactly the same terms**, and for a reason that follows directly from
-the gate below: the view is offered when *either* response column is present, so an instance reporting only
-the assembled column is a supported state — and a projection that names `response_body` regardless rejects
-the whole query on it. Neither response column may be named unconditionally. Gating one and hard-coding the
-other makes the gate and the projection two different answers to the same question, which is the failure this
-requirement exists to prevent.
+the gate below: the response side is offered when *either* response column is present, so an instance
+reporting only the assembled column is a supported state — and a projection that names `response_body`
+regardless rejects the whole query on it. Neither response column may be named unconditionally. Gating one
+and hard-coding the other makes the gate and the projection two different answers to the same question, which
+is the failure this requirement exists to prevent.
 
-The Chat view SHALL be offered when the schema reports `request_body` **and at least one** of
-`assembled_response` or `response_body`. The request body has no substitute — it is the only record of what
-the user said — while either response column can supply the assistant's text. An instance that carries
-`response_body` but not `assembled_response` SHALL therefore offer a fully functional Chat view.
+**The grant SHALL be reported per side and SHALL NOT be reduced to a single combined flag.** The schema probe
+SHALL report whether the request column is readable and whether at least one response column is, and each tab
+SHALL be gated by the columns it actually reads, under **Each side of the inspector is gated by its own
+recorded column**. A conjunction of the two has no reader: it would withhold a readable request over an
+unreadable response.
 
 The frontend MUST NOT implement an access check of its own. The service's column-level access control is the
 gate, and a second gate maintained here would be a second answer to the same question.
 
-Where the Chat view is not offered, the view SHALL state that the transcript is not available and SHALL keep
-the Trace view, the header, the panels and every figure on the page fully functional. It MUST NOT render an
-error, and MUST NOT imply the conversation recorded no messages.
+Where no body column is granted, the trace view SHALL state that once for the whole session and SHALL keep
+the tree, the span facts, the header, the panels and every figure on the page fully functional. It MUST NOT
+render an error, and MUST NOT imply the hop recorded nothing.
 
 A schema read that **fails** is not the same as a schema that omits a column, and SHALL be reported as a
-failure rather than silently withholding the Chat view.
+failure rather than silently withholding the bodies.
 
-#### Scenario: A full administrator on a current instance is offered the transcript
+#### Scenario: A full administrator on a current instance reads both sides
 
 - **WHEN** the fetched hop-log schema reports the request body and both response columns
-- **THEN** the Chat view is offered and renders the recorded transcript
+- **THEN** the Request, Response and Chat tabs are all offered
 
-#### Scenario: An instance without the assembled column still offers the transcript
+#### Scenario: An instance without the assembled column still reads responses
 
 - **WHEN** the fetched schema reports the request body and the raw response body but not the assembled response
-- **THEN** the Chat view is offered
+- **THEN** the Response tab is offered
 - **AND** no query names the assembled response column
 - **AND** the assistant text is decoded from the raw response body
 
 #### Scenario: The assembled column is named only when the schema reports it
 
-- **WHEN** the transcript body query is built and the schema does not report the assembled response
+- **WHEN** a hop body query is built and the schema does not report the assembled response
 - **THEN** the select does not name it
 - **AND** the query returns rows
 
 #### Scenario: The raw response column is named only when the schema reports it
 
 - **WHEN** the fetched schema reports the request body and the assembled column but not `response_body`
-- **THEN** the transcript query does not name `response_body`
-- **AND** the Chat view is offered and renders the transcript
+- **THEN** no hop body query names `response_body`
+- **AND** the Response tab is offered
 
-#### Scenario: A caller without the body columns is not offered the transcript
+#### Scenario: The probe reports each side separately
+
+- **WHEN** the schema probe resolves the caller's body-column grant
+- **THEN** it reports the request side and the response side independently
+- **AND** it reports no combined flag requiring both
+
+#### Scenario: A caller without the body columns keeps the rest of the trace
 
 - **WHEN** the fetched hop-log schema reports none of the body columns
-- **THEN** the Chat view is not offered
-- **AND** the view states that the transcript is unavailable to this caller rather than showing an error
-- **AND** the Trace view, the header and the panels still render
+- **THEN** the trace states once that the bodies are unavailable to this caller
+- **AND** the tree, the span facts, the header and the panels still render
+- **AND** no error is rendered
 
-#### Scenario: No frontend role check gates the transcript
+#### Scenario: No frontend role check gates the bodies
 
-- **WHEN** the detail route decides whether to offer the Chat view
+- **WHEN** the trace view decides which tabs to offer
 - **THEN** the decision reads only the fetched entity schema
 - **AND** no role, scope or permission of the session is consulted
 
 #### Scenario: A failed schema read is reported as a failure
 
 - **WHEN** the hop-log schema cannot be fetched
-- **THEN** the view reports a failure rather than presenting the transcript as unavailable to the caller
+- **THEN** the view reports a failure rather than presenting the bodies as unavailable to the caller
 
 ### Requirement: Hop bodies are read and decoded server-side and never sent to the browser
 
@@ -6549,17 +6933,187 @@ one span the reader selected, under **The inspector reads bodies in tiers, and n
 - **THEN** every row renders from the recorded spans alone
 - **AND** no model-call response body is read to build the tree
 
+### Requirement: The trace view splits the span tree from the selected span's bodies
+
+Inside an open trace the left region SHALL be split horizontally into two sections: the **span tree** above
+and the **selected span's bodies** below. The bodies SHALL NOT be presented in the span rail beside the tree.
+One 360px rail cannot hold a span's facts, its request, its response and its conversation at once — the facts
+block was already capped to stop it squeezing the message history to a sliver — and a reader compares a hop's
+request against the tree, which a rail forces into a column a third of the tree's width.
+
+**The split SHALL be adjustable by the reader**, so a reader following a long chain can give the tree the
+screen and a reader reading a large request can give it to the bodies.
+
+**Each section SHALL be floored at 20% of the split region's available height**, and neither SHALL be
+collapsible to nothing. The floor SHALL be expressed as a proportion of the available height rather than as a
+fixed number of pixels, so that a size chosen at one viewport height stays legal at a smaller one: a section
+sized in pixels can fall below its own floor when the window shrinks, which is the state the floor exists to
+prevent.
+
+**The split SHALL start at 50/50** and SHALL keep the reader's chosen proportion while the trace stays open,
+including across changes of selected span. Resetting the split when the selection changes would undo the
+reader's adjustment on every click of the surface the adjustment was made for.
+
+**The separator SHALL be operable by keyboard as well as by pointer.** It SHALL expose its orientation and
+its current proportion to assistive technology, and SHALL report the same floor it enforces. A pointer-only
+handle leaves a reader with no pointer unable to reach a size the view offers everyone else.
+
+**Where the selected span offers no body at all** — every body column withheld from this caller — the region
+SHALL render the tree alone, with no bodies section and no separator. A floor governs how small a section may
+be made, not whether a section exists; half the region held open for a statement the trace's header already
+makes once would cost the tree the screen it is the only remaining use for.
+
+Changing the split MUST NOT re-read anything. It is a layout change, and neither the span read nor any body
+read depends on it.
+
+#### Scenario: The split opens at half the region and is adjustable
+
+- **WHEN** a trace's hop chain opens
+- **THEN** the span tree and the span's bodies each take half the split region's height
+- **AND** the separator between them can be dragged
+
+#### Scenario: Neither section can be driven below its floor
+
+- **WHEN** the separator is dragged past either end
+- **THEN** each section keeps at least 20% of the available height
+- **AND** neither section is collapsed to nothing
+
+#### Scenario: The floor survives a smaller viewport
+
+- **WHEN** the reader sizes one section near its floor and the window is then made shorter
+- **THEN** both sections still hold at least 20% of the available height
+
+#### Scenario: The separator is operable from the keyboard
+
+- **WHEN** the separator is focused and an arrow key is pressed
+- **THEN** the split moves in that direction
+- **AND** the separator states its orientation and its current proportion to assistive technology
+
+#### Scenario: Selecting another span keeps the reader's split
+
+- **WHEN** the reader adjusts the split and then selects a different span
+- **THEN** the split keeps the adjusted proportion
+
+#### Scenario: Adjusting the split issues no read
+
+- **WHEN** the separator is dragged
+- **THEN** no span query and no body query is issued
+
+#### Scenario: A span with no readable body renders no split
+
+- **WHEN** every body column is withheld from this caller
+- **THEN** the span tree takes the whole region
+- **AND** no bodies section and no separator render
+
+### Requirement: The span's bodies are presented as Request, Response and Chat tabs
+
+The bodies section SHALL present the selected span in tabs, in the fixed order **Request**, **Response**,
+**Chat**. Request and Response state the envelope as the inspector requirements define them; Chat states the
+conversation the span received.
+
+**The order SHALL be fixed and SHALL NOT be reordered by which tabs a span offers.** A tab a span has nothing
+for is absent, and the remaining tabs keep their relative order, so the strip does not rearrange itself as
+the reader moves down the tree.
+
+**The active tab SHALL persist across a change of selected span** wherever the newly selected span offers it,
+and SHALL fall back to the first tab the span offers where it does not. A reader comparing one side of two
+hops is asking the same question twice; being returned to the first tab on each click answers a different one.
+
+**The tab set SHALL be one layout rule for every kind of hop.** What differs by kind is what each tab renders
+and whether Chat is offered — never whether the strip exists. An MCP hop's arguments are its request column
+and its result its response column; an embedding hop's probe text is its request column and its dimension
+count its only response-column field. Each SHALL therefore render on the tab that reads the column it comes
+from, so a reader moving down a tree of mixed kinds keeps one layout and finds a response fact where every
+other response fact was.
+
+**A fact read from the hop row rather than from a body SHALL render above the tab strip**, where it is visible
+on every tab. An MCP hop's method, tool name and toolset are plain columns belonging to neither side, and
+duplicating them onto both tabs would state the same thing twice while leaving a reader unsure whether the
+two copies could differ. This is the slot the request's parameters already occupy.
+
+**A trace SHALL open on its entry hop** — the span whose parent is null, what the client sent to DIAL — and
+on its earliest span where it records none. That hop's request body is the only one carrying the user-visible
+exchange with no system prompt and no internal planning, so it is the span whose Chat answers "what was this
+conversation" for a reader who has not yet picked a hop. Ordering alone does not find it: a Core-internal
+root can fire long after the hop it belongs to, so the earliest span lands on the conversation only usually.
+
+**Where no span is selected the section SHALL say so** rather than render an empty tab strip — the same
+statement the rail makes for the same state.
+
+#### Scenario: The tabs render in a fixed order
+
+- **WHEN** a span offering all three is selected
+- **THEN** the tabs read Request, Response, Chat in that order
+
+#### Scenario: A missing tab does not reorder the others
+
+- **WHEN** a span offers Request and Chat but not Response
+- **THEN** Request precedes Chat
+- **AND** no placeholder Response tab renders
+
+#### Scenario: The active tab survives a change of span
+
+- **WHEN** the reader is on Response and selects another span that offers Response
+- **THEN** Response is still the active tab
+
+#### Scenario: A span that does not offer the active tab falls back
+
+- **WHEN** the reader is on Chat and selects a span that offers no Chat
+- **THEN** the first tab that span offers becomes active
+
+#### Scenario: An MCP hop splits its arguments from its result
+
+- **WHEN** an MCP hop is selected
+- **THEN** the Request tab states the arguments it sent
+- **AND** the Response tab states the result it returned
+- **AND** no Chat tab is offered for it
+
+#### Scenario: An MCP hop's row facts stay visible on both tabs
+
+- **WHEN** an MCP hop is selected and the reader moves between its tabs
+- **THEN** its method, tool name and toolset render above the tab strip on both
+
+#### Scenario: An embedding hop states its dimension count on the response side
+
+- **WHEN** an embedding hop is selected
+- **THEN** the Request tab states the model, the input count and the embedded text
+- **AND** the Response tab states the dimension count rather than that there is nothing to read
+
+#### Scenario: A trace opens on the span whose history is the conversation
+
+- **WHEN** a trace whose earliest span is a child of a later-recorded root is opened
+- **THEN** the entry hop is the selected span
+- **AND** a trace recording no entry hop opens on its earliest span instead
+
+#### Scenario: No selected span is stated
+
+- **WHEN** the trace opens with no span selected
+- **THEN** the bodies section states that no span is selected
+
 ### Requirement: A hop's request and response render as a structured inspector
 
 The hop detail SHALL state what the selected hop sent and what came back as a **Request / Response**
 inspector, not as excerpts. The two sides SHALL be separate tabs, because a reader is asking about one or the
-other and the panel is a rail, not a page.
+other; they sit in the trace view's bodies section alongside the Chat tab, under
+**The span's bodies are presented as Request, Response and Chat tabs**.
 
 **The Request tab SHALL state the whole message list as a history**, one row per message, each carrying its
 role, its position in the list and its size in bytes. A message's text SHALL be clamped to a readable length
-with an affordance that opens the rest, and a message large enough to dominate the request SHALL be marked as
-such **in words as well as by colour** — 21% of model-call requests exceed 100 KB, and which message made it
-so is the first thing a reader wants.
+with an affordance that opens the rest.
+
+**The control that opens a message in full SHALL carry no border of its own.** It sits inside a bordered
+card, where a second border reads as a nested panel; it states itself as a link instead, in the accent colour
+the rest of the console uses for an action.
+
+**No message SHALL be marked as large, and no message SHALL be outlined for its size.** The removed rule
+marked a message at or above a byte threshold, in words and by a warning border. The size itself is stated on
+every message and is the honest form of that fact: a threshold turns a continuum into a verdict, and the
+border made a routine 1 KB system prompt look like a fault. Which message made a request heavy is read from
+the sizes, which are already there.
+
+**One message SHALL be presented one way wherever it is read.** The request's history rows and the assembled
+response SHALL share the card: a response *is* one assistant message, with a role, a size, text and the calls
+it asked for, and stating it as bare text made the two tabs look like two tools reading two different things.
 
 **A tool call SHALL render as the message's content, not as metadata about it.** An assistant message that
 called a tool and said nothing records `content` as the empty string, so the call is the whole of what that
@@ -6569,6 +7123,24 @@ A message that recorded neither text nor a call SHALL say so rather than render 
 
 **Per-property sizes SHALL NOT be stated.** A message's own size is stated; its members' sizes are not. The
 reader opens a hop for the history, and a property is not a unit they asked about.
+
+**A call SHALL state the id its answer will quote, and a result SHALL state the call it answers.** A recorded
+result carries only the id of the call, so on its own it is an anonymous block of text: a turn that called
+one tool three times is answered by three messages nothing distinguishes. The tool's **name** SHALL be
+stated, resolved against the calls the same request carried, together with enough of the call's id to tell
+two answers of one tool apart. Where an id matches no call in this request — the history a client feeds back
+can reach further than the request itself — the id SHALL still be stated and no tool named, rather than the
+pairing shifting onto another call.
+
+**A result that reported a failure SHALL be marked as failed, in words as well as by colour.** A failed tool
+is usually why a reader opened the hop, and it is a fact about the result that its text may not state.
+
+This is stated here and not on the Chat tab: Chat leaves tool traffic out of the conversation entirely, so
+the pairing has exactly one surface.
+
+**The request's parameters SHALL be stated inside the Request tab**, not above the tab strip. Only facts read
+from the hop row belong above it: a request-body fact placed there sits over the Response tab describing
+something else.
 
 **The system message SHALL render, labelled by its role, like any other message.** This reverses the removed
 requirement. There SHALL be no per-role setting and no separate reveal: the bodies are already behind the
@@ -6610,6 +7182,36 @@ its frame count, and frames can be counted only by a pass over the raw body.
 - **WHEN** a request carries a message with neither text nor a tool call
 - **THEN** the row states that the message recorded no text
 
+#### Scenario: No message is marked or outlined for its size
+
+- **WHEN** a request carries a message far larger than the others
+- **THEN** no marker names it as large
+- **AND** its card is not outlined differently from the rest
+- **AND** its size is stated as it is for every other message
+
+#### Scenario: A call and its answer state the id that pairs them
+
+- **WHEN** a request carries an assistant call and the message answering it
+- **THEN** the call states the tail of its id
+- **AND** the answering message names that call's tool
+- **AND** it states enough of the call's id to distinguish two answers of the same tool
+
+#### Scenario: An answer to a call this request does not carry states no tool
+
+- **WHEN** a message quotes a call id that no call in the request carries
+- **THEN** the id is still stated
+- **AND** no tool name is claimed for it
+
+#### Scenario: A failed tool result is marked as failed
+
+- **WHEN** a recorded result reports a failure
+- **THEN** the row states that it failed in words, not by colour alone
+
+#### Scenario: The request's parameters are stated on the request tab alone
+
+- **WHEN** the reader moves to the Response tab
+- **THEN** the request's parameters are not stated above the tab strip
+
 #### Scenario: No per-property size is stated
 
 - **WHEN** the Request tab renders a message
@@ -6645,24 +7247,54 @@ its frame count, and frames can be counted only by a pass over the raw body.
 - **THEN** the request message count comes from the hop row
 - **AND** no body column is named to obtain it
 
-### Requirement: The inspector states the parameters the request carried, and the absence of the ones it did not
+### Requirement: The inspector states every parameter the request carried, and the absence of the ones it did not
 
-The inspector SHALL state the sampling parameters the request body carries, beside the tabs. It SHALL NOT
-render a hardcoded list of parameters with values looked up against it, and it SHALL NOT omit a parameter
-merely because the body did not carry one.
+The inspector SHALL state the parameters the request body carries, on the Request tab. It SHALL NOT render a
+hardcoded list of parameters with values looked up against it, and it SHALL NOT omit a parameter merely
+because the body did not carry one.
 
 **`temperature`, `max_tokens`, `tools` and `stream` SHALL always be stated**, showing a de-emphasised
 placeholder when the body carries none. An absent `temperature` is a debugging answer — the call ran at the
 deployment's default — and a parameter line that silently omits it cannot be told apart from one the reader
 did not look at carefully.
 
-**Every other parameter the body carries SHALL be stated when present**, and parameters this frontend does not
-recognise SHALL be **counted, not listed**: an unbounded parameter list would push the messages off a 360px
-rail to state keys that are usually vendor passthrough.
+**Every other member of the body SHALL be stated under the name the body gave it**, whether or not this
+frontend recognises it. The recognised names are an *ordering* — the settings a reader looks for by name come
+first, under a short label — not an allow-list. A parameter this frontend has never met is still one the call
+was made with, and the endpoint set is open by design, so any allow-list is permanently behind it.
+
+**Unrecognised parameters SHALL NOT be collapsed into a count.** The removed rule counted them, to keep an
+unbounded list from pushing the messages off a 360px rail. The parameter line no longer lives in that rail,
+and a count told the reader that something existed while refusing to name it — the one thing they would have
+opened the hop to learn.
+
+**Only the members that carry the conversation itself SHALL be left out** — the message list, its per-dialect
+spellings, and the system prompt — because the history renders those in full and a second, counted copy of
+them says nothing.
+
+**The tool catalogue's count SHALL be labelled as a catalogue.** It states how many tools the model was
+offered, while the role filter one row below counts the tool *results* the history fed back — a turn offered
+ten tools can answer with twenty results, and stated as two bare counts of "tool" the two read as one number
+that disagrees with itself.
+
+**The model the request asked for SHALL be stated.** It is not the deployment the hop row names: a deployment
+routes to a model whose own id and version the row never records, and the two strings differ on real traffic.
+The response states what answered; this states what was asked for.
+
+**A state envelope SHALL be stated by its size, not omitted.** The DIAL-specific envelopes are blobs, so like
+any array- or object-valued parameter they SHALL be stated by their length or their number of keys rather
+than rendered — which is what keeps a passthrough blob from becoming the line. Their presence is worth
+stating: an envelope is why a message's recorded size can run far past its visible text, and a reader
+comparing the two has no other way to see that it is there.
 
 **Presence SHALL be tested as "not null", never as truthiness.** `temperature: 0` is real and common — it is
 the value a reader most often wants confirmed — and `stream: false` is the fact that explains an unframed
 response. A truthiness test reports both as absent, which is the opposite of what the body says.
+
+**A stated value SHALL be bounded, with the whole value still reachable.** Naming every member of the body
+means any of them can reach this line, and one long passthrough value rendered whole gave the bodies section
+a horizontal scrollbar of its own. A truncated value SHALL keep the full one available rather than losing it,
+under the truncation rule in `a11y.md`.
 
 #### Scenario: A zero-valued parameter is stated, not treated as absent
 
@@ -6675,11 +7307,40 @@ response. A truthiness test reports both as absent, which is the opposite of wha
 - **WHEN** a request body carries no `temperature`
 - **THEN** the parameter line states temperature with a de-emphasised absent-value placeholder
 
-#### Scenario: Unrecognised parameters are counted
+#### Scenario: An unrecognised parameter is named
 
-- **WHEN** a request body carries parameters this frontend does not recognise
-- **THEN** the parameter line states how many there are
-- **AND** it does not name them individually
+- **WHEN** a request body carries a parameter this frontend does not recognise
+- **THEN** the parameter line states it under the key the body recorded
+- **AND** no count stands in place of it
+
+#### Scenario: The settings a reader looks for come first
+
+- **WHEN** a request body carries both a recognised parameter and an unrecognised one
+- **THEN** the always-stated four lead the line
+- **AND** the recognised parameter precedes the unrecognised one
+
+#### Scenario: The tool catalogue is not confusable with the tool results
+
+- **WHEN** a request offers a catalogue of tools and its history carries tool results
+- **THEN** the catalogue's count is labelled as what was offered
+- **AND** it is not stated as a bare count under the same word the role filter uses
+
+#### Scenario: The requested model is stated
+
+- **WHEN** a request body names the model it asked for
+- **THEN** the parameter line states it
+- **AND** it is stated whether or not the hop row's deployment carries the same string
+
+#### Scenario: A long parameter value is bounded, not lost
+
+- **WHEN** a request body carries a parameter whose value is long enough to overflow the line
+- **THEN** the line stays within the width of the section
+- **AND** the whole value remains reachable
+
+#### Scenario: A parameter carrying a blob is stated by its size
+
+- **WHEN** a request body carries a parameter whose value is an array or an object
+- **THEN** the line states its length or its number of keys rather than its content
 
 ### Requirement: The inspector reads bodies in tiers, and never ships one whole
 
@@ -6749,8 +7410,14 @@ anyway.
 which is the half a reader is asking about; only the response is a vector, and it is the response side that
 states so.
 
+**The Chat tab SHALL be decided from the row on the same terms**, and SHALL be offered only for a hop that
+records a message history: an MCP hop and an embedding hop SHALL NOT offer it, because a protocol message and
+a probe vector are not conversations. What Chat states once offered is governed by
+**A span's Chat states the conversation that span received**.
+
 **The test SHALL remain a deny-list.** An `event_kind` or `mcp_method` this frontend does not recognise SHALL
-default to shown, on both tabs.
+default to shown, on every tab — including Chat, whose content states its own absence of messages where the
+dialect turns out to carry none.
 
 #### Scenario: A hop that returned nothing still shows its request
 
@@ -6773,6 +7440,12 @@ default to shown, on both tabs.
 
 - **WHEN** a hop records an event kind this frontend does not recognise
 - **THEN** its bodies are fetched and its content is shown
+- **AND** its Chat tab is offered
+
+#### Scenario: A hop with no conversation offers no Chat tab
+
+- **WHEN** an MCP hop or an embedding hop is opened
+- **THEN** no Chat tab is offered for it
 
 ### Requirement: The model-call dialects are told apart by endpoint, never by body inspection
 
@@ -6909,6 +7582,47 @@ message list.
 The Response tab SHALL offer two modes: **Assembled**, the response as the client received it, and **Raw**,
 the body as recorded.
 
+**The recorded bytes SHALL be reached through one switch, offered on both the Request and the Response tab.**
+"Show me what was recorded" is one question about whichever side is open, so it is one control in one place
+rather than a mode that exists on one side only. **There SHALL be no named "assembled" mode**: it was never
+something a reader chose — it is simply what a tab shows when it is not showing bytes — and naming it made a
+two-option control out of a single toggle.
+
+**While the recorded bytes are shown, a control that narrows the structured view SHALL NOT be offered.** The
+request's role filter narrows a list, and the bytes are not a list.
+
+**The recorded bytes SHALL be shown readably, not dumped.** A body arrives as one unwrapped line of up to
+half a megabyte. It SHALL be pretty-printed where it parses, syntax-highlighted, foldable and copyable —
+through the console's own code viewer rather than a preformatted block — and shown as recorded where it does
+not parse.
+
+**A control SHALL sit on the ground of the section it is in.** The bodies section's ground is not the rail's,
+and a pinned control row carrying the rail's background reads as a lighter stripe across the panel. The raw
+switch SHALL sit at the same end of that row on both tabs, so the control does not move when the reader
+changes tab.
+
+**The control that opens a turn in full SHALL sit inside that turn**, not beneath it: below the bubble it
+reads as a control for the conversation rather than for the turn it opens.
+
+**A chosen filter SHALL be marked in the accent colour, not by a lighter panel.** A selected chip filled with
+the next background layer reads as a slab of background rather than as a selection, and a row of them reads
+as disabled. The state SHALL remain programmatic as well as visual, under the toggle-state rule.
+
+**Assembled SHALL be stated as a message**, in the same card the request's history rows use, carrying the
+assistant role, the recorded size, the text and the calls the response asked for. A response is one assistant
+message; stating it as bare text made the two tabs read as two different tools.
+
+**A call the response asked for SHALL state its arguments and its id**, not its name alone. All three are
+recorded in the body: the name says which tool, the arguments say what was asked of it, and the id is what
+the message answering it quotes back in the next request. Carrying the name alone discarded the other two and
+left a result unpairable.
+
+**The response's own facts SHALL be stated outside that card, and above it.** Which model answered, how the
+tokens split, what came from cache and the upstream's id for the completion are facts about the response
+rather than about the message it carried — and the tab holds exactly one answer, so they head the reply
+instead of trailing a card the reader has to scroll past. The clamp and the note about a requested tool with
+no recorded call stay with the text they qualify.
+
 **Assembled SHALL be built from the shape its dialect records, not from one shape for all of them.** The
 Responses dialect lands in the same assembled column while recording `output[]` rather than
 `choices[].message`, so a single decoder finds nothing there and reports a hop that recorded a full response as
@@ -6917,9 +7631,9 @@ having recorded nothing. The decode SHALL therefore be chosen by dialect.
 **Assembled SHALL be the mode a hop opens in**, and SHALL be built from the assembled-response column where
 the caller's schema reports it — averaging 1 511 characters against 52.8 KB for the raw body, roughly 35×
 smaller, and already carrying the finish reason, the message and the full usage breakdown. Where that column
-is absent from the schema, Assembled SHALL be decoded from the recorded response body, exactly as the
-transcript already does. The column is a later addition to the hop log and an instance predating it does not
-persist it, so its absence SHALL be handled, not assumed away.
+is absent from the schema, Assembled SHALL be decoded from the recorded response body. The column is a later
+addition to the hop log and an instance predating it does not persist it, so its absence SHALL be handled, not
+assumed away.
 
 **Raw SHALL be fetched only when selected**, and clamped per the tier rules above.
 
@@ -6945,12 +7659,51 @@ flag does not.
 - **WHEN** the reader selects the raw mode
 - **THEN** the recorded body is read server-side and returned clamped
 
+#### Scenario: The assembled response is stated as a message
+
+- **WHEN** a response carrying text is opened
+- **THEN** it renders in the same card the request's history rows use
+- **AND** it states the assistant role and the recorded size
+
+#### Scenario: A response's calls state their arguments and ids
+
+- **WHEN** a response asked for a tool call
+- **THEN** the call states its name, its arguments and the tail of its id
+
+#### Scenario: The raw switch is offered on both sides
+
+- **WHEN** either the Request or the Response tab is open
+- **THEN** a single switch offers the recorded bytes for that side
+- **AND** no separate "assembled" option is offered
+
+#### Scenario: The recorded bytes are read only when the switch is turned on
+
+- **WHEN** the Request tab is opened and its raw switch is off
+- **THEN** the recorded body has not been read
+- **AND** turning the switch on reads it and states it
+
+#### Scenario: The recorded bytes are shown pretty-printed
+
+- **WHEN** the raw switch is on and the recorded body parses as JSON
+- **THEN** it renders pretty-printed rather than as the single line it was recorded as
+
+#### Scenario: The role filter is not offered over the recorded bytes
+
+- **WHEN** the request's raw switch is on
+- **THEN** the role filter is not offered
+
 ### Requirement: MCP and embedding hops state the facts their kind actually has
 
 **An MCP hop SHALL state its method, its tool name, its toolset, its arguments and its result.** The toolset
 SHALL be taken from the hop's deployment: in one measured conversation all 277 MCP hops shared a single parent
 span and were distinguishable only by it. **No session field SHALL be stated** — the hop log records no session
 column for MCP, and a field with no source is a field that will be filled with the wrong thing.
+
+**Each of those facts SHALL be stated where the column it comes from is stated.** The method, the tool name
+and the toolset are plain hop-row columns and SHALL render above the tab strip, visible on every tab; the
+arguments are the request column and SHALL render on the Request tab; the result is the response column and
+SHALL render on the Response tab. The hop's two halves are read in one round trip, so neither tab waits on
+the other — the split is a matter of where a fact is stated, not of when it is fetched.
 
 `tools/call` is the only MCP method the inspector opens on; it averages 5.5 KB in and 123 KB out, so its
 result SHALL be subject to the same clamp as any other raw content.
@@ -6960,6 +7713,12 @@ text that was embedded.** It SHALL NOT render the vector: 96% of recorded vector
 any depiction of one requires decoding it first, and the result is decoration — the reader is asking what was
 embedded, not what the coordinates were.
 
+**The dimension count SHALL be stated on the Response tab**, which is the column it is read from, and that
+tab SHALL NOT be presented as having nothing to read. The vector itself is still never rendered, so the
+count is what the response side has to say — and it is exactly the answer a reader checking that a probe
+returned a usable embedding is after. Stating it beside the request's own facts put a response fact on the
+request side, where a reader had no reason to look for it.
+
 **The probe text SHALL be clamped like any other body-derived content.** A single input averages 352 B, but
 the endpoint accepts an array and a batch is assembled into one text here — the one path that would otherwise
 walk past the payload budget every other read honours.
@@ -6967,8 +7726,8 @@ walk past the payload budget every other read honours.
 #### Scenario: An MCP hop states its arguments, its result and its toolset
 
 - **WHEN** an MCP tool call is opened
-- **THEN** the inspector states the method, the tool name and the toolset
-- **AND** it states the arguments sent and the result returned
+- **THEN** the method, the tool name and the toolset render above the tab strip
+- **AND** the Request tab states the arguments sent and the Response tab states the result returned
 
 #### Scenario: No MCP session field is stated
 
@@ -6978,8 +7737,9 @@ walk past the payload budget every other read honours.
 #### Scenario: An embedding hop states its input, not its vector
 
 - **WHEN** an embedding hop is opened
-- **THEN** the inspector states the model, the dimension count and the embedded text
-- **AND** it renders no depiction of the vector
+- **THEN** the Request tab states the model, the input count and the embedded text
+- **AND** the Response tab states the dimension count
+- **AND** neither renders a depiction of the vector
 
 #### Scenario: A batch of embedding inputs is clamped and says so
 
@@ -6993,9 +7753,16 @@ The request body and the response body are separate columns of the hop log, so t
 them is separate. The inspector SHALL treat them separately: a caller whose schema reports one and not the
 other SHALL get the tab they are entitled to rather than neither.
 
+**The Chat tab SHALL be gated by the request column alone.** The history is the substance of that tab and it
+comes from the request body; the trailing answer comes from a response column and SHALL be stated as withheld
+where none is granted. Gating Chat on both columns would withdraw the history over the absence of the answer,
+which is the failure this per-column rule exists to prevent.
+
 **A withheld side SHALL be stated once, not on every hop.** The statement belongs with the view's own header,
 where it explains the state for the whole session, and individual hops SHALL stay silent about it — a
-per-hop explanation repeats a fixed fact once per click.
+per-hop explanation repeats a fixed fact once per click. The withheld answer inside Chat is the exception and
+is stated where the answer would have been, because there it marks the position of something absent rather
+than explaining an entitlement.
 
 **The statistics SHALL stay visible when a body is withheld.** Sizes, token counts, message counts, status,
 duration and cost are plain columns and are not gated by the body grant; withdrawing them along with the
@@ -7005,17 +7772,30 @@ bodies would withdraw facts the caller is entitled to.
 nothing — three distinct facts, and rendering any two identically hides an outage behind an entitlement or an
 entitlement behind an empty result.
 
-**A panel built from both columns SHALL state each half by its own grant.** The MCP and embedding panels are
-not one side of a hop: an MCP hop's arguments are the request column and its result the response column, and
-an embedding hop's dimension count is its only response-column field. Where one column is granted and the
-other is not, the granted half SHALL render and the withheld half SHALL be stated as withheld — never as a
-hop that recorded nothing, which describes the caller's entitlement as a property of the hop.
+**A kind whose two halves are different shapes SHALL still state each half by its own grant, on the tab that
+reads that column.** An MCP hop's arguments are the request column and its result the response column, and an
+embedding hop's dimension count is its only response-column field. Where one column is granted and the other
+is not, the granted half SHALL render on its own tab and the withheld half SHALL be stated as withheld on
+its — never as a hop that recorded nothing, which describes the caller's entitlement as a property of the
+hop.
 
 #### Scenario: A caller entitled to one side gets that side
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **THEN** the Request tab renders
 - **AND** the Response tab states that it is withheld
+
+#### Scenario: A caller entitled to the request alone still gets Chat
+
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **THEN** the Chat tab is offered
+- **AND** it renders the history and states that the answer is withheld
+
+#### Scenario: A caller entitled to the response alone is offered no Chat
+
+- **WHEN** the caller's schema reports a response body column but not the request body column
+- **THEN** the Response tab renders
+- **AND** no Chat tab is offered
 
 #### Scenario: A withheld side is explained once
 
@@ -7037,251 +7817,69 @@ hop that recorded nothing, which describes the caller's entitlement as a propert
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **AND** an MCP tool call is opened
-- **THEN** the arguments render
-- **AND** the result is stated as withheld rather than as recorded nothing
+- **THEN** the arguments render on the Request tab
+- **AND** the Response tab states the result as withheld rather than as recorded nothing
 
 #### Scenario: A half-granted embedding hop states its dimension count as withheld
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **AND** an embedding hop is opened
-- **THEN** the probe text renders
-- **AND** the dimension count is stated as withheld rather than as absent
+- **THEN** the probe text renders on the Request tab
+- **AND** the Response tab states the dimension count as withheld rather than as absent
 
-### Requirement: The conversation detail view switches between Chat and Trace
+### Requirement: The conversation detail view presents its traces without a view switch
 
-The detail view SHALL offer a switch between two views of one conversation: **Chat**, the recorded
-transcript, and **Trace**, the conversation's traces. The switch SHALL indicate which view is current, SHALL
-be reachable by keyboard, and SHALL NOT navigate away from the conversation.
+The conversation detail view SHALL present the conversation's **traces** and SHALL NOT offer a view switch.
+The transcript is no longer a view of its own: a conversation's readable exchange is the request history of
+its entry span, which the trace's own Chat tab states in the place where everything else about that trace is
+stated.
 
-Choosing a view is a **local** change and SHALL re-render only the region the switch governs. The
-conversation's header and the supporting panels beside the view do not depend on which view is showing, and
-SHALL NOT re-render when it changes. Opening a hop chain is the exception, and only because the header gives
-way to the trace's own identity.
+The detail body SHALL render the trace listing, grouped by trace and carded by root span as
+**The conversation trace listing groups by trace and cards by root span** defines, each card opening its
+trace's hop chain. The conversation's header and the supporting panels beside the listing SHALL be
+unaffected, and no body read SHALL be issued when the page opens.
 
-**The detail view SHALL open on Trace.** The trace listing renders from the conversation's own recorded
-calls and needs no body read, so it is the view that can always be shown; the transcript depends on body
-columns this caller may not be able to read and on rows that may not reconstruct.
+A conversation whose trace listing is empty SHALL render the listing's own empty state, and a failed listing
+read SHALL be reported as a failure there — both exactly as they already are.
 
-**The Trace view SHALL land on the trace listing**, grouped by trace and carded by root span as
-**The conversation trace listing groups by trace and cards by root span** defines, each card stating its own
-recorded time, duration, status, own figures and rating counts, and each opening its trace's hop chain.
-Landing on Trace MUST NOT open a hop chain directly: the reader has not chosen a trace, and picking one for
-them presents an arbitrary default as the answer.
+Closing an open hop chain SHALL return to the trace listing.
 
-A conversation whose trace listing is empty SHALL render the listing's own empty state rather than refusing
-the switch — the view still has something to say about why there is nothing to open. A failed listing read
-SHALL be reported as a failure there, distinctly from an empty listing.
+No page of the console SHALL offer a conversation-level transcript, and none SHALL state that one is
+unavailable: an option that no longer exists is not an option to explain.
 
-**The transcript's body read SHALL be issued when the reader switches to Chat, not when the page opens.**
-While that read is outstanding the Chat view SHALL show a loading state, and the switch SHALL remain usable.
-A body read that fails SHALL state so **inside the Chat view**, leaving the Trace view and the rest of the
-page intact. Reading the transcript on page open made a body-read failure the whole page's failure, on a page
-whose landing view does not depend on it.
+#### Scenario: The detail view opens on its traces
 
-**The switch's gating and the transcript's content states resolve at different times, and the view SHALL NOT
-conflate them.** Whether this caller can read body columns at all is a **schema** fact: it is resolved from
-the entity schema before any body query is issued, so it is known when the switch first renders and it
-SHALL gate the Chat option there. Whether the transcript is aged out, not reconstructable, or was never
-recorded are **data** facts about the rows themselves: they are resolved by the body read, so they SHALL be
-stated inside the Chat view after the switch. Gating up front, content states inside.
-
-The per-turn trace control on each assistant message SHALL keep its current behaviour: it opens a turn's hop
-chain directly, without passing through the list.
-
-Returning from a hop chain SHALL land on the view it was opened from. A reader who reached a hop chain from
-the trace list and is returned to the transcript has been moved somewhere they were not, and has to find their
-way back to the list to continue.
-
-Where the Chat view is not offered — because the schema reports no usable body column, for either of the two
-reasons a column can be missing — the switch SHALL still be rendered, with the Chat option disabled and its
-reason stated, rather than removed. A control that disappears leaves the reader unable to tell an unavailable
-view from a view that does not exist.
-
-**In that state the view SHALL open on Trace**, not on the disabled Chat option. Opening on it makes the same
-option current and unselectable at once, which is the expected path for every caller below FULL_ADMIN: the
-disabled segment is not focusable, so keyboard navigation within the switch has no starting point, and the data
-that *is* available has to be discovered.
-
-The Chat option SHALL remain enabled whenever the transcript is merely **empty**. An aged-out, not
-reconstructable or never-recorded transcript is a Chat view with something to say, and disabling the switch
-would replace that statement with silence.
-
-#### Scenario: Switching views keeps the conversation
-
-- **WHEN** the user switches from Chat to Trace
-- **THEN** the hop chain renders in place
-- **AND** the page does not navigate away from the conversation
-
-#### Scenario: The current view is indicated
-
-- **WHEN** either view is shown
-- **THEN** the switch indicates which of the two is current
-
-#### Scenario: A caller without the body columns opens on the Trace view
-
-- **WHEN** the schema reports no usable body column
-- **THEN** the detail opens on the Trace view
-- **AND** the Chat option is rendered, disabled, with its reason stated
-
-#### Scenario: A per-turn control opens the trace on that turn
-
-- **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's hop chain opens directly
-
-#### Scenario: Switching to Trace lists the conversation's traces
-
-- **WHEN** the user switches to Trace from the view switch
-- **THEN** the conversation's traces render, one card per recorded root span, each stating its own figures
-- **AND** no hop chain is opened and no hop read is issued
+- **WHEN** a conversation's detail view loads
+- **THEN** the trace listing renders
+- **AND** no view switch is offered
+- **AND** no body read has been issued
 
 #### Scenario: A trace in the list opens its hop chain
 
 - **WHEN** a card of the trace listing is activated
 - **THEN** that trace's hop chain opens
 
-#### Scenario: A conversation with no turns switches to an empty list
+#### Scenario: Closing a hop chain returns to the listing
 
-- **WHEN** the user switches to Trace on a conversation whose trace listing is empty
-- **THEN** the trace listing states that no traces were recorded
-- **AND** the switch is not refused
+- **WHEN** an open hop chain is closed
+- **THEN** the trace listing renders again
 
-#### Scenario: Returning from a hop chain lands on the view it was opened from
+#### Scenario: A conversation with no traces states so
 
-- **WHEN** a hop chain opened from the trace list is closed
-- **THEN** the Trace view is shown, still listing the traces
-- **AND** a hop chain opened from an assistant message returns to the transcript instead
+- **WHEN** a conversation's trace listing is empty
+- **THEN** the listing states that no traces were recorded
 
-#### Scenario: An unavailable Chat view is disabled, not hidden
+#### Scenario: A caller without the body columns still gets the listing
 
 - **WHEN** the schema reports no usable body column
-- **THEN** the switch renders with the Chat option disabled and its reason stated
+- **THEN** the trace listing renders unchanged
+- **AND** no statement about an unavailable transcript is made
 
-#### Scenario: Choosing a view does not re-render the page around it
+### Requirement: A trace opens in place, stating its own figures and each span's
 
-- **WHEN** the user switches between Chat and Trace
-- **THEN** the conversation's header does not re-render
-- **AND** the supporting panels beside the view do not re-render
-
-#### Scenario: An empty transcript keeps the Chat view enabled
-
-- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
-- **THEN** the Chat option stays enabled
-- **AND** selecting it shows the statement for that cause
-
-#### Scenario: The detail view opens on the trace listing
-
-- **WHEN** a conversation's detail view loads and this caller can read body columns
-- **THEN** the Trace view is current
-- **AND** no body read has been issued
-
-#### Scenario: The transcript's body read is issued on switching to Chat
-
-- **WHEN** the user switches to Chat for the first time
-- **THEN** the body read is issued at that point
-- **AND** the Chat view shows a loading state until it resolves
-
-#### Scenario: The Chat view fetches the figures it displays
-
-- **WHEN** the transcript resolves
-- **THEN** figures for the traces it covers are requested for that view
-- **AND** they are not read from the listing's loaded pages
-
-#### Scenario: A failed body read leaves the trace listing usable
-
-- **WHEN** the transcript's body read fails
-- **THEN** the Chat view states that the transcript could not be read
-- **AND** the Trace view still lists the conversation's traces
-- **AND** the page does not render its whole-page error state
-
-#### Scenario: A schema-gated Chat option is decided without a body read
-
-- **WHEN** the switch first renders
-- **THEN** whether the Chat option is enabled was resolved from the entity schema
-- **AND** no body query was issued to decide it
-
-#### Scenario: An empty transcript's cause is stated after the switch, not before
-
-- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
-- **THEN** the Chat option was enabled before the switch
-- **AND** the cause is stated inside the Chat view once the body read resolves
-
-### Requirement: An absent transcript is distinguished from a failed one, by cause
-
-A transcript can be absent for three different reasons and can fail for a fourth. All four render no
-messages, and the view SHALL distinguish them, because they say different things about the conversation: one
-lost its detail to age, one never had detail to lose, one has detail that cannot be attributed to the user,
-and one is an outage. Collapsing them would state something false about three conversations out of four.
-
-**Aged out.** `dial_usage_log` and `rate_analytics` retain a row for one year from its request time, while
-`sessions`, `turns` and `session_insights` retain theirs indefinitely. The retention is
-**row-level**, so a body lives exactly as long as the hop carrying it: a conversation older than a year keeps
-its list row, its detail header and its rollup figures, and has no hops left to read. The view SHALL state
-that the hop log no longer carries the conversation.
-
-**Not reconstructable.** The conversation has hops, but none of them is an entry hop, so nothing recorded
-under it represents what the user sent. The view SHALL state that the transcript cannot be reconstructed from
-what was logged, and MUST NOT state that no messages were recorded — messages were recorded; they cannot be
-attributed. This state exists precisely so that the view never has a reason to reach for an inner hop's body.
-
-This is also the state for entry hops that **were** read and yielded no message: rows exist and no transcript
-could be built from them, which is what this state says. Reporting that combination as an available transcript
-of nothing renders it through the nothing-recorded presentation, which is the mislabel this state was added to
-prevent. On the dev instance this is not an edge case — of 228 conversations with hops in one recent two-day
-window, 112 had no entry hop, every one of them agent-SDK or benchmark traffic whose bodies open with a 6.6 KB
-system prompt rather than anything a person typed. Widening the entry-hop rule to admit an orphaned hop would
-put that system prompt where the user's first question belongs.
-
-**Nothing recorded.** The conversation is within the retention window and has no hops at all.
-
-**Failed.** A query or the schema read failed. The view SHALL state that the transcript could not be loaded.
-
-None of the first three SHALL render as an error — nothing failed in any of them. In all four the header, the
-panels, the turn list and every rollup figure SHALL still render, and the Trace view SHALL remain available
-wherever hops exist.
-
-#### Scenario: A conversation past retention states its transcript has aged out
-
-- **WHEN** the detail view loads a conversation whose last request is older than the hop log's retention
-- **AND** the conversation has no hops
-- **THEN** the transcript region states that the hop log no longer carries the conversation
-- **AND** no error is reported
-- **AND** the header, the panels and the turn list still render
-
-#### Scenario: Entry hops that yield no message state the transcript cannot be reconstructed
-
-- **WHEN** the entry hops are read and none of their bodies yields a message
-- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
-- **AND** it does not state that the conversation recorded no messages
-
-#### Scenario: A conversation with hops but no entry hop states it cannot be reconstructed
-
-- **WHEN** a conversation records hops and none of them is an entry hop
-- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
-- **AND** it does not state that no messages were recorded
-- **AND** the Trace view remains available for those hops
-
-#### Scenario: A recent conversation with no hops states nothing was recorded
-
-- **WHEN** a conversation within the retention window records no hops at all
-- **THEN** the transcript region states that no messages were recorded
-
-#### Scenario: A failed entry-hop query is reported as a failure
-
-- **WHEN** the entry-hop query fails
-- **THEN** the transcript region states that the transcript could not be loaded
-- **AND** it does not state that the conversation recorded no messages
-
-#### Scenario: The four states are distinguishable
-
-- **WHEN** each of the four causes occurs
-- **THEN** the transcript region renders a different statement for each
-
-### Requirement: A turn's trace opens in place, stating the turn's own figures and each span's
-
-Each assistant message SHALL offer a control opening that turn's trace, and the view switch SHALL offer the
-Trace view for the conversation. The trace SHALL replace the transcript **within the same view** and SHALL
-offer a control returning to the transcript. Opening a trace is a read of one turn and MUST NOT navigate away
-from the conversation.
+A trace SHALL be opened from the trace listing, and SHALL replace the listing **within the same view** with a
+control returning to it. Opening a trace is a read of one trace and MUST NOT navigate away from the
+conversation.
 
 While a trace is open the conversation's header SHALL be replaced rather than kept above it. The trace states
 its own identity and its own figures, and two stacked headers would leave the reader unsure which of them the
@@ -7326,12 +7924,14 @@ rows are missing — so the view SHALL neither claim completeness nor report a m
 ordered list naming the deployments a request was routed through, application first and model last. Where
 present it SHALL be rendered as that chain.
 
-Selecting a span SHALL show its detail beside the tree: its kind and its outcome, its recorded time, its
+Selecting a span SHALL show its **facts** beside the tree — its kind and its outcome, its recorded time, its
 duration where reported, its tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP
-status, its MCP method and tool where recorded, and its routing chain where recorded. Its request and
-response SHALL be read on demand for that span alone, under **The inspector reads bodies in tiers, and never
-ships one whole** — a raw body MUST NOT reach the client unread, and what does reach it SHALL be bounded and
-state its own clamp.
+status, its MCP method and tool where recorded, and its routing chain where recorded — while its **bodies**
+render below the tree, under **The trace view splits the span tree from the selected span's bodies**. The
+facts are reference values read once per hop; the bodies are the surface a reader works in, and the two SHALL
+NOT compete for one column. Its request and response SHALL be read on demand for that span alone, under
+**The inspector reads bodies in tiers, and never ships one whole** — a raw body MUST NOT reach the client
+unread, and what does reach it SHALL be bounded and state its own clamp.
 
 **Colour SHALL never be the only thing distinguishing one kind of row from another.** Every row states its
 kind as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to
@@ -7357,24 +7957,18 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 - **THEN** no loading indicator remains
 - **AND** the trace states that it could not be read
 
-#### Scenario: Opening a turn's trace replaces the transcript in place
+#### Scenario: Opening a trace replaces the listing in place
 
-- **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's tree renders in place of the transcript
-- **AND** the trace states the turn it belongs to and its own trace id
-- **AND** a control returns to the transcript
+- **WHEN** a card of the trace listing is activated
+- **THEN** that trace's tree renders in place of the listing
+- **AND** the trace states the card it was opened from and its own trace id
+- **AND** a control returns to the listing
 
 #### Scenario: A turn's figures are the same in the list and in its trace
 
 - **WHEN** a trace is opened from the trace listing
 - **THEN** the tokens, cost and span count stated above the tree equal those the listing states for it
 - **AND** they do not change when the span read is clipped by its bound
-
-#### Scenario: The shortcut attributes each message to its own turn
-
-- **WHEN** the whole conversation is assembled from one entry span's body
-- **THEN** each message carries the trace id of the turn that produced it
-- **AND** the newest turn's figures appear only beneath the newest turn's answer
 
 #### Scenario: Spans render in the order they were recorded
 
@@ -7425,13 +8019,14 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 #### Scenario: A routing chain renders as a chain
 
 - **WHEN** a span records an execution path of an application followed by a model
-- **THEN** the span's detail shows that chain in that order
+- **THEN** the span's facts show that chain in that order
 
-#### Scenario: Selecting a span shows its detail
+#### Scenario: Selecting a span shows its facts beside the tree and its bodies below it
 
 - **WHEN** a span is selected
 - **THEN** its kind, status, recorded time, tokens, cost, endpoint, upstream, caller and HTTP status render
   beside the tree
+- **AND** its request, response and conversation render in the section below the tree
 - **AND** its duration renders where the producer reported one
 - **AND** its MCP method, tool and routing chain render where recorded
 - **AND** no raw request or response body value reaches the client

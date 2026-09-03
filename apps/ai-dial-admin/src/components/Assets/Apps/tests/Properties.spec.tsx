@@ -39,4 +39,16 @@ describe('ApplicationAssetProperties', () => {
     expect(screen.getByText(EntityFieldsI18nKey.intro)).toBeInTheDocument();
     expect(screen.getAllByRole('textbox').some((el) => (el as HTMLTextAreaElement).value === 'Intro text')).toBe(true);
   });
+
+  test('renders the folder-move control for a public-bucket application', () => {
+    render(<ApplicationAssetProperties asset={{ ...baseAsset, folderId: 'public/' }} onChange={vi.fn()} />);
+
+    expect(screen.getByText('file-path')).toBeInTheDocument();
+  });
+
+  test('hides the folder-move control for a platform-bucket application — the bucket has no folders', () => {
+    render(<ApplicationAssetProperties asset={{ ...baseAsset, folderId: 'platform/' }} onChange={vi.fn()} />);
+
+    expect(screen.queryByText('file-path')).not.toBeInTheDocument();
+  });
 });

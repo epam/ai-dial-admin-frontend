@@ -33,6 +33,7 @@ import {
   getPrompt,
   movePrompts,
 } from '@/src/app/[lang]/prompts/actions';
+import { isPlatformApplicationsBucket } from '@/src/components/Assets/utils';
 import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
@@ -91,6 +92,7 @@ export const getGridColumns = (
   ) => void,
   selectedVersionsMap: Record<string, string[]>,
   hasSelectedItems: boolean,
+  currentPath?: string,
 ) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
@@ -148,7 +150,7 @@ export const getGridColumns = (
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
   // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
   // read a display name from.
-  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills) {
+  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformApplicationsBucket(view, currentPath)) {
     return [
       NAME_COLUMN(view === ApplicationRoute.PlatformAppRunners ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,

@@ -239,3 +239,9 @@ export const conversationTopics = (raw: ConversationScalar | undefined): string[
         .map((topic) => topic.trim())
         .filter(Boolean)
     : [];
+
+// The tail of a tool-call id, which is what pairs a call with the result that quotes it. Provider ids run to
+// 33 characters and are identical for their first half, so the tail is the part that distinguishes them —
+// and two calls within one request colliding on six characters is not a case worth designing for. The whole
+// id stays available in the raw body.
+export const shortCallId = (id: string | null): string => (id == null ? '' : id.slice(-6));

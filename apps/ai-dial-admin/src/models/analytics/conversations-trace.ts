@@ -1,6 +1,7 @@
-import { Icon as TablerIcon } from '@tabler/icons-react';
+import { ReactNode } from 'react';
 
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
 // Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
@@ -425,12 +426,11 @@ export enum UsageLogField {
   AssembledResponse = 'assembled_response',
 }
 
-// A trace's own totals, as the drawer states them. Named for what it is rather than for the rollup it used
-// to come from: the listing resolves these live now, and the drawer reads whichever figures the view that
-// opened it already has.
-// What the drawer states above a trace's hops. A view model, not a row — hence camelCase, matching the group
-// and card models it is built from. `durationMs` is card-level and therefore absent when the drawer was
-// opened from the transcript, which has no card to speak for.
+// A trace's own totals, as the drawer states them above its hops. A view model, not a row — hence camelCase,
+// matching the group and card models it is built from. Named for what it holds rather than for any one
+// source: the listing resolves these live, and the drawer reads whichever figures the view that opened it
+// already has. `durationMs` is card-level and therefore unavailable for a trace whose root the roots pass
+// never returned, which leaves no card to state it.
 export interface ConversationTraceFigures {
   traceId: string;
   startedAt: number | string | null;
@@ -704,9 +704,20 @@ export enum HopDialect {
   Unknown = 'unknown',
 }
 
+// A body column of the hop log, and the unit every body read is issued in: the server turns a member of this
+// into a column list. Every member must therefore name a real column — which is why the reader's tab set is a
+// separate enum below rather than a third member here.
 export enum HopInspectorSide {
   Request = 'request',
   Response = 'response',
+}
+
+// What the reader chooses between in the trace view's bodies section. Chat is not a side of the envelope: it
+// is a second presentation of both, so it maps to sides rather than being one.
+export enum SpanBodyTab {
+  Request = 'request',
+  Response = 'response',
+  Chat = 'chat',
 }
 
 // Why a side has no content to fetch, decided from the hop row before any body read.
@@ -741,7 +752,6 @@ export interface HopParam {
 
 export interface HopParams {
   stated: HopParam[];
-  unrecognisedCount: number;
 }
 
 // What an assistant asked for, carried as part of the history rather than as metadata about it. An assistant
@@ -749,6 +759,19 @@ export interface HopParams {
 export interface HopToolCall {
   name: string;
   args: string | null;
+  // The id the result will quote back. It is the only thing pairing a call with its answer: a turn that made
+  // three calls of the same tool is answered by three messages that are otherwise identical.
+  id: string | null;
+}
+
+// One call a message answers, with the tool it belongs to. Kept as a pair rather than as two parallel lists:
+// an id whose call is not in this request resolves to no name, and two lists would then be a different length
+// and silently pair the wrong result with the wrong tool.
+export interface HopToolAnswer {
+  callId: string;
+  // Null when nothing in this request carries that id — the history the client sent back reaches further than
+  // the request itself does.
+  toolName: string | null;
 }
 
 export interface HopRoleCount {
@@ -757,7 +780,8 @@ export interface HopRoleCount {
 }
 
 // One entry per recorded message. `bytes` is the size of the recorded JSON, not of the rendered text, so a
-// message whose text was clamped away entirely still states honestly what made the request heavy.
+// message whose text was clamped away entirely still states honestly what made the request heavy — and it is
+// the only field that says so.
 export interface HopMessageEntry {
   index: number;
   role: MessageRole;
@@ -765,7 +789,11 @@ export interface HopMessageEntry {
   text: string | null;
   toolCalls: HopToolCall[];
   isTextClamped: boolean;
-  isLarge: boolean;
+  // The calls this message answers, resolved against the whole message list while the envelope is built. A
+  // result carries only an id, so a reader looking at one message has no way to tell which tool it came from
+  // — and the pairing cannot be resolved from that message alone.
+  answers: HopToolAnswer[];
+  isError: boolean;
 }
 
 // What a dialect parser yields before clamping and budgeting: the recorded shape, read once, with no
@@ -776,6 +804,12 @@ export interface HopDialectMessage {
   text: string | null;
   toolCalls: HopToolCall[];
   bytes: number;
+  // The calls this message answers. A list rather than one id because the messages dialect feeds several
+  // results back in a single message, and dropping all but the first would lose the pairing for the rest.
+  answeredCallIds: string[];
+  // Whether the tool reported a failure. Only the messages dialect records it, and for a reader debugging an
+  // agent loop it matters more than the result text.
+  isError: boolean;
 }
 
 export interface HopRequestEnvelope {
@@ -789,11 +823,6 @@ export interface HopRequestEnvelope {
   isClamped: boolean;
 }
 
-export enum HopResponseMode {
-  Assembled = 'assembled',
-  Raw = 'raw',
-}
-
 // A clamp states itself **and** states by how much. One shape for every clamped thing, so the three places
 // that clamp cannot each invent their own spelling of the same sentence — and so none of them can carry the
 // flag without carrying the numbers, which is how two of them ended up computing a clamp and never saying so.
@@ -801,6 +830,21 @@ export interface HopClamp {
   isClamped: boolean;
   recordedBytes: number | null;
   deliveredBytes: number | null;
+}
+
+// What a response states about itself rather than about the message it carried. None of it is on the hop
+// row: the row has `total_tokens`, `reasoning_tokens` and the *deployment* name, which is not the string the
+// upstream reports as its model — a deployment can route to a model whose own id and version the row never
+// records.
+export interface HopResponseFacts {
+  model: string | null;
+  // The upstream's own id for the completion, which is what correlates this hop with the provider's logs.
+  completionId: string | null;
+  // The split the row cannot state, and the cache hit that explains a bill the token total does not. A zero
+  // is a reported zero — no cache hit — while null is a provider that reported nothing.
+  promptTokens: number | null;
+  completionTokens: number | null;
+  cachedTokens: number | null;
 }
 
 export interface HopResponseEnvelope {
@@ -811,7 +855,11 @@ export interface HopResponseEnvelope {
   // summary, and reading it as the reply would misattribute the model's own scratch work.
   reasoningText: string | null;
   finishReason: string | null;
-  toolCalls: string[];
+  // The calls this response asked for, with their arguments and the ids the next request's results quote
+  // back. The arguments are carried rather than the names alone, because they are the one fact that says
+  // what the model actually asked the tool to do.
+  toolCalls: HopToolCall[];
+  facts: HopResponseFacts;
   recordedBytes: number | null;
 }
 
@@ -846,7 +894,9 @@ export interface HopMcpFacts {
   resultText: string | null;
   resultClamp: HopClamp;
   // The result comes from the response column and the arguments from the request one, so a caller granted
-  // only one side gets a panel that is half available and half withheld. `state` cannot say that.
+  // only one side gets a hop that is half available and half withheld, and the two halves are stated on
+  // their own tabs. `state` is the hop-level read and cannot say either.
+  argumentsState: HopReadState;
   resultState: HopReadState;
 }
 
@@ -864,58 +914,17 @@ export interface HopEmbeddingFacts {
   isDimensionsWithheld: boolean;
 }
 
-export interface ConversationMessage {
-  role: MessageRole;
-  content: string | null;
-  trace_id: string;
-}
-
-export enum TranscriptState {
-  Available = 'available',
-  ColumnsUnavailable = 'columns-unavailable',
-  NotReconstructable = 'not-reconstructable',
-  Expired = 'expired',
-  NoMessages = 'no-messages',
-  LoadFailed = 'load-failed',
-}
-
-export interface ConversationTranscript {
-  state: TranscriptState;
-  messages: ConversationMessage[];
-  loadedTurns: number | null;
-  // Figures for the traces this transcript covers, resolved by the same read. The Chat view states each
-  // answer's own figures, and reading them from the listing's paged state would make a message's
-  // completeness depend on how far the reader had scrolled a different view — so each view fetches what it
-  // displays. Overlapping reads between the two are accepted; no cache is shared.
-  traceFigures?: ConversationTraceGroup[];
-}
-
-// Whether this caller can read body columns at all. A *schema* fact, resolved before any body query, so it is
-// known when the view switch first renders and can gate the Chat option there. The transcript's other states
-// — aged out, not reconstructable, never recorded, failed — are facts about the rows themselves and resolve
-// only once the body read runs, so they are stated inside the Chat view instead.
-export interface ConversationTranscriptAvailability {
-  isReadable: boolean;
-  // Per side, because the inspector offers the two independently: the transcript needs both a question and an
-  // answer, but a hop's request is worth reading on its own.
+// Which body columns this caller can read. A *schema* fact, resolved before any body query, so a span's body
+// tabs are gated before a body is read. Reported per side and never as a conjunction: each tab reads its own
+// column, and requiring both would withhold a readable request history over an unreadable answer. Whether a
+// granted column has anything in it for a given hop is a fact about the row, stated inside the tab.
+export interface HopBodyGrants {
   isRequestReadable: boolean;
   isResponseReadable: boolean;
 }
 
-export interface TranscriptBodyFields {
-  isReadable: boolean;
-  isRequestReadable: boolean;
-  isResponseReadable: boolean;
+export interface HopBodyFields extends HopBodyGrants {
   responseFields: UsageLogField[];
-}
-
-export interface ConversationEntryHopRow {
-  trace_id: string;
-  request_time: number | string | null;
-  deployment: string | null;
-  number_request_messages: number | string | null;
-  request_body_bytes: number | string | null;
-  response_body_bytes: number | string | null;
 }
 
 export interface ConversationEntryBodyRow {
@@ -927,18 +936,6 @@ export interface ConversationEntryBodyRow {
   // Selected by the inspector's own read so the dialect is resolved server-side from the endpoint rather than
   // taken on trust from the caller. A plain column, and free beside the body it travels with.
   request_uri?: string | null;
-}
-
-export interface TranscriptStatePresentation {
-  titleKey: string;
-  hintKey: string;
-  icon: TablerIcon;
-  isError: boolean;
-}
-
-export enum ConversationDetailView {
-  Chat = 'chat',
-  Trace = 'trace',
 }
 
 export enum ConversationDetailPanel {
@@ -1003,4 +1000,22 @@ export interface ResolvedConversationField {
   hintKey?: string;
 }
 
-export type ResolvedInsightFields = Partial<Record<ConversationsField, ResolvedConversationField>>;
+// One row of the rail's label-and-value register. The value is a node rather than a string because a field's
+// absence is presented differently from its content, and the panels that can render an absence carry that
+// distinction in markup rather than in the text.
+export interface ConversationTerm {
+  key: string;
+  label: string;
+  hint?: string;
+  value: ReactNode;
+}
+
+// One insight column as the entity schema reports it, reduced to what the panel renders it with. Built from
+// the schema rather than declared here, so a column the enrichment gains is described without a release:
+// the label and the hint are the service's own words, and the type is what decides the value's formatting.
+export interface ConversationInsightField {
+  name: string;
+  label: string;
+  hint?: string;
+  type: AnalyticsFieldType;
+}

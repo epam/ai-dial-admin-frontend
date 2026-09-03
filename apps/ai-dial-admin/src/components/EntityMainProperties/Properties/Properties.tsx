@@ -23,6 +23,8 @@ interface Props<T> {
   onChangeEntity: (entity: object) => void;
   initialValues?: Partial<T>;
   isModal?: boolean;
+  /** Applications only — omits the version field/validation for a platform-bucket create (flat, unversioned). */
+  hideVersionField?: boolean;
 }
 
 // TODO: remove this component and use EntityProperties and DeploymentProperties directly in the views

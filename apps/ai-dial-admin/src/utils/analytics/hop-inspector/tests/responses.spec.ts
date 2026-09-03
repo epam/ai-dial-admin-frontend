@@ -156,7 +156,7 @@ describe('responseEnvelopeOf :: the Responses shape', () => {
 
   // Span 47ed5589e0cd5d86, `ali.qwen3.7-plus`, 21 Aug — the one hop in 472 that called a tool. Only a
   // `message` item carries text, so without this the reader saw the reasoning and the call was invisible.
-  test('names a function_call output item so the call is not invisible', () => {
+  test('states a function_call output item so the call is not invisible', () => {
     const called = JSON.stringify({
       status: 'completed',
       output: [
@@ -173,7 +173,11 @@ describe('responseEnvelopeOf :: the Responses shape', () => {
 
     const envelope = responseEnvelopeOf(row({ assembled_response: called }), HopDialect.Responses);
 
-    expect(envelope.toolCalls).toEqual(['get_current_weather']);
+    // This dialect records the id as `call_id`, beside the name and the arguments; without it the result
+    // that quotes it back cannot be paired.
+    expect(envelope.toolCalls).toEqual([
+      { name: 'get_current_weather', args: '{"city": "Paris"}', id: 'call_5782d835' },
+    ]);
     expect(envelope.state).toBe(HopReadState.Available);
     expect(envelope.text).toBeNull();
   });

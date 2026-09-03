@@ -16,7 +16,9 @@ import {
   getMoveNotificationContent,
   getParentPathByFullPath,
   getToolbarOptionLabels,
+  getTreeActionLabels,
   getVersionsPerName,
+  isPlatformApplicationsBucket,
 } from '../utils';
 
 describe('getToolbarOptionLabels', () => {
@@ -31,6 +33,78 @@ describe('getToolbarOptionLabels', () => {
 
   test('AssetsSkills returns no options for a read-only admin', () => {
     expect(getToolbarOptionLabels(ApplicationRoute.Skills, true)).toEqual([]);
+  });
+});
+
+describe('isPlatformApplicationsBucket', () => {
+  test('is true only for AssetsApplications when the current path is platform-prefixed', () => {
+    expect(isPlatformApplicationsBucket(ApplicationRoute.AssetsApplications, 'platform/')).toBe(true);
+    expect(isPlatformApplicationsBucket(ApplicationRoute.AssetsApplications, 'platform/my-app')).toBe(true);
+  });
+
+  test('is false for a public-prefixed path on AssetsApplications', () => {
+    expect(isPlatformApplicationsBucket(ApplicationRoute.AssetsApplications, 'public/')).toBe(false);
+  });
+
+  test('is false for an undefined path, and for other views even with a platform-prefixed path', () => {
+    expect(isPlatformApplicationsBucket(ApplicationRoute.AssetsApplications, undefined)).toBe(false);
+    expect(isPlatformApplicationsBucket(ApplicationRoute.PlatformKeys, 'platform/')).toBe(false);
+    expect(isPlatformApplicationsBucket(ApplicationRoute.AssetsToolsets, 'platform/')).toBe(false);
+  });
+});
+
+describe('getGridActionLabels', () => {
+  test('AssetsApplications on the platform bucket offers only duplicate, delete, and openInNewTab', () => {
+    const keys = getGridActionLabels(ApplicationRoute.AssetsApplications, false, 'platform/').map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+    expect(keys).not.toContain('preview');
+    expect(keys).not.toContain('move');
+    expect(keys).not.toContain('rename');
+  });
+
+  test('AssetsApplications on the public bucket keeps the existing full action set', () => {
+    const withPublicPath = getGridActionLabels(ApplicationRoute.AssetsApplications, false, 'public/').map(
+      (item) => item.key,
+    );
+    const withoutPath = getGridActionLabels(ApplicationRoute.AssetsApplications, false).map((item) => item.key);
+
+    expect(withPublicPath).toEqual(withoutPath);
+    // The public bucket keeps folder/versioning actions the platform bucket's restricted set lacks.
+    expect(withPublicPath).toContain('move');
+    expect(withPublicPath).toContain('rename');
+  });
+
+  test('AssetsApplications on the platform bucket still returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.AssetsApplications, true, 'platform/')).toEqual([]);
+  });
+});
+
+describe('getTreeActionLabels', () => {
+  test('AssetsApplications offers no tree actions while browsing the platform bucket', () => {
+    expect(getTreeActionLabels(false, ApplicationRoute.AssetsApplications, 'platform/')).toEqual([]);
+  });
+
+  test('AssetsApplications keeps folder-tree actions while browsing the public bucket', () => {
+    const keys = getTreeActionLabels(false, ApplicationRoute.AssetsApplications, 'public/').map((item) => item.key);
+
+    expect(keys.length).toBeGreaterThan(0);
+  });
+});
+
+describe('getToolbarOptionLabels — Assets Applications bucket switch', () => {
+  test('offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
+
+    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }]);
+  });
+
+  test('keeps the existing toolbar entries while browsing the public bucket', () => {
+    const withPublicPath = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'public/');
+    const withoutPath = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false);
+
+    expect(withPublicPath).toEqual(withoutPath);
+    expect(withPublicPath.some((item) => item.label === FileManagerI18nKey.Application)).toBe(true);
   });
 });
 

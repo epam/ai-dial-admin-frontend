@@ -7,6 +7,9 @@ export interface ColumnRow {
   name: string;
   type: AnalyticsFieldType;
   element_type: AnalyticsFieldType | '';
+  // Always an array — empty for every type but Enum, so the editor never has to distinguish "no values
+  // collected" from "not an enum row".
+  enum_values: string[];
   tag: string;
   display_name: string;
   description: string;
@@ -21,6 +24,9 @@ export interface ColumnRowError {
   display_name?: string;
   description?: string;
   element_type?: string;
+  // One message for the list as a whole: the popup renders its own per-entry messages, and this is what
+  // labels the collapsed field and disables Save.
+  enum_values?: string;
 }
 
 // Names already declared on the table an "Add columns" patch targets; new rows must not collide with

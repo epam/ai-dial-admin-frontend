@@ -14,7 +14,7 @@ const TurnExpanderCellRenderer = ({ data, onToggleExpand }: Props) => {
   if (data?.rowType === GridRowType.TURN) {
     return (
       <div className="flex items-center justify-end h-full pr-1" style={{ paddingLeft: 24 }}>
-        <span className="size-1.5 rounded-full bg-tertiary" />
+        <span className="size-1.5 rounded-full bg-secondary" />
       </div>
     );
   }

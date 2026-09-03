@@ -1,4 +1,4 @@
-import { ConversationEntryBodyRow, MessageRole } from '@/src/models/analytics/conversations-trace';
+import { ConversationEntryBodyRow, HopToolCall } from '@/src/models/analytics/conversations-trace';
 
 const SSE_DATA_PREFIX = 'data:';
 const SSE_DONE = '[DONE]';
@@ -32,24 +32,6 @@ export const messageTextOf = (message: Record<string, unknown>): string | undefi
     .filter((text): text is string => typeof text === 'string');
 
   return parts.length ? parts.join('') : undefined;
-};
-
-const TRANSCRIPT_ROLES = new Set<string>([MessageRole.User, MessageRole.Assistant]);
-
-export interface RecordedMessage {
-  role: MessageRole;
-  content: string | undefined;
-}
-
-export const transcriptMessagesOf = (requestBody: string | null): RecordedMessage[] => {
-  const parsed = requestBody ? parseJson(requestBody) : null;
-  if (!isRecord(parsed)) {
-    return [];
-  }
-
-  return asRecords(parsed.messages)
-    .filter((message) => typeof message.role === 'string' && TRANSCRIPT_ROLES.has(message.role))
-    .map((message) => ({ role: message.role as MessageRole, content: messageTextOf(message) }));
 };
 
 const firstChoiceMessage = (parsed: unknown): Record<string, unknown> | null => {
@@ -140,25 +122,25 @@ export const assistantTextOf = (row: ConversationEntryBodyRow): string | null =>
 
 export const toolCallNamesOf = (body: string | null): string[] => toolCallRequestsOf(body).map(({ name }) => name);
 
-export interface ToolCallRequest {
-  name: string;
-  args: string | null;
-}
-
-const toolRequestsOfMessage = (message: Record<string, unknown>): ToolCallRequest[] =>
+// This response is where a call's id is minted; the next request's result quotes it back.
+const toolRequestsOfMessage = (message: Record<string, unknown>): HopToolCall[] =>
   asRecords(message.tool_calls)
-    .map((call) => (isRecord(call.function) ? call.function : null))
-    .filter((fn): fn is Record<string, unknown> => fn !== null)
-    .map((fn) => ({
-      name: typeof fn.name === 'string' ? fn.name : '',
-      args: typeof fn.arguments === 'string' ? fn.arguments : null,
-    }))
+    .filter((call) => isRecord(call.function))
+    .map((call) => {
+      const fn = call.function as Record<string, unknown>;
+
+      return {
+        name: typeof fn.name === 'string' ? fn.name : '',
+        args: typeof fn.arguments === 'string' ? fn.arguments : null,
+        id: typeof call.id === 'string' ? call.id : null,
+      };
+    })
     .filter(({ name }) => name.length > 0);
 
 // A streamed response carries no `message.tool_calls`: each chunk contributes a fragment under
 // `delta.tool_calls`, keyed by an `index` naming the call slot it belongs to.
-const streamedToolRequestsOf = (raw: string): ToolCallRequest[] => {
-  const slots = new Map<number, { name: string; args: string }>();
+const streamedToolRequestsOf = (raw: string): HopToolCall[] => {
+  const slots = new Map<number, { name: string; args: string; id: string | null }>();
 
   for (const frame of sseFrames(raw)) {
     const parsed = parseJson(frame);
@@ -170,11 +152,13 @@ const streamedToolRequestsOf = (raw: string): ToolCallRequest[] => {
       for (const call of asRecords(isRecord(choice.delta) ? choice.delta.tool_calls : null)) {
         const index = typeof call.index === 'number' ? call.index : 0;
         const fn = isRecord(call.function) ? call.function : {};
-        const slot = slots.get(index) ?? { name: '', args: '' };
+        const slot = slots.get(index) ?? { name: '', args: '', id: null };
 
         slots.set(index, {
           name: typeof fn.name === 'string' && fn.name ? fn.name : slot.name,
           args: slot.args + (typeof fn.arguments === 'string' ? fn.arguments : ''),
+          // Only the first chunk of a slot names the call, and only it carries the id.
+          id: typeof call.id === 'string' && call.id ? call.id : slot.id,
         });
       }
     }
@@ -182,11 +166,11 @@ const streamedToolRequestsOf = (raw: string): ToolCallRequest[] => {
 
   return [...slots.entries()]
     .sort(([left], [right]) => left - right)
-    .map(([, { name, args }]) => ({ name, args: args || null }))
+    .map(([, { name, args, id }]) => ({ name, args: args || null, id }))
     .filter(({ name }) => name.length > 0);
 };
 
-export const toolCallRequestsOf = (body: string | null): ToolCallRequest[] => {
+export const toolCallRequestsOf = (body: string | null): HopToolCall[] => {
   const raw = body?.trim();
   if (!raw) {
     return [];
@@ -208,17 +192,4 @@ export const jsonRpcArgumentsOf = (requestBody: string | null): string | null =>
   const args = isRecord(params.arguments) ? params.arguments : params;
 
   return Object.keys(args).length ? JSON.stringify(args, null, 2) : null;
-};
-
-export const lastRequestMessageOf = (requestBody: string | null): string | null => {
-  const messages = transcriptMessagesOf(requestBody);
-
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const text = messages[index].content?.trim();
-    if (text) {
-      return text;
-    }
-  }
-
-  return null;
 };

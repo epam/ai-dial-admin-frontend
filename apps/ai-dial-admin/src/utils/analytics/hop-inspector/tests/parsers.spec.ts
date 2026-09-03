@@ -33,7 +33,7 @@ describe('chatCompletionsMessagesOf', () => {
     const [, , assistant] = chatCompletionsMessagesOf(body);
 
     expect(assistant.text).toBeNull();
-    expect(assistant.toolCalls).toEqual([{ name: 'add', args: '{}' }]);
+    expect(assistant.toolCalls).toEqual([{ name: 'add', args: '{}', id: 'c1' }]);
     expect(assistant.bytes).toBeGreaterThan(0);
   });
 
@@ -42,6 +42,33 @@ describe('chatCompletionsMessagesOf', () => {
 
     expect(tool.role).toBe(MessageRole.Tool);
     expect(tool.text).toBe('4');
+  });
+
+  // The id is the only thing pairing a result with the call it answers: a turn that called one tool three
+  // times is answered by three messages that are otherwise identical.
+  test('carries the id a result quotes back', () => {
+    const [, , , tool] = chatCompletionsMessagesOf(body);
+
+    expect(tool.answeredCallIds).toEqual(['c1']);
+  });
+
+  test('answers nothing for a message that quotes no call', () => {
+    const [, user] = chatCompletionsMessagesOf(body);
+
+    expect(user.answeredCallIds).toEqual([]);
+  });
+
+  // The dialect records no failure flag on a result, so none is claimed.
+  test('reports no failure for this dialect’s results', () => {
+    expect(chatCompletionsMessagesOf(body).every(({ isError }) => isError === false)).toBe(true);
+  });
+
+  test('keeps a call whose id was not recorded', () => {
+    const [call] = chatCompletionsMessagesOf({
+      messages: [{ role: 'assistant', tool_calls: [{ function: { name: 'add', arguments: '{}' } }] }],
+    })[0].toolCalls;
+
+    expect(call).toEqual({ name: 'add', args: '{}', id: null });
   });
 
   test('a message that called nothing carries no calls', () => {
@@ -100,7 +127,46 @@ describe('messagesDialectMessagesOf', () => {
     const [, , assistant] = messagesDialectMessagesOf(body);
 
     expect(assistant.text).toBe('A pirate.');
-    expect(assistant.toolCalls).toEqual([{ name: 'calc', args: '{}' }]);
+    expect(assistant.toolCalls).toEqual([{ name: 'calc', args: '{}', id: 't1' }]);
+  });
+
+  test('reads every call a message answers, not only the first', () => {
+    const [message] = messagesDialectMessagesOf({
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'tool_result', tool_use_id: 't1', content: 'app/' },
+            { type: 'tool_result', tool_use_id: 't2', content: 'appdata/' },
+          ],
+        },
+      ],
+    });
+
+    expect(message.answeredCallIds).toEqual(['t1', 't2']);
+    expect(message.isError).toBe(false);
+  });
+
+  // A failed result matters more to a reader debugging an agent loop than its text does, and this is the one
+  // dialect that records the flag.
+  test('marks a message carrying a failed result', () => {
+    const [message] = messagesDialectMessagesOf({
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'tool_result', tool_use_id: 't1', content: 'ok' },
+            { type: 'tool_result', tool_use_id: 't2', content: 'no such file', is_error: true },
+          ],
+        },
+      ],
+    });
+
+    expect(message.isError).toBe(true);
+  });
+
+  test('claims no failure for a message whose results all succeeded', () => {
+    expect(messagesDialectMessagesOf(body).every(({ isError }) => isError === false)).toBe(true);
   });
 
   // A tool result is content being fed back, not metadata: without it the user turn carrying one reads blank.

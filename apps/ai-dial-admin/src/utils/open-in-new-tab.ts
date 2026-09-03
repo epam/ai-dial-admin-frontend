@@ -5,6 +5,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
@@ -34,7 +35,6 @@ export const getEntityPath = (
     case ApplicationRoute.Conversations:
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
-    case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Skills: {
       const path = version
@@ -45,6 +45,28 @@ export const getEntityPath = (
       return forRemove
         ? decodeURIComponent(escapePercentSign(path))
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
+    }
+
+    // Applications is the one view whose resources live in both buckets (design.md's
+    // `platform-applications` capability). Both share the same `/assets-applications/[id]` detail
+    // route — a platform-bucket row has no version and no folder tree, so it gets the flat
+    // `PlatformModels`-style segment below (bare name, no `?path=`); the query param's presence is
+    // exactly what the detail page uses to tell the two buckets apart.
+    case ApplicationRoute.AssetsApplications: {
+      const entity = data as DialPrompt & { folderId?: string; path?: string };
+
+      if (isPlatformBucketPath(entity.path || entity.folderId)) {
+        const resolvedName = entity.name || '';
+        return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
+      }
+
+      const path = version
+        ? `${entity.folderId}${entity.name}__${version}`
+        : entity.path || `${entity.folderId}${entity.name}__${entity.version}`;
+
+      return forRemove
+        ? decodeURIComponent(escapePercentSign(path))
+        : `${encodeURIComponent(entity.name as string)}?path=${encodeURIComponent(path)}`;
     }
 
     case ApplicationRoute.PlatformModels:
