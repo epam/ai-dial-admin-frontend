@@ -16,7 +16,7 @@ export interface DialResource extends BaseEntity {
   folderId: string;
   nodeType?: string;
   version: string;
-  author: string;
+  author?: string;
   endpoint?: string;
   icon_url: string;
   reference: string;
