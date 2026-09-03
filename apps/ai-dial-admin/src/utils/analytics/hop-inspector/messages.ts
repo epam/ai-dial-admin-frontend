@@ -49,8 +49,23 @@ const blockToolCallsOf = (blocks: Record<string, unknown>[]): HopToolCall[] =>
     .map((block) => ({
       name: typeof block.name === 'string' ? block.name : '',
       args: argsOf(block.input),
+      id: typeof block.id === 'string' ? block.id : null,
     }))
     .filter(({ name }) => name.length > 0);
+
+// This dialect feeds several results back inside one message, each block quoting the call it answers, so the
+// pairing is a list. Taking the first alone would leave every result after it anonymous.
+const answeredCallIdsOf = (blocks: Record<string, unknown>[]): string[] =>
+  blocks
+    .filter((block) => block.type === TOOL_RESULT_BLOCK)
+    .map((block) => block.tool_use_id)
+    .filter((id): id is string => typeof id === 'string');
+
+// A result that reported a failure. Any failing block marks the message: the blocks were merged into one text
+// on the way in, so there is no per-block surface left to mark instead — and a reader debugging an agent loop
+// needs to see that something failed more than they need to know which block it was.
+const hasErrorResult = (blocks: Record<string, unknown>[]): boolean =>
+  blocks.some((block) => block.type === TOOL_RESULT_BLOCK && block.is_error === true);
 
 const systemMessageOf = (system: unknown): HopDialectMessage | null => {
   if (system == null) {
@@ -59,7 +74,14 @@ const systemMessageOf = (system: unknown): HopDialectMessage | null => {
 
   const text = typeof system === 'string' ? system : blockTextOf(asRecords(system));
 
-  return { role: MessageRole.System, text, toolCalls: [], bytes: jsonByteLength(system) };
+  return {
+    role: MessageRole.System,
+    text,
+    toolCalls: [],
+    bytes: jsonByteLength(system),
+    answeredCallIds: [],
+    isError: false,
+  };
 };
 
 // The messages dialect carries its system prompt as a top-level field rather than as a message — 99.5% of a
@@ -82,6 +104,8 @@ export const messagesDialectMessagesOf = (parsed: unknown): HopDialectMessage[] 
         text: typeof message.content === 'string' ? message.content : null,
         toolCalls: [],
         bytes: jsonByteLength(message),
+        answeredCallIds: [],
+        isError: false,
       };
     }
 
@@ -90,6 +114,8 @@ export const messagesDialectMessagesOf = (parsed: unknown): HopDialectMessage[] 
       text: blockTextOf(blocks),
       toolCalls: blockToolCallsOf(blocks),
       bytes: jsonByteLength(message),
+      answeredCallIds: answeredCallIdsOf(blocks),
+      isError: hasErrorResult(blocks),
     };
   });
 

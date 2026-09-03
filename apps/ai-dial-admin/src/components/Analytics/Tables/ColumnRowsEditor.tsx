@@ -6,6 +6,7 @@ import { DialGhostButton, DialInput, DialRemoveButton, DialSelectField, DialSwit
 import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
 import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
@@ -35,9 +36,16 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         const first = index === 0;
         const rowError = errors?.[index];
         const isArray = row.type === AnalyticsFieldType.Array;
+        const isEnum = row.type === AnalyticsFieldType.Enum;
         const onTypeChange = (v: string | string[]) => {
           const type = v as AnalyticsFieldType;
-          update(row.id, { type, ...(type !== AnalyticsFieldType.Array ? { element_type: '' } : {}) });
+          update(row.id, {
+            type,
+            ...(type !== AnalyticsFieldType.Array ? { element_type: '' } : {}),
+            // Dropped for the same reason the element type is: a domain kept across a retype would be
+            // submitted with a column that no longer has the type it belongs to.
+            ...(type !== AnalyticsFieldType.Enum ? { enum_values: [] } : {}),
+          });
         };
         // A validation error makes that field's column taller (label + input + error text). With
         // items-end (the normal bottom-aligned layout) that drags the erroring column's label out of
@@ -48,7 +56,8 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
           rowError?.tag ||
           rowError?.display_name ||
           rowError?.description ||
-          rowError?.element_type,
+          rowError?.element_type ||
+          rowError?.enum_values,
         );
         return (
           <div key={row.id} className={classNames('flex gap-2', rowHasError ? 'items-start' : 'items-end')}>
@@ -103,6 +112,14 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
                 onChange={(v) => update(row.id, { element_type: v as AnalyticsFieldType })}
               />
             )}
+            {isEnum && (
+              <EnumValuesField
+                rowId={row.id}
+                values={row.enum_values}
+                errorText={rowError?.enum_values}
+                onChange={(values) => update(row.id, { enum_values: values })}
+              />
+            )}
             <DialInput
               id={`col-tag-${row.id}`}
               containerClassName="flex-1 min-w-[120px]"
@@ -133,6 +150,11 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
           </div>
         );
       })}
+      {/* Stated once for the row set rather than per enum row: it is a property of the type, and anything
+          rendered beneath a field would lift that field out of line with the row's other inputs. */}
+      {rows.some((row) => row.type === AnalyticsFieldType.Enum) && (
+        <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesOrderHint)}</p>
+      )}
       <div>
         <DialGhostButton
           label={t(AnalyticsTablesI18nKey.AddColumn)}

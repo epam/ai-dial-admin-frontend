@@ -1,5 +1,6 @@
 import { HopDialect, HopDialectMessage } from '@/src/models/analytics/conversations-trace';
 import { chatCompletionsMessagesOf } from '@/src/utils/analytics/hop-inspector/chat-completions';
+import { withoutBlankEdges } from '@/src/utils/analytics/hop-inspector/envelope';
 import { messagesDialectMessagesOf } from '@/src/utils/analytics/hop-inspector/messages';
 import { responsesMessagesOf } from '@/src/utils/analytics/hop-inspector/responses';
 
@@ -27,5 +28,8 @@ const DIALECT_PARSER: Record<HopDialect, (parsed: unknown) => HopDialectMessage[
   [HopDialect.Unknown]: () => [],
 };
 
+// The blank edges are dropped here rather than in each parser or at each render: this is the one path every
+// message text takes, for all three dialects and for both the envelope and the tier-2 read of one message in
+// full, so a turn cannot arrive trimmed through one route and untrimmed through the other.
 export const messagesForDialect = (dialect: HopDialect, parsed: unknown): HopDialectMessage[] =>
-  DIALECT_PARSER[dialect](parsed);
+  DIALECT_PARSER[dialect](parsed).map((message) => ({ ...message, text: withoutBlankEdges(message.text) }));

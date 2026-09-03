@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
@@ -10,7 +10,7 @@ import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/Compac
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { compactSelectLabel } from '@/src/components/Analytics/QueryBuilder/utils/options';
-import { VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { ENUM_UNSUPPORTED_OPERATORS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -21,6 +21,7 @@ import {
   FilterPredicateNode,
   QueryBuilderColor,
 } from '@/src/models/analytics/query-builder';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 
 interface Props {
@@ -43,13 +44,38 @@ const BOOLEAN_VALUES = ['true', 'false'];
 
 const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
 
+const fieldTypeOf = (options: FieldOption[], name: string): string | undefined =>
+  options.find((o) => o.name === name)?.type;
+
+const isEnumType = (type?: string): boolean => type === AnalyticsFieldType.Enum;
+
 const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOptions, color }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
+  const isEnumField = isEnumType(fieldTypeOf(fieldOptions, node.field));
+
+  // Keyed on the declared type alone — no list here names which fields are enums, so a field an instance
+  // begins reporting as one is guarded with no change. The unfiltered `operatorOptions` still back the
+  // collapsed summary below, so a JSON-authored predicate carrying a withheld operator still reads by name
+  // instead of falling back to its code.
+  const availableOperatorOptions = useMemo(
+    () =>
+      isEnumField
+        ? operatorOptions.filter((option) => !ENUM_UNSUPPORTED_OPERATORS.includes(option.value as QueryOperator))
+        : operatorOptions,
+    [isEnumField, operatorOptions],
+  );
+
   const onChangeField = (value: string) => {
     node.field = value;
-    node.valueType = defaultValueType(fieldOptions.find((o) => o.name === value)?.type);
+    const fieldType = fieldTypeOf(fieldOptions, value);
+    node.valueType = defaultValueType(fieldType);
+    // Retargeting a contains condition at an enum field would otherwise leave it serializing a predicate
+    // the service rejects outright, taking the whole query down rather than this one condition.
+    if (isEnumType(fieldType) && ENUM_UNSUPPORTED_OPERATORS.includes(node.op)) {
+      node.op = QueryOperator.Eq;
+    }
     refresh();
   };
 
@@ -100,7 +126,7 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOption
         <div className="min-w-[200px] flex-1">
           <CompactSelect
             ariaLabel={t(QueryBuilderI18nKey.Operator)}
-            options={operatorOptions}
+            options={availableOperatorOptions}
             value={node.op}
             onChange={onChangeOperator}
           />

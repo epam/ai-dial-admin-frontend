@@ -5,14 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationDetailView from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailView';
 import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import {
-  ConversationDetailRow,
-  ConversationTranscript,
-  HopDialect,
-  HopReadState,
-  MessageRole,
-  TranscriptState,
-} from '@/src/models/analytics/conversations-trace';
+import { ConversationDetailRow, HopDialect, HopReadState } from '@/src/models/analytics/conversations-trace';
 
 const getConversationSpans = vi.fn();
 const getConversationHopRequest = vi.fn();
@@ -22,7 +15,6 @@ const getConversationHopRawBody = vi.fn();
 const getConversationHopMcp = vi.fn();
 const getConversationHopEmbedding = vi.fn();
 const getConversationTracePage = vi.fn();
-const getConversationTranscript = vi.fn();
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationSpans: (...args: unknown[]) => getConversationSpans(...args),
@@ -33,11 +25,10 @@ vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationHopMcp: (...args: unknown[]) => getConversationHopMcp(...args),
   getConversationHopEmbedding: (...args: unknown[]) => getConversationHopEmbedding(...args),
   getConversationTracePage: (...args: unknown[]) => getConversationTracePage(...args),
-  getConversationTranscript: (...args: unknown[]) => getConversationTranscript(...args),
 }));
 
-// Counting stub: the header sits above the switch, so its render count is the direct measure of whether
-// choosing a view re-renders the page around it.
+// Counting stub: the header sits above the trace listing, so its render count is the direct measure of
+// whether opening a trace re-renders the page around it.
 const headerRenders = vi.fn();
 
 vi.mock('@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailHeader', () => ({
@@ -97,30 +88,17 @@ const traceGroup = (traceId: string, deployment: string) => ({
   isRootRecorded: true,
 });
 
-const transcript = (overrides: Partial<ConversationTranscript> = {}): ConversationTranscript => ({
-  state: TranscriptState.Available,
-  messages: [
-    { role: MessageRole.User, content: 'q', trace_id: 't1' },
-    { role: MessageRole.Assistant, content: 'a', trace_id: 't1' },
-  ],
-  loadedTurns: 2,
-  ...overrides,
-});
-
 const renderView = (props: Partial<ComponentProps<typeof ConversationDetailView>> = {}) =>
   render(
     <ConversationDetailView
       conversation={CONVERSATION}
       insightColumns={[]}
       feedback={null}
-      isTranscriptReadable
-      bodyGrants={{ isReadable: true, isRequestReadable: true, isResponseReadable: true }}
+      bodyGrants={{ isRequestReadable: true, isResponseReadable: true }}
       nowMs={1000}
       {...props}
     />,
   );
-
-const switchOption = (key: string) => screen.getByRole('tab', { name: key });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -134,7 +112,7 @@ beforeEach(() => {
     response: {
       state: HopReadState.Available,
       dialect: HopDialect.ChatCompletions,
-      params: { stated: [], unrecognisedCount: 0 },
+      params: { stated: [] },
       messages: [],
       roleCounts: [],
       recordedBytes: 10,
@@ -145,24 +123,21 @@ beforeEach(() => {
     success: true,
     response: { groups: [traceGroup('t1', 'gpt-one'), traceGroup('t2', 'gpt-two')], hasMore: false },
   });
-  getConversationTranscript.mockResolvedValue({
-    success: true,
-    response: { ...transcript(), traceFigures: [traceGroup('t1', 'gpt-one')] },
-  });
 });
 
 describe('ConversationDetailView', () => {
-  test('offers both views and starts on the trace listing', async () => {
+  // A conversation's readable exchange is the request history of its entry span, and the trace's own Chat tab
+  // states it where everything else about that trace is stated — so this view offers no second way in.
+  test('opens on the trace listing, with no view switch', async () => {
     renderView();
 
-    expect(switchOption(ConversationsTraceI18nKey.ViewTrace)).toHaveAttribute('aria-selected', 'true');
-    expect(switchOption(ConversationsTraceI18nKey.ViewChat)).toHaveAttribute('aria-selected', 'false');
     expect(await screen.findByText('gpt-one')).toBeInTheDocument();
+    expect(screen.queryByRole('tab')).toBeNull();
   });
 
-  // Switching to Trace lands on the list of the conversation's traces rather than dropping into one turn's
-  // hop chain, so a reader who has not chosen a turn is shown the choice instead of an arbitrary default.
-  test('the trace listing names each recorded call and reads no spans yet', async () => {
+  // The listing renders from the conversation's own recorded calls, so the page opens without a body read
+  // and without dropping into one trace's hop chain.
+  test('names each recorded call and reads no spans yet', async () => {
     renderView();
 
     expect(await screen.findByText('gpt-one')).toBeInTheDocument();
@@ -179,91 +154,65 @@ describe('ConversationDetailView', () => {
     expect(getConversationSpans).toHaveBeenCalledWith('t2');
   });
 
-  test('a per-turn control on a message opens the trace on that turn', async () => {
+  // A Core-internal root can fire long after the hop it belongs to, so the earliest span is not reliably the
+  // entry hop — and the entry hop is the one whose history is the conversation.
+  test('opens a trace on its entry hop rather than on its earliest span', async () => {
     const user = userEvent.setup();
+    getConversationSpans.mockResolvedValue({
+      success: true,
+      response: {
+        spans: [
+          { core_span_id: 'child', core_parent_span_id: 'root', request_time: 1, deployment: 'a-child-call' },
+          { core_span_id: 'root', core_parent_span_id: null, request_time: 9, deployment: 'the-entry-hop' },
+        ],
+        total: 2,
+      },
+    });
     renderView();
 
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
-    await user.click(await screen.findByText(ConversationsTraceI18nKey.TraceOpen));
+    await user.click(await screen.findByText('gpt-two'));
 
-    expect(getConversationSpans).toHaveBeenCalledWith('t1');
+    // The rail states the selected span, so the name it shows is the selection.
+    expect(await screen.findByRole('button', { name: /the-entry-hop/, current: true })).toBeInTheDocument();
   });
 
-  // A reader who reached a hop chain from the trace list should not be dropped back onto the transcript.
-  test('returning from a trace lands on the view it was opened from', async () => {
+  test('closing an open hop chain returns to the listing', async () => {
     const user = userEvent.setup();
     renderView();
 
     await user.click(await screen.findByText('gpt-two'));
-    await user.click(await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToTranscript }));
+    await user.click(await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToList }));
 
-    expect(switchOption(ConversationsTraceI18nKey.ViewTrace)).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('gpt-two')).toBeInTheDocument();
   });
 
-  test('returning from a trace opened from the transcript lands back on the transcript', async () => {
-    const user = userEvent.setup();
-    renderView();
-
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
-    await user.click(await screen.findByText(ConversationsTraceI18nKey.TraceOpen));
-    await user.click(await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToTranscript }));
-
-    expect(switchOption(ConversationsTraceI18nKey.ViewChat)).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText('q')).toBeInTheDocument();
-  });
-
   // Two stacked headers would leave the reader unsure which of them the figures belong to. The body stays
-  // mounted so the switch keeps its choice, so it is the hiding that has to be asserted.
-  test('the conversation header and switch are hidden while a trace is open', async () => {
+  // mounted, so it is the hiding that has to be asserted.
+  test('hides the conversation header and the listing while a trace is open', async () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
-    await user.click(await screen.findByText(ConversationsTraceI18nKey.TraceOpen));
-    await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToTranscript });
+    await user.click(await screen.findByText('gpt-two'));
+    await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToList });
 
-    const hidden = switchOption(ConversationsTraceI18nKey.ViewChat).closest('.hidden');
+    const hidden = screen.getByText('conversation header').closest('.hidden');
 
     expect(hidden).toBeTruthy();
     expect(hidden).toHaveAttribute('inert');
   });
 
-  // A control that disappears leaves the reader unable to tell an unavailable view from one that does not
-  // exist, so the option is disabled and its reason is stated.
-  test('disables the Chat option when the caller cannot read the body columns', () => {
-    renderView({ isTranscriptReadable: false });
+  // Body grants reach only the span inspector's tabs inside an open trace, so a caller holding none of them
+  // changes nothing here: the listing renders from the conversation's recorded calls, with no body read to
+  // withhold and so nothing to explain.
+  test('renders the listing unchanged for a caller who can read no body column', async () => {
+    renderView({ bodyGrants: { isRequestReadable: false, isResponseReadable: false } });
 
-    expect(switchOption(ConversationsTraceI18nKey.ViewChat)).toBeDisabled();
-    // A distinct sentence from the empty state's own explanation: the same text twice on one screen reads as
-    // a rendering bug rather than as emphasis.
-    expect(screen.getByText(ConversationsTraceI18nKey.ViewChatUnavailable)).toBeInTheDocument();
+    expect(await screen.findByText('gpt-one')).toBeInTheDocument();
+    expect(screen.queryByRole('tab')).toBeNull();
   });
 
-  // Gating is a schema fact; the transcript's other states are facts about the rows, resolved by the body
-  // read. So an empty transcript never disables the option — it states its cause inside the Chat view.
-  test.each([
-    ['not reconstructable', TranscriptState.NotReconstructable],
-    ['aged out', TranscriptState.Expired],
-    ['never recorded', TranscriptState.NoMessages],
-  ])('keeps the Chat option enabled for a transcript that is %s', async (_label, state) => {
-    getConversationTranscript.mockResolvedValue({
-      success: true,
-      response: { state, messages: [], loadedTurns: null },
-    });
-    const user = userEvent.setup();
-    renderView();
-
-    expect(switchOption(ConversationsTraceI18nKey.ViewChat)).toBeEnabled();
-
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
-
-    expect(switchOption(ConversationsTraceI18nKey.ViewChat)).toHaveAttribute('aria-selected', 'true');
-  });
-
-  // Nothing to open, but the view still has something to say — which is why the switch no longer refuses it.
-  // The listing now resolves its own traces, so emptiness is a property of that read rather than of the
-  // turns the page handed down.
+  // Nothing to open, but the view still has something to say. The listing resolves its own traces, so
+  // emptiness is a property of that read.
   test('a conversation with no recorded traces states so rather than reporting an error', async () => {
     getConversationTracePage.mockResolvedValue({ success: true, response: { groups: [], hasMore: false } });
     renderView();
@@ -281,16 +230,11 @@ describe('ConversationDetailView', () => {
     expect(screen.queryByText(ConversationsTraceI18nKey.TraceListEmpty)).toBeNull();
   });
 
-  // The view switch owns its state below the header, so choosing a view re-renders the body and nothing
-  // above it. Re-rendering the page for a local choice is the thing this structure exists to avoid.
-  test('choosing a view does not re-render the page around it', async () => {
-    const user = userEvent.setup();
+  // Paging the listing is a local change and must not re-render the page above it.
+  test('loading the listing does not re-render the page around it', async () => {
     renderView();
 
-    expect(headerRenders).toHaveBeenCalledOnce();
-
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewTrace));
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
+    await screen.findByText('gpt-one');
 
     expect(headerRenders).toHaveBeenCalledOnce();
   });
@@ -300,9 +244,8 @@ describe('ConversationDetailView', () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewChat));
-    await user.click(await screen.findByText(ConversationsTraceI18nKey.TraceOpen));
-    await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToTranscript });
+    await user.click(await screen.findByText('gpt-two'));
+    await screen.findByRole('button', { name: ConversationsTraceI18nKey.TraceBackToList });
 
     expect(headerRenders.mock.calls.length).toBeGreaterThan(1);
   });
@@ -314,8 +257,7 @@ describe('ConversationDetailView', () => {
 describe('ConversationDetailView — opening a trace', () => {
   const openFirstTrace = async () => {
     const user = userEvent.setup();
-    await user.click(switchOption(ConversationsTraceI18nKey.ViewTrace));
-    await user.click(screen.getByText('t1'));
+    await user.click(await screen.findByText('gpt-one'));
   };
 
   test('clears the loader when the read rejects, and says the trace could not be read', async () => {

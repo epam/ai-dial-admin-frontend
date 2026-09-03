@@ -6,14 +6,12 @@ import {
   CONVERSATION_ARRAY_VALUE_SOURCE,
   CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
   CONVERSATION_FIELD_VALUE_LIMIT,
-  CONVERSATION_HOP_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationArrayFilter,
   ConversationColumnFilter,
-  ConversationEntryHopRow,
   ConversationFilterOperator,
   ConversationRatingTotalsField,
   ConversationScalarOperator,
@@ -45,11 +43,8 @@ import {
 import { TimeRange } from '@/src/models/time-range';
 import {
   buildArrayValueResolutionQuery,
-  buildConversationEntryBodiesQuery,
   buildConversationFieldValuesQuery,
   buildConversationHopBodyQuery,
-  buildConversationEntryHopsQuery,
-  buildConversationHopCountQuery,
   buildConversationListQuery,
   buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
@@ -762,17 +757,6 @@ describe('buildConversationRatingCountsQuery', () => {
 const CHAT_ID: SessionScope = { id: 'chat-1', source: CHAT_ID_SESSION_SOURCE };
 const AGENT_SCOPE: SessionScope = { id: 'cc-session-1', source: 'x-claude-code-session-id' };
 
-const hopRow = (traceId: string, requestTime: number | string | null): ConversationEntryHopRow => ({
-  trace_id: traceId,
-  request_time: requestTime,
-  deployment: 'app',
-  number_request_messages: 1,
-  request_body_bytes: 10,
-  response_body_bytes: 20,
-});
-
-const HOPS = [hopRow('t1', 1787218895000), hopRow('t2', 1787220824000)];
-
 const BODY_COLUMNS = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
 
 const flatPredicates = (query: StructuredQuery): QueryPredicate[] =>
@@ -784,176 +768,6 @@ const predicateFor = (query: StructuredQuery, name: string): QueryPredicate | un
 // The time bound is two predicates over one field, so `predicateFor` would only ever see the lower one.
 const timePredicates = (query: StructuredQuery): QueryPredicate[] =>
   flatPredicates(query).filter((node) => fieldName(node) === UsageLogField.RequestTime);
-
-describe('buildConversationEntryHopsQuery', () => {
-  const query = buildConversationEntryHopsQuery(CHAT_ID, 200);
-
-  test('reads the hop log in row mode, ordered by when each turn started', () => {
-    expect(query.entity).toBe(USAGE_LOG_ENTITY);
-    expect(query.mode).toBe(QueryMode.Row);
-    expect(query.sort).toEqual([{ field: UsageLogField.RequestTime, dir: QuerySortDirection.Asc }]);
-  });
-
-  // A root hop's parent is null and never '', so an empty-string comparison would match nothing and read as
-  // a conversation with no turns.
-  test('selects entry hops by a null parent span, not an empty string', () => {
-    const parent = predicateFor(query, UsageLogField.CoreParentSpanId);
-
-    expect(parent?.op).toBe(QueryOperator.Eq);
-    expect((parent?.args?.[1] as QueryValueExpr).value_type).toBe(QueryValueType.Null);
-    expect((parent?.args?.[1] as QueryValueExpr).value).toBeNull();
-  });
-
-  test('filters by the conversation', () => {
-    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
-  });
-
-  // The whole point of the cheap read: it establishes the turns without paying for a body.
-  test('names no body column', () => {
-    const names = selectNames(query);
-
-    BODY_COLUMNS.forEach((column) => expect(names).not.toContain(column));
-  });
-
-  test('names what the assembly and the disclosure need', () => {
-    expect(selectNames(query)).toEqual([
-      UsageLogField.TraceId,
-      UsageLogField.RequestTime,
-      UsageLogField.Deployment,
-      UsageLogField.NumberRequestMessages,
-      UsageLogField.RequestBodyBytes,
-      UsageLogField.ResponseBodyBytes,
-    ]);
-  });
-
-  test('requests the total so a clipped read can disclose its bound', () => {
-    expect((query.page as QueryOffsetPage).include_total).toBe(true);
-    expect((query.page as QueryOffsetPage).limit).toBe(200);
-  });
-});
-
-describe('buildConversationHopCountQuery', () => {
-  const query = buildConversationHopCountQuery(CHAT_ID);
-
-  test('counts the conversation hops with no entry-hop predicate', () => {
-    expect(query.entity).toBe(USAGE_LOG_ENTITY);
-    expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(fieldName(query.filter as QueryPredicate)).toBe(UsageLogField.ChatId);
-    expect(JSON.stringify(query.filter)).not.toContain(UsageLogField.CoreParentSpanId);
-  });
-
-  test('names only the count, so it stays cheap enough to run beside the entry-hop read', () => {
-    const [column] = query.select as QueryOutputColumn[];
-
-    expect((column.expr as QueryFnExpr).name).toBe('count');
-    expect(column.as).toBe(CONVERSATION_HOP_COUNT_ALIAS);
-    BODY_COLUMNS.forEach((name) => expect(JSON.stringify(query.select)).not.toContain(name));
-  });
-});
-
-describe('buildConversationEntryBodiesQuery', () => {
-  const withAssembled = buildConversationEntryBodiesQuery(CHAT_ID, HOPS, [...BODY_COLUMNS, UsageLogField.TraceId]);
-
-  test('narrows to the traces whose bodies the assembly needs', () => {
-    const traces = predicateFor(withAssembled, UsageLogField.TraceId);
-
-    expect(traces?.op).toBe(QueryOperator.In);
-    expect(JSON.stringify(traces?.args?.[1])).toContain('t1');
-    expect(JSON.stringify(traces?.args?.[1])).toContain('t2');
-  });
-
-  test('still filters by the conversation and the null parent span', () => {
-    expect((predicateFor(withAssembled, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
-    expect(predicateFor(withAssembled, UsageLogField.CoreParentSpanId)).toBeTruthy();
-  });
-
-  // The table partitions on the day of `request_time`, so the chat predicate prunes nothing and the read is
-  // rejected at the query budget. The bound has to be a range: `in` compiles to `has([...], request_time)`,
-  // a function over the column that prunes nothing — measured at 47 GiB read against 1.46 GiB for the
-  // equivalent range. The window is the fetched rows' own instants, not the conversation's span, which runs
-  // for weeks.
-  test('bounds the read by a range over the recorded times of the rows it fetches', () => {
-    const times = timePredicates(withAssembled);
-
-    expect(times.map(({ op }) => op)).toEqual([QueryOperator.Ge, QueryOperator.Le]);
-    times.forEach((time) => expect((time.args?.[1] as QueryValueExpr).value_type).toBe(QueryValueType.Timestamp));
-    expect(times.map((time) => (time.args?.[1] as QueryValueExpr).value)).toEqual(['1787218895000', '1787220824000']);
-  });
-
-  // The DSL takes a timestamp only as epoch millis while rows carry ISO-8601, so passing a returned value
-  // through verbatim is rejected outright and takes every body read with it.
-  test('converts an ISO-8601 recorded time to epoch millis', () => {
-    const query = buildConversationEntryBodiesQuery(
-      CHAT_ID,
-      [hopRow('t1', '2026-08-18T11:33:17.216Z'), hopRow('t2', '2026-08-18T11:40:00.000Z')],
-      BODY_COLUMNS,
-    );
-
-    expect(timePredicates(query).map((time) => (time.args?.[1] as QueryValueExpr).value)).toEqual([
-      '1787052797216',
-      '1787053200000',
-    ]);
-  });
-
-  // A single-row read still needs the predicate: one instant is one partition, and without it the read is
-  // unbounded across the whole table.
-  test('bounds a single hop to its own instant', () => {
-    const query = buildConversationEntryBodiesQuery(CHAT_ID, [HOPS[1]], BODY_COLUMNS);
-
-    expect(timePredicates(query).map((time) => (time.args?.[1] as QueryValueExpr).value)).toEqual([
-      '1787220824000',
-      '1787220824000',
-    ]);
-  });
-
-  test('bounds nothing when no hop records a time, rather than sending an unparseable literal', () => {
-    const query = buildConversationEntryBodiesQuery(CHAT_ID, [hopRow('t1', null)], BODY_COLUMNS);
-
-    expect(timePredicates(query)).toHaveLength(0);
-  });
-
-  test('names the assembled column where the schema reports it', () => {
-    expect(selectNames(withAssembled)).toContain(UsageLogField.AssembledResponse);
-  });
-
-  // The gate that protects a full administrator: an instance predating the column does not persist it, and
-  // the service rejects the whole query for one unknown field.
-  test('omits the assembled column where the schema does not report it', () => {
-    const names = selectNames(
-      buildConversationEntryBodiesQuery(CHAT_ID, HOPS, [
-        UsageLogField.TraceId,
-        UsageLogField.RequestBody,
-        UsageLogField.ResponseBody,
-      ]),
-    );
-
-    expect(names).not.toContain(UsageLogField.AssembledResponse);
-    expect(names).toContain(UsageLogField.RequestBody);
-    expect(names).toContain(UsageLogField.ResponseBody);
-  });
-
-  test('omits the assembled column when the schema could not be read', () => {
-    expect(selectNames(buildConversationEntryBodiesQuery(CHAT_ID, HOPS))).not.toContain(
-      UsageLogField.AssembledResponse,
-    );
-  });
-
-  // The read gate accepts either response column, so an instance persisting only the assembled one is a
-  // supported state. Naming `response_body` regardless rejected the whole query and broke the Chat view.
-  test('omits the raw response column where the schema reports only the assembled one', () => {
-    const names = selectNames(
-      buildConversationEntryBodiesQuery(CHAT_ID, HOPS, [
-        UsageLogField.TraceId,
-        UsageLogField.RequestBody,
-        UsageLogField.AssembledResponse,
-      ]),
-    );
-
-    expect(names).not.toContain(UsageLogField.ResponseBody);
-    expect(names).toContain(UsageLogField.AssembledResponse);
-    expect(names).toContain(UsageLogField.RequestBody);
-  });
-});
 
 describe('buildConversationHopBodyQuery', () => {
   const query = buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', '2026-08-18T11:33:17.216Z', BODY_COLUMNS);
@@ -967,8 +781,8 @@ describe('buildConversationHopBodyQuery', () => {
     expect((query.page as QueryOffsetPage).limit).toBe(1);
   });
 
-  // The same pruning rule as the transcript read: the table partitions on the day of `request_time`, and one
-  // hop is one instant, so the range collapses to a single partition.
+  // The table partitions on the day of `request_time`, and one hop is one instant, so the range collapses to
+  // a single partition.
   test('bounds the read by the hop own instant, as a range in epoch millis', () => {
     const times = timePredicates(query);
 
@@ -1004,16 +818,14 @@ describe('buildConversationHopBodyQuery', () => {
 
 // A read predicated on an attribute instead of a conversation took the service down, so the chat predicate is
 // not an optimisation — it is the contract every hop-log query in this view keeps.
-describe('every transcript query filters by the conversation', () => {
-  test.each([
-    ['entry hops', buildConversationEntryHopsQuery(CHAT_ID, 10)],
-    ['hop count', buildConversationHopCountQuery(CHAT_ID)],
-    ['entry bodies', buildConversationEntryBodiesQuery(CHAT_ID, HOPS, BODY_COLUMNS)],
-    ['hop body', buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', 1, BODY_COLUMNS)],
-  ])('%s', (_name, query) => {
-    expect(JSON.stringify(query.filter)).toContain(UsageLogField.ChatId);
-    expect(JSON.stringify(query.filter)).toContain(CHAT_ID.id);
-  });
+describe('every hop-body query filters by the conversation', () => {
+  test.each([['hop body', buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', 1, BODY_COLUMNS)]])(
+    '%s',
+    (_name, query) => {
+      expect(JSON.stringify(query.filter)).toContain(UsageLogField.ChatId);
+      expect(JSON.stringify(query.filter)).toContain(CHAT_ID.id);
+    },
+  );
 });
 
 // The other half of that contract. `chat_id` is bloom-filtered and the enrichment column is not, so the
@@ -1021,9 +833,6 @@ describe('every transcript query filters by the conversation', () => {
 // session — whose hops carry no chat id at all — must not be scoped by a column that is always empty for it.
 describe("a hop-log query is scoped by the column that session's hops carry", () => {
   const agentQueries: [string, StructuredQuery][] = [
-    ['entry hops', buildConversationEntryHopsQuery(AGENT_SCOPE, 10)],
-    ['hop count', buildConversationHopCountQuery(AGENT_SCOPE)],
-    ['entry bodies', buildConversationEntryBodiesQuery(AGENT_SCOPE, HOPS, BODY_COLUMNS)],
     ['hop body', buildConversationHopBodyQuery(AGENT_SCOPE, 'tr1', 'sp1', 1, BODY_COLUMNS)],
   ];
 
@@ -1039,7 +848,7 @@ describe("a hop-log query is scoped by the column that session's hops carry", ()
   });
 
   test('a session whose source is unknown takes the enrichment column, not the index', () => {
-    const query = buildConversationHopCountQuery({ id: 'unknown-1' });
+    const query = buildConversationHopBodyQuery({ id: 'unknown-1' }, 'tr1', 'sp1', 1, BODY_COLUMNS);
 
     expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
   });

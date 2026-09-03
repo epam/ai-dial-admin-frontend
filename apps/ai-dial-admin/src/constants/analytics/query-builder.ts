@@ -73,6 +73,17 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
   },
 ];
 
+// The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
+// the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
+// are all the same LIKE and all rejected. One bad predicate fails the whole query, so these are withheld
+// from the selector rather than left authorable; they stay in the model so a loaded query still round-trips.
+export const ENUM_UNSUPPORTED_OPERATORS: QueryOperator[] = [
+  QueryOperator.Co,
+  QueryOperator.Nc,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+];
+
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),
 );

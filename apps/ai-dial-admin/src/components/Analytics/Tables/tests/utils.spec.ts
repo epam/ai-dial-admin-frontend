@@ -16,7 +16,7 @@ import {
   tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsTable,
@@ -208,6 +208,65 @@ describe('createColumnRow', () => {
   });
 });
 
+describe('enum column row validation', () => {
+  const t = (key: string) => key;
+  const noExisting = { sourceNames: [], names: [] };
+
+  test('an Enum row with no declared values errors and blocks save', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.Enum })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBe(AnalyticsTablesI18nKey.EnumValuesRequired);
+    expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('an Enum row with a valid domain has no error', () => {
+    const errors = getColumnRowErrors(
+      [
+        row({
+          source_name: 'status',
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['pending', 'failed'],
+        }),
+      ],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+
+  test('a duplicate after trimming errors', () => {
+    const errors = getColumnRowErrors(
+      [
+        row({
+          source_name: 'status',
+          name: 'status',
+          type: AnalyticsFieldType.Enum,
+          enum_values: ['failed', 'failed '],
+        }),
+      ],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBe(AnalyticsTablesI18nKey.EnumValueDuplicate);
+  });
+
+  // The rule is required-iff-enum: an empty list on any other type is not an error.
+  test('a non-Enum row with no values is not checked', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.String })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].enum_values).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+});
+
 describe('toTableColumns', () => {
   test('keeps only rows with both source_name and name, trims, and omits empty tag', () => {
     const rows = [
@@ -235,6 +294,36 @@ describe('toTableColumns', () => {
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'email', name: 'email', type: AnalyticsFieldType.String, nullable: false, sensitive: true },
       { source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal, nullable: false },
+    ]);
+  });
+
+  test('an Enum row carries its enum_values, trimmed and in the authored order', () => {
+    const rows = [
+      row({
+        source_name: 'status',
+        name: 'status',
+        type: AnalyticsFieldType.Enum,
+        enum_values: ['low', ' medium ', 'high'],
+      }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      {
+        source_name: 'status',
+        name: 'status',
+        type: AnalyticsFieldType.Enum,
+        nullable: false,
+        enum_values: ['low', 'medium', 'high'],
+      },
+    ]);
+  });
+
+  // Gated on the type, so a row retyped away from Enum cannot submit a domain it no longer has.
+  test('a non-Enum row omits enum_values even when the draft still holds some', () => {
+    const rows = [
+      row({ source_name: 'status', name: 'status', type: AnalyticsFieldType.String, enum_values: ['low', 'high'] }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'status', name: 'status', type: AnalyticsFieldType.String, nullable: false },
     ]);
   });
 

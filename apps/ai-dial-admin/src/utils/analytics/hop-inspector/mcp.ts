@@ -32,6 +32,13 @@ export const mcpFactsOf = ({ row, method, toolName, toolset, grants }: McpInput)
   const hasContent = argumentsText !== null || clamped.text !== null;
 
   const emptyState = grants.isRequestReadable ? HopReadState.NoBody : HopReadState.ColumnWithheld;
+  const argumentsState = () => {
+    if (!grants.isRequestReadable) {
+      return HopReadState.ColumnWithheld;
+    }
+
+    return argumentsText === null ? HopReadState.NoBody : HopReadState.Available;
+  };
   const resultState = () => {
     if (!grants.isResponseReadable) {
       return HopReadState.ColumnWithheld;
@@ -48,6 +55,7 @@ export const mcpFactsOf = ({ row, method, toolName, toolset, grants }: McpInput)
     argumentsText,
     resultText: clamped.text,
     resultClamp: clamped.clamp,
+    argumentsState: argumentsState(),
     resultState: resultState(),
   };
 };

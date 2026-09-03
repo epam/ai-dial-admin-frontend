@@ -4,6 +4,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect } from 'react';
 
 import HopClampNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopClampNote';
+import CodeViewer from '@/src/components/Common/CodeViewer/CodeViewer';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import { useHopRaw } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-raw';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -11,6 +12,12 @@ import { useI18n } from '@/src/locales/client';
 import { HopInspectorSide, HopReadState, SessionScope } from '@/src/models/analytics/conversations-trace';
 
 const LOADER_SIZE = 18;
+
+// Named by the side it holds, so the two viewers of one hop are told apart when both are open.
+const TITLE_KEY: Record<HopInspectorSide, string> = {
+  [HopInspectorSide.Request]: ConversationsTraceI18nKey.InspectorRequest,
+  [HopInspectorSide.Response]: ConversationsTraceI18nKey.InspectorResponse,
+};
 
 interface Props {
   scope: SessionScope;
@@ -43,9 +50,11 @@ const HopRawView: FC<Props> = ({ scope, traceId, coreSpanId, requestTime, side }
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <HopClampNote clamp={body.clamp} />
-      <pre className="whitespace-pre-wrap break-words rounded border border-primary bg-layer-1 p-2 font-mono text-primary dial-caption-text">
-        {body.text}
-      </pre>
+      {/* The app's own readable-JSON surface rather than a `<pre>`: a recorded body is one unwrapped line of
+          up to half a megabyte, and pretty-printing, highlighting, folding and a copy control are the
+          difference between a body a reader can read and a wall of characters. A body that does not parse is
+          shown as it was recorded — the viewer falls back to the raw string. */}
+      <CodeViewer title={t(TITLE_KEY[side])} content={body.text} defaultOpen />
     </div>
   );
 };
