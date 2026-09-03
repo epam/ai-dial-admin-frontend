@@ -32,6 +32,7 @@ import {
   HopEmbeddingFacts,
   HopInspectorSide,
   HopMcpFacts,
+  HopProtocolFacts,
   HopParams,
   HopMessageValue,
   HopRawBody,
@@ -104,6 +105,7 @@ import {
   textByteLength,
 } from '@/src/utils/analytics/hop-inspector/envelope';
 import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
+import { protocolFactsOf } from '@/src/utils/analytics/hop-inspector/protocol';
 import { paramsOf } from '@/src/utils/analytics/hop-inspector/params';
 import { NO_FACTS, responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -674,8 +676,10 @@ const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): UsageLogF
 const isSideReadable = (side: HopInspectorSide, fields: HopBodyFields): boolean =>
   side === HopInspectorSide.Request ? fields.isRequestReadable : fields.isResponseReadable;
 
+// Takes no `scope` — see `buildConversationHopBodyQuery` for why a session predicate here left a Core-internal
+// hop reporting that it had recorded nothing. The actions that call this keep `scope`: it is the client's
+// contract and the key it holds one read per, and it reaches no filter.
 async function readHopBody(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -699,7 +703,7 @@ async function readHopBody(
 
   const bodyFields = [...new Set(readable.flatMap((side) => bodyFieldsFor(side, fields)))];
   const result = await analyticsDataApi.executeAction(
-    buildConversationHopBodyQuery(scope, traceId, coreSpanId, requestTime, bodyFields),
+    buildConversationHopBodyQuery(traceId, coreSpanId, requestTime, bodyFields),
     authToken,
   );
 
@@ -713,7 +717,7 @@ async function readHopBody(
   return row ? { row, state: HopReadState.Available, fields } : { state: HopReadState.NoBody, fields };
 }
 
-const EMPTY_PARAMS: HopParams = { stated: [] };
+const EMPTY_PARAMS: HopParams = { stated: [], rest: [] };
 
 const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
   state,
@@ -734,7 +738,7 @@ export async function getConversationHopRequest(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopRequestEnvelope>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: emptyRequestEnvelope(state) };
@@ -781,7 +785,7 @@ export async function getConversationHopResponse(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopResponseEnvelope>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: emptyResponseEnvelope(state) };
@@ -801,7 +805,7 @@ export async function getConversationHopMessage(
   requestTime: number | string | null,
   messageIndex: number,
 ): Promise<ServerActionResponse<HopMessageValue>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: { state, text: null, toolCalls: [] } };
@@ -828,7 +832,7 @@ export async function getConversationHopRawBody(
   requestTime: number | string | null,
   side: HopInspectorSide,
 ): Promise<ServerActionResponse<HopRawBody>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [side]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [side]);
 
   if (!row) {
     return {
@@ -852,7 +856,7 @@ export async function getConversationHopMcp(
   toolName: string | null,
   toolset: string | null,
 ): Promise<ServerActionResponse<HopMcpFacts>> {
-  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
@@ -879,13 +883,43 @@ export async function getConversationHopMcp(
   return { success: true, response: mcpFactsOf({ row, method, toolName, toolset, grants: fields }) };
 }
 
+export async function getConversationHopProtocol(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  method: string | null,
+): Promise<ServerActionResponse<HopProtocolFacts>> {
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
+    HopInspectorSide.Request,
+    HopInspectorSide.Response,
+  ]);
+
+  if (!row) {
+    return {
+      success: state !== HopReadState.LoadFailed,
+      response: {
+        state,
+        method,
+        requestText: null,
+        requestState: state,
+        resultText: null,
+        resultClamp: NO_CLAMP,
+        responseState: state,
+      },
+    };
+  }
+
+  return { success: true, response: protocolFactsOf({ row, method, grants: fields }) };
+}
+
 export async function getConversationHopEmbedding(
   scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopEmbeddingFacts>> {
-  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);

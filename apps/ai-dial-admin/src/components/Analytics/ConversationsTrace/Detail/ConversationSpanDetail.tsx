@@ -40,6 +40,8 @@ interface Props {
 // The span's own facts, and nothing that has to be read from a body. The request, the response and the
 // conversation live in the section below the tree instead: those are the surface a reader works in and need
 // the width, while these are reference facts checked once per hop and read fine in a 360px rail.
+// The recorded HTTP status is not among them: it is stated by the bodies section's transport line, beside the
+// two bodies it is the question about.
 const ConversationSpanDetail: FC<Props> = ({ node }) => {
   const t = useI18n();
 
@@ -94,11 +96,6 @@ const ConversationSpanDetail: FC<Props> = ({ node }) => {
     {
       label: t(ConversationsTraceI18nKey.SpanParent),
       value: span.parent_deployment || UNAVAILABLE_VALUE,
-      isMono: true,
-    },
-    {
-      label: t(ConversationsTraceI18nKey.SpanHttpStatus),
-      value: span.response_status === null ? UNAVAILABLE_VALUE : String(span.response_status),
       isMono: true,
     },
     {

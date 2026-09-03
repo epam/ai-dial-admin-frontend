@@ -55,17 +55,32 @@ export const CONVERSATION_DAY_PAD_MS = 24 * 60 * 60 * 1000;
 
 export const USAGE_LOG_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
 
-export const MCP_PROTOCOL_METHODS: string[] = [
-  'initialize',
-  'notifications/initialized',
-  'tools/list',
-  'resources/list',
-  'prompts/list',
-  'resources/templates/list',
-  'server/discover',
-  'ping',
-  'logging/setLevel',
-];
+// The protocol's own phrases, not prose this console writes: constants rather than translated strings. Only
+// the codes the hop log records are named; anything else states its number alone rather than a guess.
+export const HTTP_REASON_PHRASE: Record<number, string> = {
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  204: 'No Content',
+  206: 'Partial Content',
+  304: 'Not Modified',
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  408: 'Request Timeout',
+  409: 'Conflict',
+  413: 'Content Too Large',
+  422: 'Unprocessable Content',
+  424: 'Failed Dependency',
+  429: 'Too Many Requests',
+  500: 'Internal Server Error',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+};
+
+export const MCP_NOTIFICATION_PREFIX = 'notifications/';
 
 // The rating endpoint. A rating records no `event_kind`, so its endpoint is the only thing that identifies
 // it — the same signal an unlabelled model call is classified by. Anchored at the end of the path because the
@@ -401,6 +416,13 @@ export const SPAN_KIND_CLASS: Record<SpanKind, string> = {
 // Failure is its own axis, so it has its own class rather than a member of the kind palette.
 export const SPAN_FAILED_CLASS = 'bg-error text-error';
 
+// The other half of that axis, for the status a hop reports: `text-success` on `bg-success` clears AA, and it
+// is never the only thing distinguishing the two states — the chip prints the protocol's own words too.
+export const HOP_STATUS_OK_CLASS = 'bg-success text-success';
+
+// The verb the request was sent with, marked like the kind badges in the tree, and stated in words too.
+export const HOP_METHOD_CLASS = 'bg-accent-primary-alpha text-accent-primary';
+
 export const INSIGHTS_ABSENCE_KEY: Record<
   Exclude<ConversationInsightsState, ConversationInsightsState.Available>,
   string
@@ -461,10 +483,6 @@ export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
 // against a `bg-layer-2` panel read as a slab of background rather than as a selection, and the row of them
 // read as disabled. Every token here is one the palette defines.
 export const SELECTED_CHIP_CLASS = 'border-accent-primary bg-accent-primary-alpha text-accent-primary';
-
-// The raw switch's label, at the weight of the controls beside it. ui-kit's own label renders in the primary
-// text colour at body size, which shouted next to a row of secondary-weight chips.
-export const RAW_LABEL_CLASS = '!text-secondary dial-caption-text';
 
 // The outcome axis carries its own colour rather than borrowing one from the kind palette, so a failure reads
 // as a failure whatever kind of call it happened to.

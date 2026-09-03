@@ -47,6 +47,13 @@ describe('responseEnvelopeOf', () => {
     expect(envelopeOf(row()).state).toBe(HopReadState.NoBody);
   });
 
+  test('a body no parser can read is unstructured, not absent', () => {
+    const envelope = envelopeOf(row({ response_body: '{"error":{"message":"unprocessable"}}' }));
+
+    expect(envelope.state).toBe(HopReadState.Unstructured);
+    expect(envelope.recordedBytes).toBe('{"error":{"message":"unprocessable"}}'.length);
+  });
+
   test('states the tools a response requested, with their arguments and ids', () => {
     const withTools = JSON.stringify({
       choices: [
@@ -209,6 +216,40 @@ describe('mcpFactsOf', () => {
     expect(facts.argumentsText).toContain('"page": "home"');
     expect(facts.resultText).toBe('the page');
     expect(facts.toolset).toBe('docs-mcp');
+  });
+
+  // A `tools/call` result is routinely a JSON document returned on one line.
+  test('formats a JSON result, and still states the size the log recorded', () => {
+    const recorded = '{"stdout":"one","exit_code":0}';
+    const facts = mcpFactsOf({
+      row: row({
+        event_kind: 'mcp',
+        request_body: request,
+        response_body: `data: ${JSON.stringify({ result: { content: [{ type: 'text', text: recorded }] } })}\n`,
+      }),
+      method: 'tools/call',
+      toolName: 'run_code',
+      toolset: 'code-mcp',
+      grants: BOTH_SIDES,
+    });
+
+    expect(facts.resultText).toBe('{\n  "stdout": "one",\n  "exit_code": 0\n}');
+    // The formatted text is longer than what was recorded, and the reader is told the recorded size.
+    expect(facts.resultClamp.recordedBytes).toBe(recorded.length);
+    expect((facts.resultText as string).length).toBeGreaterThan(recorded.length);
+  });
+
+  test('leaves a result that is not JSON exactly as it was recorded', () => {
+    const facts = mcpFactsOf({
+      row: row({ event_kind: 'mcp', request_body: request, response_body: response }),
+      method: 'tools/call',
+      toolName: 'get_page',
+      toolset: 'docs-mcp',
+      grants: BOTH_SIDES,
+    });
+
+    expect(facts.resultText).toBe('the page');
+    expect(facts.resultClamp.recordedBytes).toBe('the page'.length);
   });
 
   test('a hop that recorded neither is stated as empty', () => {

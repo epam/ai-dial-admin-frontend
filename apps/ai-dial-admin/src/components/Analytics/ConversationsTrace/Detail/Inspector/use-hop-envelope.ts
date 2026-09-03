@@ -19,7 +19,7 @@ import {
 const FAILED_REQUEST: HopRequestEnvelope = {
   state: HopReadState.LoadFailed,
   dialect: HopDialect.Unknown,
-  params: { stated: [] },
+  params: { stated: [], rest: [] },
   messages: [],
   roleCounts: [],
   recordedBytes: null,

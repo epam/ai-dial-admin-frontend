@@ -13,9 +13,9 @@ interface Props {
 /**
  * An MCP hop's method, tool and toolset — plain hop-row columns belonging to neither body side.
  *
- * They render above the tab strip, in the slot the request's parameters occupy, so they stay visible whichever
- * half of the hop the reader is on. Duplicating them onto both tabs would state the same thing twice and leave
- * a reader wondering whether the two copies could differ.
+ * They render directly below the tab strip, outside the scrolling body, so they stay visible whichever half of
+ * the hop the reader is on. Duplicating them onto both tabs would state the same thing twice and leave a
+ * reader wondering whether the two copies could differ.
  *
  * The toolset is the hop's deployment: one measured conversation recorded all of its MCP hops under a single
  * parent span, distinguishable only by it. No session field is stated — the hop log has no session column for

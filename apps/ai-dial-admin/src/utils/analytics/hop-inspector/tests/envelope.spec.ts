@@ -75,7 +75,7 @@ describe('buildRequestEnvelope :: the calls a message makes and answers', () => 
   const envelopeOf = (messages: Parameters<typeof buildRequestEnvelope>[0]['messages']) =>
     buildRequestEnvelope({
       dialect: HopDialect.ChatCompletions,
-      params: { stated: [] },
+      params: { stated: [], rest: [] },
       messages,
       recordedBytes: 100,
     });

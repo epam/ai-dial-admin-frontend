@@ -1,6 +1,7 @@
 import {
+  HTTP_REASON_PHRASE,
   MCP_EVENT_KIND,
-  MCP_PROTOCOL_METHODS,
+  MCP_NOTIFICATION_PREFIX,
   MODEL_CALL_URI_MARKERS,
   RATE_URI_SUFFIX,
   ROUTE_EVENT_KIND,
@@ -11,6 +12,7 @@ import {
   HopFactsShape,
   HopSideSuppression,
   HopSideSuppressions,
+  HopTransport,
   McpToolCallTally,
   SpanBodyTab,
   SpanKind,
@@ -94,8 +96,30 @@ export const spanPhaseOf = ({ mcp_tool_call_name, mcp_method }: ConversationSpan
 export const areSpansPartial = (spans: ConversationSpanRow[], hopCount: number | null): boolean =>
   hopCount !== null && hopCount > spans.length;
 
-export const isProtocolEnvelope = ({ mcp_method, mcp_tool_call_name }: ConversationSpanRow): boolean =>
-  !mcp_tool_call_name?.trim() && MCP_PROTOCOL_METHODS.includes(mcp_method?.trim() ?? '');
+// Any MCP hop that called no tool. By the absent call rather than by a list of known methods: one outside
+// such a list fell through to the tool-call reader, whose single shape it does not answer in, and rendered
+// empty.
+export const isProtocolEnvelope = ({ mcp_tool_call_name }: ConversationSpanRow): boolean => !mcp_tool_call_name?.trim();
+
+// The one protocol message answered with no body. By prefix: the set a server sends is not ours to fix.
+export const isProtocolNotification = ({ mcp_method, mcp_tool_call_name }: ConversationSpanRow): boolean =>
+  !mcp_tool_call_name?.trim() && (mcp_method?.trim() ?? '').startsWith(MCP_NOTIFICATION_PREFIX);
+
+// `hasFailed` is `isFailedHop`, not a second test: a 202, or a status this map does not name, has to read the
+// same here as in the tree.
+export const hopTransportOf = (span: ConversationSpanRow): HopTransport => {
+  const status = toNumber(span.response_status);
+
+  return {
+    method: span.request_method?.trim() || null,
+    status,
+    reason: status === null ? null : (HTTP_REASON_PHRASE[status] ?? null),
+    hasFailed: isFailedHop(span),
+    requestBytes: toNumber(span.request_body_bytes),
+    responseBytes: toNumber(span.response_body_bytes),
+    durationMs: toNumber(span.operation_duration_ms),
+  };
+};
 
 // Which figures the row states, decided by what the hop recorded rather than by what kind of call it was.
 // A hop that metered nothing of its own — every MCP and route hop, and every application hop, which spends
@@ -168,11 +192,13 @@ export const unansweredToolNamesOf = (requested: string[], tally: McpToolCallTal
 // Whether a side has anything worth fetching, decided from the hop row before any body read — and decided
 // per side, because the two questions are not the same one. A hop that returned nothing still sent something,
 // and its request is the only record of what it attempted; suppressing it whole, as the previous per-hop rule
-// did, withheld exactly the case a reader most wants opened. Only the protocol-envelope methods still settle
-// both sides at once: they negotiate a session and carry no content either way.
+// did, withheld exactly the case a reader most wants opened.
+//
+// The protocol methods used to settle both sides on the claim that they carry no content. They do carry it,
+// so only a notification — answered with no body at all — still settles its response side.
 export const hopSideSuppressionsOf = (span: ConversationSpanRow): HopSideSuppressions => {
-  if (isProtocolEnvelope(span)) {
-    return { request: HopSideSuppression.SessionSetup, response: HopSideSuppression.SessionSetup };
+  if (isProtocolNotification(span)) {
+    return { request: null, response: HopSideSuppression.ProtocolNoBody };
   }
 
   if (toNumber(span.response_body_bytes) === 0) {
