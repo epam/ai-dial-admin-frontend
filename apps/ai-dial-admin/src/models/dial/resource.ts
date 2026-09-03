@@ -16,7 +16,7 @@ export interface DialResource extends BaseEntity {
   folderId: string;
   nodeType?: string;
   version: string;
-  author: string;
+  author?: string;
   endpoint?: string;
   icon_url: string;
   reference: string;
@@ -254,6 +254,26 @@ export interface DialKeyResource extends ModifiedEntity {
   allowedIpAddressRanges?: string[];
 }
 
+/**
+ * A platform-bucket application resource (`applications/platform/{name}`), as returned by Core.
+ * Core reuses the same `Application` entity class for both the `public` and `platform` buckets — the
+ * bucket segment alone distinguishes them — so this carries the same snake_case content fields as
+ * `DialApplicationResource`, minus the fields that only make sense for the versioned, folder-nested
+ * `public` bucket (`version`/`display_version`, `nodeType`, `created_at`/`updated_at` in favor of
+ * `ModifiedEntity`'s `createdAt`/`updatedAt`, `etag`). Flat and unversioned like `DialKeyResource`.
+ */
+export interface DialPlatformApplicationResource
+  extends
+    Omit<DialApplicationResource, 'path' | 'folderId' | 'version' | 'nodeType' | 'created_at' | 'updated_at' | 'etag'>,
+    ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
 export type PlatformAsset =
   | DialModelResource
@@ -261,7 +281,8 @@ export type PlatformAsset =
   | DialInterceptorResource
   | DialRouteResource
   | DialRoleResource
-  | DialKeyResource;
+  | DialKeyResource
+  | DialPlatformApplicationResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',

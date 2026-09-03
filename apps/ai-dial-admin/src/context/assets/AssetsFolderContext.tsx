@@ -3,12 +3,19 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { mergeFiles } from '@/src/utils/files/folder';
+import { fillChildren, getFolderName, mergeFiles } from '@/src/utils/files/folder';
 import { isFolder } from '@/src/utils/files/path';
 
 export interface AssetsFolderContext {
   isFetchingFiles: boolean;
-  fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
+  /**
+   * `path` is a single folder for every view but Applications (see `getRootFolders`), which fetches
+   * both the `platform` and `public` roots on mount. An array bypasses the single-root `mergeFiles`
+   * wrapping below and constructs both top-level nodes directly, in the given order, in one
+   * `setFiles` call — `mergeFiles`'s empty-existing-files branch only ever produces one root, and two
+   * fetches racing independently into it would have the later one silently overwrite the earlier.
+   */
+  fetchFiles: (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: Asset[];
   expandedFolders: Set<string>;
@@ -101,7 +108,57 @@ export function createFolderContext(
       })();
     };
 
-    const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
+    const fetchRoots = (paths: string[], refreshData?: boolean, resetFolder?: boolean) => {
+      setIsFetchingFiles(true);
+      Promise.all(paths.map((rootPath) => getFilesFunc(rootPath)))
+        .then((results) => {
+          if (results.some((result) => result === undefined)) {
+            setData(null);
+            return;
+          }
+
+          const newFetchedFoldersData: Record<string, Asset[]> = {};
+          paths.forEach((rootPath, index) => {
+            newFetchedFoldersData[rootPath] = (results[index]?.filter((f) => f.nodeType === DialFileNodeType.ITEM) ??
+              []) as Asset[];
+          });
+
+          const rootNodes = paths.map(
+            (rootPath, index) =>
+              ({
+                name: getFolderName(rootPath),
+                path: rootPath,
+                nodeType: DialFileNodeType.FOLDER,
+                // TODO: Remove When we get real permissions
+                permissions: ['WRITE', 'READ'],
+                items: fillChildren((results[index] ?? []) as Asset[]),
+              }) as Asset,
+          );
+
+          setFiles(rootNodes);
+          setFetchedFoldersData((prev) =>
+            refreshData ? newFetchedFoldersData : { ...prev, ...newFetchedFoldersData },
+          );
+
+          // The last root keeps the pre-existing single-root behavior of opening on load (Applications
+          // orders `platform` first but keeps `public` — the historical single root — as the folder
+          // shown open by default, so existing users see no change in what's initially expanded).
+          const openPath = paths[paths.length - 1];
+          setData(newFetchedFoldersData[openPath] ?? []);
+          setExpandedFolders((prev) => new Set(refreshData ? [openPath] : [...prev, openPath]));
+          if (!filePath || resetFolder) {
+            setFilePath(openPath);
+          }
+        })
+        .finally(() => setIsFetchingFiles(false));
+    };
+
+    const fetchFiles = (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => {
+      if (Array.isArray(path)) {
+        fetchRoots(path, refreshData, resetFolder);
+        return;
+      }
+
       setIsFetchingFiles(true);
       getFilesFunc(path)
         .then((fetched) => {

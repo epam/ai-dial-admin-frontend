@@ -27,6 +27,7 @@ import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreateEntityBase extends BaseEntity {
@@ -67,8 +68,14 @@ const CreateEntity = <T extends CreateEntityBase>({
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
 
+  // Applications is the one asset-with-version route that also has a flat, unversioned bucket
+  // (`platform/`) — the current folder (where "New Application" was invoked from) is the only signal
+  // available at create time to tell the two apart (design.md's `platform-applications` capability).
+  const isPlatformApplicationCreate =
+    route === ApplicationRoute.AssetsApplications && isPlatformBucketPath(folderContext?.filePath);
+
   const [currentEntity, setEntity] = useState<T>(() => {
-    if (isAssetWithVersion(route)) {
+    if (isAssetWithVersion(route) && !isPlatformApplicationCreate) {
       return { name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T;
     }
 
@@ -162,7 +169,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       });
     }
 
-    if (isAssetWithVersion(route)) {
+    if (isAssetWithVersion(route) && !isPlatformApplicationCreate) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'version',
@@ -203,6 +210,7 @@ const CreateEntity = <T extends CreateEntityBase>({
           onChangeEntity={(entity) => setEntity(entity as T)}
           initialValues={initialValues}
           isModal={isModal}
+          hideVersionField={isPlatformApplicationCreate}
         />
       </div>
     </DialFormPopup>

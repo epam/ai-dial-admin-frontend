@@ -23,3 +23,17 @@ export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view &
 
 export const getRootFolder = (view: ApplicationRoute): string =>
   isFlatPlatformView(view) ? PLATFORM_ROOT_FOLDER : ROOT_FOLDER;
+
+/**
+ * Applications is the one view whose resources DIAL Core stores in *both* buckets — a flat
+ * `platform` set (config-managed, same as the six `FLAT_PLATFORM_VIEWS`) and the hierarchical,
+ * versioned `public` tree. Every other view has exactly one root; this returns that view's single
+ * root as a one-element array, and for Applications returns both roots with `platform` first, so a
+ * caller can fetch/order them without special-casing the view itself.
+ */
+export const getRootFolders = (view: ApplicationRoute): string[] =>
+  view === ApplicationRoute.AssetsApplications ? [PLATFORM_ROOT_FOLDER, ROOT_FOLDER] : [getRootFolder(view)];
+
+/** The bucket segment a path/folderId begins with, for views whose resources can live in either. */
+export const isPlatformBucketPath = (path?: string | null): boolean =>
+  !!path && path.startsWith(`${PLATFORM_ROOT_FOLDER}/`);
