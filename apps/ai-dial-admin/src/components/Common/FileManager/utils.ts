@@ -4,12 +4,7 @@ import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@e
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
 import { bulkActionLabels } from '@/src/components/Assets/constants';
-import {
-  getGridActionLabels,
-  getToolbarOptionLabels,
-  getTreeActionLabels,
-  isPlatformApplicationsBucket,
-} from '@/src/components/Assets/utils';
+import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { TEMP_FOLDER } from '@/src/constants/file';
@@ -22,7 +17,7 @@ import {
   MAX_FOLDER_NESTING_DEPTH,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -225,7 +220,7 @@ export const getBulkActionsToolbarOptions = (
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformKeys ||
     view === ApplicationRoute.Skills ||
-    isPlatformApplicationsBucket(view, currentPath);
+    isPlatformDualBucketView(view, currentPath);
 
   const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;
 

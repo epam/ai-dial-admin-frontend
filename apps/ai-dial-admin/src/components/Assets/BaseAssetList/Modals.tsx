@@ -9,7 +9,7 @@ import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -109,7 +109,12 @@ const Modals: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.duplicate &&
         view !== ApplicationRoute.PlatformKeys &&
-        (isFlatPlatformView(view) ? (
+        // A platform-bucket application/toolset row duplicates the same flat, unversioned way the
+        // six other flat platform views already do (design.md D2/`platform-applications`/
+        // `platform-toolsets`) — the row's own path decides it, since neither dual-bucket view is
+        // itself flagged `isFlatPlatformView`.
+        (isFlatPlatformView(view) ||
+        isPlatformDualBucketView(view, (duplicateItem as PlatformAsset)?.path || duplicateItem?.folderId) ? (
           <DuplicatePlatformAsset
             view={view}
             isModalOpen={isModalOpen}
