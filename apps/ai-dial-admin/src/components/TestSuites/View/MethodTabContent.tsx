@@ -12,7 +12,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconEdit } from '@tabler/icons-react';
 
-import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
+import { getDeployment, getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import EndpointSchema from '@/src/components/TestSuites/EndpointSchema/EndpointSchema';
 import ChangeMethodModal from '@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal';
 import MethodEndpoint from '@/src/components/TestSuites/Methods/Endpoint';
@@ -57,13 +57,15 @@ const MethodTabContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => 
 
 const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh }) => {
   const t = useI18n();
-  const [deployments, setDeployments] = useState<Deployment[] | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Deployment | null>(null);
   const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
   const [rawSelectedRequestIndex, setSelectedRequestIndex] = useState(0);
   const { sidebar } = useAppContext();
   const isTryOutOpen = sidebar.show;
 
   const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
+  const deploymentId = testSuite.deploymentRef?.id;
+  const deploymentType = testSuite.deploymentRef?.type;
 
   useEffect(() => {
     if (selectedRequestIndex !== rawSelectedRequestIndex) {
@@ -79,15 +81,25 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [onChange, testSuite, selectedRequestIndex],
   );
 
-  const selectedApplication = deployments?.find((d) => d.deploymentId === testSuite.deploymentRef?.id) ?? null;
-
   useEffect(() => {
-    getDeployments().then((res) => {
-      if (res?.success) {
-        setDeployments(res.response || []);
+    if (!deploymentId) {
+      setSelectedApplication(null);
+      return;
+    }
+
+    let cancelled = false;
+    const load = deploymentType ? getDeployment(deploymentId, deploymentType) : getDeploymentById(deploymentId);
+
+    load.then((deployment) => {
+      if (!cancelled) {
+        setSelectedApplication(deployment);
       }
     });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deploymentId, deploymentType]);
 
   const onAddRequest = useCallback(() => {
     const updatedSuite = addRequest(testSuite);

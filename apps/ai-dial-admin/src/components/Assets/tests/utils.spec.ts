@@ -995,4 +995,34 @@ describe('getAgentLinkForConversation', () => {
     expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
     expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
   });
+
+  test('returns model link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'en',
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('returns application link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-application', deploymentId: 'my-app', displayName: 'My App' },
+      'en',
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns assets application link from applications/ id prefix', () => {
+    const result = getAgentLinkForConversation(
+      {
+        $type: 'dial-application',
+        deploymentId: 'applications/folder/my-app__1.0.0',
+        displayName: 'My Asset App',
+      },
+      'en',
+    );
+    expect(result).toBe(
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My Asset App')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+    );
+  });
 });
