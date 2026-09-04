@@ -27,11 +27,11 @@ The system SHALL display the bottom pivot panel when the detail mode is "drawer"
 
 ### Requirement: Bottom panel shows a single-row pivot
 
-The bottom panel body SHALL render a pivot with a section-header row, a field-label row, a metric-only filter row when metric columns are present, and exactly one value row for the selected test case. Execution columns SHALL appear as Execution Status → `# Run number` → HTTP (Duration available but hidden by default). Metric sections SHALL appear immediately after Execution. It SHALL NOT render a sticky run-name column, a second run row, a delta row, a DiffMiniMap, or a table/pivot view toggle.
+The bottom panel body SHALL render a pivot with a section-header row, a field-label row, and exactly one value row for the selected test case. Execution columns SHALL appear as Execution Status → `# Run number` → HTTP (Duration available but hidden by default). Metric sections SHALL appear immediately after Execution. It SHALL NOT render a metric filter row, a sticky run-name column, a second run row, a delta row, a DiffMiniMap, or a table/pivot view toggle.
 
 #### Scenario: Pivot layout for one test case
 - **WHEN** the bottom panel opens for a test case with Execution, metric, and Extracted sections
-- **THEN** the pivot shows Execution then metric sections as column groups, with search/filter controls on metric columns only, and one value row of truncated cell values
+- **THEN** the pivot shows Execution then metric sections as column groups, and one value row of truncated cell values
 
 ### Requirement: Display overlay controls field visibility and order
 

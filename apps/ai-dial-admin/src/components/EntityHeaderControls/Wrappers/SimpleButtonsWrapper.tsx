@@ -7,6 +7,8 @@ import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import AdaptiveHeaderActions from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/AdaptiveHeaderActions';
+import { AdaptiveHeaderActionsConfig } from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
@@ -35,6 +37,8 @@ export interface SimpleButtonsWrapperProps<T> {
   jsonConfiguration?: JsonConfiguration;
   children?: ReactNode;
   leadingActions?: ReactNode;
+  /** When set, replaces leadingActions + children with overflow-aware actions (Delete stays owned here). */
+  adaptiveActions?: AdaptiveHeaderActionsConfig;
   entity: T;
   etag?: string;
   getAssetContext?: () => AssetsFolderContext;
@@ -51,6 +55,7 @@ const SimpleButtonsWrapper = <T extends object>({
   jsonConfiguration,
   children,
   leadingActions,
+  adaptiveActions,
   isChanged,
   onDiscard,
   onSave,
@@ -101,28 +106,46 @@ const SimpleButtonsWrapper = <T extends object>({
     }
   }, [jsonErrors, showNotification, t, dispatch, onSave]);
 
+  const deleteAction = useMemo(
+    () => ({
+      id: 'delete',
+      label: t(ButtonsI18nKey.Delete),
+      icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
+      onClick: onOpenModal,
+      appearance: 'danger' as const,
+    }),
+    [t, onOpenModal],
+  );
+
   return (
     <>
-      <div className={containerClassName}>
+      <div className={classNames(containerClassName, adaptiveActions && 'min-w-0 flex-1 lg:h-auto lg:min-h-[35px]')}>
         {isReadOnlyAdmin ? (
           jsonConfiguration && <JsonToggleWithFormats view={view} {...jsonConfiguration} />
         ) : isChanged ? (
           <ChangedEntityButtons disableSave={isDisableSave} onDiscard={onStartDiscard} onSave={onTryToSave} />
         ) : (
-          <div className="flex flex-row items-center w-full gap-x-4">
-            {!isEditorEnabled && (
-              <div className="flex-1 flex flex-row gap-x-4 justify-center">
-                {leadingActions}
-                <DialDangerButton
-                  className={buttonsClassName}
-                  label={t(ButtonsI18nKey.Delete)}
-                  appearance={ButtonAppearance.Outlined}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                  onClick={onOpenModal}
+          <div className="flex flex-row items-center w-full min-w-0 gap-x-4">
+            {!isEditorEnabled &&
+              (adaptiveActions ? (
+                <AdaptiveHeaderActions
+                  actions={adaptiveActions}
+                  deleteAction={deleteAction}
+                  buttonsClassName={buttonsClassName}
                 />
-                {children}
-              </div>
-            )}
+              ) : (
+                <div className="flex-1 flex flex-row gap-x-4 justify-center">
+                  {leadingActions}
+                  <DialDangerButton
+                    className={buttonsClassName}
+                    label={t(ButtonsI18nKey.Delete)}
+                    appearance={ButtonAppearance.Outlined}
+                    iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
+                    onClick={onOpenModal}
+                  />
+                  {children}
+                </div>
+              ))}
             {jsonConfiguration && <JsonToggleWithFormats view={view} {...jsonConfiguration} />}
           </div>
         )}

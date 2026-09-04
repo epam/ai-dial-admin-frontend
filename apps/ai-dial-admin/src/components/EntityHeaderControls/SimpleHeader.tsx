@@ -33,6 +33,7 @@ const SimpleEntityHeader = <T extends Entity>({
   jsonConfiguration,
   children,
   leadingActions,
+  adaptiveActions,
   tabs,
   activeTab,
   onChangeActiveTab,
@@ -50,13 +51,18 @@ const SimpleEntityHeader = <T extends Entity>({
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
         {!isEditorEnabled && (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             {hasCoreSyncStatus && <CoreSyncEntityStatus view={props.view} name={readonlyId} />}
 
             <ReadonlyId value={readonlyId} />
           </div>
         )}
-        <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} leadingActions={leadingActions} {...props}>
+        <SimpleButtonsWrapper
+          jsonConfiguration={jsonConfiguration}
+          leadingActions={leadingActions}
+          adaptiveActions={adaptiveActions}
+          {...props}
+        >
           {children}
         </SimpleButtonsWrapper>
       </div>

@@ -52,7 +52,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const sidebarRef = useRef(sidebar);
   sidebarRef.current = sidebar;
 
-  const showDetailPanelRef = useRef<(row: CompareAnalyticsRow, position: SidebarPosition) => void>(() => {});
+  const showDetailPanelRef = useRef<
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey?: string | null) => void
+  >(() => {});
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
@@ -63,7 +65,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [onlyMatchingTestCases, setOnlyMatchingTestCases] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
-  const [detailPosition, setDetailPosition] = useState(SidebarPosition.Right);
+  const [detailPosition, setDetailPosition] = useState(SidebarPosition.Bottom);
+  const [focusFieldKey, setFocusFieldKey] = useState<string | null>(null);
   const [colorDisplayMode, setColorDisplayMode] = useState(HeatMapColorDisplayMode.Absolute);
   const [availableMetricGroups, setAvailableMetricGroups] = useState<string[]>([]);
   const [selectedMetricGroups, setSelectedMetricGroups] = useState<Set<string>>(new Set());
@@ -78,6 +81,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const selectedRowRef = useRef(selectedRow);
   selectedRowRef.current = selectedRow;
+  const focusFieldKeyRef = useRef(focusFieldKey);
+  focusFieldKeyRef.current = focusFieldKey;
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
@@ -193,7 +198,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const closeRowDetail = useCallback(() => {
     setSelectedRow(null);
-    setDetailPosition(SidebarPosition.Right);
+    setFocusFieldKey(null);
     sidebarRef.current.closeSidebar();
   }, []);
 
@@ -201,7 +206,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Bottom);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Bottom);
+      showDetailPanelRef.current(currentRow, SidebarPosition.Bottom, focusFieldKeyRef.current);
     }
   }, []);
 
@@ -209,12 +214,12 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Right);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Right);
+      showDetailPanelRef.current(currentRow, SidebarPosition.Right, focusFieldKeyRef.current);
     }
   }, []);
 
   const showDetailPanel = useCallback(
-    (row: CompareAnalyticsRow, position: SidebarPosition) => {
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey: string | null = null) => {
       const isBottom = position === SidebarPosition.Bottom;
       const content = isBottom ? (
         <CompareRowDetailBottomPanel
@@ -223,6 +228,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           comparedRunName={comparedRunName}
           onClose={closeRowDetail}
           onSwitchToSidebar={switchToSidebar}
+          focusFieldKey={fieldKey}
         />
       ) : (
         <CompareRowDetailPanel
@@ -232,6 +238,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onClose={closeRowDetail}
           position={SidebarPosition.Right}
           onSwitchDisplayMode={switchToBottom}
+          focusFieldKey={fieldKey}
         />
       );
       const className = isBottom ? ROW_DETAIL_BOTTOM_CLASS : ROW_DETAIL_SIDEBAR_CLASS;
@@ -243,16 +250,22 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   showDetailPanelRef.current = showDetailPanel;
 
   const openRowDetail = useCallback(
-    (row: CompareAnalyticsRow) => {
+    (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => {
       const rowSelectionId = getCompareRowSelectionId(row);
       const selectedSelectionId = selectedRow ? getCompareRowSelectionId(selectedRow) : null;
-      const isToggleClose = rowSelectionId != null && rowSelectionId === selectedSelectionId;
-      if (isToggleClose) {
+      const isCellClick = options != null;
+      const fieldKey = options?.focusFieldKey ?? null;
+      const isSameRow = rowSelectionId != null && rowSelectionId === selectedSelectionId;
+
+      // Row re-click toggles closed; cell click on the same row never toggles.
+      if (isSameRow && !isCellClick) {
         closeRowDetail();
         return;
       }
+
       setSelectedRow(row);
-      showDetailPanel(row, detailPosition);
+      setFocusFieldKey(fieldKey);
+      showDetailPanel(row, detailPosition, fieldKey);
     },
     [selectedRow, detailPosition, closeRowDetail, showDetailPanel],
   );

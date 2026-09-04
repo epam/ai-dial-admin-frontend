@@ -28,7 +28,7 @@ interface Props {
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
-  onOpenRowDetail: (row: CompareAnalyticsRow) => void;
+  onOpenRowDetail: (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => void;
   onCloseRowDetail: () => void;
   executionResultsState: ExecutionResultsTabUiState;
   setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
