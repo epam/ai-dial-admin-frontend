@@ -40,14 +40,6 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
   features?: DialApplicationResourceFeatures;
   external_services?: Record<string, DialExternalService>;
   interfaces?: Record<string, DialResourceInterface>;
-  /**
-   * `Application` is `@JsonNaming(SnakeCaseStrategy)` on Core — unlike `Model`/`Route`, whose
-   * `RoleBasedEntity.userRoles` serializes as plain camelCase, Core always writes this back as
-   * `user_roles`. `RoleBasedEntity`'s `@JsonAlias({"userRoles", "user_roles", "dial:userRoles"})`
-   * only widens what a *write* accepts — it does not change what a *read* returns, so reading this
-   * field as `userRoles` would silently never see a value back.
-   */
-  user_roles?: string[];
 }
 
 export interface DialExternalService {
@@ -336,8 +328,6 @@ export interface DialToolsetResource extends DialResource {
   provider?: string;
   vendor_website?: string;
   updatedAt: string;
-  /** See `DialApplicationResource.user_roles` — `ToolSet` is also `@JsonNaming(SnakeCaseStrategy)`. */
-  user_roles?: string[];
 }
 
 /**

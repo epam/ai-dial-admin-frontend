@@ -11,7 +11,6 @@ import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
-import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import Tools from '@/src/components/Tools/Tools';
@@ -83,20 +82,6 @@ const TabsContent: FC<Props> = ({
 
   const onChangeAsset = (application: DialApplicationResource) => {
     onChangeApplication(application as DialApplication);
-  };
-
-  /**
-   * `AssetRoles` is generic over `{ userRoles?: string[] }`, but Core's `Application` class is
-   * `@JsonNaming(SnakeCaseStrategy)` and always serializes this field as `user_roles` (see
-   * `DialApplicationResource.user_roles`'s doc comment) — unlike `Model`/`Route`, which are plain
-   * camelCase. This adapts at the boundary rather than widening the shared component: presents
-   * `user_roles` under the `userRoles` key `AssetRoles` expects, and translates back on change,
-   * rebuilding from the current asset rather than spreading `AssetRoles`'s own output so no stray
-   * `userRoles` key reaches the write payload, which Core's strict platform-bucket deserializer
-   * would reject.
-   */
-  const onChangeAssetRoles = (updated: DialApplicationResource & { userRoles?: string[] }) => {
-    onChangeAsset({ ...(selectedApplication as DialApplicationResource), user_roles: updated.userRoles });
   };
 
   return (
@@ -186,26 +171,15 @@ const TabsContent: FC<Props> = ({
           onChangeEntity={onChangeApplication}
         />
       )}
-      {activeTab === EntityViewTab.Roles &&
-        (view === ApplicationRoute.AssetsApplications ? (
-          <AssetRoles
-            view={view}
-            asset={{
-              ...(selectedApplication as DialApplicationResource),
-              userRoles: (selectedApplication as DialApplicationResource).user_roles,
-            }}
-            roles={roles || []}
-            onChange={onChangeAssetRoles}
-          />
-        ) : (
-          <EntityRoles
-            entity={selectedApplication}
-            view={view}
-            roles={roles || []}
-            onChangeEntity={onChangeApplication}
-            isSkipRefresh={isSkipRefresh}
-          />
-        ))}
+      {activeTab === EntityViewTab.Roles && (
+        <EntityRoles
+          entity={selectedApplication}
+          view={view}
+          roles={roles || []}
+          onChangeEntity={onChangeApplication}
+          isSkipRefresh={isSkipRefresh}
+        />
+      )}
       {activeTab === EntityViewTab.Interceptors && (
         <EntityInterceptors
           appRunner={appRunner}

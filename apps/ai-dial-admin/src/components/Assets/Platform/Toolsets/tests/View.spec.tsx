@@ -1,9 +1,7 @@
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { TabsI18nKey } from '@/src/constants/i18n';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialRole } from '@/src/models/dial/role';
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
+import { beforeEach, describe, Mock, test, vi } from 'vitest';
 import PlatformToolsetView from '../View';
 
 vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
@@ -35,7 +33,6 @@ describe('PlatformToolsetView', () => {
     displayName: 'Platform Toolset',
   } as AssetToolset;
 
-  const mockRoles: DialRole[] = [];
   const mockEtag = 'etag-123';
 
   beforeEach(() => {
@@ -47,15 +44,8 @@ describe('PlatformToolsetView', () => {
   });
 
   test('renders the platform toolset detail view without crashing', () => {
-    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
+    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} />);
 
     expect(screen.getByText('platform-toolset')).toBeTruthy();
-  });
-
-  test('renders a Roles tab positioned after Tools and before Audit', () => {
-    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
-
-    const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
-    expect(tabLabels).toEqual([TabsI18nKey.Properties, TabsI18nKey.Tools, TabsI18nKey.Roles]);
   });
 });

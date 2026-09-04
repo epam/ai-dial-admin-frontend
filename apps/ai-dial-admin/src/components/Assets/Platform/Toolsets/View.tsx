@@ -16,7 +16,6 @@ import TabsContent from '@/src/components/Assets/Toolsets/View/TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -24,20 +23,16 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/dial/resource';
-import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getTabsForAsset, rolesTab } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 
 interface Props {
   etag: string;
   oAuthCode?: string | null;
   originalToolset: AssetToolset;
-  roles: DialRole[];
-  /** i18n keys for non-fatal problems from the server-side role-population read, resolved here. */
-  optionWarnings?: EntitiesI18nKey[];
 }
 
 /**
@@ -51,7 +46,7 @@ interface Props {
  * selector, no publish, no move) and which server actions get called differ here — mirrors
  * `Assets/Platform/Applications/View.tsx`.
  */
-const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, roles, optionWarnings }) => {
+const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset }) => {
   const t = useI18n();
   const router = useRouter();
   const { featureFlags } = useAppContext();
@@ -59,24 +54,7 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
-  // An option list read from only one of Core's two populations is shown rather than withheld, so the
-  // user has to be told the list is incomplete — otherwise a missing role reads as deleted. Mirrors
-  // `PlatformApplicationView`'s identical handling of its own Interceptors/Roles option-list warnings.
-  useEffect(() => {
-    optionWarnings?.forEach((warning) => {
-      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
-    });
-  }, [optionWarnings, showNotification, t]);
-
-  // The platform bucket is the only `AssetsToolsets` bucket with a Roles tab (Issue #4406) —
-  // `getTabsForAsset`'s shared `AssetsToolsets` branch stays untouched so the public bucket
-  // (`ToolsetView.tsx`) is unaffected. Inserted right after `Tools` and before the
-  // conditionally-appended `Audit` tab, matching the admin-BE `Toolsets` entity's own
-  // `[Properties, Tools, Roles, Audit]` ordering.
-  const tabs = useMemo(
-    () => getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags).toSpliced(2, 0, rolesTab(t)),
-    [t, featureFlags],
-  );
+  const tabs = useMemo(() => getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags), [t, featureFlags]);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
@@ -164,7 +142,6 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
             activeTab={activeTab}
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}
-            roles={roles}
             onChange={setSelectedToolset}
           />
         )}
