@@ -56,6 +56,9 @@ const RuleDetailView: FC<Props> = ({ originalRule, evaluators, hasEvaluatorsErro
   // handed up, so a per-render object re-creates the Monaco model on every accepted keystroke.
   const [documentSeed, setDocumentSeed] = useState<RuleDraft | null>(null);
 
+  // A rule either pins its read source or follows the one its target enrichment declares.
+  const readSource = originalRule.source || target?.source_table;
+
   const assemblyContext = useMemo(
     () => ({ grainKey: form.grainKey, sourceTable: target?.source_table }),
     [form.grainKey, target?.source_table],
@@ -203,6 +206,20 @@ const RuleDetailView: FC<Props> = ({ originalRule, evaluators, hasEvaluatorsErro
         <div className="flex flex-col gap-1">
           {!isEditorEnabled && <RuleEnabledBadge enabled={originalRule.enabled} className="self-start" />}
           <h1 className="text-primary dial-h4">{originalRule.name}</h1>
+          {/* What the rule writes and what it reads both sit inside collapsed sections of the form, so the
+              page could not answer "which table is this bound to" without a trip back to the listing. Stated
+              from the stored rule, like the name and the status badge above — the form holds the draft. */}
+          <p className="flex flex-wrap items-center gap-x-2 text-secondary dial-tiny-text">
+            <span>
+              {t(AnalyticsEnrichmentRulesI18nKey.TargetEnrichment)}:{' '}
+              <span className="text-primary">{originalRule.target_enrichment}</span>
+            </span>
+            <span aria-hidden>·</span>
+            <span>
+              {t(AnalyticsEnrichmentRulesI18nKey.Source)}:{' '}
+              <span className="text-primary">{readSource || t(AnalyticsEnrichmentRulesI18nKey.NotSet)}</span>
+            </span>
+          </p>
         </div>
 
         <div className="flex flex-row items-center gap-3">

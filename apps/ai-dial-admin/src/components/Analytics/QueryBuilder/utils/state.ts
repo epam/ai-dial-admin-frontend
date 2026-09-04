@@ -4,8 +4,8 @@ import {
   FilterGroupNode,
   FilterNodeKind,
   FilterPredicateNode,
+  ExpressionRow,
   FnArgValue,
-  GroupByRow,
   PageState,
   QueryBuilderState,
   SortRow,
@@ -35,13 +35,15 @@ export const createPredicate = (fieldType?: string): FilterPredicateNode => ({
   id: nextId(),
   kind: FilterNodeKind.Predicate,
   field: '',
+  fn: null,
+  args: [],
   op: QueryOperator.Eq,
   valueType: defaultValueType(fieldType),
   value: '',
   isNull: false,
 });
 
-export const createGroupByColumn = (field: string): GroupByRow => ({
+export const createColumnRow = (field: string): ExpressionRow => ({
   id: nextId(),
   fn: null,
   field,
@@ -50,9 +52,9 @@ export const createGroupByColumn = (field: string): GroupByRow => ({
   args: [],
 });
 
-// A scalar-function Group by row: one empty arg slot per catalog argument (or pre-filled slots when
+// A scalar-function row: one empty arg slot per catalog argument (or pre-filled slots when
 // deserializing an existing query).
-export const createGroupByFn = (fn: QueryFunction, args?: FnArgValue[], alias = ''): GroupByRow => ({
+export const createFnRow = (fn: QueryFunction, args?: FnArgValue[], alias = ''): ExpressionRow => ({
   id: nextId(),
   fn: fn.name,
   field: '',

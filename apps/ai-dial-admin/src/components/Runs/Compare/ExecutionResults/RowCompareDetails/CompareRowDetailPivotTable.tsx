@@ -8,15 +8,12 @@ import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
-import FieldValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/FieldValue';
-import StatusValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/StatusValue';
-import { getPivotGridTemplateColumns } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/pivot-column-width';
-import {
-  CompareRowDetailField,
-  CompareRowDetailSection,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
+import { getPivotGridTemplateColumns } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
-import { flattenPivotFields } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/flatten-pivot-fields';
+import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
 import {
   CompareDiffPivotPosition,
   getCompareDiffPivotCellProps,
@@ -32,7 +29,7 @@ import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
-  sections: CompareRowDetailSection[];
+  sections: RowDetailSection[];
   primaryRunName: string;
   comparedRunName: string;
   hasComparedMatch: boolean;
@@ -59,7 +56,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
-  const onOpenDiff = useCallback((field: CompareRowDetailField) => {
+  const onOpenDiff = useCallback((field: RowDetailField) => {
     setDiffView({ fieldLabel: field.label, original: field.primaryRaw ?? '', modified: field.secondaryRaw ?? '' });
   }, []);
 
@@ -77,7 +74,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 
   const renderValueCell = (
     key: string,
-    field: CompareRowDetailField,
+    field: RowDetailField,
     raw: string | null,
     isFailed: boolean,
     rowBg: string,

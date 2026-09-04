@@ -8,21 +8,22 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import CompareRowDetailDisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDisplayPanel';
-import CompareRowDetailHeader from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailHeader';
+import RowDetailHeader from '@/src/components/Runs/Details/RowDetails/RowDetailHeader';
 import CompareRowDetailPivotTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPivotTable';
 import CompareRowDetailTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailTable';
-import { ROW_DETAIL_DISPLAY_PANEL_CLASS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { DEFAULT_HIDDEN_ROW_DETAIL_FIELDS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import { RowDetailViewMode } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
+import { ROW_DETAIL_DISPLAY_PANEL_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import {
   buildRowDetailSections,
   countRowDetailDiffs,
-  getCompareRowDetailTitle,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-sections';
+  getRowDetailTitle,
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-sections';
 import {
   applyRowDetailDisplayTree,
   buildRowDetailDisplayTree,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-display-tree';
+} from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
@@ -67,7 +68,7 @@ const CompareRowDetailPanel: FC<Props> = ({
   const isComparedOnly = !row.id && comparedId != null;
   const hasComparedMatch = comparedId != null;
   const rowSelectionId = getCompareRowSelectionId(row);
-  const title = getCompareRowDetailTitle(row);
+  const title = getRowDetailTitle(row);
 
   useEffect(() => {
     if (!row.id && !comparedId) {
@@ -132,7 +133,7 @@ const CompareRowDetailPanel: FC<Props> = ({
     if (sections.length === 0) {
       return;
     }
-    setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev));
+    setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev, DEFAULT_HIDDEN_ROW_DETAIL_FIELDS));
   }, [sections]);
 
   const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
@@ -142,7 +143,7 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   return (
     <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
-      <CompareRowDetailHeader
+      <RowDetailHeader
         title={title}
         onClose={onClose}
         onOpenDisplay={onToggleDisplayPanel}

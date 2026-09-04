@@ -133,6 +133,11 @@ export async function getMetricDeclarations(page: number, size: number) {
   return testSuitesApi.getMetricDeclarations(page, size, token);
 }
 
+export async function getDetailedMetricDeclarations() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDetailedMetricDeclarations(token);
+}
+
 export async function getMetricLatestVersion(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getMetricLatestVersion(id, token);

@@ -1,24 +1,37 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { ColDef, GridOptions, IRowNode, RowSelectedEvent } from 'ag-grid-community';
+import { ComponentProps } from 'react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { TWO_LINE_ROW_HEIGHT } from '@/src/components/Grid/constants';
+import { METRIC_NAME_COLUMN_WIDTH, METRIC_PROVIDER_COLUMN_WIDTH } from '@/src/constants/grid-columns/grid-columns';
+import { EntitiesI18nKey, EntityFieldsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import MetricSelection from '../MetricSelection';
 
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialNoDataContent: ({ title }: any) => (
-    <div role="status" aria-label={title}>
-      {title}
-    </div>
-  ),
+interface GridViewProps {
+  columnDefs?: ColDef[];
+  rowData?: Metric[] | null;
+  additionalGridOptions?: GridOptions;
+  emptyDataProps?: { title?: string };
+}
+
+let capturedGridProps: GridViewProps | undefined;
+
+vi.mock('@/src/components/Grid/GridView/GridView', () => ({
+  default: (props: GridViewProps) => {
+    capturedGridProps = props;
+    return <section aria-label="metrics-grid" />;
+  },
 }));
 
-vi.mock('@/src/components/Common/Search/Search', () => ({
-  default: ({ onChange }: any) => (
-    <input type="search" role="searchbox" aria-label="search" onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
+const buildRowSelectedEvent = (metric: Metric, isSelected: boolean) => {
+  const refreshCells = vi.fn();
+  const node = { isSelected: () => isSelected } as IRowNode<Metric>;
+  const event = { api: { refreshCells }, node, data: metric } as unknown as RowSelectedEvent<Metric>;
+
+  return { event, node, refreshCells };
+};
 
 describe('MetricSelection', () => {
   const metrics: Metric[] = [
@@ -27,84 +40,151 @@ describe('MetricSelection', () => {
     { id: 'metric-3', name: 'Gamma Metric', displayName: 'Gamma Metric', description: 'Third metric' },
   ];
 
+  const renderMetricSelection = (props?: Partial<ComponentProps<typeof MetricSelection>>) =>
+    render(<MetricSelection metrics={metrics} {...props} />);
+
+  beforeEach(() => {
+    capturedGridProps = undefined;
+    vi.clearAllMocks();
+  });
+
   test('renders metrics heading', () => {
-    render(<MetricSelection metrics={metrics} />);
+    renderMetricSelection();
 
-    expect(screen.getByText(TabsI18nKey.Metrics)).toBeInTheDocument();
+    expect(screen.getByText(TabsI18nKey.Metrics)).toBeTruthy();
   });
 
-  test('renders search input', () => {
-    render(<MetricSelection metrics={metrics} />);
+  test('renders the selection grid', () => {
+    renderMetricSelection();
 
-    expect(screen.getByRole('searchbox', { name: 'search' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'metrics-grid' })).toBeTruthy();
   });
 
-  test('renders all metrics when no filter is applied', () => {
-    render(<MetricSelection metrics={metrics} />);
+  test('passes the metrics list to the grid as row data', () => {
+    renderMetricSelection();
 
-    expect(screen.getByText('Alpha Metric')).toBeInTheDocument();
-    expect(screen.getByText('Beta Metric')).toBeInTheDocument();
-    expect(screen.getByText('Gamma Metric')).toBeInTheDocument();
+    expect(capturedGridProps?.rowData).toEqual(metrics);
   });
 
-  test('renders metric descriptions', () => {
-    render(<MetricSelection metrics={metrics} />);
+  test('renders a Metric column carrying the radio-and-initials renderer, then description, outputs and provider', () => {
+    renderMetricSelection();
 
-    expect(screen.getByText('First metric')).toBeInTheDocument();
-    expect(screen.getByText('Second metric')).toBeInTheDocument();
-    expect(screen.getByText('Third metric')).toBeInTheDocument();
+    const [nameColumn, descriptionColumn, outputsColumn, providerColumn] = capturedGridProps?.columnDefs ?? [];
+
+    expect(capturedGridProps?.columnDefs).toHaveLength(4);
+    expect(nameColumn.colId).toBe('displayName');
+    expect(nameColumn.headerName).toBe(TestSuitesI18nKey.Metric);
+    expect(nameColumn.cellRenderer).toBeTruthy();
+    expect(descriptionColumn.field).toBe('description');
+    expect(outputsColumn.headerName).toBe(TestSuitesI18nKey.Outputs);
+    expect(outputsColumn.cellRenderer).toBeTruthy();
+    expect(providerColumn.colId).toBe('providerId');
+    expect(providerColumn.field).toBe('providerId');
+    expect(providerColumn.headerName).toBe(EntityFieldsI18nKey.provider);
   });
 
-  test('shows no data content when metrics list is empty', () => {
-    render(<MetricSelection metrics={[]} />);
+  test('sizes the metric and provider columns to their designed widths', () => {
+    renderMetricSelection();
 
-    expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+    const [nameColumn, , , providerColumn] = capturedGridProps?.columnDefs ?? [];
+
+    expect(nameColumn.minWidth).toBe(METRIC_NAME_COLUMN_WIDTH);
+    expect(providerColumn.maxWidth).toBe(METRIC_PROVIDER_COLUMN_WIDTH);
   });
 
-  test('filters metrics by search pattern', async () => {
-    const user = userEvent.setup();
-    render(<MetricSelection metrics={metrics} />);
+  test('wraps the description over two clamped lines in a row tall enough to hold them', () => {
+    renderMetricSelection();
 
-    await user.type(screen.getByRole('searchbox', { name: 'search' }), 'alpha');
+    const descriptionColumn = capturedGridProps?.columnDefs?.[1];
 
-    expect(screen.getByText('Alpha Metric')).toBeInTheDocument();
-    expect(screen.queryByText('Beta Metric')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gamma Metric')).not.toBeInTheDocument();
+    expect(capturedGridProps?.additionalGridOptions?.rowHeight).toBe(TWO_LINE_ROW_HEIGHT);
+    expect(descriptionColumn?.wrapText).toBe(true);
+    expect(descriptionColumn?.cellRendererParams).toEqual({ lines: 2 });
   });
 
-  test('shows no data content when search matches nothing', async () => {
-    const user = userEvent.setup();
-    render(<MetricSelection metrics={metrics} />);
+  test('selects a single row by click without a separate selection column', () => {
+    renderMetricSelection();
 
-    await user.type(screen.getByRole('searchbox', { name: 'search' }), 'xyz-no-match');
-
-    expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+    expect(capturedGridProps?.additionalGridOptions?.rowSelection).toEqual({
+      mode: 'singleRow',
+      enableClickSelection: true,
+      checkboxes: false,
+    });
+    expect(capturedGridProps?.additionalGridOptions?.selectionColumnDef).toBeUndefined();
   });
 
-  test('calls onSelectMetric with metric id when metric is clicked', async () => {
-    const user = userEvent.setup();
+  test('passes the empty state title to the grid', () => {
+    renderMetricSelection({ metrics: [] });
+
+    expect(capturedGridProps?.emptyDataProps?.title).toBe(EntitiesI18nKey.NoMetrics);
+  });
+
+  test('calls onSelectMetric with the metric id when a row becomes selected', () => {
     const onSelectMetric = vi.fn();
-    render(<MetricSelection metrics={metrics} onSelectMetric={onSelectMetric} />);
+    renderMetricSelection({ onSelectMetric });
+    const { event } = buildRowSelectedEvent(metrics[0], true);
 
-    await user.click(screen.getByText('Alpha Metric'));
+    capturedGridProps?.additionalGridOptions?.onRowSelected?.(event);
 
+    expect(onSelectMetric).toHaveBeenCalledOnce();
     expect(onSelectMetric).toHaveBeenCalledWith('metric-1');
   });
 
-  test('does not throw when onSelectMetric is not provided', async () => {
-    const user = userEvent.setup();
-    render(<MetricSelection metrics={metrics} />);
+  test('refreshes the name cell of the row whose selection changed so its radio follows', () => {
+    renderMetricSelection({ onSelectMetric: vi.fn() });
+    const { event, node, refreshCells } = buildRowSelectedEvent(metrics[1], false);
 
-    await expect(user.click(screen.getByText('Alpha Metric'))).resolves.not.toThrow();
+    capturedGridProps?.additionalGridOptions?.onRowSelected?.(event);
+
+    expect(refreshCells).toHaveBeenCalledWith({
+      rowNodes: [node],
+      columns: ['displayName'],
+      force: true,
+    });
   });
 
-  test('filter is case-insensitive', async () => {
-    const user = userEvent.setup();
-    render(<MetricSelection metrics={metrics} />);
+  test('does not call onSelectMetric when a row becomes deselected', () => {
+    const onSelectMetric = vi.fn();
+    renderMetricSelection({ onSelectMetric });
+    const { event } = buildRowSelectedEvent(metrics[0], false);
 
-    await user.type(screen.getByRole('searchbox', { name: 'search' }), 'BETA');
+    capturedGridProps?.additionalGridOptions?.onRowSelected?.(event);
 
-    expect(screen.getByText('Beta Metric')).toBeInTheDocument();
-    expect(screen.queryByText('Alpha Metric')).not.toBeInTheDocument();
+    expect(onSelectMetric).not.toHaveBeenCalled();
+  });
+
+  test('preselects and scrolls to the already chosen metric once data is rendered', () => {
+    renderMetricSelection({ selectedMetricId: 'metric-2' });
+
+    const setSelected = vi.fn();
+    const ensureNodeVisible = vi.fn();
+    const nodes = metrics.map((metric) => ({ data: metric, setSelected }) as unknown as IRowNode<Metric>);
+    const api = {
+      forEachNode: (callback: (node: IRowNode<Metric>) => void) => nodes.forEach(callback),
+      ensureNodeVisible,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    capturedGridProps?.additionalGridOptions?.onFirstDataRendered?.({ api } as any);
+
+    expect(setSelected).toHaveBeenCalledOnce();
+    expect(setSelected).toHaveBeenCalledWith(true);
+    expect(ensureNodeVisible).toHaveBeenCalledWith(nodes[1], 'middle');
+  });
+
+  test('does not preselect anything when no metric is chosen yet', () => {
+    renderMetricSelection();
+
+    const setSelected = vi.fn();
+    const api = {
+      forEachNode: (callback: (node: IRowNode<Metric>) => void) =>
+        metrics.forEach((metric) => callback({ data: metric, setSelected } as unknown as IRowNode<Metric>)),
+      ensureNodeVisible: vi.fn(),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    capturedGridProps?.additionalGridOptions?.onFirstDataRendered?.({ api } as any);
+
+    expect(setSelected).not.toHaveBeenCalled();
   });
 });
