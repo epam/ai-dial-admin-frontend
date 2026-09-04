@@ -1,13 +1,10 @@
 'use client';
 
-import { DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
-import { IconArrowsLeftRight, IconTable } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo } from 'react';
 
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { getCompareDiffSection } from '@/src/components/Runs/Compare/ExecutionResults/utils/diff-section';
-import { RowDetailViewMode } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -17,8 +14,6 @@ interface Props {
   onColumnsChange: (columns: ColDef[]) => void;
   onClose: () => void;
   panelClassName: string;
-  viewMode: RowDetailViewMode;
-  onViewModeChange: (mode: RowDetailViewMode) => void;
   viewDifferencesOnly: boolean;
   onViewDifferencesOnlyChange: (value: boolean) => void;
   hideHighlights: boolean;
@@ -30,26 +25,12 @@ const CompareRowDetailDisplayPanel: FC<Props> = ({
   onColumnsChange,
   onClose,
   panelClassName,
-  viewMode,
-  onViewModeChange,
   viewDifferencesOnly,
   onViewDifferencesOnlyChange,
   hideHighlights,
   onHideHighlightsChange,
 }) => {
   const t = useI18n();
-
-  const viewModeOptions = useMemo<SegmentedControlOption<RowDetailViewMode>[]>(
-    () => [
-      { value: RowDetailViewMode.Table, label: t(RunsI18nKey.RunCompareTable), icon: <IconTable size={16} /> },
-      {
-        value: RowDetailViewMode.Pivot,
-        label: t(RunsI18nKey.RunComparePivot),
-        icon: <IconArrowsLeftRight size={16} />,
-      },
-    ],
-    [t],
-  );
 
   const diffSection = useMemo(
     () =>
@@ -84,15 +65,6 @@ const CompareRowDetailDisplayPanel: FC<Props> = ({
       title={t(RunsI18nKey.RunCompareDisplay)}
       diffSection={diffSection}
       treeSubtitle={t(RunsI18nKey.RunCompareRows)}
-      topSlot={
-        <DialSegmentedControl
-          options={viewModeOptions}
-          value={viewMode}
-          onChange={onViewModeChange}
-          className="w-[165px] mb-4"
-          ariaLabel={t(RunsI18nKey.RunCompareDisplay)}
-        />
-      }
       renderLabel={renderLabel}
     />
   );

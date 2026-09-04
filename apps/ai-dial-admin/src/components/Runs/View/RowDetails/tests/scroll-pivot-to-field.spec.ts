@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { scrollPivotToField } from '../ExecutionRowDetailPivotTable';
+import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 
 describe('scrollPivotToField', () => {
   test('no-ops when container or field key is missing', () => {
