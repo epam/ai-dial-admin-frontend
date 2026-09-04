@@ -1,5 +1,3 @@
-# Analytics Bottom Drawer — Spec
-
 ## Purpose
 
 Provides the bottom detail panel for the Execution Result tab (Run Detail view) as an alternative
@@ -7,7 +5,7 @@ to the right sidebar (`RunMetricDetailPanel`). The panel is a single-row pivot o
 case’s fields, shown via AppContext sidebar at `SidebarPosition.Bottom`. It supports Display-based
 field visibility/order, horizontal scroll-to-field from grid cell clicks, and a full-value popup.
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Bottom pivot panel displays when detail mode is drawer
 
@@ -104,3 +102,15 @@ The system SHALL close the AppContext sidebar (including bottom slot content) wh
 #### Scenario: Navigate away while panel is open
 - **WHEN** the bottom panel is open and the user navigates away from the Run view
 - **THEN** `sidebar.closeSidebar()` runs and no orphaned bottom-slot content remains
+
+## REMOVED Requirements
+
+### Requirement: Drawer is resizable via drag handle
+### Requirement: Drawer can be collapsed and expanded
+### Requirement: Main grid adjusts available height for drawer
+### Requirement: Drawer renders via portal
+### Requirement: Pin a test case for comparison
+### Requirement: Diff count badge in toolbar
+### Requirement: View toggle between Table and Pivot
+### Requirement: Drawer shows progressive loading for pinned data
+### Requirement: Drawer shows empty state when all fields are hidden

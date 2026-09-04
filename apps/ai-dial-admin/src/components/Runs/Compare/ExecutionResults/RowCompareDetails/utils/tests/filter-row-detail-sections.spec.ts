@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { CompareRowDetailSection } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 
-const sections: CompareRowDetailSection[] = [
+const sections: RowDetailSection[] = [
   {
     key: 'execution',
     label: 'Execution',
@@ -187,7 +187,7 @@ describe('filterRowDetailSections', () => {
     });
 
     test('treats null raw values as empty string', () => {
-      const sectionsWithNull: CompareRowDetailSection[] = [
+      const sectionsWithNull: RowDetailSection[] = [
         {
           key: 'execution',
           label: 'Execution',
@@ -218,7 +218,7 @@ describe('filterRowDetailSections', () => {
   });
 
   describe('deltaFilter', () => {
-    const metricSections: CompareRowDetailSection[] = [
+    const metricSections: RowDetailSection[] = [
       {
         key: 'metric:accuracy',
         label: 'Accuracy',
