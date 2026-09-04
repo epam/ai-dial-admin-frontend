@@ -2467,6 +2467,8 @@ export default {
     WarningEmptyAggregate: 'Aggregate mode usually needs group_by and/or aggregate entries.',
     ViewFullValue: 'View full value',
     CopyValue: 'Copy value',
+    WarningDroppedProjectionColumn: 'A function column with an unfilled argument is left out of the query.',
+    WarningDroppedCondition: 'A condition with an unfilled function argument is left out — the query runs without it.',
     ViewForm: 'Builder',
     ViewSql: 'SQL',
     ViewSwitcher: 'View',

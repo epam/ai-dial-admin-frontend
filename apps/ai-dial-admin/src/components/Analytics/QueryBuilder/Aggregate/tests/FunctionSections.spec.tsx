@@ -9,7 +9,7 @@ import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/con
 import {
   createAggregate,
   createGroup,
-  createGroupByFn,
+  createFnRow,
   createInitialState,
   createPredicate,
   createSort,
@@ -85,7 +85,7 @@ describe('QueryBuilder :: Aggregates', () => {
 
 describe('QueryBuilder :: GroupBySection', () => {
   test('date_bin row renders amount (numeric), unit (select) and timestamp (field) editors', () => {
-    const row = { ...createGroupByFn(fnFixture('date_bin')), alias: 'bucket' };
+    const row = { ...createFnRow(fnFixture('date_bin')), alias: 'bucket' };
     renderWith(stateWith({ groupBy: [row] }), <GroupBySection />);
 
     expect(screen.getByLabelText('amount')).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe('QueryBuilder :: GroupBySection', () => {
   });
 
   test('multi-arg scalar function (width_bucket) renders one field dropdown per expression arg', () => {
-    const row = { ...createGroupByFn(fnFixture('width_bucket')), alias: 'bkt' };
+    const row = { ...createFnRow(fnFixture('width_bucket')), alias: 'bkt' };
     renderWith(stateWith({ groupBy: [row] }), <GroupBySection />);
 
     ['operand', 'low', 'high', 'count'].forEach((name) => {

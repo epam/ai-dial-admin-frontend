@@ -3,13 +3,15 @@ import { describe, expect, test } from 'vitest';
 import {
   buildQuery,
   getAggregateWarnings,
+  hasDroppedCondition,
+  hasDroppedProjectionColumn,
   serializeNode,
 } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   createAggregate,
   createGroup,
-  createGroupByColumn,
-  createGroupByFn,
+  createColumnRow,
+  createFnRow,
   createInitialState,
   createPredicate,
   createSort,
@@ -51,7 +53,7 @@ describe('buildQuery — row mode', () => {
 
   test('selected fields become field-expression columns in selection order', () => {
     const s = baseState();
-    s.select = ['project_id', 'chat_id'];
+    s.select = [createColumnRow('project_id'), createColumnRow('chat_id')];
     expect(buildQuery(s).select).toEqual([
       { expr: { type: 'field', name: 'project_id' } },
       { expr: { type: 'field', name: 'chat_id' } },
@@ -98,11 +100,11 @@ describe('buildQuery — sort', () => {
 
 describe('serializeNode — filter tree', () => {
   test('empty group serializes to null (omitted)', () => {
-    expect(serializeNode(createGroup())).toBeNull();
+    expect(serializeNode(createGroup(), [])).toBeNull();
   });
 
   test('fieldless predicate serializes to null', () => {
-    expect(serializeNode(createPredicate())).toBeNull();
+    expect(serializeNode(createPredicate(), [])).toBeNull();
   });
 
   test('AND group with a predicate', () => {
@@ -112,7 +114,7 @@ describe('serializeNode — filter tree', () => {
     pred.value = 'chat';
     pred.valueType = QueryValueType.String;
     group.children.push(pred);
-    expect(serializeNode(group)).toEqual({
+    expect(serializeNode(group, [])).toEqual({
       op: 'and',
       args: [
         {
@@ -134,7 +136,7 @@ describe('serializeNode — filter tree', () => {
     pred.valueType = QueryValueType.String;
     const group = createGroup();
     group.children.push(pred);
-    const serialized = serializeNode(group) as { args: { op: string }[] };
+    const serialized = serializeNode(group, []) as { args: { op: string }[] };
     expect(serialized.args[0].op).toBe('ico');
   });
 
@@ -146,7 +148,7 @@ describe('serializeNode — filter tree', () => {
     pred.valueType = QueryValueType.String;
     const group = createGroup();
     group.children.push(pred);
-    const serialized = serializeNode(group) as { args: { op: string }[] };
+    const serialized = serializeNode(group, []) as { args: { op: string }[] };
     expect(serialized.args[0].op).toBe('co');
   });
 
@@ -157,7 +159,7 @@ describe('serializeNode — filter tree', () => {
     pred.value = 'ignored';
     const group = createGroup();
     group.children.push(pred);
-    const serialized = serializeNode(group) as { args: { args: unknown[] }[] };
+    const serialized = serializeNode(group, []) as { args: { args: unknown[] }[] };
     expect(serialized.args[0].args[1]).toEqual({ type: 'value', value_type: 'null', value: null });
   });
 
@@ -169,7 +171,7 @@ describe('serializeNode — filter tree', () => {
     pred.value = 'a, b, ,c';
     const group = createGroup();
     group.children.push(pred);
-    const serialized = serializeNode(group) as { args: { args: unknown[] }[] };
+    const serialized = serializeNode(group, []) as { args: { args: unknown[] }[] };
     expect(serialized.args[0].args[1]).toEqual({
       type: 'array',
       items: [
@@ -186,7 +188,7 @@ describe('serializeNode — filter tree', () => {
     pred.field = 'success';
     pred.value = 'true';
     group.children.push(pred);
-    expect(serializeNode(group)).toEqual({
+    expect(serializeNode(group, [])).toEqual({
       op: 'not',
       args: [
         {
@@ -205,7 +207,7 @@ describe('buildQuery — aggregate mode', () => {
   test('group-by fields and aggregates land in select and group_by', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('deployment')];
+    s.groupBy = [createColumnRow('deployment')];
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = 'sum_tokens';
     s.aggregates = [agg];
@@ -220,7 +222,7 @@ describe('buildQuery — aggregate mode', () => {
   test('date_bin group-by entry serializes its literal + field args from the catalog', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const bucket = createGroupByFn(fnFixture('date_bin'), [
+    const bucket = createFnRow(fnFixture('date_bin'), [
       { literal: '5' },
       { literal: 'minute' },
       { field: 'request_time' },
@@ -246,7 +248,7 @@ describe('buildQuery — aggregate mode', () => {
   test('multi-arg scalar function (width_bucket) serializes four field args', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const row = createGroupByFn(fnFixture('width_bucket'), [
+    const row = createFnRow(fnFixture('width_bucket'), [
       { field: 'latency' },
       { field: 'lo' },
       { field: 'hi' },
@@ -274,7 +276,7 @@ describe('buildQuery — aggregate mode', () => {
   test('scalar function group-by entry serializes fn(field) AS alias, group_by uses the alias', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const row = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
+    const row = createFnRow(fnFixture('lower'), [{ field: 'deployment' }]);
     row.alias = 'dep';
     s.groupBy = [row];
     const q = buildQuery(s);
@@ -319,8 +321,8 @@ describe('buildQuery — aggregate mode', () => {
   test('incomplete function entries are dropped; aliasless complete entries stay out of group_by', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const empty = createGroupByFn(fnFixture('upper')); // required text arg unfilled → dropped
-    const cleared = createGroupByFn(fnFixture('trim'), [{ field: 'deployment' }]);
+    const empty = createFnRow(fnFixture('upper')); // required text arg unfilled → dropped
+    const cleared = createFnRow(fnFixture('trim'), [{ field: 'deployment' }]);
     cleared.alias = '';
     s.groupBy = [empty, cleared];
     const q = buildQuery(s);
@@ -386,7 +388,7 @@ describe('getAggregateWarnings', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.aggregates = [createAggregate(fnFixture('sum'))];
-    s.groupBy = [createGroupByFn(fnFixture('date_bin'))];
+    s.groupBy = [createFnRow(fnFixture('date_bin'))];
     expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.MissingGroupByField);
   });
 
@@ -395,11 +397,11 @@ describe('getAggregateWarnings', () => {
   test('a blank alias raises no warning', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
+    const fnRow = createFnRow(fnFixture('lower'), [{ field: 'deployment' }]);
     fnRow.alias = '';
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = '';
-    s.groupBy = [createGroupByColumn('project_id'), fnRow];
+    s.groupBy = [createColumnRow('project_id'), fnRow];
     s.aggregates = [agg];
     expect(getAggregateWarnings(s)).toEqual([]);
   });
@@ -409,7 +411,7 @@ describe('buildQuery implicit measure', () => {
   test('aggregate mode without aggregates appends the catalog implicit measure (count)', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     const q = buildQuery(s);
     expect(q.select).toEqual([
       { expr: { type: 'field', name: 'project_id' } },
@@ -421,7 +423,7 @@ describe('buildQuery implicit measure', () => {
     const s = baseState();
     s.functions = TEST_FUNCTIONS.filter((f) => f.name !== 'count');
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     const q = buildQuery(s);
     expect(q.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
   });
@@ -429,7 +431,7 @@ describe('buildQuery implicit measure', () => {
   test('user-defined aggregates suppress the implicit measure', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = 'tokens';
     s.aggregates = [agg];
@@ -486,5 +488,160 @@ describe('buildQuery time bound', () => {
   test('no bound leaves the filter untouched', () => {
     const q = buildQuery(baseState());
     expect(q.filter).toBeUndefined();
+  });
+});
+
+describe('buildQuery — row-mode function columns', () => {
+  const extract = (alias = '') =>
+    createFnRow(fnFixture('json_extract_string'), [{ field: 'request_tags' }, { literal: 'baggage' }], alias);
+
+  test('a scalar function projects as an fn expression under its alias, in selection order', () => {
+    const s = baseState();
+    s.select = [createColumnRow('project_id'), extract('baggage')];
+
+    expect(buildQuery(s).select).toEqual([
+      { expr: { type: 'field', name: 'project_id' } },
+      {
+        expr: {
+          type: 'fn',
+          name: 'json_extract_string',
+          args: [
+            { type: 'field', name: 'request_tags' },
+            { type: 'value', value_type: 'string', value: 'baggage' },
+          ],
+        },
+        as: 'baggage',
+      },
+    ]);
+  });
+
+  // The alias is the column's only name, so a cleared one falls back to the derived value rather than
+  // serializing an output column the backend would reject.
+  test('a blank alias falls back to the derived name', () => {
+    const s = baseState();
+    s.select = [createFnRow(fnFixture('lower'), [{ field: 'project_id' }])];
+
+    expect(buildQuery(s).select?.[0].as).toBe('project_id (Lowercase)');
+  });
+
+  test('a function entry with an unfilled required argument contributes no column', () => {
+    const s = baseState();
+    s.select = [createColumnRow('project_id'), createFnRow(fnFixture('lower'))];
+
+    expect(buildQuery(s).select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+  });
+
+  test('select is omitted when the only entry is incomplete', () => {
+    const s = baseState();
+    s.select = [createFnRow(fnFixture('lower'))];
+
+    expect(buildQuery(s).select).toBeUndefined();
+  });
+
+  test('a function column is sortable by the alias the query carries', () => {
+    const s = baseState();
+    s.select = [extract('baggage')];
+    s.sort = [{ ...createSort(), field: 'baggage' }];
+
+    expect(buildQuery(s).sort).toEqual([{ field: 'baggage', dir: 'asc' }]);
+  });
+});
+
+describe('serializeNode — function left operands', () => {
+  const conditionOn = (fn: string | null, args: { field?: string; literal?: string }[]) => {
+    const group = createGroup();
+    group.children.push({
+      ...createPredicate(),
+      fn,
+      args,
+      op: QueryOperator.Ico,
+      valueType: QueryValueType.String,
+      value: 'eval.run.id',
+    });
+    return group;
+  };
+
+  test("a function operand serializes as the predicate's left fn expression", () => {
+    const group = conditionOn('json_extract_string', [{ field: 'request_tags' }, { literal: 'baggage' }]);
+
+    expect(serializeNode(group, TEST_FUNCTIONS)).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [
+        {
+          op: QueryOperator.Ico,
+          args: [
+            {
+              type: 'fn',
+              name: 'json_extract_string',
+              args: [
+                { type: 'field', name: 'request_tags' },
+                { type: 'value', value_type: 'string', value: 'baggage' },
+              ],
+            },
+            { type: 'value', value_type: 'string', value: 'eval.run.id' },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('a function operand with an unfilled required argument drops the condition', () => {
+    expect(
+      serializeNode(conditionOn('json_extract_string', [{ field: 'request_tags' }, {}]), TEST_FUNCTIONS),
+    ).toBeNull();
+  });
+
+  test('a function the catalog does not name drops the condition', () => {
+    expect(
+      serializeNode(conditionOn('json_extract_string', [{ field: 'request_tags' }, { literal: 'b' }]), []),
+    ).toBeNull();
+  });
+});
+
+describe('dropped-entry detection', () => {
+  test('flags a row-mode function column whose required argument is unfilled', () => {
+    const s = baseState();
+    s.select = [createColumnRow('project_id'), createFnRow(fnFixture('lower'))];
+
+    expect(hasDroppedProjectionColumn(s)).toBe(true);
+  });
+
+  test('does not flag a complete projection', () => {
+    const s = baseState();
+    s.select = [createColumnRow('project_id'), createFnRow(fnFixture('lower'), [{ field: 'project_id' }])];
+
+    expect(hasDroppedProjectionColumn(s)).toBe(false);
+  });
+
+  test('does not report a projection warning in aggregate mode', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.select = [createFnRow(fnFixture('lower'))];
+
+    expect(hasDroppedProjectionColumn(s)).toBe(false);
+  });
+
+  test('flags an incomplete condition at any nesting depth', () => {
+    const root = createGroup();
+    const nested = createGroup();
+    nested.children.push({ ...createPredicate(), fn: 'json_extract_string', args: [{ field: 'request_tags' }, {}] });
+    root.children.push(nested);
+
+    expect(hasDroppedCondition(root, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('flags a condition naming a function the catalog does not serve', () => {
+    const root = createGroup();
+    root.children.push({ ...createPredicate(), fn: 'lower', args: [{ field: 'project_id' }] });
+
+    expect(hasDroppedCondition(root, [])).toBe(true);
+  });
+
+  test('does not flag complete or plain-column conditions', () => {
+    const root = createGroup();
+    root.children.push({ ...createPredicate(), field: 'project_id' });
+    root.children.push({ ...createPredicate(), fn: 'lower', args: [{ field: 'project_id' }] });
+
+    expect(hasDroppedCondition(root, TEST_FUNCTIONS)).toBe(false);
   });
 });
