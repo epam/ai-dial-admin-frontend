@@ -1,7 +1,7 @@
 import { RunDeployment } from '@/src/components/Runs/View/models';
 import { SuiteSnapshot, SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CatalogDeploymentRecord, resolveDeploymentNavigationTarget } from '@/src/utils/deployment-navigation';
+import { resolveDeploymentNavigationTarget } from '@/src/utils/deployment-navigation';
 
 export type SuiteContext = SuiteSnapshot | TestSuite | null | undefined;
 
@@ -15,7 +15,6 @@ export const getSuiteApplicationName = (suiteContext: SuiteContext): string =>
 export const resolveRunDeployment = (
   suiteContext: SuiteContext,
   deploymentType: string | undefined,
-  catalogDeployments: CatalogDeploymentRecord[],
 ): RunDeployment | null => {
   if (!suiteContext) {
     return null;
@@ -28,11 +27,7 @@ export const resolveRunDeployment = (
     };
   }
   if (suiteContext.deploymentRef?.name && suiteContext.deploymentRef?.id && deploymentType) {
-    const navigationTarget = resolveDeploymentNavigationTarget(
-      suiteContext.deploymentRef,
-      deploymentType,
-      catalogDeployments,
-    );
+    const navigationTarget = resolveDeploymentNavigationTarget(suiteContext.deploymentRef, deploymentType, []);
     if (!navigationTarget) {
       return null;
     }

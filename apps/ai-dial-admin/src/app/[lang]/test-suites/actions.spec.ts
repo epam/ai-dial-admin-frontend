@@ -8,6 +8,7 @@ import {
   createTestSuite,
   deleteTestSuiteMetric,
   getDeployment,
+  getDeploymentById,
   getDeployments,
   getMetricDeclarations,
   getMetricLatestVersion,
@@ -180,6 +181,14 @@ describe('TestSuites :: server actions', () => {
     const result = await getDeployment('id', 'type');
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getDeployment).toHaveBeenCalledWith('id', 'type', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDeploymentById action', async () => {
+    (testSuitesApi.getDeploymentById as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getDeploymentById('gpt-4');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getDeploymentById).toHaveBeenCalledWith('gpt-4', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
