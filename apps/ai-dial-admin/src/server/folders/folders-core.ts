@@ -259,21 +259,29 @@ export async function changeFolderCore(
   resourceTypes: ResourceType[],
   overwrite = false,
 ): Promise<ServerActionResponse> {
+  // The ui-kit's DialCopiedItem.destinationUrl is built as `${destinationFolder}/${name}`
+  // with no trailing slash, while sourceUrl (from DialFile.path) carries one. Core's
+  // create-publication endpoint validates targetFolder with isFolder() (must end with /),
+  // so normalize both before any Core call — addTrailingSlash is idempotent for paths
+  // that already end with /.
+  const normalizedOldPath = addTrailingSlash(oldPath);
+  const normalizedNewPath = addTrailingSlash(newPath);
+
   for (const type of resourceTypes) {
-    if (!(await folderExists(token, type, oldPath))) {
+    if (!(await folderExists(token, type, normalizedOldPath))) {
       return {
         success: false,
         errorHeader: 'Not Found',
-        errorMessage: `Folder "${oldPath}" does not exist for resource type ${type}`,
+        errorMessage: `Folder "${normalizedOldPath}" does not exist for resource type ${type}`,
       };
     }
   }
 
-  const rulesResult = await getRulesCore(token, oldPath);
+  const rulesResult = await getRulesCore(token, normalizedOldPath);
   if (rulesResult.success && rulesResult.response) {
     const flatRules = Object.values(rulesResult.response).flat();
     if (flatRules.length > 0) {
-      const copyResult = await updateRulesCore(token, newPath, flatRules);
+      const copyResult = await updateRulesCore(token, normalizedNewPath, flatRules);
       if (!copyResult.success) {
         return copyResult;
       }
@@ -282,12 +290,12 @@ export async function changeFolderCore(
 
   for (const type of resourceTypes) {
     const prefix = RESOURCE_TYPE_PREFIX[type];
-    const urls = await gatherResourceUrls(readRecursiveMetadata(token, type), oldPath);
+    const urls = await gatherResourceUrls(readRecursiveMetadata(token, type), normalizedOldPath);
     for (const url of urls) {
       const barePath = decodeCorePath(stripPrefix(url, prefix));
       let destinationPath: string;
       try {
-        destinationPath = replacePathPrefix(barePath, oldPath, newPath);
+        destinationPath = replacePathPrefix(barePath, normalizedOldPath, normalizedNewPath);
       } catch (error) {
         return {
           success: false,
