@@ -3,7 +3,7 @@ import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { CreateRuleDto, RuleEnabledFilter, TriggerKind } from '@/src/models/analytics/rule';
+import { CreatePipelineDto, PipelineEnabledFilter, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -418,145 +418,184 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
-  describe('rules', () => {
-    const rule = {
-      id: 'r_1',
-      name: 'turn-feedback-live',
+  describe('pipelines', () => {
+    const pipeline = {
+      name: 'turn_feedback_live',
+      kind: PipelineKind.Enrich,
+      target: 'turn_feedback',
+      inputs: ['response_ratings'],
+      trigger: { kind: TriggerKind.OnIngest },
       evaluator_name: 'feedback-rollup',
       evaluator_version: 2,
       evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
-      target_enrichment: 'turn_feedback',
-      source: 'response_ratings',
       grain_key: 'response_id',
-      trigger_kind: TriggerKind.OnIngest,
       enabled: true,
       generation: 5,
       created_at: '2026-08-20T14:39:05Z',
       updated_at: '2026-08-21T09:37:29Z',
     };
 
-    const createDto: CreateRuleDto = {
-      name: 'new-rule',
+    const createDto: CreatePipelineDto = {
+      name: 'new_pipeline',
+      kind: PipelineKind.Enrich,
+      target: 'turn_feedback',
+      trigger: { kind: TriggerKind.OnIngest },
       evaluator_name: 'feedback-rollup',
-      target_enrichment: 'turn_feedback',
-      trigger_kind: TriggerKind.OnIngest,
       enabled: false,
     };
 
-    test('getRules unwraps the {items} envelope, not {tables}', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [rule] }), JSON_HEADERS);
+    test('getPipelines unwraps the {pipelines} envelope, not {items}', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [pipeline] }), JSON_HEADERS);
 
-      const res = await instance.getRules(undefined, TOKEN_MOCK);
-
-      expect(res).toEqual([rule]);
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
     });
 
-    test('getRules returns null when neither shape is present', async () => {
-      fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+    test('getPipelines ignores a list under any other key', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [pipeline] }), JSON_HEADERS);
 
-      expect(await instance.getRules(undefined, TOKEN_MOCK)).toBeNull();
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
     });
 
     // Deployed builds disagree: some answer a bare array, some the wrapper.
-    test('getRules accepts a bare array as well as the wrapper', async () => {
-      fetch.mockResponseOnce(JSON.stringify([rule]), JSON_HEADERS);
+    test('getPipelines accepts a bare array as well as the wrapper', async () => {
+      fetch.mockResponseOnce(JSON.stringify([pipeline]), JSON_HEADERS);
 
-      expect(await instance.getRules(undefined, TOKEN_MOCK)).toEqual([rule]);
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
     });
 
-    test('getRules reads an empty bare array as no rules rather than a failure', async () => {
+    test('getPipelines reads an empty bare array as no pipelines rather than a failure', async () => {
       fetch.mockResponseOnce(JSON.stringify([]), JSON_HEADERS);
 
-      expect(await instance.getRules(undefined, TOKEN_MOCK)).toEqual([]);
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [], isForbidden: false });
     });
 
-    test('getRules omits enabled entirely when no preference is expressed', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+    test('getPipelines marks a forbidden read so the page can offer its own fallback', async () => {
+      fetch.mockResponseOnce('', { status: 403 });
 
-      await instance.getRules({ enabled: RuleEnabledFilter.All }, TOKEN_MOCK);
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: true });
+    });
+
+    test('getPipelines reports any other failure as readable but empty', async () => {
+      fetch.mockResponseOnce('boom', { status: 500 });
+
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
+    });
+
+    test('getPipelines omits enabled entirely when no preference is expressed', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.All }, TOKEN_MOCK);
 
       const url = fetch.mock.calls[0][0] as string;
       expect(url).not.toContain('enabled');
       expect(url).not.toContain('?');
     });
 
-    test('getRules sends enabled=true for the enabled-only filter', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+    test('getPipelines sends enabled=true for the enabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
 
-      await instance.getRules({ enabled: RuleEnabledFilter.Enabled }, TOKEN_MOCK);
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.Enabled }, TOKEN_MOCK);
 
       expect(fetch.mock.calls[0][0] as string).toContain('enabled=true');
     });
 
-    test('getRules sends enabled=false for the disabled-only filter', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+    test('getPipelines sends enabled=false for the disabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
 
-      await instance.getRules({ enabled: RuleEnabledFilter.Disabled }, TOKEN_MOCK);
+      await instance.getPipelines({ enabled: PipelineEnabledFilter.Disabled }, TOKEN_MOCK);
 
       expect(fetch.mock.calls[0][0] as string).toContain('enabled=false');
     });
 
-    test('getRules combines both filters rather than one replacing the other', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+    test('getPipelines scopes the listing to one kind', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
 
-      await instance.getRules({ enabled: RuleEnabledFilter.Enabled, updatedSince: '2026-08-01T00:00:00Z' }, TOKEN_MOCK);
+      await instance.getPipelines({ kind: PipelineKind.Aggregate }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('kind=aggregate');
+    });
+
+    test('getPipelines combines every filter rather than one replacing the other', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(
+        {
+          kind: PipelineKind.Enrich,
+          enabled: PipelineEnabledFilter.Enabled,
+          updatedSince: '2026-08-01T00:00:00Z',
+        },
+        TOKEN_MOCK,
+      );
 
       const url = fetch.mock.calls[0][0] as string;
+      expect(url).toContain('kind=enrich');
       expect(url).toContain('enabled=true');
       expect(url).toContain('updated_since=2026-08-01T00%3A00%3A00Z');
     });
 
-    test('getRules sends updated_since alone when enabled is unfiltered', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+    test('getPipelines sends updated_since alone when enabled is unfiltered', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
 
-      await instance.getRules({ enabled: RuleEnabledFilter.All, updatedSince: '2026-08-01T00:00:00Z' }, TOKEN_MOCK);
+      await instance.getPipelines(
+        { enabled: PipelineEnabledFilter.All, updatedSince: '2026-08-01T00:00:00Z' },
+        TOKEN_MOCK,
+      );
 
       const url = fetch.mock.calls[0][0] as string;
       expect(url).toContain('updated_since=');
       expect(url).not.toContain('enabled');
     });
 
-    test('getRule issues GET on the encoded rule URL', async () => {
-      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+    test('getPipeline issues GET on the encoded name URL', async () => {
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
 
-      const res = await instance.getRule('r 1', TOKEN_MOCK);
+      const res = await instance.getPipeline('turn feedback', TOKEN_MOCK);
 
-      expect(res).toEqual(rule);
+      expect(res).toEqual({ data: pipeline, isForbidden: false });
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/rules/r%201'),
+        expect.stringContaining('/v1/pipelines/turn%20feedback'),
         expect.objectContaining({ method: 'GET' }),
       );
     });
 
-    test('createRule POSTs the whole rule in one request', async () => {
-      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+    test('getPipeline marks a forbidden read rather than reporting the pipeline missing', async () => {
+      fetch.mockResponseOnce('', { status: 403 });
 
-      await instance.createRule(createDto, TOKEN_MOCK);
+      expect(await instance.getPipeline('turn_feedback_live', TOKEN_MOCK)).toEqual({
+        data: null,
+        isForbidden: true,
+      });
+    });
+
+    test('createPipeline POSTs the whole pipeline in one request', async () => {
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
+
+      await instance.createPipeline(createDto, TOKEN_MOCK);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/rules'),
+        expect.stringContaining('/v1/pipelines'),
         expect.objectContaining({ method: 'POST', body: JSON.stringify(createDto) }),
       );
     });
 
-    test('updateRule PUTs the complete object', async () => {
-      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+    test('updatePipeline PATCHes the name-addressed pipeline', async () => {
+      fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
 
-      await instance.updateRule('r_1', createDto, TOKEN_MOCK);
+      await instance.updatePipeline('turn_feedback_live', createDto, TOKEN_MOCK);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/rules/r_1'),
-        expect.objectContaining({ method: 'PUT', body: JSON.stringify(createDto) }),
+        expect.stringContaining('/v1/pipelines/turn_feedback_live'),
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify(createDto) }),
       );
     });
 
-    test('deleteRule issues DELETE on the encoded rule URL', async () => {
+    test('deletePipeline issues DELETE on the encoded name URL', async () => {
       fetch.mockResponseOnce('');
 
-      await instance.deleteRule('r_1', TOKEN_MOCK);
+      await instance.deletePipeline('turn_feedback_live', TOKEN_MOCK);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/rules/r_1'),
+        expect.stringContaining('/v1/pipelines/turn_feedback_live'),
         expect.objectContaining({ method: 'DELETE' }),
       );
     });
