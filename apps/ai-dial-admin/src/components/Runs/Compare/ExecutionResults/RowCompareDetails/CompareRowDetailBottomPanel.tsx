@@ -22,7 +22,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   onSwitchToSidebar,
 }) => {
   return (
-    <div className="flex flex-col size-full bg-layer-0 overflow-hidden px-2">
+    <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
       <CompareRowDetailPanel
         row={row}
         primaryRunName={primaryRunName}
