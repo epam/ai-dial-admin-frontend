@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { DialFormPopup, DialLoader, DialSelectField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
 
@@ -15,39 +15,39 @@ interface Props {
   onClose: () => void;
 }
 
-// FULL_ADMIN-only panel to view and full-replace a table's write/modify provider-role lists. Rendered
-// only when the caller can manage roles (the backend access endpoint is admin-only). Role names are
-// picked from the DIAL Roles catalog (each role's `name` is what the backend matches against the
-// caller's provider roles) rather than typed free-form.
 const TableAccessPanel: FC<Props> = ({ name, onClose }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const [write, setWrite] = useState<string[]>([]);
   const [modify, setModify] = useState<string[]>([]);
-  const [roleOptions, setRoleOptions] = useState<SelectOption[]>([]);
+  const [catalogRoles, setCatalogRoles] = useState<string[]>([]);
+  const [grantedOnLoad, setGrantedOnLoad] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  // Whether the initial fetch is still in flight — gates the spinner. Distinct from `loaded` (below):
-  // a failed fetch still stops `fetching` (falls through to the empty, Save-disabled form) rather than
-  // spinning forever.
   const [fetching, setFetching] = useState(true);
-  // Gate Save until the current lists are loaded — otherwise a save could full-replace the table's real
-  // roles with empty state (before the fetch resolves, or if it failed).
   const [loaded, setLoaded] = useState(false);
+
+  const roleOptions: SelectOption[] = useMemo(
+    () =>
+      Array.from(new Set([...catalogRoles, ...grantedOnLoad]))
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+        .map((role) => ({ value: role, label: role })),
+    [catalogRoles, grantedOnLoad],
+  );
 
   useEffect(() => {
     let active = true;
-    void Promise.all([getTableAccess(name), getRoles()]).then(([access, roles]) => {
+    void Promise.all([getTableAccess(name), getRoles()]).then(([access, catalog]) => {
       if (!active) return;
       setFetching(false);
-      if (roles) {
-        setRoleOptions(roles.map((role) => ({ value: role.name ?? '', label: role.name ?? '' })));
-      } else {
-        showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RolesLoadFailed)));
-      }
+      setCatalogRoles(catalog.roles.map((role) => role.displayName ?? '').filter(Boolean));
+      catalog.warnings.forEach((warning) =>
+        showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RolesLoadFailed), t(warning))),
+      );
       if (access) {
         setWrite(access.write ?? []);
         setModify(access.modify ?? []);
+        setGrantedOnLoad([...(access.write ?? []), ...(access.modify ?? [])]);
         setLoaded(true);
       } else {
         showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.AccessLoadFailed)));
