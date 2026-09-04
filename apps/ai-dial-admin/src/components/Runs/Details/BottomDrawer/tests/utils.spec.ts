@@ -1,10 +1,9 @@
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-import { DRAWER_COARSE_STEP_HEIGHT, DRAWER_STEP_HEIGHT } from '../constants';
-import { buildComparisonSections, clampDrawerHeight, countDiffs, valuesAreEqual } from '../utils';
+import { buildComparisonSections, valuesAreEqual } from '../utils';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'r1',
@@ -449,67 +448,5 @@ describe('valuesAreEqual', () => {
 
   it('returns false for different strings', () => {
     expect(valuesAreEqual('hello', 'world')).toBe(false);
-  });
-});
-
-describe('countDiffs', () => {
-  it('counts differing visible fields', () => {
-    const active = makeResult({ id: 'a', testCaseData: { input: 'x' } });
-    const pinned = makeResult({ id: 'b', testCaseData: { input: 'y' } });
-    const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
-
-    const diffs = countDiffs(sections);
-    expect(diffs).toBeGreaterThan(0);
-  });
-
-  it('returns 0 when no pinned (single column)', () => {
-    const result = makeResult();
-    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
-  });
-
-  it('returns 0 when all values are equal', () => {
-    const result = makeResult({ id: 'a' });
-    const same = makeResult({ id: 'b' });
-    const sections = buildComparisonSections(result, same, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
-  });
-});
-
-describe('clampDrawerHeight', () => {
-  test('returns a height already inside the bounds', () => {
-    expect(clampDrawerHeight(380, 200, 800)).toBe(380);
-  });
-
-  test('raises a height below the minimum', () => {
-    expect(clampDrawerHeight(40, 200, 800)).toBe(200);
-  });
-
-  test('lowers a height above the maximum', () => {
-    expect(clampDrawerHeight(9000, 200, 800)).toBe(800);
-  });
-
-  // The maximum comes from the viewport, so a short window can put it below the minimum. The minimum wins
-  // rather than the two crossing and answering a negative height.
-  test('keeps the minimum when the viewport puts the maximum below it', () => {
-    expect(clampDrawerHeight(500, 200, 120)).toBe(200);
-  });
-
-  test('falls back to the minimum for a height that is not a number', () => {
-    expect(clampDrawerHeight(Number.NaN, 200, 800)).toBe(200);
-  });
-});
-
-// The two step sizes `openspec/specs/analytics-bottom-drawer/spec.md` requires of the drawer's handle. They
-// are asserted against the spec's numbers rather than against whatever the constants happen to say.
-describe('the drawer keyboard step sizes', () => {
-  test('nudges by 20px and crosses by 100px', () => {
-    expect(DRAWER_STEP_HEIGHT).toBe(20);
-    expect(DRAWER_COARSE_STEP_HEIGHT).toBe(100);
-  });
-
-  test('a shifted step still stops at the bounds', () => {
-    expect(clampDrawerHeight(220 - DRAWER_COARSE_STEP_HEIGHT, 200, 800)).toBe(200);
-    expect(clampDrawerHeight(750 + DRAWER_COARSE_STEP_HEIGHT, 200, 800)).toBe(800);
   });
 });

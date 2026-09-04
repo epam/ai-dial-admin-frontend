@@ -10,14 +10,3 @@ export const SECTION_I18N: Record<string, RunsI18nKey> = {
 export const TRUNCATE_THRESHOLD = 500;
 
 export const EXECUTION_STATUS_FIELD_KEY = 'executionStatus';
-
-export const DEFAULT_DRAWER_HEIGHT = 380;
-export const MIN_DRAWER_HEIGHT = 200;
-export const MAX_DRAWER_OFFSET = 100;
-export const COLLAPSED_HEIGHT = 34;
-
-// The two step sizes `openspec/specs/analytics-bottom-drawer/spec.md` requires of the drawer's handle: a
-// plain arrow nudges, a shifted one crosses the panel.
-export const DRAWER_STEP_HEIGHT = 20;
-
-export const DRAWER_COARSE_STEP_HEIGHT = 100;

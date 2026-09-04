@@ -15,13 +15,12 @@ import {
   ROW_DETAIL_MINIMAP_COL_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import {
-  CompareRowDetailField,
-  CompareRowDetailSection,
   RowDetailDeltaFilter,
   RowDetailFieldFilter,
   RowDetailValueFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
+import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
@@ -31,7 +30,7 @@ import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  sections: CompareRowDetailSection[];
+  sections: RowDetailSection[];
   primaryRunName: string;
   comparedRunName: string;
   hasComparedMatch: boolean;
@@ -100,7 +99,7 @@ const CompareRowDetailTable: FC<Props> = ({
     setSecondarySearchQuery(event.target.value);
   }, []);
 
-  const onOpenDiff = useCallback((row: CompareRowDetailField) => {
+  const onOpenDiff = useCallback((row: RowDetailField) => {
     setDiffView({ fieldLabel: row.label, original: row.primaryRaw ?? '', modified: row.secondaryRaw ?? '' });
   }, []);
 
