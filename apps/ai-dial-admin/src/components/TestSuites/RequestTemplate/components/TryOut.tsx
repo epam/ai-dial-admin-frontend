@@ -23,12 +23,20 @@ import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { SuiteType, TestCase, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import {
+  SuiteType,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TryOutCoreResponse,
+  TryOutResponse,
+} from '@/src/models/evaluation/test-suite';
 import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
 import {
   normalizeResponseBodyForColumns,
   unwrapJsonRequestBody,
 } from '@/src/components/TestSuites/utils/column-eval-context';
+import { TryOutInvocation } from '@/src/components/TestSuites/utils/models';
 import { getRequestTurnCounts, getTryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
@@ -36,10 +44,6 @@ import TryOutRequestPreview from './TryOutRequestPreview';
 import TryOutRequestTabs from './TryOutRequestTabs';
 import TryOutResponsePreview from './TryOutResponse';
 
-export interface TryOutResponse {
-  statusCode: number;
-  [key: string]: unknown;
-}
 interface Props {
   testSuite: TestSuite;
   testCaseId?: string;
@@ -48,7 +52,7 @@ interface Props {
 }
 
 const TryOutResponseBody: FC<{
-  response: TryOutResponse | null;
+  response: TryOutCoreResponse | null;
   isRequestSend: boolean;
   growOnOpen: boolean;
 }> = ({ response, isRequestSend, growOnOpen }) => {
@@ -84,13 +88,28 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
-  const [response, setResponse] = useState<TryOutResponse | null>(null);
-  const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
-  const [history, setHistory] = useState<TryOutHistoryEntry[] | undefined>(undefined);
+  /**
+   * The whole try-out envelope, not just its inner response: the reported extraction lives beside
+   * `history` on the envelope, so keeping them together stops them drifting out of step.
+   */
+  const [tryOutResult, setTryOutResult] = useState<TryOutResponse | null>(null);
   const [isRequestSend, setIsRequestSend] = useState(false);
-  const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
   const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(() => !response && !!testCaseId);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(() => !!testCaseId);
+
+  const response = tryOutResult?.response ?? null;
+  const resolvedRequest = tryOutResult?.resolvedRequest ?? {};
+  const history = tryOutResult?.history;
+  const grafanaTraceUrl = tryOutResult?.grafanaTraceUrl;
+
+  const invocation = useMemo<TryOutInvocation>(
+    () => ({
+      response: tryOutResult?.response,
+      extractedColumns: tryOutResult?.extractedColumns,
+      extractionWarnings: tryOutResult?.extractionWarnings,
+    }),
+    [tryOutResult],
+  );
 
   const multiTurnLength = initialTestCase?.multiTurnData?.length ?? 0;
   const turnCounts = useMemo(
@@ -126,18 +145,15 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
 
       const testSuiteId = testSuite.id || '';
       if (res?.success) {
-        const tryoutResponse = (res.response?.response as TryOutResponse) || null;
-        setResolvedRequest(res.response?.resolvedRequest || {});
-        setResponse(tryoutResponse);
-        setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
-        setHistory(res.response?.history);
+        setTryOutResult(res.response ?? null);
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
-        const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
-        setResolvedRequest({ body: requestBody || {} });
-        setResponse(errorResponse.response);
-        setHistory(undefined);
-        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
+        const errorResult: TryOutResponse = {
+          resolvedRequest: { body: requestBody || {} },
+          response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 },
+        };
+        setTryOutResult(errorResult);
+        if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResult);
       }
     } finally {
       setIsRequestSend(false);
@@ -148,10 +164,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
     if (!testCaseId) {
       const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
       if (responseFromStorage) {
-        setResponse(responseFromStorage.response as TryOutResponse);
-        setResolvedRequest(responseFromStorage.resolvedRequest || {});
-        setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
-        setHistory(responseFromStorage.history);
+        setTryOutResult(responseFromStorage);
       }
     }
 
@@ -187,7 +200,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
                       iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                       label={t(ButtonsI18nKey.Change)}
                       onClick={() => {
-                        setResponse(null);
+                        setTryOutResult(null);
                         setActiveTab(EntityViewTab.Response);
                       }}
                     />
@@ -267,6 +280,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
             schema={schema}
             multiTurnData={initialTestCase?.multiTurnData}
             columns={testSuite.responseColumns}
+            invocation={invocation}
             response={normalizeResponseBodyForColumns(response?.body as Record<string, unknown>)}
             request={unwrapJsonRequestBody(resolvedRequest.body as Record<string, unknown> | undefined)}
             isLoading={isRequestSend}

@@ -33,6 +33,10 @@ const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentIn
       return t(InterfacesI18nKey.AnthropicMessages);
     case DeploymentInterfaceType.OpenAIEmbeddings:
       return t(InterfacesI18nKey.OpenAIEmbeddings);
+    // The enum spans DIAL Core's whole InterfaceType vocabulary; only the types in the
+    // `*_INTERFACE_TYPES` allowlists are configurable here and so only they carry a label.
+    default:
+      return type;
   }
 };
 

@@ -1,167 +1,151 @@
 import jsonata from 'jsonata';
 
+import { resolveInvocationColumns } from '@/src/components/TestSuites/utils/column-extraction';
 import {
   normalizeResponseBodyForColumns,
   unwrapJsonRequestBody,
 } from '@/src/components/TestSuites/utils/column-eval-context';
-import { ResponseColumn, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import {
+  ColumnExtractionStatus,
+  EvaluatedColumn,
+  TryOutColumnGroupResult,
+  TryOutColumnResults,
+  TryOutColumnTurnResult,
+  TryOutInvocation,
+} from '@/src/components/TestSuites/utils/models';
+import {
+  ResponseColumn,
+  SuiteType,
+  TestCaseSchema,
+  TestSuite,
+  TryOutHistoryEntry,
+} from '@/src/models/evaluation/test-suite';
 import { toRequestView } from '@/src/utils/evaluation/request-chain';
 import {
   getRequestTurnCounts,
   getTryOutSectionShape,
   groupTryOutSections,
   shouldShowTurnLabels,
-  TryOutSectionShape,
 } from '@/src/utils/evaluation/tryout-sections';
-
-export interface EvaluatedColumn {
-  name: string;
-  expression: string;
-  type: string;
-  result: string;
-  valid: boolean;
-}
-
-export interface TryOutColumnTurnResult {
-  turnIndex: number;
-  columns: EvaluatedColumn[];
-  responseBody?: unknown;
-}
-
-export interface TryOutColumnGroupResult {
-  requestIndex: number;
-  showTurnLabels: boolean;
-  turns: TryOutColumnTurnResult[];
-}
-
-export interface TryOutColumnResults {
-  shape: TryOutSectionShape;
-  flatColumns?: EvaluatedColumn[];
-  groups?: TryOutColumnGroupResult[];
-}
 
 const hasContent = (value?: Record<string, unknown>): boolean => !!value && Object.keys(value).length > 0;
 
-const parseColumnBindingValue = (result: string): unknown => {
-  if (result === 'true') {
-    return true;
-  }
-  if (result === 'false') {
-    return false;
-  }
-  if (result === '') {
-    return '';
-  }
-
-  try {
-    return JSON.parse(result);
-  } catch {
-    return result;
-  }
-};
-
-const mergeColumnBindings = (
-  bindings: Record<string, unknown>,
-  evaluated: EvaluatedColumn[],
-): Record<string, unknown> => {
-  const next = { ...bindings };
-
-  for (const column of evaluated) {
-    if (!column.name || !column.valid) {
-      continue;
-    }
-    next[column.name] = parseColumnBindingValue(column.result);
-  }
-
-  return next;
-};
-
-const historyEntryDisplayBody = (entry: TryOutHistoryEntry): unknown => (entry.response as { body?: unknown })?.body;
+const historyEntryDisplayBody = (entry: TryOutHistoryEntry): unknown => entry.response?.body;
 
 const historyEntryResponse = (entry: TryOutHistoryEntry): Record<string, unknown> =>
-  normalizeResponseBodyForColumns((entry.response as { body?: Record<string, unknown> })?.body) || {};
+  normalizeResponseBodyForColumns(entry.response?.body as Record<string, unknown> | undefined) || {};
 
 const historyEntryRequest = (entry: TryOutHistoryEntry): Record<string, unknown> | undefined =>
   unwrapJsonRequestBody(entry.resolvedRequest?.body as Record<string, unknown> | undefined);
 
+const historyEntryInvocation = (entry: TryOutHistoryEntry): TryOutInvocation => ({
+  response: entry.response,
+  extractedColumns: entry.extractedColumns,
+  extractionWarnings: entry.extractionWarnings,
+});
+
+/**
+ * Client-side evaluation of column expressions. Reached only for MCP-tool suites, whose try-out
+ * performs no extraction — for every other suite the backend's own extraction is what is displayed.
+ */
 export const evaluateColumns = async (
   columns: ResponseColumn[],
   response: Record<string, unknown>,
   request?: Record<string, unknown>,
-  extraBindings?: Record<string, unknown>,
 ): Promise<EvaluatedColumn[]> => {
   return Promise.all(
     columns.map(async (column) => {
-      let result: string = '';
-      let valid = false;
+      let result = '';
+      let status = ColumnExtractionStatus.Failed;
 
       try {
         const expr = jsonata(column.expression);
         // Backend/eval column expressions use $_request / $_response; FE docs/examples use $request / $response.
         const bindings = {
-          ...extraBindings,
           request,
           response,
           _request: request,
           _response: response,
         };
         const evaluated = await expr.evaluate(response, bindings);
-        valid = evaluated != null;
-        if (!valid) {
-          result = '';
-        } else {
+
+        if (evaluated != null) {
+          status = ColumnExtractionStatus.Extracted;
           result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : String(evaluated);
         }
       } catch {
         result = '';
-        valid = false;
+        status = ColumnExtractionStatus.Failed;
       }
 
       return {
         name: column.name,
         expression: column.expression,
         type: column.type,
+        status,
         result,
-        valid,
       };
     }),
   );
 };
 
+interface EvaluateTryOutColumnSectionsParams {
+  testSuite: TestSuite;
+  history?: TryOutHistoryEntry[];
+  schema?: TestCaseSchema[];
+  multiTurnLength?: number;
+  fallbackColumns?: ResponseColumn[];
+  fallbackInvocation?: TryOutInvocation;
+  fallbackResponse?: Record<string, unknown>;
+  fallbackRequest?: Record<string, unknown>;
+}
+
+/**
+ * Column results for every section the Try Out panel shows.
+ *
+ * Values come from the extraction each invocation reported — per invocation, never accumulated across
+ * them: the backend reports each one already reconciled against the frame carried between requests, so
+ * re-deriving a later request's values from an earlier one's would reimplement those chaining rules a
+ * second time.
+ */
 export const evaluateTryOutColumnSections = async ({
   testSuite,
   history,
   schema,
   multiTurnLength = 0,
   fallbackColumns = [],
+  fallbackInvocation = {},
   fallbackResponse = {},
   fallbackRequest,
-}: {
-  testSuite: TestSuite;
-  history?: TryOutHistoryEntry[];
-  schema?: TestCaseSchema[];
-  multiTurnLength?: number;
-  fallbackColumns?: ResponseColumn[];
-  fallbackResponse?: Record<string, unknown>;
-  fallbackRequest?: Record<string, unknown>;
-}): Promise<TryOutColumnResults> => {
+}: EvaluateTryOutColumnSectionsParams): Promise<TryOutColumnResults> => {
   const turnCounts = getRequestTurnCounts(testSuite, schema, multiTurnLength);
   const shape = getTryOutSectionShape(turnCounts);
+  const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
   const useGroupedHistory =
     !!history?.length && (shape === 'requests' || shape === 'combined') && turnCounts.length > 1;
 
   if (!useGroupedHistory) {
-    if (!hasContent(fallbackResponse) && !hasContent(fallbackRequest)) {
-      return { shape, flatColumns: [] };
+    if (isMcp) {
+      const flatColumns =
+        hasContent(fallbackResponse) || hasContent(fallbackRequest)
+          ? await evaluateColumns(fallbackColumns, fallbackResponse, fallbackRequest)
+          : [];
+
+      return { shape, flatColumns };
     }
 
-    const flatColumns = await evaluateColumns(fallbackColumns, fallbackResponse, fallbackRequest);
-    return { shape, flatColumns };
+    // No invocation at all is distinct from an invocation that reported no extraction: the first shows
+    // nothing, the second shows why each column has no value.
+    const hasInvocation = !!fallbackInvocation.response || !!fallbackInvocation.extractedColumns;
+
+    return {
+      shape,
+      flatColumns: hasInvocation ? resolveInvocationColumns(fallbackColumns, fallbackInvocation) : [],
+    };
   }
 
   const groups = groupTryOutSections(history, turnCounts);
-  let accumulatedBindings: Record<string, unknown> = {};
   const groupResults: TryOutColumnGroupResult[] = [];
 
   for (const group of groups) {
@@ -169,10 +153,10 @@ export const evaluateTryOutColumnSections = async ({
     const turns: TryOutColumnTurnResult[] = [];
 
     for (const { turnIndex, item } of group.turns) {
-      const response = historyEntryResponse(item);
-      const request = historyEntryRequest(item);
-      const columns = await evaluateColumns(requestColumns, response, request, accumulatedBindings);
-      accumulatedBindings = mergeColumnBindings(accumulatedBindings, columns);
+      const columns = isMcp
+        ? await evaluateColumns(requestColumns, historyEntryResponse(item), historyEntryRequest(item))
+        : resolveInvocationColumns(requestColumns, historyEntryInvocation(item));
+
       turns.push({ turnIndex, columns, responseBody: historyEntryDisplayBody(item) });
     }
 

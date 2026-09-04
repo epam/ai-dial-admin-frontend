@@ -1,12 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { evaluateTryOutColumnSections } from '@/src/components/TestSuites/utils/evaluate-columns';
 import {
+  ColumnExtractionStatus,
   EvaluatedColumn,
-  evaluateTryOutColumnSections,
+  NotExtractedReason,
   TryOutColumnResults,
-} from '@/src/components/TestSuites/utils/evaluate-columns';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+} from '@/src/components/TestSuites/utils/models';
+import { TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { ResponseColumn, SuiteType, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import TryOutColumns from '../components/TryOutColumns';
 
@@ -48,7 +50,7 @@ const makeEvaluatedColumn = (overrides: Partial<EvaluatedColumn> = {}): Evaluate
   expression: 'foo',
   type: 'STRING',
   result: 'bar',
-  valid: true,
+  status: ColumnExtractionStatus.Extracted,
   ...overrides,
 });
 
@@ -244,6 +246,94 @@ describe('TryOutColumns', () => {
     expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
     expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
     expect(screen.queryByText('JsonEditor:{"out":"c"}')).not.toBeInTheDocument();
+  });
+
+  test('passes the reported extraction through as the invocation', async () => {
+    vi.mocked(evaluateTryOutColumnSections).mockResolvedValueOnce({ shape: 'single', flatColumns: [] });
+
+    const invocation = {
+      response: { statusCode: 200 },
+      extractedColumns: { testCol: 'bar' },
+      extractionWarnings: [],
+    };
+
+    render(
+      <TryOutColumns testSuite={baseSuite} columns={[makeColumn()]} invocation={invocation} responseBody={null} />,
+    );
+
+    await waitFor(() => {
+      expect(evaluateTryOutColumnSections).toHaveBeenCalledWith(
+        expect.objectContaining({ fallbackInvocation: invocation }),
+      );
+    });
+  });
+
+  describe('column result cards', () => {
+    const renderColumns = async (columns: EvaluatedColumn[]) => {
+      vi.mocked(evaluateTryOutColumnSections).mockResolvedValueOnce({ shape: 'single', flatColumns: columns });
+
+      render(<TryOutColumns testSuite={baseSuite} columns={[makeColumn()]} responseBody={null} />);
+
+      await waitFor(() => {
+        expect(screen.getByText(columns[0].name)).toBeInTheDocument();
+      });
+    };
+
+    test('an extracted column shows its value and the valid badge', async () => {
+      await renderColumns([makeEvaluatedColumn({ result: 'Hi there, friend!' })]);
+
+      expect(screen.getByRole('group', { name: TestSuitesI18nKey.ColumnResultLabel })).toBeInTheDocument();
+      expect(screen.getByText('Hi there, friend!')).toBeInTheDocument();
+      expect(screen.getByText(ValidityStatusI18nKey.Valid)).toBeInTheDocument();
+    });
+
+    test('a failed column shows the backend error and no value', async () => {
+      await renderColumns([
+        makeEvaluatedColumn({
+          name: 'summary',
+          result: '',
+          status: ColumnExtractionStatus.Failed,
+          error: 'Expression matched nothing',
+        }),
+      ]);
+
+      expect(screen.getByText('Expression matched nothing')).toBeInTheDocument();
+      expect(screen.getByText(ValidityStatusI18nKey.Invalid)).toBeInTheDocument();
+    });
+
+    test.each([
+      [NotExtractedReason.RequestFailed, TestSuitesI18nKey.ColumnNotExtractedRequestFailed],
+      [NotExtractedReason.StreamIncomplete, TestSuitesI18nKey.ColumnNotExtractedStreamIncomplete],
+      [NotExtractedReason.NoExtractionReported, TestSuitesI18nKey.ColumnNotExtractedNoneReported],
+    ])('a not-extracted column states its reason (%s)', async (reason, reasonKey) => {
+      await renderColumns([
+        makeEvaluatedColumn({
+          result: '',
+          status: ColumnExtractionStatus.NotExtracted,
+          reason,
+          statusCode: 401,
+        }),
+      ]);
+
+      expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtracted)).toBeInTheDocument();
+      expect(screen.getByText(reasonKey)).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: TestSuitesI18nKey.ColumnResultLabel })).toBeInTheDocument();
+    });
+
+    test('all three kinds render together, each addressable by role', async () => {
+      await renderColumns([
+        makeEvaluatedColumn({ name: 'answer' }),
+        makeEvaluatedColumn({ name: 'summary', status: ColumnExtractionStatus.Failed, result: '' }),
+        makeEvaluatedColumn({
+          name: 'id',
+          status: ColumnExtractionStatus.NotExtracted,
+          reason: NotExtractedReason.RequestFailed,
+          result: '',
+        }),
+      ]);
+
+      expect(screen.getAllByRole('group', { name: TestSuitesI18nKey.ColumnResultLabel })).toHaveLength(3);
+    });
   });
 
   test('renders no column rows when evaluation returns empty flat results', async () => {

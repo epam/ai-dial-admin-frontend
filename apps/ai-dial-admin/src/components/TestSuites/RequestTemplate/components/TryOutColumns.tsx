@@ -7,12 +7,15 @@ import { capitalize } from 'lodash';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { evaluateTryOutColumnSections } from '@/src/components/TestSuites/utils/evaluate-columns';
 import {
-  evaluateTryOutColumnSections,
+  ColumnExtractionStatus,
   EvaluatedColumn,
-  TryOutColumnTurnResult,
+  NotExtractedReason,
   TryOutColumnResults,
-} from '@/src/components/TestSuites/utils/evaluate-columns';
+  TryOutColumnTurnResult,
+  TryOutInvocation,
+} from '@/src/components/TestSuites/utils/models';
 import { BasicI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
@@ -26,45 +29,77 @@ interface Props {
   schema?: TestCaseSchema[];
   multiTurnData?: Record<string, unknown>[];
   columns?: ResponseColumn[];
+  /** The try-out's own reported extraction, for the single-invocation case. */
+  invocation?: TryOutInvocation;
+  /** Normalized response and request bodies — used only by the MCP fallback. */
   response?: Record<string, unknown>;
   request?: Record<string, unknown>;
   selectedRequestIndex?: number;
 }
 
-const ColumnResultsList: FC<{ columns: EvaluatedColumn[] }> = ({ columns }) => {
+const CARD_CLASS: Record<ColumnExtractionStatus, string> = {
+  [ColumnExtractionStatus.Extracted]: 'border-success bg-success',
+  [ColumnExtractionStatus.Failed]: 'border-error bg-error',
+  [ColumnExtractionStatus.NotExtracted]: 'border-primary bg-layer-2',
+};
+
+const BADGE_CLASS: Record<ColumnExtractionStatus, string> = {
+  [ColumnExtractionStatus.Extracted]: 'border-success bg-controls-accent-success-alpha-hover',
+  [ColumnExtractionStatus.Failed]: 'border-error bg-controls-error-alpha-hover',
+  [ColumnExtractionStatus.NotExtracted]: 'border-primary bg-layer-3',
+};
+
+const STATUS_LABEL_KEY: Record<ColumnExtractionStatus, string> = {
+  [ColumnExtractionStatus.Extracted]: ValidityStatusI18nKey.Valid,
+  [ColumnExtractionStatus.Failed]: ValidityStatusI18nKey.Invalid,
+  [ColumnExtractionStatus.NotExtracted]: TestSuitesI18nKey.ColumnNotExtracted,
+};
+
+/** Stated per reason rather than through a lookup, so each key keeps its own interpolation params. */
+const getNotExtractedReason = (t: ReturnType<typeof useI18n>, column: EvaluatedColumn): string => {
+  if (column.reason === NotExtractedReason.RequestFailed) {
+    return t(TestSuitesI18nKey.ColumnNotExtractedRequestFailed, { statusCode: column.statusCode ?? '' });
+  }
+  if (column.reason === NotExtractedReason.StreamIncomplete) {
+    return t(TestSuitesI18nKey.ColumnNotExtractedStreamIncomplete);
+  }
+
+  return t(TestSuitesI18nKey.ColumnNotExtractedNoneReported);
+};
+
+const ColumnResultCard: FC<{ column: EvaluatedColumn }> = ({ column }) => {
   const t = useI18n();
+  const isNotExtracted = column.status === ColumnExtractionStatus.NotExtracted;
+  const statusLabel = t(STATUS_LABEL_KEY[column.status]);
+  const reason = isNotExtracted ? getNotExtractedReason(t, column) : column.error;
 
   return (
-    <div className="flex flex-col gap-3">
-      {columns.map((column, index) => (
-        <div
-          key={`${column.name}-${index}`}
-          className={classNames(
-            'flex flex-col gap-2 rounded p-3 border',
-            column.valid ? 'border-success bg-success' : 'border-error bg-error',
-          )}
-        >
-          <div className="flex flex-row justify-between items-center">
-            <div className="flex flex-row gap-2 items-center">
-              <div className="small-text-semi text-primary">{column.name}</div>
-              <DialTag label={capitalize(column.type)} />
-            </div>
-            <DialTag
-              label={column.valid ? t(ValidityStatusI18nKey.Valid) : t(ValidityStatusI18nKey.Invalid)}
-              className={classNames(
-                column.valid
-                  ? 'border-success bg-controls-accent-success-alpha-hover'
-                  : 'border-error bg-controls-error-alpha-hover',
-              )}
-            />
-          </div>
-          <div className="text-secondary text-sm">{column.expression}</div>
-          <div className="text-primary text-sm overflow-auto">{column.result !== null ? column.result : 'Null'}</div>
+    <div
+      role="group"
+      aria-label={t(TestSuitesI18nKey.ColumnResultLabel, { name: column.name, status: statusLabel })}
+      className={classNames('flex flex-col gap-2 rounded p-3 border', CARD_CLASS[column.status])}
+    >
+      <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row gap-2 items-center">
+          <div className="small-text-semi text-primary">{column.name}</div>
+          <DialTag label={capitalize(column.type)} />
         </div>
-      ))}
+        <DialTag label={statusLabel} className={BADGE_CLASS[column.status]} />
+      </div>
+      <div className="text-secondary text-sm">{column.expression}</div>
+      {reason ? <div className="text-secondary text-sm">{reason}</div> : null}
+      {isNotExtracted ? null : <div className="text-primary text-sm overflow-auto">{column.result}</div>}
     </div>
   );
 };
+
+const ColumnResultsList: FC<{ columns: EvaluatedColumn[] }> = ({ columns }) => (
+  <div className="flex flex-col gap-3">
+    {columns.map((column, index) => (
+      <ColumnResultCard key={`${column.name}-${index}`} column={column} />
+    ))}
+  </div>
+);
 
 const TurnColumnSection: FC<{ turn: TryOutColumnTurnResult; showTurnLabel: boolean }> = ({ turn, showTurnLabel }) => {
   const t = useI18n();
@@ -107,6 +142,7 @@ const TryOutColumns: FC<Props> = ({
   schema,
   multiTurnData,
   columns,
+  invocation,
   response,
   request,
   selectedRequestIndex = 0,
@@ -125,6 +161,7 @@ const TryOutColumns: FC<Props> = ({
       schema,
       multiTurnLength: multiTurnData?.length ?? 0,
       fallbackColumns: columns || [],
+      fallbackInvocation: invocation || {},
       fallbackResponse: response || {},
       fallbackRequest: request,
     })
@@ -142,7 +179,7 @@ const TryOutColumns: FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [testSuite, history, schema, multiTurnData, columns, response, request]);
+  }, [testSuite, history, schema, multiTurnData, columns, invocation, response, request]);
 
   const renderGrouped = () => {
     const group = results.groups?.find((item) => item.requestIndex === selectedRequestIndex);
