@@ -7,8 +7,16 @@ import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Co
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Common/FnArgEditor';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import {
+  emptyArgs,
+  functionArgSummary,
+  functionByName,
+  functionResultType,
+  operandFunctionOptions,
+} from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { compactSelectLabel } from '@/src/components/Analytics/QueryBuilder/utils/options';
 import { ENUM_UNSUPPORTED_OPERATORS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
@@ -19,9 +27,11 @@ import {
   FieldOption,
   FilterGroupNode,
   FilterPredicateNode,
+  FnArgValue,
   QueryBuilderColor,
 } from '@/src/models/analytics/query-builder';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 
 interface Props {
@@ -31,12 +41,27 @@ interface Props {
   operatorOptions: SelectOption[];
   // Collapsed-chip tint from the owning section (Filter vs Having).
   color?: QueryBuilderColor;
+  // Whether a scalar function may stand in for the column on the left of the condition. Having says
+  // no: its operands are the query's own output columns, not the source's.
+  isFunctionOperandOffered?: boolean;
 }
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
 
-const summaryOf = (node: FilterPredicateNode, options: FieldOption[], operatorOptions: SelectOption[]): string =>
-  `${node.field ? fieldDisplayName(options, node.field) : '…'} ${compactSelectLabel(operatorOptions, node.op)} ${
+// How the left operand reads in the collapsed row.
+const operandSummary = (node: FilterPredicateNode, options: FieldOption[], fn?: QueryFunction): string => {
+  if (!node.fn) return node.field ? fieldDisplayName(options, node.field) : '…';
+  const args = fn ? functionArgSummary(fn, node.args, (name) => fieldDisplayName(options, name)) : '';
+  return `${node.fn}(${args})`;
+};
+
+const summaryOf = (
+  node: FilterPredicateNode,
+  options: FieldOption[],
+  operatorOptions: SelectOption[],
+  fn?: QueryFunction,
+): string =>
+  `${operandSummary(node, options, fn)} ${compactSelectLabel(operatorOptions, node.op)} ${
     node.isNull ? 'null' : node.value || '…'
   }`;
 
@@ -49,33 +74,76 @@ const fieldTypeOf = (options: FieldOption[], name: string): string | undefined =
 
 const isEnumType = (type?: string): boolean => type === AnalyticsFieldType.Enum;
 
-const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOptions, color }) => {
+const FilterCondition: FC<Props> = ({
+  node,
+  parent,
+  fieldOptions,
+  operatorOptions,
+  color,
+  isFunctionOperandOffered,
+}) => {
   const t = useI18n();
-  const { refresh } = useQueryBuilder();
+  const { state, refresh } = useQueryBuilder();
 
-  const isEnumField = isEnumType(fieldTypeOf(fieldOptions, node.field));
+  const fn = functionByName(state.functions, node.fn);
+  const functionOptions = useMemo(
+    () => (isFunctionOperandOffered ? operandFunctionOptions(state.functions) : undefined),
+    [isFunctionOperandOffered, state.functions],
+  );
 
-  // Keyed on the declared type alone — no list here names which fields are enums, so a field an instance
+  // One resolver for both type-dependent rules below, so the value type and the operator list can
+  // never disagree about what the left operand is.
+  const operandType = (): string | undefined => {
+    if (!node.fn) return fieldTypeOf(fieldOptions, node.field);
+    return fn ? functionResultType(fn, node.args, state.fields) : undefined;
+  };
+  const isEnumOperand = isEnumType(operandType());
+
+  // Keyed on the resolved type alone — no list here names which fields are enums, so a field an instance
   // begins reporting as one is guarded with no change. The unfiltered `operatorOptions` still back the
   // collapsed summary below, so a JSON-authored predicate carrying a withheld operator still reads by name
   // instead of falling back to its code.
   const availableOperatorOptions = useMemo(
     () =>
-      isEnumField
+      isEnumOperand
         ? operatorOptions.filter((option) => !ENUM_UNSUPPORTED_OPERATORS.includes(option.value as QueryOperator))
         : operatorOptions,
-    [isEnumField, operatorOptions],
+    [isEnumOperand, operatorOptions],
   );
 
+  // Retargeting a contains condition at an enum operand would otherwise leave it serializing a predicate
+  // the service rejects outright, taking the whole query down rather than this one condition.
+  const guardEnumOperator = (type?: string) => {
+    if (isEnumType(type) && ENUM_UNSUPPORTED_OPERATORS.includes(node.op)) node.op = QueryOperator.Eq;
+  };
+
   const onChangeField = (value: string) => {
+    node.fn = null;
+    node.args = [];
     node.field = value;
     const fieldType = fieldTypeOf(fieldOptions, value);
     node.valueType = defaultValueType(fieldType);
-    // Retargeting a contains condition at an enum field would otherwise leave it serializing a predicate
-    // the service rejects outright, taking the whole query down rather than this one condition.
-    if (isEnumType(fieldType) && ENUM_UNSUPPORTED_OPERATORS.includes(node.op)) {
-      node.op = QueryOperator.Eq;
-    }
+    guardEnumOperator(fieldType);
+    refresh();
+  };
+
+  const onSelectFunction = (name: string) => {
+    const picked = functionByName(state.functions, name);
+    if (!picked) return;
+    node.fn = picked.name;
+    node.field = '';
+    node.args = emptyArgs(picked);
+    const resultType = functionResultType(picked, node.args, state.fields);
+    node.valueType = defaultValueType(resultType);
+    guardEnumOperator(resultType);
+    refresh();
+  };
+
+  const onChangeArg = (index: number, value: FnArgValue) => {
+    node.args[index] = value;
+    // A function that returns its argument's own type changes what the operand is as its arguments
+    // change; the value type stays as chosen, but a now-invalid operator cannot be left standing.
+    if (fn) guardEnumOperator(functionResultType(fn, node.args, state.fields));
     refresh();
   };
 
@@ -112,16 +180,32 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOption
   const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
 
   return (
-    <ChipRow summary={summaryOf(node, fieldOptions, operatorOptions)} onRemove={remove} color={color}>
+    <ChipRow summary={summaryOf(node, fieldOptions, operatorOptions, fn)} onRemove={remove} color={color}>
       <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
         mode={FieldDropdownMode.Picker}
         options={fieldOptions}
-        value={node.field}
+        value={node.fn ?? node.field}
+        functions={functionOptions}
         placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
         ariaLabel={t(QueryBuilderI18nKey.Field)}
         onSelect={onChangeField}
+        onSelectFunction={onSelectFunction}
       />
+      {!!fn?.args.length && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {fn.args.map((arg, i) => (
+            <FnArgEditor
+              key={`${node.id}-${i}`}
+              id={`qb-cond-${node.id}-arg-${i}`}
+              arg={arg}
+              value={node.args[i] ?? {}}
+              fieldOptions={fieldOptions}
+              onChange={(value) => onChangeArg(i, value)}
+            />
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-1.5">
         <div className="min-w-[200px] flex-1">
           <CompactSelect

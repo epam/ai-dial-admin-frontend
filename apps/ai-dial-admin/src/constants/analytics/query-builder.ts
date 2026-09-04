@@ -160,6 +160,8 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
   [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
+  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
+  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
 };
 
 // Which section header surfaces which aggregate-validation warning.

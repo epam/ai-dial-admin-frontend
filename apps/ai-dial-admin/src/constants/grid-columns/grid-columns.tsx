@@ -1744,7 +1744,7 @@ export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
     colId: 'editor',
     headerName: t(QueriesI18nKey.Editor),
     hide: false,
-    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery)]),
+    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery, null)]),
     ...baseStringFilter,
   },
   {

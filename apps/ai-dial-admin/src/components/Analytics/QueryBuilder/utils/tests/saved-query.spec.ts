@@ -297,19 +297,19 @@ describe('deriveSavedQueryEditor', () => {
   const representable: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
 
   test('reports SQL for a query carrying a SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' })).toBe(SavedQueryEditor.Sql);
+    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' }, null)).toBe(SavedQueryEditor.Sql);
   });
 
   test('reports Builder for a representable structured body', () => {
-    expect(deriveSavedQueryEditor({ query: representable })).toBe(SavedQueryEditor.Builder);
+    expect(deriveSavedQueryEditor({ query: representable }, null)).toBe(SavedQueryEditor.Builder);
   });
 
   test('reports JSON for a structured body the builder cannot represent', () => {
-    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY })).toBe(SavedQueryEditor.Json);
+    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY }, null)).toBe(SavedQueryEditor.Json);
   });
 
   test('ignores a blank SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: '   ', query: representable })).toBe(SavedQueryEditor.Builder);
+    expect(deriveSavedQueryEditor({ sql: '   ', query: representable }, null)).toBe(SavedQueryEditor.Builder);
   });
 });
 
@@ -353,6 +353,14 @@ describe('toBuilderRestore', () => {
     expect(result.state.entityName).toBe('dial_usage_log');
     expect(result.state.mode).toBe(QueryMode.Aggregate);
     expect(result.state.fields).toEqual(FIELDS);
+  });
+
+  test('leaves builder state untouched for a body the builder cannot represent', () => {
+    const result = restore({ query: DEEPLY_NESTED_BODY });
+
+    expect(result.editor).toBe(SavedQueryEditor.Json);
+    expect(result.state.filter.children).toEqual([]);
+    expect(result.jsonText).toContain('dial_usage_log');
   });
 
   test('opens a SQL body in the SQL view with the stored statement intact', () => {

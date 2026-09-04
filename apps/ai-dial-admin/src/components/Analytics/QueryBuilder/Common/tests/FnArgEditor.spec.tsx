@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
+import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Common/FnArgEditor';
 import { FieldOption } from '@/src/models/analytics/query-builder';
 import { QueryFunctionArg, QueryFunctionArgKind } from '@/src/models/analytics/query-function';
 

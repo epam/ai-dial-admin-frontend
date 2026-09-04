@@ -2,6 +2,7 @@ import { IMPLICIT_COUNT_ALIAS, UNTAGGED_KEY } from '@/src/constants/analytics/qu
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   ComputedRow,
+  ExpressionRow,
   FieldOption,
   FieldOptionGroup,
   FnArgValue,
@@ -139,16 +140,20 @@ export const uniqueAlias = (candidate: string, taken: string[]): string => {
   return `${candidate} ${suffix}`;
 };
 
-// The computed rows the query will actually carry a column for, in the order the serializer emits
-// them: group-by function entries whose required arguments are filled, then every aggregate.
-const computedRows = (state: QueryBuilderState): ComputedRow[] => {
-  const rows: ComputedRow[] = [];
-  state.groupBy.forEach((g) => {
-    if (!g.fn) return;
-    const fn = functionByName(state.functions, g.fn);
-    if (!fn || !requiredArgsFilled(fn, g.args)) return;
-    rows.push({ id: g.id, fn, args: g.args, distinct: false, alias: g.alias, aliasEdited: g.aliasEdited });
+const fnRowsOf = (rows: ExpressionRow[], functions: QueryFunction[]): ComputedRow[] =>
+  rows.flatMap((row) => {
+    if (!row.fn) return [];
+    const fn = functionByName(functions, row.fn);
+    if (!fn || !requiredArgsFilled(fn, row.args)) return [];
+    return [{ id: row.id, fn, args: row.args, distinct: false, alias: row.alias, aliasEdited: row.aliasEdited }];
   });
+
+// The computed rows the query will actually carry a column for, in the order the serializer emits
+// them. The two modes never contribute at once: `row` mode computes only through its projection,
+// `aggregate` mode through its group-by function entries followed by every aggregate.
+const computedRows = (state: QueryBuilderState): ComputedRow[] => {
+  if (state.mode === QueryMode.Row) return fnRowsOf(state.select, state.functions);
+  const rows = fnRowsOf(state.groupBy, state.functions);
   state.aggregates.forEach((a) => {
     const fn = functionByName(state.functions, a.fn);
     if (!fn) return;
@@ -157,15 +162,18 @@ const computedRows = (state: QueryBuilderState): ComputedRow[] => {
   return rows;
 };
 
+const plainColumnNames = (state: QueryBuilderState): string[] =>
+  (state.mode === QueryMode.Row ? state.select : state.groupBy).filter((r) => !r.fn && r.field).map((r) => r.field);
+
 // The single source of truth for what each computed column is called: row id → output name. Every
 // path — the alias prefill, the Having/Sort options, and serialization — resolves names through this
 // one function, so a column is offered under exactly the name the query will carry and the name shown
 // in the row's alias input. A row's own alias is that name (a duplicate the user typed included —
 // their choice); a blank one falls back to the derived name, kept unique against the names already
-// assigned, plain group-by columns included.
+// assigned — the active mode's plain columns included.
 export const computedColumnNames = (state: QueryBuilderState, exceptRowId?: string): Map<string, string> => {
   const names = new Map<string, string>();
-  const assigned = state.groupBy.filter((g) => !g.fn && g.field).map((g) => g.field);
+  const assigned = plainColumnNames(state);
   computedRows(state).forEach((row) => {
     if (row.id === exceptRowId) return;
     const name = row.alias.trim() || uniqueAlias(deriveAlias(row.fn, row.args, row.distinct, state.fields), assigned);
@@ -178,7 +186,7 @@ export const computedColumnNames = (state: QueryBuilderState, exceptRowId?: stri
 // Every output column name the query already uses. `exceptRowId` leaves one row out so rederiving
 // that row's own name does not collide with itself.
 export const takenColumnNames = (state: QueryBuilderState, exceptRowId?: string): string[] => [
-  ...state.groupBy.filter((g) => !g.fn && g.field).map((g) => g.field),
+  ...plainColumnNames(state),
   ...computedColumnNames(state, exceptRowId).values(),
 ];
 
@@ -198,21 +206,25 @@ const plainColumnOption = (state: QueryBuilderState, row: GroupByRow): FieldOpti
   return { name: row.field, type: field?.type, display_name: field?.display_name, description: field?.description };
 };
 
-export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
+// A computed column as a picker option, typed by what its function returns — except an aggregate (or
+// a distinct one), whose measure is numeric whatever its argument was.
+const computedColumnOptions = (state: QueryBuilderState): FieldOption[] => {
   const names = computedColumnNames(state);
+  return computedRows(state).map((row) => ({
+    name: names.get(row.id) ?? '',
+    type:
+      row.distinct || state.aggregates.some((a) => a.id === row.id)
+        ? AnalyticsFieldType.Decimal
+        : functionResultType(row.fn, row.args, state.fields),
+  }));
+};
+
+export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
   const plainColumns = state.groupBy
     .filter((g) => !g.fn)
     .map((g) => plainColumnOption(state, g))
     .filter((o): o is FieldOption => o !== null);
-  const computed = computedRows(state).map(
-    (row): FieldOption => ({
-      name: names.get(row.id) ?? '',
-      type:
-        row.distinct || state.aggregates.some((a) => a.id === row.id)
-          ? AnalyticsFieldType.Decimal
-          : functionResultType(row.fn, row.args, state.fields),
-    }),
-  );
+  const computed = computedColumnOptions(state);
   // Aggregate mode with no aggregates of its own still returns the implicit count column, so it is
   // offered here too — the option set mirrors the query's output columns, not just its authored rows.
   const implicit: FieldOption[] =
@@ -223,7 +235,11 @@ export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
 };
 
 export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {
-  // Keep tags so the categorized dropdown can group; aggregate-mode options are aliases (untagged).
-  if (state.mode === QueryMode.Row) return sortByName(fieldsToOptions(state.fields));
+  // Keep tags so the categorized dropdown can group; alias options (a row-mode function column, or
+  // any aggregate-mode output) carry none. A row-mode function column is sortable by its alias
+  // because the service registers a projection alias as one of the query's output names.
+  if (state.mode === QueryMode.Row) {
+    return sortByName([...fieldsToOptions(state.fields), ...computedColumnOptions(state)]);
+  }
   return havingFieldOptions(state);
 };
