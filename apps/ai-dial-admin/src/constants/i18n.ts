@@ -2404,6 +2404,8 @@ export enum QueryBuilderI18nKey {
   RunFailed = 'QueryBuilder.RunFailed',
   WarningMissingGroupByField = 'QueryBuilder.WarningMissingGroupByField',
   WarningEmptyAggregate = 'QueryBuilder.WarningEmptyAggregate',
+  ViewFullValue = 'QueryBuilder.ViewFullValue',
+  CopyValue = 'QueryBuilder.CopyValue',
   WarningDroppedProjectionColumn = 'QueryBuilder.WarningDroppedProjectionColumn',
   WarningDroppedCondition = 'QueryBuilder.WarningDroppedCondition',
   ViewForm = 'QueryBuilder.ViewForm',
