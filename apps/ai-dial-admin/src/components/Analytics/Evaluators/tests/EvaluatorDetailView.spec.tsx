@@ -6,7 +6,7 @@ import { createEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
 import { AnalyticsEvaluatorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { Evaluator, EvaluatorPreset, EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
+import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/evaluators/actions');
 
@@ -14,7 +14,7 @@ const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData }: { rowData?: EnrichmentRuleListItem[] }) => <div>rules: {rowData?.length ?? 0}</div>,
+  default: ({ rowData }: { rowData?: PipelineListItem[] }) => <div>rules: {rowData?.length ?? 0}</div>,
 }));
 
 const llm: Evaluator = {
@@ -46,22 +46,22 @@ const summary: EvaluatorSummary = {
   created_at: '2026-08-17T10:00:00Z',
 };
 
-const rule: EnrichmentRuleListItem = {
-  id: 'r_1',
+const rule: PipelineListItem = {
   name: 'insights-live',
+  kind: PipelineKind.Enrich,
   evaluator_name: 'conversation-insights',
   evaluator_version: 2,
   evaluator: { name: 'conversation-insights', version: 2, type: EvaluatorType.Llm },
-  target_enrichment: 'conversation_insights',
+  target: 'conversation_insights',
   grain_key: 'conversation_id',
-  trigger_kind: TriggerKind.OnIngest,
+  trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 3,
   updated_at: '2026-08-21T09:37:29Z',
 };
 
 const renderView = (props?: Partial<Parameters<typeof EvaluatorDetailView>[0]>) =>
-  render(<EvaluatorDetailView evaluator={llm} summary={summary} referencingRules={[rule]} {...props} />);
+  render(<EvaluatorDetailView evaluator={llm} summary={summary} referencingPipelines={[rule]} {...props} />);
 
 beforeEach(() => {
   vi.clearAllMocks();

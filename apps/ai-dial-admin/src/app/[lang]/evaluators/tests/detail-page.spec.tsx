@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import { getEvaluator, getEvaluatorVersion, getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import Page from '@/src/app/[lang]/evaluators/[name]/page';
 import Page403 from '@/src/components/Page403/Page403';
 import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
+import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
-vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/pipelines/actions');
 vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('@/src/server/analytics/analytics-access');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
@@ -27,15 +27,15 @@ const latest: Evaluator = {
 
 const pinnedVersion: Evaluator = { ...latest, version: 2 };
 
-const rule: EnrichmentRuleListItem = {
-  id: 'r_1',
+const rule: PipelineListItem = {
   name: 'insights-live',
+  kind: PipelineKind.Enrich,
   evaluator_name: 'conversation-insights',
   evaluator_version: 2,
   evaluator: { name: 'conversation-insights', version: 2, type: EvaluatorType.Llm },
-  target_enrichment: 'conversation_insights',
+  target: 'conversation_insights',
   grain_key: 'conversation_id',
-  trigger_kind: TriggerKind.OnIngest,
+  trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 3,
   updated_at: '2026-08-21T09:37:29Z',
@@ -62,7 +62,7 @@ beforeEach(() => {
   vi.mocked(getEvaluators).mockResolvedValue([
     { name: 'conversation-insights', latest_version: 4, created_at: '2026-08-17T10:00:00Z' },
   ]);
-  vi.mocked(getRules).mockResolvedValue([rule]);
+  vi.mocked(getPipelines).mockResolvedValue({ data: [rule], isForbidden: false });
 });
 
 describe('evaluator detail page — version addressing', () => {
@@ -140,27 +140,27 @@ describe('evaluator detail page — degraded reads', () => {
     expect(view.props.summary).toBeNull();
   });
 
-  test('hands the view the rules referencing this evaluator', async () => {
+  test('hands the view the pipelines referencing this evaluator', async () => {
     const view = await renderView();
 
-    expect(getRules).toHaveBeenCalledOnce();
-    expect(view.props.referencingRules).toEqual([rule]);
+    expect(getPipelines).toHaveBeenCalledOnce();
+    expect(view.props.referencingPipelines).toEqual([rule]);
   });
 
-  test('leaves the referencing rules null when the listing fails', async () => {
-    vi.mocked(getRules).mockResolvedValue(null);
+  test('leaves the referencing pipelines null when the listing fails', async () => {
+    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
 
     const view = await renderView();
 
-    expect(view.props.referencingRules).toBeNull();
+    expect(view.props.referencingPipelines).toBeNull();
   });
 
-  test('leaves the referencing rules null when the fetch throws', async () => {
-    vi.mocked(getRules).mockRejectedValue(new Error('boom'));
+  test('leaves the referencing pipelines null when the fetch throws', async () => {
+    vi.mocked(getPipelines).mockRejectedValue(new Error('boom'));
 
     const view = await renderView();
 
-    expect(view.props.referencingRules).toBeNull();
+    expect(view.props.referencingPipelines).toBeNull();
   });
 });
 
@@ -174,6 +174,6 @@ describe('evaluator detail page — access', () => {
     expect(getEvaluator).not.toHaveBeenCalled();
     expect(getEvaluatorVersion).not.toHaveBeenCalled();
     expect(getEvaluators).not.toHaveBeenCalled();
-    expect(getRules).not.toHaveBeenCalled();
+    expect(getPipelines).not.toHaveBeenCalled();
   });
 });
