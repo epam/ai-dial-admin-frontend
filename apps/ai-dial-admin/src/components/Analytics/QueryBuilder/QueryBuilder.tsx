@@ -36,13 +36,17 @@ import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-s
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
+import { buildQuery, hasDroppedCondition } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { buildExecutedMeta } from '@/src/components/Analytics/QueryBuilder/utils/executed-meta';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
-import { DEFAULT_CHART_CONFIG, LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
+import {
+  DEFAULT_CHART_CONFIG,
+  LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY,
+  WARNING_I18N,
+} from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
@@ -58,6 +62,7 @@ import {
   QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
+  QueryBuilderWarning,
   QueryRequestKind,
   QueryResultView,
   QueryRunRequest,
@@ -312,7 +317,7 @@ const QueryBuilder: FC<Props> = ({
       // Edited SQL: try to translate it back into the builder; only guard when that can't be shown.
       if (isSqlView && sqlEdited) {
         const res = await translateSqlToQuery(sqlText);
-        if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
+        if (res.success && res.response?.query && isBuilderRepresentable(res.response.query, state.functions)) {
           await hydrateBuilderFromQuery(res.response.query);
           setSqlText('');
           setSqlError(null);
@@ -363,7 +368,7 @@ const QueryBuilder: FC<Props> = ({
     try {
       const parsed = JSON.parse(value) as StructuredQuery;
       setJsonInvalid(false);
-      if (!isBuilderRepresentable(parsed)) {
+      if (!isBuilderRepresentable(parsed, state.functions)) {
         setJsonDiverged(true);
         return;
       }
@@ -392,7 +397,7 @@ const QueryBuilder: FC<Props> = ({
     let runFields = state.fields;
     let runEntityName = state.entityName;
     let request: QueryRunRequest = { kind: QueryRequestKind.Sql, sql };
-    if (translated && isBuilderRepresentable(translated)) {
+    if (translated && isBuilderRepresentable(translated, state.functions)) {
       const hydrated = await hydrateBuilderFromQuery(translated);
       runFields = hydrated.fields;
       runEntityName = hydrated.state.entityName;
@@ -590,6 +595,11 @@ const QueryBuilder: FC<Props> = ({
                     <SectionBlock
                       title={t(QueryBuilderI18nKey.Filter)}
                       markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].marker}
+                      warning={
+                        hasDroppedCondition(state.filter, state.functions)
+                          ? t(WARNING_I18N[QueryBuilderWarning.DroppedCondition])
+                          : undefined
+                      }
                       action={
                         <>
                           <SectionAction
@@ -613,7 +623,12 @@ const QueryBuilder: FC<Props> = ({
                       {!state.filter.children.length && (
                         <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoConditions)}</span>
                       )}
-                      <FilterGroup node={state.filter} parent={null} fieldOptions={fieldsToOptions(state.fields)} />
+                      <FilterGroup
+                        node={state.filter}
+                        parent={null}
+                        fieldOptions={fieldsToOptions(state.fields)}
+                        isFunctionOperandOffered
+                      />
                     </SectionBlock>
 
                     {isAggregate && (
