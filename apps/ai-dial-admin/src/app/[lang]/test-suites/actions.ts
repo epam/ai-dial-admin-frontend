@@ -103,6 +103,11 @@ export async function getDeployment(id: string, type: string) {
   return testSuitesApi.getDeployment(id, type, token);
 }
 
+export async function getDeploymentById(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getDeploymentById(id, token);
+}
+
 export async function getTestSuiteTemplateVariables(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuiteTemplateVariables(id, token);
