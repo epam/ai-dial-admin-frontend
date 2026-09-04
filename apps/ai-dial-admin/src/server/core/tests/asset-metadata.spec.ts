@@ -44,6 +44,21 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
+  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource', () => {
+    const content = { endpoint: 'https://app' };
+    const meta = metadata({ url: 'applications/platform/my-app', author: 'alice', createdAt: 100, updatedAt: 111 });
+
+    expect(mergeApplicationResource(content, meta)).toEqual({
+      endpoint: 'https://app',
+      name: 'my-app',
+      path: 'my-app',
+      folderId: '',
+      author: 'alice',
+      createdAt: '100',
+      updatedAt: '111',
+    });
+  });
+
   test('mergeToolsetResource sources name/folderId/version/author/updatedAt from metadata, rest from content', () => {
     const content = { endpoint: 'https://ts', maxRetryAttempts: 2 };
     const meta = metadata({ url: 'toolsets/folder/My Toolset__1', author: 'bob', updatedAt: 222 });
@@ -56,6 +71,21 @@ describe('Server :: Core :: asset-metadata', () => {
       path: 'folder/My Toolset__1',
       version: '1',
       author: 'bob',
+      updatedAt: '222',
+    });
+  });
+
+  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource', () => {
+    const content = { endpoint: 'https://ts' };
+    const meta = metadata({ url: 'toolsets/platform/my-toolset', author: 'bob', createdAt: 200, updatedAt: 222 });
+
+    expect(mergeToolsetResource(content, meta)).toEqual({
+      endpoint: 'https://ts',
+      name: 'my-toolset',
+      path: 'my-toolset',
+      folderId: '',
+      author: 'bob',
+      createdAt: '200',
       updatedAt: '222',
     });
   });

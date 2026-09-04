@@ -18,7 +18,14 @@ import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
-import { parseEncodedFlatPath, parseEncodedVersionedPath, VersionedPathParts } from '@/src/server/publications/path';
+import {
+  decodeCorePath,
+  parseEncodedFlatPath,
+  parseEncodedVersionedPath,
+  stripPrefix,
+  VersionedPathParts,
+} from '@/src/server/publications/path';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 /**
  * DIAL Core's generic resource metadata node (`GET /v1/metadata/{type}/{path}`).
@@ -101,6 +108,7 @@ const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
     path,
     version: version ?? '',
     author: metadata.author ?? '',
+    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
   };
 };
@@ -118,6 +126,21 @@ const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) 
 };
 
 /**
+ * Applications and toolsets are dual-bucket (see `DUAL_BUCKET_VIEWS`): `public/…` is hierarchical
+ * and versioned, `platform/…` is flat like the other platform-only entities. Which bucket a given
+ * resource lives in is a property of its own metadata `url`, not its `ResourceType` — the same type
+ * serves both — so it's read off the URL here rather than threaded through as a caller flag. The
+ * `platform` segment is folded into the prefix for the flat case, matching how `MODELS_PREFIX` et al.
+ * already bake their fixed bucket segment in.
+ */
+const dualBucketMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+  const remainder = decodeCorePath(stripPrefix(metadata.url, prefix));
+  return isPlatformBucketPath(remainder)
+    ? flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`)
+    : metadataFields(metadata, prefix);
+};
+
+/**
  * Merges a Core content DTO with its Core metadata node into the frontend model shape,
  * matching the backend's `*ClientMapper` field split: name/folderId/version/author/updatedAt
  * come from metadata, everything else comes from content.
@@ -128,7 +151,7 @@ export const mergeApplicationResource = (
 ): DialApplicationResource => {
   return {
     ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]),
+    ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]),
   } as DialApplicationResource;
 };
 
@@ -138,7 +161,7 @@ export const mergeToolsetResource = (
 ): DialToolsetResource => {
   return {
     ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]),
+    ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]),
   } as DialToolsetResource;
 };
 
