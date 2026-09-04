@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
+import { ConfigEntityOrigin, ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -22,6 +25,7 @@ import {
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
+vi.mock('@/src/server/config-entities/read-page-options');
 
 describe('Tables server actions', () => {
   beforeEach(() => {
@@ -117,11 +121,30 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.replaceTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
   });
 
-  test('getRoles passes the token to the roles client', async () => {
-    (rolesApi.getRolesList as any).mockResolvedValue([{ name: 'Admin' }]);
+  test('getRoles reads the role catalog from Core, not from the admin backend', async () => {
+    (readConfigEntities as any).mockResolvedValue([
+      { name: 'analytics-writer', displayName: 'analytics-writer', origin: ConfigEntityOrigin.Api },
+    ]);
 
-    await getRoles();
+    const catalog = await getRoles();
 
-    expect(rolesApi.getRolesList).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(readConfigEntities).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Roles, []);
+    expect(rolesApi.getRolesList).not.toHaveBeenCalled();
+    expect(catalog.roles).toEqual([
+      { name: 'analytics-writer', displayName: 'analytics-writer', origin: ConfigEntityOrigin.Api },
+    ]);
+  });
+
+  test('getRoles returns the warnings the Core read reported', async () => {
+    (readConfigEntities as any).mockImplementation(
+      async (_token: unknown, _type: unknown, warnings: EntitiesI18nKey[]) => {
+        warnings.push(EntitiesI18nKey.OptionListPartial);
+        return [];
+      },
+    );
+
+    const catalog = await getRoles();
+
+    expect(catalog).toEqual({ roles: [], warnings: [EntitiesI18nKey.OptionListPartial] });
   });
 });

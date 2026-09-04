@@ -2,8 +2,10 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
+import { analyticsDataApi } from '@/src/app/api/api';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import {
+  AnalyticsRoleCatalog,
   AnalyticsSchemaPatch,
   AnalyticsTable,
   CreateTableDto,
@@ -12,8 +14,10 @@ import {
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
-import { DialRole } from '@/src/models/dial/role';
+import { ConfigEntityRow } from '@/src/models/dial/config-file';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -59,7 +63,9 @@ export async function replaceTableAccess(name: string, access: TableAccess): Pro
   return analyticsDataApi.replaceTableAccess(name, access, await token());
 }
 
-// The catalog of DIAL-configured roles offered as checkboxes in the Manage table access panel.
-export async function getRoles(): Promise<DialRole[] | null> {
-  return rolesApi.getRolesList(await token());
+export async function getRoles(): Promise<AnalyticsRoleCatalog> {
+  const warnings: EntitiesI18nKey[] = [];
+  const roles = await readConfigEntities<ConfigEntityRow>(await token(), ConfigFileEntityType.Roles, warnings);
+
+  return { roles, warnings };
 }
