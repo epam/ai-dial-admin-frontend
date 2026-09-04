@@ -19,6 +19,7 @@ export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases
 export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
+export const DEPLOYMENT_BY_ID_URL = (id: string) => `${DEPLOYMENTS_URL}/all/${id}`;
 export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
@@ -172,6 +173,10 @@ export class TestSuitesApi extends BaseApi {
 
   getDeployment(id: string, type: string, token: Token): Promise<Deployment | null> {
     return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
+  }
+
+  getDeploymentById(id: string, token: Token): Promise<Deployment | null> {
+    return this.get(DEPLOYMENT_BY_ID_URL(id), token);
   }
 
   getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
