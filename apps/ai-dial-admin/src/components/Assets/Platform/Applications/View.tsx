@@ -24,11 +24,12 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
+import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { EntityViewTab, getTabsForAsset, toolsTab } from '@/src/utils/tabs/utils';
+import { EntityViewTab, getTabsForAsset, rolesTab, toolsTab } from '@/src/utils/tabs/utils';
 
 interface Props {
   etag: string;
@@ -36,11 +37,25 @@ interface Props {
   models: DialModel[];
   applications: DialApplication[];
   schemes: DialApplicationScheme[];
+  roles: DialRole[];
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
 }
+
+/**
+ * The platform bucket is the only `AssetsApplications` bucket with a Roles tab (Issue #4406) —
+ * `getTabsForAsset`'s shared `AssetsApplications` branch stays untouched so the public bucket
+ * (`AppView.tsx`) is unaffected. Inserted immediately before `Interceptors`, matching
+ * `PlatformModels`' `[Properties, Features, Roles, Interceptors]` ordering, and computed alongside
+ * the existing MCP-conditional `toolsTab` splice so both conditional insertions stay visible at one
+ * call site.
+ */
+const withPlatformApplicationTabs = (t: (key: string) => string, baseTabs: ReturnType<typeof getTabsForAsset>) => {
+  const interceptorsIndex = baseTabs.findIndex((tab) => tab.id === EntityViewTab.Interceptors);
+  return baseTabs.toSpliced(interceptorsIndex, 0, rolesTab(t));
+};
 
 /**
  * Platform-bucket application detail view. Core gives platform-bucket applications full field/tab
@@ -59,6 +74,7 @@ const PlatformApplicationView: FC<Props> = ({
   models,
   applications,
   schemes,
+  roles,
   interceptors,
   globalInterceptors,
   optionWarnings,
@@ -70,7 +86,9 @@ const PlatformApplicationView: FC<Props> = ({
   const getReqRef = useRef(useProtectedRequest());
   const { visualizerConnector } = useAppContext();
 
-  const [tabs, setTabs] = useState(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+  const [tabs, setTabs] = useState(
+    withPlatformApplicationTabs(t, getTabsForAsset(t, ApplicationRoute.AssetsApplications)),
+  );
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState(false);
@@ -95,10 +113,11 @@ const PlatformApplicationView: FC<Props> = ({
   // supported for platform-bucket applications, unlike `function`/code-runtime apps.
   useEffect(() => {
     const appRunner = getAppRunner(originalApp, schemes, ApplicationRoute.AssetsApplications);
+    const baseTabs = withPlatformApplicationTabs(t, getTabsForAsset(t, ApplicationRoute.AssetsApplications));
     if (originalApp.mcp?.endpoint || appRunner?.['dial:applicationTypeMcp']) {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications).toSpliced(1, 0, toolsTab(t)));
+      setTabs(baseTabs.toSpliced(1, 0, toolsTab(t)));
     } else {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+      setTabs(baseTabs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalApp.mcp?.endpoint]);
@@ -188,6 +207,7 @@ const PlatformApplicationView: FC<Props> = ({
             models={models}
             applications={applications}
             applicationSchemes={schemes}
+            roles={roles}
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
             view={ApplicationRoute.AssetsApplications}
