@@ -92,6 +92,30 @@ describe('RuleDetailView', () => {
     expect(within(facts).getByText(EntityFieldsI18nKey.id)).toBeTruthy();
   });
 
+  // Both facts live inside collapsed sections of the form, so without this the page could not say which
+  // table the rule is bound to without a trip back to the listing.
+  const header = () => screen.getByRole('heading', { name: 'feedback-live' }).parentElement as HTMLElement;
+
+  test('states the target enrichment and the read source under the name', async () => {
+    renderView();
+
+    expect(within(header()).getByText('turn_feedback')).toBeTruthy();
+    await waitFor(() => expect(within(header()).getByText('dial_usage_log')).toBeTruthy());
+  });
+
+  test('falls back to a placeholder while the followed source is unresolved', () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    renderView();
+
+    expect(within(header()).getByText(AnalyticsEnrichmentRulesI18nKey.NotSet)).toBeTruthy();
+  });
+
+  test('states a pinned read source instead of the target’s own', async () => {
+    renderView({ source: 'otel_claude_code_logs' });
+
+    await waitFor(() => expect(within(header()).getByText('otel_claude_code_logs')).toBeTruthy());
+  });
+
   test('offers a control that copies the id', () => {
     renderView();
 
@@ -134,7 +158,8 @@ describe('RuleDetailView', () => {
   test('renders an em dash for an absent version column', () => {
     renderView({ version_column: undefined });
 
-    expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.NotSet)).toBeTruthy();
+    const facts = screen.getByRole('region', { name: AnalyticsEnrichmentRulesI18nKey.ReadOnlyFacts });
+    expect(within(facts).getByText(AnalyticsEnrichmentRulesI18nKey.NotSet)).toBeTruthy();
   });
 
   test('offers nothing to save until something is edited', async () => {
