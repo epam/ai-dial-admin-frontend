@@ -1813,6 +1813,7 @@ export enum TestSuitesI18nKey {
   FromDial = 'TestSuites.FromDial',
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
+  Responses = 'TestSuites.Responses',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',
@@ -2007,6 +2008,11 @@ export enum TestSuitesI18nKey {
   TrendsTooltipDate = 'TestSuites.TrendsTooltipDate',
   TrendsTooltipRun = 'TestSuites.TrendsTooltipRun',
   TrendsTooltipScore = 'TestSuites.TrendsTooltipScore',
+  ColumnNotExtracted = 'TestSuites.ColumnNotExtracted',
+  ColumnNotExtractedRequestFailed = 'TestSuites.ColumnNotExtractedRequestFailed',
+  ColumnNotExtractedStreamIncomplete = 'TestSuites.ColumnNotExtractedStreamIncomplete',
+  ColumnNotExtractedNoneReported = 'TestSuites.ColumnNotExtractedNoneReported',
+  ColumnResultLabel = 'TestSuites.ColumnResultLabel',
 }
 
 export enum DatasetsI18nKey {

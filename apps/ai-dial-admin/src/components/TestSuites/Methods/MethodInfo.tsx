@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialInput, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
@@ -32,7 +32,6 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
   const PARAMETERS_COLUMNS: ColDef[] = useMemo(() => PARAMETERS_SCHEMA_COLUMNS(t), [t]);
 
   const [view, setView] = useState(ParamsView.TABLE);
-  const [finalPathError, setFinalPathError] = useState<string | undefined>(undefined);
 
   const inputSchema = useMemo(() => {
     return convertSchemaToTable(testSuite?.endpointRef?.requestBodySchema?.schema);
@@ -46,31 +45,31 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
     return testSuite?.endpointRef?.parameters || [];
   }, [testSuite?.endpointRef?.parameters]);
 
-  const validateFinalPath = useCallback(
-    (urlTemplate?: string) => {
-      const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
+  /**
+   * Derived rather than stored, so switching method re-validates the freshly seeded path instead of
+   * leaving the previous method's error — and its disabled Save — standing.
+   */
+  const finalPathError = useMemo(() => {
+    const relativeUrlPattern = testSuite.endpointRef?.relativeUrlPattern;
+    const urlTemplate = testSuite.requestTemplate?.urlTemplate;
 
-      if (!urlTemplate || !relativeUrlPattern) {
-        return undefined;
-      }
-
-      if (isContainRegexSymbols(relativeUrlPattern)) {
-        try {
-          const regex = new RegExp(relativeUrlPattern);
-
-          if (!regex.test(urlTemplate)) {
-            dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: false });
-            return `Not matches with ${relativeUrlPattern} regex`;
-          }
-        } catch (error) {
-          console.error('Invalid regex pattern:', error);
-        }
-      }
-      dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: true });
+    if (!urlTemplate || !relativeUrlPattern || !isContainRegexSymbols(relativeUrlPattern)) {
       return undefined;
-    },
-    [dispatch, testSuite.endpointRef?.relativeUrlPattern],
-  );
+    }
+
+    try {
+      return new RegExp(relativeUrlPattern).test(urlTemplate)
+        ? undefined
+        : `Not matches with ${relativeUrlPattern} regex`;
+    } catch (error) {
+      console.error('Invalid regex pattern:', error);
+      return undefined;
+    }
+  }, [testSuite.endpointRef?.relativeUrlPattern, testSuite.requestTemplate?.urlTemplate]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'urlTemplate', isValid: !finalPathError });
+  }, [dispatch, finalPathError]);
 
   const onChangeEndpointRef = useCallback(
     (endpointRef: TestSuiteEndpointRef) => {
@@ -88,9 +87,8 @@ const MethodInfo: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
         ...testSuite,
         requestTemplate: { ...testSuite.requestTemplate, urlTemplate: finalPath },
       });
-      setFinalPathError(validateFinalPath(finalPath));
     },
-    [onChangeTestSuite, testSuite, validateFinalPath],
+    [onChangeTestSuite, testSuite],
   );
 
   return (testSuite?.endpointRef && !!Object.keys(testSuite?.endpointRef).length) || testSuite ? (

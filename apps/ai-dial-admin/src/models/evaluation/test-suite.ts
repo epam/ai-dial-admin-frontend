@@ -192,9 +192,45 @@ export interface InputBindingRowData extends InputBinding {
   defaultValue?: unknown;
 }
 
-export interface TryOutHistoryEntry {
+/** Terminal parse status of a streamed response; anything but `Success` means the invocation failed. */
+export enum StreamingStatus {
+  Success = 'SUCCESS',
+  Failed = 'FAILED',
+  Timeout = 'TIMEOUT',
+  Error = 'ERROR',
+}
+
+/** One column whose backend extraction failed, carrying the expression that was actually evaluated. */
+export interface ExtractionWarning {
+  column: string;
+  expression: string;
+  error: string;
+}
+
+/** The invoked endpoint's own reply, as reported inside a try-out envelope. */
+export interface TryOutCoreResponse {
+  statusCode: number;
+  body?: unknown;
+  streaming?: boolean;
+  events?: unknown[];
+  streamingStatus?: StreamingStatus;
+  truncationWarning?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * `extractedColumns` is the backend's own reconciled extraction for this one invocation — a column
+ * whose extraction failed appears with an explicit `null`. Both fields are absent when no extraction
+ * was performed: the suite declares no response columns, the invocation failed, or the try-out is MCP.
+ */
+interface TryOutExtraction {
+  extractedColumns?: Record<string, unknown>;
+  extractionWarnings?: ExtractionWarning[];
+}
+
+export interface TryOutHistoryEntry extends TryOutExtraction {
   resolvedRequest: Record<string, unknown>;
-  response: Record<string, unknown>;
+  response: TryOutCoreResponse;
   durationMs?: number;
   traceId?: string;
   grafanaTraceUrl?: string;
@@ -202,9 +238,9 @@ export interface TryOutHistoryEntry {
   turnIndex?: number;
 }
 
-export interface TryOutResponse {
+export interface TryOutResponse extends TryOutExtraction {
   resolvedRequest: Record<string, unknown>;
-  response: Record<string, unknown>;
+  response: TryOutCoreResponse;
   grafanaTraceUrl?: string;
   history?: TryOutHistoryEntry[];
 }

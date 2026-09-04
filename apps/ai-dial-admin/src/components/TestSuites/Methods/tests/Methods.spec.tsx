@@ -22,10 +22,10 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 
 vi.mock('../MethodItem', () => ({
   __esModule: true,
-  default: ({ item, index, onClick, isActive }: any) => (
+  default: ({ item, index, onClick, isActive, label }: any) => (
     <div className={isActive ? 'active-method' : 'inactive-method'} data-index={index}>
-      <button onClick={() => onClick(index)}>
-        {item?.method} {item?.relativeUrlPattern || ''}
+      <button onClick={() => onClick(index)} aria-current={isActive}>
+        {item?.method} {label ?? item?.relativeUrlPattern ?? ''}
       </button>
     </div>
   ),
@@ -199,5 +199,132 @@ describe('Methods component', () => {
     expect(updater({}).responseColumns[0]).toEqual(
       expect.objectContaining({ name: 'answer2', displayName: 'answer2' }),
     );
+  });
+
+  describe('Responses group', () => {
+    const selectedApplication: any = { deploymentId: 'gpt-4o', $type: 'dial-model' };
+
+    const renderWithInterfaces = (interfaces?: string[], testSuite: any = { endpointRef: {} }) => {
+      mockGetDeployment.mockResolvedValue({ ...mockDeployment, deploymentId: 'gpt-4o', interfaces });
+
+      return render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
+    };
+
+    test('is absent when the deployment reports no interfaces', async () => {
+      renderWithInterfaces();
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+    });
+
+    test('is absent when the reported interfaces omit openaiResponses', async () => {
+      renderWithInterfaces(['chat', 'openaiChatCompletions']);
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+    });
+
+    test('renders the four operations when openaiResponses is reported', async () => {
+      renderWithInterfaces(['chat', 'openaiResponses']);
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST /openai/v1/responses' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'POST /openai/v1/responses/{response_id}/cancel' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET /openai/v1/responses/{response_id}' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'DELETE /openai/v1/responses/{response_id}' })).toBeInTheDocument();
+    });
+
+    test('renders groups in order: chat interface, responses, other', async () => {
+      renderWithInterfaces(['openaiResponses']);
+
+      await screen.findByRole('group', { name: 'TestSuites.Responses' });
+      const groupNames = screen
+        .getAllByRole('group')
+        .map((group) => group.getAttribute('aria-labelledby'))
+        .map((id) => document.getElementById(id ?? '')?.textContent);
+
+      expect(groupNames).toEqual(['TestSuites.ChatInterface', 'TestSuites.Responses', 'TestSuites.Other']);
+    });
+
+    test('renders from features.responses_api when Core reports no interfaces', async () => {
+      // Shape observed on the wire for a Responses-capable model: Core omits `interfaces` and
+      // reports support through the passed-through `features` flag instead.
+      mockGetDeployment.mockResolvedValue({
+        ...mockDeployment,
+        deploymentId: 'deepseek-ocr-2',
+        interfaces: undefined,
+        features: { chat_completion: true, responses_api: true },
+      });
+
+      render(
+        <Methods testSuite={{ endpointRef: {} } as any} selectedTarget={selectedApplication} onChange={onChange} />,
+      );
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST /openai/v1/responses' })).toBeInTheDocument();
+    });
+
+    test('is absent when features reports responses_api false', async () => {
+      mockGetDeployment.mockResolvedValue({
+        ...mockDeployment,
+        features: { chat_completion: true, responses_api: false },
+      });
+
+      render(
+        <Methods testSuite={{ endpointRef: {} } as any} selectedTarget={selectedApplication} onChange={onChange} />,
+      );
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+    });
+
+    test('stays visible for a suite already selecting a Responses method', async () => {
+      renderWithInterfaces(undefined, {
+        endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses' },
+      });
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+    });
+
+    test('marks the saved Responses method as current', async () => {
+      renderWithInterfaces(['openaiResponses'], {
+        endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses/[^/]+/cancel' },
+      });
+
+      const cancel = await screen.findByRole('button', {
+        name: 'POST /openai/v1/responses/{response_id}/cancel',
+      });
+
+      expect(cancel).toHaveAttribute('aria-current', 'true');
+      expect(screen.getByRole('button', { name: 'POST /chat/completions' })).toHaveAttribute('aria-current', 'false');
+    });
+
+    test('seeds the create-response suite with the target deployment id', async () => {
+      const user = userEvent.setup();
+      renderWithInterfaces(['openaiResponses']);
+
+      await user.click(await screen.findByRole('button', { name: 'POST /openai/v1/responses' }));
+
+      const updater = onChange.mock.calls.at(-1)?.[0];
+      expect(updater({}).requestTemplate.body.content).toEqual({ model: 'gpt-4o', input: '${{user_message}}' });
+      expect(updater({}).responseColumns[0]).toEqual(expect.objectContaining({ name: 'answer' }));
+    });
+
+    test('seeds a response-scoped operation with a placeholder path and clears the previous columns', async () => {
+      const user = userEvent.setup();
+      renderWithInterfaces(['openaiResponses']);
+
+      await user.click(await screen.findByRole('button', { name: 'GET /openai/v1/responses/{response_id}' }));
+
+      const previous: any = {
+        responseColumns: [{ name: 'answer', displayName: 'answer', expression: 'choices[0].message.content' }],
+      };
+      const updater = onChange.mock.calls.at(-1)?.[0];
+      expect(updater(previous).requestTemplate.urlTemplate).toBe('/openai/v1/responses/${{response_id}}');
+      expect(updater(previous).requestTemplate.body.content).toEqual({});
+      expect(updater(previous).responseColumns).toEqual([]);
+    });
   });
 });

@@ -5,9 +5,10 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { getTestCaseTemplateVariables, tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestCase, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { getTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import TryOut from '../components/TryOut';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -137,9 +138,14 @@ const deploymentSuite: TestSuite = {
   endpointRef: { method: 'POST', relativeUrlPattern: '/api/search' },
 };
 
-const deploymentSuiteWithRequestColumn: TestSuite = {
-  ...deploymentSuite,
+const mcpSuiteWithRequestColumn: TestSuite = {
+  ...mcpSuite,
   responseColumns: [{ name: 'reqFoo', displayName: 'reqFoo', expression: '$request.foo', type: 'STRING' }],
+};
+
+const deploymentSuiteWithAnswerColumn: TestSuite = {
+  ...deploymentSuite,
+  responseColumns: [{ name: 'answer', displayName: 'answer', expression: 'output', type: 'STRING' }],
 };
 
 const multiRequestSchema: TestCaseSchema[] = [
@@ -219,7 +225,8 @@ describe('TryOut Columns tab request binding', () => {
     expect(screen.queryByRole('tab', { name: TabsI18nKey.Columns })).not.toBeInTheDocument();
   });
 
-  test('binds $request to the request body, not the request envelope', async () => {
+  // Client-side evaluation survives only for MCP, so this binding guard now belongs to an MCP suite.
+  test('binds $request to the request body, not the request envelope, for an MCP suite', async () => {
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
       success: true,
       response: {
@@ -229,7 +236,7 @@ describe('TryOut Columns tab request binding', () => {
     });
 
     const user = userEvent.setup();
-    render(<TryOut testSuite={deploymentSuiteWithRequestColumn} />);
+    render(<TryOut testSuite={mcpSuiteWithRequestColumn} />);
 
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
@@ -239,6 +246,85 @@ describe('TryOut Columns tab request binding', () => {
 
     await waitFor(() => {
       expect(screen.getByText('bar')).toBeInTheDocument();
+    });
+  });
+
+  test("renders the backend's reported extraction for a deployment suite", async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/openai/v1/responses', body: {} },
+        response: { statusCode: 200, body: { events: [] } },
+        extractedColumns: { answer: 'Hi there, friend!' },
+        extractionWarnings: [],
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Hi there, friend!')).toBeInTheDocument();
+    });
+    expect(screen.getByText(ValidityStatusI18nKey.Valid)).toBeInTheDocument();
+  });
+
+  test('reports not extracted when the invocation failed', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/openai/v1/responses', body: {} },
+        response: { statusCode: 401, body: 'At least API-KEY or Authorization header must be provided' },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    await waitFor(() => {
+      expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtracted)).toBeInTheDocument();
+    });
+    expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtractedRequestFailed)).toBeInTheDocument();
+    expect(screen.queryByText(ValidityStatusI18nKey.Invalid)).not.toBeInTheDocument();
+  });
+
+  test('a restored result shows the same extraction as the original', async () => {
+    vi.mocked(getTryoutResponseFromStorage).mockReturnValueOnce({
+      resolvedRequest: { url: '/openai/v1/responses', body: {} },
+      response: { statusCode: 200, body: { events: [] } },
+      extractedColumns: { answer: 'Hi there, friend!' },
+      extractionWarnings: [],
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Hi there, friend!')).toBeInTheDocument();
+    });
+  });
+
+  test('a restored result recorded before extraction was captured reports not extracted', async () => {
+    vi.mocked(getTryoutResponseFromStorage).mockReturnValueOnce({
+      resolvedRequest: { url: '/openai/v1/responses', body: {} },
+      response: { statusCode: 200, body: { events: [] } },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithAnswerColumn} />);
+
+    await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
+
+    await waitFor(() => {
+      expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtractedNoneReported)).toBeInTheDocument();
     });
   });
 });

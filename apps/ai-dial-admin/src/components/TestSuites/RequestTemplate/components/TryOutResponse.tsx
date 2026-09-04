@@ -14,7 +14,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { BasicI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import { TestCaseSchema, TestSuite, TryOutCoreResponse, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import {
   getRequestTurnCounts,
   getTryOutSectionShape,
@@ -22,10 +22,9 @@ import {
   shouldShowTurnLabels,
 } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
-import { TryOutResponse } from './TryOut';
 
 interface Props {
-  response: TryOutResponse;
+  response: TryOutCoreResponse;
   resolvedRequest: Record<string, unknown>;
   history?: TryOutHistoryEntry[];
   grafanaTraceUrl?: string;
@@ -76,7 +75,7 @@ const HistoryEntryPair: FC<{
 }> = ({ entry, isRequestSend, sectionTitle }) => {
   const t = useI18n();
   const turnRequestBody = (entry.resolvedRequest?.body as object) ?? {};
-  const turnResponseBody = (entry.response as { body?: object })?.body as object | undefined;
+  const turnResponseBody = entry.response?.body as object | undefined;
 
   return (
     <div className="flex flex-col gap-y-4 shrink-0">
