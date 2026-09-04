@@ -7,8 +7,8 @@ import { DialCoreRoleLimits } from '@/src/models/dial/role-limits';
  * to the nearest representable double (visibly `9223372036854776000` in a browser's console).
  *
  * Rather than preserving that value's exact digits through the read/write round-trip, or stringifying
- * it, this treats any token JS cannot represent as a safe integer as simply **absent** — Core's own
- * field default already means "unlimited" once a token is missing from the JSON. A role's
+ * it, this treats any token whose magnitude overflows the safe integer range as simply **absent** —
+ * Core's own field default already means "unlimited" once a token is missing from the JSON. A role's
  * `costLimit`/`limits` write is always a full replace, never a merge with the stored blob (`Role` has
  * no encrypted fields, so `ConfigResourceController.prepareWrite`'s update arm skips
  * `mergePreservingOmittedSecrets` entirely and deserializes the request body verbatim) — so omitting
@@ -16,18 +16,24 @@ import { DialCoreRoleLimits } from '@/src/models/dial/role-limits';
  * a stale value surviving from whatever was stored before. The exact digits are never needed: the UI
  * only ever needs to know "is this token unlimited", never what the sentinel's value actually is.
  *
+ * Decimal tokens (e.g. a `BigDecimal` cost limit of `1.5`) are kept — `CostLimit` uses `BigDecimal`
+ * on Core's side, and a finite JS double within the safe integer magnitude range is a faithful
+ * round-trip for any realistic cost-limit value. Only the overflow sentinel is dropped, not
+ * non-integer values in general.
+ *
  * Every token that survives is kept as a plain `number` — `DialCoreRoleLimits`'s declared type — not
  * a string: Core's `Limit`/`CostLimit` fields have no `@JsonFormat(shape=STRING)`, so a number is
  * what the wire actually carries and what the UI should show.
  */
+const isSafeNumber = (value: number): boolean => Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+
 const isSafeNumericToken = (value: unknown): value is number | string =>
-  (typeof value === 'number' && Number.isSafeInteger(value)) ||
-  (typeof value === 'string' && Number.isSafeInteger(Number(value)));
+  (typeof value === 'number' && isSafeNumber(value)) || (typeof value === 'string' && isSafeNumber(Number(value)));
 
 /**
- * Normalizes one `Limit`/`CostLimit`-shaped object: a token whose value overflows
- * `Number.isSafeInteger` is dropped rather than kept as a lossily-rounded number, so no consumer
- * can mistake it for a real, finite value.
+ * Normalizes one `Limit`/`CostLimit`-shaped object: a token whose magnitude overflows the safe
+ * integer range is dropped rather than kept as a lossily-rounded number, so no consumer can mistake
+ * it for a real, finite value. Decimal values within range are kept.
  */
 export const normalizeRoleLimits = (limits?: Record<string, unknown> | null): DialCoreRoleLimits | undefined => {
   if (!limits) {
