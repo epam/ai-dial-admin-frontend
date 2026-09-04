@@ -1,10 +1,10 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
+import HopPanelLoader from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopPanelLoader';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
-import { INSPECTOR_LOADER_SIZE, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { HopEmbeddingFacts, HopReadState, HopSideSuppression } from '@/src/models/analytics/conversations-trace';
@@ -37,11 +37,7 @@ const HopEmbeddingResultPanel: FC<Props> = ({ facts, isLoading, suppression }) =
   const t = useI18n();
 
   if (isLoading || facts === null) {
-    return (
-      <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-        <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
-      </div>
-    );
+    return <HopPanelLoader />;
   }
 
   // Every field but the dimension count comes from the request column, so a caller denied that column has no

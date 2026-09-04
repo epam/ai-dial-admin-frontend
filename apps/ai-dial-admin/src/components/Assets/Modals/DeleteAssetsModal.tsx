@@ -94,7 +94,7 @@ const DeleteAssetsModal: FC<Props> = ({
   );
 
   const getDeleteModalContent = useCallback(() => {
-    const columnDefs = getGridColumns(view, hasFoldersToDelete, selectedVersionsMap);
+    const columnDefs = getGridColumns(view, hasFoldersToDelete, selectedVersionsMap, itemsToDelete);
 
     return (
       <div className="px-6 dial-small mb-6">

@@ -6,3 +6,7 @@ export const MIN_SPLIT_PERCENT = 20;
 export const DEFAULT_SPLIT_PERCENT = 50;
 
 export const SPLIT_STEP_PERCENT = 5;
+
+// A hit area, not a share of the space: the library's 10px default clipped the grip, and no taller than this
+// because half of it reaches into the section below, whose padding is 8px.
+export const SPLIT_HANDLE_HEIGHT = 16;

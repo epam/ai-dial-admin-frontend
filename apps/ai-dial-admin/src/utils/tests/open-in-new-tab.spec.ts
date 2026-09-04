@@ -48,6 +48,23 @@ describe('getUrnForEntity', () => {
     );
   });
 
+  test('returns the bare-name URN, with no ?path=, for a platform-bucket toolset', () => {
+    const entity = { name: 'my-toolset', path: 'platform/my-toolset' };
+    const urn = getUrnForEntity(ApplicationRoute.AssetsToolsets, entity);
+
+    expect(urn).toBe('/assets-toolsets/my-toolset');
+    expect(urn).not.toContain('?path=');
+  });
+
+  test('returns the versioned ?path= URN, unchanged, for a public-bucket toolset', () => {
+    const entity = { name: 'MyToolset', path: 'public/MyToolset__1.0', folderId: 'public/', version: '1.0' };
+    const urn = getUrnForEntity(ApplicationRoute.AssetsToolsets, entity);
+
+    expect(urn).toBe(
+      `/assets-toolsets/${encodeURIComponent('MyToolset')}?path=${encodeURIComponent('public/MyToolset__1.0')}`,
+    );
+  });
+
   test('returns correct URN for ActivityAudit', () => {
     const entity = { activityId: 'act123' };
     const urn = getUrnForEntity(ApplicationRoute.ActivityAudit, entity);
@@ -235,6 +252,42 @@ describe('Entity list view :: getEntityPath', () => {
     });
     expect(result).toEqual('my-route');
   });
+
+  // Regression: forRemove must still resolve to the resource's full storage path for a
+  // platform-bucket application/toolset — Core has no route for the bare name alone, unlike the
+  // URL-segment case (no forRemove) where the bucket prefix is deliberately dropped.
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return the platform-prefixed path for %s when forRemove is true',
+    (route) => {
+      const result = getEntityPath(route, { name: 'my-item', path: 'platform/my-item' }, true);
+      expect(result).toEqual('platform/my-item');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should fall back to a built platform path for %s when forRemove is true and no path field is present',
+    (route) => {
+      const result = getEntityPath(route, { name: 'my-item', folderId: 'platform/' }, true);
+      expect(result).toEqual('platform/my-item');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return the bare encoded name for %s (no ?path=) when forRemove is false',
+    (route) => {
+      const result = getEntityPath(route, { name: 'my-item', path: 'platform/my-item' });
+      expect(result).toEqual('my-item');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should keep the versioned ?path= for %s when forRemove is true on a public-bucket entity',
+    (route) => {
+      const entity = { name: 'MyEntity', path: 'public/MyEntity__1.0', folderId: 'public/', version: '1.0' };
+      const result = getEntityPath(route, entity, true);
+      expect(result).toEqual('public/MyEntity__1.0');
+    },
+  );
 });
 
 describe('onOpenInNewTab', () => {

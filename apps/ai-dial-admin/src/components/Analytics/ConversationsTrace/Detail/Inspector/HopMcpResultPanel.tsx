@@ -1,12 +1,11 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
+import HopPanelLoader from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopPanelLoader';
 import HopClampNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopClampNote';
 import HopFactBlock from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopFactBlock';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
-import { INSPECTOR_LOADER_SIZE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { HopMcpFacts, HopReadState, HopSideSuppression } from '@/src/models/analytics/conversations-trace';
@@ -28,11 +27,7 @@ const HopMcpResultPanel: FC<Props> = ({ facts, isLoading, suppression }) => {
   }
 
   if (isLoading || facts === null) {
-    return (
-      <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-        <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
-      </div>
-    );
+    return <HopPanelLoader />;
   }
 
   if (facts.resultText === null) {

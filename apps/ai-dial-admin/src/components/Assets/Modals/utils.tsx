@@ -5,16 +5,25 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { enrichConversationWithVersion } from '@/src/components/Assets/BaseAssetList/utils';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 export const getGridColumns = (
   view: ApplicationRoute,
   hasFoldersToDelete: boolean,
   selectedVersionsMap?: Record<string, string[]>,
+  itemsToDelete?: DialFile[],
 ) => {
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
     headerName: 'Display name',
+    width: 200,
+  };
+
+  const AUTHOR_COLUMN = {
+    colId: FileManagerColumnKey.Author,
+    field: 'author',
+    headerName: 'Author',
     width: 200,
   };
 
@@ -52,9 +61,20 @@ export const getGridColumns = (
   };
 
   switch (view) {
-    case ApplicationRoute.Prompts:
+    // A platform-bucket application/toolset row has no version — showing Name+Version here would
+    // repeat the same "no version" gap the delete-notification fix addresses, so this shows
+    // Name+Author instead, matching the flat column set the row's own list view already uses.
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.AssetsToolsets: {
+      const isPlatformBucketDelete =
+        !hasFoldersToDelete &&
+        isPlatformBucketPath((itemsToDelete?.[0] as { folderId?: string } | undefined)?.folderId);
+      if (isPlatformBucketDelete) {
+        return [GRID_NAME_COLUMN, AUTHOR_COLUMN];
+      }
+      return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
+    }
+    case ApplicationRoute.Prompts:
     case ApplicationRoute.Conversations:
       return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
     case ApplicationRoute.Files:

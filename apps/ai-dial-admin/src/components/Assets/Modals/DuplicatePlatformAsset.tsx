@@ -6,10 +6,17 @@ import IdControl from '@/src/components/BaseControls/Id/Id';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
+import {
+  DialAppRunnerResource,
+  DialModelResource,
+  DialPlatformApplicationResource,
+  DialPlatformToolsetResource,
+  PlatformAsset,
+} from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { DUAL_BUCKET_VIEWS } from '@/src/utils/files/root-folder';
 
 interface Props {
   view: ApplicationRoute;
@@ -24,8 +31,15 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
   const isRunner = view === ApplicationRoute.PlatformAppRunners;
+  // Applications/Toolsets carry their display name as `display_name` (snake_case, inherited from
+  // `DialResource`), unlike Models/Interceptors' camelCase `displayName` — Core reuses the same
+  // entity class for both buckets, so the field name doesn't change for a platform-bucket row.
+  const isDualBucketAsset = DUAL_BUCKET_VIEWS.includes(view);
   const hasDisplayName =
-    isRunner || view === ApplicationRoute.PlatformModels || view === ApplicationRoute.PlatformInterceptors;
+    isRunner ||
+    view === ApplicationRoute.PlatformModels ||
+    view === ApplicationRoute.PlatformInterceptors ||
+    isDualBucketAsset;
 
   const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() =>
     isRunner
@@ -42,17 +56,22 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
-      setClonedAsset((asset) =>
-        isRunner ? { ...asset, 'dial:applicationTypeDisplayName': displayName } : { ...asset, displayName },
-      );
+      setClonedAsset((asset) => {
+        if (isRunner) {
+          return { ...asset, 'dial:applicationTypeDisplayName': displayName };
+        }
+        return isDualBucketAsset ? { ...asset, display_name: displayName } : { ...asset, displayName };
+      });
     },
-    [isRunner],
+    [isRunner, isDualBucketAsset],
   );
 
   const id = isRunner ? (clonedAsset as DialAppRunnerResource).$id : clonedAsset.name;
   const displayName = isRunner
     ? (clonedAsset as DialAppRunnerResource)['dial:applicationTypeDisplayName']
-    : (clonedAsset as DialModelResource).displayName;
+    : isDualBucketAsset
+      ? (clonedAsset as DialPlatformApplicationResource | DialPlatformToolsetResource).display_name
+      : (clonedAsset as DialModelResource).displayName;
 
   return (
     <DialFormPopup

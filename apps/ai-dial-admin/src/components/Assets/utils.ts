@@ -3,7 +3,7 @@ import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
 import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView, isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformBucketPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -82,16 +82,6 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-/**
- * Applications is the one view whose resources live in both the flat `platform` bucket and the
- * hierarchical `public` one (see design.md D2, `platform-applications` capability). The grid never
- * shows rows from both at once — browsing into `platform/` renders only its flat row set, browsing
- * into `public/...` renders the public tree — so which action set applies is a property of the
- * current path being browsed, not of an individual row.
- */
-export const isPlatformApplicationsBucket = (view: ApplicationRoute, currentPath?: string): boolean =>
-  view === ApplicationRoute.AssetsApplications && isPlatformBucketPath(currentPath);
-
 export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   switch (view) {
     case ApplicationRoute.Files:
@@ -110,7 +100,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
     case ApplicationRoute.AssetsApplications:
-      if (isPlatformApplicationsBucket(view, currentPath)) {
+    case ApplicationRoute.AssetsToolsets:
+      if (isPlatformDualBucketView(view, currentPath)) {
         return isReadOnlyAdmin
           ? []
           : allActionLabels.filter(
@@ -118,7 +109,6 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
             );
       }
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
-    case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
@@ -132,7 +122,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
-  if (isFlatPlatformView(view) || isPlatformApplicationsBucket(view, currentPath)) {
+  if (isFlatPlatformView(view) || isPlatformDualBucketView(view, currentPath)) {
     return [];
   }
 
@@ -158,8 +148,10 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
 export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   if (isReadOnlyAdmin) return [];
 
-  if (isPlatformApplicationsBucket(view, currentPath)) {
-    return [{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }];
+  if (isPlatformDualBucketView(view, currentPath)) {
+    const label =
+      view === ApplicationRoute.AssetsToolsets ? FileManagerI18nKey.Toolset : FileManagerI18nKey.Application;
+    return [{ key: 'newItem', label, icon: null }];
   }
 
   switch (view) {
@@ -388,6 +380,22 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsApplications: {
+      // A platform-bucket row has no version to select or append — `isMultipleVersionsDelete`
+      // never applies there, and the description shows the bare name rather than a
+      // `folderId+name__version` path that carries no meaning for a flat, unversioned resource.
+      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Application),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
@@ -414,6 +422,20 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsToolsets: {
+      // Same platform-bucket carve-out as AssetsApplications above.
+      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Toolset),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>

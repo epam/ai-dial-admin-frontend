@@ -4,7 +4,11 @@ import { ResizeCallback, Resizable } from 're-resizable';
 import { FC, ReactNode, useCallback, useRef, useState } from 'react';
 
 import SplitHandle from '@/src/components/Common/SplitPane/SplitHandle';
-import { DEFAULT_SPLIT_PERCENT, MIN_SPLIT_PERCENT } from '@/src/components/Common/SplitPane/constants';
+import {
+  DEFAULT_SPLIT_PERCENT,
+  MIN_SPLIT_PERCENT,
+  SPLIT_HANDLE_HEIGHT,
+} from '@/src/components/Common/SplitPane/constants';
 import { clampSplitPercent } from '@/src/components/Common/SplitPane/utils';
 
 interface Props {
@@ -57,8 +61,11 @@ const SplitPane: FC<Props> = ({ top, bottom, ariaLabel, minPercent = MIN_SPLIT_P
             <SplitHandle ariaLabel={ariaLabel} percent={percent} minPercent={floor} onChangePercent={setPercent} />
           ),
         }}
+        // Straddles the boundary, so the grip sits on the line and paints over the section below it.
+        handleStyles={{ bottom: { height: SPLIT_HANDLE_HEIGHT, bottom: -SPLIT_HANDLE_HEIGHT / 2, zIndex: 20 } }}
         onResizeStop={onResizeStop}
-        className="flex min-h-0 flex-col overflow-hidden"
+        // No `overflow-hidden`: it clipped the straddling handle, and the top section brings its own scroller.
+        className="flex min-h-0 flex-col"
       >
         {top}
       </Resizable>

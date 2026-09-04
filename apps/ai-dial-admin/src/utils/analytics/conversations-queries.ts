@@ -590,8 +590,12 @@ export const buildConversationSpansQuery = (traceId: string, limit: number): Str
 // response body is separate, and a caller holding one must not have the other named in their query — an
 // unknown field rejects the whole read, which would withdraw the side they *are* entitled to along with the
 // one they are not.
+//
+// Never scoped by the session header: a Core-internal call carries none, so the tree offered its row while
+// every tab of that row reported the hop had recorded nothing. `buildConversationSpansQuery` dropped the same
+// predicate. The read stays bounded — the table partitions on the day of `request_time`, and the hop's own
+// instant collapses that to one partition.
 export const buildConversationHopBodyQuery = (
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -604,7 +608,6 @@ export const buildConversationHopBodyQuery = (
     entity: USAGE_LOG_ENTITY,
     select: selectable.map((fieldName) => col(field(fieldName))),
     filter: and([
-      sessionScopePredicate(scope),
       eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
       eq(UsageLogField.CoreSpanId, value(QueryValueType.String, coreSpanId)),
       ...(recordedMillis === null

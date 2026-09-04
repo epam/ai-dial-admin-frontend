@@ -4,7 +4,6 @@ import { ElementSize, LinkButton } from '@epam/ai-dial-ui-kit';
 import { FC, useId } from 'react';
 
 import HopChatBubble from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopChatBubble';
-import HopToolCalls from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopToolCalls';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +26,6 @@ const HopChatTurn: FC<Props> = ({ message, opened, isLoading, onOpen, onClose })
 
   const isOpen = opened !== undefined;
   const text = opened?.text ?? message.text;
-  const toolCalls = opened?.toolCalls ?? message.toolCalls;
   const hasText = (text ?? '').trim().length > 0;
 
   return (
@@ -50,16 +48,22 @@ const HopChatTurn: FC<Props> = ({ message, opened, isLoading, onOpen, onClose })
             onClick={() => (isOpen ? onClose(message.index) : onOpen(message.index))}
             // A link button rather than an outlined one: no border to nest inside the bubble, and no fill,
             // so the `--bg-control-*` gap that forces a hover override elsewhere does not apply here.
-            textClassName="dial-caption-text"
+            textClassName="dial-caption-text text-accent-primary"
+            // Always at the start of the bubble: stretched by the column it sits in, its label centred itself
+            // and the control read as a caption for the message rather than as something to press.
+            className="self-start"
           />
         )
       }
     >
-      {hasText && <p className="whitespace-pre-wrap break-words text-primary dial-small-text">{text}</p>}
-      <HopToolCalls calls={toolCalls} />
-      {/* Neither text nor a call: `content` was recorded empty and nothing was asked for either, which is a
-          fact about the turn rather than a blank bubble. */}
-      {!hasText && !toolCalls.length && <p className="italic text-secondary dial-small-text">{UNAVAILABLE_VALUE}</p>}
+      {/* The text of the turn and nothing else: this tab states the exchange a person would have seen, and the
+          Request and Response tabs state the tool traffic in full. */}
+      {hasText ? (
+        <p className="whitespace-pre-wrap break-words text-primary dial-small-text">{text}</p>
+      ) : (
+        // `content` was recorded empty, which is a fact about the turn rather than a blank bubble.
+        <p className="italic text-secondary dial-small-text">{UNAVAILABLE_VALUE}</p>
+      )}
     </HopChatBubble>
   );
 };
