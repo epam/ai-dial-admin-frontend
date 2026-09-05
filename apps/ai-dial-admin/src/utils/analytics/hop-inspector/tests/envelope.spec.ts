@@ -1,188 +1,212 @@
 import { describe, expect, test } from 'vitest';
 
-import {
-  ENVELOPE_BYTE_BUDGET,
-  MESSAGE_TEXT_CLAMP,
-  RAW_BODY_BYTE_BUDGET,
-} from '@/src/constants/analytics/conversations-trace';
-import { HopDialect, HopToolCall, MessageRole } from '@/src/models/analytics/conversations-trace';
-import {
-  buildRequestEnvelope,
-  clampBytes,
-  clampText,
-  jsonByteLength,
-  roleOf,
-  roleCountsOf,
-  textByteLength,
-} from '@/src/utils/analytics/hop-inspector/envelope';
+import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/conversations-trace';
+import { HopDialect, MessageRole } from '@/src/models/analytics/conversations-trace';
+import { messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
+import { buildRequestEnvelope, withoutBlankEdges } from '@/src/utils/analytics/hop-inspector/envelope';
 
-const message = (role: MessageRole, text: string | null, bytes = 100, toolCalls: HopToolCall[] = []) => ({
-  role,
-  text,
-  bytes,
-  toolCalls,
-});
-
-const envelope = (messages: ReturnType<typeof message>[]) =>
-  buildRequestEnvelope({
-    dialect: HopDialect.ChatCompletions,
-    params: { stated: [], unrecognisedCount: 0 },
-    messages,
-    recordedBytes: 1000,
+describe('withoutBlankEdges', () => {
+  test('drops a leading newline, which is what a templated prompt records', () => {
+    expect(withoutBlankEdges('\nwhere is odesa?')).toBe('where is odesa?');
   });
 
-describe('roleOf', () => {
-  test.each([
-    ['system', MessageRole.System],
-    ['user', MessageRole.User],
-    ['assistant', MessageRole.Assistant],
-    ['tool', MessageRole.Tool],
-  ])('reads %s from the parsed structure', (raw, expected) => {
-    expect(roleOf(raw)).toBe(expected);
+  test('drops several blank lines at either end', () => {
+    expect(withoutBlankEdges('\n\n  \nthe question\n \n\n')).toBe('the question');
   });
 
-  // Dropping a message with an unfamiliar role would hide recorded work, which is the worse failure here.
-  test('an unrecognised role is kept rather than dropped', () => {
-    expect(roleOf('developer')).toBe(MessageRole.Other);
-    expect(roleOf(undefined)).toBe(MessageRole.Other);
+  test('keeps the blank lines inside the text, which are the author’s own paragraphs', () => {
+    expect(withoutBlankEdges('first\n\nsecond')).toBe('first\n\nsecond');
+  });
+
+  // `trim()` would take this indentation with the blank line above it, and a message opening with a code
+  // block would lose the shape that makes it readable.
+  test('keeps the indentation of the first line that has content', () => {
+    expect(withoutBlankEdges('\n    def answer():\n        return 42\n')).toBe('    def answer():\n        return 42');
+  });
+
+  test('treats a carriage-return line as blank', () => {
+    expect(withoutBlankEdges('\r\nthe question')).toBe('the question');
+  });
+
+  test('answers an empty string for text that is blank throughout', () => {
+    expect(withoutBlankEdges('\n \n')).toBe('');
+    expect(withoutBlankEdges('')).toBe('');
+  });
+
+  // Null is a message with no `content` key at all, which is not the same fact as empty content.
+  test('leaves a missing text missing', () => {
+    expect(withoutBlankEdges(null)).toBeNull();
+  });
+
+  test('leaves text with no blank edge untouched', () => {
+    expect(withoutBlankEdges('the question')).toBe('the question');
   });
 });
 
-describe('jsonByteLength', () => {
-  // The reader is asking what made a request 166 KB, and the serialized form is what the log stored.
-  test('measures the recorded JSON, not the rendered text', () => {
-    expect(jsonByteLength({ a: 'x' })).toBe(9);
+describe('messagesForDialect', () => {
+  const body = {
+    messages: [
+      { role: 'system', content: '\n\nYe be a helpful assistant.\n' },
+      { role: 'user', content: 'where is odesa?' },
+    ],
+  };
+
+  test('strips the blank edges of every message it returns', () => {
+    const messages = messagesForDialect(HopDialect.ChatCompletions, body);
+
+    expect(messages.map(({ text }) => text)).toEqual(['Ye be a helpful assistant.', 'where is odesa?']);
   });
 
-  test('counts multi-byte characters as the bytes they occupy', () => {
-    expect(jsonByteLength('é')).toBeGreaterThan(3);
-  });
-});
+  // The size is the recorded JSON's, not the rendered text's, so stripping cannot understate what made a
+  // request heavy.
+  test('leaves the recorded size of a stripped message alone', () => {
+    const [system] = messagesForDialect(HopDialect.ChatCompletions, body);
+    const [raw] = messagesForDialect(HopDialect.ChatCompletions, {
+      messages: [{ role: 'system', content: 'Ye be a helpful assistant.' }],
+    });
 
-describe('clampText and clampBytes', () => {
-  test('leaves short content alone', () => {
-    expect(clampText('short')).toEqual({ text: 'short', isClamped: false });
-  });
-
-  test('clamps and says so', () => {
-    const clamped = clampText('x'.repeat(MESSAGE_TEXT_CLAMP + 10));
-
-    expect(clamped.isClamped).toBe(true);
-    expect(clamped.text).toHaveLength(MESSAGE_TEXT_CLAMP);
-  });
-
-  // One byte of a multi-byte character can fall on the boundary, so a cut landing mid-character drops that
-  // character rather than emitting a replacement for it.
-  test('clamping by bytes never splits a character', () => {
-    const { text } = clampBytes('é'.repeat(20), 5);
-
-    expect(text).toBe('éé');
-    expect(text).not.toContain('\uFFFD');
-  });
-
-  // The regression gate for the clamp being O(n) rather than O(n²). A 5-byte ASCII budget — what this file
-  // tested before — has one byte per character, so the old character-trimming loop ran zero passes and the
-  // defect was invisible. Multi-byte content at the real budget is what exercises it: the old form needed
-  // ~242 000 re-encodes of a shrinking 800 KB string, which overruns the test timeout rather than returning.
-  test('clamps a large multi-byte body in one pass', () => {
-    const text = 'ф'.repeat(400_000);
-
-    expect(textByteLength(text)).toBe(800_000);
-
-    const clamped = clampBytes(text, RAW_BODY_BYTE_BUDGET);
-
-    expect(clamped.isClamped).toBe(true);
-    expect(textByteLength(clamped.text)).toBeLessThanOrEqual(RAW_BODY_BYTE_BUDGET);
-    // Within one character of the budget: the only bytes given up are the ones that would have split a
-    // character, not a scan's worth.
-    expect(textByteLength(clamped.text)).toBeGreaterThan(RAW_BODY_BYTE_BUDGET - 2);
-    expect(clamped.text).not.toContain('\uFFFD');
-  });
-
-  test('leaves a multi-byte body inside the budget whole', () => {
-    const text = 'ф'.repeat(10);
-
-    expect(clampBytes(text, RAW_BODY_BYTE_BUDGET)).toEqual({ text, isClamped: false });
+    expect(system.bytes).toBeGreaterThan(raw.bytes);
   });
 });
 
-describe('buildRequestEnvelope', () => {
-  test('numbers messages and counts their roles', () => {
-    const built = envelope([message(MessageRole.System, 'a'), message(MessageRole.User, 'b')]);
+// A result message carries only the id of the call it answers, so the pairing has to be resolved while the
+// whole list is in hand — a reader looking at one message, or a tier-2 read of one, cannot recover it.
+describe('buildRequestEnvelope :: the calls a message makes and answers', () => {
+  const envelopeOf = (messages: Parameters<typeof buildRequestEnvelope>[0]['messages']) =>
+    buildRequestEnvelope({
+      dialect: HopDialect.ChatCompletions,
+      params: { stated: [], rest: [] },
+      messages,
+      recordedBytes: 100,
+    });
 
-    expect(built.messages.map(({ index }) => index)).toEqual([0, 1]);
-    expect(built.roleCounts).toEqual([
-      { role: MessageRole.System, count: 1 },
-      { role: MessageRole.User, count: 1 },
+  const call = (name: string, id: string | null) => ({ name, args: '{}', id });
+
+  const message = (
+    role: MessageRole,
+    overrides: Partial<Parameters<typeof envelopeOf>[0][number]> = {},
+  ): Parameters<typeof envelopeOf>[0][number] => ({
+    role,
+    text: null,
+    toolCalls: [],
+    bytes: 50,
+    answeredCallIds: [],
+    isError: false,
+    ...overrides,
+  });
+
+  // The clamp rebuilds a call from its parts, so the id has to be among the parts it keeps: without it the
+  // request side cannot state which call is which, while the response side still can.
+  test('carries the id of each call a message made', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c1'), call('cat', 'c2')] }),
+    ]);
+
+    expect(messages[0].toolCalls).toEqual([
+      { id: 'c1', name: 'ls', args: '{}' },
+      { id: 'c2', name: 'cat', args: '{}' },
     ]);
   });
 
-  test('marks a message large enough to dominate the request', () => {
-    const built = envelope([message(MessageRole.User, 'a', 4096), message(MessageRole.User, 'b', 10)]);
+  // A message that does not fit gives up its arguments and keeps the rest. The id costs a handful of
+  // characters and is what makes the call legible at all, so it is not among what gets given up.
+  test('keeps a call id past the byte budget, having given up only its arguments', () => {
+    const filler = 'x'.repeat(MESSAGE_TEXT_CLAMP);
+    const spenders = Math.ceil(ENVELOPE_BYTE_BUDGET / MESSAGE_TEXT_CLAMP);
+    const { messages, isClamped } = envelopeOf([
+      ...Array.from({ length: spenders }, () => message(MessageRole.User, { text: filler })),
+      // Its own arguments clamp to the per-message limit, so this one costs as much as a spender and cannot
+      // fit in what is left.
+      message(MessageRole.Assistant, {
+        toolCalls: [{ name: 'ls', args: 'y'.repeat(MESSAGE_TEXT_CLAMP), id: 'c9' }],
+      }),
+    ]);
 
-    expect(built.messages.map(({ isLarge }) => isLarge)).toEqual([true, false]);
+    expect(isClamped).toBe(true);
+    expect(messages[messages.length - 1].toolCalls).toEqual([{ id: 'c9', name: 'ls', args: null }]);
   });
 
-  // Once the total budget is spent, later messages keep the numbers a reader decides with and give up only
-  // their text, which tier 2 can still fetch one at a time.
-  test('drops text past the total budget while keeping every message stated', () => {
-    const long = 'x'.repeat(MESSAGE_TEXT_CLAMP);
-    const many = Array.from({ length: Math.ceil(ENVELOPE_BYTE_BUDGET / MESSAGE_TEXT_CLAMP) + 2 }, () =>
-      message(MessageRole.User, long),
-    );
+  // The budget is spent per message, not as a cut-off point: a cheap message after an expensive one still
+  // fits, and pretending otherwise would have the envelope withhold what it can afford to send.
+  test('still carries a cheap call after the budget has been spent', () => {
+    const filler = 'x'.repeat(MESSAGE_TEXT_CLAMP);
+    const spenders = Math.ceil(ENVELOPE_BYTE_BUDGET / MESSAGE_TEXT_CLAMP) + 1;
+    const { messages, isClamped } = envelopeOf([
+      ...Array.from({ length: spenders }, () => message(MessageRole.User, { text: filler })),
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c9')] }),
+    ]);
 
-    const built = envelope(many);
-
-    expect(built.isClamped).toBe(true);
-    expect(built.messages).toHaveLength(many.length);
-    expect(built.messages.every(({ bytes, role }) => bytes > 0 && role === MessageRole.User)).toBe(true);
-    expect(built.messages.at(-1)?.text).toBeNull();
+    expect(isClamped).toBe(true);
+    expect(messages[messages.length - 1].toolCalls).toEqual([{ id: 'c9', name: 'ls', args: '{}' }]);
   });
 
-  test('a message that recorded no text is not reported as clamped', () => {
-    const built = envelope([message(MessageRole.Assistant, null)]);
+  test('names the tool a result answers', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c1')] }),
+      message(MessageRole.Tool, { text: 'app/', answeredCallIds: ['c1'] }),
+    ]);
 
-    expect(built.messages[0].isTextClamped).toBe(false);
+    expect(messages[1].answers).toEqual([{ callId: 'c1', toolName: 'ls' }]);
   });
-});
 
-describe('roleCountsOf', () => {
-  test('counts each role once', () => {
-    expect(roleCountsOf([MessageRole.User, MessageRole.User, MessageRole.System])).toEqual([
-      { role: MessageRole.User, count: 2 },
-      { role: MessageRole.System, count: 1 },
+  // Two calls of one tool are answered by two messages that are otherwise identical, so the id has to travel
+  // with the name rather than being collapsed into it.
+  test('keeps the id of each answer alongside its tool', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c1'), call('ls', 'c2')] }),
+      message(MessageRole.Tool, { text: 'app/', answeredCallIds: ['c1'] }),
+      message(MessageRole.Tool, { text: 'appdata/', answeredCallIds: ['c2'] }),
+    ]);
+
+    expect(messages[1].answers).toEqual([{ callId: 'c1', toolName: 'ls' }]);
+    expect(messages[2].answers).toEqual([{ callId: 'c2', toolName: 'ls' }]);
+  });
+
+  test('pairs every call a single message answers', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c1'), call('cat', 'c2')] }),
+      message(MessageRole.User, { text: 'both', answeredCallIds: ['c1', 'c2'] }),
+    ]);
+
+    expect(messages[1].answers).toEqual([
+      { callId: 'c1', toolName: 'ls' },
+      { callId: 'c2', toolName: 'cat' },
     ]);
   });
-});
 
-// Tool-call arguments are content, so they take the clamp and count against the budget the text respects.
-describe('buildRequestEnvelope :: tool calls', () => {
-  test('carries a call whose message said nothing else', () => {
-    const built = envelope([message(MessageRole.Assistant, '', 200, [{ name: 'calc', args: '{"a":1}' }])]);
+  // The history a client feeds back can reach further than the request itself: an id with no call in this
+  // request keeps its place and states no tool, rather than shifting the pairing onto the wrong one.
+  test('states no tool for an id no call in this request carries', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', 'c1')] }),
+      message(MessageRole.Tool, { text: 'x', answeredCallIds: ['gone', 'c1'] }),
+    ]);
 
-    expect(built.messages[0].toolCalls).toEqual([{ name: 'calc', args: '{"a":1}' }]);
+    expect(messages[1].answers).toEqual([
+      { callId: 'gone', toolName: null },
+      { callId: 'c1', toolName: 'ls' },
+    ]);
   });
 
-  test('clamps long arguments and marks the message clamped', () => {
-    const args = 'x'.repeat(MESSAGE_TEXT_CLAMP + 50);
-    const built = envelope([message(MessageRole.Assistant, null, 200, [{ name: 'calc', args }])]);
+  test('ignores a call whose own id was never recorded', () => {
+    const { messages } = envelopeOf([
+      message(MessageRole.Assistant, { toolCalls: [call('ls', null)] }),
+      message(MessageRole.Tool, { text: 'x', answeredCallIds: ['c1'] }),
+    ]);
 
-    expect(built.messages[0].toolCalls[0].args).toHaveLength(MESSAGE_TEXT_CLAMP);
-    expect(built.messages[0].isTextClamped).toBe(true);
+    expect(messages[1].answers).toEqual([{ callId: 'c1', toolName: null }]);
   });
 
-  // Past the budget a message keeps the names of what it called — a reader can still see that it called
-  // something — and gives up only the arguments, which tier 2 fetches.
-  test('keeps call names past the budget and drops only their arguments', () => {
-    const long = 'x'.repeat(MESSAGE_TEXT_CLAMP);
-    const many = Array.from({ length: Math.ceil(ENVELOPE_BYTE_BUDGET / MESSAGE_TEXT_CLAMP) + 2 }, () =>
-      message(MessageRole.Assistant, long, 200, [{ name: 'calc', args: long }]),
-    );
+  test('carries the failure flag a message arrived with', () => {
+    const { messages } = envelopeOf([message(MessageRole.Tool, { text: 'no such file', isError: true })]);
 
-    const built = envelope(many);
-    const last = built.messages.at(-1);
+    expect(messages[0].isError).toBe(true);
+  });
 
-    expect(built.isClamped).toBe(true);
-    expect(last?.toolCalls).toEqual([{ name: 'calc', args: null }]);
+  test('answers nothing for a message that quotes no call', () => {
+    const { messages } = envelopeOf([message(MessageRole.User, { text: 'where is odesa?' })]);
+
+    expect(messages[0].answers).toEqual([]);
+    expect(messages[0].isError).toBe(false);
   });
 });

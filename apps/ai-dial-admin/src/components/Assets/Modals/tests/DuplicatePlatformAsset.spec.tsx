@@ -92,4 +92,31 @@ describe('DuplicatePlatformAsset', () => {
 
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
   });
+
+  // Regression: platform-bucket applications/toolsets duplicate the flat, unversioned way every
+  // other platform entity does (design.md's `platform-applications`/`platform-toolsets`
+  // capabilities) — but their display name is `display_name` (snake_case), not `displayName`.
+  describe.each([
+    { view: ApplicationRoute.AssetsApplications, label: 'application' },
+    { view: ApplicationRoute.AssetsToolsets, label: 'toolset' },
+  ])('a platform-bucket $label', ({ view }) => {
+    const platformEntity = { name: 'pl_Ts', display_name: 'Platform Thing', folderId: 'platform/' } as PlatformAsset;
+
+    test('offers only an id and a display name, this asset having no version or folder', () => {
+      renderModal(view, platformEntity);
+
+      expect(screen.getAllByRole('textbox')).toHaveLength(2);
+    });
+
+    test('suffixes the name without brackets and duplicates under the edited name and display_name', async () => {
+      const user = userEvent.setup();
+      const { onDuplicate } = renderModal(view, platformEntity);
+
+      expect(screen.getAllByRole('textbox')[0]).toHaveValue('pl_Ts-copy');
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+      expect(onDuplicate).toHaveBeenCalledWith({ ...platformEntity, name: 'pl_Ts-copy' });
+    });
+  });
 });

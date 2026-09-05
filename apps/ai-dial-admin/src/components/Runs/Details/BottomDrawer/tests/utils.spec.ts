@@ -1,7 +1,9 @@
+import { describe, expect, it } from 'vitest';
+
 import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-import { buildComparisonSections, countDiffs, valuesAreEqual } from '../utils';
+import { buildComparisonSections, valuesAreEqual } from '../utils';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'r1',
@@ -446,29 +448,5 @@ describe('valuesAreEqual', () => {
 
   it('returns false for different strings', () => {
     expect(valuesAreEqual('hello', 'world')).toBe(false);
-  });
-});
-
-describe('countDiffs', () => {
-  it('counts differing visible fields', () => {
-    const active = makeResult({ id: 'a', testCaseData: { input: 'x' } });
-    const pinned = makeResult({ id: 'b', testCaseData: { input: 'y' } });
-    const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
-
-    const diffs = countDiffs(sections);
-    expect(diffs).toBeGreaterThan(0);
-  });
-
-  it('returns 0 when no pinned (single column)', () => {
-    const result = makeResult();
-    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
-  });
-
-  it('returns 0 when all values are equal', () => {
-    const result = makeResult({ id: 'a' });
-    const same = makeResult({ id: 'b' });
-    const sections = buildComparisonSections(result, same, defaultVisibility, defaultOrder, defaultHidden);
-    expect(countDiffs(sections)).toBe(0);
   });
 });

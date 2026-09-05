@@ -1,10 +1,8 @@
 import { FC } from 'react';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
-import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
-import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
-import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
+import FunctionRow from '@/src/components/Analytics/QueryBuilder/Common/FunctionRow';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import {
@@ -14,31 +12,21 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   emptyArgs,
-  functionArgSummary,
   functionByName,
-  functionLabels,
-  scalarFunctions,
+  scalarFunctionOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
-  createGroupByColumn,
-  createGroupByFn,
+  createColumnRow,
+  createFnRow,
   renamedFilterFields,
   renamedSortKeys,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { GROUP_BY_SECTION_WARNINGS, WARNING_I18N } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsEntityField } from '@/src/models/analytics/entity';
-import { FieldDropdownMode, FunctionOption, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
-import { QueryFunction } from '@/src/models/analytics/query-function';
+import { FieldDropdownMode, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
-
-const summaryOf = (row: GroupByRow, functions: QueryFunction[], fields: AnalyticsEntityField[]): string => {
-  const fn = functionByName(functions, row.fn);
-  const inner = fn ? functionArgSummary(fn, row.args, (name) => fieldDisplayName(fields, name)) : '';
-  return `${row.fn}(${inner})${row.alias ? ` AS ${row.alias}` : ''}`;
-};
 
 const GroupBySection: FC = () => {
   const t = useI18n();
@@ -48,13 +36,7 @@ const GroupBySection: FC = () => {
   const pickedColumns = state.groupBy.filter((g) => !g.fn).map((g) => g.field);
   const addOptions = fieldsToOptions(state.fields);
   // The Functions group is sourced entirely from the served catalog's scalar functions.
-  const scalarFns = scalarFunctions(state.functions);
-  const scalarLabels = functionLabels(scalarFns);
-  const functionOptions: FunctionOption[] = scalarFns.map((fn) => ({
-    name: fn.name,
-    label: scalarLabels.get(fn.name) ?? fn.name,
-    hint: fn.description,
-  }));
+  const functionOptions = scalarFunctionOptions(state.functions);
 
   const warnings = getAggregateWarnings(state).filter((w) => GROUP_BY_SECTION_WARNINGS.includes(w));
   const warning = warnings.length ? warnings.map((w) => t(WARNING_I18N[w])).join(' ') : undefined;
@@ -66,7 +48,7 @@ const GroupBySection: FC = () => {
   const toggleColumn = (name: string) => {
     const picked = state.groupBy.find((g) => !g.fn && g.field === name);
     if (picked) state.groupBy = state.groupBy.filter((g) => g !== picked);
-    else state.groupBy.push(createGroupByColumn(name));
+    else state.groupBy.push(createColumnRow(name));
     refresh();
   };
 
@@ -74,7 +56,7 @@ const GroupBySection: FC = () => {
     const fn = functionByName(state.functions, name);
     if (!fn) return;
     const args = emptyArgs(fn);
-    state.groupBy.push(createGroupByFn(fn, args, prefilledAlias(state, fn, args, false)));
+    state.groupBy.push(createFnRow(fn, args, prefilledAlias(state, fn, args, false)));
     refresh();
   };
 
@@ -124,44 +106,28 @@ const GroupBySection: FC = () => {
             ))}
           </div>
         )}
-        {fnRows.map((row) => {
-          const fn = functionByName(state.functions, row.fn);
-          return (
-            <ChipRow
-              key={row.id}
-              inline
-              color={QueryBuilderColor.Dimension}
-              summary={summaryOf(row, state.functions, state.fields)}
-              onRemove={() => removeRow(row)}
-            >
-              {fn?.args.map((arg, i) => (
-                <FnArgEditor
-                  key={`${row.id}-${i}`}
-                  id={`qb-groupby-${row.id}-arg-${i}`}
-                  arg={arg}
-                  value={row.args[i] ?? {}}
-                  fieldOptions={fieldOptions}
-                  onChange={(value) => {
-                    row.args[i] = value;
-                    syncAlias(row);
-                    refresh();
-                  }}
-                />
-              ))}
-              <CompactInput
-                ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
-                className="min-w-[140px] flex-1"
-                value={row.alias}
-                placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
-                onChange={(value) => {
-                  row.alias = value;
-                  row.aliasEdited = true;
-                  refresh();
-                }}
-              />
-            </ChipRow>
-          );
-        })}
+        {fnRows.map((row) => (
+          <FunctionRow
+            key={row.id}
+            id={`qb-groupby-${row.id}`}
+            row={row}
+            fn={functionByName(state.functions, row.fn)}
+            fields={state.fields}
+            fieldOptions={fieldOptions}
+            color={QueryBuilderColor.Dimension}
+            onChangeArg={(index, value) => {
+              row.args[index] = value;
+              syncAlias(row);
+              refresh();
+            }}
+            onChangeAlias={(alias) => {
+              row.alias = alias;
+              row.aliasEdited = true;
+              refresh();
+            }}
+            onRemove={() => removeRow(row)}
+          />
+        ))}
         {!state.groupBy.length && (
           <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>
         )}

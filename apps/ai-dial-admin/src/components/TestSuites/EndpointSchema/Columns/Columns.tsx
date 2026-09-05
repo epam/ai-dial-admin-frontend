@@ -97,7 +97,7 @@ const Columns: FC<ColumnsProps> = ({
       const columnToUpdate = columns[index || 0];
       if (columnToUpdate) {
         columnToUpdate.expression = value.expression;
-        columnToUpdate.type = value.type || columnToUpdate.type;
+        columnToUpdate.type = value.type?.toUpperCase() || columnToUpdate.type;
         onChangeResponseColumns(columns);
       }
     },

@@ -187,4 +187,93 @@ describe('ColumnRowsEditor', () => {
     expect(container.querySelector('.items-end')).toBeTruthy();
     expect(container.querySelector('.items-start')).toBeNull();
   });
+
+  describe('an Enum row', () => {
+    const enumRow = (overrides?: Partial<ColumnRow>) => row({ type: AnalyticsFieldType.Enum, ...overrides });
+
+    test('offers no value list until the type is Enum', () => {
+      const { container, rerender } = render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+      const stringRow = container.querySelector('[id^="col-enum-values-"]');
+      expect(stringRow).toBeNull();
+
+      const enumRows = [enumRow()];
+      rerender(<ColumnRowsEditor rows={enumRows} onChange={vi.fn()} />);
+
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValues)).toBeInTheDocument();
+    });
+
+    test('does not offer the element-type field (that is the Array control)', () => {
+      render(<ColumnRowsEditor rows={[enumRow()]} onChange={vi.fn()} />);
+      expect(screen.queryByLabelText(AnalyticsTablesI18nKey.ElementType)).not.toBeInTheDocument();
+    });
+
+    // The same reason the element type is cleared: a domain carried across a retype would be submitted with
+    // a column that no longer has the type it belongs to.
+    test('retyping away from Enum clears the collected values', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(<ColumnRowsEditor rows={[enumRow({ enum_values: ['low', 'high'] })]} onChange={onChange} />);
+
+      await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.String);
+
+      expect(onChange).toHaveBeenCalledWith([
+        expect.objectContaining({ type: AnalyticsFieldType.String, enum_values: [] }),
+      ]);
+    });
+
+    test('retyping from Array to Enum clears the element type and starts an empty domain', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColumnRowsEditor
+          rows={[row({ type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String })]}
+          onChange={onChange}
+        />,
+      );
+
+      await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Enum);
+
+      expect(onChange).toHaveBeenCalledWith([
+        expect.objectContaining({ type: AnalyticsFieldType.Enum, element_type: '' }),
+      ]);
+    });
+
+    // Stated once for the row set, not per row: a note under a field would lift that field out of line with
+    // the row's other inputs, which is exactly the misalignment this placement fixes.
+    test('states the declared-order consequence once, outside the rows', () => {
+      render(<ColumnRowsEditor rows={[enumRow(), enumRow()]} onChange={vi.fn()} />);
+
+      expect(screen.getAllByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toHaveLength(1);
+    });
+
+    test('states nothing about ordering when no row is an enum', () => {
+      render(<ColumnRowsEditor rows={[row(), row()]} onChange={vi.fn()} />);
+
+      expect(screen.queryByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toBeNull();
+    });
+
+    test('surfaces the value-list validation message', () => {
+      render(
+        <ColumnRowsEditor
+          rows={[enumRow()]}
+          errors={[{ enum_values: AnalyticsTablesI18nKey.EnumValuesRequired }]}
+          onChange={vi.fn()}
+        />,
+      );
+      expect(screen.getByText(AnalyticsTablesI18nKey.EnumValuesRequired)).toBeInTheDocument();
+    });
+
+    // rowHasError drives the row's top-aligned layout; a row erroring only on its domain must trigger it too.
+    test('erroring only on the value list still gets the top-aligned layout', () => {
+      const { container } = render(
+        <ColumnRowsEditor
+          rows={[enumRow()]}
+          errors={[{ enum_values: AnalyticsTablesI18nKey.EnumValuesRequired }]}
+          onChange={vi.fn()}
+        />,
+      );
+      expect(container.querySelector('.items-start')).toBeTruthy();
+      expect(container.querySelector('.items-end')).toBeNull();
+    });
+  });
 });

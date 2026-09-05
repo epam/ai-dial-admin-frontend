@@ -288,24 +288,3 @@ export function valuesAreEqual(a: string | null, b: string | null): boolean {
 
   return false;
 }
-
-export function getDiffClass(row: ComparisonRow): string {
-  if (row.values.length < 2) return '';
-  const [active, pinned] = row.values;
-  if (active.isFailed === pinned.isFailed && valuesAreEqual(active.raw, pinned.raw)) return '';
-  return row.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
-}
-
-export function countDiffs(sections: ComparisonSection[]): number {
-  let count = 0;
-  for (const section of sections) {
-    for (const row of section.rows) {
-      if (row.values.length < 2) continue;
-      const [a, b] = row.values;
-      if (a.isFailed !== b.isFailed || !valuesAreEqual(a.raw, b.raw)) {
-        count++;
-      }
-    }
-  }
-  return count;
-}

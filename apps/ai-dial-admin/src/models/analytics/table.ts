@@ -1,4 +1,6 @@
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { ConfigEntityRow } from '@/src/models/dial/config-file';
 
 export enum AnalyticsTableType {
   Source = 'source',
@@ -29,6 +31,11 @@ export interface AnalyticsTableColumn {
   type: AnalyticsFieldType;
   // Required when `type` is Array; the array's scalar value type (no nested array/object).
   element_type?: AnalyticsFieldType;
+  // Required when `type` is Enum, and rejected on a column of any other type; the closed value set in
+  // declared order (see AnalyticsFieldType.Enum). Immutable once the column exists — a schema patch
+  // `update` carrying it is rejected rather than ignored, so widening a domain means dropping the column
+  // and adding it again.
+  enum_values?: string[];
   nullable?: boolean;
   tag?: string;
   display_name?: string;
@@ -80,8 +87,11 @@ export interface TableAccess {
   modify: string[];
 }
 
-// POST /v1/tables is identity-only: no columns, no physical keys. The physical schema is defined
-// afterwards via the draft-schema resource (see DraftSchemaDto below).
+export interface AnalyticsRoleCatalog {
+  roles: ConfigEntityRow[];
+  warnings: EntitiesI18nKey[];
+}
+
 export interface CreateSourceTableDto {
   name: string;
   type: AnalyticsTableType.Source;

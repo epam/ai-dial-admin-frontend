@@ -1,27 +1,27 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import Page from '@/src/app/[lang]/evaluators/page';
 import Page403 from '@/src/components/Page403/Page403';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
+import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
-vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/pipelines/actions');
 vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('@/src/server/analytics/analytics-access');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
 
-const rule: EnrichmentRuleListItem = {
-  id: 'r_1',
+const rule: PipelineListItem = {
   name: 'turn-feedback-live',
+  kind: PipelineKind.Enrich,
   evaluator_name: 'feedback-rollup',
   evaluator_version: 2,
   evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
-  target_enrichment: 'turn_feedback',
+  target: 'turn_feedback',
   grain_key: 'response_id',
-  trigger_kind: TriggerKind.OnIngest,
+  trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',
@@ -35,7 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(isAnalyticsForbidden).mockResolvedValue(false);
   vi.mocked(getEvaluators).mockResolvedValue(evaluators);
-  vi.mocked(getRules).mockResolvedValue([rule]);
+  vi.mocked(getPipelines).mockResolvedValue({ data: [rule], isForbidden: false });
 });
 
 describe('evaluators page', () => {
@@ -52,7 +52,7 @@ describe('evaluators page', () => {
   test('joins the usage from a single rules listing', async () => {
     await renderPage();
 
-    expect(getRules).toHaveBeenCalledOnce();
+    expect(getPipelines).toHaveBeenCalledOnce();
   });
 
   test('renders the console with a stated failure when the evaluators listing fails', async () => {
@@ -73,7 +73,7 @@ describe('evaluators page', () => {
   });
 
   test('reports the usage as unknown, not zero, when the rules listing fails', async () => {
-    vi.mocked(getRules).mockResolvedValue(null);
+    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
 
     const page = await renderPage();
 
@@ -82,7 +82,7 @@ describe('evaluators page', () => {
   });
 
   test('reports the usage as unknown when the rules fetch throws', async () => {
-    vi.mocked(getRules).mockRejectedValue(new Error('boom'));
+    vi.mocked(getPipelines).mockRejectedValue(new Error('boom'));
 
     const page = await renderPage();
 
@@ -105,6 +105,6 @@ describe('evaluators page', () => {
 
     expect(page.type).toBe(Page403);
     expect(getEvaluators).not.toHaveBeenCalled();
-    expect(getRules).not.toHaveBeenCalled();
+    expect(getPipelines).not.toHaveBeenCalled();
   });
 });

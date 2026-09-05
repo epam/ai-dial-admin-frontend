@@ -39,7 +39,7 @@ const StatusPill: FC<{ status?: ExtractionResultStatus }> = ({ status }) => {
   );
 };
 
-const MetaSeparator = () => <span className="w-px h-3 bg-tertiary" />;
+const MetaSeparator = () => <span aria-hidden className="h-3 border-l border-primary" />;
 
 const MetaTag: FC<{ label: string; value: string; className?: string }> = ({ label, value, className }) => (
   <span className="inline-flex items-center gap-1 dial-tiny-text text-secondary">

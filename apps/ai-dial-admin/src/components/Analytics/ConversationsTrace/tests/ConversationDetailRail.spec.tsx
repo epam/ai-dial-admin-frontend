@@ -19,6 +19,8 @@ import {
   ConversationRatingCounts,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { insightColumnsOf } from '@/src/utils/analytics/conversation-insights';
 
 const CONVERSATION: ConversationDetailRow = {
   chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
@@ -63,16 +65,30 @@ const RATINGS: ConversationRatingCounts = {
   rate_events: 2,
 };
 
+// What the enrichment exposes on the instance under test. The rail decides whether to render the panel by
+// asking whether the record carries any of these, so an empty list is how "this deployment has no insight
+// enrichment" is expressed.
+const INSIGHT_SCHEMA: AnalyticsEntityField[] = [
+  { name: ConversationsField.InsightTitle, source: 'title', type: AnalyticsFieldType.String },
+  { name: ConversationsField.InsightSummary, source: 'summary', type: AnalyticsFieldType.String },
+  { name: ConversationsField.InsightSentiment, source: 'sentiment', type: AnalyticsFieldType.Enum },
+  { name: ConversationsField.InsightResolutionStatus, source: 'resolution_status', type: AnalyticsFieldType.Enum },
+  { name: ConversationsField.InsightTopic, source: 'topic', type: AnalyticsFieldType.String },
+  { name: ConversationsField.InsightLanguage, source: 'language', type: AnalyticsFieldType.String },
+];
+
 const setup = (
   feedback: ConversationFeedbackRow[] = FEEDBACK,
   total: number | null = feedback.length,
   ratings: ConversationRatingCounts | null = RATINGS,
   conversation: ConversationDetailRow = CONVERSATION,
   isCommentTextReadable = false,
+  schema: AnalyticsEntityField[] = INSIGHT_SCHEMA,
 ) =>
   render(
     <ConversationDetailRail
       conversation={conversation}
+      insightColumns={insightColumnsOf(schema)}
       feedback={feedback}
       feedbackTotal={total}
       ratings={ratings}
@@ -149,18 +165,19 @@ describe('ConversationDetailRail', () => {
   });
 
   test('an unevaluated conversation gets a statement rather than a panel of markers', () => {
-    setup(FEEDBACK, FEEDBACK.length, RATINGS, {
+    const unevaluated = INSIGHT_SCHEMA.reduce((record, { name }) => ({ ...record, [name]: null }), {
       ...CONVERSATION,
-      [ConversationsField.InsightTitle]: null,
     } as ConversationDetailRow);
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, unevaluated);
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailInsightsNotEvaluated)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.DetailPanelInsights)).toBeNull();
-    expect(screen.queryByText(ConversationsTraceI18nKey.DetailSummary)).toBeNull();
   });
 
+  // A record carrying none of the enrichment's columns is a deployment that does not have it — distinct
+  // from a conversation it has not reached, which carries the columns with nothing in them.
   test('a deployment without the enrichment says so distinctly', () => {
-    setup();
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, CONVERSATION, false, []);
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailInsightsUnavailable)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.DetailInsightsNotEvaluated)).toBeNull();

@@ -32,7 +32,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, getRootFolders } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -137,8 +137,9 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      fetchFiles(`${getRootFolder(view)}/`);
-      setLoadedPaths(new Set([`${getRootFolder(view)}/`]));
+      const rootPaths = getRootFolders(view).map((root) => `${root}/`);
+      fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
+      setLoadedPaths(new Set(rootPaths));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
@@ -147,6 +148,11 @@ const FileManager: FC<Props> = ({
     () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
     [label],
   );
+
+  // Applications is the one view with two top-level buckets (`platform`/`public` — see
+  // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
+  // wrapper instead of reusing one bucket's own node as the tree's virtual root.
+  const isMultiRootView = getRootFolders(view).length > 1;
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -383,7 +389,7 @@ const FileManager: FC<Props> = ({
   );
 
   const gridOptions = useMemo(() => {
-    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t);
+    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t, undefined, filePath);
     return {
       ...base,
       additionalGridOptions: {
@@ -391,7 +397,10 @@ const FileManager: FC<Props> = ({
         onFilterChanged: handleGridFilterChanged,
       },
     };
-  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged]);
+    // Applications and Toolsets are the only views whose action set depends on `filePath` (which
+    // bucket is being browsed — see `isPlatformDualBucketView`); every other view keeps the same
+    // options regardless of path, so this dependency is a no-op for them.
+  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged, filePath]);
 
   return (
     <>
@@ -401,11 +410,11 @@ const FileManager: FC<Props> = ({
         path={filePath}
         defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}
-        rootItem={filteredFiles?.[0] as DialRootFolder}
+        rootItem={isMultiRootView ? ({ label } as DialRootFolder) : (filteredFiles?.[0] as DialRootFolder)}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
-        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t)}
-        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
+        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
+        toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t, filePath)}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
@@ -414,6 +423,7 @@ const FileManager: FC<Props> = ({
           view,
           setExpandedFolders,
           t,
+          filePath,
         )}
         gridOptions={gridOptions}
         onGridApiChange={handleGridApiChange}

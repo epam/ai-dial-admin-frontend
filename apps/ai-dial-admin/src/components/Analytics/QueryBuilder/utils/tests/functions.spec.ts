@@ -3,9 +3,13 @@ import { describe, expect, test } from 'vitest';
 import {
   functionLabel,
   functionLabels,
+  functionResultType,
   humanizeFunctionName,
+  operandFunctionOptions,
+  scalarFunctionOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
-import { fnFixture } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryFunction, QueryFunctionGroup, QueryFunctionReturnType } from '@/src/models/analytics/query-function';
 
 const withDescription = (description: string): QueryFunction => ({
@@ -111,5 +115,35 @@ describe('functionLabels', () => {
     expect(labels.get('sum')).toBe('Sum');
     expect(labels.get('sum_squares')).toBe('Sum squares');
     expect(labels.get('avg')).toBe('Average');
+  });
+});
+
+describe('operandFunctionOptions', () => {
+  test('withholds array-returning scalars that projection still offers', () => {
+    const projected = scalarFunctionOptions(TEST_FUNCTIONS).map((o) => o.name);
+    const compared = operandFunctionOptions(TEST_FUNCTIONS).map((o) => o.name);
+
+    expect(projected).toContain('json_extract_array');
+    expect(compared).not.toContain('json_extract_array');
+  });
+
+  test('keeps every other scalar and no aggregate', () => {
+    const compared = operandFunctionOptions(TEST_FUNCTIONS).map((o) => o.name);
+
+    expect(compared).toContain('json_extract_string');
+    expect(compared).toContain('starts_with');
+    expect(compared).not.toContain('sum');
+  });
+
+  test('an empty catalog offers nothing', () => {
+    expect(operandFunctionOptions([])).toEqual([]);
+  });
+});
+
+describe('functionResultType — boolean returns', () => {
+  test('a boolean-returning function types as boolean, not as string', () => {
+    expect(functionResultType(fnFixture('starts_with'), [{ field: 'deployment' }], [])).toBe(
+      AnalyticsFieldType.Boolean,
+    );
   });
 });

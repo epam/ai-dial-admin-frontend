@@ -12,10 +12,7 @@ import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
 import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
 import CompareRowDetailBottomPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailBottomPanel';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
-import {
-  ROW_DETAIL_BOTTOM_CLASS,
-  ROW_DETAIL_SIDEBAR_CLASS,
-} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { ROW_DETAIL_BOTTOM_CLASS, ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import {
   CompareRunSlot,

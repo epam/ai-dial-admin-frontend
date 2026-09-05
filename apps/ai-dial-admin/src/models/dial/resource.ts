@@ -16,7 +16,7 @@ export interface DialResource extends BaseEntity {
   folderId: string;
   nodeType?: string;
   version: string;
-  author: string;
+  author?: string;
   endpoint?: string;
   icon_url: string;
   reference: string;
@@ -40,6 +40,14 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
   features?: DialApplicationResourceFeatures;
   external_services?: Record<string, DialExternalService>;
   interfaces?: Record<string, DialResourceInterface>;
+  /**
+   * `Application` is `@JsonNaming(SnakeCaseStrategy)` on Core — unlike `Model`/`Route`, whose
+   * `RoleBasedEntity.userRoles` serializes as plain camelCase, Core always writes this back as
+   * `user_roles`. `RoleBasedEntity`'s `@JsonAlias({"userRoles", "user_roles", "dial:userRoles"})`
+   * only widens what a *write* accepts — it does not change what a *read* returns, so reading this
+   * field as `userRoles` would silently never see a value back.
+   */
+  user_roles?: string[];
 }
 
 export interface DialExternalService {
@@ -254,6 +262,46 @@ export interface DialKeyResource extends ModifiedEntity {
   allowedIpAddressRanges?: string[];
 }
 
+/**
+ * A platform-bucket application resource (`applications/platform/{name}`), as returned by Core.
+ * Core reuses the same `Application` entity class for both the `public` and `platform` buckets — the
+ * bucket segment alone distinguishes them — so this carries the same snake_case content fields as
+ * `DialApplicationResource`, minus the fields that only make sense for the versioned, folder-nested
+ * `public` bucket (`version`/`display_version`, `nodeType`, `created_at`/`updated_at` in favor of
+ * `ModifiedEntity`'s `createdAt`/`updatedAt`, `etag`). Flat and unversioned like `DialKeyResource`.
+ */
+export interface DialPlatformApplicationResource
+  extends
+    Omit<DialApplicationResource, 'path' | 'folderId' | 'version' | 'nodeType' | 'created_at' | 'updated_at' | 'etag'>,
+    ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+}
+
+/**
+ * A platform-bucket toolset resource (`toolsets/platform/{name}`), as returned by Core. Core reuses
+ * the same `ToolSet` entity class for both the `public` and `platform` buckets — the bucket segment
+ * alone distinguishes them — so this carries the same snake_case content fields as
+ * `DialToolsetResource`, minus the fields that only make sense for the versioned, folder-nested
+ * `public` bucket (`version`, `nodeType`, `updatedAt` in favor of `ModifiedEntity`'s
+ * `createdAt`/`updatedAt`, `etag`). Flat and unversioned like `DialPlatformApplicationResource`.
+ */
+export interface DialPlatformToolsetResource
+  extends
+    Omit<DialToolsetResource, 'path' | 'folderId' | 'version' | 'nodeType' | 'updatedAt' | 'etag'>,
+    ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
 export type PlatformAsset =
   | DialModelResource
@@ -261,7 +309,9 @@ export type PlatformAsset =
   | DialInterceptorResource
   | DialRouteResource
   | DialRoleResource
-  | DialKeyResource;
+  | DialKeyResource
+  | DialPlatformApplicationResource
+  | DialPlatformToolsetResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',
@@ -286,6 +336,8 @@ export interface DialToolsetResource extends DialResource {
   provider?: string;
   vendor_website?: string;
   updatedAt: string;
+  /** See `DialApplicationResource.user_roles` — `ToolSet` is also `@JsonNaming(SnakeCaseStrategy)`. */
+  user_roles?: string[];
 }
 
 /**

@@ -19,6 +19,7 @@ export const TEST_CASES_URL = (id?: string) => `${TEST_SUITE_URL(id)}/test-cases
 export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
+export const DEPLOYMENT_BY_ID_URL = (id: string) => `${DEPLOYMENTS_URL}/all/${id}`;
 export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
@@ -27,6 +28,7 @@ export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string)
 export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
 export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
 export const METRIC_DECLARATIONS_URL = `${API}/metric-declarations`;
+export const METRIC_DECLARATIONS_LATEST_URL = `${API}/metric-declarations/versions/latest`;
 export const TEST_SUITE_DETACH_URL = (id: string) => `${TEST_SUITE_URL(id)}/detach-dataset`;
 export const TEST_SUITE_METRICS_URL = (id: string) => `${TEST_SUITE_URL(id)}/metric-definitions`;
 export const TEST_CASES_BULK_URL = (id?: string) => `${TEST_CASES_URL(id)}:bulk`;
@@ -173,6 +175,10 @@ export class TestSuitesApi extends BaseApi {
     return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
   }
 
+  getDeploymentById(id: string, token: Token): Promise<Deployment | null> {
+    return this.get(DEPLOYMENT_BY_ID_URL(id), token);
+  }
+
   getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
     return this.get(TEST_SUITE_TEMPLATE_VARIABLES_URL(id), token);
   }
@@ -195,6 +201,10 @@ export class TestSuitesApi extends BaseApi {
 
   getMetricDeclarations(page: number, size: number, token: Token): Promise<MetricResponse | null> {
     return this.get(`${METRIC_DECLARATIONS_URL}?page=${page}&size=${size}&includeTotalCount=true`, token);
+  }
+
+  getDetailedMetricDeclarations(token: Token): Promise<Metric[] | null> {
+    return this.get(METRIC_DECLARATIONS_LATEST_URL, token);
   }
 
   getMetricLatestVersion(id: string, token: Token): Promise<Metric | null> {

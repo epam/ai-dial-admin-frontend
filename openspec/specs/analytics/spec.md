@@ -45,11 +45,11 @@ The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value 
 
 ### Requirement: Analytics menu group with Query Builder and Tables sub-items
 
-The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Enrichment rules" (linking to the Enrichment rules route), "Evaluators" (linking to the Evaluators route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/enrichment-rules`, `/evaluators`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Enrichment rules", "Evaluators", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
+The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Pipelines" (linking to the Pipelines route), "Evaluators" (linking to the Evaluators route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/pipelines`, `/evaluators`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Pipelines", "Evaluators", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
 
-"Evaluators" SHALL sit directly after "Enrichment rules" rather than before it. An evaluator cannot be registered from this console, so a position ahead of Enrichment rules would read as the first step of a workflow that does not start here; the evaluators page is a reference surface an operator reaches from a rule, and placing it next to rules keeps the enrichment pair adjacent.
+"Evaluators" SHALL sit directly after "Pipelines" rather than before it. An evaluator cannot be registered from this console, so a position ahead of Pipelines would read as the first step of a workflow that does not start here; the evaluators page is a reference surface an operator reaches from a pipeline, and placing it next to Pipelines keeps the pair adjacent.
 
-The Enrichment rules route SHALL be spelled `/enrichment-rules`, not `/rules`: `src/components/Rules/` and the `RuleFolderProvider` in the app's provider stack already denote entity **access rules**, an unrelated capability, and a `/rules` route would shadow that meaning in the menu, in breadcrumbs, and in the codebase.
+The Pipelines route SHALL be spelled `/pipelines`, not `/rules`: `src/components/Rules/` and the `RuleFolderProvider` in the app's provider stack already denote entity **access rules**, an unrelated capability, and a `/rules` route would shadow that meaning in the menu, in breadcrumbs, and in the codebase.
 
 The standalone `/query-builder` route SHALL NOT be present in the menu or in the `ApplicationRoute` enum. Requests to `/query-builder` SHALL redirect to `/queries` so existing links resolve.
 
@@ -58,8 +58,8 @@ The standalone `/query-builder` route SHALL NOT be present in the menu or in the
 - **WHEN** `featureFlags.analyticsEnabled` is `true` and the sidebar menu renders
 - **THEN** an "Analytics" group is present
 - **AND** expanding it shows a "Tables" sub-item linking to `/tables`
-- **AND** it shows an "Enrichment rules" sub-item linking to `/enrichment-rules`
-- **AND** it shows an "Evaluators" sub-item linking to `/evaluators`, ordered after "Enrichment rules"
+- **AND** it shows a "Pipelines" sub-item linking to `/pipelines`
+- **AND** it shows an "Evaluators" sub-item linking to `/evaluators`, ordered after "Pipelines"
 - **AND** it shows a "Queries" sub-item linking to `/queries`
 - **AND** it shows a "Conversations" sub-item linking to `/conversations-trace`
 - **AND** no "Query Builder" sub-item is present
@@ -130,17 +130,21 @@ Tables endpoints (base path `/v1/tables`):
 - `PATCH /v1/tables/{name}/schema` — evolve a materialized (`ACTIVE`) table's columns; exposed as `updateTableSchema`
 - `POST /v1/tables/{name}/rows` — insert rows into a table
 
-Enrichment rules endpoints (base path `/v1/rules`):
-- `GET /v1/rules` — list rules. Deployed builds of the service answer with either a bare array or a `{ items: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }`.** The listing accepts two optional filters, `enabled` and `updated_since`, which combine rather than replace one another. The client SHALL support both on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `id` breaking ties)
-- `POST /v1/rules` — register a rule. A rule is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. Exposed as an `*Action` returning a `ServerActionResponse`
-- `GET /v1/rules/{id}` — read one rule by id
-- `PUT /v1/rules/{id}` — **full replace**, not a merge-patch: an omitted member is erased. Exposed as an `*Action` returning a `ServerActionResponse`
-- `DELETE /v1/rules/{id}` — delete a rule by id; exposed as an `*Action` returning a `ServerActionResponse`
+Pipeline endpoints (base path `/v1/pipelines`), covering both kinds — `enrich` and `aggregate` — in one registry:
+- `GET /v1/pipelines` — list pipelines. Deployed builds of the service answer with either a bare array or a `{ pipelines: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }` and from the evaluators listing's `{ items }`.** The listing accepts three optional filters — `kind`, `enabled`, and `updated_since` — which combine rather than replace one another. The client SHALL support all three on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `name` breaking ties)
+- `POST /v1/pipelines` — register a pipeline. A pipeline is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. Exposed as an `*Action` returning a `ServerActionResponse`
+- `GET /v1/pipelines/{name}` — read one pipeline by name
+- `PATCH /v1/pipelines/{name}` — apply the members the request carries: an omitted member is left alone, a presented one is replaced. Exposed as an `*Action` returning a `ServerActionResponse`
+- `DELETE /v1/pipelines/{name}` — delete a pipeline by name; exposed as an `*Action` returning a `ServerActionResponse`
 
-Every rule the service returns is **resolved**: it carries its pinned evaluator version inlined as `evaluator`, its read `source` (declared on the rule, or defaulted to the target enrichment's `source_table` — the response does not distinguish the two), the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A disabled rule is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
+A pipeline is addressed by its `name`, which is its identity and is never reassigned; there is no separate id.
+
+Resolution is **kind-scoped**. A listing narrowed to one `kind` carries each pipeline's resolved members — for an enrichment pipeline its pinned evaluator version inlined as `evaluator`, the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A listing across both kinds omits all three, so a cross-kind grid SHALL render only the flat members every pipeline carries. A disabled pipeline is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
+
+Both pipeline reads SHALL keep a refusal distinct from a failure. `BaseApi` answers HTTP 403 with no value and any other failure with a null; the client SHALL carry that distinction to the caller as `PipelineReadResult<T>` — `{ data, isForbidden }` — rather than collapsing the two into one empty result.
 
 Evaluator endpoints (base path `/v1/evaluators`). Reads are open to any authenticated caller; the single write is `FULL_ADMIN`-only:
-- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the rules listing the response may be a bare array or a `{ items: [...] }` wrapper and the client SHALL accept both. Version definitions are **not** included
+- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the pipelines listing the response may be a bare array or a wrapper and the client SHALL accept both. Version definitions are **not** included
 - `GET /v1/evaluators/{name}` — read that evaluator's latest version in full, including `type` (`llm` or `sql`), `input_vars`, and `output_vars`
 - `GET /v1/evaluators/{name}/versions/{version}` — read one pinned version in full
 - `POST /v1/evaluators` — register an evaluator or **append a version to an existing one**; the only evaluator mutation the service offers, and the only one it marks `@FullAdminOnly`. The body carries no version: an unknown `name` creates version 1, and a known `name` creates `latest_version + 1`, so there is no way to address which version is produced. Exposed as an `*Action` returning a `ServerActionResponse`
@@ -168,10 +172,10 @@ The accepted body shape depends on `type` and is enforced imperatively by the se
 - **WHEN** `analyticsDataApi` is used
 - **THEN** it can issue `GET /v1/tables` (unwrapping `{ tables }`), `POST /v1/tables` (identity-only), `GET /v1/tables/{name}`, `PUT /v1/tables/{name}` via `updateTable`, `DELETE /v1/tables/{name}`, `POST /v1/tables/{name}/schema` via `defineTableSchema`, `PATCH /v1/tables/{name}/schema` via `updateTableSchema`, and `POST /v1/tables/{name}/rows`
 
-#### Scenario: Client covers the rules and evaluators endpoints
+#### Scenario: Client covers the pipelines and evaluators endpoints
 
 - **WHEN** `analyticsDataApi` is used
-- **THEN** it can issue `GET /v1/rules` (unwrapping `{ items }`), `POST /v1/rules`, `GET /v1/rules/{id}`, `PUT /v1/rules/{id}`, and `DELETE /v1/rules/{id}`
+- **THEN** it can issue `GET /v1/pipelines` (unwrapping `{ pipelines }`), `POST /v1/pipelines`, `GET /v1/pipelines/{name}`, `PATCH /v1/pipelines/{name}`, and `DELETE /v1/pipelines/{name}`
 - **AND** it can issue `GET /v1/evaluators` (unwrapping `{ items }`), `GET /v1/evaluators/{name}`, and `GET /v1/evaluators/{name}/versions/{version}`
 - **AND** it can issue `POST /v1/evaluators` to register an evaluator or append a version
 
@@ -181,17 +185,23 @@ The accepted body shape depends on `type` and is enforced imperatively by the se
 - **THEN** it offers no call against `PUT /v1/evaluators/{name}/versions/{version}` or `DELETE /v1/evaluators/{name}/versions/{version}`
 - **AND** the only evaluator write available is the registration POST
 
-#### Scenario: The rules listing omits an unset enabled filter
+#### Scenario: The pipelines listing omits an unset enabled filter
 
-- **WHEN** the rules listing is requested with no preference on `enabled`
+- **WHEN** the pipelines listing is requested with no preference on `enabled`
 - **THEN** the query string carries no `enabled` parameter at all
 - **AND** it is not sent as an empty value, which the service rejects with HTTP 400
 
-#### Scenario: The rules listing sends both filters together
+#### Scenario: The pipelines listing sends every filter together
 
-- **WHEN** the rules listing is requested for enabled rules updated since a given instant
-- **THEN** the query string carries `enabled=true` and `updated_since` with that instant
-- **AND** the two narrow the result together rather than one replacing the other
+- **WHEN** the pipelines listing is requested for one kind, enabled only, updated since a given instant
+- **THEN** the query string carries `kind`, `enabled=true`, and `updated_since` with that instant
+- **AND** the three narrow the result together rather than one replacing another
+
+#### Scenario: A refused read is not reported as a failed one
+
+- **WHEN** the service answers a pipelines listing or a single pipeline read with HTTP 403
+- **THEN** the client returns `isForbidden: true` with no data
+- **AND** any other failed read returns `isForbidden: false` with no data
 
 ### Requirement: Analytics pages fetch initial data server-side
 
@@ -209,10 +219,10 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 - **THEN** the page awaits that table on the server and renders the detail view seeded with it
 - **AND** if the table is missing the page resolves to a not-found result
 
-#### Scenario: The enrichment rules listing is fetched on the server
+#### Scenario: The pipelines listing is fetched on the server
 
-- **WHEN** the user navigates to `/enrichment-rules`
-- **THEN** the page awaits the unfiltered rules list on the server and renders the listing view seeded with it
+- **WHEN** the user navigates to `/pipelines`
+- **THEN** the page awaits the unfiltered pipelines list on the server and renders the listing view seeded with it
 - **AND** if the list request fails the page renders the console with the failure stated rather than a not-found result
 
 #### Scenario: The queries list is fetched on the server
@@ -349,7 +359,7 @@ The query builder SHALL render in a fixed-width rail at the right edge of the co
 
 Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a borderless section tile — a raised background panel, no outline — with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls.
 
-Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only. A field whose schema `sensitive` flag is true SHALL show a sensitive marker (a colored dot with a "Sensitive" tooltip) in its dropdown option, after the display name.
+Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, row-mode select functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only. A field whose schema `sensitive` flag is true SHALL show a sensitive marker (a colored dot with a "Sensitive" tooltip) in its dropdown option, after the display name.
 
 The field dropdown SHALL support a multi-select mode, used by the sections whose target is a list of fields — the row-mode Select projection and the plain-column part of Group by. In multi-select mode: picking an option SHALL toggle that field's membership and SHALL leave the overlay open, its search term, and its expanded category untouched, so several fields can be added in one visit; already-selected fields SHALL remain listed among the options rather than being filtered out; a selected option SHALL be marked by a check mark in the row's reserved left gutter plus the same accent background tint the single-select picker uses for its current value (no checkbox control), so the state does not rest on colour alone; clicking a selected option SHALL deselect it; and the listbox SHALL declare itself multi-selectable with each option carrying its selected state for assistive technology. Selection order SHALL be preserved as the section's list order (a newly selected field appends). Single-valued pickers — the Sort key field, the Filter and Having condition field, and function expression arguments — SHALL remain single-select and SHALL keep closing the overlay on pick.
 
@@ -433,16 +443,17 @@ The field dropdown SHALL support a multi-select mode, used by the sections whose
 
 ### Requirement: Served function catalog
 
-The Query Builder SHALL source the set of functions offered in `aggregate` mode exclusively from the backend function catalog `GET /v1/queries/functions`, fetched on the server when the query-builder page loads and seeded into the builder. The frontend SHALL NOT hardcode any function name, group, argument shape, allowed literal values, numeric bound, distinct support, return type, or hint text: every such property SHALL be read from the served catalog entry. Each catalog entry provides the function `name`, `group` (`scalar`, `aggregate`, or `ordered_set_aggregate`), a `signature`, a `returns` type, a `distinct_supported` flag, a `description`, and an ordered `args` list; each argument provides its `name`, its `kind` (`expression`, `integer_literal`, `numeric_literal`, or `string_literal`), an `optional` flag, and — when applicable — `constraints` with `allowed_values` and/or `min`/`max`.
+The Query Builder SHALL source the set of functions it offers — in `aggregate` mode's Group by and Aggregate sections, in the `row`-mode Select projection, and as the left operand of a Filter condition — exclusively from the backend function catalog `GET /v1/queries/functions`, fetched on the server when the query-builder page loads and seeded into the builder. The frontend SHALL NOT hardcode any function name, group, argument shape, allowed literal values, numeric bound, distinct support, return type, or hint text: every such property SHALL be read from the served catalog entry. Each catalog entry provides the function `name`, `group` (`scalar`, `aggregate`, or `ordered_set_aggregate`), a `signature`, a `returns` type, a `distinct_supported` flag, a `description`, and an ordered `args` list; each argument provides its `name`, its `kind` (`expression`, `integer_literal`, `numeric_literal`, or `string_literal`), an `optional` flag, and — when applicable — `constraints` with `allowed_values` and/or `min`/`max`.
 
-There SHALL be no local fallback catalog. When the catalog fetch fails or returns an empty list, no functions SHALL be offered: the Group by dropdown's Functions group SHALL be empty and the Aggregate section SHALL offer no metric functions, while plain-column querying (`row` mode, and plain group-by columns in `aggregate` mode) SHALL remain fully functional.
+There SHALL be no local fallback catalog. When the catalog fetch fails or returns an empty list, no functions SHALL be offered: the Functions group of the Group by, row-mode Select, and Filter-condition dropdowns SHALL be empty and the Aggregate section SHALL offer no metric functions, while plain-column querying (the `row`-mode projection, plain group-by columns in `aggregate` mode, and conditions over a schema column) SHALL remain fully functional.
 
-Every enum and function picker in the rail (operator, value type, nulls, sort direction, aggregate function) SHALL mark its current option the same way as the field dropdowns — a check mark beside the label plus the accent tint. Every function picker — the Aggregate section's selector and the Group by Functions group — SHALL name a function from the served catalog and SHALL expose its catalog `description` as a hover tooltip. The name SHALL be derived from the served data, never from a per-function table in the frontend: catalog descriptions open by naming the function ("Average of a numeric expression over the group; …", "Row count; with an argument …", "Continuous percentile: …"), so the label SHALL be that leading phrase, cut at the first clause break or the "<name> of/for …" and "<name> (…)" patterns. A description that instead opens with prose ("Lowercases a text expression."), or a function with no description, SHALL fall back to the function's own name made readable (`percentile_cont` → "Percentile cont"). A function with no description SHALL render without a tooltip.
+Every enum and function picker in the rail (operator, value type, nulls, sort direction, aggregate function) SHALL mark its current option the same way as the field dropdowns — a check mark beside the label plus the accent tint. Every function picker — the Aggregate section's selector and the Functions group of the Group by, row-mode Select, and Filter-condition dropdowns — SHALL name a function from the served catalog and SHALL expose its catalog `description` as a hover tooltip. The name SHALL be derived from the served data, never from a per-function table in the frontend: catalog descriptions open by naming the function ("Average of a numeric expression over the group; …", "Row count; with an argument …", "Continuous percentile: …"), so the label SHALL be that leading phrase, cut at the first clause break or the "<name> of/for …" and "<name> (…)" patterns. A description that instead opens with prose ("Lowercases a text expression."), or a function with no description, SHALL fall back to the function's own name made readable (`percentile_cont` → "Percentile cont"). A function with no description SHALL render without a tooltip.
 
 #### Scenario: Functions offered come from the served catalog
 
 - **WHEN** the query-builder page loads and the function catalog lists `date_bin`, `width_bucket`, `lower`, `count`, `sum`, and `percentile_cont`
 - **THEN** the Group by Functions group offers the `scalar` functions (`date_bin`, `width_bucket`, `lower`) and the Aggregate section offers the `aggregate` / `ordered_set_aggregate` functions (`count`, `sum`, `percentile_cont`)
+- **AND** the row-mode Select dropdown and a Filter condition's operand dropdown offer that same `scalar` set
 
 #### Scenario: New backend functions appear with no frontend change
 
@@ -452,8 +463,8 @@ Every enum and function picker in the rail (operator, value type, nulls, sort di
 #### Scenario: Absent catalog degrades to plain columns
 
 - **WHEN** the function catalog fails to load or is empty
-- **THEN** the Group by dropdown offers only schema columns and the Aggregate section offers no metric functions
-- **AND** `row` mode and plain group-by columns still build and run
+- **THEN** the Group by, row-mode Select, and Filter-condition dropdowns offer only schema columns, and the Aggregate section offers no metric functions
+- **AND** the row-mode projection, plain group-by columns, and conditions over a schema column still build and run
 
 #### Scenario: Function options are named from the served description
 
@@ -491,7 +502,18 @@ An aggregate metric whose catalog entry has `distinct_supported: true` SHALL ren
 
 ### Requirement: Filter (WHERE) builder with nested groups
 
-The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. Each operator SHALL be shown by its full name (Equals, Not equals, Contains, Does not contain, Less than, Greater than, Less than or equal, Greater than or equal, In list) — in the selector's open list, in its collapsed trigger, and in the condition's collapsed row summary — with no short code shown anywhere, and each option SHALL expose a hover tooltip describing the operator. The two case-insensitive contains operators SHALL be named Contains / Does not contain while serializing to `ico`/`inc` (SQL ILIKE); their tooltips SHALL state that matching is case-insensitive. The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
+The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a left-operand selector, an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. The left operand SHALL be either a schema column or a call to a `scalar` catalog function: the operand dropdown SHALL offer the loaded schema's fields grouped by field category and, in the same Functions group the Group by dropdown carries, the catalog's scalar functions. The functions offered here SHALL exclude those whose catalog return type is `array`: the service accepts an array result as a projected column but rejects it as an operand, and it rejects the whole query for one bad predicate, so such a condition would take every other one down with it. The exclusion SHALL key on the served return type, never on a list of names. Choosing a function SHALL expand the condition into one argument editor per catalog argument — built from the catalog exactly as a group-by function row's editors are — and the condition's collapsed summary SHALL read the call with its arguments in place of a column name. A function operand SHALL serialize as the predicate's left `fn` expression. The condition's default value type, and the operator-withholding rule below, SHALL follow the operand's **resolved type**: a column's schema type, or a function's catalog return type — resolved, for a function whose return type is declared as its argument's own, from the schema type of its first expression argument's field. Each operator SHALL be shown by its full name (Equals, Not equals, Contains, Does not contain, Less than, Greater than, Less than or equal, Greater than or equal, In list) — in the selector's open list, in its collapsed trigger, and in the condition's collapsed row summary — with no short code shown anywhere, and each option SHALL expose a hover tooltip describing the operator. The two case-insensitive contains operators SHALL be named Contains / Does not contain while serializing to `ico`/`inc` (SQL ILIKE); their tooltips SHALL state that matching is case-insensitive. The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups, conditions with no left operand, and function conditions whose required catalog arguments are not all filled SHALL be omitted; a condition omitted for an unfilled function argument SHALL raise a warning on the Filter section header, because the query then runs without that predicate and returns more rows than were asked for with nothing else on screen saying so; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
+
+The two contains operators SHALL be **withheld** when the condition's left operand resolves to the schema's
+**enum** type — a column the schema types enum, or a function whose resolved return type is that column's. ClickHouse defines comparison over an enum but not the string functions, so the service refuses the
+LIKE-based operators on an enum field — and it rejects the **whole** query for one bad predicate, so a single
+such condition takes the entire result down rather than degrading it. The remaining operators (`eq`, `ne`, the
+four magnitude comparisons, and `in`) SHALL stay offered, since comparison, equality, membership, grouping and
+sorting all work over an enum. The withholding SHALL key on the **resolved operand type alone**: no list in the
+frontend names which fields are enums, so a field an instance begins reporting as an enum is guarded with no
+change here. A condition that already carries a contains operator when its left operand is changed to an
+enum-typed one SHALL be moved to a supported operator rather than left serializing a predicate the service will
+reject.
 
 #### Scenario: Nested group with a condition serializes
 
@@ -539,9 +561,51 @@ The Filter section SHALL let the user build a WHERE tree limited to two levels: 
 - **THEN** the trigger shows "Greater than or equal"
 - **AND** the condition's collapsed row summary names the operator the same way
 
+#### Scenario: Contains is withheld on an enum-typed field
+
+- **WHEN** a condition's left operand is a column the schema types enum and the user opens its operator selector
+- **THEN** Contains and Does not contain are not offered
+- **AND** Equals, Not equals, the magnitude comparisons and In list remain offered
+
+#### Scenario: Switching a contains condition to an enum field leaves a valid operator
+
+- **WHEN** a condition carrying Contains has its left operand changed to an enum-typed column
+- **THEN** the condition's operator is no longer Contains
+- **AND** the serialized query carries no LIKE-based predicate over that field
+
+#### Scenario: A function left operand serializes as an fn expression
+
+- **WHEN** a condition's left operand is the scalar function `json_extract_string` over a JSON column with the key `baggage`, its operator is Contains, and its value is a token
+- **THEN** the serialized predicate's first argument is an `fn` expression naming that function, with the column as a field argument and the key as a string value argument
+- **AND** the condition's collapsed summary reads the call and its arguments rather than a column name
+
+#### Scenario: An incomplete function condition is omitted, and says so
+
+- **WHEN** a condition's left operand is a function whose required arguments are not all filled
+- **THEN** that condition contributes no predicate to the serialized filter
+- **AND** the rest of the filter tree still serializes
+- **AND** the Filter section header shows a warning that the condition is left out
+
+#### Scenario: An array-returning function is not offered as an operand
+
+- **WHEN** the catalog serves a scalar function whose return type is `array` and the user opens a condition's operand dropdown
+- **THEN** that function is not among the Functions group's options
+- **AND** it is still offered in the row-mode Select dropdown, where its result is projected rather than compared
+
+#### Scenario: The value type follows the function's return type
+
+- **WHEN** the user picks a scalar function returning an integer as a condition's left operand
+- **THEN** the condition's value type defaults to the integer type rather than to string
+
+#### Scenario: A JSON-authored function predicate round-trips
+
+- **WHEN** a query authored in the JSON view carries a predicate whose left operand is an `fn` expression naming a served catalog function
+- **THEN** the Builder view shows that condition with the function selected and its arguments filled
+- **AND** serializing the builder state reproduces the same predicate
+
 ### Requirement: Row-mode projection
 
-In `row` mode the Select section SHALL let the user add projection fields through a categorized searchable dropdown; added fields SHALL render as removable chips. Added fields SHALL serialize to `select` as field-expression output columns, in selection order. When no field is added, `select` SHALL be omitted (default projection).
+In `row` mode the Select section SHALL let the user build the projection from two kinds of entry, both added through the section's one categorized searchable dropdown: **schema columns**, offered in multi-select mode and rendered as removable chips, and **`scalar` catalog functions**, offered in the dropdown's Functions group and rendered as collapsible rows carrying one argument editor per catalog argument plus an alias input — the same controls, built the same way from the catalog, as a Group by function row. Entries SHALL serialize to `select` in the order they were added: a column as a field-expression output column, a function as its `fn` expression under its effective alias. A function entry's alias SHALL be prefilled from its function and arguments, rederived while the user has not edited it, kept unique against the query's other output names, and fall back to the derived value when blank — exactly as a computed row's alias does in `aggregate` mode, and for the same reason: it is that output column's only name. A function entry whose required catalog arguments are not all filled SHALL contribute no output column, and SHALL raise a warning on the Select section header so the omission is not silent. When no entry is added, `select` SHALL be omitted (default projection).
 
 #### Scenario: Selected fields become projection columns
 
@@ -551,8 +615,27 @@ In `row` mode the Select section SHALL let the user add projection fields throug
 
 #### Scenario: No projection omits select
 
-- **WHEN** no field is added in row mode
+- **WHEN** no entry is added in row mode
 - **THEN** the serialized query has no `select` key
+
+#### Scenario: A scalar function becomes an aliased projection column
+
+- **WHEN** the user picks `json_extract_string` from the row-mode Select dropdown's Functions group and fills its arguments with a JSON column and a key
+- **THEN** the section shows a collapsible row with an editor per catalog argument and a prefilled alias
+- **AND** the serialized `select` carries that call as an `fn` expression under that alias
+
+#### Scenario: An incomplete function entry is not projected, and says so
+
+- **WHEN** a row-mode function entry has an unfilled required argument
+- **THEN** the serialized `select` carries no column for it
+- **AND** the other entries are still projected
+- **AND** the Select section header shows a warning that the column is left out
+
+#### Scenario: A JSON-authored function column round-trips
+
+- **WHEN** a `row`-mode query authored in the JSON view carries a `select` entry whose expression is an `fn` naming a served catalog function
+- **THEN** the Builder view shows that entry with its function and arguments filled and its authored alias kept
+- **AND** serializing the builder state reproduces the same output column
 
 ### Requirement: Aggregate-mode group by, time buckets, and metrics
 
@@ -653,7 +736,7 @@ In `aggregate` mode the builder SHALL provide a Having section using the same ne
 
 ### Requirement: Sort keys
 
-The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select trigger SHALL carry a dimmed "Nulls:" prefix so its role is readable next to the direction select. In `row` mode the field options SHALL be the schema fields; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
+The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select trigger SHALL carry a dimmed "Nulls:" prefix so its role is readable next to the direction select. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
 
 #### Scenario: Sort key serializes
 
@@ -676,6 +759,12 @@ The Sort section SHALL let the user add, edit, and remove sort keys, each with a
 - **WHEN** a query parsed from JSON carries a `sum` column with no `as`, and the user opens a sort key's field dropdown
 - **THEN** that aggregate is offered under the derived alias the query will be serialized with
 - **AND** sorting by it produces a sort key matching that column's `as`
+
+#### Scenario: A row-mode function column is sortable by its alias
+
+- **WHEN** a row-mode projection carries a scalar-function entry and the user opens a sort key's field dropdown
+- **THEN** that entry's effective alias is offered as a sort field
+- **AND** picking it serializes a sort item naming that alias
 
 #### Scenario: The implicit count column is sortable
 
@@ -752,7 +841,14 @@ While in `aggregate` mode the builder SHALL surface non-blocking warnings when: 
 
 ### Requirement: Run query and result
 
-The toolbar Run action SHALL execute the current query and render the result in the main results area. In the Builder view the query is the serialized `StructuredQuery` from the builder state; in the JSON view it is the query as written in the editor — both executed via a server action delegating to `analyticsDataApi.executeAction` (`/v1/queries/execute`). The result SHALL be shown as a grid whose columns are derived from the returned result (the result's declared columns when present, otherwise the union of keys across the returned rows), with object/array cell values stringified. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show an empty state inviting the user to run the query. An empty result SHALL show an empty-state message. A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded and while the JSON view contains invalid (unparseable) JSON.
+The toolbar Run action SHALL execute the current query and render the result in the main results area. In the Builder view the query is the serialized `StructuredQuery` from the builder state; in the JSON view it is the query as written in the editor — both executed via a server action delegating to `analyticsDataApi.executeAction` (`/v1/queries/execute`). The result SHALL be shown as a grid whose columns are derived from the returned result (the result's declared columns when present, otherwise the union of keys across the returned rows), with object/array cell values stringified. A cell SHALL make its value readable whatever its size: up to a
+bounded length the value SHALL be reachable as a tooltip carrying that rendered text — including for an
+object, which the grid's shared tooltip otherwise drops for not being a string — and beyond that length the
+cell SHALL instead show a bounded preview and a named control that opens the value in a dialog. The dialog
+SHALL present the value in a read-only editor that scrolls, folds and searches, SHALL indent a value that is
+JSON — including one that arrives as JSON text, which is the shape the heavy columns take — and SHALL offer
+copying it and closing. No tooltip SHALL be offered past that length, where one could not show the value
+anyway. The cell SHALL carry only the preview, not the whole document. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show an empty state inviting the user to run the query. An empty result SHALL show an empty-state message. A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded and while the JSON view contains invalid (unparseable) JSON.
 
 #### Scenario: Successful run renders a result grid
 
@@ -790,6 +886,30 @@ The toolbar Run action SHALL execute the current query and render the result in 
 
 - **WHEN** the user runs a query from the SQL view
 - **THEN** each grid column is headed by the name the result returned
+
+#### Scenario: A short value is reachable as a tooltip, an object included
+
+- **WHEN** a result cell holds a value short enough to show in a tooltip
+- **THEN** hovering it shows that value as rendered text
+- **AND** this holds for an object value, not only a string one
+
+#### Scenario: A value too large for a tooltip opens in a viewer
+
+- **WHEN** a result cell holds a value past the tooltip length
+- **THEN** the cell shows a preview of it and a control naming the column it belongs to
+- **AND** no tooltip is offered for that cell
+- **AND** activating the control opens the value in a dialog named by that column
+
+#### Scenario: A value that is JSON text is shown indented
+
+- **WHEN** the opened value is JSON, whether it arrived as an object or as JSON text
+- **THEN** the dialog shows it indented rather than as one line
+
+#### Scenario: The opened value can be copied
+
+- **WHEN** the user activates the dialog's copy action
+- **THEN** the value as shown is placed on the clipboard
+- **AND** a confirmation names the column it came from
 
 ### Requirement: Result stat tiles
 
@@ -1077,6 +1197,63 @@ SQL and JSON are "written" modes: they can hold queries the visual builder canno
 - **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
 - **THEN** no confirmation is shown
 - **AND** the builder reflects that query
+
+### Requirement: A query the visual builder cannot hold stays in the written views
+
+The Builder view SHALL never silently drop part of a query. Builder-representability SHALL therefore
+cover every expression the builder would have to hold, not only the shape of the filter tree. Beyond
+the existing two-level nesting rule, a structured query SHALL be treated as representable only when:
+
+- every `fn` expression in a position the builder edits — a `select` entry in either mode, and the
+  left operand of a `filter` or `having` predicate — names a function the served catalog lists;
+- each such call carries no argument beyond the ones its catalog entry declares (a variadic call
+  carries more, and the builder has exactly one slot per declared argument); and
+- each argument is of the kind its position expects — a field reference for an `expression`
+  argument, a literal for a literal one — because those are the only forms the argument editor
+  produces and therefore the only ones it can show back.
+- a predicate's right operand is a literal value or an array of them, the only right-hand shape the
+  condition editor produces.
+
+A query failing any of these SHALL be handled exactly as filter nesting deeper than two levels
+already is: it stays in the written view, fully editable and runnable, a non-blocking message states
+that it cannot be shown in the visual builder, the builder state SHALL NOT be updated from it —
+including when a stored query is opened, where the builder SHALL start from its defaults rather than
+from a partial parse — and switching to the Builder view SHALL go through the written-mode
+confirmation. An empty or failed catalog therefore makes every function-bearing query unrepresentable
+rather than stripping its functions.
+
+This widens what opens in the written views. A query passing a constant where the catalog declares an
+`expression` argument, or a JSON path of several keys through a variadic argument, previously opened
+in the Builder with that argument blanked; it now opens in the JSON view intact. That is the point:
+the builder has no editor for either, so showing them was showing something the query did not say.
+
+#### Scenario: A query using an unserved function stays in the written view
+
+- **WHEN** the JSON view holds a valid query whose filter predicate calls a function the served catalog does not list
+- **THEN** the informational message states the query cannot be shown in the visual builder
+- **AND** Run stays enabled and executes the query as written
+- **AND** the builder state is not updated from it
+
+#### Scenario: A call carrying more arguments than the catalog declares stays in the written view
+
+- **WHEN** a query calls a served function with an extra argument beyond the ones its catalog entry declares
+- **THEN** the query is not builder-representable and is not hydrated with the extra argument dropped
+
+#### Scenario: A literal where the catalog declares an expression stays in the written view
+
+- **WHEN** a query passes a constant to an argument the catalog declares as an `expression`
+- **THEN** the query is not builder-representable and is not hydrated with that argument blank
+
+#### Scenario: A stored query the builder cannot hold does not seed builder state
+
+- **WHEN** a saved query whose body the builder cannot represent is opened
+- **THEN** it opens in the JSON view showing that body
+- **AND** the builder rail holds its defaults rather than a partial parse of the body
+
+#### Scenario: A served function is representable
+
+- **WHEN** the same query calls a function the catalog does list, in a position the builder edits, with arguments of the declared kinds
+- **THEN** the query is representable and hydrates into the Builder view with that call intact
 
 ### Requirement: Saved query storage contract
 
@@ -1761,7 +1938,15 @@ Every delete-table confirmation dialog — the catalog list's row delete action 
 
 ### Requirement: Full-admin per-table role management panel
 
-The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN` and system tables carry no per-table roles to manage, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
+The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN` and system tables carry no per-table roles to manage, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system); a save SHALL full-replace the lists via `replaceTableAccess`.
+
+Role names SHALL be picked from a closed option list rather than typed. The catalog behind that list SHALL be DIAL Core's own merged role population — the union of the roles written through Core's API and the roles declared in Core's configuration file, merged by bare name with an API-written entry superseding a configuration-file entry of the same name, and degrading to whichever population could be read rather than to an empty catalog. The admin backend's roles list SHALL NOT be requested: it is a third copy that is neither population, it can hold a role Core does not, and it is being retired — every other role picker in the application already reads Core. Each option's value SHALL be the role's bare name, which is the raw provider-role string the backend matches against; there is no separate role id, and no resource reference is ever stored.
+
+The options SHALL be presented in alphabetical order, independently of the order the two populations were read in, so a role can be found by name.
+
+The options SHALL additionally include every role name the table already grants, even when the catalog does not offer it. A closed select renders only the values that match an option, so without this a grant naming a role outside the catalog — one declared only in Core's configuration file, or any of them when the catalog read failed — would be invisible and would be dropped by the next unrelated edit, silently revoking access that is still in effect.
+
+While the initial fetch (the table's current access and the role catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed role-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds. A failed role-catalog fetch SHALL still leave the table's existing grants selected and selectable rather than emptying the lists.
 
 #### Scenario: Full admin edits the role lists
 
@@ -1781,17 +1966,34 @@ The table detail view SHALL provide a panel to view and manage the table's `writ
 #### Scenario: Loading spinner while fetching
 
 - **WHEN** the panel opens
-- **THEN** a loading spinner is shown until both the table's current access and the roles catalog have been fetched
+- **THEN** a loading spinner is shown until both the table's current access and the role catalog have been fetched
 
 #### Scenario: Every catalog role is offered, not just the granted ones
 
-- **WHEN** the roles catalog loads
-- **THEN** each write/modify picker offers every catalog role as a checkbox, with already-granted roles checked
+- **WHEN** the role catalog loads
+- **THEN** each write/modify picker offers every catalog role as an option, with already-granted roles selected
+
+#### Scenario: Options are ordered alphabetically
+
+- **WHEN** the catalog resolves in an order other than alphabetical
+- **THEN** each picker presents its options sorted by name
+
+#### Scenario: The admin backend's roles list is not requested
+
+- **WHEN** the panel opens
+- **THEN** no request is made to the admin backend's roles endpoint
+
+#### Scenario: A granted role outside the catalog stays offered and survives a save
+
+- **WHEN** the panel opens for a table whose stored `write` list contains a role the catalog does not offer
+- **THEN** that role is offered as a selected option in the `write` picker
+- **AND** a save made after editing only the `modify` list sends the `write` list back unchanged
 
 #### Scenario: Roles-catalog fetch failure is surfaced independently
 
-- **WHEN** the roles catalog fails to load even though the table's current access loads successfully
+- **WHEN** the role catalog fails to load even though the table's current access loads successfully
 - **THEN** an error notification distinct from the access-load-failure notification is shown
+- **AND** the roles the table already grants remain offered and selected
 
 ### Requirement: System-owned tables are read-only
 
@@ -2013,6 +2215,150 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **WHEN** the schema-definition surface renders a `FAILED` source whose definition already stores `identity_column` and `version_column`
 - **THEN** both selects are seeded with those stored values
 - **AND** both are required, because omitting a member on re-post leaves the stored value unchanged rather than clearing it
+
+### Requirement: A column may be declared with an enum type and a closed, ordered value list
+
+The column-type vocabulary the schema editors offer SHALL include **enum**, a string column whose value set is
+closed. It SHALL be offered wherever a column is declared — the schema-definition surface of a `PENDING`/`FAILED`
+table and the "Add columns" popup of an `ACTIVE` one — and for both **source** and **enrichment** tables, since
+the service accepts it on either.
+
+A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
+Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+because a value's position in the list becomes its numeric id in the physical type and the column therefore
+sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
+nothing about a list of values otherwise suggests it.
+
+Each value SHALL be validated client-side against the service's rules, with a per-value message and Save
+disabled while any is violated:
+
+- at least **1** and at most **512** values
+- each value non-blank after trimming
+- each value at most **64** characters
+- values **distinct after trimming** — two entries differing only in surrounding whitespace collide
+
+Values SHALL be submitted **trimmed**, which is how the service stores and materializes them. A value MAY
+contain any characters, including commas and quotes, so the control MUST NOT treat any character as a
+separator.
+
+`enum_values` SHALL be submitted **if and only if** the column's type is enum: a column of any other type
+carrying the key is rejected (422), and an enum column without it is rejected the same way. Retyping a row away
+from enum SHALL discard the values it had collected, exactly as retyping away from Array discards its element
+type, so a stale domain can never be submitted with a column that no longer has that type.
+
+Enum SHALL NOT be offered as an Array column's **element type** — the service rejects an enum element. Enum
+SHALL NOT appear among the **Version column** or **Partition column** candidates, both of which require a
+temporal type. Enum SHALL be selectable as an **ordering key** entry, as an **Identity column**, and as an
+enrichment's **grain key**, on the same terms as any other non-nullable, non-sensitive scalar.
+
+#### Scenario: Enum is offered as a column type
+
+- **WHEN** the user opens the column-type selector on a source or an enrichment table's column row
+- **THEN** enum is among the offered types
+
+#### Scenario: Choosing enum reveals a required value list
+
+- **WHEN** the user sets a column row's type to enum
+- **THEN** the row offers a required value-list control
+- **AND** Save is disabled while the list is empty
+
+#### Scenario: Declared values are submitted in the authored order
+
+- **WHEN** the user declares an enum column with the values `low`, `medium`, `high` in that order and saves a
+  complete schema
+- **THEN** that column in the submitted payload carries `enum_values` `["low", "medium", "high"]` in that order
+
+#### Scenario: Reordering the list changes what is submitted
+
+- **WHEN** the user reorders a declared enum column's values so that `high` precedes `low`
+- **THEN** the submitted `enum_values` carries the new order
+
+#### Scenario: A blank or over-long value blocks Save
+
+- **WHEN** an enum column's value list holds a blank entry, or an entry longer than 64 characters
+- **THEN** that entry shows a validation message and Save is disabled
+- **AND** correcting the entry clears the message and re-enables Save
+
+#### Scenario: Duplicate values after trimming block Save
+
+- **WHEN** an enum column's value list holds `failed` and `failed ` (with a trailing space)
+- **THEN** a validation message reports the collision and Save is disabled
+
+#### Scenario: Values are submitted trimmed
+
+- **WHEN** the user declares an enum value as ` running ` and saves
+- **THEN** the submitted `enum_values` carries `running`
+
+#### Scenario: More than 512 values blocks Save
+
+- **WHEN** an enum column's value list exceeds 512 entries
+- **THEN** a validation message reports the cap and Save is disabled
+
+#### Scenario: Retyping away from enum drops the collected values
+
+- **WHEN** a column row typed enum with declared values is retyped to string
+- **THEN** the value-list control is no longer offered
+- **AND** the submitted column carries no `enum_values`
+
+#### Scenario: Enum is not offered as an array element type
+
+- **WHEN** a column row is typed Array and the user opens its element-type selector
+- **THEN** enum is not among the offered element types
+
+#### Scenario: An enum column is not a version-column candidate
+
+- **WHEN** a source table declares an enum column and the user opens the Version column selector
+- **THEN** that column is not offered
+- **AND** it is offered in the Ordering key and Identity column selectors
+
+#### Scenario: An enum column can be added to a materialized table
+
+- **WHEN** the user adds an enum column with a declared value list to an `ACTIVE` table and submits
+- **THEN** the schema patch's `add` entry carries the column's type and its `enum_values`
+- **AND** on success the detail view refreshes from the server
+
+### Requirement: An enum column's declared domain is immutable once the column exists
+
+The service refuses to change a column's `enum_values` after the column exists: a schema-patch `update` entry
+carrying the key is rejected with 422 rather than ignored, because widening a ClickHouse enum rewrites the
+column and fails outright on any stored row holding a value the new domain drops.
+
+The per-column **edit** modal SHALL therefore show an enum column's declared values **read-only**, and the patch
+it submits SHALL NOT carry `enum_values` under any circumstance. Presenting the domain rather than omitting it
+is the point: an operator who cannot find the values in the modal has no way to learn that the column has a
+closed domain at all, and the read-only presentation states both facts at once. The modal SHALL say that the
+domain cannot be changed and that changing it means dropping the column and adding it again — the only path the
+service supports — so the restriction does not read as a gap in the console.
+
+A **rename** SHALL remain available on an enum column on the same terms as any other column; the service keeps
+the domain and the type intact across one.
+
+The columns grid SHALL make an enum column's declared values reachable without opening the edit modal, so the
+domain is discoverable from the schema at a glance.
+
+#### Scenario: The edit modal shows the domain read-only
+
+- **WHEN** the user opens the edit modal on an enum column
+- **THEN** its declared values are shown and cannot be edited
+- **AND** the modal states that the domain cannot be changed and that a change means dropping and re-adding the
+  column
+
+#### Scenario: An edit patch never carries the domain
+
+- **WHEN** the user changes an enum column's display name in the edit modal and submits
+- **THEN** the schema patch carries the metadata `update` entry
+- **AND** it carries no `enum_values`
+
+#### Scenario: An enum column can still be renamed
+
+- **WHEN** the user renames an enum column
+- **THEN** the rename patch is sent
+- **AND** the refreshed column keeps its type and its declared values
+
+#### Scenario: The declared domain is reachable from the columns grid
+
+- **WHEN** the columns grid renders an enum column
+- **THEN** its declared values are reachable from the grid without opening the edit modal
 
 ### Requirement: Table metadata editing (description and tag order)
 
@@ -3417,18 +3763,32 @@ column SHALL be **named explicitly**. A column the service marks `heavy` is excl
 projection, so a query that relied on the default would silently return no value for it; `traces` is such a
 column, and the detail view renders it.
 
-The query SHALL take the available field names from the caller rather than enumerating a field list of its
-own, per "A conversation query names only fields the entity's schema reports". The columns the view has
+The query SHALL take the schema's reported fields from the caller rather than enumerating a field list of
+its own, per "A conversation query names only fields the entity's schema reports". The columns the view has
 always read are required; every column added since — `traces`, the cache, cached-prompt and reasoning token
 counts, the chain cost, and the insight columns — is optional. With no schema available the query SHALL name
 the required set alone.
 
-The insight enrichment's **descriptive** fields SHALL all be named where the schema reports them, not a
-subset of them: the session's title, its summary, its sentiment, its topic and
-topics, its language and its resolution status. A descriptive insight field the query does not name is a
-field the detail view cannot render at all, and the reader has no way to tell that from a conversation the
-evaluator never reached. The enrichment's `provenance`-tagged fields are not covered by this rule — they
-are the evaluation's own bookkeeping, and the detail view reads none of them.
+The query SHALL name **every** column the insight enrichment exposes, discovered from the enrichment
+namespace the schema qualifies those columns with rather than from a field list held in the frontend. An
+enumerated list cannot follow the enrichment: a column the evaluator gains is one the detail view cannot
+render at all, and the reader has no way to tell that from a conversation the evaluator never reached. The
+failure is worse than absence when a column is *superseded* — the enumerated pair keeps being named and
+comes back null, while the pair that replaced it is never asked for, so the panel reports the evaluator as
+silent on a conversation it labelled.
+
+No column SHALL be withheld for the **kind** of column it is. The enrichment's own bookkeeping — which
+evaluator produced a row, and from what input — was previously excluded as not describing the conversation,
+and that exclusion is removed: those columns are what separate a conversation the current evaluator has not
+reached from one it labelled and found nothing in, which no descriptive column can say about itself. The
+rule's only test is the enrichment namespace, so no category of column has to be recognised for it to hold.
+
+A column the enrichment exposes that the detail view cannot render as a value SHALL be excluded — one the
+schema types as an object or an array. The exclusion SHALL be decided by what the schema reports about the
+column rather than by its name, so a column newly typed is classified with no frontend change. A sensitive
+column needs no separate treatment here: the rule against referencing one governs every column this query
+names. The enrichment exposes no column of either kind today, so this is a guard against one being added
+rather than a filter that removes anything.
 
 The selected set SHALL include the rollup's enrichment columns where the schema reports them, whose exposed
 names are qualified flat names containing a dot. The query SHALL send such a name whole rather than treating
@@ -3458,15 +3818,34 @@ field for those callers rather than being refused cleanly, making the whole view
 
 - **WHEN** the single-session query is built and the schema reports the insight columns
 - **THEN** its select names `session_insights.title`
-- **AND** it names the summary, sentiment, topic, topics, language, resolution status, activity type and activity sub-task type
-- **AND** it names no `provenance`-tagged bookkeeping field of the enrichment
+- **AND** it names every other column the schema reports under that enrichment namespace
+- **AND** it names them whether or not the frontend has a definition for them
+
+#### Scenario: An insight column the frontend has never heard of is still named
+
+- **WHEN** the schema reports an insight column no frontend list enumerates
+- **THEN** the select names it
+- **AND** naming it required no change to a frontend field list
+
+#### Scenario: No insight column is withheld for its category
+
+- **WHEN** the schema reports insight columns the enrichment stamps for its own bookkeeping rather than to
+  describe the conversation
+- **THEN** the select names them like any other column of the namespace
+- **AND** no category of insight column is excluded
 
 #### Scenario: A descriptive insight field the schema omits is not named
 
 - **WHEN** the schema reports the insight enrichment but does not report its resolution status
-- **THEN** the select names the descriptive insight fields the schema does report
+- **THEN** the select names the insight columns the schema does report
 - **AND** it does not name `session_insights.resolution_status`
 - **AND** the query returns a row
+
+#### Scenario: A non-scalar insight column is excluded
+
+- **WHEN** the schema reports an insight column typed as an array or an object
+- **THEN** the select does not name it
+- **AND** the exclusion follows the schema's own report rather than a list of column names
 
 #### Scenario: An instance without the enrichment still resolves a conversation
 
@@ -4219,10 +4598,11 @@ A panel's identifier and its colour are therefore two independent claims, and th
 from the other. Deriving the colour from the identifier would paint an enrichment-sourced panel as the
 rollup, which is the mis-attribution the two registers exist to prevent.
 
-The **insights panel** SHALL present the conversation's insight enrichment: its summary, its sentiment, its
-resolution status, its topic and topics, and its language. It SHALL take the **insight** provenance colour
-and SHALL name `sessions` as its source, per the rule above. It MUST NOT restate the conversation's
-title, which is the view's heading.
+The **insights panel** SHALL present the conversation's insight enrichment. Which of its fields the panel
+presents is fixed by the enrichment's own schema rather than enumerated here — see "The insights panel's
+field set is derived from the enrichment's schema". It SHALL take the **insight** provenance colour and
+SHALL name `sessions` as its source, per the rule above. It MUST NOT restate the conversation's title,
+which is the view's heading.
 
 The insights panel SHALL render **only where the conversation carries an insight row**. Where it does not,
 the view SHALL state in the panel's place, in text, that the conversation has not been evaluated — and MUST
@@ -4233,13 +4613,17 @@ it would state a shape the record does not have. The statement SHALL distinguish
 reached, the second is a capability the deployment does not have, and a reader cannot act on the two the
 same way.
 
-The panel's summary SHALL render as prose rather than as a label-and-value row: it is two or three sentences
-describing what happened, and a value slot sized for a figure would truncate it. The two fields whose values
-form a closed vocabulary — sentiment and resolution status — SHALL render as badges, so the reader can scan
-them rather than read them, and SHALL render their values as readable words rather than as the raw
-underscored token the evaluator emits. A value the frontend holds no styling for SHALL render as a neutral
-badge carrying that value's text, never dropped and never styled as though it were a recognised one: the
-evaluator's vocabulary is declared on the service side and can gain a value without a frontend release.
+The panel's summary SHALL render as prose rather than as a label-and-value row: it is several sentences
+describing what happened, and the schema declares no bound on its length. It SHALL carry no label of its
+own — the panel's heading already names what the panel is — and SHALL be omitted where the record carries no
+value for it. This is the one field the panel presents in a register of its own.
+
+No other field SHALL be singled out by a presentation of its own. A value whose vocabulary is closed renders
+as readable words in the same value register as every other field, and the panel MUST NOT distinguish one
+with a badge, a colour or a rank. The evaluator's vocabulary is declared on the service side and can gain a
+value, and its fields are discovered rather than enumerated — so styling two of them would leave every other
+closed-vocabulary field, and every one added later, looking like a lesser kind of value for no reason the
+record supports.
 
 The usage panel SHALL state prompt tokens, completion tokens, total tokens, total cost and the recorded
 durations from the rollup, laid out as headline figures rather than a label-and-value list. Monetary values SHALL carry the emphasis
@@ -4257,6 +4641,22 @@ not the average turn. Each SHALL state its own caveat: the two figures are wrong
 shared note would misdescribe whichever it did not name. The view MUST NOT describe either as elapsed time.
 This restates a caveat previously carried only by the conversations grid's Duration column, which no longer
 exists — the figures remain on this panel, so the statement has to as well.
+
+Every panel that presents label-and-value rows rather than headline figures SHALL render them in **one
+register** — one type treatment, one row rhythm, one alignment — regardless of which source the values came
+from. The rail's panels all list fields of the same record, so a treatment reserved for one of them states a
+difference in kind the record does not have; the panels are already distinguished by their heading and their
+provenance colour, which is what that distinction is for. Monospace in particular SHALL NOT appear in a
+value: it is this feature's mark for a catalog identifier naming an entity the page queried, and a
+conversation id, a user hash or a trace id is a value of the record rather than a name in the catalog.
+
+A value in that register SHALL occupy **one line** whatever its length, and a value too long for its column
+SHALL be clamped rather than allowed to reflow. Nothing bounds an insight value and most metadata values are
+opaque identifiers, so a few long fields allowed to wrap would take most of a panel whose point is that every
+field is visible at once — the row rhythm is what makes the list scannable. A clamped value's full content
+SHALL remain reachable, on hover and through the trigger's accessible name; a `title` attribute alone does
+not satisfy this. Clamping SHALL apply only where the value actually overflows, so a value that fits carries
+no dead affordance.
 
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
 activity time, the successful-request count, the conversation's **trace ids** and the deployments that served
@@ -4296,7 +4696,7 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The insights panel states the evaluator's reading
 
 - **WHEN** a conversation carries an insight row
-- **THEN** the insights panel states its summary, sentiment, resolution status, topic, topics and language
+- **THEN** the insights panel states what the enrichment recorded for it
 - **AND** it does not restate the conversation's title
 
 #### Scenario: An unevaluated conversation gets a statement, not a panel of dashes
@@ -4314,13 +4714,14 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: A closed-vocabulary value renders as a readable badge
 
 - **WHEN** the insights panel renders a resolution status of `partially_resolved`
-- **THEN** it renders as a badge reading readable words rather than the underscored token
+- **THEN** it reads as readable words rather than the underscored token
+- **AND** it renders in the same value register as every other field, with no badge of its own
 
 #### Scenario: An unrecognised vocabulary value still renders
 
-- **WHEN** the insights panel renders a sentiment value the frontend holds no styling for
-- **THEN** a neutral badge carrying that value's text renders
-- **AND** the value is neither dropped nor styled as a recognised one
+- **WHEN** the insights panel renders a sentiment value no frontend list enumerates
+- **THEN** its text renders as recorded
+- **AND** the value is neither dropped nor presented differently from a recognised one
 
 #### Scenario: The insights panel is coloured by the enrichment and identified by the entity
 
@@ -4348,6 +4749,14 @@ map to a colour, so a newly added source cannot render unstyled.
 - **THEN** the panel still names `sessions` as its source
 - **AND** no panel is labelled as enrichment-derived
 
+#### Scenario: The row panels share one value register
+
+- **WHEN** the insights panel and the metadata panel both render label-and-value rows
+- **THEN** the two present their rows in the same type treatment, row rhythm and alignment
+- **AND** no value is rendered in monospace
+- **AND** a value longer than its column is clamped to one line, with its full content reachable on hover
+  and exposed to assistive technology
+
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
@@ -4365,6 +4774,100 @@ map to a colour, so a newly added source cannot render unstyled.
 
 - **WHEN** the metadata panel renders
 - **THEN** its successful-request label states that a turn counts when at least one of its hops succeeded
+
+### Requirement: The insights panel's field set is derived from the enrichment's schema
+
+The insights panel SHALL present **every** field of the insight enrichment that the fetched schema reports
+and the record carries a value for — not an enumerated subset. The field set SHALL be derived from the
+schema, so a field the enrichment gains renders with no frontend release and a field it drops stops
+rendering with none either.
+
+A field's label and its explanatory hint SHALL be taken from what the schema reports for that field — its
+display name, falling back to its readable field name with the enrichment namespace dropped, and its
+description. A field this frontend has never heard of must still be labelled and explained, and no
+translation key can exist for one.
+
+The enrichment's own **bookkeeping** fields SHALL be presented alongside its descriptive ones and in the
+same register — no field is withheld for the kind of field it is. Which evaluator produced a row, and from
+what input, is what tells a reader whether an empty descriptive field means *the evaluator found nothing* or
+*this row predates that field*, which no descriptive field can say about itself. This does not reopen the
+header's rule: the header SHALL still state a title exactly as recorded and MUST NOT qualify it with a
+truncation caveat, per "Conversation detail header names the conversation and states its turn count". A
+fact stated as a field in a panel is not a caveat attached to a heading.
+
+Whether the conversation carries an insight row at all SHALL be decided over the enrichment's **namespace
+as a whole**, never over one named field. A record carrying no key for any field of the namespace has not
+been reached by the enrichment on this instance; a record carrying those keys with a value in none of them
+has been reached and produced nothing. Keying that test on a single field would make the panel's existence
+depend on that field continuing to exist, and would report a conversation whose one field happens to be
+blank as one the evaluator never reached.
+
+A value SHALL render **in full**, wrapping where it is long, rather than being clipped to a fixed value
+slot. The enrichment's fields range from a two-letter code to several sentences and the schema declares no
+length for any of them, so which values are short is not something the panel can be told in advance.
+
+A field the record carries no value for SHALL be omitted rather than rendered as an empty row. The
+enrichment retains superseded fields and leaves them null on rows a later evaluator labelled, so rendering
+every reported field unconditionally would fill the panel with blanks whose only meaning is "produced by a
+later version" — the same noise the panel's unavailable-marker rule already refuses.
+
+A value of a field the schema types as a **closed vocabulary** SHALL render as readable words rather than as
+the raw underscored token the evaluator emits. The rule follows the schema's declared type rather than a
+list of field names, so a field newly typed as a closed vocabulary reads as words with no frontend change.
+
+#### Scenario: A field the frontend has never heard of still renders
+
+- **WHEN** the schema reports an insight field no frontend list enumerates and the record carries a value
+  for it
+- **THEN** the panel renders it as a labelled value
+- **AND** rendering it required no change to a frontend field list
+
+#### Scenario: A field's label and hint come from the schema
+
+- **WHEN** the panel renders an insight field the schema reports a display name and a description for
+- **THEN** the field's label is that display name
+- **AND** its description is offered as a keyboard-reachable hint
+
+#### Scenario: A field the schema names but does not describe is still labelled
+
+- **WHEN** the schema reports an insight field with no display name
+- **THEN** the panel labels it from its field name, in readable words, without the enrichment namespace
+
+#### Scenario: The enrichment's bookkeeping is stated in the panel
+
+- **WHEN** a conversation's insight row carries the enrichment's own bookkeeping fields alongside its
+  descriptive ones
+- **THEN** the insights panel states them in the same register as the rest
+- **AND** the view's heading still states the title with no truncation caveat attached to it
+
+#### Scenario: A long value renders in full rather than clipped
+
+- **WHEN** the panel renders an insight field whose value runs long
+- **THEN** the value renders in full, wrapping, rather than clipped to a value slot
+
+#### Scenario: A superseded field left null is omitted, not rendered blank
+
+- **WHEN** a conversation's insight row carries no value for a field the schema still reports
+- **THEN** that field does not render in the panel
+- **AND** no empty or unavailable row is rendered in its place
+
+#### Scenario: The panel's presence is decided over the namespace, not one field
+
+- **WHEN** a record carries values for the enrichment's fields but none for the one the view reads as its
+  heading
+- **THEN** the insights panel renders those fields
+- **AND** the conversation is not reported as unevaluated
+
+#### Scenario: A record carrying the namespace with no values reads as unevaluated
+
+- **WHEN** a record carries the enrichment's field keys and a value in none of them
+- **THEN** the view reports the conversation as not yet evaluated
+- **AND** it does not report the enrichment as absent from the instance
+
+#### Scenario: A closed-vocabulary value row reads as words
+
+- **WHEN** the insights panel renders a value row for a field the schema types as a closed vocabulary
+- **THEN** its value reads as readable words rather than the raw underscored token
 
 ### Requirement: Conversation detail feedback reads the rating source
 
@@ -5270,6 +5773,91 @@ A column of an enum type SHALL remain sortable on the same terms as any other sc
 - **AND** no text entry is offered in its place
 - **AND** the request carries no predicate for that column
 
+### Requirement: The enum value filter is presented in the grid's own filter design language
+
+The value-selection control an enum-typed column's filter offers (see "A column of an enum type filters by
+selecting from its observed values", whose value semantics this requirement does not change) SHALL be presented
+consistently with the text and number filters in the same grid header, which are themed to the application's
+form controls. A control that applies the same kind of narrowing SHALL NOT read as a different class of thing
+because of how it was implemented.
+
+The control SHALL provide:
+
+- a **search field** that narrows the listed values, offered once the list is long enough for scanning to be the
+  slower path. The search SHALL be presentational: it SHALL NOT change which values are selected, and clearing
+  it SHALL restore the full list with the selection intact.
+- a **select-all / clear** affordance reflecting the current selection as all, none, or partial, so a
+  many-valued column does not have to be cleared one value at a time.
+- each value's **count** rendered as its own trailing element in a secondary text treatment, **not** concatenated
+  into the option's label. The count SHALL NOT form part of the option's accessible name: the name is the value,
+  which is what a selection means, and a name that changes as counts move makes the same option unrecognisable
+  between openings.
+- a **reset** action that clears the selection, matching the reset the text and number filters offer.
+
+The control's **loading**, **empty** and **failed** states SHALL each be announced through a live region and
+SHALL be visually distinguishable, with the failed state carrying the error text treatment. The live region
+SHALL remain separate from any control's own label.
+
+An enum column SHALL keep its place in the grid's **floating-filter row**, so its affordance sits level with
+every neighbouring column's filter rather than a row above it. It MUST NOT take the row's default floating
+filter, which is a free-text entry and would write a text model over the column's value model. The affordance
+SHALL be the grid's own filter button — the same control, at the same size, as the one every other column in
+that row carries — and MUST NOT be a bespoke substitute, which would differ from its neighbours for no reason
+a reader could see. Exactly one such control SHALL be offered for the column.
+
+The listed values SHALL remain keyboard-reachable and operable, and the selected state SHALL be exposed
+programmatically rather than by styling alone.
+
+#### Scenario: The filter is themed like the grid's other filters
+
+- **WHEN** the operator opens an enum column's filter
+- **THEN** its surface, spacing and controls follow the same treatment as the text and number filters in that
+  grid's header
+
+#### Scenario: Search narrows the list without changing the selection
+
+- **WHEN** the operator has two values selected and types a term matching neither
+- **THEN** the list shows only the matching values
+- **AND** the two values remain selected
+- **AND** clearing the term restores the full list with both still selected
+
+#### Scenario: Select all and clear act on the whole list
+
+- **WHEN** the operator activates select-all on an enum column's filter
+- **THEN** every listed value becomes selected
+- **AND** the affordance reports the selection as complete
+- **AND** activating it again clears the selection
+
+#### Scenario: A value's accessible name is the value alone
+
+- **WHEN** the operator reaches a listed value with assistive technology
+- **THEN** its accessible name is the value
+- **AND** the count is not part of that name
+
+#### Scenario: Reset clears the selection
+
+- **WHEN** the operator has values selected and activates reset
+- **THEN** no value is selected
+- **AND** the request carries no predicate for that column
+
+#### Scenario: The affordance sits level with the other columns' filters
+
+- **WHEN** the grid renders an enum column beside a text-filtered one
+- **THEN** both columns' filter affordances are in the floating-filter row
+- **AND** the enum column's is the grid's own filter button, not a text entry and not a bespoke one
+
+#### Scenario: Only one control opens the value list
+
+- **WHEN** the grid renders an enum column
+- **THEN** its floating-filter row offers a single filter control
+- **AND** no second control for the same column appears in the header row
+
+#### Scenario: Loading, empty and failed states are announced
+
+- **WHEN** the value query is in flight, returns nothing, or fails
+- **THEN** the corresponding message is announced through a live region
+- **AND** the failed state is rendered in the error text treatment
+
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
 
 The system SHALL expose two optional environment variables carrying the endpoints an external client would call: `ANALYTICS_PUBLIC_URL` for the REST surface and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` for the Arrow Flight SQL surface. Both SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; neither SHALL be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When a variable is unset or blank the detail view SHALL receive an empty value for it.
@@ -5399,6 +5987,7 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 - `timestamp` — a **space-separated** `YYYY-MM-DD HH:MM:SS.mmm` literal, which is what the insert path accepts; an ISO-8601 `T` separator or `Z` suffix is rejected on write
 - `object` — an empty object literal
 - `array` — a literal array of two values shaped by the column's `element_type`
+- `enum` — **one of the column's own declared values** (its first), never a generic example string: the domain is closed and the server itself refuses a value outside it, so a placeholder literal is a row the reader cannot insert
 
 A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
 
@@ -5555,6 +6144,13 @@ After the write snippets — not before them, since the generated snippet alread
 - **WHEN** the **Write data** tab renders
 - **THEN** the unknown-column and authorization rejections appear below the write snippets, each naming the message the caller would see
 
+#### Scenario: An enum column's write snippet uses one of its declared values
+
+- **WHEN** the Connect panel renders the write snippet for a table declaring an enum column whose values are
+  `pending`, `running`, `failed`
+- **THEN** that column's field in the generated row carries `pending`
+- **AND** it does not carry a generic example string
+
 ### Requirement: Connect panel states the authentication and role contract
 
 The panel SHALL instruct the user to supply a DIAL API key through a `DIAL_API_KEY` environment variable rather than pasting it into the script. Every surface the panel shows takes the same key in the same `Api-Key` header; the Flight SQL client sends it as a gRPC call header, which is why its driver option carries the lower-cased name. The panel SHALL NOT render, echo, or offer to generate an actual key; the value in every snippet SHALL be a placeholder.
@@ -5673,187 +6269,148 @@ the schema, and caching it would extend one outage over the entry's whole lifeti
 - **WHEN** a schema fetch fails and the page is loaded again
 - **THEN** the schema is fetched from the analytics service again rather than the failure being replayed
 
-### Requirement: Conversation message content is the recorded transcript
+### Requirement: A span's Chat states the conversation that span received
 
-The conversation detail view SHALL render the conversation's **recorded** message text — the words the user
-and the assistant actually exchanged, as `dial_usage_log` stored them — and MUST NOT render fabricated,
-derived or sample content in their place.
+The **Chat** tab SHALL render the selected span's own recorded request message list as a conversation, in the
+order the request carried it, followed by that span's assembled answer as the trailing turn. It answers what
+the conversation looked like **at that hop** — the history a deep hop received carries sub-agent prompts,
+tool results and intermediate turns that a conversation-level transcript never shows, and that history is
+what makes a failed hop legible.
 
-The presentation SHALL be the one the view already uses: alternating user and assistant messages, each
-assistant message carrying its turn's real token total, cost, hop count and duration, its rating counts, and
-the control that opens that turn's trace. Only the message text changes. The notice stating that the messages
-are samples SHALL be removed, because the statement it makes is no longer true.
+**Chat SHALL read no source of its own.** It SHALL be rendered from the same request envelope the Request tab
+states and the same response the Response tab states — never a third read of a body already fetched for one
+of them. Reaching Chat from the Request tab does fetch the response, because the response read is deferred
+until a tab that shows it is open; moving between Chat and Response fetches nothing.
 
-The transcript MUST NOT interleave tool calls, model steps or embeddings between the messages. The hop chain
-is the Trace view's subject, and a reader who wants it has a control on every assistant message and a view
-switch on the page.
+**Chat SHALL state the exchange, not the whole history.** A turn qualifies when its role is user or assistant
+and it carries text; everything else a hop receives is machinery — a system prompt, a tool result, an
+assistant turn that only called a tool — and the Request tab states all of it, in full, with its sizes. With
+every message rendered the tab was the Request tab in different clothes: on a nested model call, fifty
+messages became fifty bubbles, most of them tool traffic, and the exchange was not findable among them.
 
-An assistant message SHALL be bound to its turn by **trace id**, not by its position in the rendered list. A
-transcript assembled from one bounded read and a turn list assembled from another can differ in length or in
-membership, and a positional binding would then attach one turn's figures to another turn's words.
+**Role alone SHALL NOT decide it.** The messages dialect feeds a tool result back as a **user** message
+carrying `tool_result` blocks, so a filter by role would let machinery through wearing the user's role — the
+one thing this tab must never do. A message that answers a recorded call SHALL be treated as a result
+whatever role it arrived under.
 
-An assistant message whose recorded response carries no text content SHALL render the view's explicit
-unavailable placeholder rather than an empty bubble. A response with empty content is a response that put its
-output somewhere other than text — commonly in tool calls — and a blank bubble would read as an assistant
-that said nothing.
+**Every turn SHALL be labelled with its own role and its place in the history**, so a reader can point at one
+and find it on the Request tab.
 
-#### Scenario: Recorded messages render in place of sample content
+**A turn whose recorded text was clamped SHALL keep the affordance that opens the rest**, reading the one
+message in full on demand exactly as the Request tab does. A conversation view that silently truncates is
+worse than a list that admits it.
 
-- **WHEN** the detail view loads a conversation whose hop log carries its bodies
-- **THEN** the user and assistant messages show the recorded text
-- **AND** no notice claims the messages are samples
+**The trailing answer SHALL be the span's assembled response text**, and SHALL be omitted rather than faked
+where the response yields none. Where the response column is withheld from this caller, Chat SHALL still
+render the history and SHALL state that the answer is withheld — the history is the substance of the tab and
+is gated by its own column.
 
-#### Scenario: The transcript carries no machinery between messages
+**The request's tool catalogue SHALL NOT render here either**, and no reasoning summary SHALL be merged into
+the answer. Both rules already hold for the tabs Chat is rendered from, and Chat is not a way around them.
 
-- **WHEN** a turn's hop chain includes tool calls and embeddings
-- **THEN** none of them render between the messages of the transcript
-- **AND** the assistant message still offers the control that opens that turn's trace
+**A turn SHALL NOT render the blank lines a recorded body carried at either end of its text.** Content
+routinely opens with a newline — a templated prompt is assembled around its variables and the template's own
+leading break is part of the string; measured over one hour of model-call hops, 39 of 272 requests carried at
+least one message whose content began with one, and 20 of their assembled responses did. Rendered as recorded,
+each of those costs a line and a bubble opening on an empty line reads as a rendering fault. Only lines that
+are **entirely** blank SHALL be dropped, and only at the two ends: the indentation of the first line that has
+content is part of that content, and a message opening with a code block loses its shape without it. The
+strip SHALL be applied where the text is read rather than where it is rendered, so one message cannot arrive
+stripped through the envelope and unstripped through the read that opens it in full. **No stated size or
+clamp SHALL change with it** — those are measured against the recorded body, not against the rendered text.
 
-#### Scenario: An assistant message takes its figures from its own turn
+**An answer whose text is blank SHALL add no turn**, on the same terms as one that yielded no text at all.
 
-- **WHEN** the transcript carries a turn the bounded turn list does not, or lists them in a different order
-- **THEN** each assistant message shows the figures of the turn whose trace id it shares
-- **AND** no assistant message shows another turn's figures
+**A span whose history is all machinery SHALL say so.** A retrieval prompt, or a tool loop with nothing said
+in it, has no conversation to state — and saying that is the answer, where fifty bubbles of tool traffic was
+not. Whether a hop records a history at all is decided from the row before any read; whether that history
+contains an exchange can only be known after it, and is stated inside.
 
-#### Scenario: A response with no text content is stated, not blank
+**Chat SHALL be offered only for a span that records a message history.** An MCP protocol message and an
+embedding probe are not conversations, and a tab that resolves to "this hop has no conversation" on every
+such span states a fixed fact once per click.
 
-- **WHEN** a turn's recorded response carries no text content
-- **THEN** that assistant message renders the explicit unavailable placeholder
+Where the request envelope carries no message, or its dialect is one no parser claims, Chat SHALL state that
+rather than render an empty conversation; the raw body stays the Request tab's answer.
 
-### Requirement: The transcript is assembled from every entry hop of the conversation
+#### Scenario: A hop's history renders as a conversation
 
-A conversation's **entry hop** is a `dial_usage_log` row attributed to that conversation whose
-`core_parent_span_id` is null — what the client sent to DIAL. Where one exists, its request body carries the
-user-visible exchange with no system prompt and no internal planning; a child hop carries the machinery
-instead, and one sampled child held a 20 461-character system prompt. The transcript SHALL therefore be
-assembled from entry hops alone, and MUST NOT read a child hop's body for message text.
+- **WHEN** a model-call span carrying prior turns is selected and Chat is opened
+- **THEN** the request's messages render as a conversation in recorded order
+- **AND** each turn states its role
 
-The null test SHALL be a null test. The column is null for a root hop and never the empty string (measured:
-655 078 null, 0 empty), so a predicate comparing it to an empty string would match nothing.
+#### Scenario: The machinery is left to the request tab
 
-Where a conversation has entry hops at all, it has at most one per trace id, so its entry hops are its turns.
-A conversation MUST NOT be assumed to have one per trace, or any at all: observed conversations carry a full
-set of turns in the rollup and no entry hop under their session id, and that case is governed below.
+- **WHEN** the span's request carries a system prompt and tool results alongside the exchange
+- **THEN** the conversation states the user and assistant turns
+- **AND** it states neither the system prompt nor the tool results
 
-The transcript MUST NOT be taken from a single row. Reading only the newest entry hop's request body is
-correct **only** for a client that resends the whole history each turn. A DIAL **application** deployment
-keeps conversation state server-side and sends only the new message: one measured 11-turn conversation
-reported `1, 3, 1, 1, 1, 1, 1, 1, 3, 5, 5` messages across its entry hops in time order, eight of eleven
-turns carrying a single message, while a full-history client on the same instance grew monotonically
-247 → 250 → 253 → 255 → 258.
+#### Scenario: A result that arrived under the user role is still a result
 
-Entry hops SHALL be read in ascending `request_time` order and assembled in that order. For each entry hop,
-the messages its request body carries SHALL be appended to the transcript **after dropping the longest
-leading run of them that already matches the tail of the assembled transcript**, and the text decoded from
-its response body SHALL then be appended as that turn's assistant message. One rule SHALL cover both client
-shapes: a full-history client's leading run matches everything already assembled and contributes only its
-new message, and an application deployment's single message matches nothing and is appended whole.
+- **WHEN** a message answering a recorded call arrives with the user role
+- **THEN** it is not stated as part of the conversation
 
-**A message whose text was never recorded SHALL match.** Two messages with the same role SHALL be treated as
-the same message when either carries no text, because a message this view failed to decode is still that
-message. A turn that answered with tool calls alone decodes to no text while the resent copy of that same
-message carries no `content` key at all, and comparing the two strictly finds no overlap anywhere in the
-history: the match is effectively all-or-nothing, so a single mismatched message re-appends the **whole**
-conversation under the later turn — the reader sees their first question twice, and the duplicated answer
-carries the later turn's tokens, cost, hops and duration.
+#### Scenario: A history with no exchange in it says so
 
-Where the newest entry hop demonstrably carries the whole conversation, the implementation MAY fetch that one
-row's bodies instead of every row's. **The test SHALL be that every entry hop's message count is exactly
-`2k − 1` at its position `k`** — one question and one answer per turn, in order — and not merely that the
-newest hop's count reaches `2n − 1`. Where the test does not hold, every entry hop's bodies SHALL be fetched.
+- **WHEN** every message a span received is machinery
+- **THEN** the tab states that the span received no conversation
 
-This is a cost optimisation and SHALL produce the same transcript as the general rule, **including which turn
-each message belongs to**. A single body carries no turn of its own for the messages inside it, so a count
-that only reaches `2n − 1` establishes that the content is all present while saying nothing about where one
-turn ends and the next begins; attributing those messages by position under that weaker test puts the newest
-turn's figures beneath every answer in the conversation. Under the exact test the attribution is arithmetic:
-the messages at index `2i` and `2i + 1` belong to turn `i + 1`, and the newest turn's answer comes from the
-response body. Where the decoded history is not the length the test promised, the implementation SHALL fall
-back to fetching every entry hop's bodies rather than attributing by position.
+#### Scenario: The answer is the span's own response
 
-The entry-hop read SHALL be bounded by the same limit as the turn list, so the transcript and the turn list
-cannot disclose different lengths for one conversation. When the bound clips the entry hops, the view SHALL
-state both figures together exactly as the turn list already does.
+- **WHEN** the span's response yields assistant text
+- **THEN** it renders as the trailing turn of the conversation
 
-**The entry-hop test MUST NOT be relaxed.** A conversation can record hops under its session id and yet have
-no entry hop among them, because the hop that entered DIAL was logged with no session id of its own. This is
-not a rare accident: it is a routine outcome for whole classes of deployment, and observed conversations show
-it for every one of their turns. In such a conversation the hops that *are* attributed to it are inner
-agent-loop calls, and the view MUST NOT take message text from one. Sampled examples carry a system message,
-a tool-definition array, and per-turn message counts that grow with the loop rather than with the
-conversation. Specifically, the view MUST NOT fall back to a hop whose parent is merely absent from the
-result, nor to the earliest hop of each trace, nor to any hop selected by recency or depth: each of those
-would render a system prompt and a tool catalogue as though the user had typed them. A conversation with hops
-but no entry hop SHALL render the dedicated state that says the transcript cannot be reconstructed.
+#### Scenario: A response that yields no text adds no turn
 
-**Only user and assistant messages belong to the transcript.** A message whose role is neither SHALL be
-excluded, and a request body's own system field — where the dialect carries one outside the message list —
-SHALL be ignored. The exclusion is by role, applied to every entry hop, and does not depend on the entry-hop
-test having already screened the hop: two independent rules protecting one outcome is the point, because the
-consequence of a single missed case is a leaked system prompt.
+- **WHEN** the span's response yields no assistant text
+- **THEN** no trailing assistant turn renders
+- **AND** no substitute text is shown
 
-**A message's content is a string or a list of content parts.** Both SHALL be handled; a list SHALL be
-reduced to the text of its text-bearing parts, in order. A message that carries no `content` key at all is
-not a message with empty content — it is a message whose output went elsewhere, and it SHALL be treated as
-such rather than as an empty string.
+#### Scenario: A withheld response still leaves the history
 
-#### Scenario: Entry hops are selected by a null parent span
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **THEN** Chat renders the history
+- **AND** it states that the answer is withheld
 
-- **WHEN** the entry-hop query is built
-- **THEN** its filter tests that the parent span column is null
-- **AND** it does not compare that column to an empty string
+#### Scenario: Chat re-reads no body already fetched
 
-#### Scenario: A server-side-state deployment's transcript is assembled across turns
+- **WHEN** the reader switches from Response to Chat for the same span
+- **THEN** no additional body query is issued
+- **AND** reaching Chat from Request fetches the response once, as opening the Response tab would
 
-- **WHEN** a conversation's entry hops each carry only the turn's new message
-- **THEN** the transcript contains every turn's user message
-- **AND** it is not limited to the messages the newest entry hop carried
+#### Scenario: A clamped turn can be opened in full
 
-#### Scenario: A full-history client's repeated messages appear once
+- **WHEN** a turn's recorded text was clamped
+- **THEN** the turn offers the affordance that reads that message in full
 
-- **WHEN** a conversation's entry hops each resend the whole prior exchange
-- **THEN** each message renders exactly once
-- **AND** the messages are in the order the entry hops recorded them
+#### Scenario: A turn does not render the blank lines its body carried
 
-#### Scenario: A resent message whose text was never recorded is not repeated
+- **WHEN** a recorded message's content begins or ends with blank lines
+- **THEN** the turn renders without them
+- **AND** the indentation of its first line of content is preserved
+- **AND** the size stated for that message is unchanged
 
-- **WHEN** a full-history client resends a message whose text this view could not decode from its own turn
-- **THEN** that message appears once
-- **AND** the earlier turn's messages are not repeated under the later turn
+#### Scenario: A blank answer adds no turn
 
-#### Scenario: Child hop bodies are never read for message text
+- **WHEN** the span's response yields text that is blank throughout
+- **THEN** no trailing assistant turn renders
 
-- **WHEN** the transcript is assembled
-- **THEN** no body of a hop with a non-null parent span is read
+#### Scenario: A span with no conversation offers no Chat
 
-#### Scenario: A clipped entry-hop read states its bound
+- **WHEN** an MCP span or an embedding span is selected
+- **THEN** no Chat tab is offered for it
 
-- **WHEN** a conversation records more entry hops than the bound allows
-- **THEN** the view states how many of how many turns are shown
-- **AND** that disclosure is visible without interaction
+#### Scenario: A request that carried no message states so
 
-#### Scenario: A conversation with hops but no entry hop is not reconstructed from them
-
-- **WHEN** a conversation's hops all record a parent span and none is an entry hop
-- **THEN** the view renders the state that says the transcript cannot be reconstructed
-- **AND** no message text is taken from any of those hops
-- **AND** the Trace view, the header, the panels and the turn list still render
-
-#### Scenario: A system message is never part of the transcript
-
-- **WHEN** an entry hop's request body carries a system message, or a system field outside the message list
-- **THEN** neither appears in the transcript
-- **AND** only the user and assistant messages render
-
-#### Scenario: Content parts are reduced to their text
-
-- **WHEN** a message's content is a list of content parts rather than a string
-- **THEN** the message renders the text of its text-bearing parts in order
+- **WHEN** the span's request envelope carries no message
+- **THEN** Chat states that the span received no conversation
+- **AND** it does not render an empty conversation
 
 ### Requirement: Assistant text is read from the assembled response, or decoded from the raw body
 
-A request body is always plain JSON. An assistant's text has **two** possible sources, and the transcript
-SHALL treat both as first-class.
+A request body is always plain JSON. An assistant's text has **two** possible sources, and a span's response
+SHALL treat both as first-class — for the Response tab's assembled statement and for the trailing answer of
+its Chat tab alike.
 
 **Preferred source — `assembled_response`.** Where the producer persists it, this column holds the merged
 response message: a single JSON object whose first choice's message content is the readable answer, already
@@ -5861,9 +6418,9 @@ reassembled from whatever streaming the call used. Reading it avoids reassemblin
 
 **Guaranteed fallback — `response_body`.** The assembled column is not always populated. It is null for every
 row ingested before the producer began writing it, and hop rows live for a year, so a recently upgraded
-instance carries up to a year of conversations for which the raw body is the **only** source of assistant
-text. A minority of rows, current ones included, also store a value that is not JSON. The fallback is
-therefore an ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
+instance carries up to a year of spans for which the raw body is the **only** source of assistant text. A
+minority of rows, current ones included, also store a value that is not JSON. The fallback is therefore an
+ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
 
 The fallback SHALL decode `response_body` in whichever of three formats it is written:
 
@@ -5878,12 +6435,12 @@ absent, withheld or unparseable would leave the response undecodable for want of
 response already carries plainly.
 
 The fallback SHALL be used whenever the assembled value is absent, null, or not parseable as JSON — the three
-cases are indistinguishable to a reader and SHALL be indistinguishable in behaviour. A turn SHALL NOT render
+cases are indistinguishable to a reader and SHALL be indistinguishable in behaviour. A span SHALL NOT render
 as unavailable while a decodable raw body for it exists.
 
-Where neither source yields text, the turn SHALL render the view's unavailable placeholder. It MUST NOT yield
-the raw body, a partial fragment, or a fabricated substitute: a malformed body is an unknown message, and
-rendering bytes at the reader would present transport detail as conversation.
+Where neither source yields text, the response SHALL state its own read state and the Chat tab SHALL add no
+trailing turn. Neither MUST yield the raw body, a partial fragment, or a fabricated substitute: a malformed
+body is an unknown message, and rendering bytes at the reader would present transport detail as conversation.
 
 A response whose decoded content is empty, or which carries no content key at all, SHALL NOT be treated as an
 empty step. Its output is in the response's tool calls, whose names exist **only** in a response body — the
@@ -5891,30 +6448,30 @@ hop log carries no column for them.
 
 #### Scenario: The assembled response is preferred where present
 
-- **WHEN** a turn's assembled response is present and parseable
-- **THEN** the assistant message is its first choice's message content
-- **AND** the raw response body is not decoded for that turn
+- **WHEN** a span's assembled response is present and parseable
+- **THEN** the assistant text is its first choice's message content
+- **AND** the raw response body is not decoded for that span
 
 #### Scenario: A null assembled response falls back to the raw body
 
-- **WHEN** a turn's assembled response is null because the row predates the column
-- **THEN** the assistant message is decoded from the raw response body
-- **AND** the turn does not render as unavailable
+- **WHEN** a span's assembled response is null because the row predates the column
+- **THEN** the assistant text is decoded from the raw response body
+- **AND** the span does not render as unavailable
 
 #### Scenario: A non-JSON assembled response falls back to the raw body
 
-- **WHEN** a turn's assembled response is present but is not parseable as JSON
-- **THEN** the assistant message is decoded from the raw response body
+- **WHEN** a span's assembled response is present but is not parseable as JSON
+- **THEN** the assistant text is decoded from the raw response body
 
 #### Scenario: A streamed body is reassembled from its chunks
 
 - **WHEN** the fallback decodes a body that is a stream of event chunks
-- **THEN** the assistant message is the concatenation of their content deltas in arrival order
+- **THEN** the assistant text is the concatenation of their content deltas in arrival order
 
 #### Scenario: A single-object body is read from its first choice
 
 - **WHEN** the fallback decodes a body that is one JSON object
-- **THEN** the assistant message is that object's first choice's message content
+- **THEN** the assistant text is that object's first choice's message content
 
 #### Scenario: An MCP body is read from its JSON-RPC result
 
@@ -5930,15 +6487,15 @@ hop log carries no column for them.
 #### Scenario: Neither source yields a placeholder, not raw bytes
 
 - **WHEN** the assembled response is unusable and the raw body cannot be parsed in any of the three formats
-- **THEN** that message renders the unavailable placeholder
+- **THEN** the Response tab states its read-state placeholder and the Chat tab adds no trailing turn
 - **AND** no part of either raw value is rendered
 
-### Requirement: The body columns are schema-gated for two independent reasons
+### Requirement: The hop body columns are schema-gated for two independent reasons
 
 The fetched `dial_usage_log` entity schema SHALL be the sole authority on which body columns a query may
 name. Two different conditions remove a column from that schema, they are **not** interchangeable, and a
 projection that names an absent column is rejected with the whole query — so both must be handled or the
-Chat view fails outright rather than degrading.
+span's bodies fail outright rather than degrading.
 
 **Access — `sensitive`.** `request_body`, `response_body` and `assembled_response` are flagged `sensitive` in
 the analytics catalog, so the service omits them from the schema it returns to any caller below FULL_ADMIN.
@@ -5954,72 +6511,79 @@ changes it; only upgrading the service does.
 Consequently `assembled_response` SHALL be treated as an **optional** field in exactly the sense the
 conversations views already use: named only when the fetched schema reports it, through the same
 optional-field mechanism the insight columns go through. It MUST NOT be named unconditionally. Naming it on
-an instance that predates it costs the whole transcript query, which is the one failure this gate exists to
+an instance that predates it costs the whole body query, which is the one failure this gate exists to
 prevent — and it is a failure a full administrator would see, so no amount of permission masks it.
 
 **`response_body` SHALL be optional on exactly the same terms**, and for a reason that follows directly from
-the gate below: the view is offered when *either* response column is present, so an instance reporting only
-the assembled column is a supported state — and a projection that names `response_body` regardless rejects
-the whole query on it. Neither response column may be named unconditionally. Gating one and hard-coding the
-other makes the gate and the projection two different answers to the same question, which is the failure this
-requirement exists to prevent.
+the gate below: the response side is offered when *either* response column is present, so an instance
+reporting only the assembled column is a supported state — and a projection that names `response_body`
+regardless rejects the whole query on it. Neither response column may be named unconditionally. Gating one
+and hard-coding the other makes the gate and the projection two different answers to the same question, which
+is the failure this requirement exists to prevent.
 
-The Chat view SHALL be offered when the schema reports `request_body` **and at least one** of
-`assembled_response` or `response_body`. The request body has no substitute — it is the only record of what
-the user said — while either response column can supply the assistant's text. An instance that carries
-`response_body` but not `assembled_response` SHALL therefore offer a fully functional Chat view.
+**The grant SHALL be reported per side and SHALL NOT be reduced to a single combined flag.** The schema probe
+SHALL report whether the request column is readable and whether at least one response column is, and each tab
+SHALL be gated by the columns it actually reads, under **Each side of the inspector is gated by its own
+recorded column**. A conjunction of the two has no reader: it would withhold a readable request over an
+unreadable response.
 
 The frontend MUST NOT implement an access check of its own. The service's column-level access control is the
 gate, and a second gate maintained here would be a second answer to the same question.
 
-Where the Chat view is not offered, the view SHALL state that the transcript is not available and SHALL keep
-the Trace view, the header, the panels and every figure on the page fully functional. It MUST NOT render an
-error, and MUST NOT imply the conversation recorded no messages.
+Where no body column is granted, the trace view SHALL state that once for the whole session and SHALL keep
+the tree, the span facts, the header, the panels and every figure on the page fully functional. It MUST NOT
+render an error, and MUST NOT imply the hop recorded nothing.
 
 A schema read that **fails** is not the same as a schema that omits a column, and SHALL be reported as a
-failure rather than silently withholding the Chat view.
+failure rather than silently withholding the bodies.
 
-#### Scenario: A full administrator on a current instance is offered the transcript
+#### Scenario: A full administrator on a current instance reads both sides
 
 - **WHEN** the fetched hop-log schema reports the request body and both response columns
-- **THEN** the Chat view is offered and renders the recorded transcript
+- **THEN** the Request, Response and Chat tabs are all offered
 
-#### Scenario: An instance without the assembled column still offers the transcript
+#### Scenario: An instance without the assembled column still reads responses
 
 - **WHEN** the fetched schema reports the request body and the raw response body but not the assembled response
-- **THEN** the Chat view is offered
+- **THEN** the Response tab is offered
 - **AND** no query names the assembled response column
 - **AND** the assistant text is decoded from the raw response body
 
 #### Scenario: The assembled column is named only when the schema reports it
 
-- **WHEN** the transcript body query is built and the schema does not report the assembled response
+- **WHEN** a hop body query is built and the schema does not report the assembled response
 - **THEN** the select does not name it
 - **AND** the query returns rows
 
 #### Scenario: The raw response column is named only when the schema reports it
 
 - **WHEN** the fetched schema reports the request body and the assembled column but not `response_body`
-- **THEN** the transcript query does not name `response_body`
-- **AND** the Chat view is offered and renders the transcript
+- **THEN** no hop body query names `response_body`
+- **AND** the Response tab is offered
 
-#### Scenario: A caller without the body columns is not offered the transcript
+#### Scenario: The probe reports each side separately
+
+- **WHEN** the schema probe resolves the caller's body-column grant
+- **THEN** it reports the request side and the response side independently
+- **AND** it reports no combined flag requiring both
+
+#### Scenario: A caller without the body columns keeps the rest of the trace
 
 - **WHEN** the fetched hop-log schema reports none of the body columns
-- **THEN** the Chat view is not offered
-- **AND** the view states that the transcript is unavailable to this caller rather than showing an error
-- **AND** the Trace view, the header and the panels still render
+- **THEN** the trace states once that the bodies are unavailable to this caller
+- **AND** the tree, the span facts, the header and the panels still render
+- **AND** no error is rendered
 
-#### Scenario: No frontend role check gates the transcript
+#### Scenario: No frontend role check gates the bodies
 
-- **WHEN** the detail route decides whether to offer the Chat view
+- **WHEN** the trace view decides which tabs to offer
 - **THEN** the decision reads only the fetched entity schema
 - **AND** no role, scope or permission of the session is consulted
 
 #### Scenario: A failed schema read is reported as a failure
 
 - **WHEN** the hop-log schema cannot be fetched
-- **THEN** the view reports a failure rather than presenting the transcript as unavailable to the caller
+- **THEN** the view reports a failure rather than presenting the bodies as unavailable to the caller
 
 ### Requirement: Hop bodies are read and decoded server-side and never sent to the browser
 
@@ -6113,6 +6677,38 @@ conversion is lossless.
 
 - **WHEN** a first-query time is returned as an ISO-8601 string
 - **THEN** the value sent as the bound is that instant in epoch milliseconds
+
+### Requirement: A hop's bodies are located by its trace and its span, never by the conversation header
+
+The read that fetches a selected hop's request and response SHALL be located by the trace the span was read
+under, the span's own id and its recorded time, and SHALL NOT be conditioned on the conversation or session
+header. That header is unpopulated on whole classes of in-turn spans — a Core-internal call recorded under the
+trace carries none — so a read requiring it matches no row for exactly those hops, and the section then
+reports that the hop recorded nothing while the log holds its body.
+
+**The bodies read and the span tree SHALL agree on which hops of one trace exist.** The tree is already
+scoped by trace id alone, for this same reason; a tree that offers a row whose every tab denies it contradicts
+itself, and the reader has no way to tell which of the two is wrong.
+
+**Entitlement is unaffected.** Which body columns a caller may read is resolved from the entity schema and
+stays the only gate on the content: a caller holding neither column SHALL still be told the column was
+withheld, rather than that the hop recorded nothing.
+
+#### Scenario: A hop recorded with no conversation header states its body
+
+- **WHEN** a span whose conversation header is empty is selected
+- **THEN** its Request and Response state what the log recorded for that span
+- **AND** neither reports that the hop recorded nothing
+
+#### Scenario: The tree and the bodies read agree
+
+- **WHEN** a trace offers a row for a span
+- **THEN** selecting that row reads that span's bodies under the same scope the row was read under
+
+#### Scenario: A withheld column is still reported as withheld
+
+- **WHEN** a caller entitled to neither body column opens a hop
+- **THEN** the section states that the column was withheld rather than that nothing was recorded
 
 ### Requirement: A turn renders as a tree of spans
 
@@ -6549,17 +7145,261 @@ one span the reader selected, under **The inspector reads bodies in tiers, and n
 - **THEN** every row renders from the recorded spans alone
 - **AND** no model-call response body is read to build the tree
 
+### Requirement: The trace view splits the span tree from the selected span's bodies
+
+Inside an open trace the left region SHALL be split horizontally into two sections: the **span tree** above
+and the **selected span's bodies** below. The bodies SHALL NOT be presented in the span rail beside the tree.
+One 360px rail cannot hold a span's facts, its request, its response and its conversation at once — the facts
+block was already capped to stop it squeezing the message history to a sliver — and a reader compares a hop's
+request against the tree, which a rail forces into a column a third of the tree's width.
+
+**The split SHALL be adjustable by the reader**, so a reader following a long chain can give the tree the
+screen and a reader reading a large request can give it to the bodies.
+
+**Each section SHALL be floored at 20% of the split region's available height**, and neither SHALL be
+collapsible to nothing. The floor SHALL be expressed as a proportion of the available height rather than as a
+fixed number of pixels, so that a size chosen at one viewport height stays legal at a smaller one: a section
+sized in pixels can fall below its own floor when the window shrinks, which is the state the floor exists to
+prevent.
+
+**The split SHALL start at 50/50** and SHALL keep the reader's chosen proportion while the trace stays open,
+including across changes of selected span. Resetting the split when the selection changes would undo the
+reader's adjustment on every click of the surface the adjustment was made for.
+
+**The separator SHALL be operable by keyboard as well as by pointer.** It SHALL expose its orientation and
+its current proportion to assistive technology, and SHALL report the same floor it enforces. A pointer-only
+handle leaves a reader with no pointer unable to reach a size the view offers everyone else.
+
+**Where the selected span offers no body at all** — every body column withheld from this caller — the region
+SHALL render the tree alone, with no bodies section and no separator. A floor governs how small a section may
+be made, not whether a section exists; half the region held open for a statement the trace's header already
+makes once would cost the tree the screen it is the only remaining use for.
+
+Changing the split MUST NOT re-read anything. It is a layout change, and neither the span read nor any body
+read depends on it.
+
+#### Scenario: The split opens at half the region and is adjustable
+
+- **WHEN** a trace's hop chain opens
+- **THEN** the span tree and the span's bodies each take half the split region's height
+- **AND** the separator between them can be dragged
+
+#### Scenario: Neither section can be driven below its floor
+
+- **WHEN** the separator is dragged past either end
+- **THEN** each section keeps at least 20% of the available height
+- **AND** neither section is collapsed to nothing
+
+#### Scenario: The floor survives a smaller viewport
+
+- **WHEN** the reader sizes one section near its floor and the window is then made shorter
+- **THEN** both sections still hold at least 20% of the available height
+
+#### Scenario: The separator is operable from the keyboard
+
+- **WHEN** the separator is focused and an arrow key is pressed
+- **THEN** the split moves in that direction
+- **AND** the separator states its orientation and its current proportion to assistive technology
+
+#### Scenario: Selecting another span keeps the reader's split
+
+- **WHEN** the reader adjusts the split and then selects a different span
+- **THEN** the split keeps the adjusted proportion
+
+#### Scenario: Adjusting the split issues no read
+
+- **WHEN** the separator is dragged
+- **THEN** no span query and no body query is issued
+
+#### Scenario: A span with no readable body renders no split
+
+- **WHEN** every body column is withheld from this caller
+- **THEN** the span tree takes the whole region
+- **AND** no bodies section and no separator render
+
+### Requirement: The span's bodies are presented as Request, Response and Chat tabs
+
+The bodies section SHALL present the selected span in tabs, in the fixed order **Request**, **Response**,
+**Chat**. Request and Response state the envelope as the inspector requirements define them; Chat states the
+conversation the span received.
+
+**The order SHALL be fixed and SHALL NOT be reordered by which tabs a span offers.** A tab a span has nothing
+for is absent, and the remaining tabs keep their relative order, so the strip does not rearrange itself as
+the reader moves down the tree.
+
+**The active tab SHALL persist across a change of selected span** wherever the newly selected span offers it,
+and SHALL fall back to the first tab the span offers where it does not. A reader comparing one side of two
+hops is asking the same question twice; being returned to the first tab on each click answers a different one.
+
+**The tab set SHALL be one layout rule for every kind of hop.** What differs by kind is what each tab renders
+and whether Chat is offered — never whether the strip exists. An MCP hop's arguments are its request column
+and its result its response column; an embedding hop's probe text is its request column and its dimension
+count its only response-column field. Each SHALL therefore render on the tab that reads the column it comes
+from, so a reader moving down a tree of mixed kinds keeps one layout and finds a response fact where every
+other response fact was.
+
+**The tab strip SHALL be the first element of the bodies section.** It is the control that decides what the
+section shows, so it heads the section it governs; a section opening with a row of facts puts what a reader
+reads second above what they act on first.
+
+**The strip, the hop-row facts and the body SHALL sit on one continuous opaque surface.** A transparent band
+between them shows whatever lies behind the section, and on the seam of a pinned element it is where a stale
+repaint survives; the section's own ground SHALL run from the strip to the body with no gap to see through.
+
+**A fact read from the hop row rather than from a body SHALL render directly below the tab strip**, outside
+the scrolling body, where it stays visible on every tab. An MCP hop's method, tool name and toolset are plain
+columns belonging to neither side, and duplicating them onto both tabs would state the same thing twice while
+leaving a reader unsure whether the two copies could differ.
+
+**A trace SHALL open on its entry hop** — the span whose parent is null, what the client sent to DIAL — and
+on its earliest span where it records none. That hop's request body is the only one carrying the user-visible
+exchange with no system prompt and no internal planning, so it is the span whose Chat answers "what was this
+conversation" for a reader who has not yet picked a hop. Ordering alone does not find it: a Core-internal
+root can fire long after the hop it belongs to, so the earliest span lands on the conversation only usually.
+
+**Where no span is selected the section SHALL say so** rather than render an empty tab strip — the same
+statement the rail makes for the same state.
+
+#### Scenario: The tabs render in a fixed order
+
+- **WHEN** a span offering all three is selected
+- **THEN** the tabs read Request, Response, Chat in that order
+
+#### Scenario: A missing tab does not reorder the others
+
+- **WHEN** a span offers Request and Chat but not Response
+- **THEN** Request precedes Chat
+- **AND** no placeholder Response tab renders
+
+#### Scenario: The active tab survives a change of span
+
+- **WHEN** the reader is on Response and selects another span that offers Response
+- **THEN** Response is still the active tab
+
+#### Scenario: A span that does not offer the active tab falls back
+
+- **WHEN** the reader is on Chat and selects a span that offers no Chat
+- **THEN** the first tab that span offers becomes active
+
+#### Scenario: An MCP hop splits its arguments from its result
+
+- **WHEN** an MCP hop is selected
+- **THEN** the Request tab states the arguments it sent
+- **AND** the Response tab states the result it returned
+- **AND** no Chat tab is offered for it
+
+#### Scenario: The tab strip heads the bodies section
+
+- **WHEN** a span is selected
+- **THEN** the tab strip is the first element of the bodies section
+- **AND** any fact read from the hop row renders below it
+
+#### Scenario: An MCP hop's row facts stay visible on both tabs
+
+- **WHEN** an MCP hop is selected and the reader moves between its tabs
+- **THEN** its method, tool name and toolset render below the tab strip on both
+
+#### Scenario: An embedding hop states its dimension count on the response side
+
+- **WHEN** an embedding hop is selected
+- **THEN** the Request tab states the model, the input count and the embedded text
+- **AND** the Response tab states the dimension count rather than that there is nothing to read
+
+#### Scenario: A trace opens on the span whose history is the conversation
+
+- **WHEN** a trace whose earliest span is a child of a later-recorded root is opened
+- **THEN** the entry hop is the selected span
+- **AND** a trace recording no entry hop opens on its earliest span instead
+
+#### Scenario: No selected span is stated
+
+- **WHEN** the trace opens with no span selected
+- **THEN** the bodies section states that no span is selected
+
+### Requirement: Every hop states how its call went, before any body is read
+
+**A hop SHALL state the outcome of its call from the hop row alone** — the recorded HTTP status with its
+reason phrase, the recorded size of each side, and the duration — and SHALL state it without reading a body.
+These are columns the tree already carries, so the statement costs no read and holds for a hop whose bodies
+are withheld, absent, or clamped away. Until now a hop that showed no body showed nothing at all, which
+reports a gap in what the reader may see as a gap in what happened.
+
+**The outcome SHALL be stated in the bodies section rather than on the span's facts sheet.** The status is the
+answer to "did this call work", which is the question the two bodies are read against, so it belongs where
+they are read; stating it in both places leaves one fact with two homes and two chances to disagree.
+
+**Each fact SHALL be stated on the side it describes, beside that side's own facts.** The verb heads the
+request; the status heads the response. Stated once over both tabs, the outcome of the call sits above the
+request describing something the request has not done yet.
+
+**A tab SHALL state the one fact its side owns, and not the measurements another surface already carries.**
+The duration is on the span's facts sheet, the sizes are on the messages and on the recorded bytes — a line
+that repeats them makes the reader search it for the two facts only it can give. **Where a hop offers no tab
+at all** — a caller entitled to neither body column — **the sizes and the duration SHALL be stated with both
+halves**, because that line is then the whole of what the section can show.
+
+**The conversation tab SHALL state neither half**: it presents a history rather than a call.
+
+**A failed call SHALL be marked on the line as a whole, not on the status alone.** The status states the
+failure in words; the line carries it before the reader has read anything.
+
+**Failure SHALL be decided by the same test the tree uses** — a false success flag or a status of 400 and
+above — so a hop cannot read as failed in one surface and successful in the other. A status outside that
+test, such as the 202 a notification is answered with, SHALL be stated as the success it is.
+
+#### Scenario: A hop with no readable body still states its outcome
+
+- **WHEN** a hop whose body columns are withheld is opened
+- **THEN** the section states the recorded status, the recorded sizes and the duration
+- **AND** it states separately that the bodies were withheld
+
+#### Scenario: Each side states its own half of the call
+
+- **WHEN** the reader is on the Request tab
+- **THEN** it states the verb and does not state the status
+- **AND** on the Response tab the status is stated instead
+
+#### Scenario: A failed call is marked on the line, not by the status alone
+
+- **WHEN** a hop whose call failed is opened
+- **THEN** its status states the failure in words
+- **AND** the line carrying it is marked as failed
+
+#### Scenario: The conversation tab states no transport facts
+
+- **WHEN** the reader moves to the Chat tab
+- **THEN** neither half of the transport is stated there
+
+#### Scenario: An accepted notification is not stated as a failure
+
+- **WHEN** a hop answered with a status outside the failure test is opened
+- **THEN** it is stated as successful
+- **AND** the marker the tree gives that hop agrees with it
+
 ### Requirement: A hop's request and response render as a structured inspector
 
 The hop detail SHALL state what the selected hop sent and what came back as a **Request / Response**
 inspector, not as excerpts. The two sides SHALL be separate tabs, because a reader is asking about one or the
-other and the panel is a rail, not a page.
+other; they sit in the trace view's bodies section alongside the Chat tab, under
+**The span's bodies are presented as Request, Response and Chat tabs**.
 
 **The Request tab SHALL state the whole message list as a history**, one row per message, each carrying its
 role, its position in the list and its size in bytes. A message's text SHALL be clamped to a readable length
-with an affordance that opens the rest, and a message large enough to dominate the request SHALL be marked as
-such **in words as well as by colour** — 21% of model-call requests exceed 100 KB, and which message made it
-so is the first thing a reader wants.
+with an affordance that opens the rest.
+
+**The control that opens a message in full SHALL carry no border of its own.** It sits inside a bordered
+card, where a second border reads as a nested panel; it states itself as a link instead, in the accent colour
+the rest of the console uses for an action.
+
+**No message SHALL be marked as large, and no message SHALL be outlined for its size.** The removed rule
+marked a message at or above a byte threshold, in words and by a warning border. The size itself is stated on
+every message and is the honest form of that fact: a threshold turns a continuum into a verdict, and the
+border made a routine 1 KB system prompt look like a fault. Which message made a request heavy is read from
+the sizes, which are already there.
+
+**One message SHALL be presented one way wherever it is read.** The request's history rows and the assembled
+response SHALL share the card: a response *is* one assistant message, with a role, a size, text and the calls
+it asked for, and stating it as bare text made the two tabs look like two tools reading two different things.
 
 **A tool call SHALL render as the message's content, not as metadata about it.** An assistant message that
 called a tool and said nothing records `content` as the empty string, so the call is the whole of what that
@@ -6569,6 +7409,24 @@ A message that recorded neither text nor a call SHALL say so rather than render 
 
 **Per-property sizes SHALL NOT be stated.** A message's own size is stated; its members' sizes are not. The
 reader opens a hop for the history, and a property is not a unit they asked about.
+
+**A call SHALL state the id its answer will quote, and a result SHALL state the call it answers.** A recorded
+result carries only the id of the call, so on its own it is an anonymous block of text: a turn that called
+one tool three times is answered by three messages nothing distinguishes. The tool's **name** SHALL be
+stated, resolved against the calls the same request carried, together with enough of the call's id to tell
+two answers of one tool apart. Where an id matches no call in this request — the history a client feeds back
+can reach further than the request itself — the id SHALL still be stated and no tool named, rather than the
+pairing shifting onto another call.
+
+**A result that reported a failure SHALL be marked as failed, in words as well as by colour.** A failed tool
+is usually why a reader opened the hop, and it is a fact about the result that its text may not state.
+
+This is stated here and not on the Chat tab: Chat leaves tool traffic out of the conversation entirely, so
+the pairing has exactly one surface.
+
+**The request's parameters SHALL be stated inside the Request tab**, not in the hop-row facts slot below the
+tab strip. Only facts read from the hop row belong in that slot: a request-body fact placed there is stated
+over the Response tab too, describing something else.
 
 **The system message SHALL render, labelled by its role, like any other message.** This reverses the removed
 requirement. There SHALL be no per-role setting and no separate reveal: the bodies are already behind the
@@ -6610,6 +7468,36 @@ its frame count, and frames can be counted only by a pass over the raw body.
 - **WHEN** a request carries a message with neither text nor a tool call
 - **THEN** the row states that the message recorded no text
 
+#### Scenario: No message is marked or outlined for its size
+
+- **WHEN** a request carries a message far larger than the others
+- **THEN** no marker names it as large
+- **AND** its card is not outlined differently from the rest
+- **AND** its size is stated as it is for every other message
+
+#### Scenario: A call and its answer state the id that pairs them
+
+- **WHEN** a request carries an assistant call and the message answering it
+- **THEN** the call states the tail of its id
+- **AND** the answering message names that call's tool
+- **AND** it states enough of the call's id to distinguish two answers of the same tool
+
+#### Scenario: An answer to a call this request does not carry states no tool
+
+- **WHEN** a message quotes a call id that no call in the request carries
+- **THEN** the id is still stated
+- **AND** no tool name is claimed for it
+
+#### Scenario: A failed tool result is marked as failed
+
+- **WHEN** a recorded result reports a failure
+- **THEN** the row states that it failed in words, not by colour alone
+
+#### Scenario: The request's parameters are stated on the request tab alone
+
+- **WHEN** the reader moves to the Response tab
+- **THEN** the request's parameters are not stated outside the Request tab
+
 #### Scenario: No per-property size is stated
 
 - **WHEN** the Request tab renders a message
@@ -6645,24 +7533,65 @@ its frame count, and frames can be counted only by a pass over the raw body.
 - **THEN** the request message count comes from the hop row
 - **AND** no body column is named to obtain it
 
-### Requirement: The inspector states the parameters the request carried, and the absence of the ones it did not
+### Requirement: The inspector states every parameter the request carried, and the absence of the ones it did not
 
-The inspector SHALL state the sampling parameters the request body carries, beside the tabs. It SHALL NOT
-render a hardcoded list of parameters with values looked up against it, and it SHALL NOT omit a parameter
-merely because the body did not carry one.
+The inspector SHALL state the parameters the request body carries, on the Request tab. It SHALL NOT render a
+hardcoded list of parameters with values looked up against it, and it SHALL NOT omit a parameter merely
+because the body did not carry one.
 
 **`temperature`, `max_tokens`, `tools` and `stream` SHALL always be stated**, showing a de-emphasised
 placeholder when the body carries none. An absent `temperature` is a debugging answer — the call ran at the
 deployment's default — and a parameter line that silently omits it cannot be told apart from one the reader
 did not look at carefully.
 
-**Every other parameter the body carries SHALL be stated when present**, and parameters this frontend does not
-recognise SHALL be **counted, not listed**: an unbounded parameter list would push the messages off a 360px
-rail to state keys that are usually vendor passthrough.
+**The model the request asked for SHALL head the line**, and the settings a reader looks for by name SHALL
+follow it. The call was made *to* a model, and everything after it is how — a line that states the model as
+one member among ten makes the reader search for the subject of the sentence.
+
+**Every other member of the body SHALL be counted, with its names carried.** A parameter this frontend has
+never met is still one the call was made with, so it is never dropped; but naming every member turned the
+line into a paragraph the reader had to read through to find the four settings they came for, on hops that
+carry a dozen passthrough members. The count SHALL carry the names of what it stands for, as text a screen
+reader reaches, and the values SHALL remain one control away in the recorded bytes.
+
+This reverses the rule that replaced the original count. That rule was right that a bare count says something
+exists while refusing to name it — which is why the names travel with this one.
+
+**Only the members that carry the conversation itself SHALL be left out** — the message list, its per-dialect
+spellings, and the system prompt — because the history renders those in full and a second, counted copy of
+them says nothing.
+
+**The tool catalogue's count SHALL be labelled as a catalogue.** It states how many tools the model was
+offered, while the role filter one row below counts the tool *results* the history fed back — a turn offered
+ten tools can answer with twenty results, and stated as two bare counts of "tool" the two read as one number
+that disagrees with itself.
+
+**The model the request asked for SHALL be stated.** It is not the deployment the hop row names: a deployment
+routes to a model whose own id and version the row never records, and the two strings differ on real traffic.
+The response states what answered; this states what was asked for.
+
+**A state envelope SHALL keep its presence stated, as a name among the counted members.** The DIAL-specific
+envelopes are blobs and are never rendered; an envelope is why a message's recorded size can run far past its
+visible text, and a reader comparing the two has no other way to see that it is there.
+
+**An array among the named settings SHALL be stated by its length, and an object by the names of its
+members.** How many tools were offered is the answer for a catalogue; for a settings object it is not — a
+lone `1` under a parameter says something is set while refusing to say what, and the member names say it in
+the same space.
+
+**The request's message count SHALL be stated only where no message list states it.** The list's own "all N"
+control sits one row below, and the same number twice over two adjacent lines is noise; where the list is
+absent — a withheld column, a body that recorded none — the hop row's count is the only thing that still
+answers how long the request was.
 
 **Presence SHALL be tested as "not null", never as truthiness.** `temperature: 0` is real and common — it is
 the value a reader most often wants confirmed — and `stream: false` is the fact that explains an unframed
 response. A truthiness test reports both as absent, which is the opposite of what the body says.
+
+**A stated value SHALL be bounded, with the whole value still reachable.** Naming every member of the body
+means any of them can reach this line, and one long passthrough value rendered whole gave the bodies section
+a horizontal scrollbar of its own. A truncated value SHALL keep the full one available rather than losing it,
+under the truncation rule in `a11y.md`.
 
 #### Scenario: A zero-valued parameter is stated, not treated as absent
 
@@ -6675,11 +7604,53 @@ response. A truthiness test reports both as absent, which is the opposite of wha
 - **WHEN** a request body carries no `temperature`
 - **THEN** the parameter line states temperature with a de-emphasised absent-value placeholder
 
-#### Scenario: Unrecognised parameters are counted
+#### Scenario: An unrecognised parameter is named
 
-- **WHEN** a request body carries parameters this frontend does not recognise
-- **THEN** the parameter line states how many there are
-- **AND** it does not name them individually
+- **WHEN** a request body carries a parameter this frontend does not recognise
+- **THEN** the parameter line counts it among the members it does not name
+- **AND** the name it was recorded under travels with that count, reachable by a screen reader
+- **AND** its value is not stated on the line
+
+#### Scenario: The settings a reader looks for come first
+
+- **WHEN** a request body carries both a recognised parameter and an unrecognised one
+- **THEN** the model heads the line and the always-stated four follow it
+- **AND** the unrecognised one is counted at the end rather than stated among them
+
+#### Scenario: The tool catalogue is not confusable with the tool results
+
+- **WHEN** a request offers a catalogue of tools and its history carries tool results
+- **THEN** the catalogue's count is labelled as what was offered
+- **AND** it is not stated as a bare count under the same word the role filter uses
+
+#### Scenario: The requested model is stated
+
+- **WHEN** a request body names the model it asked for
+- **THEN** the parameter line states it
+- **AND** it is stated whether or not the hop row's deployment carries the same string
+
+#### Scenario: A long parameter value is bounded, not lost
+
+- **WHEN** a request body carries a parameter whose value is long enough to overflow the line
+- **THEN** the line stays within the width of the section
+- **AND** the whole value remains reachable
+
+#### Scenario: A parameter carrying a blob is stated by its size
+
+- **WHEN** a named setting carries an array
+- **THEN** the line states its length rather than its content
+
+#### Scenario: A named setting carrying an object states its members
+
+- **WHEN** a named setting carries an object
+- **THEN** the line states the names of its members rather than how many there are
+- **AND** it states none of their values
+
+#### Scenario: The message count is not stated twice
+
+- **WHEN** the Request tab lists the messages and offers the role filter
+- **THEN** the parameter line does not restate the message count
+- **AND** a hop whose message list is absent has it stated there
 
 ### Requirement: The inspector reads bodies in tiers, and never ships one whole
 
@@ -6741,16 +7712,29 @@ that decision SHALL be made **per tab**.
 suppressed such a hop whole. A call that returned nothing is the case a reader most wants opened, and its
 request is the only record of what it attempted; only the Response tab SHALL state the absence.
 
-**The nine MCP protocol-envelope methods SHALL remain settled without a fetch, on both tabs.** They negotiate
-a session and carry no content, and `tools/list` returns the tool catalogue this requirement withholds
-anyway.
+**A protocol-envelope method SHALL NOT be settled as having nothing to show.** The claim that the nine of
+them carry no content is measurably wrong: over the recorded log `initialize` and `tools/list` record response
+bodies reaching hundreds of kilobytes, and every protocol hop records its status, its two sizes and its
+duration whether or not it recorded a body. What that rule actually protected was the tool catalogue, which is
+a policy about what to render — stated as if it were a fact about the log, it left nine methods blank on both
+tabs. What a protocol hop states is governed by **A protocol hop states the facts its method carries**.
+
+**A side SHALL be suppressed only where the log holds nothing for it**, and the suppression SHALL say which
+case it is. A notification answered by the protocol with no body has recorded nothing to show; a method whose
+body the reader is not being shown has not.
 
 **Embedding hops SHALL no longer be suppressed.** Their request body — averaging 352 B — is the probe text,
 which is the half a reader is asking about; only the response is a vector, and it is the response side that
 states so.
 
+**The Chat tab SHALL be decided from the row on the same terms**, and SHALL be offered only for a hop that
+records a message history: an MCP hop and an embedding hop SHALL NOT offer it, because a protocol message and
+a probe vector are not conversations. What Chat states once offered is governed by
+**A span's Chat states the conversation that span received**.
+
 **The test SHALL remain a deny-list.** An `event_kind` or `mcp_method` this frontend does not recognise SHALL
-default to shown, on both tabs.
+default to shown, on every tab — including Chat, whose content states its own absence of messages where the
+dialect turns out to carry none.
 
 #### Scenario: A hop that returned nothing still shows its request
 
@@ -6761,8 +7745,20 @@ default to shown, on both tabs.
 #### Scenario: A protocol-envelope hop is settled without a fetch
 
 - **WHEN** a hop whose MCP method negotiates the session is opened
-- **THEN** no body is fetched for it
-- **AND** both tabs state why that hop has no content
+- **THEN** its status, its two sizes and its duration are stated from the hop row, with no body read
+- **AND** nothing further is claimed about it until its body is read
+
+#### Scenario: A protocol hop states how its call went
+
+- **WHEN** a hop whose MCP method negotiates the session is opened
+- **THEN** it states the status, the two sizes and the duration recorded for it
+- **AND** neither tab reports that the hop recorded nothing where the log holds a body for it
+
+#### Scenario: A notification states that the protocol defines no body
+
+- **WHEN** a hop whose method is a notification is opened
+- **THEN** its response states that the protocol defines no body for it
+- **AND** it does not state that nothing was recorded
 
 #### Scenario: An embedding hop shows its probe text
 
@@ -6773,6 +7769,12 @@ default to shown, on both tabs.
 
 - **WHEN** a hop records an event kind this frontend does not recognise
 - **THEN** its bodies are fetched and its content is shown
+- **AND** its Chat tab is offered
+
+#### Scenario: A hop with no conversation offers no Chat tab
+
+- **WHEN** an MCP hop or an embedding hop is opened
+- **THEN** no Chat tab is offered for it
 
 ### Requirement: The model-call dialects are told apart by endpoint, never by body inspection
 
@@ -6909,6 +7911,71 @@ message list.
 The Response tab SHALL offer two modes: **Assembled**, the response as the client received it, and **Raw**,
 the body as recorded.
 
+**The recorded bytes SHALL be reached through one switch, offered on both the Request and the Response tab.**
+"Show me what was recorded" is one question about whichever side is open, so it is one control in one place
+rather than a mode that exists on one side only. **There SHALL be no named "assembled" mode**: it was never
+something a reader chose — it is simply what a tab shows when it is not showing bytes — and naming it made a
+two-option control out of a single toggle.
+
+**While the recorded bytes are shown, a control that narrows the structured view SHALL NOT be offered.** The
+request's role filter narrows a list, and the bytes are not a list.
+
+**The recorded bytes SHALL be shown readably, not dumped.** A body arrives as one unwrapped line of up to
+half a megabyte. It SHALL be pretty-printed where it parses, syntax-highlighted, foldable and copyable —
+through the console's own code viewer rather than a preformatted block — and shown as recorded where it does
+not parse.
+
+**A control SHALL sit on the ground of the section it is in.** The bodies section's ground is not the rail's,
+and a pinned control row carrying the rail's background reads as a lighter stripe across the panel.
+
+**The control that reaches the recorded bytes SHALL sit at the end of that side's facts line**, in the same
+place on both tabs — the line says what this half of the call was, and the last thing on it is "or show me it
+as recorded". It is therefore always in view, whatever the body below it does.
+
+**It SHALL be the same control the rest of that surface is made of, carrying its state programmatically.** A
+toggle-switch widget on a line of facts reads as a setting for the screen rather than as one more control on
+that line, and the one it replaced hid its accessible node behind a label a pointer could not reach.
+
+**Every statement that there is nothing to show SHALL be made in one treatment.** A withheld column, a body
+the protocol defines none of, a request whose method is the whole of it — these differ in what they say, not
+in what kind of thing they are, and rendering one as loose text beside another in a bordered note made the
+section look like two screens.
+
+**A fact stated about the hop SHALL remain stated over the recorded bytes.** Only a control that narrows the
+structured view is withdrawn there. What answered and at what cost describes the same response whichever form
+of it is on screen, and withdrawing it makes the raw mode read as a different hop.
+
+**The control that opens a turn in full SHALL sit inside that turn**, not beneath it: below the bubble it
+reads as a control for the conversation rather than for the turn it opens.
+
+**A chosen filter SHALL be marked in the accent colour, not by a lighter panel.** A selected chip filled with
+the next background layer reads as a slab of background rather than as a selection, and a row of them reads
+as disabled. The state SHALL remain programmatic as well as visual, under the toggle-state rule.
+
+**Assembled SHALL be stated as a message**, in the same card the request's history rows use, carrying the
+assistant role, the recorded size, the text and the calls the response asked for. A response is one assistant
+message; stating it as bare text made the two tabs read as two different tools.
+
+**A call the response asked for SHALL state its arguments and its id**, not its name alone. All three are
+recorded in the body: the name says which tool, the arguments say what was asked of it, and the id is what
+the message answering it quotes back in the next request. Carrying the name alone discarded the other two and
+left a result unpairable.
+
+**The response's own facts SHALL be stated outside that card, and above it.** How the tokens split and what
+came from cache are facts about the response rather than about the message it carried — and the tab holds
+exactly one answer, so they head the reply instead of trailing a card the reader has to scroll past. The clamp
+and the note about a requested tool with no recorded call stay with the text they qualify.
+
+**The model that answered SHALL be stated only where it differs from the model the request asked for.** The
+request line names the asked-for model one tab away, and repeating the same string on the response says
+nothing; a difference is the thing no other field on the screen can tell the reader, and it is exactly what
+this fact exists for.
+
+**The upstream's id for the completion SHALL NOT be stated on this line.** It is not a fact a reader scans a
+line for — it is one they copy, once, to take to the provider's own logs — and it sits in the recorded bytes
+the control at the end of this line opens. Carrying it here cost the line a third of its width for a value
+nobody reads in place.
+
 **Assembled SHALL be built from the shape its dialect records, not from one shape for all of them.** The
 Responses dialect lands in the same assembled column while recording `output[]` rather than
 `choices[].message`, so a single decoder finds nothing there and reports a hop that recorded a full response as
@@ -6917,9 +7984,9 @@ having recorded nothing. The decode SHALL therefore be chosen by dialect.
 **Assembled SHALL be the mode a hop opens in**, and SHALL be built from the assembled-response column where
 the caller's schema reports it — averaging 1 511 characters against 52.8 KB for the raw body, roughly 35×
 smaller, and already carrying the finish reason, the message and the full usage breakdown. Where that column
-is absent from the schema, Assembled SHALL be decoded from the recorded response body, exactly as the
-transcript already does. The column is a later addition to the hop log and an instance predating it does not
-persist it, so its absence SHALL be handled, not assumed away.
+is absent from the schema, Assembled SHALL be decoded from the recorded response body. The column is a later
+addition to the hop log and an instance predating it does not persist it, so its absence SHALL be handled, not
+assumed away.
 
 **Raw SHALL be fetched only when selected**, and clamped per the tier rules above.
 
@@ -6945,6 +8012,50 @@ flag does not.
 - **WHEN** the reader selects the raw mode
 - **THEN** the recorded body is read server-side and returned clamped
 
+#### Scenario: The assembled response is stated as a message
+
+- **WHEN** a response carrying text is opened
+- **THEN** it renders in the same card the request's history rows use
+- **AND** it states the assistant role and the recorded size
+
+#### Scenario: A response's calls state their arguments and ids
+
+- **WHEN** a response asked for a tool call
+- **THEN** the call states its name, its arguments and the tail of its id
+
+#### Scenario: The raw switch is offered on both sides
+
+- **WHEN** either the Request or the Response tab is open
+- **THEN** a single switch offers the recorded bytes for that side
+- **AND** no separate "assembled" option is offered
+
+#### Scenario: The recorded bytes are read only when the switch is turned on
+
+- **WHEN** the Request tab is opened and its raw switch is off
+- **THEN** the recorded body has not been read
+- **AND** turning the switch on reads it and states it
+
+#### Scenario: The recorded bytes are shown pretty-printed
+
+- **WHEN** the raw switch is on and the recorded body parses as JSON
+- **THEN** it renders pretty-printed rather than as the single line it was recorded as
+
+#### Scenario: The raw control closes the facts line
+
+- **WHEN** either the Request or the Response tab is open
+- **THEN** the control reaching the recorded bytes is the last element of that side's facts line
+- **AND** its pressed state is exposed programmatically
+
+#### Scenario: The response's facts are stated over the recorded bytes
+
+- **WHEN** the response's raw switch is on
+- **THEN** the line stating what answered is still present
+
+#### Scenario: The role filter is not offered over the recorded bytes
+
+- **WHEN** the request's raw switch is on
+- **THEN** the role filter is not offered
+
 ### Requirement: MCP and embedding hops state the facts their kind actually has
 
 **An MCP hop SHALL state its method, its tool name, its toolset, its arguments and its result.** The toolset
@@ -6952,13 +8063,32 @@ SHALL be taken from the hop's deployment: in one measured conversation all 277 M
 span and were distinguishable only by it. **No session field SHALL be stated** — the hop log records no session
 column for MCP, and a field with no source is a field that will be filled with the wrong thing.
 
+**Each of those facts SHALL be stated where the column it comes from is stated.** The method, the tool name
+and the toolset are plain hop-row columns and SHALL render below the tab strip, visible on every tab; the
+arguments are the request column and SHALL render on the Request tab; the result is the response column and
+SHALL render on the Response tab. The hop's two halves are read in one round trip, so neither tab waits on
+the other — the split is a matter of where a fact is stated, not of when it is fetched.
+
 `tools/call` is the only MCP method the inspector opens on; it averages 5.5 KB in and 123 KB out, so its
 result SHALL be subject to the same clamp as any other raw content.
+
+**Both halves SHALL be presented as formatted JSON where what was recorded is JSON**, and exactly as recorded
+where it is not. A tool returns its result as one line, and a reader cannot pick a field out of a JSON
+document written that way; the arguments are already stated formatted, and the two halves of one hop SHALL NOT
+be formatted by different rules. **The sizes stated about a body SHALL remain the recorded ones** —
+reformatting adds whitespace that the log never held, and a clamp that counted it would report a size the hop
+does not have.
 
 **An embedding hop SHALL state the model, the number of inputs, the dimension count, the token count and the
 text that was embedded.** It SHALL NOT render the vector: 96% of recorded vectors arrive base64-encoded, so
 any depiction of one requires decoding it first, and the result is decoration — the reader is asking what was
 embedded, not what the coordinates were.
+
+**The dimension count SHALL be stated on the Response tab**, which is the column it is read from, and that
+tab SHALL NOT be presented as having nothing to read. The vector itself is still never rendered, so the
+count is what the response side has to say — and it is exactly the answer a reader checking that a probe
+returned a usable embedding is after. Stating it beside the request's own facts put a response fact on the
+request side, where a reader had no reason to look for it.
 
 **The probe text SHALL be clamped like any other body-derived content.** A single input averages 352 B, but
 the endpoint accepts an array and a batch is assembled into one text here — the one path that would otherwise
@@ -6967,8 +8097,19 @@ walk past the payload budget every other read honours.
 #### Scenario: An MCP hop states its arguments, its result and its toolset
 
 - **WHEN** an MCP tool call is opened
-- **THEN** the inspector states the method, the tool name and the toolset
-- **AND** it states the arguments sent and the result returned
+- **THEN** the method, the tool name and the toolset render below the tab strip
+- **AND** the Request tab states the arguments sent and the Response tab states the result returned
+
+#### Scenario: A JSON tool result is presented as formatted JSON
+
+- **WHEN** an MCP tool call whose recorded result is a JSON document is opened
+- **THEN** the Response tab presents that result as formatted JSON
+- **AND** the size it states is the size the log recorded, not the size after formatting
+
+#### Scenario: A tool result that is not JSON is presented as recorded
+
+- **WHEN** an MCP tool call whose recorded result is not JSON is opened
+- **THEN** the Response tab presents the text exactly as it was recorded
 
 #### Scenario: No MCP session field is stated
 
@@ -6978,13 +8119,47 @@ walk past the payload budget every other read honours.
 #### Scenario: An embedding hop states its input, not its vector
 
 - **WHEN** an embedding hop is opened
-- **THEN** the inspector states the model, the dimension count and the embedded text
-- **AND** it renders no depiction of the vector
+- **THEN** the Request tab states the model, the input count and the embedded text
+- **AND** the Response tab states the dimension count
+- **AND** neither renders a depiction of the vector
 
 #### Scenario: A batch of embedding inputs is clamped and says so
 
 - **WHEN** an embedding hop's inputs assemble into more text than the budget admits
 - **THEN** the probe text is clamped
+- **AND** the panel states the recorded size and the delivered size
+
+### Requirement: A protocol hop states the facts its method carries
+
+Beyond the outcome every hop states, an MCP protocol hop SHALL state what its own method actually recorded,
+decoded server-side into facts rather than shipped as a body.
+
+**Both halves SHALL be stated as the JSON they were recorded as, formatted** — the parameters the client sent
+on the Request tab, the result the server answered with on the Response tab. A protocol message is a request
+and a response like any other, and it is stated in the shape every other body is stated in.
+
+**They SHALL NOT be summarised into named facts.** Decoding each method into a line — a negotiated version
+here, a tool count and names there — describes a response instead of showing one, and makes two protocol
+messages read as two different screens. It also needs a decoder per method, so an unfamiliar method has
+nothing to fall back to but a blank.
+
+**The result SHALL be clamped like any other raw content.** A `tools/list` result carries every tool's schema
+and reaches hundreds of kilobytes; the clamp is what bounds it, and it states what it withheld.
+
+This does not reopen the tool-catalogue rule, which governs a **model call's** request line: that line states
+a count because the catalogue is one member of a body the reader opened for other reasons. A `tools/list` hop
+*is* the catalogue — it is what the reader selected the span to see.
+
+#### Scenario: A protocol hop states the result it was answered with
+
+- **WHEN** an `initialize` or `tools/list` hop is opened
+- **THEN** its Response states the recorded result as formatted JSON
+- **AND** a method this console has never met is stated the same way rather than left blank
+
+#### Scenario: A protocol result too large for the budget states what it withheld
+
+- **WHEN** a protocol result exceeds the delivered budget
+- **THEN** it is clamped
 - **AND** the panel states the recorded size and the delivered size
 
 ### Requirement: Each side of the inspector is gated by its own recorded column
@@ -6993,9 +8168,16 @@ The request body and the response body are separate columns of the hop log, so t
 them is separate. The inspector SHALL treat them separately: a caller whose schema reports one and not the
 other SHALL get the tab they are entitled to rather than neither.
 
+**The Chat tab SHALL be gated by the request column alone.** The history is the substance of that tab and it
+comes from the request body; the trailing answer comes from a response column and SHALL be stated as withheld
+where none is granted. Gating Chat on both columns would withdraw the history over the absence of the answer,
+which is the failure this per-column rule exists to prevent.
+
 **A withheld side SHALL be stated once, not on every hop.** The statement belongs with the view's own header,
 where it explains the state for the whole session, and individual hops SHALL stay silent about it — a
-per-hop explanation repeats a fixed fact once per click.
+per-hop explanation repeats a fixed fact once per click. The withheld answer inside Chat is the exception and
+is stated where the answer would have been, because there it marks the position of something absent rather
+than explaining an entitlement.
 
 **The statistics SHALL stay visible when a body is withheld.** Sizes, token counts, message counts, status,
 duration and cost are plain columns and are not gated by the body grant; withdrawing them along with the
@@ -7005,17 +8187,30 @@ bodies would withdraw facts the caller is entitled to.
 nothing — three distinct facts, and rendering any two identically hides an outage behind an entitlement or an
 entitlement behind an empty result.
 
-**A panel built from both columns SHALL state each half by its own grant.** The MCP and embedding panels are
-not one side of a hop: an MCP hop's arguments are the request column and its result the response column, and
-an embedding hop's dimension count is its only response-column field. Where one column is granted and the
-other is not, the granted half SHALL render and the withheld half SHALL be stated as withheld — never as a
-hop that recorded nothing, which describes the caller's entitlement as a property of the hop.
+**A kind whose two halves are different shapes SHALL still state each half by its own grant, on the tab that
+reads that column.** An MCP hop's arguments are the request column and its result the response column, and an
+embedding hop's dimension count is its only response-column field. Where one column is granted and the other
+is not, the granted half SHALL render on its own tab and the withheld half SHALL be stated as withheld on
+its — never as a hop that recorded nothing, which describes the caller's entitlement as a property of the
+hop.
 
 #### Scenario: A caller entitled to one side gets that side
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **THEN** the Request tab renders
 - **AND** the Response tab states that it is withheld
+
+#### Scenario: A caller entitled to the request alone still gets Chat
+
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **THEN** the Chat tab is offered
+- **AND** it renders the history and states that the answer is withheld
+
+#### Scenario: A caller entitled to the response alone is offered no Chat
+
+- **WHEN** the caller's schema reports a response body column but not the request body column
+- **THEN** the Response tab renders
+- **AND** no Chat tab is offered
 
 #### Scenario: A withheld side is explained once
 
@@ -7037,251 +8232,69 @@ hop that recorded nothing, which describes the caller's entitlement as a propert
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **AND** an MCP tool call is opened
-- **THEN** the arguments render
-- **AND** the result is stated as withheld rather than as recorded nothing
+- **THEN** the arguments render on the Request tab
+- **AND** the Response tab states the result as withheld rather than as recorded nothing
 
 #### Scenario: A half-granted embedding hop states its dimension count as withheld
 
 - **WHEN** the caller's schema reports the request body column but no response body column
 - **AND** an embedding hop is opened
-- **THEN** the probe text renders
-- **AND** the dimension count is stated as withheld rather than as absent
+- **THEN** the probe text renders on the Request tab
+- **AND** the Response tab states the dimension count as withheld rather than as absent
 
-### Requirement: The conversation detail view switches between Chat and Trace
+### Requirement: The conversation detail view presents its traces without a view switch
 
-The detail view SHALL offer a switch between two views of one conversation: **Chat**, the recorded
-transcript, and **Trace**, the conversation's traces. The switch SHALL indicate which view is current, SHALL
-be reachable by keyboard, and SHALL NOT navigate away from the conversation.
+The conversation detail view SHALL present the conversation's **traces** and SHALL NOT offer a view switch.
+The transcript is no longer a view of its own: a conversation's readable exchange is the request history of
+its entry span, which the trace's own Chat tab states in the place where everything else about that trace is
+stated.
 
-Choosing a view is a **local** change and SHALL re-render only the region the switch governs. The
-conversation's header and the supporting panels beside the view do not depend on which view is showing, and
-SHALL NOT re-render when it changes. Opening a hop chain is the exception, and only because the header gives
-way to the trace's own identity.
+The detail body SHALL render the trace listing, grouped by trace and carded by root span as
+**The conversation trace listing groups by trace and cards by root span** defines, each card opening its
+trace's hop chain. The conversation's header and the supporting panels beside the listing SHALL be
+unaffected, and no body read SHALL be issued when the page opens.
 
-**The detail view SHALL open on Trace.** The trace listing renders from the conversation's own recorded
-calls and needs no body read, so it is the view that can always be shown; the transcript depends on body
-columns this caller may not be able to read and on rows that may not reconstruct.
+A conversation whose trace listing is empty SHALL render the listing's own empty state, and a failed listing
+read SHALL be reported as a failure there — both exactly as they already are.
 
-**The Trace view SHALL land on the trace listing**, grouped by trace and carded by root span as
-**The conversation trace listing groups by trace and cards by root span** defines, each card stating its own
-recorded time, duration, status, own figures and rating counts, and each opening its trace's hop chain.
-Landing on Trace MUST NOT open a hop chain directly: the reader has not chosen a trace, and picking one for
-them presents an arbitrary default as the answer.
+Closing an open hop chain SHALL return to the trace listing.
 
-A conversation whose trace listing is empty SHALL render the listing's own empty state rather than refusing
-the switch — the view still has something to say about why there is nothing to open. A failed listing read
-SHALL be reported as a failure there, distinctly from an empty listing.
+No page of the console SHALL offer a conversation-level transcript, and none SHALL state that one is
+unavailable: an option that no longer exists is not an option to explain.
 
-**The transcript's body read SHALL be issued when the reader switches to Chat, not when the page opens.**
-While that read is outstanding the Chat view SHALL show a loading state, and the switch SHALL remain usable.
-A body read that fails SHALL state so **inside the Chat view**, leaving the Trace view and the rest of the
-page intact. Reading the transcript on page open made a body-read failure the whole page's failure, on a page
-whose landing view does not depend on it.
+#### Scenario: The detail view opens on its traces
 
-**The switch's gating and the transcript's content states resolve at different times, and the view SHALL NOT
-conflate them.** Whether this caller can read body columns at all is a **schema** fact: it is resolved from
-the entity schema before any body query is issued, so it is known when the switch first renders and it
-SHALL gate the Chat option there. Whether the transcript is aged out, not reconstructable, or was never
-recorded are **data** facts about the rows themselves: they are resolved by the body read, so they SHALL be
-stated inside the Chat view after the switch. Gating up front, content states inside.
-
-The per-turn trace control on each assistant message SHALL keep its current behaviour: it opens a turn's hop
-chain directly, without passing through the list.
-
-Returning from a hop chain SHALL land on the view it was opened from. A reader who reached a hop chain from
-the trace list and is returned to the transcript has been moved somewhere they were not, and has to find their
-way back to the list to continue.
-
-Where the Chat view is not offered — because the schema reports no usable body column, for either of the two
-reasons a column can be missing — the switch SHALL still be rendered, with the Chat option disabled and its
-reason stated, rather than removed. A control that disappears leaves the reader unable to tell an unavailable
-view from a view that does not exist.
-
-**In that state the view SHALL open on Trace**, not on the disabled Chat option. Opening on it makes the same
-option current and unselectable at once, which is the expected path for every caller below FULL_ADMIN: the
-disabled segment is not focusable, so keyboard navigation within the switch has no starting point, and the data
-that *is* available has to be discovered.
-
-The Chat option SHALL remain enabled whenever the transcript is merely **empty**. An aged-out, not
-reconstructable or never-recorded transcript is a Chat view with something to say, and disabling the switch
-would replace that statement with silence.
-
-#### Scenario: Switching views keeps the conversation
-
-- **WHEN** the user switches from Chat to Trace
-- **THEN** the hop chain renders in place
-- **AND** the page does not navigate away from the conversation
-
-#### Scenario: The current view is indicated
-
-- **WHEN** either view is shown
-- **THEN** the switch indicates which of the two is current
-
-#### Scenario: A caller without the body columns opens on the Trace view
-
-- **WHEN** the schema reports no usable body column
-- **THEN** the detail opens on the Trace view
-- **AND** the Chat option is rendered, disabled, with its reason stated
-
-#### Scenario: A per-turn control opens the trace on that turn
-
-- **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's hop chain opens directly
-
-#### Scenario: Switching to Trace lists the conversation's traces
-
-- **WHEN** the user switches to Trace from the view switch
-- **THEN** the conversation's traces render, one card per recorded root span, each stating its own figures
-- **AND** no hop chain is opened and no hop read is issued
+- **WHEN** a conversation's detail view loads
+- **THEN** the trace listing renders
+- **AND** no view switch is offered
+- **AND** no body read has been issued
 
 #### Scenario: A trace in the list opens its hop chain
 
 - **WHEN** a card of the trace listing is activated
 - **THEN** that trace's hop chain opens
 
-#### Scenario: A conversation with no turns switches to an empty list
+#### Scenario: Closing a hop chain returns to the listing
 
-- **WHEN** the user switches to Trace on a conversation whose trace listing is empty
-- **THEN** the trace listing states that no traces were recorded
-- **AND** the switch is not refused
+- **WHEN** an open hop chain is closed
+- **THEN** the trace listing renders again
 
-#### Scenario: Returning from a hop chain lands on the view it was opened from
+#### Scenario: A conversation with no traces states so
 
-- **WHEN** a hop chain opened from the trace list is closed
-- **THEN** the Trace view is shown, still listing the traces
-- **AND** a hop chain opened from an assistant message returns to the transcript instead
+- **WHEN** a conversation's trace listing is empty
+- **THEN** the listing states that no traces were recorded
 
-#### Scenario: An unavailable Chat view is disabled, not hidden
+#### Scenario: A caller without the body columns still gets the listing
 
 - **WHEN** the schema reports no usable body column
-- **THEN** the switch renders with the Chat option disabled and its reason stated
+- **THEN** the trace listing renders unchanged
+- **AND** no statement about an unavailable transcript is made
 
-#### Scenario: Choosing a view does not re-render the page around it
+### Requirement: A trace opens in place, stating its own figures and each span's
 
-- **WHEN** the user switches between Chat and Trace
-- **THEN** the conversation's header does not re-render
-- **AND** the supporting panels beside the view do not re-render
-
-#### Scenario: An empty transcript keeps the Chat view enabled
-
-- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
-- **THEN** the Chat option stays enabled
-- **AND** selecting it shows the statement for that cause
-
-#### Scenario: The detail view opens on the trace listing
-
-- **WHEN** a conversation's detail view loads and this caller can read body columns
-- **THEN** the Trace view is current
-- **AND** no body read has been issued
-
-#### Scenario: The transcript's body read is issued on switching to Chat
-
-- **WHEN** the user switches to Chat for the first time
-- **THEN** the body read is issued at that point
-- **AND** the Chat view shows a loading state until it resolves
-
-#### Scenario: The Chat view fetches the figures it displays
-
-- **WHEN** the transcript resolves
-- **THEN** figures for the traces it covers are requested for that view
-- **AND** they are not read from the listing's loaded pages
-
-#### Scenario: A failed body read leaves the trace listing usable
-
-- **WHEN** the transcript's body read fails
-- **THEN** the Chat view states that the transcript could not be read
-- **AND** the Trace view still lists the conversation's traces
-- **AND** the page does not render its whole-page error state
-
-#### Scenario: A schema-gated Chat option is decided without a body read
-
-- **WHEN** the switch first renders
-- **THEN** whether the Chat option is enabled was resolved from the entity schema
-- **AND** no body query was issued to decide it
-
-#### Scenario: An empty transcript's cause is stated after the switch, not before
-
-- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
-- **THEN** the Chat option was enabled before the switch
-- **AND** the cause is stated inside the Chat view once the body read resolves
-
-### Requirement: An absent transcript is distinguished from a failed one, by cause
-
-A transcript can be absent for three different reasons and can fail for a fourth. All four render no
-messages, and the view SHALL distinguish them, because they say different things about the conversation: one
-lost its detail to age, one never had detail to lose, one has detail that cannot be attributed to the user,
-and one is an outage. Collapsing them would state something false about three conversations out of four.
-
-**Aged out.** `dial_usage_log` and `rate_analytics` retain a row for one year from its request time, while
-`sessions`, `turns` and `session_insights` retain theirs indefinitely. The retention is
-**row-level**, so a body lives exactly as long as the hop carrying it: a conversation older than a year keeps
-its list row, its detail header and its rollup figures, and has no hops left to read. The view SHALL state
-that the hop log no longer carries the conversation.
-
-**Not reconstructable.** The conversation has hops, but none of them is an entry hop, so nothing recorded
-under it represents what the user sent. The view SHALL state that the transcript cannot be reconstructed from
-what was logged, and MUST NOT state that no messages were recorded — messages were recorded; they cannot be
-attributed. This state exists precisely so that the view never has a reason to reach for an inner hop's body.
-
-This is also the state for entry hops that **were** read and yielded no message: rows exist and no transcript
-could be built from them, which is what this state says. Reporting that combination as an available transcript
-of nothing renders it through the nothing-recorded presentation, which is the mislabel this state was added to
-prevent. On the dev instance this is not an edge case — of 228 conversations with hops in one recent two-day
-window, 112 had no entry hop, every one of them agent-SDK or benchmark traffic whose bodies open with a 6.6 KB
-system prompt rather than anything a person typed. Widening the entry-hop rule to admit an orphaned hop would
-put that system prompt where the user's first question belongs.
-
-**Nothing recorded.** The conversation is within the retention window and has no hops at all.
-
-**Failed.** A query or the schema read failed. The view SHALL state that the transcript could not be loaded.
-
-None of the first three SHALL render as an error — nothing failed in any of them. In all four the header, the
-panels, the turn list and every rollup figure SHALL still render, and the Trace view SHALL remain available
-wherever hops exist.
-
-#### Scenario: A conversation past retention states its transcript has aged out
-
-- **WHEN** the detail view loads a conversation whose last request is older than the hop log's retention
-- **AND** the conversation has no hops
-- **THEN** the transcript region states that the hop log no longer carries the conversation
-- **AND** no error is reported
-- **AND** the header, the panels and the turn list still render
-
-#### Scenario: Entry hops that yield no message state the transcript cannot be reconstructed
-
-- **WHEN** the entry hops are read and none of their bodies yields a message
-- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
-- **AND** it does not state that the conversation recorded no messages
-
-#### Scenario: A conversation with hops but no entry hop states it cannot be reconstructed
-
-- **WHEN** a conversation records hops and none of them is an entry hop
-- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
-- **AND** it does not state that no messages were recorded
-- **AND** the Trace view remains available for those hops
-
-#### Scenario: A recent conversation with no hops states nothing was recorded
-
-- **WHEN** a conversation within the retention window records no hops at all
-- **THEN** the transcript region states that no messages were recorded
-
-#### Scenario: A failed entry-hop query is reported as a failure
-
-- **WHEN** the entry-hop query fails
-- **THEN** the transcript region states that the transcript could not be loaded
-- **AND** it does not state that the conversation recorded no messages
-
-#### Scenario: The four states are distinguishable
-
-- **WHEN** each of the four causes occurs
-- **THEN** the transcript region renders a different statement for each
-
-### Requirement: A turn's trace opens in place, stating the turn's own figures and each span's
-
-Each assistant message SHALL offer a control opening that turn's trace, and the view switch SHALL offer the
-Trace view for the conversation. The trace SHALL replace the transcript **within the same view** and SHALL
-offer a control returning to the transcript. Opening a trace is a read of one turn and MUST NOT navigate away
-from the conversation.
+A trace SHALL be opened from the trace listing, and SHALL replace the listing **within the same view** with a
+control returning to it. Opening a trace is a read of one trace and MUST NOT navigate away from the
+conversation.
 
 While a trace is open the conversation's header SHALL be replaced rather than kept above it. The trace states
 its own identity and its own figures, and two stacked headers would leave the reader unsure which of them the
@@ -7326,12 +8339,14 @@ rows are missing — so the view SHALL neither claim completeness nor report a m
 ordered list naming the deployments a request was routed through, application first and model last. Where
 present it SHALL be rendered as that chain.
 
-Selecting a span SHALL show its detail beside the tree: its kind and its outcome, its recorded time, its
+Selecting a span SHALL show its **facts** beside the tree — its kind and its outcome, its recorded time, its
 duration where reported, its tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP
-status, its MCP method and tool where recorded, and its routing chain where recorded. Its request and
-response SHALL be read on demand for that span alone, under **The inspector reads bodies in tiers, and never
-ships one whole** — a raw body MUST NOT reach the client unread, and what does reach it SHALL be bounded and
-state its own clamp.
+status, its MCP method and tool where recorded, and its routing chain where recorded — while its **bodies**
+render below the tree, under **The trace view splits the span tree from the selected span's bodies**. The
+facts are reference values read once per hop; the bodies are the surface a reader works in, and the two SHALL
+NOT compete for one column. Its request and response SHALL be read on demand for that span alone, under
+**The inspector reads bodies in tiers, and never ships one whole** — a raw body MUST NOT reach the client
+unread, and what does reach it SHALL be bounded and state its own clamp.
 
 **Colour SHALL never be the only thing distinguishing one kind of row from another.** Every row states its
 kind as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to
@@ -7357,24 +8372,18 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 - **THEN** no loading indicator remains
 - **AND** the trace states that it could not be read
 
-#### Scenario: Opening a turn's trace replaces the transcript in place
+#### Scenario: Opening a trace replaces the listing in place
 
-- **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's tree renders in place of the transcript
-- **AND** the trace states the turn it belongs to and its own trace id
-- **AND** a control returns to the transcript
+- **WHEN** a card of the trace listing is activated
+- **THEN** that trace's tree renders in place of the listing
+- **AND** the trace states the card it was opened from and its own trace id
+- **AND** a control returns to the listing
 
 #### Scenario: A turn's figures are the same in the list and in its trace
 
 - **WHEN** a trace is opened from the trace listing
 - **THEN** the tokens, cost and span count stated above the tree equal those the listing states for it
 - **AND** they do not change when the span read is clipped by its bound
-
-#### Scenario: The shortcut attributes each message to its own turn
-
-- **WHEN** the whole conversation is assembled from one entry span's body
-- **THEN** each message carries the trace id of the turn that produced it
-- **AND** the newest turn's figures appear only beneath the newest turn's answer
 
 #### Scenario: Spans render in the order they were recorded
 
@@ -7425,13 +8434,14 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 #### Scenario: A routing chain renders as a chain
 
 - **WHEN** a span records an execution path of an application followed by a model
-- **THEN** the span's detail shows that chain in that order
+- **THEN** the span's facts show that chain in that order
 
-#### Scenario: Selecting a span shows its detail
+#### Scenario: Selecting a span shows its facts beside the tree and its bodies below it
 
 - **WHEN** a span is selected
 - **THEN** its kind, status, recorded time, tokens, cost, endpoint, upstream, caller and HTTP status render
   beside the tree
+- **AND** its request, response and conversation render in the section below the tree
 - **AND** its duration renders where the producer reported one
 - **AND** its MCP method, tool and routing chain render where recorded
 - **AND** no raw request or response body value reaches the client
@@ -7458,102 +8468,174 @@ read is bounded and the spans interleave, so neither a sum nor a span of them is
 - **THEN** that root appears as a row in the tree
 - **AND** the span read's filter names the trace id and not the chat id
 
-### Requirement: Enrichment rules page route and access guard
+### Requirement: Pipelines page route and access guard
 
-The system SHALL expose an Analytics page at `/enrichment-rules`, present in the `ApplicationRoute` enum
-(`types/routes.ts`) as `AnalyticsEnrichmentRules`, with the route directory
-`src/app/[lang]/enrichment-rules/`. The page SHALL be a server component declaring
-`export const dynamic = 'force-dynamic'` that calls `isAnalyticsForbidden()` before any data access and
-renders `Page403` when it returns `true`, matching the guard the Tables, Queries, and Conversations pages
-already use. User-facing strings SHALL read "Enrichment rules".
+The system SHALL expose an Analytics page at `/pipelines`, present in the `ApplicationRoute` enum
+(`types/routes.ts`) as `AnalyticsPipelines`, with the route directory `src/app/[lang]/pipelines/`. The page
+SHALL be a server component declaring `export const dynamic = 'force-dynamic'` that calls
+`isAnalyticsForbidden()` before any data access and renders `Page403` when it returns `true`, matching the
+guard the Tables, Queries, and Conversations pages already use. User-facing strings SHALL read "Pipelines".
 
 The listing view SHALL be seeded from an **unfiltered** server-side fetch, so the page opens showing every
-registered rule — enabled and disabled alike. Narrowing is the user's explicit act, because the question the
-page exists to answer ("is this enrichment's rule missing, or registered but switched off?") is unanswerable
-from a view that hides disabled rules by default.
+registered pipeline — both kinds, enabled and disabled alike. Narrowing is the user's explicit act, because
+the question the page exists to answer ("is this table's pipeline missing, or registered but switched off?")
+is unanswerable from a view that hides disabled pipelines by default.
 
-A registry holding no rules is an ordinary state and SHALL render as the console with an empty grid. A
+A registry holding no pipelines is an ordinary state and SHALL render as the console with an empty grid. A
 **failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
 NOT resolve to a not-found result. A not-found page conflates three conditions an operator needs to tell
-apart — no rule registered, the service unreachable, and the route absent — which is the confusion this page
+apart — nothing registered, the service unreachable, and the route absent — which is the confusion this page
 exists to remove. The stated failure SHALL clear once a subsequent fetch succeeds.
+
+`/enrichment-rules` SHALL NOT be redirected. The route is removed, and a request for it SHALL resolve to the
+not-found page.
 
 #### Scenario: Page renders for a permitted caller
 
-- **WHEN** `isAnalyticsForbidden()` returns `false` and `/enrichment-rules` is requested
-- **THEN** the page fetches the rules list on the server and renders the listing seeded with it
-- **AND** disabled rules are present in that initial listing
+- **WHEN** `isAnalyticsForbidden()` returns `false` and `/pipelines` is requested
+- **THEN** the page fetches the pipelines list on the server and renders the listing seeded with it
+- **AND** disabled pipelines of both kinds are present in that initial listing
 
 #### Scenario: An empty registry renders as an empty grid
 
-- **WHEN** the rules listing resolves with no rules
+- **WHEN** the pipelines listing resolves with no pipelines
 - **THEN** the console renders with an empty grid and no failure message
 
 #### Scenario: A failed listing states the failure instead of a not-found page
 
-- **WHEN** the server-side rules listing fetch fails
-- **THEN** the console still renders, reporting that the rules could not be loaded
+- **WHEN** the server-side pipelines listing fetch fails
+- **THEN** the console still renders, reporting that the pipelines could not be loaded
 - **AND** the page does not resolve to a not-found result
 
-#### Scenario: Forbidden caller sees Page403 and no rules are fetched
+#### Scenario: Forbidden caller sees Page403 and no pipelines are fetched
 
-- **WHEN** `isAnalyticsForbidden()` returns `true` and `/enrichment-rules` is requested
+- **WHEN** `isAnalyticsForbidden()` returns `true` and `/pipelines` is requested
 - **THEN** `Page403` is rendered
-- **AND** no rules request is issued
+- **AND** no pipelines request is issued
 
-### Requirement: Enrichment rules listing grid
+#### Scenario: The former route is gone rather than redirected
 
-The Enrichment rules page SHALL render the fetched rules as a grid, seeded in the order the service returned
-them — that order is total, so no client-side sort is applied by default. Narrowing and reordering are the
-grid's own affordances: every data column SHALL remain sortable and filterable through the grid's standard
-column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing is unpaged, those
-controls act on the whole registry. Columns SHALL be: **name**,
-**target enrichment**, **source**, **trigger**, **evaluator**, **grain key**, **version column**,
-**enabled**, **generation**, and **updated at**.
+- **WHEN** `/enrichment-rules` is requested
+- **THEN** the page resolves to a not-found result
+- **AND** no redirect to `/pipelines` is issued
 
-- The **name** cell SHALL navigate to that rule's detail route, `/enrichment-rules/{id}`.
-- The **trigger** cell SHALL show the `trigger_kind` as a badge, and beneath it the `trigger_cron` for a
-  `schedule` rule or `by {group_by}` for a `group` rule; an `on_ingest` rule SHALL show the badge alone.
-- The **evaluator** cell SHALL show `{evaluator_name}@{version}` with a badge for the evaluator's `llm` or
-  `sql` type, and SHALL mark the pin as "latest" when the rule declares no `evaluator_version`. This cell
-  SHALL be resolved from the listing response alone — the rule carries its evaluator inlined, so the grid
-  SHALL NOT issue a per-row evaluator request.
-- The **version column** cell SHALL render an em dash when the rule reports none, which means the read source
-  declares no scan metadata. This is a legitimate state on this read, not an error.
-- The **enabled** cell SHALL render as a badge distinguishing an enabled from a disabled rule; colour alone
-  SHALL NOT be the only carrier of that distinction.
+### Requirement: A read the service refuses resolves to the forbidden page
+
+`isAnalyticsForbidden()` answers whether the caller may reach the Analytics section at all; it does not
+answer whether they may read a pipeline. The service currently admits only a full admin to the pipeline
+registry, so a caller who passes the section guard can still be refused by the read itself.
+
+The console distinguishes a refusal from a failure — a refused read resolves to no value where a failed one
+resolves to a null — and the pipelines pages SHALL preserve that distinction rather than collapsing both
+into a load failure. A refused listing or a refused pipeline read SHALL render `Page403`. Reporting a refusal
+as "the pipelines could not be loaded" states the wrong cause and sends the operator to check a service that
+is working.
+
+This is stated as a fallback rather than as the intended end state: the service is expected to restore
+read access to a read-only caller, at which point such a caller reads the pipeline through the same
+read-only presentation the pages already apply, and this requirement stops being reachable.
+
+#### Scenario: A refused listing renders the forbidden page
+
+- **WHEN** the pipelines listing is refused by the service
+- **THEN** `Page403` is rendered
+- **AND** no load-failure message is presented
+
+#### Scenario: A refused pipeline read renders the forbidden page
+
+- **WHEN** reading one pipeline is refused by the service
+- **THEN** `Page403` is rendered
+
+#### Scenario: A failed read is still reported as a failure
+
+- **WHEN** the pipelines listing fails for a reason other than refusal
+- **THEN** the console renders with the load failure stated
+- **AND** `Page403` is not rendered
+
+### Requirement: Pipelines listing grid presents both kinds
+
+The Pipelines page SHALL render the fetched pipelines as one grid holding both kinds, seeded in the order
+the service returned them — that order is total, so no client-side sort is applied by default. Narrowing and
+reordering are the grid's own affordances: every data column SHALL remain sortable and filterable through the
+grid's standard column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing
+is unpaged, those controls act on the whole registry.
+
+Columns SHALL be: **name**, **kind**, **target**, **inputs**, **trigger**, **evaluator**, **enabled**,
+**generation**, and **updated at**.
+
+The grain key and the version column are **not** among them. The service resolves those two — and the
+inlined evaluator definition — only for a listing narrowed to one kind; a cross-kind listing is deliberately
+left unresolved, because resolving an aggregate pipeline would cost lookups for fields it has none of. A
+column that could only ever be empty here is not offered, and both are read on the pipeline itself.
+
+- The **name** cell SHALL navigate to that pipeline's detail route, `/pipelines/{name}`, while rendering as
+  plain text rather than as a link: the name is a value an operator reads and compares across rows, and
+  styling every one as a link makes the column harder to scan.
+- The **kind** cell SHALL present the kind as a badge. Kind SHALL NOT be carried by colour alone.
+- The **trigger** cell SHALL show the trigger kind as a badge and nothing else. A raw six-field cron says
+  nothing at a glance, and the schedule and the grouping key are both stated on the pipeline's own page.
+- The **evaluator** cell SHALL show `{evaluator_name}@{version}` and SHALL mark the pin as "latest" when the
+  pipeline declares no `evaluator_version`. Both members are carried by a cross-kind listing. The **type
+  badge** SHALL be shown only where the inlined evaluator definition is present, which is to say only where
+  the listing was narrowed to one kind. The grid SHALL NOT issue a per-row evaluator request to recover it.
+- A column belonging to one kind SHALL render an em dash on a row of the other kind, which is an ordinary
+  state rather than a failure: the service omits such a member rather than sending it empty.
+- The **enabled** cell SHALL render as a badge distinguishing an enabled from a disabled pipeline; colour
+  alone SHALL NOT be the only carrier of that distinction.
 
 Each row SHALL offer an action menu with a **delete** entry, whose confirmation dialog SHALL use the danger
-(red confirm) variant and SHALL identify the rule by name. After a successful delete the listing SHALL
+(red confirm) variant and SHALL identify the pipeline by name. After a successful delete the listing SHALL
 refresh client-side, preserving the filters currently applied.
 
-#### Scenario: Listing renders a rule with its resolved evaluator
+#### Scenario: Both kinds appear in one listing
 
-- **WHEN** the listing renders a rule pinned to version 4 of an `llm` evaluator
-- **THEN** its evaluator cell shows the evaluator name with version 4 and an `llm` type badge
+- **WHEN** the registry holds pipelines of both kinds and the listing renders
+- **THEN** every pipeline is presented in the same grid
+- **AND** each row carries a badge naming its kind
+
+#### Scenario: Listing names the evaluator a pipeline declares
+
+- **WHEN** the listing renders an enrichment pipeline pinned to version 4 of an evaluator
+- **THEN** its evaluator cell shows the evaluator name with version 4
 - **AND** no additional evaluator request is issued for that row
+
+#### Scenario: The type badge waits for a resolved listing
+
+- **WHEN** a cross-kind listing renders an enrichment pipeline
+- **THEN** its evaluator cell carries no type badge
+- **AND** the same pipeline listed under a single kind carries one
 
 #### Scenario: An unpinned evaluator is marked latest
 
-- **WHEN** the listing renders a rule that declares no `evaluator_version`
+- **WHEN** the listing renders an enrichment pipeline that declares no `evaluator_version`
 - **THEN** its evaluator cell marks the pin as "latest"
 
-#### Scenario: Trigger cell carries the kind and its qualifier
+#### Scenario: An aggregate row leaves the enrichment column empty
 
-- **WHEN** the listing renders a `schedule` rule and a `group` rule
-- **THEN** the `schedule` row shows a schedule badge with its cron expression beneath
-- **AND** the `group` row shows a group badge with `by {group_by}` beneath
+- **WHEN** the listing renders an aggregate pipeline
+- **THEN** its evaluator cell shows an em dash
+- **AND** the row is presented as an ordinary pipeline, not as a failure
 
-#### Scenario: A rule whose source declares no scan metadata
+#### Scenario: The resolved-only columns are not offered
 
-- **WHEN** the listing renders a rule with no `version_column`
-- **THEN** that cell shows an em dash
-- **AND** the row is presented as an ordinary rule, not as a failure
+- **WHEN** the listing renders
+- **THEN** it carries no grain key column and no version column
 
-#### Scenario: Navigating to a rule
+#### Scenario: Trigger cell carries the kind alone
 
-- **WHEN** the user activates a rule's name cell
-- **THEN** the browser navigates to `/enrichment-rules/{id}` for that rule
+- **WHEN** the listing renders a `schedule` pipeline and a `group` pipeline
+- **THEN** each row shows its trigger kind as a badge
+- **AND** neither shows the cron expression or the grouping key
+
+#### Scenario: Navigating to a pipeline
+
+- **WHEN** the user activates a pipeline's name cell
+- **THEN** the browser navigates to `/pipelines/{name}` for that pipeline
+
+#### Scenario: The name is presented as text rather than as a link
+
+- **WHEN** the listing renders a pipeline
+- **THEN** its name is presented as text rather than as a link
 
 #### Scenario: Data columns stay sortable and filterable
 
@@ -7561,43 +8643,50 @@ refresh client-side, preserving the filters currently applied.
 - **THEN** no data column disables sorting or filtering
 - **AND** no separate filter toolbar is rendered above the grid
 
-#### Scenario: Delete a rule
+#### Scenario: Delete a pipeline
 
 - **WHEN** the user activates a row's delete action and confirms in the red confirmation dialog
-- **THEN** the rule is deleted, a success notification is shown, and the listing is re-read
+- **THEN** the pipeline is deleted, a success notification is shown, and the listing is re-read
 - **AND** a failure surfaces an error notification without removing the row
 
-### Requirement: Rule creation requires full-admin rights and a registered evaluator
+### Requirement: Pipeline registration requires full-admin rights, and an enrichment one a registered evaluator
 
-Registering and enabling a rule is `FULL_ADMIN`-only on the service, and a rule DTO carries no per-entity
-`permissions` object of the kind table DTOs report. The console SHALL therefore gate the create action on the
-caller's application role (`isFullAdmin` from `AppContext`) alone, and SHALL NOT attempt a per-rule permission
-derivation. A caller who is not a full admin SHALL see the listing without a create action.
+Registering and enabling a pipeline is `FULL_ADMIN`-only on the service, and a pipeline DTO carries no
+per-entity `permissions` object of the kind table DTOs report. The console SHALL therefore gate the create
+action on the caller's application role (`isFullAdmin` from `AppContext`) alone, and SHALL NOT attempt a
+per-pipeline permission derivation. A caller who is not a full admin SHALL see the listing without a create
+action.
 
-Because evaluators are registered outside this UI, a rule cannot be created when none exist. The create
-action SHALL nonetheless stay available to a full admin regardless of how many evaluators are registered:
-the modal is where the shortage is visible and where submission is blocked, so gating the action that opens
-it would hide the explanation behind a control the operator cannot reach. With no evaluator registered the
-modal SHALL state that one must be registered through the API first, and submission SHALL be blocked because
-no evaluator can be selected. A failed evaluator listing SHALL be reported as a load failure rather than as
-"none are registered", which would send the operator to register one they may already have.
+Because evaluators are registered outside this UI, an enrichment pipeline cannot be created when none exist.
+The create action SHALL nonetheless stay available to a full admin regardless of how many evaluators are
+registered: the modal is where the shortage is visible and where submission is blocked, so gating the action
+that opens it would hide the explanation behind a control the operator cannot reach. With no evaluator
+registered the modal SHALL state that one must be registered through the API first, and SHALL block
+submission **of an enrichment pipeline only** — an aggregate pipeline declares no evaluator and SHALL remain
+creatable. A failed evaluator listing SHALL be reported as a load failure rather than as "none are
+registered", which would send the operator to register one they may already have.
 
 #### Scenario: Non-admin sees no create action
 
 - **WHEN** a caller who is not a full admin opens the listing
-- **THEN** no create-rule action is offered
+- **THEN** no create-pipeline action is offered
 
 #### Scenario: The create action does not depend on the evaluator list
 
 - **WHEN** a full admin opens the listing and the evaluator list is empty
-- **THEN** the create action is still enabled and opens the create-rule modal
+- **THEN** the create action is still enabled and opens the create-pipeline modal
 - **AND** the listing itself carries no note about the missing evaluator
 
-#### Scenario: The modal explains a missing evaluator and blocks submission
+#### Scenario: The modal explains a missing evaluator and blocks the enrichment kind
 
-- **WHEN** the create-rule modal is open and no evaluator is registered
+- **WHEN** the create modal is open with the enrichment kind selected and no evaluator is registered
 - **THEN** it states that an evaluator must be registered through the API first
 - **AND** submission is blocked
+
+#### Scenario: An aggregate pipeline needs no evaluator
+
+- **WHEN** the create modal is open with the aggregate kind selected and no evaluator is registered
+- **THEN** submission is not blocked on that account
 
 #### Scenario: A failed evaluator listing is not reported as an empty one
 
@@ -7605,50 +8694,90 @@ no evaluator can be selected. A failed evaluator listing SHALL be reported as a 
 - **THEN** the modal reports the load failure
 - **AND** it does not state that no evaluator is registered
 
-### Requirement: Create-rule modal collects a complete rule in one request
+### Requirement: The create modal collects a complete pipeline of one kind in one request
 
-The service has no draft state for a rule: it is created whole by a single `POST /v1/rules`. The create modal
-SHALL therefore assemble a submittable rule in one pass, collecting fields in this order: **name**,
-**evaluator**, **evaluator version**, **target enrichment**, **trigger kind**, the conditional block for the
-selected trigger kind, **output bindings**, **enabled**.
+The service has no draft state for a pipeline: it is created whole by a single `POST /v1/pipelines`. The
+create modal SHALL therefore assemble a submittable pipeline in one pass.
+
+It SHALL collect **only what a registration requires**. Everything a declaration may carry but need not is
+edited on the pipeline's own page, where the target has resolved and there is room for it — the evaluator
+version, the freshness mode, the read scope and the runtime knobs among them. A registration form that also
+offers the optional members reads as a wall of controls whose necessity the operator has to work out.
+
+**Name** and **kind** SHALL be presented first and always, because both kinds carry them and neither depends
+on the other. Kind SHALL be **preselected** to the first kind: an unchosen pair of radios reads as a form
+waiting for something it never names, and either kind can be switched before anything else is filled in.
+Every field after the kind belongs to one kind or the other.
 
 The modal SHALL be mounted only while open, so closing discards its state without a manual reset, following
 the create-table popup.
 
-Five values are required by the service, and all five SHALL be required to submit:
+For an **enrichment** pipeline the modal SHALL collect, in this order: **name**, **kind**, **evaluator**,
+**trigger kind**, the conditional block for the selected trigger kind, **target**, and — once the editor can
+be used — **output bindings**. Four of these are required by the service and all four SHALL be required to
+submit:
 
-- **name** — validated only as non-blank; the service defines no grammar for it. Uniqueness is enforced by
-  the service, not pre-checked here.
+- **name** — validated against the service's identity grammar, lower-case alphanumerics with hyphens and
+  underscores, starting with a letter and no longer than 64 characters. Uniqueness is enforced by the
+  service, not pre-checked here.
 - **evaluator** — selected from the registered evaluators.
-- **target enrichment** — selected from tables of type `enrichment`.
+- **target** — selected from tables of type `enrichment`.
 - **trigger kind** — one of `on_ingest`, `schedule`, `group`.
-- **enabled** — an explicit `true`/`false` choice with **no default**. The service models this as a
-  non-nullable boolean specifically so that whether a rule starts live is an operator decision rather than an
-  omission silently becoming `false`; the modal SHALL preserve that by refusing to submit until the operator
-  chooses. The `true` option SHALL be captioned "Runs on its schedule" and the `false` option "Registered but
-  not running. Manual scan and backfill still work".
 
-**Evaluator version** is optional: the control SHALL offer "latest" alongside each concrete version from `1`
-to the evaluator's `latest_version`, and "latest" SHALL submit no `evaluator_version` member rather than a
-literal string.
+For an **aggregate** pipeline the modal SHALL collect: **name**, **kind**, **target**, **inputs**, the
+**schedule**, **group keys** and **measures**. An aggregate pipeline's trigger is always a schedule, so the
+trigger-kind control SHALL NOT be offered for it. Its **input** SHALL be collected here rather than deferred:
+an aggregate target is a source table, which carries no parent to fall back on, and every control the
+transform offers is scoped to that input's columns.
+
+**Both kinds SHALL be registered not running.** The service stores an aggregate pipeline disabled whatever
+the caller asks, and an enrichment pipeline is enabled from its own page, where its declaration can be read
+back first. The modal SHALL therefore collect no **enabled** choice and SHALL send `false`, which the service
+requires present for an enrichment registration rather than merely defaulted.
+
+The **output bindings** editor SHALL be offered only once it can be used — that is, once both the evaluator
+and the target have resolved. Before that it would be an optional-looking control with nothing to bind
+against; the refusals it carries appear with it.
 
 On success the modal SHALL close, show a success notification, and refresh the listing.
 
-#### Scenario: All five required values are needed to submit
+#### Scenario: Name and kind open the form
 
-- **WHEN** the modal is open with any of name, evaluator, target enrichment, trigger kind, or enabled unset
+- **WHEN** the create modal is opened
+- **THEN** the name and the kind are presented before the fields that belong to a kind
+- **AND** the first kind is selected
+
+#### Scenario: An enrichment pipeline needs its four required values
+
+- **WHEN** the enrichment kind is selected with any of name, evaluator, target, or trigger kind unset
 - **THEN** submission is blocked
 
-#### Scenario: Enabled has no default
+#### Scenario: Both kinds are registered not running
 
-- **WHEN** the modal is opened
-- **THEN** neither the enabled nor the disabled option is preselected
-- **AND** both options carry their captions describing what the choice means
+- **WHEN** a pipeline of either kind is registered
+- **THEN** no enabled choice was collected
+- **AND** the request carries `enabled` as `false`
 
-#### Scenario: Latest version is submitted as an omission
+#### Scenario: The optional members are left to the detail page
 
-- **WHEN** the user leaves the evaluator version as "latest" and submits
-- **THEN** the request body carries no `evaluator_version` member
+- **WHEN** the create modal is opened
+- **THEN** it offers no evaluator version and no freshness mode
+
+#### Scenario: The bindings editor waits until it can be used
+
+- **WHEN** an evaluator is selected and no target has resolved
+- **THEN** no output-bindings editor is presented
+
+#### Scenario: An aggregate pipeline offers no trigger kind
+
+- **WHEN** the aggregate kind is selected
+- **THEN** no trigger-kind control is presented
+- **AND** a schedule is collected
+
+#### Scenario: A name outside the identity grammar is refused
+
+- **WHEN** the user enters a name carrying an upper-case letter or a leading digit
+- **THEN** the control reports it as invalid and submission is blocked
 
 #### Scenario: Modal state is discarded on close
 
@@ -7658,51 +8787,121 @@ On success the modal SHALL close, show a success notification, and refresh the l
 #### Scenario: Successful creation refreshes the listing
 
 - **WHEN** creation succeeds
-- **THEN** the modal closes, a success notification is shown, and the new rule appears in the listing
+- **THEN** the modal closes, a success notification is shown, and the new pipeline appears in the listing
 
-### Requirement: The selected trigger kind determines which members are sent
+### Requirement: The selected kind determines which members are sent
+
+The registry accepts one flat declaration for both kinds and rejects a member belonging to the other kind
+with HTTP 422 rather than ignoring it. That rejection is what makes one flat shape safe, and the console
+SHALL respect it: the request body SHALL carry only the members of the selected kind, whatever was entered
+before the kind was changed. Hiding a control is not sufficient.
+
+- `kind = enrich` — the body SHALL carry none of `group_by`, `measures`, or `freshness`.
+- `kind = aggregate` — the body SHALL carry none of `evaluator_name`, `evaluator_version`, `input_bindings`,
+  `output_bindings`, `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, or `priority`.
+
+#### Scenario: Switching kind strips the abandoned members
+
+- **WHEN** the user selects an evaluator, switches the kind to aggregate, and submits
+- **THEN** the request body carries no `evaluator_name`
+
+#### Scenario: An enrichment pipeline sends no aggregate members
+
+- **WHEN** an enrichment pipeline is submitted
+- **THEN** the request body carries none of `group_by`, `measures`, or `freshness`
+
+#### Scenario: A cross-kind rejection is surfaced
+
+- **WHEN** the service rejects a submission for a member belonging to the other kind
+- **THEN** the service's message is shown
+- **AND** the modal stays open with its values intact
+
+### Requirement: The selected trigger kind determines which trigger members are sent
 
 The service's trigger invariants run **both ways**: a member that belongs to the selected trigger kind is
-required, and a member that does not belong to it is **rejected with HTTP 422 rather than ignored**. The modal
-SHALL therefore strip the members of every unselected branch from the request body — hiding a control is not
-sufficient, because a value entered before the trigger kind was changed would otherwise still be submitted.
+required, and a member that does not belong to it is **rejected with HTTP 422 rather than ignored**. The
+console SHALL therefore strip the members of every unselected branch from the request body — hiding a control
+is not sufficient, because a value entered before the trigger kind was changed would otherwise still be
+submitted. The trigger members nest under a single `trigger` object.
 
-- `trigger_kind = on_ingest` — the body SHALL carry none of `trigger_cron`, `group_by`, `ready_when`, or
-  `member_select`.
-- `trigger_kind = schedule` — `trigger_cron` SHALL be required; `group_by`, `ready_when`, and `member_select`
-  SHALL be absent.
-- `trigger_kind = group` — `group_by` and `ready_when` SHALL both be required; `trigger_cron` SHALL be absent.
-  `member_select` is never required and is not collected by this modal.
+- `on_ingest` — the trigger SHALL carry none of `cron`, `group_by`, `ready_when`, or `member_select`.
+- `schedule` — `cron` SHALL be required; `group_by`, `ready_when`, and `member_select` SHALL be absent.
+- `group` — `group_by` and `ready_when` SHALL both be required; `cron` SHALL be absent. `member_select` is
+  never required and is not collected by the create modal.
 
 #### Scenario: Switching trigger kind strips the abandoned branch
 
 - **WHEN** the user fills a cron expression, then switches the trigger kind to `group`, then submits
-- **THEN** the request body carries `group_by` and `ready_when` and carries no `trigger_cron`
+- **THEN** the trigger carries `group_by` and `ready_when` and carries no `cron`
 
-#### Scenario: An on-ingest rule sends no trigger qualifiers
+#### Scenario: An on-ingest pipeline sends no trigger qualifiers
 
-- **WHEN** the user submits an `on_ingest` rule
-- **THEN** the request body carries none of `trigger_cron`, `group_by`, `ready_when`, or `member_select`
+- **WHEN** the user submits an `on_ingest` pipeline
+- **THEN** the trigger carries none of `cron`, `group_by`, `ready_when`, or `member_select`
 
-#### Scenario: A schedule rule requires its cron
+#### Scenario: A schedule requires its cron
 
 - **WHEN** the trigger kind is `schedule` and no cron expression has been provided
 - **THEN** submission is blocked
 
-#### Scenario: A group rule requires its readiness declaration
+#### Scenario: A group trigger requires its readiness declaration
 
 - **WHEN** the trigger kind is `group` and no readiness condition has been provided
 - **THEN** submission is blocked
 
-### Requirement: The modal resolves the evaluator and the target table on demand
+### Requirement: Targets already bound to a pipeline are not offered
+
+A table admits **at most one** pipeline writing it, across both kinds — a registry-wide uniqueness
+constraint, because two declarations writing the same table would clobber one another. A second pipeline on
+the same target is rejected with HTTP 409.
+
+The target control SHALL therefore offer only tables that no existing pipeline already targets, derived by
+excluding the pipelines listing's targets from the candidate tables. That exclusion SHALL be computed from
+the **whole** listing rather than from one kind, because the constraint is registry-wide: an enrichment
+already built by an aggregate pipeline is not available to a new enrichment pipeline either. Learning about
+the constraint from a 409 after filling in an entire form is a preventable failure.
+
+When an existing pipeline is being edited, its **own** target SHALL remain on offer. That target is bound by
+the pipeline doing the editing, so excluding it would strand the control on a value it does not list.
+
+The 409 SHALL still be handled: the exclusion is computed from data that can be stale by the time the form is
+submitted, so a rejection SHALL surface the service's message and leave the form open with its values intact.
+
+#### Scenario: A bound table is not offered as a target
+
+- **WHEN** a table is already the target of a registered pipeline
+- **THEN** it does not appear among the target options
+
+#### Scenario: The exclusion spans both kinds
+
+- **WHEN** a table is the target of an aggregate pipeline and an enrichment pipeline is being created
+- **THEN** that table does not appear among the target options
+
+#### Scenario: An edited pipeline still offers its own target
+
+- **WHEN** an existing pipeline is opened for editing
+- **THEN** its current target is among the offered options
+
+#### Scenario: Every candidate is already bound
+
+- **WHEN** every candidate table already has a pipeline
+- **THEN** the target control offers no options and states why
+
+#### Scenario: A racing 409 is surfaced without losing the form
+
+- **WHEN** submission is rejected with HTTP 409 because another pipeline claimed the target first
+- **THEN** the service's message is shown
+- **AND** the modal stays open with the entered values intact
+
+### Requirement: The pipeline form resolves the evaluator and the target table on demand
 
 Neither list response carries what the form needs: `GET /v1/evaluators` returns no version definitions, and
-`GET /v1/tables` returns neither `grain` nor `columns`. Rule editing — in the create modal and on the detail
-page alike — SHALL therefore read the full evaluator whenever the selected evaluator or its version changes
-— the pinned version via `GET /v1/evaluators/{name}/versions/{version}`, "latest" via
+`GET /v1/tables` returns neither `grain` nor `columns`. Pipeline editing — in the create modal and on the
+detail page alike — SHALL therefore read the full evaluator whenever the selected evaluator or its version
+changes — the pinned version via `GET /v1/evaluators/{name}/versions/{version}`, "latest" via
 `GET /v1/evaluators/{name}` — and the full target table via `GET /v1/tables/{name}` whenever the target
-enrichment changes. Resolved values SHALL be cached by their key for as long as the surface is open, so
-re-selecting a previously chosen evaluator, version, or table issues no second request.
+changes. Resolved values SHALL be cached by their key for as long as the surface is open, so re-selecting a
+previously chosen evaluator, version, or table issues no second request.
 
 Controls that depend on a resolution SHALL report a pending state while it is in flight rather than rendering
 as empty, and a failed resolution SHALL be reported in the form rather than leaving a control silently
@@ -7720,7 +8919,7 @@ unpopulated.
 
 #### Scenario: Resolutions are cached
 
-- **WHEN** the user selects a target enrichment, switches to another, and switches back
+- **WHEN** the user selects a target, switches to another, and switches back
 - **THEN** no second request is issued for the first table
 
 #### Scenario: A failed resolution is reported
@@ -7729,55 +8928,475 @@ unpopulated.
 - **THEN** the form reports the failure
 - **AND** the controls that depend on that table do not present themselves as having no options
 
-### Requirement: Target enrichments already bound to a rule are not offered
+### Requirement: Pipeline action failures report the service's own message
 
-An enrichment table admits **at most one** rule — a UNIQUE constraint, because an enrichment is a
-replacing-merge table whose rows are replaced whole by grain, so two rules writing different columns of the
-same row would clobber one another. A second rule on the same target is rejected with HTTP 409.
+The Analytics data-access service reports a failure as `{status, error, message, path, method}`, where
+`error` is a stable machine code and `message` names the specific violation and often the fix. Pipeline
+actions — create, delete, save, enable/disable, and any listing re-fetch — SHALL surface that `message` to
+the user as the service worded it, through the app's error notification, rather than substituting generic
+text. Replacing it discards the most useful part of the response, and the codes involved
+(`pipeline_validation_failed` at 422, `pipeline_conflict` at 409, `pipeline_access_denied` at 403,
+`sensitive_column_not_entitled` at 403, `write_column_not_allowed` at 422, `bad_request` at 400,
+`unknown_pipeline` at 404) are not individually actionable in the UI in a way that generic text could
+preserve.
 
-The target-enrichment control SHALL therefore offer only enrichment tables that no existing rule already
-targets, derived by excluding the rules listing's target enrichments from the enrichment tables. Learning
-about the constraint from a 409 after filling in an entire form is a preventable failure.
+A create or save rejection SHALL leave the form open with its values intact, so the operator can act on the
+message without re-entering it.
 
-When an existing rule is being edited, its **own** target SHALL remain on offer. That target is bound by the
-rule doing the editing, so excluding it would strand the control on a value it does not list and make the
-rule unsaveable without repointing it.
+#### Scenario: A validation rejection shows the service's message
 
-The 409 SHALL still be handled: the exclusion is computed from data that can be stale by the time the form is
-submitted, so a rejection SHALL surface the service's message and leave the form open with its values intact.
+- **WHEN** creation is rejected with a `pipeline_validation_failed` response
+- **THEN** the message from the response is shown to the user as worded by the service
+- **AND** the modal stays open with its values intact
 
-#### Scenario: A bound enrichment is not offered as a target
+#### Scenario: An unrecognised field is reported by name
 
-- **WHEN** an enrichment table is already the target of a registered rule
-- **THEN** it does not appear among the target-enrichment options
+- **WHEN** a request is rejected with `bad_request` naming a field the service does not recognise
+- **THEN** the service's message, including the field name, is shown
 
-#### Scenario: An edited rule still offers its own target
+#### Scenario: A forbidden sensitive column is reported as sent
 
-- **WHEN** an existing rule is opened for editing
-- **THEN** its current target enrichment is among the offered options
+- **WHEN** an action is rejected with `sensitive_column_not_entitled`
+- **THEN** the service's message is shown rather than a generic authorization error
 
-#### Scenario: Every enrichment is already bound
+### Requirement: Pipeline detail route addresses a pipeline by name
 
-- **WHEN** every enrichment table already has a rule
-- **THEN** the target-enrichment control offers no options and states why
+The system SHALL expose a pipeline detail page at `/pipelines/{name}`, with the route directory
+`src/app/[lang]/pipelines/[name]/`. The page SHALL be a server component declaring
+`export const dynamic = 'force-dynamic'` that calls `isAnalyticsForbidden()` before any data access and
+renders `Page403` when it returns `true`.
 
-#### Scenario: A racing 409 is surfaced without losing the form
+The page SHALL read the pipeline by name on the server. Unlike the listing — where an empty or failed result
+is an ordinary state worth rendering — a detail page addressed by an identity has nothing to show when that
+identity does not resolve, so a `null` result SHALL produce a not-found result.
 
-- **WHEN** submission is rejected with HTTP 409 because another rule claimed the target first
-- **THEN** the service's message is shown
-- **AND** the modal stays open with the entered values intact
+The route SHALL be registered in the breadcrumb configuration so the trail reads from the Pipelines listing
+to the pipeline.
 
-### Requirement: Output bindings editor
+#### Scenario: A permitted caller opens a pipeline
 
-`output_bindings` maps the evaluator's output variables onto the target table's columns; without it a rule
-computes a result and discards it. The modal SHALL collect it as a repeater whose every row is a pair of
-selects: a **column**, from the resolved target table's `columns`, and a **variable**, from the resolved
-evaluator version's `output_vars`.
+- **WHEN** `isAnalyticsForbidden()` returns `false` and `/pipelines/{name}` is requested for a registered
+  pipeline
+- **THEN** the pipeline is read on the server and the detail view renders seeded with it
 
-- The editor SHALL enforce the one-to-one mapping by suppressing an already-chosen column or variable from its
-  sibling rows' options. This guard is load-bearing rather than cosmetic: the service does not reject a
-  duplicate, it silently drops a binding, so an unguarded duplicate produces a rule that quietly writes less
-  than the operator specified.
+#### Scenario: An unknown name is not found
+
+- **WHEN** the pipeline read resolves to no pipeline
+- **THEN** the page resolves to a not-found result
+
+#### Scenario: Forbidden caller sees Page403 and no pipeline is fetched
+
+- **WHEN** `isAnalyticsForbidden()` returns `true` and `/pipelines/{name}` is requested
+- **THEN** `Page403` is rendered
+- **AND** no pipeline request is issued
+
+### Requirement: The detail page is one frame with a transform section chosen by kind
+
+Both kinds share an identity, a target, a read scope, a trigger, an enabled state and a runtime state; they
+differ only in what they compute. The detail page SHALL therefore present **one** frame — the identity row,
+the read-only facts, the read scope, the trigger, the runtime state, the JSON editor toggle and the save
+bar — and SHALL choose the transform section by the pipeline's kind.
+
+The kind SHALL be read from the pipeline and SHALL NOT be selectable on the detail page: it is fixed at
+registration and the service refuses to change it.
+
+The choice of section SHALL be the page's only branch on kind. A control that belongs to one kind SHALL live
+inside that kind's section rather than being conditionally rendered among the shared ones, so the shared
+frame stays kind-independent.
+
+The enrichment section SHALL present the evaluator and its version, the variable bindings, and the execution
+knobs. The aggregate section SHALL present the group keys, the measures and the freshness mode.
+
+The **trigger** SHALL be stated above the collapsible sections rather than filed inside one. It belongs to
+neither transform — an enrichment pipeline's trigger and an aggregate one's schedule are the same member —
+and burying it under a heading would make when a pipeline runs the one fact the page hides.
+
+The detail page SHALL present **every** editable member of a pipeline, so that a pipeline registered through
+the API can be inspected and corrected in the console. Controls that the create modal already provides SHALL
+be the same controls here, differing only in width and layout.
+
+#### Scenario: An enrichment pipeline presents the enrichment section
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** its evaluator, variable bindings and execution knobs are presented
+- **AND** no group keys, measures or freshness control is presented
+
+#### Scenario: An aggregate pipeline presents the aggregate section
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** its group keys, measures and freshness mode are presented
+- **AND** no evaluator, variable bindings or execution knobs are presented
+
+#### Scenario: The shared frame is the same for both kinds
+
+- **WHEN** a pipeline of either kind is opened
+- **THEN** the identity row, read-only facts, read scope, trigger, runtime state and save bar are presented
+
+#### Scenario: Kind is not selectable
+
+- **WHEN** a pipeline is opened
+- **THEN** no control offers to change its kind
+
+#### Scenario: A member set only through the API is visible
+
+- **WHEN** a pipeline carrying a member the create modal does not collect is opened
+- **THEN** that member is presented with its current value
+
+#### Scenario: The trigger branch follows the selected kind
+
+- **WHEN** the trigger kind is changed
+- **THEN** only the members that kind admits are presented
+- **AND** the members belonging to the previous kind are no longer presented
+
+### Requirement: A pipeline's name is its identity and is not editable
+
+The service made `name` the registry key and refused to change it: a patch restating the name is accepted,
+a patch changing it is rejected with HTTP 422. The console SHALL present the name as a read-only identity on
+the detail page rather than as an editable field, so an operator is not offered an edit the service will
+refuse. Renaming is registering under the new name and retiring the old one, which the console does not
+automate.
+
+The name SHALL still be sent on a save, because it is the shape a full-replace caller sends and the service
+accepts it restated.
+
+#### Scenario: The name is presented but not editable
+
+- **WHEN** a pipeline is opened
+- **THEN** its name is presented
+- **AND** no control offers to change it
+
+#### Scenario: The name is restated on save
+
+- **WHEN** a pipeline is saved
+- **THEN** the request carries the pipeline's own name
+
+### Requirement: Read-only pipeline facts are presented separately from editable ones
+
+A pipeline carries members the service derives and the API refuses to accept: `generation`, `created_at`,
+`updated_at`, the runtime `state`, and — for an enrichment pipeline — `grain_key`, `version_column`, and the
+resolved `evaluator` definition. The detail page SHALL present these as read-only, visually separated from
+the editable form, so it is unambiguous which values an operator can change. `version_column` SHALL render as
+an em dash when the read source declares no scan metadata.
+
+The name SHALL be presented among the identity rather than among these facts, because it addresses the page.
+Because quoting it elsewhere is a common need, it SHALL carry a copy control.
+
+The **target** and the resolved **read source** SHALL be presented among these facts as well, each linking to
+that table's own page. Both sit inside collapsible sections of the form, so without this the page could not
+answer "which tables is this bound to" without a trip back to the listing; and an operator who asks that
+question is usually on their way to the table itself.
+
+A resolved evaluator SHALL link to that evaluator's detail page at the version the pipeline resolved to. The
+pipeline states which evaluator runs but nothing about what it does, and this fact is where an operator
+asking that question already is.
+
+These members SHALL NOT be sent when the pipeline is saved.
+
+#### Scenario: Derived facts are shown but not editable
+
+- **WHEN** a pipeline is opened
+- **THEN** its `generation`, `created_at` and `updated_at` are presented as read-only values
+
+#### Scenario: An enrichment pipeline adds its resolved facts
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** its `grain_key` and resolved evaluator are presented as read-only values
+
+#### Scenario: An absent version column reads as an em dash
+
+- **WHEN** an enrichment pipeline's read source declares no scan metadata
+- **THEN** `version_column` renders as an em dash rather than as blank
+
+#### Scenario: The pipeline name is copied from the identity row
+
+- **WHEN** a pipeline is opened
+- **THEN** a control is offered that copies its name
+
+#### Scenario: The bound tables are reachable from the facts
+
+- **WHEN** a pipeline is opened
+- **THEN** its target and its resolved read source are presented among the facts
+- **AND** each links to that table's page
+
+#### Scenario: The resolved evaluator opens its own page
+
+- **WHEN** the user activates the resolved evaluator on a pipeline pinned to version 2
+- **THEN** the browser navigates to that evaluator's detail page addressing version 2
+
+### Requirement: A pipeline's runtime state is presented read-only
+
+Every pipeline carries a server-owned `state` reporting how its execution is going: when it last ran, when
+it will next run, how far behind its input it is, the last failure, whether the last run left input behind,
+what held its window short of its input, and whether an enrichment it reads has been re-derived beneath it.
+The console SHALL present this state on the detail page, read-only.
+
+This is the console's only answer to the question an operator arrives with when an analytics page looks
+stale — the pipeline that builds that table is the thing that is behind, disabled, failing or held — and
+until now none of it was reachable from the console at all.
+
+State SHALL be presented as reported and SHALL NOT be interpreted into a health verdict. A lag figure is
+measured against the moment it is read, so two reads of an unchanged position differ by the time between
+them and both are correct; a clamp is progress rather than an error. Presenting either as a fault would be
+the console inventing a judgement the service does not make.
+
+A member the service omits SHALL be presented as absent rather than as a zero. A pipeline that has never run
+reports no last run, which is not the same as having run at the epoch.
+
+State SHALL NOT be sent when the pipeline is saved.
+
+#### Scenario: Execution state is presented
+
+- **WHEN** a pipeline that has run is opened
+- **THEN** its last run, next run and lag are presented as read-only values
+
+#### Scenario: A pipeline that has never run says so
+
+- **WHEN** a pipeline with no recorded run is opened
+- **THEN** its last run is presented as absent rather than as a zero or an epoch date
+
+#### Scenario: The last failure is presented
+
+- **WHEN** a pipeline whose last run failed is opened
+- **THEN** the failure reported by the service is presented as worded by the service
+
+#### Scenario: A clamp is presented as progress
+
+- **WHEN** a pipeline whose window was held short by an enrichment it reads is opened
+- **THEN** the clamp and the enrichment holding it are presented
+- **AND** the pipeline is not presented as failing on that account
+
+#### Scenario: A required rebuild is presented as an instruction
+
+- **WHEN** a pipeline whose read enrichment has been re-derived since its output was built is opened
+- **THEN** the console states that a rebuild is required and names the enrichment
+
+#### Scenario: State is not sent on save
+
+- **WHEN** a pipeline is saved
+- **THEN** the request carries no `state` member
+
+### Requirement: Saving replaces the pipeline whole without discarding unpresented members
+
+`PATCH /v1/pipelines/{name}` applies every member the request carries, so an omitted member is left alone
+but a presented one is replaced. The detail page SHALL save by sending a complete pipeline, and a member the
+form does not present SHALL be carried through rather than dropped. An operator who edits one member MUST
+NOT thereby change a member the console never showed them.
+
+Two exceptions SHALL be constructed rather than carried over:
+
+- the **trigger branch**, because the service rejects a member that does not belong to the selected trigger
+  kind with HTTP 422 rather than ignoring it. Changing the trigger kind SHALL drop the previous kind's
+  members from the request.
+- the **read source** of an enrichment pipeline, which the service resolves and echoes back. Sending it back
+  unchanged **declares** it, which is validated more strictly than following. See the read-source
+  requirement.
+
+Members the service refuses on write SHALL NOT be sent at all. The service now rejects an unrecognised
+member with HTTP 400 naming it rather than dropping it silently, so echoing a read-only member back is a
+failed save rather than a harmless one.
+
+A successful save SHALL report success and re-read the pipeline, so the read-only facts — `generation` in
+particular — reflect the accepted mutation. A failed save SHALL surface the service's own message and leave
+the edited values intact.
+
+#### Scenario: An unpresented member survives an unrelated edit
+
+- **WHEN** a pipeline carrying a member the form does not present is opened, another member is changed, and
+  it is saved
+- **THEN** the request carries that member unchanged
+
+#### Scenario: Switching trigger kind drops the previous branch
+
+- **WHEN** a scheduled enrichment pipeline's trigger kind is changed to on-ingest and it is saved
+- **THEN** the request carries no cron
+
+#### Scenario: Read-only members are not sent
+
+- **WHEN** a pipeline is saved
+- **THEN** the request carries none of `generation`, `created_at`, `updated_at`, `state`, `grain_key`,
+  `version_column`, or the resolved `evaluator`
+
+#### Scenario: A successful save refreshes the derived facts
+
+- **WHEN** a save succeeds
+- **THEN** success is reported
+- **AND** the pipeline is re-read so the presented `generation` and `updated_at` reflect the mutation
+
+#### Scenario: A failed save keeps the edits
+
+- **WHEN** a save is rejected
+- **THEN** the service's message is surfaced
+- **AND** the edited values remain in the form
+
+### Requirement: An enrichment pipeline's read source either follows its target or is pinned
+
+An enrichment pipeline may declare its input, or declare none and read from whatever its target
+enrichment's `source_table` points at. **The service resolves the two into the same response**, so a
+pipeline that follows is indistinguishable from one pinned to the same table — and echoing the resolved
+value back on a save declares it, which the service validates more strictly than following.
+
+Because the only way to express "follows" is to omit the input from the request, saving forces a decision
+whether or not the control is presented. The console SHALL therefore infer the state: an input equal to the
+target enrichment's `source_table` SHALL be treated as following and omitted from the request; any other
+value SHALL be treated as pinned and sent.
+
+The inference SHALL be presented rather than applied invisibly — the control SHALL offer an explicit choice
+between following the target enrichment and pinning a named table, seeded from the inference, so an operator
+can see and correct it. When following is selected, the table currently being followed SHALL be named.
+
+An aggregate pipeline declares its input outright and SHALL present it as a plain selection with no
+follow-or-pin choice.
+
+#### Scenario: A following pipeline keeps following after an unrelated edit
+
+- **WHEN** an enrichment pipeline whose input equals its target's `source_table` is opened, edited elsewhere,
+  and saved
+- **THEN** the request omits the input
+
+#### Scenario: A pinned pipeline stays pinned
+
+- **WHEN** an enrichment pipeline whose input differs from its target's `source_table` is saved
+- **THEN** the request carries that input
+
+#### Scenario: The inference is visible and correctable
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** the read-source control shows whether it is following or pinned
+- **AND** the followed table is named when following is shown
+- **AND** the operator can switch between the two
+
+#### Scenario: An aggregate pipeline declares its input plainly
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** its input is presented as a selection with no follow-or-pin choice
+
+### Requirement: Pipeline editing resolves the read source in addition to the evaluator and target
+
+Input bindings read from an enrichment pipeline's **read source**, not from its target, and every SQL
+predicate a pipeline admits is scoped to that source's columns. The read source is itself derived — it is
+the declared input, or the target enrichment's `source_table` — so it cannot be resolved until the target is.
+
+Pipeline editing SHALL therefore resolve three entities in a chain: the evaluator (for `input_vars`,
+`output_vars`, and `type`), the target (for its columns, its `grain_key`, and its `source_table`), and the
+read source (for its columns and its `version_column`). Controls scoped to the read source SHALL report a
+pending state while it resolves and SHALL report a failed resolution rather than presenting themselves as
+having no options.
+
+An aggregate pipeline resolves its input directly and needs no evaluator resolution.
+
+#### Scenario: Input bindings offer the read source's columns
+
+- **WHEN** the read source resolves
+- **THEN** the input-bindings editor offers that source's columns, not the target's
+
+#### Scenario: Changing the target re-resolves the followed source
+
+- **WHEN** the pipeline follows its target and the target is changed
+- **THEN** the read source is re-resolved from the new target's `source_table`
+
+#### Scenario: A failed source resolution is reported
+
+- **WHEN** reading the resolved source table fails
+- **THEN** the failure is reported
+- **AND** the controls scoped to that source do not present themselves as having no options
+
+### Requirement: Unsaved pipeline edits are tracked and discardable
+
+The detail page SHALL track whether the pipeline differs from the one it was loaded with, and SHALL offer
+save and discard only while it does. Discarding SHALL restore the loaded pipeline and SHALL require
+confirmation, because a discard is unrecoverable.
+
+Comparison SHALL treat an absent member and a member explicitly set to `undefined` as equal, so clearing an
+optional field and never having set it do not read as a difference.
+
+#### Scenario: An unedited pipeline offers nothing to save
+
+- **WHEN** a pipeline is opened and not edited
+- **THEN** no save or discard action is offered
+
+#### Scenario: Editing offers save and discard
+
+- **WHEN** any editable member is changed
+- **THEN** save and discard are offered
+
+#### Scenario: Discard restores the loaded pipeline after confirmation
+
+- **WHEN** discard is chosen and confirmed
+- **THEN** every edited member returns to the value the pipeline was loaded with
+
+#### Scenario: Editing back to the original value clears the edited state
+
+- **WHEN** a member is changed and then changed back to its loaded value
+- **THEN** save and discard are no longer offered
+
+### Requirement: Saving a pipeline requires full-admin rights
+
+Editing a pipeline is a mutation and SHALL be gated on the same right the console already requires to create
+and delete one. A caller without full-admin rights SHALL be able to open and read a pipeline but SHALL NOT be
+offered save. The gate SHALL be the same predicate the listing uses, so a caller sees a consistent set of
+rights on both screens.
+
+This read-only presentation SHALL be kept even while the service refuses such a caller's read outright. It is
+the presentation a read-only caller returns to once read access is restored, and removing it would have to be
+built again.
+
+#### Scenario: A caller without full-admin rights cannot save
+
+- **WHEN** a caller lacking full-admin rights opens a pipeline and changes a member
+- **THEN** save is not offered
+
+#### Scenario: The detail page and the listing agree
+
+- **WHEN** a caller is not offered pipeline deletion on the listing
+- **THEN** that same caller is not offered save on the detail page
+
+### Requirement: The pipeline detail header states the pipeline's status before its name
+
+The pipeline detail header SHALL be composed the way the console's other entity headers are: the
+enabled-state badge on its own line **above** the pipeline name, both aligned to the leading edge, and the
+header's actions on the name's row at the trailing edge. Status is the first question a pipeline answers — an
+operator arriving from the listing is asking whether it is running at all — and a badge trailing the opposite
+edge of the header is read last, after the name and after the actions.
+
+The enable/disable control SHALL carry the appearance its consequence warrants. While the pipeline is enabled
+the control reads "Disable pipeline" and SHALL be rendered as an outlined danger button, the same treatment
+the console gives Delete; while it is disabled it reads "Enable pipeline" and SHALL be rendered as a primary
+button. The control SHALL carry no icon: the trash glyph that accompanies Delete would misstate a reversible
+switch as a removal, and no other glyph distinguishes the two directions better than the label already does.
+
+The control SHALL be offered only to a full admin, SHALL confirm before it applies, and SHALL be withheld
+while the pipeline has unsaved edits — stating why, since toggling re-reads the pipeline and would discard
+them.
+
+#### Scenario: An enabled pipeline leads with its status
+
+- **WHEN** an enabled pipeline is opened
+- **THEN** its enabled badge is presented above the pipeline name at the header's leading edge
+- **AND** the control offering to disable it is presented as a danger action
+
+#### Scenario: A disabled pipeline offers enabling as the primary action
+
+- **WHEN** a disabled pipeline is opened
+- **THEN** its disabled badge is presented above the pipeline name at the header's leading edge
+- **AND** the control offering to enable it is presented as the primary action
+
+#### Scenario: Pending edits withhold the toggle
+
+- **WHEN** the pipeline has unsaved edits
+- **THEN** the enable/disable control is not actionable
+- **AND** the reason is stated rather than left to be guessed
+
+### Requirement: Pipeline output bindings editor
+
+`output_bindings` maps the evaluator's output variables onto the target table's columns; without it an
+enrichment pipeline computes a result and discards it. The console SHALL collect it as a repeater whose every
+row is a pair of selects: a **column**, from the resolved target table's `columns`, and a **variable**, from
+the resolved evaluator version's `output_vars`.
+
+- The editor SHALL enforce the one-to-one mapping by suppressing an already-chosen column or variable from
+  its sibling rows' options. This guard is load-bearing rather than cosmetic: the service does not reject a
+  duplicate, it silently drops a binding, so an unguarded duplicate produces a pipeline that quietly writes
+  less than the operator specified.
 - Each option SHALL display its type alongside its name. When a row pairs a column and a variable whose types
   disagree, the editor SHALL flag the row. The flag is advisory — the service remains the authority — and
   SHALL NOT by itself block submission.
@@ -7788,13 +9407,13 @@ evaluator version's `output_vars`.
   operator to choose them, rather than an empty repeater.
 
 At least one binding SHALL be required to submit when the resolved evaluator's `type` is `sql`, which the
-service rejects outright without one. For an `llm` evaluator the service accepts a rule with no bindings, and
-submission SHALL be allowed — but the modal SHALL warn that such a rule computes results and stores none,
-since that is a silent misconfiguration rather than a deliberate mode.
+service rejects outright without one. For an `llm` evaluator the service accepts a pipeline with no bindings,
+and submission SHALL be allowed — but the console SHALL warn that such a pipeline computes results and stores
+none, since that is a silent misconfiguration rather than a deliberate mode.
 
 #### Scenario: Empty state before its inputs are chosen
 
-- **WHEN** the modal is open with no evaluator or no target enrichment selected
+- **WHEN** the form is open with no evaluator or no target selected
 - **THEN** the output-bindings editor shows a prompt to select an evaluator and a target table
 
 #### Scenario: A chosen column is withheld from sibling rows
@@ -7827,386 +9446,19 @@ since that is a silent misconfiguration rather than a deliberate mode.
 #### Scenario: An llm evaluator with no bindings warns
 
 - **WHEN** the resolved evaluator's type is `llm` and no output binding has been added
-- **THEN** the modal warns that the rule will compute results and store none
+- **THEN** the console warns that the pipeline will compute results and store none
 - **AND** submission remains possible
 
-### Requirement: Six-field cron control for a scheduled rule
-
-The service checks only whether `trigger_cron` is present or absent for the selected trigger kind — it never
-parses the expression, at create or at update. A syntactically invalid expression is accepted with HTTP 201
-and fails later inside the runner, where the operator will not be looking. The console is the only guard, so
-the control SHALL validate the expression it submits.
-
-The accepted format is **six-field cron** — seconds, minutes, hours, day-of-month, month, day-of-week —
-matching every expression the service configures and the parser its sibling scheduled capability validates
-against. A five-field expression SHALL be rejected by the control: it parses as a *different* schedule under a
-six-field reader, so accepting one silently shifts the schedule rather than failing.
-
-The control SHALL offer named presets alongside a custom expression. A custom expression SHALL be validated
-for its field count before submission, and an invalid expression SHALL block submission with a message naming
-the six-field requirement.
-
-#### Scenario: A preset yields a six-field expression
-
-- **WHEN** the user selects a named schedule preset
-- **THEN** the value submitted as `trigger_cron` has six fields
-
-#### Scenario: A five-field custom expression is rejected
-
-- **WHEN** the user enters a five-field expression
-- **THEN** the control reports it as invalid and submission is blocked
-
-#### Scenario: A valid custom expression is accepted
-
-- **WHEN** the user enters a well-formed six-field expression
-- **THEN** the control accepts it and submission proceeds
-
-### Requirement: Readiness declaration for a group rule
-
-A `group` rule requires `ready_when`, and the service rejects the object with HTTP 422 unless at least one of
-`signal`, `idle`, or `max_staleness` is present. The reason is behavioural rather than formal: a readiness
-declaration satisfying none of them would leave a group perpetually dirty and never ready, so the rule would
-register successfully and then do nothing.
-
-This modal SHALL collect `idle` and `max_staleness`, and SHALL require at least one of the two before
-submission. It SHALL also accept an optional `cost_ceiling`, constrained to a positive integer. `signal` — the
-SQL-predicate form of readiness — is not collected here; the duration form alone yields a valid rule.
-
-Each duration SHALL be entered as a **number paired with a unit** and submitted in the service's short form
-(for example `10` and minutes submitted as `"10m"`), rather than as free text, which offers nothing but a way
-to mistype a format. When a duration control is seeded with an existing value it SHALL round-trip both
-accepted spellings — the short form and the ISO-8601 form — and SHALL fall back to a raw text input holding
-the value verbatim when it matches neither, rather than discarding a value written directly through the API.
-
-#### Scenario: A group rule needs at least one readiness condition
-
-- **WHEN** the trigger kind is `group` and neither idle nor max staleness has a value
-- **THEN** submission is blocked with a message that at least one is required
-
-#### Scenario: A duration is submitted in short form
-
-- **WHEN** the user enters 10 and selects minutes for idle
-- **THEN** the request body carries `ready_when.idle` as `"10m"`
-
-#### Scenario: Cost ceiling must be a positive integer
-
-- **WHEN** the user enters zero or a negative cost ceiling
-- **THEN** the control reports it as invalid and submission is blocked
-
-#### Scenario: An unrecognised duration is preserved verbatim
-
-- **WHEN** a duration control is seeded with a value matching neither the short nor the ISO-8601 form
-- **THEN** it presents that value in a raw text input
-- **AND** the value is not discarded
-
-### Requirement: Group-by is derived from the target enrichment's grain key
-
-`group_by` is a string in the API, but the service accepts exactly one value: the target enrichment's own
-grain key. Anything else is rejected with HTTP 422. The constraint is physical — an enrichment is keyed on its
-grain and collapses by it, so grouping by any other column would pile many groups onto a single row.
-
-The modal SHALL therefore **derive** `group_by` from the resolved target table's `grain.grain_key` and present
-it read-only, captioned as the target table's grain key. It SHALL NOT be offered as a free-text input, which
-could only produce a value the service rejects. The derived value SHALL be re-read whenever the target
-enrichment changes.
-
-#### Scenario: Group-by is filled from the target's grain key
-
-- **WHEN** the trigger kind is `group` and a target enrichment is selected
-- **THEN** the group-by field shows that table's grain key and is not editable
-
-#### Scenario: Changing the target re-derives group-by
-
-- **WHEN** the user changes the target enrichment to one with a different grain key
-- **THEN** the group-by field shows the new table's grain key
-
-### Requirement: Rule action failures report the service's own message
-
-The Analytics data-access service reports a failure as `{status, error, message, path, method}`, where `error`
-is a stable machine code and `message` names the specific violation and often the fix. Rule actions — create,
-delete, and any listing re-fetch — SHALL surface that `message` to the user as the service worded it, through
-the app's error notification, rather than substituting generic text. Replacing it discards the most useful
-part of the response, and the codes involved (`rule_validation_failed` at 422 and 409,
-`sensitive_column_not_entitled` at 403, `write_column_not_allowed` at 422, `bad_request` at 400,
-`unknown_rule` at 404) are not individually actionable in the UI in a way that generic text could preserve.
-
-A create rejection SHALL leave the modal open with its values intact, so the operator can act on the message
-without re-entering the form.
-
-#### Scenario: A validation rejection shows the service's message
-
-- **WHEN** creation is rejected with a `rule_validation_failed` response
-- **THEN** the message from the response is shown to the user as worded by the service
-- **AND** the modal stays open with its values intact
-
-#### Scenario: A forbidden sensitive column is reported as sent
-
-- **WHEN** an action is rejected with `sensitive_column_not_entitled`
-- **THEN** the service's message is shown rather than a generic authorization error
-
-### Requirement: Enrichment rule detail route and access guard
-
-The system SHALL expose a rule detail page at `/enrichment-rules/{id}`, with the route directory
-`src/app/[lang]/enrichment-rules/[id]/`. The page SHALL be a server component declaring
-`export const dynamic = 'force-dynamic'` that calls `isAnalyticsForbidden()` before any data access and
-renders `Page403` when it returns `true`.
-
-The page SHALL read the rule by id on the server. Unlike the listing — where an empty or failed result is
-an ordinary state worth rendering — a detail page addressed by id has nothing to show when that id does not
-resolve, so a `null` result SHALL produce a not-found result.
-
-The route SHALL be registered in the breadcrumb configuration so the trail reads from the Enrichment rules
-listing to the rule. The listing grid SHALL render the rule name as plain text: the name is a value an
-operator reads and compares across rows, and turning every one of them into a link makes the column harder
-to scan for the sake of a navigation affordance the page does not yet commit to.
-
-#### Scenario: A permitted caller opens a rule
-
-- **WHEN** `isAnalyticsForbidden()` returns `false` and `/enrichment-rules/{id}` is requested for a
-  registered rule
-- **THEN** the rule is read on the server and the detail view renders seeded with it
-
-#### Scenario: An unknown id is not found
-
-- **WHEN** the rule read resolves to no rule
-- **THEN** the page resolves to a not-found result
-
-#### Scenario: Forbidden caller sees Page403 and no rule is fetched
-
-- **WHEN** `isAnalyticsForbidden()` returns `true` and `/enrichment-rules/{id}` is requested
-- **THEN** `Page403` is rendered
-- **AND** no rule request is issued
-
-#### Scenario: The listing renders the rule name as plain text
-
-- **WHEN** the rules listing renders a rule
-- **THEN** its name is presented as text rather than as a link
-
-### Requirement: The rule detail page presents every editable member
-
-The create modal deliberately collects only what a rule needs to exist. The detail page SHALL present
-**every** editable member of a rule, so that a rule registered through the API can be inspected and
-corrected in the console: `name`, `evaluator_name`, `evaluator_version`, `target_enrichment`,
-`trigger_kind` and the members its branch admits, `source`, `filter_sql`, `sampling`, `input_bindings`,
-`output_bindings`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, `priority`, and `enabled`.
-
-Members SHALL be grouped so an operator can find one without reading the whole form. Controls that the
-create modal already provides SHALL be the same controls here, differing only in width and layout.
-
-#### Scenario: A member set only through the API is visible
-
-- **WHEN** a rule carrying `filter_sql` and `input_bindings` — neither of which the create modal
-  collects — is opened
-- **THEN** both are presented with their current values
-
-#### Scenario: The trigger branch follows the selected kind
-
-- **WHEN** the trigger kind is changed
-- **THEN** only the members that kind admits are presented
-- **AND** the members belonging to the previous kind are no longer presented
-
-### Requirement: Read-only rule facts are presented separately from editable ones
-
-A rule carries members the service derives and the API refuses to accept: `id`, `grain_key`,
-`version_column`, `generation`, `created_at`, `updated_at`, and the resolved `evaluator` definition. The
-detail page SHALL present these as read-only, visually separated from the editable form, so it is
-unambiguous which values an operator can change. `version_column` SHALL render as an em dash when the
-read source declares no scan metadata.
-
-The `id` SHALL be presented among these facts, labelled, rather than as unlabelled small print beneath the
-rule name. It is a derived read-only fact like the others, and the header position gave it no label while
-spending the most prominent line of the page on a value an operator reads only to quote it elsewhere. Because
-quoting it is the only thing an operator does with it, it SHALL carry a copy control.
-
-The resolved evaluator SHALL link to that evaluator's detail page at the version the rule resolved to. The
-rule states which evaluator runs but nothing about what it does, and this fact is where an operator asking
-that question already is.
-
-These members SHALL NOT be sent when the rule is saved.
-
-#### Scenario: Derived facts are shown but not editable
-
-- **WHEN** a rule is opened
-- **THEN** its `grain_key`, `generation`, `created_at`, `updated_at`, and resolved evaluator are presented
-  as read-only values
-
-#### Scenario: An absent version column reads as an em dash
-
-- **WHEN** the rule's read source declares no scan metadata
-- **THEN** `version_column` renders as an em dash rather than as blank
-
-#### Scenario: The rule id is read and copied from the facts
-
-- **WHEN** a rule is opened
-- **THEN** its `id` is presented as a labelled read-only fact alongside the others
-- **AND** a control is offered that copies the id
-
-#### Scenario: The resolved evaluator opens its own page
-
-- **WHEN** the user activates the resolved evaluator on a rule pinned to version 2
-- **THEN** the browser navigates to that evaluator's detail page addressing version 2
-
-### Requirement: Saving replaces the rule whole without discarding unpresented members
-
-`PUT /v1/rules/{id}` is a full replace: an omitted member is erased. The detail page SHALL therefore save
-by sending a complete rule, and a member the form does not present SHALL be preserved rather than dropped.
-An operator who edits a rule's name MUST NOT thereby delete a member the console never showed them.
-
-The trigger branch is the exception and SHALL be **constructed** from the selected kind rather than carried
-over, because the service rejects a member that does not belong to the selected kind with HTTP 422 rather
-than ignoring it. Changing the trigger kind SHALL drop the previous kind's members from the request.
-
-A successful save SHALL report success and re-read the rule, so the read-only facts — `generation` in
-particular — reflect the accepted mutation. A failed save SHALL surface the service's own message and leave
-the edited values intact.
-
-#### Scenario: An unpresented member survives an unrelated edit
-
-- **WHEN** a rule carrying a member the form does not present is opened, its name is changed, and it is saved
-- **THEN** the request carries that member unchanged
-
-#### Scenario: Switching trigger kind drops the previous branch
-
-- **WHEN** a scheduled rule's trigger kind is changed to on-ingest and the rule is saved
-- **THEN** the request carries no `trigger_cron`
-
-#### Scenario: Read-only members are not sent
-
-- **WHEN** a rule is saved
-- **THEN** the request carries none of `id`, `grain_key`, `version_column`, `generation`, `created_at`,
-  `updated_at`, or the resolved `evaluator`
-
-#### Scenario: A successful save refreshes the derived facts
-
-- **WHEN** a save succeeds
-- **THEN** success is reported
-- **AND** the rule is re-read so the presented `generation` and `updated_at` reflect the mutation
-
-#### Scenario: A failed save keeps the edits
-
-- **WHEN** a save is rejected
-- **THEN** the service's message is surfaced
-- **AND** the edited values remain in the form
-
-### Requirement: A rule's read source either follows its target enrichment or is pinned
-
-A rule may declare a `source`, or declare none and read from whatever its target enrichment's
-`source_table` points at. **The service resolves the two into the same response shape**, so a rule that
-follows is indistinguishable from one pinned to the same table.
-
-Because the only way to express "follows" is to omit `source` from the request, saving forces a decision
-whether or not the control is presented. The console SHALL therefore infer the state: a `source` equal to
-the target enrichment's `source_table` SHALL be treated as following and omitted from the request; any
-other value SHALL be treated as pinned and sent.
-
-The inference SHALL be presented rather than applied invisibly — the control SHALL offer an explicit choice
-between following the target enrichment and pinning a named table, seeded from the inference, so an
-operator can see and correct it. When following is selected, the table currently being followed SHALL be
-named.
-
-#### Scenario: A following rule keeps following after an unrelated edit
-
-- **WHEN** a rule whose `source` equals its target enrichment's `source_table` is opened, edited elsewhere,
-  and saved
-- **THEN** the request omits `source`
-
-#### Scenario: A pinned rule stays pinned
-
-- **WHEN** a rule whose `source` differs from its target enrichment's `source_table` is saved
-- **THEN** the request carries that `source`
-
-#### Scenario: The inference is visible and correctable
-
-- **WHEN** a rule is opened
-- **THEN** the read-source control shows whether it is following or pinned
-- **AND** the followed table is named when following is shown
-- **AND** the operator can switch between the two
-
-### Requirement: Rule editing resolves the read source in addition to the evaluator and target
-
-Input bindings read from the rule's **read source**, not from its target enrichment, and every SQL
-predicate a rule admits is scoped to that source's columns. The read source is itself derived — it is the
-rule's declared `source`, or the target enrichment's `source_table` — so it cannot be resolved until the
-target is.
-
-Rule editing SHALL therefore resolve three entities in a chain: the evaluator (for `input_vars`,
-`output_vars`, and `type`), the target enrichment (for its columns, its `grain_key`, and its
-`source_table`), and the read source (for its columns and its `version_column`). Controls scoped to the
-read source SHALL report a pending state while it resolves and SHALL report a failed resolution rather
-than presenting themselves as having no options.
-
-#### Scenario: Input bindings offer the read source's columns
-
-- **WHEN** the read source resolves
-- **THEN** the input-bindings editor offers that source's columns, not the target enrichment's
-
-#### Scenario: Changing the target re-resolves the followed source
-
-- **WHEN** the rule follows its target enrichment and the target is changed
-- **THEN** the read source is re-resolved from the new target's `source_table`
-
-#### Scenario: A failed source resolution is reported
-
-- **WHEN** reading the resolved source table fails
-- **THEN** the failure is reported
-- **AND** the controls scoped to that source do not present themselves as having no options
-
-### Requirement: Unsaved rule edits are tracked and discardable
-
-The detail page SHALL track whether the rule differs from the one it was loaded with, and SHALL offer save
-and discard only while it does. Discarding SHALL restore the loaded rule and SHALL require confirmation,
-because a discard is unrecoverable.
-
-Comparison SHALL treat an absent member and a member explicitly set to `undefined` as equal, so clearing an
-optional field and never having set it do not read as a difference.
-
-#### Scenario: An unedited rule offers nothing to save
-
-- **WHEN** a rule is opened and not edited
-- **THEN** no save or discard action is offered
-
-#### Scenario: Editing offers save and discard
-
-- **WHEN** any editable member is changed
-- **THEN** save and discard are offered
-
-#### Scenario: Discard restores the loaded rule after confirmation
-
-- **WHEN** discard is chosen and confirmed
-- **THEN** every edited member returns to the value the rule was loaded with
-
-#### Scenario: Editing back to the original value clears the edited state
-
-- **WHEN** a member is changed and then changed back to its loaded value
-- **THEN** save and discard are no longer offered
-
-### Requirement: Saving a rule requires full-admin rights
-
-Editing a rule is a mutation and SHALL be gated on the same right the console already requires to create
-and delete one. A caller without full-admin rights SHALL be able to open and read a rule but SHALL NOT be
-offered save. The gate SHALL be the same predicate the listing uses, so a caller sees a consistent set of
-rights on both screens.
-
-#### Scenario: A caller without full-admin rights cannot save
-
-- **WHEN** a caller lacking full-admin rights opens a rule and changes a member
-- **THEN** save is not offered
-
-#### Scenario: The detail page and the listing agree
-
-- **WHEN** a caller is not offered rule deletion on the listing
-- **THEN** that same caller is not offered save on the detail page
-
-### Requirement: Input bindings editor
-
-An input binding maps one of the evaluator's `input_vars` to a value drawn from the read source, either as
-a column or as a JSONata expression over the row. The two are alternatives: a binding SHALL carry a column
-or an expression, never both.
-
-The editor SHALL offer the evaluator's `input_vars` and the read source's columns, SHALL NOT offer a
-variable already bound by another row, and SHALL report a row whose variable or column no longer exists on
-the resolved evaluator or source — a rule can outlive the definitions it was written against. A row that is
-incomplete SHALL be omitted from the saved rule rather than sent as a partial binding.
+### Requirement: Pipeline input bindings editor
+
+An input binding maps one of the evaluator's `input_vars` to a value drawn from the read source, either as a
+column or as a JSONata expression over the row. The two are alternatives: a binding SHALL carry a column or
+an expression, never both.
+
+The editor SHALL offer the evaluator's `input_vars` and the read source's columns, SHALL NOT offer a variable
+already bound by another row, and SHALL report a row whose variable or column no longer exists on the
+resolved evaluator or source — a pipeline can outlive the definitions it was written against. A row that is
+incomplete SHALL be omitted from the saved pipeline rather than sent as a partial binding.
 
 #### Scenario: A variable bound elsewhere is not offered again
 
@@ -8227,117 +9479,557 @@ incomplete SHALL be omitted from the saved rule rather than sent as a partial bi
 #### Scenario: An incomplete row is not sent
 
 - **WHEN** a row names a variable but neither a column nor an expression
-- **THEN** the saved rule omits that binding
+- **THEN** the saved pipeline omits that binding
 
-### Requirement: SQL predicate fields are presented as bounded expressions
+### Requirement: Six-field cron control for a scheduled trigger
 
-A rule admits three SQL predicates — `filter_sql`, the readiness `signal` of a group rule, and the
-`prefer_sql` of its member selection. Each is a boolean expression over the read source's columns, and none
-admits a join, a subquery, or a CTE.
+The service checks only whether the trigger's cron is present or absent for the selected trigger kind — it
+never parses the expression, at registration or at patch. A syntactically invalid expression is accepted and
+fails later where the operator will not be looking. The console is the only guard, so the control SHALL
+validate the expression it submits.
 
-Each SHALL be presented as a multi-line expression input, in a monospaced face, captioned with the source
-its columns come from. The console SHALL NOT attempt to validate the expression — the grammar is the
-service's and a client-side approximation would reject valid predicates — so an invalid expression SHALL be
-reported by surfacing the service's rejection on save.
+The accepted format is **six-field cron** — seconds, minutes, hours, day-of-month, month, day-of-week —
+matching every expression the service configures. A five-field expression SHALL be rejected by the control:
+it parses as a *different* schedule under a six-field reader, so accepting one silently shifts the schedule
+rather than failing.
 
-#### Scenario: A predicate names its source
+The control SHALL offer named presets alongside a custom expression. A custom expression SHALL be validated
+for its field count before submission, and an invalid expression SHALL block submission with a message naming
+the six-field requirement.
 
-- **WHEN** a SQL predicate field is presented
-- **THEN** it states which table its columns come from
+This control SHALL be used for an aggregate pipeline's schedule as well, whose trigger kind is always
+`schedule`.
 
-#### Scenario: An invalid predicate is reported by the service
+#### Scenario: A preset yields a six-field expression
 
-- **WHEN** a rule carrying an unparseable predicate is saved
-- **THEN** the service's rejection message is surfaced
-- **AND** the edited values remain in the form
+- **WHEN** the user selects a named schedule preset
+- **THEN** the value submitted as the trigger's cron has six fields
 
-### Requirement: Member selection for a group rule
+#### Scenario: A five-field custom expression is rejected
 
-A group rule may declare how members of a group are chosen: a `prefer_sql` preference, an `order_by`
-sequence of column and direction, and a `limit`. `limit` is required whenever member selection is declared
-at all, and SHALL be a positive integer no greater than the service's configured group fetch maximum.
+- **WHEN** the user enters a five-field expression
+- **THEN** the control reports it as invalid and submission is blocked
+
+#### Scenario: A valid custom expression is accepted
+
+- **WHEN** the user enters a well-formed six-field expression
+- **THEN** the control accepts it and submission proceeds
+
+#### Scenario: An aggregate pipeline uses the same control
+
+- **WHEN** an aggregate pipeline's schedule is edited
+- **THEN** the six-field cron control is presented
+
+### Requirement: Readiness declaration for a group trigger
+
+A `group` trigger requires `ready_when`, and the service rejects the object with HTTP 422 unless at least one
+of `signal`, `idle`, or `max_staleness` is present. The reason is behavioural rather than formal: a readiness
+declaration satisfying none of them would leave a group perpetually dirty and never ready, so the pipeline
+would register successfully and then do nothing.
+
+The console SHALL collect `idle` and `max_staleness`, and SHALL require at least one of the two before
+submission. It SHALL also accept an optional `cost_ceiling`, constrained to a positive integer. `signal` — the
+SQL-predicate form of readiness — is not collected by the create modal; the duration form alone yields a
+valid pipeline.
+
+Each duration SHALL be entered as a **number paired with a unit** and submitted in the service's short form
+(for example `10` and minutes submitted as `"10m"`), rather than as free text, which offers nothing but a way
+to mistype a format. When a duration control is seeded with an existing value it SHALL round-trip both
+accepted spellings — the short form and the ISO-8601 form — and SHALL fall back to a raw text input holding
+the value verbatim when it matches neither, rather than discarding a value written directly through the API.
+
+#### Scenario: A group trigger needs at least one readiness condition
+
+- **WHEN** the trigger kind is `group` and neither idle nor max staleness has a value
+- **THEN** submission is blocked with a message that at least one is required
+
+#### Scenario: A duration is submitted in short form
+
+- **WHEN** the user enters 10 and selects minutes for idle
+- **THEN** the request carries `trigger.ready_when.idle` as `"10m"`
+
+#### Scenario: Cost ceiling must be a positive integer
+
+- **WHEN** the user enters zero or a negative cost ceiling
+- **THEN** the control reports it as invalid and submission is blocked
+
+#### Scenario: An unrecognised duration is preserved verbatim
+
+- **WHEN** a duration control is seeded with a value matching neither the short nor the ISO-8601 form
+- **THEN** it presents that value in a raw text input
+- **AND** the value is not discarded
+
+### Requirement: A group trigger's grouping key is derived from the target enrichment's grain key
+
+The trigger's `group_by` is a string in the API, but the service accepts exactly one value for an enrichment
+pipeline: the target enrichment's own grain key. Anything else is rejected with HTTP 422. The constraint is
+physical — an enrichment is keyed on its grain and collapses by it, so grouping by any other column would
+pile many groups onto a single row.
+
+The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
+`grain.grain_key` and present it read-only, captioned as the target table's grain key. It SHALL NOT be
+offered as a free-text input, which could only produce a value the service rejects. The derived value SHALL
+be re-read whenever the target changes.
+
+This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
+its rows are grouped by. The two SHALL NOT share a control.
+
+#### Scenario: The grouping key is filled from the target's grain key
+
+- **WHEN** the trigger kind is `group` and a target is selected
+- **THEN** the grouping-key field shows that table's grain key and is not editable
+
+#### Scenario: Changing the target re-derives the grouping key
+
+- **WHEN** the user changes the target to one with a different grain key
+- **THEN** the grouping-key field shows the new table's grain key
+
+### Requirement: Member selection for a group trigger
+
+A group trigger may declare how members of a group are chosen: a `prefer_sql` preference, an `order_by`
+sequence of column and direction, and a `limit`. `limit` is required whenever member selection is declared at
+all, and SHALL be a positive integer no greater than the service's configured group fetch maximum.
 
 `prefer_sql` is a **preference, not a filter**: when no member satisfies it, every member becomes a
-candidate. The control SHALL say so, because an operator reading it as a filter would expect an empty
-result instead.
+candidate. The control SHALL say so, because an operator reading it as a filter would expect an empty result
+instead.
 
-Member selection SHALL be presentable only for a group rule, and SHALL be omitted entirely from the saved
-rule when nothing has been declared.
+Member selection SHALL be presentable only for a group trigger, and SHALL be omitted entirely from the saved
+pipeline when nothing has been declared.
 
 #### Scenario: Declaring member selection requires a limit
 
 - **WHEN** an order or preference is declared without a limit
-- **THEN** the rule cannot be saved and the missing limit is reported
+- **THEN** the pipeline cannot be saved and the missing limit is reported
 
 #### Scenario: Member selection is omitted when empty
 
 - **WHEN** no member-selection member has been declared
-- **THEN** the saved rule omits member selection entirely
+- **THEN** the saved pipeline omits member selection entirely
 
 #### Scenario: The preference is described as a preference
 
 - **WHEN** the `prefer_sql` control is presented
 - **THEN** it states that all members become candidates when none satisfies it
 
-#### Scenario: Member selection is only offered for a group rule
+#### Scenario: Member selection is only offered for a group trigger
 
 - **WHEN** the trigger kind is not group
 - **THEN** member selection is not presented
 
-### Requirement: Execution knobs are presented without invented validation
+### Requirement: An enrichment pipeline's execution knobs are presented without invented validation
 
-A rule carries `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, and `priority`. The
-service validates none of these beyond type, and the runner interprets `cadence`. The console SHALL present
-them and SHALL NOT impose constraints the service does not, beyond `sampling` being a fraction between 0
-and 1 — a bound that follows from its meaning rather than from a guessed policy.
+An enrichment pipeline carries `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, and
+`priority`. The service validates none of these beyond type, and the runner interprets `cadence`. The console
+SHALL present them and SHALL NOT impose constraints the service does not, beyond `sampling` being a fraction
+between 0 and 1 — a bound that follows from its meaning rather than from a guessed policy.
 
-An empty knob SHALL be omitted from the saved rule rather than sent as a zero, because zero is a meaningful
-value for several of them.
+An empty knob SHALL be omitted from the saved pipeline rather than sent as a zero, because zero is a
+meaningful value for several of them.
+
+These members belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
 
 #### Scenario: A cleared knob is omitted, not zeroed
 
 - **WHEN** a numeric knob is cleared
-- **THEN** the saved rule omits that member
+- **THEN** the saved pipeline omits that member
 
 #### Scenario: Sampling is bounded to a fraction
 
 - **WHEN** a sampling value outside 0 to 1 is entered
-- **THEN** it is reported as invalid and the rule cannot be saved
+- **THEN** it is reported as invalid and the pipeline cannot be saved
 
-### Requirement: The rule detail header states the rule's status before its name
+#### Scenario: An aggregate pipeline presents no execution knobs
 
-The rule detail header SHALL be composed the way the console's other entity headers are: the enabled-state
-badge on its own line **above** the rule name, both aligned to the leading edge, and the header's actions on
-the name's row at the trailing edge. Status is the first question a rule answers — an operator arriving from
-the listing is asking whether this rule is running at all — and a badge trailing the opposite edge of the
-header is read last, after the name and after the actions.
+- **WHEN** an aggregate pipeline is opened
+- **THEN** none of these knobs is presented
 
-The enable/disable control SHALL carry the appearance its consequence warrants. While the rule is enabled the
-control reads "Disable rule" and SHALL be rendered as an outlined danger button, the same treatment the
-console gives Delete; while the rule is disabled it reads "Enable rule" and SHALL be rendered as a primary
-button. The control SHALL carry no icon: the trash glyph that accompanies Delete would misstate a reversible
-switch as a removal, and no other glyph distinguishes the two directions better than the label already does.
+### Requirement: A pipeline's SQL predicate fields are presented as bounded expressions
 
-The control SHALL be offered only to a full admin, SHALL confirm before it applies, and SHALL be withheld
-while the rule has unsaved edits — stating why, since toggling re-reads the rule and would discard them.
+A pipeline admits four SQL predicates: the membership `filter`, the readiness `signal` of a group trigger,
+the `prefer_sql` of its member selection, and the `where` of an individual aggregate measure. Each is a
+boolean expression over the read source's columns in the same bounded grammar, and none admits a join, a
+subquery, or a CTE.
 
-#### Scenario: An enabled rule leads with its status
+Each SHALL be presented as a multi-line expression input, in a monospaced face, captioned with the source its
+columns come from. The console SHALL NOT attempt to validate the expression — the grammar is the service's
+and a client-side approximation would reject valid predicates — so an invalid expression SHALL be reported by
+surfacing the service's rejection on save.
 
-- **WHEN** an enabled rule is opened
-- **THEN** its enabled badge is presented above the rule name at the header's leading edge
-- **AND** the control offering to disable it is presented as a danger action
+#### Scenario: A predicate names its source
 
-#### Scenario: A disabled rule offers enabling as the primary action
+- **WHEN** a SQL predicate field is presented
+- **THEN** it states which table its columns come from
 
-- **WHEN** a disabled rule is opened
-- **THEN** its disabled badge is presented above the rule name at the header's leading edge
-- **AND** the control offering to enable it is presented as the primary action
+#### Scenario: A measure's predicate uses the same control
 
-#### Scenario: Pending edits withhold the toggle
+- **WHEN** a measure's `where` is edited
+- **THEN** it is presented as a bounded SQL expression naming the input table
 
-- **WHEN** the rule has unsaved edits
-- **THEN** the enable/disable control is not actionable
-- **AND** the reason is stated rather than left to be guessed
+#### Scenario: An invalid predicate is reported by the service
+
+- **WHEN** a pipeline carrying an unparseable predicate is saved
+- **THEN** the service's rejection message is surfaced
+- **AND** the edited values remain in the form
+
+### Requirement: The aggregate section presents group keys, measures and a freshness mode
+
+An aggregate pipeline's transform is the triple: what its rows are grouped by, what is computed for each
+group, and how freshly the target is expected to track its input. The console SHALL present all three.
+
+The **freshness mode** SHALL be a choice between `periodic` and `incremental`, presented with what each
+means rather than as bare identifiers. It is optional; when nothing is chosen the member SHALL be omitted
+rather than sent as a default the operator did not pick.
+
+At least one group key and at least one measure SHALL be required before an aggregate pipeline can be
+submitted: the service refuses a declaration without them, and a rollup that groups by nothing or computes
+nothing has no meaning to fall back on.
+
+#### Scenario: The three parts are presented together
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** its group keys, measures and freshness mode are presented
+
+#### Scenario: A freshness mode explains itself
+
+- **WHEN** the freshness control is presented
+- **THEN** each mode is presented with what it means rather than as a bare identifier
+
+#### Scenario: An unset freshness mode is omitted
+
+- **WHEN** no freshness mode has been chosen
+- **THEN** the saved pipeline omits the member
+
+#### Scenario: Group keys and measures are both required
+
+- **WHEN** an aggregate pipeline is submitted with no group key or no measure
+- **THEN** submission is blocked and the missing part is named
+
+### Requirement: A group key is a column or a truncated timestamp, optionally aliased
+
+Each of an aggregate pipeline's group keys names either a column of the input or a **truncation** of a
+date-or-timestamp column to an `hour`, `day`, `week` or `month`. Either form may carry an alias naming the
+resulting column in the target.
+
+The console SHALL collect group keys as an ordered repeater whose every row offers that choice. A truncation
+SHALL offer only the units the chosen column's type admits, so a truncation the service would refuse cannot
+be built. Order SHALL be preserved as entered, because the service reads the keys in order.
+
+An alias SHALL be optional and, when absent, the console SHALL show the column name that will be used
+instead of leaving the row looking incomplete.
+
+#### Scenario: A plain column is a group key
+
+- **WHEN** the user adds a group key and selects a column
+- **THEN** the saved pipeline carries that column as a group key
+
+#### Scenario: A truncation offers only the units its column admits
+
+- **WHEN** the user selects a truncation on a column that is not a date or timestamp
+- **THEN** no truncation unit is offered and the choice is reported as unavailable
+
+#### Scenario: An alias renames the resulting column
+
+- **WHEN** the user gives a group key an alias
+- **THEN** the saved pipeline carries that alias
+
+#### Scenario: An unaliased key shows what it will be called
+
+- **WHEN** a group key carries no alias
+- **THEN** the row states the column name the target will use
+
+#### Scenario: Order is preserved
+
+- **WHEN** the user reorders the group keys
+- **THEN** the saved pipeline carries them in the presented order
+
+### Requirement: Measures are authored from the served function catalog
+
+A measure names an aggregate to compute over each group: a **name** for the resulting column, a **function**,
+the **column** it reads, and two optional qualifiers — a `where` choosing which rows it sees, and `distinct`
+aggregating the group's distinct values rather than its rows.
+
+The console SHALL hold no function knowledge of its own. The function list SHALL be derived from the catalog
+the service already serves at `GET /v1/queries/functions`, narrowed to the functions a measure can express:
+
+- the catalog's **aggregate** group, since a measure is an aggregate; and
+- functions requiring **no more than one** argument, because a measure carries one column and nothing else.
+  An aggregate declaring two required arguments cannot be expressed as a measure and the service refuses it,
+  so offering it would build a declaration that fails on every run for a reason recorded only in its state.
+
+`distinct` SHALL be offered only for a function the catalog marks as supporting it, and SHALL require a
+column, since a column-less count is a row count with no values to deduplicate.
+
+The column control SHALL be withheld only for a function that declares **no argument at all** — never for
+one whose argument is merely optional. `count` declares one optional argument: called bare it is a row
+count, and called with a column it counts that column's values, which is the only thing `distinct` has to
+deduplicate. Reading "optional" as "takes no column" withholds the control that every rollup's
+`count(distinct …)` measure needs, and leaves such a measure blocked with nothing on screen to fix it.
+
+A measure's **name** is the target column it writes and SHALL be required. A function no longer present in
+the catalog SHALL be reported on the row rather than silently cleared, following the bindings editors.
+
+#### Scenario: Only expressible aggregates are offered
+
+- **WHEN** the function control is opened
+- **THEN** it offers the catalog's aggregate functions
+- **AND** it does not offer a function requiring more than one argument
+
+#### Scenario: Distinct is offered only where the catalog allows it
+
+- **WHEN** a function the catalog does not mark as supporting distinct is chosen
+- **THEN** no distinct qualifier is offered
+
+#### Scenario: A row count takes no column
+
+- **WHEN** a function whose argument is optional is chosen and no column is given
+- **THEN** the measure is accepted and the saved pipeline carries no column for it
+
+#### Scenario: An optional argument still offers a column
+
+- **WHEN** a function whose argument is optional is chosen
+- **THEN** a column control is offered
+- **AND** choosing a column and `distinct` together is accepted
+
+#### Scenario: Distinct requires a column
+
+- **WHEN** distinct is chosen and no column is given
+- **THEN** it is reported as invalid and the pipeline cannot be saved
+
+#### Scenario: A measure needs a name
+
+- **WHEN** a measure is added without a name
+- **THEN** submission is blocked and the missing name is reported
+
+#### Scenario: An unknown function is reported rather than cleared
+
+- **WHEN** a measure names a function the served catalog no longer carries
+- **THEN** that row is reported as unresolvable
+- **AND** the stranded value remains visible
+
+### Requirement: The pipeline detail page can be edited as JSON instead of as fields
+
+The pipeline detail page SHALL offer a JSON editor as an alternative to its fields: a toggle in the identity
+row, and the pipeline as one JSON document in place of everything below that row. The editor SHALL be offered
+for **both kinds**, since the document is the declaration and the declaration is what differs.
+
+The editor and the fields SHALL edit **one** draft. Enabling the editor SHALL seed it from the pipeline on
+screen, and what the document holds at submission SHALL be what is submitted.
+
+Submitting SHALL go through the same path either way — the same control and the same request — so the same
+document produces the same request no matter which way it was submitted. The editor SHALL NOT introduce a
+second write path.
+
+The toggle SHALL be offered to every caller, and the document SHALL be read-only for a caller who may not
+save, matching the gating the fields already apply. Reading a pipeline as JSON is useful without the rights
+to change it, and it is the only way to read the members no control presents.
+
+#### Scenario: Enabling the editor replaces the fields with JSON
+
+- **WHEN** the caller enables the JSON editor
+- **THEN** the pipeline is presented as one block of JSON
+- **AND** the fields are no longer presented
+- **AND** the pipeline name remains
+
+#### Scenario: The document is seeded from the pipeline on screen
+
+- **WHEN** the caller enables the JSON editor
+- **THEN** the document holds that pipeline's values
+
+#### Scenario: The editor is offered for an aggregate pipeline
+
+- **WHEN** an aggregate pipeline is opened and the caller enables the JSON editor
+- **THEN** its group keys, measures and freshness are presented in the document
+
+#### Scenario: A caller who may not save may still read the JSON
+
+- **WHEN** a caller without saving rights enables the JSON editor
+- **THEN** the document is presented
+- **AND** it cannot be edited
+
+#### Scenario: A member no control presents is readable and changeable
+
+- **WHEN** a pipeline carrying a member the fields do not present is opened as JSON, that member is changed,
+  and the pipeline is saved
+- **THEN** the request carries the changed value
+
+### Requirement: The pipeline document is the request, not the form's working state
+
+The document SHALL present the pipeline as it will be sent, not the form's intermediate state. Because the
+save sends a complete declaration, the request body and the pipeline are the same thing, and showing anything
+else would mean the caller edits one document and the console sends another.
+
+Three consequences SHALL be accepted rather than hidden. An enrichment pipeline that follows its target
+SHALL appear without its input, since omitting it is how following is expressed. Members left empty SHALL be
+absent rather than present and blank. Members the service derives and refuses on write — the runtime state
+among them — SHALL be absent from the document, because the service now rejects an unrecognised member rather
+than dropping it.
+
+Entering the editor SHALL seed the document from the pipeline as the fields currently hold it, and the
+document SHALL then be the caller's to edit: the console SHALL NOT rewrite it while they type. Re-deriving it
+on every accepted keystroke would replace the buffer with a re-normalized request under the cursor, which
+among other things makes a trailing space impossible to type. The document SHALL be re-seeded only when the
+pipeline underneath it is replaced — a discard, or a save that re-reads it.
+
+#### Scenario: A pipeline that follows its target shows no input
+
+- **WHEN** an enrichment pipeline that follows its target is opened as JSON
+- **THEN** the document carries no input
+
+#### Scenario: Derived members are absent from the document
+
+- **WHEN** a pipeline is opened as JSON
+- **THEN** the document carries no `state`, `generation`, `created_at` or `updated_at`
+
+#### Scenario: The document is not rewritten while the caller types
+
+- **WHEN** the caller edits the document so that it still parses
+- **THEN** the text stays exactly as they typed it, trailing spaces and all
+- **AND** their cursor position and undo history are preserved
+
+#### Scenario: Discarding re-seeds the document from the stored pipeline
+
+- **WHEN** the caller discards while the editor is open
+- **THEN** the document holds the pipeline as stored
+
+### Requirement: The pipeline JSON editor takes the whole view, and an unsaved change closes the way out
+
+While the JSON editor is open, the page SHALL present the document and nothing else below the identity row:
+the read-only facts, the fields, the runtime state, the status badge, and the enable/disable action SHALL all
+be withdrawn. A caller who wants any of them SHALL leave the editor to reach it.
+
+Once the draft differs from the pipeline on screen, the toggle SHALL NOT be offered either: the identity row
+offers Discard and Save in its place. Leaving the editor is therefore discarding or saving, not toggling
+back, which is what keeps a pending change from being parked behind a presentation the caller switched away
+from.
+
+Because the enable/disable action is absent in this mode, it needs no new guard. Its existing refusal while
+edits are pending SHALL be unchanged.
+
+Discarding SHALL restore the pipeline as stored and SHALL bring the toggle back.
+
+#### Scenario: The rest of the page is withdrawn while the editor is open
+
+- **WHEN** the caller enables the JSON editor
+- **THEN** the read-only facts and the runtime state are no longer presented
+- **AND** the enable/disable action is no longer offered
+
+#### Scenario: Editing the document withdraws the toggle
+
+- **WHEN** the caller edits the document so that it differs from the pipeline on screen
+- **THEN** the toggle is no longer offered
+- **AND** Discard and Save are offered instead
+
+#### Scenario: Discarding restores the stored pipeline and the toggle
+
+- **WHEN** the caller discards while the JSON editor is open
+- **THEN** the document holds the pipeline as stored
+- **AND** the toggle is offered again
+
+### Requirement: Removing a member from the document erases it from the pipeline
+
+A save sends a complete declaration, so a member the request omits is set to nothing rather than left alone.
+The editor therefore makes erasure a single keystroke, and this SHALL be treated as the meaning of the
+document rather than as a mistake to intercept.
+
+The console SHALL NOT prompt before a save that drops a member, and SHALL NOT present a comparison against
+the stored pipeline. The operator is editing the request body and the page presents it as exactly that; a
+guard here would be a check the fields themselves do not perform, and would put this editor out of step with
+every other one in the console.
+
+The sharpest case SHALL be understood as specified behaviour: deleting `evaluator_version` unpins an
+enrichment pipeline from its pinned evaluator version and it resumes following the latest, with no error,
+because the service accepts that request. Required members are the exception — the service rejects a request
+omitting one, and that refusal surfaces as any other does.
+
+#### Scenario: A member deleted from the document is erased from the pipeline
+
+- **WHEN** the caller deletes an optional member from the document and saves
+- **THEN** the saved pipeline no longer carries that member
+- **AND** no confirmation was presented before the save
+
+#### Scenario: Deleting the pinned evaluator version unpins the pipeline
+
+- **WHEN** the caller deletes `evaluator_version` from the document and saves
+- **THEN** the save succeeds
+- **AND** the pipeline no longer pins an evaluator version
+
+#### Scenario: Omitting a required member is refused by the service
+
+- **WHEN** the caller deletes a member the service requires and saves
+- **THEN** the service's own message is reported
+- **AND** the pipeline is unchanged
+
+### Requirement: A pipeline document that does not parse blocks the save and reports where
+
+While the JSON editor is open, the form's own checks — including the check that no other pipeline already
+targets this table — SHALL NOT block the save. The one exception is the trigger's grouping key: it is rebuilt
+from the resolved target rather than carried from the document, so saving a group-triggered pipeline before
+that resolves would send no grouping key. That check SHALL keep applying in both presentations. The document
+is the input, and a document those controls could not have produced is not thereby wrong; the service's
+refusal is what surfaces instead.
+
+Three service refusals SHALL therefore be expected here rather than pre-empted: a member belonging to the
+other kind, refused with HTTP 422; a member the service does not recognise at all, refused with HTTP 400
+naming the field; and a changed `name` or `kind`, refused with HTTP 422 because both are immutable. Each
+SHALL surface as the service worded it.
+
+JSON that does not parse SHALL block the save, and each parse error SHALL be reported with the line it
+occurred on. The Save control SHALL remain enabled and refuse on use rather than being disabled — a caller
+who has broken the document is better served by being told where than by a control that has gone quiet.
+
+Text that does not parse reaches no draft, so the controls SHALL be offered on the strength of the parse
+failure itself and not only on a difference from the stored pipeline. Otherwise a caller whose **first** edit
+breaks the document is offered neither a Save to be told what is wrong nor a Discard to back out of it. The
+controls SHALL withdraw again once the document parses.
+
+#### Scenario: Unparseable JSON is reported per line and nothing is saved
+
+- **WHEN** the caller saves a document that does not parse
+- **THEN** each parse error is reported with its line number
+- **AND** the pipeline is unchanged
+
+#### Scenario: Breaking the document before changing anything still offers a way out
+
+- **WHEN** the caller's first edit to the document leaves it unparseable
+- **THEN** Discard and Save are offered
+- **AND** the Save control is offered as enabled
+
+#### Scenario: A group-triggered pipeline cannot be saved before its grain key resolves
+
+- **WHEN** a group-triggered pipeline's target has not resolved, so the grain key is not yet known
+- **THEN** saving is refused by the console rather than sending a request without the grouping key
+
+#### Scenario: A member of the other kind is refused by the service
+
+- **WHEN** the caller adds a measure to an enrichment pipeline's document and saves
+- **THEN** the save is not blocked by the console
+- **AND** the service's own message is reported
+
+#### Scenario: A misspelled member is refused by name
+
+- **WHEN** the caller misspells a member name and saves
+- **THEN** the service's message naming the unrecognised field is reported
+- **AND** the pipeline is unchanged
+
+#### Scenario: A changed name is refused
+
+- **WHEN** the caller changes `name` in the document and saves
+- **THEN** the service's refusal is reported
+- **AND** the pipeline is unchanged
+
+#### Scenario: A target another pipeline already uses is refused by the service
+
+- **WHEN** the caller sets `target` to one another pipeline already binds and saves
+- **THEN** the save is not blocked by the console
+- **AND** the service's own message is reported
+
+#### Scenario: A value of the wrong type does not break the page
+
+- **WHEN** the caller sets a member to a value of a type the service does not accept, such as a name holding
+  a number
+- **THEN** the page continues to present the document and the controls
+- **AND** saving reports the service's refusal rather than failing in the console
 
 ### Requirement: Evaluators page route and access guard
 
@@ -8345,7 +10037,7 @@ The system SHALL expose an Analytics page at `/evaluators`, present in the `Appl
 (`types/routes.ts`) as `AnalyticsEvaluators`, with the route directory `src/app/[lang]/evaluators/`. The
 page SHALL be a server component declaring `export const dynamic = 'force-dynamic'` that calls
 `isAnalyticsForbidden()` before any data access and renders `Page403` when it returns `true`, matching the
-guard the Tables, Enrichment rules, Queries, and Conversations pages already use. User-facing strings SHALL
+guard the Tables, Pipelines, Queries, and Conversations pages already use. User-facing strings SHALL
 read "Evaluators".
 
 Reaching either page SHALL be governed by that guard **alone**. `GET /v1/evaluators`,
@@ -8359,7 +10051,7 @@ service answers them differently.
 
 A registry holding no evaluators is an ordinary state and SHALL render as the console with an empty grid. A
 **failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
-NOT resolve to a not-found result — the same reasoning the rules listing already applies: an operator must
+NOT resolve to a not-found result — the same reasoning the pipelines listing already applies: an operator must
 be able to tell "nothing registered" from "the service is unreachable".
 
 The route SHALL be registered in the breadcrumb configuration so the trail reads from the Evaluators
@@ -8400,14 +10092,14 @@ version**, **registered at**, and **used by**. Every data column SHALL remain so
 through the grid's standard column controls, and the page SHALL NOT carry a separate filter toolbar.
 
 The grid SHALL NOT carry a **type** column. `GET /v1/evaluators` returns only `{name, latest_version,
-created_at}`, so a type column could be filled only by a per-row version read — which the rules listing
-requirement already forbids for its own evaluator cell — or by a join from the rules listing, which leaves
-every unreferenced evaluator blank, where an em dash reads as "this evaluator has no type" rather than "no
-rule names it". Type is presented on the detail page instead.
+created_at}`, so a type column could be filled only by a per-row version read — which the pipelines listing
+requirement already forbids for its own evaluator cell — or by a join from the pipelines listing, which
+leaves every unreferenced evaluator blank, where an em dash reads as "this evaluator has no type" rather
+than "no pipeline names it". Type is presented on the detail page instead.
 
 Activating a row SHALL navigate to that evaluator's detail route, `/evaluators/{name}`, honouring the
 modifier keys that open a new tab. The **name** cell SHALL be plain text rather than a link, for the same
-reason the rules listing renders its name as text: the column is read and compared across rows, and a link
+reason the pipelines listing renders its name as text: the column is read and compared across rows, and a link
 per row makes it harder to scan.
 
 The listing SHALL offer no create, edit, or delete action on any row.
@@ -8439,40 +10131,42 @@ The listing SHALL offer no create, edit, or delete action on any row.
 - **WHEN** the listing renders
 - **THEN** no row exposes a create, edit, or delete action
 
-### Requirement: The used-by count is derived from one rules listing and never guesses zero
+### Requirement: The used-by count is derived from one pipelines listing and never guesses zero
 
-The **used by** figure SHALL be the number of registered rules whose declared evaluator name equals that
-row's name, counted across every version. It SHALL be derived from a single rules-listing fetch the page
-makes on the server and joined in memory; the grid SHALL NOT issue a per-row request of any kind.
+The **used by** figure SHALL be the number of registered enrichment pipelines whose declared evaluator name
+equals that row's name, counted across every version. It SHALL be derived from a single pipelines-listing
+fetch the page makes on the server, narrowed to the enrichment kind, and joined in memory; the grid SHALL NOT
+issue a per-row request of any kind. Only an enrichment pipeline declares an evaluator, so an aggregate one
+can never contribute to this count.
 
-An evaluator that no rule references SHALL report **0**, presented as a value in its own right rather than
-as an em dash or a blank. This figure is the only signal the console can give that a registry entry is dead
-weight, and it is the reason the column exists: no endpoint deletes an evaluator, so an operator can never
-learn this by the entry disappearing.
+An evaluator that no pipeline references SHALL report **0**, presented as a value in its own right rather
+than as an em dash or a blank. This figure is the only signal the console can give that a registry entry is
+dead weight, and it is the reason the column exists: no endpoint deletes an evaluator, so an operator can
+never learn this by the entry disappearing.
 
-When the rules listing fails, the column SHALL state that the count is unavailable and SHALL NOT render
-**0**. A fabricated zero would tell an operator an evaluator is unused when the console simply could not
-find out, which is the one wrong answer this column must never give.
+When the pipelines listing fails, the column SHALL state that the count is unavailable and SHALL NOT render
+**0**. A fabricated zero would tell an operator an evaluator is unused when the console simply could not find
+out, which is the one wrong answer this column must never give.
 
-#### Scenario: A referenced evaluator reports its rule count
+#### Scenario: A referenced evaluator reports its pipeline count
 
-- **WHEN** three registered rules declare the same evaluator name and the listing renders
+- **WHEN** three registered enrichment pipelines declare the same evaluator name and the listing renders
 - **THEN** that evaluator's used-by cell reads 3
 - **AND** no per-row request is issued for any evaluator
 
-#### Scenario: Rules pinned to different versions of one evaluator all count
+#### Scenario: Pipelines pinned to different versions of one evaluator all count
 
-- **WHEN** one rule pins version 2 of an evaluator and another tracks its latest version
-- **THEN** that evaluator's used-by cell counts both rules
+- **WHEN** one pipeline pins version 2 of an evaluator and another tracks its latest version
+- **THEN** that evaluator's used-by cell counts both pipelines
 
 #### Scenario: An unreferenced evaluator reports zero
 
-- **WHEN** no registered rule names an evaluator
+- **WHEN** no registered pipeline names an evaluator
 - **THEN** that evaluator's used-by cell reads 0 rather than blank or an em dash
 
-#### Scenario: A failed rules listing is not reported as unused
+#### Scenario: A failed pipelines listing is not reported as unused
 
-- **WHEN** the rules listing fetch fails while the evaluators listing succeeds
+- **WHEN** the pipelines listing fetch fails while the evaluators listing succeeds
 - **THEN** the listing still renders every evaluator
 - **AND** the used-by column states that the count is unavailable rather than reading 0
 
@@ -8730,58 +10424,58 @@ An evaluator declaring no input variables SHALL state that rather than render an
 - **WHEN** a version declares no input variables
 - **THEN** the tab states that none are declared
 
-### Requirement: The Rules tab lists the referencing rules as a grid
+### Requirement: The Pipelines tab lists the referencing pipelines as a grid
 
-The **Rules** tab SHALL present the registered rules whose declared evaluator name is this evaluator's,
-across every version, derived from the rules listing the page reads on the server. It SHALL be a grid whose
-columns are **name**, **target enrichment**, **trigger**, the **version this rule resolves to**, **enabled**,
-and **updated at**. The resolved-version cell SHALL mark the pin as "latest" when the rule declares no
-`evaluator_version`. Activating a row SHALL navigate to `/enrichment-rules/{id}`.
+The **Pipelines** tab SHALL present the registered enrichment pipelines whose declared evaluator name is this
+evaluator's, across every version, derived from the pipelines listing the page reads on the server. It SHALL
+be a grid whose columns are **name**, **target**, **trigger**, the **version this pipeline resolves to**,
+**enabled**, and **updated at**. The resolved-version cell SHALL mark the pin as "latest" when the pipeline
+declares no `evaluator_version`. Activating a row SHALL navigate to `/pipelines/{name}`.
 
-When no rule references the evaluator, the tab SHALL say so explicitly. That is the state an operator is
+When no pipeline references the evaluator, the tab SHALL say so explicitly. That is the state an operator is
 looking for: nothing else in the console reports it, and no endpoint lets them act on it by deleting the
 entry.
 
-When the rules listing fails, the tab SHALL state that the referencing rules could not be loaded, and SHALL
-NOT state that none reference it.
+When the pipelines listing fails, the tab SHALL state that the referencing pipelines could not be loaded, and
+SHALL NOT state that none reference it.
 
-#### Scenario: Referencing rules are listed with their own facts
+#### Scenario: Referencing pipelines are listed with their own facts
 
-- **WHEN** two registered rules declare this evaluator
-- **THEN** both are presented with their name, target enrichment, trigger, resolved version, enabled state,
-  and last update
+- **WHEN** two registered pipelines declare this evaluator
+- **THEN** both are presented with their name, target, trigger, resolved version, enabled state, and last
+  update
 
-#### Scenario: A rule's pin is stated
+#### Scenario: A pipeline's pin is stated
 
-- **WHEN** one referencing rule pins version 2 and another declares no version
+- **WHEN** one referencing pipeline pins version 2 and another declares no version
 - **THEN** the first shows version 2 and the second is marked as tracking the latest
 
-#### Scenario: Navigating to a referencing rule
+#### Scenario: Navigating to a referencing pipeline
 
 - **WHEN** the user activates a row
-- **THEN** the browser navigates to `/enrichment-rules/{id}` for that rule
+- **THEN** the browser navigates to `/pipelines/{name}` for that pipeline
 
 #### Scenario: An unreferenced evaluator says so
 
-- **WHEN** no registered rule declares this evaluator
-- **THEN** the tab states that no rule references it
+- **WHEN** no registered pipeline declares this evaluator
+- **THEN** the tab states that no pipeline references it
 
-#### Scenario: A failed rules listing is not reported as unreferenced
+#### Scenario: A failed pipelines listing is not reported as unreferenced
 
-- **WHEN** the rules listing fetch fails
-- **THEN** the tab states that the referencing rules could not be loaded
-- **AND** it does not state that no rule references the evaluator
+- **WHEN** the pipelines listing fetch fails
+- **THEN** the tab states that the referencing pipelines could not be loaded
+- **AND** it does not state that no pipeline references the evaluator
 
-### Requirement: The evaluator detail page presents Properties and Rules as tabs
+### Requirement: The evaluator detail page presents Properties and Pipelines as tabs
 
 The detail page SHALL split into two tabs following the console's established entity-view shape — a
-`Properties` tab holding the version's definition, and a `Rules` tab holding the rules that reference the
-evaluator. `Properties` SHALL be the tab the page opens on.
+`Properties` tab holding the version's definition, and a `Pipelines` tab holding the pipelines that reference
+the evaluator. `Properties` SHALL be the tab the page opens on.
 
 The identity row — the evaluator name, the version control, and any action the caller may take — SHALL sit
 **above** the tabs, and each tab SHALL own the content below them. The read-only facts that describe the
-version, rather than define it, SHALL sit inside `Properties`, separated from the fields by a divider, so
-the tab reads as an entity view rather than as a form with a header bolted on.
+version, rather than define it, SHALL sit inside `Properties`, separated from the fields by a divider, so the
+tab reads as an entity view rather than as a form with a header bolted on.
 
 The active tab SHALL be view state, not part of the URL: the addressed version is the page's shareable
 identity, and a tab is a way of looking at it.
@@ -8789,13 +10483,13 @@ identity, and a tab is a way of looking at it.
 #### Scenario: Both tabs are offered and Properties opens
 
 - **WHEN** an evaluator version is opened
-- **THEN** a `Properties` tab and a `Rules` tab are offered
+- **THEN** a `Properties` tab and a `Pipelines` tab are offered
 - **AND** the definition fields are presented without a further interaction
 
-#### Scenario: Switching to Rules replaces the content, not the identity row
+#### Scenario: Switching to Pipelines replaces the content, not the identity row
 
-- **WHEN** the user activates the `Rules` tab
-- **THEN** the referencing rules are presented
+- **WHEN** the user activates the `Pipelines` tab
+- **THEN** the referencing pipelines are presented
 - **AND** the definition fields are no longer presented
 - **AND** the evaluator name and the version control remain
 
@@ -9196,16 +10890,15 @@ control never implies a change that the service would reject.
 
 ### Requirement: One evaluator type badge is shared by both consoles
 
-The evaluator type badge — currently written inline in the rules listing's evaluator cell — SHALL be a
-single component that both the rules listing and the evaluators console render, so the two never disagree
-about how `llm` and `sql` look.
+The evaluator type badge SHALL be a single component that both the pipelines listing and the evaluators
+console render, so the two never disagree about how `llm` and `sql` look.
 
 The badge SHALL carry the type as text. Colour SHALL NOT be the only carrier of the distinction.
 
 #### Scenario: Both consoles render the same badge
 
-- **WHEN** the rules listing shows a rule's resolved evaluator and the evaluator detail page shows the same
-  evaluator
+- **WHEN** the pipelines listing shows a pipeline's resolved evaluator and the evaluator detail page shows
+  the same evaluator
 - **THEN** both present the type through the same badge
 
 #### Scenario: The type is legible without colour
@@ -9216,16 +10909,15 @@ The badge SHALL carry the type as text. Colour SHALL NOT be the only carrier of 
 ### Requirement: Evaluator reads are served by their own server-action module
 
 The three evaluator readers — the listing, the latest version, and one pinned version — SHALL live in
-`src/app/[lang]/evaluators/actions.ts` rather than in the enrichment-rules action module that declares them
-today, so the module a reader lives in matches the surface that owns it. The enrichment-rules console SHALL
-keep calling all three, importing them from the new module; their behaviour SHALL NOT change.
+`src/app/[lang]/evaluators/actions.ts`, so the module a reader lives in matches the surface that owns it. The
+pipelines console SHALL call all three, importing them from that module; their behaviour SHALL NOT change.
 
-#### Scenario: The rules console still resolves an evaluator
+#### Scenario: The pipelines console still resolves an evaluator
 
-- **WHEN** the create-rule modal or the rule detail page resolves an evaluator after the move
+- **WHEN** the create-pipeline modal or the pipeline detail page resolves an evaluator
 - **THEN** the same evaluator definition is returned as before
 
-#### Scenario: The rules action module no longer declares them
+#### Scenario: The pipelines action module declares no evaluator reader
 
-- **WHEN** the enrichment-rules action module is read
+- **WHEN** the pipelines action module is read
 - **THEN** it declares no evaluator reader

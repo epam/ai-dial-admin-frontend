@@ -7,27 +7,26 @@ import {
   COMPOSED_COLUMN_PROVENANCE,
   CONVERSATION_FIELD_VALUE_TYPE,
   CONVERSATION_VALUE_FILTER,
+  CONVERSATION_VALUE_FLOATING_FILTER,
   CURATED_COMPOSED_FIELDS,
   DATE_FIELD_TYPES,
   ENRICHMENT_PROVENANCE,
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
-  TRANSCRIPT_REQUIRED_FIELD,
-  TRANSCRIPT_RESPONSE_FIELDS,
+  HOP_REQUEST_BODY_FIELD,
+  HOP_RESPONSE_BODY_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ColumnProvenance,
   ConversationColumnGroup,
   ConversationProjectableFields,
   ProvenanceEntity,
-  TranscriptBodyFields,
+  HopBodyFields,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { readableWords } from '@/src/utils/analytics/conversation-formatting';
-
-const ENRICHMENT_SEPARATOR = '.';
+import { columnHeaderName, enrichmentOf } from '@/src/utils/analytics/conversation-enrichment';
 
 const UNFILTERABLE: Partial<ColDef> = { filter: false, floatingFilter: false };
 
@@ -42,13 +41,6 @@ const consumedFields = (columns: ColDef[]): Set<string> =>
 // as "not a plain column of the table the query already reads", which also covers a JSON-derived field:
 // likewise not free to project, and likewise better fetched on demand.
 const isSourceBacked = (field: AnalyticsEntityField): boolean => field.name === field.source;
-
-// The namespace an enrichment field carries, empty for a plain column of the rollup. Read off the name
-// rather than from a list, so an enrichment this frontend has never heard of is still attributed.
-const enrichmentOf = (fieldName: string): string => {
-  const separator = fieldName.indexOf(ENRICHMENT_SEPARATOR);
-  return separator > 0 ? fieldName.slice(0, separator) : '';
-};
 
 // An enrichment this frontend cannot name takes the unattributed colour rather than a fourth hue. Shared
 // with `columnProvenance` so the provenance line and the grid band attribute a namespace identically.
@@ -176,15 +168,18 @@ export const availableSelectFields = (ordered: string[], optional: string[], sch
 //
 // Both stay sortable: ordering is expressible for either, and it is the predicate that has no translation.
 //
-// An `enum` field binds the value filter instead of either, and no floating filter: the default one is a text
-// entry and would write a text model over a value model. Enum-ness comes from the declared type alone — a
-// field an instance begins reporting as an enum gets the control with no change here.
+// An `enum` field binds the value filter instead of either, with its own floating filter: the *default*
+// floating filter is a text entry and would write a text model over a value model, so this column supplies a
+// funnel that opens the value popup instead. Opting out of the row altogether — which this did until now —
+// left the affordance in the header row, a level above every neighbouring column's filter, and reachable
+// only by hovering. Enum-ness comes from the declared type alone — a field an instance begins reporting as
+// an enum gets the control with no change here.
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
   if (NUMERIC_FIELD_TYPES.includes(type)) {
     return { ...numericColumn, ...baseNumberFilter };
   }
   if (type === AnalyticsFieldType.Enum) {
-    return { filter: CONVERSATION_VALUE_FILTER, floatingFilter: false };
+    return { filter: CONVERSATION_VALUE_FILTER, floatingFilterComponent: CONVERSATION_VALUE_FLOATING_FILTER };
   }
   if (DATE_FIELD_TYPES.includes(type)) {
     return { ...dateTimeColumn, ...UNFILTERABLE };
@@ -193,17 +188,6 @@ const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
     return UNFILTERABLE;
   }
   return { ...baseStringFilter };
-};
-
-// The service omits `display_name` where it is null — on some fields, and on some instances on all of them —
-// so the fallback is an ordinary path, not an edge case, and it may not present a raw catalog identifier as a
-// header. The namespace is dropped because the column's group already names it.
-export const columnHeaderName = (field: AnalyticsEntityField): string => {
-  if (field.display_name) {
-    return field.display_name;
-  }
-
-  return readableWords(field.name.slice(field.name.indexOf(ENRICHMENT_SEPARATOR) + 1));
 };
 
 // The description is the service's own, quoted rather than paraphrased: two of them contradict what their
@@ -289,21 +273,12 @@ export const filterableColumnFields = (columns: ColDef[]): string[] =>
 
 // The hop-log body columns are `sensitive` in the ADAS catalog, so they are absent from the fetched schema
 // below FULL_ADMIN — and the service rejects the whole query for one unknown field.
-export const transcriptBodyFields = (schemaFieldNames: string[] = []): TranscriptBodyFields => {
+export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields => {
   const available = new Set(schemaFieldNames);
-  const responseFields = TRANSCRIPT_RESPONSE_FIELDS.filter((name) => available.has(name));
+  const responseFields = HOP_RESPONSE_BODY_FIELDS.filter((name) => available.has(name));
 
-  // The request body and the response body are separate columns, so entitlement to them is separate. The
-  // transcript genuinely needs both — it assembles a question and its answer — so `isReadable` keeps the
-  // conjunction; the inspector consumes the two sides independently, and a caller granted one column and not
-  // the other gets the tab they are entitled to rather than neither.
-  const isRequestReadable = available.has(TRANSCRIPT_REQUIRED_FIELD);
+  const isRequestReadable = available.has(HOP_REQUEST_BODY_FIELD);
   const isResponseReadable = responseFields.length > 0;
 
-  return {
-    isReadable: isRequestReadable && isResponseReadable,
-    isRequestReadable,
-    isResponseReadable,
-    responseFields,
-  };
+  return { isRequestReadable, isResponseReadable, responseFields };
 };

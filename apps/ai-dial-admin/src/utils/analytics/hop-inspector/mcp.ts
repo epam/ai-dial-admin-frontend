@@ -6,7 +6,8 @@ import {
   HopSideGrants,
 } from '@/src/models/analytics/conversations-trace';
 import { decodeResponseBody, jsonRpcArgumentsOf } from '@/src/utils/analytics/conversation-bodies';
-import { NO_CLAMP, clampToBudget } from '@/src/utils/analytics/hop-inspector/envelope';
+import { NO_CLAMP, clampToBudget, textByteLength } from '@/src/utils/analytics/hop-inspector/envelope';
+import { formatJsonText } from '@/src/utils/analytics/hop-inspector/json-text';
 
 interface McpInput {
   row: ConversationEntryBodyRow;
@@ -26,12 +27,23 @@ interface McpInput {
 // recorded nothing" describes the caller's entitlement as a property of the hop.
 export const mcpFactsOf = ({ row, method, toolName, toolset, grants }: McpInput): HopMcpFacts => {
   const argumentsText = grants.isRequestReadable ? jsonRpcArgumentsOf(row.request_body) : null;
-  const clamped = grants.isResponseReadable
-    ? clampToBudget(decodeResponseBody(row), RAW_BODY_BYTE_BUDGET)
-    : { text: null, clamp: NO_CLAMP };
+  // Formatted before the clamp: a document the clamp has cut no longer parses, which would leave exactly the
+  // results too large to read by eye unformatted. The size handed to the clamp is the recorded one.
+  const recordedResult = grants.isResponseReadable ? decodeResponseBody(row) : null;
+  const clamped =
+    recordedResult === null
+      ? { text: null, clamp: NO_CLAMP }
+      : clampToBudget(formatJsonText(recordedResult), RAW_BODY_BYTE_BUDGET, textByteLength(recordedResult));
   const hasContent = argumentsText !== null || clamped.text !== null;
 
   const emptyState = grants.isRequestReadable ? HopReadState.NoBody : HopReadState.ColumnWithheld;
+  const argumentsState = () => {
+    if (!grants.isRequestReadable) {
+      return HopReadState.ColumnWithheld;
+    }
+
+    return argumentsText === null ? HopReadState.NoBody : HopReadState.Available;
+  };
   const resultState = () => {
     if (!grants.isResponseReadable) {
       return HopReadState.ColumnWithheld;
@@ -48,6 +60,7 @@ export const mcpFactsOf = ({ row, method, toolName, toolset, grants }: McpInput)
     argumentsText,
     resultText: clamped.text,
     resultClamp: clamped.clamp,
+    argumentsState: argumentsState(),
     resultState: resultState(),
   };
 };

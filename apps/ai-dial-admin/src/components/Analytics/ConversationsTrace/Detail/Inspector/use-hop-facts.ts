@@ -2,12 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { getConversationHopEmbedding, getConversationHopMcp } from '@/src/app/[lang]/conversations-trace/actions';
+import {
+  getConversationHopEmbedding,
+  getConversationHopMcp,
+  getConversationHopProtocol,
+} from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import {
   ConversationSpanRow,
   HopEmbeddingFacts,
   HopMcpFacts,
+  HopProtocolFacts,
   HopReadState,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
@@ -91,6 +96,7 @@ const FAILED_MCP: HopMcpFacts = {
   argumentsText: null,
   resultText: null,
   resultClamp: NO_CLAMP,
+  argumentsState: HopReadState.LoadFailed,
   resultState: HopReadState.LoadFailed,
 };
 
@@ -102,6 +108,16 @@ const FAILED_EMBEDDING: HopEmbeddingFacts = {
   inputText: null,
   inputClamp: NO_CLAMP,
   isDimensionsWithheld: false,
+};
+
+const FAILED_PROTOCOL: HopProtocolFacts = {
+  state: HopReadState.LoadFailed,
+  method: null,
+  requestText: null,
+  requestState: HopReadState.LoadFailed,
+  resultText: null,
+  resultClamp: NO_CLAMP,
+  responseState: HopReadState.LoadFailed,
 };
 
 // Module scope, so the runner is referentially stable without freezing anything render-scoped inside it.
@@ -126,7 +142,23 @@ const runEmbedding: FactsRunner<HopEmbeddingFacts> = async (scope, traceId, span
   return (result?.response as HopEmbeddingFacts) ?? FAILED_EMBEDDING;
 };
 
+const runProtocol: FactsRunner<HopProtocolFacts> = async (scope, traceId, span, request) => {
+  const result = await request(
+    getConversationHopProtocol,
+    scope,
+    traceId,
+    span.core_span_id,
+    span.request_time,
+    span.mcp_method ?? null,
+  );
+
+  return (result?.response as HopProtocolFacts) ?? FAILED_PROTOCOL;
+};
+
 export const useHopMcpFacts = (params: Params) => useHeldFacts<HopMcpFacts>(params, runMcp, FAILED_MCP);
+
+export const useHopProtocolFacts = (params: Params) =>
+  useHeldFacts<HopProtocolFacts>(params, runProtocol, FAILED_PROTOCOL);
 
 export const useHopEmbeddingFacts = (params: Params) =>
   useHeldFacts<HopEmbeddingFacts>(params, runEmbedding, FAILED_EMBEDDING);

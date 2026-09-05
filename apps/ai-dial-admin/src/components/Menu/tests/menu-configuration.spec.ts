@@ -237,14 +237,14 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group?.isPreview).toBe(true);
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
-      MenuI18nKey.EnrichmentRules,
+      MenuI18nKey.Pipelines,
       MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsConversations,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
-      ApplicationRoute.AnalyticsEnrichmentRules,
+      ApplicationRoute.AnalyticsPipelines,
       ApplicationRoute.AnalyticsEvaluators,
       ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.ConversationsTrace,
@@ -254,7 +254,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   test('orders Evaluators directly after Enrichment rules', () => {
     const keys = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true })?.items.map((item) => item.key) ?? [];
 
-    expect(keys.indexOf(MenuI18nKey.Evaluators)).toBe(keys.indexOf(MenuI18nKey.EnrichmentRules) + 1);
+    expect(keys.indexOf(MenuI18nKey.Evaluators)).toBe(keys.indexOf(MenuI18nKey.Pipelines) + 1);
   });
 
   test('hides the Evaluators sub-item when the flag is disabled', () => {

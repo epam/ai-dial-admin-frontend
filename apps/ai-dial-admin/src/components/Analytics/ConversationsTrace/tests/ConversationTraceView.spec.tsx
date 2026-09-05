@@ -12,7 +12,7 @@ import {
   ConversationSpanNode,
   ConversationSpanRow,
   ConversationTraceFigures,
-  ConversationTranscriptAvailability,
+  HopBodyGrants,
   SessionScope,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
@@ -37,11 +37,7 @@ vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
 
 const SCOPE: SessionScope = { id: 'chat-1', source: null };
 
-const GRANTS: ConversationTranscriptAvailability = {
-  isReadable: true,
-  isRequestReadable: true,
-  isResponseReadable: true,
-};
+const GRANTS: HopBodyGrants = { isRequestReadable: true, isResponseReadable: true };
 
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 
@@ -64,6 +60,7 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   deployment_price: '0.001',
   request_time: '2026-08-13T10:59:05.600Z',
   response_body_bytes: 4096,
+  total_price: null,
   ...overrides,
 });
 
@@ -223,27 +220,55 @@ describe('ConversationTraceView', () => {
     expect(screen.getByText(ConversationsTraceI18nKey.TraceNoSpans)).toBeInTheDocument();
   });
 
-  test('returns to the transcript through its back control', async () => {
+  // The tree and the span's bodies share the left region through a resizable split; the span's facts stay in
+  // the rail beside them. The bodies need the width — a message history in a 360px rail is a sliver — and the
+  // facts are reference rows that read fine in one.
+  test('splits the tree from the selected span’s bodies, with the facts rail beside them', () => {
+    renderTrace({ selectedSpanId: 's1' });
+
+    expect(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamLabel })).toBeInTheDocument();
+    expect(screen.getByRole('separator', { name: ConversationsTraceI18nKey.BodiesSplitLabel })).toBeInTheDocument();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      ConversationsTraceI18nKey.InspectorRequest,
+      ConversationsTraceI18nKey.InspectorResponse,
+      ConversationsTraceI18nKey.InspectorChat,
+    ]);
+    // The rail states the span's own facts and none of its bodies.
+    expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
+  });
+
+  test('asks for a selection in the bodies section while no span is chosen', () => {
+    renderTrace();
+
+    expect(screen.getAllByText(ConversationsTraceI18nKey.SpanSelected).length).toBeGreaterThan(1);
+    expect(screen.queryByRole('tab')).toBeNull();
+  });
+
+  test('renders the tree alone, with no separator, when every body column is withheld', () => {
+    renderTrace({
+      selectedSpanId: 's1',
+      bodyGrants: { isRequestReadable: false, isResponseReadable: false },
+    });
+
+    expect(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamLabel })).toBeInTheDocument();
+    expect(screen.queryByRole('separator')).toBeNull();
+    expect(screen.queryByRole('tab')).toBeNull();
+    // The rail keeps stating the span's facts: they are plain columns and no body grant gates them.
+    expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
+  });
+
+  test('returns to the trace listing through its back control', async () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     renderTrace({ onClose });
 
-    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.TraceBackToTranscript }));
+    await user.click(screen.getByRole('button', { name: ConversationsTraceI18nKey.TraceBackToList }));
 
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
 
-const renderDetail = (node: ConversationSpanNode | null) =>
-  render(
-    <ConversationSpanDetail
-      node={node}
-      scope={SCOPE}
-      traceId={TRACE_ID}
-      bodyGrants={GRANTS}
-      mcpToolCalls={{ counts: {}, isComplete: true }}
-    />,
-  );
+const renderDetail = (node: ConversationSpanNode | null) => render(<ConversationSpanDetail node={node} />);
 
 describe('ConversationSpanDetail', () => {
   const nodes: ConversationSpanNode[] = SPANS.map((span) => ({
@@ -259,13 +284,19 @@ describe('ConversationSpanDetail', () => {
     expect(screen.getByText(ConversationsTraceI18nKey.SpanSelected)).toBeInTheDocument();
   });
 
-  test('reports where the hop went and what came back', () => {
+  test('reports where the hop went and what it cost', () => {
     renderDetail(nodes[0]);
 
     expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
     expect(screen.getByText('https://core.dial.parts/openai/deployments/switchyard')).toBeInTheDocument();
-    expect(screen.getByText('200')).toBeInTheDocument();
     expect(screen.getByText('$0.001')).toBeInTheDocument();
+  });
+
+  // The bodies section states the recorded status now, beside the bodies it is the question about.
+  test('leaves the recorded status to the bodies section', () => {
+    renderDetail(nodes[0]);
+
+    expect(screen.queryByText('200')).toBeNull();
   });
 
   // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is

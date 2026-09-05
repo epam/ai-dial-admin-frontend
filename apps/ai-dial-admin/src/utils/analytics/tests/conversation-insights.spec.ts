@@ -1,107 +1,192 @@
 import { describe, expect, test } from 'vitest';
 
-import { INSIGHT_BADGE_NEUTRAL_CLASS } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationDetailRow,
-  ConversationFieldState,
+  ConversationInsightField,
   ConversationInsightsState,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { readableWords } from '@/src/utils/analytics/conversation-formatting';
 import {
   conversationInsightsState,
-  resolutionBadgeClass,
-  resolveInsightFields,
-  sentimentBadgeClass,
+  insightColumnsOf,
+  insightValueText,
 } from '@/src/utils/analytics/conversation-insights';
 
 const row = (fields: Partial<ConversationDetailRow> = {}): ConversationDetailRow =>
   ({ client_session_id: 'Lrr0e6L5bpTND3IY_dN0_', ...fields }) as ConversationDetailRow;
 
+const schemaField = (name: string, overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField => ({
+  name,
+  source: name.slice(name.indexOf('.') + 1),
+  type: AnalyticsFieldType.String,
+  ...overrides,
+});
+
+const column = (name: string, overrides: Partial<ConversationInsightField> = {}): ConversationInsightField => ({
+  name,
+  label: name,
+  type: AnalyticsFieldType.String,
+  ...overrides,
+});
+
+describe('insightColumnsOf', () => {
+  test('keeps only the columns the insight enrichment exposes', () => {
+    const columns = insightColumnsOf([
+      schemaField('total_tokens'),
+      schemaField('session_insights.language'),
+      schemaField('deployment_ref.display_name'),
+    ]);
+
+    expect(columns.map(({ name }) => name)).toEqual(['session_insights.language']);
+  });
+
+  // The point of deriving the set from the schema: an enrichment that gains a column needs no release here.
+  test('keeps a column no frontend list enumerates', () => {
+    const columns = insightColumnsOf([schemaField('session_insights.some_future_signal')]);
+
+    expect(columns.map(({ name }) => name)).toEqual(['session_insights.some_future_signal']);
+  });
+
+  test('drops a column the panel could not render as a value', () => {
+    const columns = insightColumnsOf([
+      schemaField('session_insights.topic'),
+      schemaField('session_insights.evidence', { type: AnalyticsFieldType.Object }),
+      schemaField('session_insights.samples', { type: AnalyticsFieldType.Array }),
+    ]);
+
+    expect(columns.map(({ name }) => name)).toEqual(['session_insights.topic']);
+  });
+
+  test('takes the label and the hint from what the schema reports', () => {
+    const [resolved] = insightColumnsOf([
+      schemaField('session_insights.risk_level', { display_name: 'Risk · Level', description: 'Severity.' }),
+    ]);
+
+    expect(resolved).toMatchObject({ label: 'Risk · Level', hint: 'Severity.' });
+  });
+
+  test('labels a column the schema does not name from its own field name', () => {
+    const [resolved] = insightColumnsOf([schemaField('session_insights.resolution_status')]);
+
+    expect(resolved.label).toBe('Resolution status');
+  });
+
+  test('preserves the schema order', () => {
+    const columns = insightColumnsOf([
+      schemaField('session_insights.summary'),
+      schemaField('session_insights.language'),
+      schemaField('session_insights.topic'),
+    ]);
+
+    expect(columns.map(({ name }) => name)).toEqual([
+      'session_insights.summary',
+      'session_insights.language',
+      'session_insights.topic',
+    ]);
+  });
+
+  test('reports nothing for an instance whose schema carries no enrichment', () => {
+    expect(insightColumnsOf([schemaField('total_tokens')])).toEqual([]);
+    expect(insightColumnsOf()).toEqual([]);
+  });
+});
+
+describe('insightValueText', () => {
+  test('renders a plain string as recorded', () => {
+    const text = insightValueText(row({ [ConversationsField.InsightTopic]: 'document generation' }), {
+      ...column(ConversationsField.InsightTopic),
+    });
+
+    expect(text).toBe('document generation');
+  });
+
+  // Follows the declared type rather than the field name, so a field newly typed as an enum reads as words
+  // without a change here.
+  test('renders a closed-vocabulary value as readable words', () => {
+    const text = insightValueText(row({ [ConversationsField.InsightResolutionStatus]: 'partially_resolved' }), {
+      ...column(ConversationsField.InsightResolutionStatus, { type: AnalyticsFieldType.Enum }),
+    });
+
+    expect(text).toBe('Partially resolved');
+  });
+
+  // A machine-looking value in a column the schema types as a plain string is what the record holds, and
+  // rewriting it on shape rather than on type would silently edit a file name or an identifier.
+  test('leaves an underscored value alone where the schema types it as a string', () => {
+    const text = insightValueText(row({ 'session_insights.activity_detail': 'bug_fixing' } as ConversationDetailRow), {
+      ...column('session_insights.activity_detail'),
+    });
+
+    expect(text).toBe('bug_fixing');
+  });
+
+  test('renders a timestamp in the local format the other panels use', () => {
+    const text = insightValueText(row({ 'session_insights.enriched_at': 1756000000000 } as ConversationDetailRow), {
+      ...column('session_insights.enriched_at', { type: AnalyticsFieldType.Timestamp }),
+    });
+
+    expect(text).not.toBe('1756000000000');
+    expect(text).not.toBe('');
+  });
+
+  test('renders a recorded false rather than treating it as absent', () => {
+    const text = insightValueText(row({ 'session_insights.truncated': false } as ConversationDetailRow), {
+      ...column('session_insights.truncated', { type: AnalyticsFieldType.Boolean }),
+    });
+
+    expect(text).toBe('false');
+  });
+
+  test('renders a zero rather than treating it as absent', () => {
+    const text = insightValueText(row({ 'session_insights.evaluator_version': 0 } as ConversationDetailRow), {
+      ...column('session_insights.evaluator_version', { type: AnalyticsFieldType.Integer }),
+    });
+
+    expect(text).toBe('0');
+  });
+
+  test('reports nothing for a column the record carries no value for', () => {
+    expect(insightValueText(row(), column(ConversationsField.InsightTopic))).toBe('');
+    expect(
+      insightValueText(row({ [ConversationsField.InsightTopic]: null }), column(ConversationsField.InsightTopic)),
+    ).toBe('');
+    expect(
+      insightValueText(row({ [ConversationsField.InsightTopic]: '' }), column(ConversationsField.InsightTopic)),
+    ).toBe('');
+  });
+});
+
 describe('conversationInsightsState', () => {
-  test('reports the enrichment unavailable when the title key is absent', () => {
-    expect(conversationInsightsState(row())).toBe(ConversationInsightsState.EnrichmentUnavailable);
+  const columns = [column(ConversationsField.InsightTitle), column(ConversationsField.InsightTopic)];
+
+  test('reports the enrichment unavailable when the row carries none of its columns', () => {
+    expect(conversationInsightsState(row(), columns)).toBe(ConversationInsightsState.EnrichmentUnavailable);
   });
 
-  test('reports not evaluated when the title is null', () => {
-    expect(conversationInsightsState(row({ [ConversationsField.InsightTitle]: null }))).toBe(
-      ConversationInsightsState.NotEvaluated,
-    );
+  test('reports the enrichment unavailable when the schema reports no insight column at all', () => {
+    expect(conversationInsightsState(row(), [])).toBe(ConversationInsightsState.EnrichmentUnavailable);
   });
 
-  test('reports not evaluated when the title is blank', () => {
-    expect(conversationInsightsState(row({ [ConversationsField.InsightTitle]: '' }))).toBe(
-      ConversationInsightsState.NotEvaluated,
-    );
+  test('reports not evaluated when every projected column is empty', () => {
+    const record = row({ [ConversationsField.InsightTitle]: null, [ConversationsField.InsightTopic]: '' });
+
+    expect(conversationInsightsState(record, columns)).toBe(ConversationInsightsState.NotEvaluated);
   });
 
-  test('reports available when the title carries a value', () => {
-    expect(conversationInsightsState(row({ [ConversationsField.InsightTitle]: 'Rotating a shared API key' }))).toBe(
-      ConversationInsightsState.Available,
-    );
+  // The reason this is not keyed on the title: a row the evaluator did reach, whose title alone came back
+  // blank, is an evaluated conversation and its other fields are worth showing.
+  test('reports available when any projected column carries a value', () => {
+    const record = row({ [ConversationsField.InsightTitle]: null, [ConversationsField.InsightTopic]: 'billing' });
+
+    expect(conversationInsightsState(record, columns)).toBe(ConversationInsightsState.Available);
   });
 
   test('distinguishes an absent enrichment from an unevaluated conversation', () => {
-    expect(conversationInsightsState(row())).not.toBe(
-      conversationInsightsState(row({ [ConversationsField.InsightTitle]: null })),
-    );
-  });
-});
+    const unevaluated = row({ [ConversationsField.InsightTitle]: null });
 
-describe('resolveInsightFields', () => {
-  test('resolves a reported field to its value', () => {
-    const fields = resolveInsightFields(row({ [ConversationsField.InsightSentiment]: 'neutral' }));
-
-    expect(fields[ConversationsField.InsightSentiment]).toMatchObject({
-      state: ConversationFieldState.Available,
-      text: 'neutral',
-    });
-  });
-
-  test('marks a field the schema does not report as unavailable', () => {
-    const fields = resolveInsightFields(row());
-
-    expect(fields[ConversationsField.InsightSummary]?.state).toBe(ConversationFieldState.Unavailable);
-  });
-
-  test('marks a reported field with no value as empty', () => {
-    const fields = resolveInsightFields(row({ [ConversationsField.InsightTopic]: null }));
-
-    expect(fields[ConversationsField.InsightTopic]?.state).toBe(ConversationFieldState.Empty);
-  });
-
-  test('carries each field label so the panel does not hold its own', () => {
-    const fields = resolveInsightFields(row({ [ConversationsField.InsightLanguage]: 'en' }));
-
-    expect(fields[ConversationsField.InsightLanguage]?.labelKey).toBeTruthy();
-  });
-
-  test('resolves the activity type as text', () => {
-    const fields = resolveInsightFields(row({ [ConversationsField.InsightActivityType]: 'coding' }));
-
-    expect(fields[ConversationsField.InsightActivityType]).toMatchObject({
-      state: ConversationFieldState.Available,
-      text: 'coding',
-    });
-  });
-});
-
-describe('badge classes', () => {
-  test('styles each sentiment the evaluator emits', () => {
-    ['positive', 'neutral', 'negative', 'mixed'].forEach((value) => {
-      expect(sentimentBadgeClass(value)).not.toBe(INSIGHT_BADGE_NEUTRAL_CLASS);
-    });
-  });
-
-  test('styles each resolution status the evaluator emits', () => {
-    ['resolved', 'partially_resolved', 'unresolved', 'abandoned'].forEach((value) => {
-      expect(resolutionBadgeClass(value)).not.toBe(INSIGHT_BADGE_NEUTRAL_CLASS);
-    });
-  });
-
-  test('falls back to neutral for a value the frontend does not know', () => {
-    expect(sentimentBadgeClass('ambivalent')).toBe(INSIGHT_BADGE_NEUTRAL_CLASS);
-    expect(resolutionBadgeClass('escalated')).toBe(INSIGHT_BADGE_NEUTRAL_CLASS);
+    expect(conversationInsightsState(row(), columns)).not.toBe(conversationInsightsState(unevaluated, columns));
   });
 });
 

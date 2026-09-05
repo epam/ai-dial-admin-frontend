@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
@@ -13,9 +13,21 @@ interface Props {
   addPlaceholder?: string;
 }
 
+// One rendered row: its text plus its position in the authored list, which is what every mutation addresses
+// it by. Filtering changes which rows render, never what they are, so the position has to travel with the row
+// rather than be re-derived from the render order.
+interface VisibleRow {
+  value: string;
+  index: number;
+}
+
 const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceholder }) => {
   const newItemsContainer = useRef<HTMLUListElement | null>(null);
 
+  // The authored list, and the only thing published upward. The search narrows what renders
+  // (`visibleRows`) and deliberately does not touch this: filtering used to replace it with the matching
+  // subset, so applying while a term was typed committed only those and silently dropped every other
+  // authored item.
   const [list, setList] = useState<string[]>(items);
 
   const [, drop] = useDrop(() => ({ accept: 'column' }));
@@ -30,13 +42,16 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
     setItems(list);
   }, [list, setItems]);
 
-  useEffect(() => {
-    if (filter) {
-      setList(items.filter((i) => i.toLowerCase().includes(filter.toLowerCase())));
-    } else {
-      setList(items);
+  const isFiltering = Boolean(filter);
+
+  const visibleRows = useMemo<VisibleRow[]>(() => {
+    const rows = list.map((value, index) => ({ value, index }));
+    if (!filter) {
+      return rows;
     }
-  }, [filter, items]);
+    const term = filter.toLowerCase();
+    return rows.filter((row) => row.value.toLowerCase().includes(term));
+  }, [filter, list]);
 
   useEffect(() => {
     const container = newItemsContainer.current;
@@ -91,13 +106,20 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
   return (
     <>
       <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
-        {list.map((item, index) => (
+        {visibleRows.map((row) => (
+          // Keyed by authored position, as the checkbox list's rows are: the items are plain strings with no
+          // id, they are edited in place, and two of them may hold the same text while the user is typing —
+          // so the text is not a usable identity. Each row reads its text from props and holds no state a
+          // shift would strand.
           <NewItem
-            value={item}
-            draggable={true}
+            key={`item_${row.index}`}
+            value={row.value}
+            // A drag while filtering has no defined meaning — the two rows either side of the drop are not
+            // the neighbours it would reorder — so reordering is offered only over the whole list.
+            draggable={!isFiltering}
             onChangeItem={onChangeNewItem}
             onRemoveItem={onRemoveNewItem}
-            index={index}
+            index={row.index}
             placeholder={addPlaceholder}
             onFindItem={findItem}
             onMoveItem={moveItem}

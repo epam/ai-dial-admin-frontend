@@ -17,7 +17,7 @@ import {
   MAX_FOLDER_NESTING_DEPTH,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -150,12 +150,13 @@ export const getGridOptions = (
   columnDefs: ColDef[],
   t: (key: string) => string,
   isSingleSelection?: boolean,
+  currentPath?: string,
 ) =>
   ({
     alternateOddRowColors: true,
     columnDefs,
     selectionMode: isReadOnlyAdmin ? void 0 : isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
+    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
       defaultColDef: {
         minWidth: 150,
@@ -181,26 +182,36 @@ export const getTreeOptions = (
   view: ApplicationRoute,
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
+  currentPath?: string,
 ) => {
   return {
     collapsed: false,
     expandedPaths: expandedPaths,
     loadedPaths,
     loadingPaths: isFetchingFiles ? new Set<string>([getRootFolder(view)]) : new Set<string>(),
-    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view), t),
+    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view, currentPath), t),
     onExpandedPathsChange: setExpanded,
     header: t(FileManagerI18nKey.FolderTree),
   };
 };
 
-export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => ({
+export const getToolbarOptions = (
+  route: ApplicationRoute,
+  isReadOnlyAdmin: boolean,
+  t: (key: string) => string,
+  currentPath?: string,
+) => ({
   showHiddenFilesToggle: false,
-  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin), t),
+  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin, currentPath), t),
   newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });
 
-export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
-  const actionLabels =
+export const getBulkActionsToolbarOptions = (
+  view: ApplicationRoute,
+  t: (key: string) => string,
+  currentPath?: string,
+) => {
+  const isFlatBulkView =
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformAppRunners ||
@@ -208,9 +219,10 @@ export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: st
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformKeys ||
-    view === ApplicationRoute.Skills
-      ? bulkActionLabels.filter((action) => action.key === 'delete')
-      : bulkActionLabels;
+    view === ApplicationRoute.Skills ||
+    isPlatformDualBucketView(view, currentPath);
+
+  const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;
 
   return {
     getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,

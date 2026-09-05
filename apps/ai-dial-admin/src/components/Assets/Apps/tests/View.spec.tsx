@@ -23,6 +23,21 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   importApps: vi.fn(),
   exportApps: vi.fn(),
   bulkDeleteApps: vi.fn(),
+  getPlatformApplication: vi.fn(),
+  createPlatformApplication: vi.fn(),
+  bulkDeletePlatformApplications: vi.fn(),
+}));
+
+vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
+  getToolset: vi.fn(),
+  createToolset: vi.fn(),
+  exportToolsets: vi.fn(),
+  importToolsets: vi.fn(),
+  moveToolsets: vi.fn(),
+  bulkDeleteToolsets: vi.fn(),
+  getPlatformToolset: vi.fn(),
+  createPlatformToolset: vi.fn(),
+  bulkDeletePlatformToolsets: vi.fn(),
 }));
 
 describe('AppView', () => {

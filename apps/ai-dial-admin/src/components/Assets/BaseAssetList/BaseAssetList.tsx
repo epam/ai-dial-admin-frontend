@@ -37,7 +37,12 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { getRootFolder, isFlatPlatformView } from '@/src/utils/files/root-folder';
+import {
+  getRootFolder,
+  isFlatPlatformView,
+  isPlatformDualBucketView,
+  PLATFORM_ROOT_FOLDER,
+} from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
@@ -58,6 +63,9 @@ import {
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
+  PlatformBulkDeleteAssetActionMap,
+  PlatformCreateAssetActionMap,
+  PlatformGetAssetActionMap,
   enrichConversationWithVersion,
 } from './utils';
 import { ImportResult } from '@/src/components/Assets/types';
@@ -122,7 +130,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       }
 
       const { path } = files[0] as AssetWithVersion;
-      const getAsset = GetAssetActionMap[view as BaseAssetRoute];
+      // Applications and Toolsets are the only views where the "get" call to make depends on which
+      // bucket the clicked row belongs to, not just on the view (design.md D2/
+      // `platform-applications`/`platform-toolsets`).
+      const getAsset = isPlatformDualBucketView(view, path)
+        ? PlatformGetAssetActionMap[view]!
+        : GetAssetActionMap[view as BaseAssetRoute];
       const fullAsset = await getAsset(path, DEFAULT_ETAG);
       setDuplicateItem(fullAsset?.response as AssetWithVersion);
       setIsModalOpen(true);
@@ -226,8 +239,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   );
 
   const columnDefs = useMemo(() => {
-    return getGridColumns(view, gridItemVersionsChange, selectedVersionsMap, hasSelectedItems);
-  }, [view, gridItemVersionsChange, hasSelectedItems, selectedVersionsMap]);
+    return getGridColumns(view, gridItemVersionsChange, selectedVersionsMap, hasSelectedItems, filePath);
+  }, [view, gridItemVersionsChange, hasSelectedItems, selectedVersionsMap, filePath]);
 
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
@@ -265,20 +278,25 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       // A real skill and its folder marker are different Core operations for this type (design D2),
       // so Skill is called directly here rather than through `CreateAssetActionMap`, whose single
-      // function per type every other entry can serve unmodified.
+      // function per type every other entry can serve unmodified. Applications and Toolsets are the
+      // other exception: which "create" call to make depends on the destination bucket, not just
+      // the view (design.md D2/`platform-applications`/`platform-toolsets`) — the platform variant
+      // pins the path to the flat `platform` bucket regardless of the `folderId` passed here.
       const createAsset =
         view === ApplicationRoute.Skills
           ? () => {
               const { name, description } = asset as unknown as { name?: string; description?: string };
               return createSkill(name || '', description || '', folderPath);
             }
-          : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
+          : isPlatformDualBucketView(view, folderPath)
+            ? () => PlatformCreateAssetActionMap[view]!({ ...asset, folderId: folderPath })
+            : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
 
       return createAsset().then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
           if (isCreateDuplicate) {
-            const isFlatAsset = isFlatPlatformView(view);
+            const isFlatAsset = isFlatPlatformView(view) || isPlatformDualBucketView(view, folderPath);
             const entityLabel = isFlatAsset
               ? asset.name || (asset as DialAppRunnerResource).$id
               : `${asset.name}__${asset.version}`;
@@ -288,10 +306,18 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
                 getCreateNotificationDescription(view, entityLabel, t),
               ),
             );
+            // `getPlatformAssetDuplicate` strips `folderId` from `asset` (Core's platform-bucket
+            // write doesn't want it) — harmless for the six genuinely flat views, whose
+            // `getEntityPath` case never reads `folderId`, but `AssetsApplications`/
+            // `AssetsToolsets` need it back here to recognize the redirect target as
+            // platform-bucket; otherwise `getEntityPath` falls through to the versioned-path
+            // branch and builds `?path=undefined{name}__` (design.md D5).
             router.push(
               getUrnForEntity(
                 view,
-                isFlatAsset ? asset : { name: asset.name, version: asset.version, folderId: folderPath },
+                isFlatAsset
+                  ? { ...asset, folderId: folderPath }
+                  : { name: asset.name, version: asset.version, folderId: folderPath },
               ),
             );
           }
@@ -309,9 +335,23 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleDuplicate = useCallback(
     (asset: AssetWithVersion) => {
-      if (isFlatPlatformView(view)) {
-        const duplicate = getPlatformAssetDuplicate(view, asset as unknown as PlatformAsset);
-        handleCreateAsset(duplicate as unknown as AssetWithVersion, void 0, true);
+      const platformAsset = asset as unknown as PlatformAsset;
+      // A platform-bucket application/toolset row duplicates the same flat, unversioned way the six
+      // other flat platform views already do (design.md D2/`platform-applications`/
+      // `platform-toolsets`) — the row's own path decides it, since neither dual-bucket view is
+      // itself flagged `isFlatPlatformView`.
+      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(
+        view,
+        platformAsset.path || platformAsset.folderId,
+      );
+      if (isFlatPlatformView(view) || isPlatformDualBucketDuplicate) {
+        const duplicate = getPlatformAssetDuplicate(view, platformAsset);
+        // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
+        // `platform` for every genuinely flat view, but a dual-bucket view's own root is `public` —
+        // it serves both buckets — so a platform-bucket duplicate must pin its destination
+        // explicitly rather than relying on that fallback.
+        const flatDestinationFolder = isPlatformDualBucketDuplicate ? `${PLATFORM_ROOT_FOLDER}/` : void 0;
+        handleCreateAsset(duplicate as unknown as AssetWithVersion, flatDestinationFolder, true);
         handleModalClose();
         return;
       }
@@ -506,7 +546,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     if (deletedItems) {
       const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialResource[];
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
-      const bulkDeleteAsset = BulkDeleteAssetActionMap[view as BaseAssetRoute];
+      // Selection is already scoped to one folder (confirmed in design.md), so a batch is always
+      // single-bucket — resolving by the first asset's path is enough, no mixed-bucket case exists.
+      const bulkDeleteAsset = isPlatformDualBucketView(view, assets[0]?.path)
+        ? PlatformBulkDeleteAssetActionMap[view]!
+        : BulkDeleteAssetActionMap[view as BaseAssetRoute];
 
       const promises = [];
       if (assets.length > 0) {

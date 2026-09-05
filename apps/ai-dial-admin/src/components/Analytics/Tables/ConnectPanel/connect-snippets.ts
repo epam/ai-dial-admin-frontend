@@ -25,11 +25,18 @@ const writableColumns = (table: AnalyticsTable): AnalyticsTableColumn[] =>
   (table.columns ?? []).filter((column) => !column.source_name.startsWith(PLATFORM_COLUMN_PREFIX));
 
 const sampleFor = (column: AnalyticsTableColumn): SnippetValue => {
-  if (column.type !== AnalyticsFieldType.Array) {
-    return ANALYTICS_FIELD_TYPE_SAMPLE[column.type];
+  if (column.type === AnalyticsFieldType.Array) {
+    const element = ANALYTICS_FIELD_TYPE_SAMPLE[column.element_type ?? AnalyticsFieldType.String];
+    return [element, element];
   }
-  const element = ANALYTICS_FIELD_TYPE_SAMPLE[column.element_type ?? AnalyticsFieldType.String];
-  return [element, element];
+  // An enum column's domain is closed and the server itself refuses a value outside it, so the generic
+  // sample literal is a row the reader cannot insert. Its own first declared value is the one sample
+  // guaranteed to be accepted. A declared-but-empty domain cannot reach the catalog, so the fallback is
+  // only for a column this app has not seen.
+  if (column.type === AnalyticsFieldType.Enum && column.enum_values?.length) {
+    return column.enum_values[0];
+  }
+  return ANALYTICS_FIELD_TYPE_SAMPLE[column.type];
 };
 
 /**

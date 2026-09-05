@@ -1,4 +1,4 @@
-import { HopDialectMessage, MessageRole } from '@/src/models/analytics/conversations-trace';
+import { HopDialectMessage, HopToolCall, MessageRole } from '@/src/models/analytics/conversations-trace';
 import { asRecords, isRecord, jsonByteLength, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const INPUT_TEXT_PART = 'input_text';
@@ -22,6 +22,8 @@ const instructionsMessageOf = (instructions: unknown): HopDialectMessage | null 
     text: instructions,
     toolCalls: [],
     bytes: jsonByteLength(instructions),
+    answeredCallIds: [],
+    isError: false,
   };
 };
 
@@ -39,7 +41,16 @@ const textOfParts = (parts: Record<string, unknown>[], type: string): string | n
 // deny-list rule requires, carrying whatever text it has and its size regardless.
 const inputMessagesOf = (input: unknown): HopDialectMessage[] => {
   if (typeof input === 'string') {
-    return [{ role: MessageRole.User, text: input, toolCalls: [], bytes: jsonByteLength(input) }];
+    return [
+      {
+        role: MessageRole.User,
+        text: input,
+        toolCalls: [],
+        bytes: jsonByteLength(input),
+        answeredCallIds: [],
+        isError: false,
+      },
+    ];
   }
 
   return asRecords(input).map((item) => {
@@ -50,6 +61,12 @@ const inputMessagesOf = (input: unknown): HopDialectMessage[] => {
       text: parts.length ? textOfParts(parts, INPUT_TEXT_PART) : typeof item.content === 'string' ? item.content : null,
       toolCalls: [],
       bytes: jsonByteLength(item),
+      // This dialect spells a call and its answer as `function_call` / `function_call_output` items, which
+      // would pair through `call_id` — but tool use is unexercised on this endpoint and no recorded hop
+      // carries one, so no handling is invented for a shape that has never been measured. Such an item
+      // still renders, under the deny-list rule, carrying whatever text and size it has.
+      answeredCallIds: [],
+      isError: false,
     };
   });
 };
@@ -95,15 +112,21 @@ export const responsesReasoningTextOf = (parsed: unknown): string | null => {
 // A `function_call` output item is what the model asked for, and only a `message` item carries text — so a
 // hop that called a tool and said nothing would render its reasoning and leave the call invisible. Rare
 // (1 of 472 sampled) but not absent, and the same defect as an assistant message whose content is empty.
-export const responsesToolCallNamesOf = (parsed: unknown): string[] => {
+export const responsesToolCallsOf = (parsed: unknown): HopToolCall[] => {
   if (!isRecord(parsed)) {
     return [];
   }
 
   return asRecords(parsed.output)
     .filter((item) => item.type === FUNCTION_CALL_ITEM)
-    .map((item) => (typeof item.name === 'string' ? item.name : ''))
-    .filter((name) => name.length > 0);
+    .map((item) => ({
+      name: typeof item.name === 'string' ? item.name : '',
+      // The arguments and the id are recorded beside the name, and the arguments are the one fact that says
+      // what the model actually asked the tool to do.
+      args: typeof item.arguments === 'string' ? item.arguments : null,
+      id: typeof item.call_id === 'string' ? item.call_id : null,
+    }))
+    .filter(({ name }) => name.length > 0);
 };
 
 // This shape states `status`, never `finish_reason`.

@@ -16,6 +16,7 @@ import {
   getMoveNotificationContent,
   getParentPathByFullPath,
   getToolbarOptionLabels,
+  getTreeActionLabels,
   getVersionsPerName,
 } from '../utils';
 
@@ -32,6 +33,82 @@ describe('getToolbarOptionLabels', () => {
   test('AssetsSkills returns no options for a read-only admin', () => {
     expect(getToolbarOptionLabels(ApplicationRoute.Skills, true)).toEqual([]);
   });
+});
+
+describe('getGridActionLabels', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the platform bucket offers only duplicate, delete, and openInNewTab',
+    (view) => {
+      const keys = getGridActionLabels(view, false, 'platform/').map((item) => item.key);
+
+      expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+      expect(keys).not.toContain('preview');
+      expect(keys).not.toContain('move');
+      expect(keys).not.toContain('rename');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the public bucket keeps the existing full action set',
+    (view) => {
+      const withPublicPath = getGridActionLabels(view, false, 'public/').map((item) => item.key);
+      const withoutPath = getGridActionLabels(view, false).map((item) => item.key);
+
+      expect(withPublicPath).toEqual(withoutPath);
+      // The public bucket keeps folder/versioning actions the platform bucket's restricted set lacks.
+      expect(withPublicPath).toContain('move');
+      expect(withPublicPath).toContain('rename');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s on the platform bucket still returns no options for a read-only admin',
+    (view) => {
+      expect(getGridActionLabels(view, true, 'platform/')).toEqual([]);
+    },
+  );
+});
+
+describe('getTreeActionLabels', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s offers no tree actions while browsing the platform bucket',
+    (view) => {
+      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s keeps folder-tree actions while browsing the public bucket',
+    (view) => {
+      const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+
+      expect(keys.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+describe('getToolbarOptionLabels — dual-bucket views', () => {
+  test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
+
+    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }]);
+  });
+
+  test('AssetsToolsets offers a single "New Toolset" entry (same label as the public bucket) while browsing the platform bucket', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsToolsets, false, 'platform/');
+
+    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Toolset, icon: null }]);
+  });
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s keeps the existing toolbar entries while browsing the public bucket',
+    (view) => {
+      const withPublicPath = getToolbarOptionLabels(view, false, 'public/');
+      const withoutPath = getToolbarOptionLabels(view, false);
+
+      expect(withPublicPath).toEqual(withoutPath);
+    },
+  );
 });
 
 describe('getGridActionLabels', () => {
@@ -273,6 +350,19 @@ describe('getDeleteNotificationContent', () => {
     expect(result.description).toContain('2');
   });
 
+  // Regression: a platform-bucket application has no version, so the notification must show the
+  // bare name, not a `folderId+name__` path with a dangling separator.
+  test('should return the bare name, not a folderId+name__ path, for a platform-bucket application delete', () => {
+    const fileNodes = [{ name: 'pl_Ts', folderId: 'platform/' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
+
+    expect(result.title).toBe('Delete Application Success');
+    expect(result.description).toBe('Successfully deleted Application pl_Ts');
+  });
+
   test('should return correct notification for single toolset delete in Toolsets view', () => {
     const fileNodes = [{ name: 'My Toolset' }] as any[];
     const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
@@ -293,6 +383,19 @@ describe('getDeleteNotificationContent', () => {
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
+  });
+
+  // Regression: a platform-bucket toolset has no version, so the notification must show the bare
+  // name, not a `folderId+name__` path with a dangling separator (e.g. "platform/pl_Ts__").
+  test('should return the bare name, not a folderId+name__ path, for a platform-bucket toolset delete', () => {
+    const fileNodes = [{ name: 'pl_Ts', folderId: 'platform/' }] as any[];
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
+
+    expect(result.title).toBe('Delete Toolset Success');
+    expect(result.description).toBe('Successfully deleted Toolset pl_Ts');
   });
 });
 
@@ -891,5 +994,35 @@ describe('getAgentLinkForConversation', () => {
     const deployment = { model: 'gpt-4' };
     expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
     expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
+  });
+
+  test('returns model link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'en',
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('returns application link from eval deployment $type', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-application', deploymentId: 'my-app', displayName: 'My App' },
+      'en',
+    );
+    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns assets application link from applications/ id prefix', () => {
+    const result = getAgentLinkForConversation(
+      {
+        $type: 'dial-application',
+        deploymentId: 'applications/folder/my-app__1.0.0',
+        displayName: 'My Asset App',
+      },
+      'en',
+    );
+    expect(result).toBe(
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My Asset App')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+    );
   });
 });

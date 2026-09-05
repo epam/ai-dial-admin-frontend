@@ -5,13 +5,13 @@ import { FC, useState } from 'react';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
-import FieldValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/FieldValue';
-import StatusValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/StatusValue';
+import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import {
   ROW_DETAIL_CELL_BASE,
   ROW_DETAIL_FIELD_INDENT,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
-import { CompareRowDetailField } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
@@ -19,11 +19,11 @@ import { mergeClasses } from '@/src/utils/merge-classes';
 import { IconMaximize } from '@tabler/icons-react';
 
 interface Props {
-  row: CompareRowDetailField;
+  row: RowDetailField;
   hasComparedMatch: boolean;
   noMatchLabel: string;
   failedLabel: string;
-  onOpenDiff: (row: CompareRowDetailField) => void;
+  onOpenDiff: (row: RowDetailField) => void;
   openDiffLabel: string;
   hideHighlights: boolean;
 }

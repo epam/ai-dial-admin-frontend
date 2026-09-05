@@ -21,8 +21,15 @@ import {
   importToolsets,
   exportToolsets,
   tryOutAssetTool,
+  bulkDeletePlatformToolsets,
+  createPlatformToolset,
+  getPlatformToolset,
+  getPlatformToolsets,
+  removePlatformToolset,
+  updatePlatformToolset,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { DialPlatformToolsetResource } from '@/src/models/dial/resource';
 import { ResourceType } from '@/src/types/resource-type';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ImportFileType } from '@/src/types/import';
@@ -340,5 +347,138 @@ describe('Assets Toolset :: server actions', () => {
     expect(mcpClientModule.buildToolsetMcpUrl).not.toHaveBeenCalled();
     expect(mcpClientModule.callToolViaMcp).toHaveBeenCalledWith(applicationUrl, TOKEN_MOCK, callToolRequest);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+});
+
+describe('Platform toolset server actions', () => {
+  const platformToolset: DialPlatformToolsetResource = {
+    name: 'my-toolset',
+    path: 'platform/my-toolset',
+    folderId: 'platform/',
+    endpoint: 'http://mock',
+  } as DialPlatformToolsetResource;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue({ success: true, response: {} });
+    (assetApi.delete as any).mockResolvedValue({ success: true });
+    (assetApi.list as any).mockResolvedValue([]);
+    (assetApi.getMergedWithEtag as any).mockResolvedValue({
+      success: true,
+      response: platformToolset,
+      etag: 'etag-1',
+    });
+  });
+
+  test('createPlatformToolset writes to the bare platform-prefixed path, with no version suffix', async () => {
+    await createPlatformToolset(platformToolset);
+
+    expect(assetApi.put).toHaveBeenCalledOnce();
+    const [, type, path] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+  });
+
+  test('updatePlatformToolset writes to the bare platform-prefixed path, with no version suffix', async () => {
+    await updatePlatformToolset(platformToolset, 'etag-1');
+
+    expect(assetApi.put).toHaveBeenCalledOnce();
+    const [, type, path, , options] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+    expect(options).toEqual({ etag: 'etag-1' });
+  });
+
+  // ConfigResourceController (the platform bucket's write path) deserializes strictly
+  // (FAIL_ON_UNKNOWN_PROPERTIES) — read-only/derived fields the merge reader adds must not round-trip
+  // back onto a write, or Core rejects the whole body ("Failed to parse entity").
+  test('createPlatformToolset strips read-only/derived fields before writing', async () => {
+    const toolsetWithExtras = {
+      ...platformToolset,
+      status: 'valid',
+      validationWarnings: [{ field: 'endpoint' }],
+      author: 'Yauheni Osipau',
+      createdAt: '1',
+      updatedAt: '2',
+      reference: 'b827783e-d894-467f-b790-d2e900cc8365',
+    } as DialPlatformToolsetResource;
+
+    await createPlatformToolset(toolsetWithExtras);
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('status');
+    expect(body).not.toHaveProperty('validationWarnings');
+    expect(body).not.toHaveProperty('author');
+    expect(body).not.toHaveProperty('createdAt');
+    expect(body).not.toHaveProperty('updatedAt');
+    expect(body).not.toHaveProperty('reference');
+    expect(body).toMatchObject({ name: 'my-toolset', endpoint: 'http://mock' });
+  });
+
+  test('updatePlatformToolset strips read-only/derived fields before writing', async () => {
+    const toolsetWithExtras = {
+      ...platformToolset,
+      status: 'valid',
+      validationWarnings: [{ field: 'endpoint' }],
+      author: 'Yauheni Osipau',
+      createdAt: '1',
+      updatedAt: '2',
+      reference: 'b827783e-d894-467f-b790-d2e900cc8365',
+    } as DialPlatformToolsetResource;
+
+    await updatePlatformToolset(toolsetWithExtras, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('status');
+    expect(body).not.toHaveProperty('validationWarnings');
+    expect(body).not.toHaveProperty('author');
+    expect(body).not.toHaveProperty('createdAt');
+    expect(body).not.toHaveProperty('updatedAt');
+    expect(body).not.toHaveProperty('reference');
+    expect(body).toMatchObject({ name: 'my-toolset', endpoint: 'http://mock' });
+  });
+
+  test('getPlatformToolset reads a platform-prefixed path with the caller-supplied etag', async () => {
+    await getPlatformToolset('platform/my-toolset', 'etag-1');
+
+    expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'platform/my-toolset',
+      'etag-1',
+    );
+  });
+
+  test('getPlatformToolsets lists a platform-prefixed path', async () => {
+    await getPlatformToolsets('platform/');
+
+    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/');
+  });
+
+  test('removePlatformToolset sends If-Match when a concrete etag is supplied', async () => {
+    await removePlatformToolset('platform/my-toolset', 'etag-1');
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/my-toolset', 'etag-1');
+  });
+
+  test('removePlatformToolset sends no conditional header when the etag is omitted', async () => {
+    await removePlatformToolset('platform/my-toolset');
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'platform/my-toolset', undefined);
+  });
+
+  test('bulkDeletePlatformToolsets deletes every path unconditionally', async () => {
+    const paths = [{ path: 'platform/toolset-1' }, { path: 'platform/toolset-2' }];
+
+    await bulkDeletePlatformToolsets(paths);
+
+    expect(assetApi.delete).toHaveBeenCalledTimes(2);
+    paths.forEach(({ path }) => {
+      expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, path);
+    });
   });
 });

@@ -19,10 +19,14 @@ export const DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV = 'DIAL_ANALYTICS_FLIGHT_SQL_URL'
 export const READ_SNIPPET_LIMIT = 100;
 
 // Mock literals, one per column type, chosen so a copied row is valid input for that type.
-// Two are not the obvious choice and are load-bearing:
+// Three are not the obvious choice and are load-bearing:
 //   Decimal   — a string, so the digits reach the store intact rather than through a JSON float.
 //   Timestamp — space-separated; the insert path rejects an ISO-8601 `T` separator or `Z` suffix,
 //               even though queries return this column in exactly that form.
+//   Enum      — unreachable in practice, and deliberately not a plausible value: an enum column's sample
+//               comes from its own declared domain (see `sampleFor`), because no fixed literal can be
+//               inside a domain the column chooses. This entry exists because the map is exhaustive over
+//               the type enum, and is reached only by a column declaring no values at all.
 export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValue> = {
   [AnalyticsFieldType.Uuid]: '8f14e45f-ceea-4d1b-a1c0-9c1e6d3b7a52',
   [AnalyticsFieldType.String]: 'example',

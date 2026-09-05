@@ -1,6 +1,13 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { getRootFolder, isFlatPlatformView, PLATFORM_ROOT_FOLDER } from '../root-folder';
+import {
+  getRootFolder,
+  getRootFolders,
+  isFlatPlatformView,
+  isPlatformBucketPath,
+  isPlatformDualBucketView,
+  PLATFORM_ROOT_FOLDER,
+} from '../root-folder';
 
 describe('Root Folder Utils :: getRootFolder', () => {
   test.each([
@@ -52,5 +59,65 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
     views.forEach((view) => {
       expect(isFlatPlatformView(view)).toBe(getRootFolder(view) === PLATFORM_ROOT_FOLDER);
     });
+  });
+});
+
+describe('Root Folder Utils :: getRootFolders', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return both buckets, platform first, for %s',
+    (view) => {
+      expect(getRootFolders(view)).toEqual(['platform', 'public']);
+    },
+  );
+
+  test.each([
+    ApplicationRoute.Prompts,
+    ApplicationRoute.Conversations,
+    ApplicationRoute.Files,
+    ApplicationRoute.PlatformKeys,
+  ])('Should return a single-element array matching getRootFolder for %s', (view) => {
+    expect(getRootFolders(view)).toEqual([getRootFolder(view)]);
+  });
+});
+
+describe('Root Folder Utils :: isPlatformDualBucketView', () => {
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'is true for %s when the current path is platform-prefixed',
+    (view) => {
+      expect(isPlatformDualBucketView(view, 'platform/')).toBe(true);
+      expect(isPlatformDualBucketView(view, 'platform/my-item')).toBe(true);
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'is false for %s for a public-prefixed path',
+    (view) => {
+      expect(isPlatformDualBucketView(view, 'public/')).toBe(false);
+    },
+  );
+
+  test('is false for an undefined path, and for a non-dual-bucket view even with a platform-prefixed path', () => {
+    expect(isPlatformDualBucketView(ApplicationRoute.AssetsApplications, undefined)).toBe(false);
+    expect(isPlatformDualBucketView(ApplicationRoute.PlatformKeys, 'platform/')).toBe(false);
+  });
+});
+
+describe('Root Folder Utils :: isPlatformBucketPath', () => {
+  test.each(['platform/', 'platform/my-app', 'platform/nested/name'])(
+    'Should return true for a platform-prefixed path (%s)',
+    (path) => {
+      expect(isPlatformBucketPath(path)).toBe(true);
+    },
+  );
+
+  test.each(['public/', 'public/my-app', 'platformist/x', ''])(
+    'Should return false for a non-platform path (%s)',
+    (path) => {
+      expect(isPlatformBucketPath(path)).toBe(false);
+    },
+  );
+
+  test.each([undefined, null])('Should return false for %s', (path) => {
+    expect(isPlatformBucketPath(path)).toBe(false);
   });
 });

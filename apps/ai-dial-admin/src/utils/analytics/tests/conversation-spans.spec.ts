@@ -2,16 +2,20 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ConversationSpanRow,
+  HopBodyGrants,
   HopFactsShape,
   HopSideSuppression,
+  SpanBodyTab,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 import {
   areSpansPartial,
   hopFactsOf,
   hopSideSuppressionsOf,
+  hopTransportOf,
   isFailedHop,
   mcpToolCallTallyOf,
+  spanBodyTabsOf,
   spanKindOf,
   spanLabelOf,
   spanPhaseOf,
@@ -37,6 +41,7 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   request_body_bytes: 2048,
   number_request_messages: 3,
   reasoning_tokens: null,
+  total_price: null,
   ...overrides,
 });
 
@@ -260,6 +265,43 @@ describe('isFailedHop', () => {
   });
 });
 
+describe('hopTransportOf', () => {
+  test('states the recorded status with the protocol phrase for it', () => {
+    const transport = hopTransportOf(span({ response_status: 200, success: true }));
+
+    expect(transport.status).toBe(200);
+    expect(transport.reason).toBe('OK');
+    expect(transport.hasFailed).toBe(false);
+  });
+
+  // 202 is outside the failure floor: reading it as anything else marks every handshake in the tree failed.
+  test('an accepted notification is a success, not a failure', () => {
+    expect(hopTransportOf(span({ response_status: 202, success: true }))).toMatchObject({
+      reason: 'Accepted',
+      hasFailed: false,
+    });
+  });
+
+  test('a status at or above the failure floor reads as failed', () => {
+    expect(hopTransportOf(span({ response_status: 502, success: true })).hasFailed).toBe(true);
+  });
+
+  // The other half of the same test the tree uses, so one hop cannot read differently in the two surfaces.
+  test('a false success flag reads as failed whatever the status says', () => {
+    expect(hopTransportOf(span({ response_status: 200, success: false })).hasFailed).toBe(true);
+  });
+
+  test('a status this console does not name still states its number', () => {
+    expect(hopTransportOf(span({ response_status: 418 }))).toMatchObject({ status: 418, reason: null });
+  });
+
+  test('carries the recorded sizes and duration, and nothing derived from a body', () => {
+    expect(
+      hopTransportOf(span({ request_body_bytes: 2048, response_body_bytes: 4096, operation_duration_ms: 89 })),
+    ).toMatchObject({ requestBytes: 2048, responseBytes: 4096, durationMs: 89 });
+  });
+});
+
 describe('hopSideSuppressionsOf', () => {
   const hop = (overrides: Partial<ConversationSpanRow> = {}) => span({ response_body_bytes: 4096, ...overrides });
 
@@ -276,15 +318,25 @@ describe('hopSideSuppressionsOf', () => {
     });
   });
 
-  test.each(['initialize', 'notifications/initialized', 'tools/list'])(
-    'the %s handshake settles both sides',
-    (method) => {
-      expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: method }))).toEqual({
-        request: HopSideSuppression.SessionSetup,
-        response: HopSideSuppression.SessionSetup,
-      });
-    },
-  );
+  // These used to settle both sides on the claim that they carry no content; they do carry it.
+  test.each(['initialize', 'tools/list'])('the %s handshake is read rather than settled', (method) => {
+    expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: method }))).toEqual({
+      request: null,
+      response: null,
+    });
+  });
+
+  // The one protocol message with no response, which is a different fact from "the log recorded nothing".
+  test('a notification states that the protocol defines no response body', () => {
+    expect(
+      hopSideSuppressionsOf(
+        hop({ event_kind: 'mcp', mcp_method: 'notifications/initialized', response_body_bytes: 0 }),
+      ),
+    ).toEqual({
+      request: null,
+      response: HopSideSuppression.ProtocolNoBody,
+    });
+  });
 
   // Only the response is a vector. The request averages 352 B and is the probe text — the half the reader is
   // actually asking about.
@@ -310,5 +362,56 @@ describe('hopSideSuppressionsOf', () => {
       request: null,
       response: null,
     });
+  });
+});
+
+describe('spanBodyTabsOf', () => {
+  const grants = (isRequestReadable: boolean, isResponseReadable: boolean): HopBodyGrants => ({
+    isRequestReadable,
+    isResponseReadable,
+  });
+
+  const mcp = span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'search' });
+  const embedding = span({ event_kind: 'embedding', request_uri: '/openai/deployments/an-embedder/embeddings' });
+  const unrecognised = span({ event_kind: 'something-new', request_uri: '/openai/deployments/x/unknown' });
+
+  test('offers every tab in a fixed order for a model call the caller can read whole', () => {
+    expect(spanBodyTabsOf(span(), grants(true, true))).toEqual([
+      SpanBodyTab.Request,
+      SpanBodyTab.Response,
+      SpanBodyTab.Chat,
+    ]);
+  });
+
+  test('drops the response tab and keeps the rest in order when only the request column is granted', () => {
+    expect(spanBodyTabsOf(span(), grants(true, false))).toEqual([SpanBodyTab.Request, SpanBodyTab.Chat]);
+  });
+
+  test('offers no chat when the request column is withheld', () => {
+    expect(spanBodyTabsOf(span(), grants(false, true))).toEqual([SpanBodyTab.Response]);
+  });
+
+  test('offers nothing when no body column is granted', () => {
+    expect(spanBodyTabsOf(span(), grants(false, false))).toEqual([]);
+  });
+
+  test('offers both sides but no chat for an MCP hop', () => {
+    expect(spanBodyTabsOf(mcp, grants(true, true))).toEqual([SpanBodyTab.Request, SpanBodyTab.Response]);
+  });
+
+  test('offers both sides but no chat for an embedding probe', () => {
+    expect(spanBodyTabsOf(embedding, grants(true, true))).toEqual([SpanBodyTab.Request, SpanBodyTab.Response]);
+  });
+
+  test('offers chat for an event kind it does not recognise', () => {
+    expect(spanBodyTabsOf(unrecognised, grants(true, true))).toContain(SpanBodyTab.Chat);
+  });
+
+  test('offers the tabs a suppressed side is entitled to, since the tab is where the absence is stated', () => {
+    expect(spanBodyTabsOf(span({ response_body_bytes: 0 }), grants(true, true))).toEqual([
+      SpanBodyTab.Request,
+      SpanBodyTab.Response,
+      SpanBodyTab.Chat,
+    ]);
   });
 });

@@ -73,6 +73,17 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
   },
 ];
 
+// The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
+// the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
+// are all the same LIKE and all rejected. One bad predicate fails the whole query, so these are withheld
+// from the selector rather than left authorable; they stay in the model so a loaded query still round-trips.
+export const ENUM_UNSUPPORTED_OPERATORS: QueryOperator[] = [
+  QueryOperator.Co,
+  QueryOperator.Nc,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+];
+
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),
 );
@@ -146,9 +157,18 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
   [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
 };
 
+// A tooltip can show a short value in place; past this the value needs the viewer instead.
+export const RESULT_TOOLTIP_MAX_CHARS = 240;
+
+// Wider than a column ever shows, so the preview is never the limit on screen, but bounded so a wide
+// result does not hold whole documents in the DOM.
+export const RESULT_PREVIEW_CHARS = 400;
+
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
   [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
+  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
+  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
 };
 
 // Which section header surfaces which aggregate-validation warning.

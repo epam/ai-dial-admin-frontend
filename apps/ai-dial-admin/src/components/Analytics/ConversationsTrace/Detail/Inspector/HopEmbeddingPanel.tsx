@@ -1,8 +1,8 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
+import HopPanelLoader from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopPanelLoader';
 import HopClampNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopClampNote';
 import HopStateNote from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopStateNote';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
@@ -11,33 +11,20 @@ import { useI18n } from '@/src/locales/client';
 import { HopEmbeddingFacts } from '@/src/models/analytics/conversations-trace';
 import { formatCompactNumber } from '@/src/utils/analytics/conversation-formatting';
 
-const LOADER_SIZE = 18;
-
-const dimensionsValue = (facts: HopEmbeddingFacts, t: (key: string) => string): string => {
-  if (facts.isDimensionsWithheld) {
-    return t(ConversationsTraceI18nKey.InspectorWithheldValue);
-  }
-
-  return facts.dimensions === null ? UNAVAILABLE_VALUE : String(facts.dimensions);
-};
-
 interface Props {
   facts: HopEmbeddingFacts | null;
   isLoading: boolean;
   tokens: number | string | null;
 }
 
-// The vector is never drawn. 96% of recorded vectors arrive base64-encoded, so any depiction means decoding
-// one first — for decoration, when the question a reader opens an embedding hop with is what was embedded.
+// The request half of an embedding hop: what was embedded, and the facts of the probe itself. The dimension
+// count is not here — it is the one field read from the response column, and it is stated on the tab that
+// reads that column.
 const HopEmbeddingPanel: FC<Props> = ({ facts, isLoading, tokens }) => {
   const t = useI18n();
 
   if (isLoading || facts === null) {
-    return (
-      <div className="flex items-center justify-center rounded border border-primary bg-layer-3 p-3">
-        <DialLoader size={LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
-      </div>
-    );
+    return <HopPanelLoader />;
   }
 
   const cells = [
@@ -45,12 +32,6 @@ const HopEmbeddingPanel: FC<Props> = ({ facts, isLoading, tokens }) => {
     {
       label: t(ConversationsTraceI18nKey.InspectorEmbeddingInputs),
       value: facts.inputCount === null ? UNAVAILABLE_VALUE : String(facts.inputCount),
-    },
-    {
-      label: t(ConversationsTraceI18nKey.InspectorEmbeddingDimensions),
-      // The one cell read from the response column. Withheld is not the same answer as "no vector was
-      // recorded", and the placeholder cannot tell them apart.
-      value: dimensionsValue(facts, t),
     },
     { label: t(ConversationsTraceI18nKey.TraceTokens), value: formatCompactNumber(tokens) || UNAVAILABLE_VALUE },
   ];

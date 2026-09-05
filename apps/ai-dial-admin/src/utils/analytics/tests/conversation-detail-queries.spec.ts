@@ -20,6 +20,7 @@ import {
   UsageLogField,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   QueryExprType,
   QueryFieldExpr,
@@ -47,8 +48,12 @@ import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
 const CHAT_SCOPE: SessionScope = { id: CHAT_ID, source: CHAT_ID_SESSION_SOURCE };
 const ALL_FIELDS: string[] = Object.values(ConversationsField);
+// The builder takes the schema's fields rather than their names, because the insight half of the select is
+// discovered from the namespace and the panel reads the type off the same report.
+const asSchemaFields = (names: string[]): AnalyticsEntityField[] =>
+  names.map((name) => ({ name, source: name.slice(name.indexOf('.') + 1), type: AnalyticsFieldType.String }));
 const detailQuery = (availableFields: string[] | undefined = ALL_FIELDS) =>
-  buildConversationDetailQuery(CHAT_ID, availableFields);
+  buildConversationDetailQuery(CHAT_ID, availableFields && asSchemaFields(availableFields));
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 const BODY_COLUMNS = ['request_body', 'response_body'];
 
@@ -137,6 +142,25 @@ describe('buildConversationDetailQuery', () => {
 
     expect(names).not.toContain(ConversationsField.InsightResolutionStatus);
     expect(names).toContain(ConversationsField.InsightSentiment);
+    expect(names).toContain(ConversationsField.InsightSummary);
+  });
+
+  // The point of deriving the select from the namespace rather than a list: a column the enrichment gains is
+  // asked for with no frontend release, which is what an enumerated list could never do.
+  test('names an insight column no frontend list enumerates', () => {
+    const names = selectedNames(detailQuery([...ALL_FIELDS, 'session_insights.risk_level']).select);
+
+    expect(names).toContain('session_insights.risk_level');
+  });
+
+  test('does not name an insight column the detail view could not render as a value', () => {
+    const fields: AnalyticsEntityField[] = [
+      ...asSchemaFields(ALL_FIELDS),
+      { name: 'session_insights.evidence', source: 'evidence', type: AnalyticsFieldType.Object },
+    ];
+    const names = selectedNames(buildConversationDetailQuery(CHAT_ID, fields).select);
+
+    expect(names).not.toContain('session_insights.evidence');
     expect(names).toContain(ConversationsField.InsightSummary);
   });
 
@@ -615,39 +639,5 @@ describe('the roots and figures passes are scoped identically', () => {
 
     expect(boundsOf(roots.filter)).toEqual(boundsOf(figures.filter));
     expect(boundsOf(figures.filter)).toEqual({ fromMs: window().fromMs, toMs: window().toMs });
-  });
-});
-
-// The figures pass has a second call site: the Chat view resolves figures for the traces its own transcript
-// covers, so an answer's figures never depend on how far the listing has been paged. Same builder, same
-// scoping rules — and the invariant is asserted here too, because a narrower filter at this call site would
-// reintroduce every correction the design deleted, inside the Chat view instead of the listing.
-describe('the figures pass is scoped the same way for the transcript traces', () => {
-  const TRANSCRIPT_TRACE_IDS = ['t1', 't2', 't3'];
-
-  test('carries neither the chat id nor the project', () => {
-    const built = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-    const names = namesInFilter(built.filter);
-
-    expect(names).not.toContain(UsageLogField.ChatId);
-    expect(names).not.toContain(UsageLogField.ProjectId);
-    expect(names).toContain(UsageLogField.TraceId);
-  });
-
-  test('is the same query shape the listing builds, differing only in which traces it names', () => {
-    const forTranscript = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-    const forListing = buildConversationTraceFiguresQuery(PAGE_TRACE_IDS, window(), 24);
-
-    expect(forTranscript.group_by).toEqual(forListing.group_by);
-    expect(forTranscript.select).toEqual(forListing.select);
-    expect(boundsOf(forTranscript.filter)).toEqual(boundsOf(forListing.filter));
-  });
-
-  test('reads no body column', () => {
-    const built = buildConversationTraceFiguresQuery(TRANSCRIPT_TRACE_IDS, window(), 24);
-
-    for (const column of BODY_COLUMNS) {
-      expect(JSON.stringify(built)).not.toContain(column);
-    }
   });
 });

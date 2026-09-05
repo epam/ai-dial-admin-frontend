@@ -29,6 +29,8 @@ interface Props {
   runners?: DialApplicationScheme[];
   initialValues?: Partial<AssetWithVersion>;
   isModal?: boolean;
+  /** Applications only — omits the version field/validation for a platform-bucket create (flat, unversioned). */
+  hideVersionField?: boolean;
 }
 
 const AssetProperties: FC<Props> = ({
@@ -41,6 +43,7 @@ const AssetProperties: FC<Props> = ({
   runners,
   initialValues,
   isModal,
+  hideVersionField,
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
@@ -91,12 +94,14 @@ const AssetProperties: FC<Props> = ({
         />
       )}
 
-      <VersionControl
-        isFullWidth={!isEntityImmutable}
-        version={entity.version}
-        onChange={onChangeVersion}
-        error={versionError}
-      />
+      {!hideVersionField && (
+        <VersionControl
+          isFullWidth={!isEntityImmutable}
+          version={entity.version}
+          onChange={onChangeVersion}
+          error={versionError}
+        />
+      )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 

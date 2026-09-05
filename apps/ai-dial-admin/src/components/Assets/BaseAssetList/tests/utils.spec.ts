@@ -1,5 +1,6 @@
+import { FileManagerColumnKey } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test, vi } from 'vitest';
-import { getAllSelectedItemsPaths, getPlatformAssetDuplicate } from '../utils';
+import { getAllSelectedItemsPaths, getGridColumns, getPlatformAssetDuplicate } from '../utils';
 import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -88,5 +89,31 @@ describe('BaseAssetList', () => {
 
       expect(source).toEqual(model);
     });
+  });
+
+  describe('getGridColumns — dual-bucket views', () => {
+    const onChange = vi.fn();
+
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      '%s uses the flat platform-entity column set (no Version column) while browsing the platform bucket',
+      (view) => {
+        const columns = getGridColumns(view, onChange, {}, false, 'platform/');
+        const colIds = columns.map((c) => c.colId);
+
+        expect(colIds).not.toContain(FileManagerColumnKey.Version);
+        expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
+      },
+    );
+
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      '%s keeps the existing Version column while browsing the public bucket',
+      (view) => {
+        const withPublicPath = getGridColumns(view, onChange, {}, false, 'public/');
+        const withoutPath = getGridColumns(view, onChange, {}, false);
+
+        expect(withPublicPath.map((c) => c.colId)).toContain(FileManagerColumnKey.Version);
+        expect(withPublicPath.map((c) => c.colId)).toEqual(withoutPath.map((c) => c.colId));
+      },
+    );
   });
 });

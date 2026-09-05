@@ -31,6 +31,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   asset: DialApplicationResource;
@@ -92,7 +93,8 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         <IconControl iconUrl={asset.icon_url} onChange={(icon_url) => onChange({ ...asset, icon_url })} />
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsApplications} />
 
-        {!isPublication && (
+        {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-applications` capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
+        {!isPublication && !isPlatformBucketPath(asset.folderId) && (
           <FilePath
             value={asset.folderId}
             label={t(EntitiesI18nKey.FolderStorage)}

@@ -1,20 +1,39 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
-import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
+import {
+  CatalogDeploymentRecord,
+  resolveCatalogDeploymentNavigation,
+  resolveDeploymentNavigationTarget,
+} from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformBucketPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 
+const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
+  '$type' in deployment && typeof deployment.$type === 'string';
+
 export const getAgentLinkForConversation = (
-  deployment: Record<string, string> | null,
+  deployment: CatalogDeploymentRecord | Deployment | null,
   currentLocale: string,
 ): string => {
-  const target = resolveCatalogDeploymentNavigation(deployment);
+  if (!deployment) {
+    return '';
+  }
+
+  const target = isEvalDeployment(deployment)
+    ? resolveDeploymentNavigationTarget(
+        { id: deployment.deploymentId, name: deployment.displayName },
+        deployment.$type,
+        [],
+      )
+    : resolveCatalogDeploymentNavigation(deployment);
+
   if (!target) {
     return '';
   }
@@ -82,7 +101,7 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
@@ -101,6 +120,14 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
           );
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
+      if (isPlatformDualBucketView(view, currentPath)) {
+        return isReadOnlyAdmin
+          ? []
+          : allActionLabels.filter(
+              (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
+            );
+      }
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
@@ -113,8 +140,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
-  if (isFlatPlatformView(view)) {
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
+  if (isFlatPlatformView(view) || isPlatformDualBucketView(view, currentPath)) {
     return [];
   }
 
@@ -137,8 +164,14 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
       );
 };
 
-export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
   if (isReadOnlyAdmin) return [];
+
+  if (isPlatformDualBucketView(view, currentPath)) {
+    const label =
+      view === ApplicationRoute.AssetsToolsets ? FileManagerI18nKey.Toolset : FileManagerI18nKey.Application;
+    return [{ key: 'newItem', label, icon: null }];
+  }
 
   switch (view) {
     case ApplicationRoute.Files:
@@ -366,6 +399,22 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsApplications: {
+      // A platform-bucket row has no version to select or append — `isMultipleVersionsDelete`
+      // never applies there, and the description shows the bare name rather than a
+      // `folderId+name__version` path that carries no meaning for a flat, unversioned resource.
+      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Application),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
@@ -392,6 +441,20 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsToolsets: {
+      // Same platform-bucket carve-out as AssetsApplications above.
+      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+        const title = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+          : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+        const description = isDeleteSeveralFiles
+          ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+          : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+              item: t(FileManagerI18nKey.Toolset),
+              name: (fileNodes as DialFile[])?.[0]?.name || '',
+            });
+        return { title, description };
+      }
+
       if (isMultipleVersionsDelete) {
         const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>

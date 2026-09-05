@@ -23,30 +23,27 @@ import {
   ConversationScalarFilter,
   ConversationRow,
   ConversationEntryBodyRow,
-  ConversationEntryHopRow,
   ConversationSpanRow,
   ConversationSpansPage,
   ConversationsField,
-  ConversationTranscript,
   ConversationTotals,
   ConversationTotalsField,
   HopDialect,
   HopEmbeddingFacts,
   HopInspectorSide,
   HopMcpFacts,
+  HopProtocolFacts,
   HopParams,
   HopMessageValue,
   HopRawBody,
   HopReadState,
   HopRequestEnvelope,
   HopResponseEnvelope,
-  TranscriptBodyFields,
-  TranscriptState,
+  HopBodyFields,
   UsageLogField,
   ConversationTracePage,
   ConversationTracePageRow,
-  ConversationTraceGroup,
-  ConversationTranscriptAvailability,
+  HopBodyGrants,
   ConversationTraceFigureRow,
   ConversationTraceRootRow,
   ConversationsPage,
@@ -64,12 +61,9 @@ import { attachRatings, conversationRatingCounts, unresolvedRatings } from '@/sr
 import {
   buildArrayValueResolutionQuery,
   buildConversationDetailQuery,
-  buildConversationEntryBodiesQuery,
-  buildConversationEntryHopsQuery,
   buildConversationFeedbackQuery,
   buildConversationFieldValuesQuery,
   buildConversationHopBodyQuery,
-  buildConversationHopCountQuery,
   buildConversationListQuery,
   buildConversationSpansQuery,
   buildConversationTraceFiguresQuery,
@@ -86,10 +80,8 @@ import {
   ARRAY_VALUE_PAGE_CAP,
   ARRAY_VALUE_PAGE_SIZE,
   CONVERSATION_ARRAY_VALUE_SOURCE,
-  CONVERSATION_ENTRY_HOP_LIMIT,
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
-  CONVERSATION_HOP_COUNT_ALIAS,
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TRACE_PAGE_SIZE,
   CONVERSATION_TRACE_ROOT_CAP,
@@ -98,17 +90,12 @@ import {
   FEEDBACK_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
-import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
 import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/conversation-trace-groups';
-import { transcriptBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
-import {
-  assembleTranscript,
-  carriesWholeConversation,
-  transcriptStateOf,
-} from '@/src/utils/analytics/conversation-transcript';
+import { hopBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import {
@@ -118,8 +105,9 @@ import {
   textByteLength,
 } from '@/src/utils/analytics/hop-inspector/envelope';
 import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
+import { protocolFactsOf } from '@/src/utils/analytics/hop-inspector/protocol';
 import { paramsOf } from '@/src/utils/analytics/hop-inspector/params';
-import { responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
+import { NO_FACTS, responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -480,10 +468,10 @@ export async function getConversationFieldValues(
 
 export async function getConversationDetail(
   chatId: string,
-  availableFields?: string[],
+  schemaFields?: AnalyticsEntityField[],
 ): Promise<ServerActionResponse<ConversationDetailResult>> {
   const result = await analyticsDataApi.executeAction(
-    buildConversationDetailQuery(chatId, availableFields),
+    buildConversationDetailQuery(chatId, schemaFields),
     await token(),
   );
 
@@ -498,7 +486,7 @@ export async function getConversationDetail(
 
 // Never rejects: a failed schema read must cost the optional comment column, not the page. Without this the
 // rejection would reach the detail route's `Promise.all` and render the error state for a conversation whose
-// transcript, turns and record all resolved.
+// header, traces and record all resolved.
 async function feedbackSchemaFields(authToken: Token): Promise<string[] | undefined> {
   try {
     const schema = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
@@ -674,10 +662,10 @@ export async function getConversationTracePage(
 interface HopBodyRead {
   row?: ConversationEntryBodyRow;
   state: HopReadState;
-  fields: TranscriptBodyFields;
+  fields: HopBodyFields;
 }
 
-const bodyFieldsFor = (side: HopInspectorSide, fields: TranscriptBodyFields): UsageLogField[] => {
+const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): UsageLogField[] => {
   if (side === HopInspectorSide.Request) {
     return [UsageLogField.RequestBody];
   }
@@ -685,11 +673,13 @@ const bodyFieldsFor = (side: HopInspectorSide, fields: TranscriptBodyFields): Us
   return fields.responseFields;
 };
 
-const isSideReadable = (side: HopInspectorSide, fields: TranscriptBodyFields): boolean =>
+const isSideReadable = (side: HopInspectorSide, fields: HopBodyFields): boolean =>
   side === HopInspectorSide.Request ? fields.isRequestReadable : fields.isResponseReadable;
 
+// Takes no `scope` — see `buildConversationHopBodyQuery` for why a session predicate here left a Core-internal
+// hop reporting that it had recorded nothing. The actions that call this keep `scope`: it is the client's
+// contract and the key it holds one read per, and it reaches no filter.
 async function readHopBody(
-  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -700,7 +690,7 @@ async function readHopBody(
     analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
   );
 
-  const fields = transcriptBodyFields(schema?.fields?.map(({ name }) => name) ?? []);
+  const fields = hopBodyFields(schema?.fields?.map(({ name }) => name) ?? []);
 
   if (!schema) {
     return { state: HopReadState.LoadFailed, fields };
@@ -713,7 +703,7 @@ async function readHopBody(
 
   const bodyFields = [...new Set(readable.flatMap((side) => bodyFieldsFor(side, fields)))];
   const result = await analyticsDataApi.executeAction(
-    buildConversationHopBodyQuery(scope, traceId, coreSpanId, requestTime, bodyFields),
+    buildConversationHopBodyQuery(traceId, coreSpanId, requestTime, bodyFields),
     authToken,
   );
 
@@ -727,7 +717,7 @@ async function readHopBody(
   return row ? { row, state: HopReadState.Available, fields } : { state: HopReadState.NoBody, fields };
 }
 
-const EMPTY_PARAMS: HopParams = { stated: [], unrecognisedCount: 0 };
+const EMPTY_PARAMS: HopParams = { stated: [], rest: [] };
 
 const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
   state,
@@ -748,7 +738,7 @@ export async function getConversationHopRequest(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopRequestEnvelope>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: emptyRequestEnvelope(state) };
@@ -785,6 +775,7 @@ const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  facts: NO_FACTS,
   recordedBytes: null,
 });
 
@@ -794,7 +785,7 @@ export async function getConversationHopResponse(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopResponseEnvelope>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: emptyResponseEnvelope(state) };
@@ -814,7 +805,7 @@ export async function getConversationHopMessage(
   requestTime: number | string | null,
   messageIndex: number,
 ): Promise<ServerActionResponse<HopMessageValue>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
 
   if (!row) {
     return { success: state !== HopReadState.LoadFailed, response: { state, text: null, toolCalls: [] } };
@@ -841,7 +832,7 @@ export async function getConversationHopRawBody(
   requestTime: number | string | null,
   side: HopInspectorSide,
 ): Promise<ServerActionResponse<HopRawBody>> {
-  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [side]);
+  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [side]);
 
   if (!row) {
     return {
@@ -865,7 +856,7 @@ export async function getConversationHopMcp(
   toolName: string | null,
   toolset: string | null,
 ): Promise<ServerActionResponse<HopMcpFacts>> {
-  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
@@ -881,6 +872,7 @@ export async function getConversationHopMcp(
         argumentsText: null,
         resultText: null,
         resultClamp: NO_CLAMP,
+        argumentsState: state,
         resultState: state,
       },
     };
@@ -891,13 +883,43 @@ export async function getConversationHopMcp(
   return { success: true, response: mcpFactsOf({ row, method, toolName, toolset, grants: fields }) };
 }
 
+export async function getConversationHopProtocol(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  method: string | null,
+): Promise<ServerActionResponse<HopProtocolFacts>> {
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
+    HopInspectorSide.Request,
+    HopInspectorSide.Response,
+  ]);
+
+  if (!row) {
+    return {
+      success: state !== HopReadState.LoadFailed,
+      response: {
+        state,
+        method,
+        requestText: null,
+        requestState: state,
+        resultText: null,
+        resultClamp: NO_CLAMP,
+        responseState: state,
+      },
+    };
+  }
+
+  return { success: true, response: protocolFactsOf({ row, method, grants: fields }) };
+}
+
 export async function getConversationHopEmbedding(
   scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopEmbeddingFacts>> {
-  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
@@ -996,167 +1018,21 @@ async function resolvePeriodSummary(range: TimeRange, authToken: Token): Promise
   };
 }
 
-const EMPTY_TRANSCRIPT = { messages: [], loadedTurns: null };
-
-const transcriptOf = (state: TranscriptState): ConversationTranscript => ({ state, ...EMPTY_TRANSCRIPT });
-
 /**
- * Whether this caller can read body columns at all — a **schema** fact, resolved from the cached entity
- * schema without issuing any body query.
- *
- * Split out so the page can still gate the Chat option accurately at open while the transcript's own body
- * read moves behind the view switch. Reading the whole transcript on page open made a body-read failure the
- * whole page's failure, on a page whose landing view does not depend on it; giving up the gate instead would
- * have offered a Chat option that only fails when clicked.
+ * Which body columns this caller can read — a **schema** fact, resolved from the cached entity schema without
+ * issuing any body query.
  */
-export async function getConversationTranscriptAvailability(): Promise<
-  ServerActionResponse<ConversationTranscriptAvailability>
-> {
+export async function getHopBodyGrants(): Promise<ServerActionResponse<HopBodyGrants>> {
   const authToken = await token();
   const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
     analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
   );
 
   if (!schema) {
-    return { success: false, response: { isReadable: false, isRequestReadable: false, isResponseReadable: false } };
+    return { success: false, response: { isRequestReadable: false, isResponseReadable: false } };
   }
 
-  const { isReadable, isRequestReadable, isResponseReadable } = transcriptBodyFields(
-    schema.fields?.map(({ name }) => name) ?? [],
-  );
+  const { isRequestReadable, isResponseReadable } = hopBodyFields(schema.fields?.map(({ name }) => name) ?? []);
 
-  return { success: true, response: { isReadable, isRequestReadable, isResponseReadable } };
-}
-
-// Figures for the traces the transcript covers, resolved by the transcript's own read rather than taken from
-// the listing's paged state. The Chat view states each answer's own figures, and a message whose trace lay
-// beyond the loaded pages would otherwise lose them — making which answers were complete depend on how far
-// the reader had scrolled the Trace view. Each view fetches what it displays; the overlap is accepted.
-//
-// Same scoping rules as the listing's own figures pass: trace ids plus a padded window derived from them, no
-// chat id and no project. A narrower filter here would reintroduce every deleted correction inside the Chat
-// view instead.
-async function resolveTranscriptFigures(
-  entryHops: ConversationEntryHopRow[],
-  projectId: string,
-  authToken: Token,
-): Promise<ConversationTraceGroup[]> {
-  const traceIds = [...new Set(entryHops.map(({ trace_id }) => trace_id))].filter(Boolean);
-  const window = paddedUtcDayRange(entryHops.map(({ request_time }) => request_time));
-
-  if (!traceIds.length || !window) {
-    return [];
-  }
-
-  const figuresLimit = traceIds.length * 8;
-  const result = await analyticsDataApi.executeAction(
-    buildConversationTraceFiguresQuery(traceIds, window, figuresLimit),
-    authToken,
-  );
-
-  if (!result.success) {
-    errorObjLog(result, 'Failed to resolve the figures for the transcript traces');
-    return [];
-  }
-
-  const figureRows = (result.response?.rows ?? []) as unknown as ConversationTraceFigureRow[];
-  if (figureRows.length >= figuresLimit) {
-    errorObjLog(
-      { traceCount: traceIds.length, limit: figuresLimit },
-      'The transcript figures read came back full and may be clipped: some answers will understate their figures',
-    );
-  }
-
-  const pageRows = traceIds.map((traceId) => ({
-    trace_id: traceId,
-    first_request_time: null,
-    last_request_time: null,
-  }));
-
-  return traceGroupsOf(pageRows, [], figureRows, projectId);
-}
-
-export async function getConversationTranscript(
-  scope: SessionScope,
-  projectId: string,
-  lastRequestTime: number | string | null,
-  nowMs: number,
-): Promise<ServerActionResponse<ConversationTranscript>> {
-  const authToken = await token();
-  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
-    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
-  );
-
-  if (!schema) {
-    return { success: false, response: transcriptOf(TranscriptState.LoadFailed) };
-  }
-
-  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
-  const { isReadable } = transcriptBodyFields(schemaFieldNames);
-
-  if (!isReadable) {
-    return { success: true, response: transcriptOf(TranscriptState.ColumnsUnavailable) };
-  }
-
-  const [entryResult, countResult] = await Promise.all([
-    analyticsDataApi.executeAction(buildConversationEntryHopsQuery(scope, CONVERSATION_ENTRY_HOP_LIMIT), authToken),
-    analyticsDataApi.executeAction(buildConversationHopCountQuery(scope), authToken),
-  ]);
-
-  if (!entryResult.success) {
-    errorObjLog(entryResult, 'Failed to fetch the conversation entry hops');
-    return { ...entryResult, response: transcriptOf(TranscriptState.LoadFailed) };
-  }
-
-  const entryHops = (entryResult.response?.rows ?? []) as unknown as ConversationEntryHopRow[];
-
-  if (!entryHops.length && !countResult.success) {
-    errorObjLog(countResult, 'Failed to resolve the conversation hop count');
-    return { ...countResult, response: transcriptOf(TranscriptState.LoadFailed) };
-  }
-
-  const countRow = countResult.response?.rows?.[0];
-  const hopCount = toNumber((countRow?.[CONVERSATION_HOP_COUNT_ALIAS] ?? null) as number | string | null) ?? 0;
-  const state = transcriptStateOf({
-    isReadable,
-    hasLoadFailed: false,
-    entryHopCount: entryHops.length,
-    hopCount,
-    lastRequestTime,
-    nowMs,
-  });
-
-  if (state !== TranscriptState.Available) {
-    return { success: true, response: transcriptOf(state) };
-  }
-
-  const needed = carriesWholeConversation(entryHops) ? [entryHops[entryHops.length - 1]] : entryHops;
-  const bodyResult = await analyticsDataApi.executeAction(
-    buildConversationEntryBodiesQuery(scope, needed, schemaFieldNames),
-    authToken,
-  );
-
-  if (!bodyResult.success) {
-    errorObjLog(bodyResult, 'Failed to fetch the conversation entry bodies');
-    return { ...bodyResult, response: transcriptOf(TranscriptState.LoadFailed) };
-  }
-
-  const bodies = (bodyResult.response?.rows ?? []) as unknown as ConversationEntryBodyRow[];
-  const messages = assembleTranscript(entryHops, bodies);
-
-  // Entry hops that yielded no message is not "nothing was recorded": the rows are there and the bodies
-  // could not be turned into a transcript, which is what this state says.
-  if (!messages.length) {
-    return { success: true, response: transcriptOf(TranscriptState.NotReconstructable) };
-  }
-
-  return {
-    success: true,
-    response: {
-      state: TranscriptState.Available,
-      messages,
-      loadedTurns: entryHops.length,
-      traceFigures: await resolveTranscriptFigures(entryHops, projectId, authToken),
-    },
-  };
+  return { success: true, response: { isRequestReadable, isResponseReadable } };
 }

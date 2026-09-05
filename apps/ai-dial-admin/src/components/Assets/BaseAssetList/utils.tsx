@@ -1,8 +1,11 @@
 import {
   bulkDeleteApps,
+  bulkDeletePlatformApplications,
   createApp,
+  createPlatformApplication,
   exportApps,
   getApp,
+  getPlatformApplication,
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
@@ -18,9 +21,12 @@ import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/skills/actions';
 import {
+  bulkDeletePlatformToolsets,
   bulkDeleteToolsets,
+  createPlatformToolset,
   createToolset,
   exportToolsets,
+  getPlatformToolset,
   getToolset,
   importToolsets,
   moveToolsets,
@@ -49,11 +55,17 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
+import {
+  DialAppRunnerResource,
+  DialModelResource,
+  DialPlatformApplicationResource,
+  DialPlatformToolsetResource,
+  PlatformAsset,
+} from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
@@ -91,6 +103,7 @@ export const getGridColumns = (
   ) => void,
   selectedVersionsMap: Record<string, string[]>,
   hasSelectedItems: boolean,
+  currentPath?: string,
 ) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
@@ -148,7 +161,7 @@ export const getGridColumns = (
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
   // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
   // read a display name from.
-  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills) {
+  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
       NAME_COLUMN(view === ApplicationRoute.PlatformAppRunners ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
@@ -348,6 +361,25 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Skills]: getSkill,
 };
 
+/**
+ * Applications and Toolsets are the only views whose "get"/"create"/"bulk-delete" call depends on
+ * which bucket the target belongs to, not just on the view (design.md D2/`platform-applications`/
+ * `platform-toolsets`). Callers resolve this map by view for a target in the `platform` bucket,
+ * falling back to `GetAssetActionMap`/`CreateAssetActionMap`/`BulkDeleteAssetActionMap` otherwise.
+ */
+export const PlatformGetAssetActionMap: Partial<
+  Record<
+    ApplicationRoute,
+    (
+      path: string,
+      etag: string,
+    ) => Promise<ServerActionResponse<DialPlatformApplicationResource | DialPlatformToolsetResource>>
+  >
+> = {
+  [ApplicationRoute.AssetsApplications]: getPlatformApplication,
+  [ApplicationRoute.AssetsToolsets]: getPlatformToolset,
+};
+
 export const CreateAssetActionMap: Record<
   CreateAssetRoute,
   (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
@@ -375,6 +407,17 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformKeys]: createKey as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+};
+
+export const PlatformCreateAssetActionMap: Partial<
+  Record<ApplicationRoute, (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>>
+> = {
+  [ApplicationRoute.AssetsApplications]: createPlatformApplication as unknown as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsToolsets]: createPlatformToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -423,6 +466,13 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
   [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
   [ApplicationRoute.Skills]: bulkDeleteSkills,
+};
+
+export const PlatformBulkDeleteAssetActionMap: Partial<
+  Record<ApplicationRoute, (paths: { path: string }[]) => Promise<ServerActionResponse<Record<string, unknown>>>>
+> = {
+  [ApplicationRoute.AssetsApplications]: bulkDeletePlatformApplications,
+  [ApplicationRoute.AssetsToolsets]: bulkDeletePlatformToolsets,
 };
 
 export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {

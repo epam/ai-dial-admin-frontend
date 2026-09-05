@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
-import {
-  buildAppRunnerOptions,
-  getRunnerOrigin,
-  getRunnerReference,
-} from '@/src/components/SourceField/Application/utils';
+import { buildAppRunnerOptions, getRunnerOrigin } from '@/src/components/SourceField/Application/utils';
 import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -73,21 +69,6 @@ describe('buildAppRunnerOptions', () => {
   it('tolerates either list being absent', () => {
     expect(buildAppRunnerOptions(null, null)).toEqual([]);
     expect(buildAppRunnerOptions(undefined, undefined)).toEqual([]);
-  });
-});
-
-describe('getRunnerReference / getRunnerOrigin', () => {
-  it('falls back to $id for a plain scheme from an untouched picker consumer', () => {
-    expect(getRunnerReference(entityRunner)).toBe('http://entity-runner');
-    expect(getRunnerOrigin(entityRunner)).toBe(AppRunnerOrigin.Entity);
-  });
-
-  it('reads the reference off a built option rather than its $id', () => {
-    const [option] = buildAppRunnerOptions([], [assetRunner]);
-
-    expect(getRunnerReference(option)).toBe('schemas/platform/http%3A%2F%2Fasdqwe');
-    expect(getRunnerReference(option)).not.toBe(option.$id);
-    expect(getRunnerOrigin(option)).toBe(AppRunnerOrigin.Asset);
   });
 });
 
