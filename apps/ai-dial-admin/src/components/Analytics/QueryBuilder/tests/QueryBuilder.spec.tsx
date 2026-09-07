@@ -193,21 +193,101 @@ describe('QueryBuilder', () => {
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled();
   });
 
-  test('preserves edited SQL across SQL ⇄ JSON switches without a prompt', async () => {
+  const typeSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, sql);
+  };
+
+  test('edited SQL switched to JSON is shown as its translated body', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: { entity: 'dial_usage_log', mode: 'row', select: [{ expr: { type: 'field', name: 'project_id' } }] },
+      },
+    });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id FROM dial_usage_log');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect((await screen.findByLabelText('json-editor')) as HTMLTextAreaElement).toHaveDisplayValue(
+      /"name": "project_id"/,
+    );
+
+    // The SQL buffer was cleared, so returning to SQL re-seeds it from the builder translation.
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    expect(await screen.findByLabelText('sql-editor')).toHaveDisplayValue(/FROM\s+dial_usage_log/);
+  });
+
+  test('a translated body the builder cannot hold lands in JSON and still guards the Builder switch', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: true, response: { query: JSON.parse(DEEP_JSON) } });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id FROM dial_usage_log WHERE project_id = 1');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(await screen.findByText('QueryBuilder.NotShownInBuilder')).toBeInTheDocument();
+    expect(screen.getByLabelText('json-editor')).toHaveDisplayValue(/"op": "or"/);
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+  });
+
+  test('SQL that cannot be translated → JSON prompts; cancel keeps the buffer intact', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    renderBuilder();
+
+    await typeSql(user, 'SELECT a.x FROM conversations a JOIN dial_usage_log b ON b.chat_id = a.chat_id');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionJson')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.DiscardQueryDescriptionBuilder')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('json-editor')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+
+    expect(screen.getByLabelText('sql-editor')).toHaveValue(
+      'SELECT a.x FROM conversations a JOIN dial_usage_log b ON b.chat_id = a.chat_id',
+    );
+  });
+
+  test('confirming the JSON prompt opens the JSON view on the default body', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    renderBuilder();
+
+    await typeSql(user, 'SELECT bad');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
+
+    const editor = await screen.findByLabelText('json-editor');
+    expect(editor).toHaveDisplayValue(/"entity": "dial_usage_log"/);
+    expect(editor).not.toHaveDisplayValue(/SELECT bad/);
+  });
+
+  test('unedited (generated) SQL switches to JSON without translating', async () => {
     const user = userEvent.setup();
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    const editor = await screen.findByLabelText('sql-editor');
-    await user.clear(editor);
-    await user.type(editor, 'SELECT 1');
-
+    await screen.findByLabelText('sql-editor');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    expect(await screen.findByLabelText('sql-editor')).toHaveValue('SELECT 1');
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"entity": "dial_usage_log"/);
+    expect(translateSqlToQuery).not.toHaveBeenCalled();
   });
 
   test('translatable SQL hydrates the builder without a prompt', async () => {
@@ -246,6 +326,8 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionBuilder')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.DiscardQueryDescriptionJson')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
 

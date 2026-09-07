@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
-import { savedQueryEntityName } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
@@ -36,8 +36,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     entities = entitiesRes ?? [];
     functions = functionsRes ?? [];
 
-    if (savedQuery) {
-      const schema = await getEntitySchema(savedQueryEntityName(savedQuery));
+    const primarySource = savedQuery ? savedQueryPrimarySource(savedQuery) : '';
+    if (primarySource) {
+      const schema = await getEntitySchema(primarySource);
       fields = schema?.fields ?? [];
     }
   } catch (e) {
@@ -52,7 +53,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     <SaveValidationContextProvider>
       <QueryBuilder
         initialEntities={entities}
-        initialEntityName={savedQueryEntityName(savedQuery)}
+        initialEntityName={savedQueryPrimarySource(savedQuery)}
         initialFields={fields}
         initialFunctions={functions}
         name={savedQuery.name}

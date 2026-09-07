@@ -3,7 +3,7 @@
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
-import FieldCaveat from '@/src/components/Analytics/ConversationsTrace/FieldCaveat';
+import FieldCaveat from '@/src/components/Common/FieldCaveat/FieldCaveat';
 import { ConversationTerm } from '@/src/models/analytics/conversations-trace';
 
 interface Props {
@@ -30,7 +30,7 @@ const ConversationTermList: FC<Props> = ({ terms }) => (
           {/* Either a caveat on a figure that cannot be read at face value, or the service's own description
               of a column this frontend has never heard of. It hangs off a focusable control so it reaches a
               keyboard. */}
-          {hint && <FieldCaveat caveat={hint} />}
+          {hint && <FieldCaveat hint={hint} />}
         </dt>
         {/* The alignment goes on the tooltip's own `className`, not on the `dd`: it renders the value in a
             span of its own carrying `text-start`, which wins over an inherited alignment. */}
