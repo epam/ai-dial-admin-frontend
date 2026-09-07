@@ -113,12 +113,22 @@ const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
   };
 };
 
-const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+/**
+ * `parseEncodedFlatPath`'s own `folderId` is always `''` (flat resources have no folder concept), which
+ * is correct for platform-only flat entities (models, roles, routes, interceptors, keys, schemas —
+ * see `DuplicatePlatformKeyModal.tsx`'s comment for why `''` matters there). The dual-bucket platform
+ * branch (see `dualBucketMetadataFields`) is the one exception: it needs `folderId: 'platform/'` so
+ * `isPlatformBucketPath(asset.folderId)` works on a freshly-fetched resource, matching what the write
+ * path already sets on create/update — hence the explicit `isDualBucketPlatform` flag rather than
+ * inferring it from `prefix`, which flat platform-only prefixes (`MODELS_PREFIX` et al.) already bake
+ * their fixed `platform/` segment into and would otherwise match too.
+ */
+const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string, isDualBucketPlatform = false) => {
   const { path, folderId, name } = parseEncodedFlatPath(metadata.url, prefix);
   return {
     name,
     path,
-    folderId,
+    folderId: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/` : folderId,
     author: metadata.author ?? '',
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
@@ -130,14 +140,15 @@ const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) 
  * and versioned, `platform/…` is flat like the other platform-only entities. Which bucket a given
  * resource lives in is a property of its own metadata `url`, not its `ResourceType` — the same type
  * serves both — so it's read off the URL here rather than threaded through as a caller flag. The
- * `platform` segment is folded into the prefix for the flat case, matching how `MODELS_PREFIX` et al.
- * already bake their fixed bucket segment in.
+ * `platform` segment is folded into the prefix for the flat case (matching how `MODELS_PREFIX` et al.
+ * already bake their fixed bucket segment in), so `name` parses correctly.
  */
 const dualBucketMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
   const remainder = decodeCorePath(stripPrefix(metadata.url, prefix));
-  return isPlatformBucketPath(remainder)
-    ? flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`)
-    : metadataFields(metadata, prefix);
+  if (isPlatformBucketPath(remainder)) {
+    return flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`, true);
+  }
+  return metadataFields(metadata, prefix);
 };
 
 /**

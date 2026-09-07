@@ -103,7 +103,7 @@ vi.mock('../Modals', () => ({
           bucket-branch decision from `handleDuplicateModalOpen`'s async fetch, tested separately above. */}
       <button
         onClick={() =>
-          props.onDuplicate({ name: 'copy-of-platform-app', path: 'platform/platform-app', folderId: undefined })
+          props.onDuplicate({ name: 'copy-of-platform-app', path: 'platform/platform-app', folderId: 'platform/' })
         }
       >
         confirm-duplicate-platform

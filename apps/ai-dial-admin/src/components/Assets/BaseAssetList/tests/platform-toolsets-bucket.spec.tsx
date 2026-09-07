@@ -110,7 +110,7 @@ vi.mock('../Modals', () => ({
           props.onDuplicate({
             name: 'copy-of-platform-toolset',
             path: 'platform/platform-toolset',
-            folderId: undefined,
+            folderId: 'platform/',
           })
         }
       >

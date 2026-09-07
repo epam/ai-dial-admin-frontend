@@ -17,7 +17,7 @@ import { useI18n } from '@/src/locales/client';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
-import { getFilePathGridOptions, processAssetsData } from './utils';
+import { excludePlatformRoot, getFilePathGridOptions, processAssetsData } from './utils';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -47,7 +47,8 @@ const FilePath: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { files, fetchFiles } = context?.() || {};
+  const { files: rawFiles, fetchFiles } = context?.() || {};
+  const files = excludePlatformRoot(rawFiles, view);
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 

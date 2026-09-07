@@ -44,7 +44,7 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource', () => {
+  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId identifying the bucket', () => {
     const content = { endpoint: 'https://app' };
     const meta = metadata({ url: 'applications/platform/my-app', author: 'alice', createdAt: 100, updatedAt: 111 });
 
@@ -52,7 +52,7 @@ describe('Server :: Core :: asset-metadata', () => {
       endpoint: 'https://app',
       name: 'my-app',
       path: 'my-app',
-      folderId: '',
+      folderId: 'platform/',
       author: 'alice',
       createdAt: '100',
       updatedAt: '111',
@@ -75,7 +75,7 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource', () => {
+  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId identifying the bucket', () => {
     const content = { endpoint: 'https://ts' };
     const meta = metadata({ url: 'toolsets/platform/my-toolset', author: 'bob', createdAt: 200, updatedAt: 222 });
 
@@ -83,7 +83,7 @@ describe('Server :: Core :: asset-metadata', () => {
       endpoint: 'https://ts',
       name: 'my-toolset',
       path: 'my-toolset',
-      folderId: '',
+      folderId: 'platform/',
       author: 'bob',
       createdAt: '200',
       updatedAt: '222',
