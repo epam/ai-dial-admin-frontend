@@ -1,8 +1,9 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState } from 'react';
 import classNames from 'classnames';
 import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface ActionsProps<T> {
@@ -15,6 +16,7 @@ interface ActionsProps<T> {
 
 const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: ActionsProps<T>) => {
   const t = useI18n();
+  const [isOpen, setIsOpen] = useState(false);
   const dropdownItems: DropdownItem[] = items.map((item) => ({
     key: item.id,
     disabled: item.disabled as boolean,
@@ -33,15 +35,33 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
 
   return (
     <div>
-      <DialDropdown items={dropdownItems}>
-        <ActionTrigger {...props} />
+      <DialDropdown items={dropdownItems} open={isOpen} onOpenChange={setIsOpen}>
+        <ActionTrigger {...props} isOpen={isOpen} />
       </DialDropdown>
     </div>
   );
 };
 
-const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClassName?: string }> = ({ icon, actionTriggerClassName }) => {
-  return <div className={classNames('cursor-pointer', actionTriggerClassName)}>{icon}</div>;
+interface TriggerProps {
+  icon: ReactNode;
+  actionTriggerClassName?: string;
+  isOpen: boolean;
+}
+
+const ActionTrigger: FC<TriggerProps> = ({ icon, actionTriggerClassName, isOpen }) => {
+  const t = useI18n();
+
+  return (
+    <button
+      type="button"
+      aria-label={t(ButtonsI18nKey.Actions)}
+      aria-haspopup="menu"
+      aria-expanded={isOpen}
+      className={classNames('cursor-pointer', actionTriggerClassName)}
+    >
+      <span aria-hidden>{icon}</span>
+    </button>
+  );
 };
 
 export default ActionsDropdown;

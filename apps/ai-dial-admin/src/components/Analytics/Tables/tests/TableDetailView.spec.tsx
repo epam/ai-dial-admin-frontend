@@ -433,6 +433,52 @@ describe('TableDetailView schema metadata', () => {
     expect(screen.queryByText(AnalyticsTablesI18nKey.OrderingKey)).not.toBeInTheDocument();
   });
 
+  // The summary is where a key is read rather than chosen, so it carries the same explanations the draft
+  // surface does — minus the group note, whose point is that the values can still be set.
+  test('an active source table explains every summarized key', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({
+          ordering_key: ['event_id'],
+          partition_by: { column: 'request_time', granularity: PartitionGranularity.Day },
+          identity_column: 'event_id',
+          version_column: 'request_time',
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    [
+      AnalyticsTablesI18nKey.OrderingKeyHint,
+      AnalyticsTablesI18nKey.PartitionColumnHint,
+      AnalyticsTablesI18nKey.GranularityHint,
+      AnalyticsTablesI18nKey.IdentityColumnHint,
+      AnalyticsTablesI18nKey.VersionColumnHint,
+    ].forEach((hint) => expect(screen.getByRole('button', { name: hint })).toBeInTheDocument());
+    expect(screen.queryByText(AnalyticsTablesI18nKey.KeysNote)).toBeNull();
+  });
+
+  test('an active enrichment table explains its grain key', () => {
+    render(
+      <TableDetailView
+        name="order_flags"
+        initialTable={table({
+          name: 'order_flags',
+          type: AnalyticsTableType.Enrichment,
+          source_table: 'orders',
+          grain: { grain_key: 'order_id' },
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.GrainKeyHint })).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.KeysNote)).toBeNull();
+  });
+
   test('an active enrichment table names the source table it enriches', () => {
     render(
       <TableDetailView
