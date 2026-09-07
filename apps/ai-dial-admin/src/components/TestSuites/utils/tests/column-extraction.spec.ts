@@ -51,7 +51,7 @@ describe('resolveInvocationColumns', () => {
     ]);
   });
 
-  // The only failure signal is an explicit null, so a legitimately falsy value must stay Extracted.
+  // See formatExtractedValue's JSDoc: a legitimately falsy value must stay Extracted.
   test.each([
     ['false', false, 'false'],
     ['zero', 0, '0'],

@@ -79,12 +79,11 @@ export const resolveInvocationColumns = (
 
     const value = extractedColumns[column.name];
     const warning = warningFor(extractionWarnings, column.name);
+    const base = { name: column.name, expression: warning?.expression || column.expression, type: column.type };
 
     if (value === null) {
       return {
-        name: column.name,
-        expression: warning?.expression || column.expression,
-        type: column.type,
+        ...base,
         status: ColumnExtractionStatus.Failed,
         result: '',
         ...(warning?.error ? { error: warning.error } : {}),
@@ -92,9 +91,7 @@ export const resolveInvocationColumns = (
     }
 
     return {
-      name: column.name,
-      expression: warning?.expression || column.expression,
-      type: column.type,
+      ...base,
       status: ColumnExtractionStatus.Extracted,
       result: formatExtractedValue(value),
     };

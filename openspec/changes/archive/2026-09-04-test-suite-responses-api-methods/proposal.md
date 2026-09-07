@@ -102,8 +102,12 @@ because they bound the change:
    `$join(output[type='message'].content[type='output_text'].text)`. This repo's own
    `src/utils/analytics/hop-inspector/responses.ts` walks the same path over measured DIAL traffic,
    which corroborates the document.
-2. Whether the Evaluation Framework expands `${{variable}}` placeholders inside
-   `requestTemplate.urlTemplate`, not only inside the request body, is unconfirmed. The three
-   parameterised operations are only usable if it does. If it does not, they are dropped and the group
-   ships with `POST /responses` alone — the gating, the model seeding, and the grouping refactor are
-   unaffected either way.
+2. **Resolved.** Whether the Evaluation Framework expands `${{variable}}` placeholders inside
+   `requestTemplate.urlTemplate`, not only inside the request body — confirmed from the codebase:
+   `getTemplateParameterVariables` (`src/components/TestSuites/utils/request-template-params.ts`) scans
+   the whole `TestSuiteRequestTemplate` — URL, headers, query params, and body alike — so a
+   `${{response_id}}` in `urlTemplate` becomes a bindable variable the same way a body placeholder
+   does. All four Responses operations ship, including the three response-scoped ones whose
+   `urlTemplate` carries `${{response_id}}`. Residual, per `design.md` — that is the frontend's
+   contract for discovering and binding the variable; that the backend substitutes it into the
+   outgoing URL at run time was not confirmed against a live one.

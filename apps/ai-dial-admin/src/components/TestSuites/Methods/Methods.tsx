@@ -41,17 +41,15 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
   const [fullApplication, setFullApplication] = useState<Deployment | null>();
   const [isLoading, setIsLoading] = useState(true);
 
-  const groups = useMemo(
-    () =>
-      buildMethodGroups({
-        deployment: fullApplication,
-        endpointRef: testSuite.endpointRef,
-        takenColumnNames,
-      }),
+  const buildGroupsFor = useCallback(
+    (deployment?: Deployment | null) =>
+      buildMethodGroups({ deployment, endpointRef: testSuite.endpointRef, takenColumnNames }),
     // `takenColumnNames` is a fresh array each render; its contents are what matter here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fullApplication, testSuite.endpointRef, takenColumnNames.join(',')],
+    [testSuite.endpointRef, takenColumnNames.join(',')],
   );
+
+  const groups = useMemo(() => buildGroupsFor(fullApplication), [buildGroupsFor, fullApplication]);
 
   const options = useMemo(() => flattenMethodGroups(groups), [groups]);
 
@@ -95,13 +93,7 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
         .then((data) => {
           setFullApplication(data);
 
-          const loadedOptions = flattenMethodGroups(
-            buildMethodGroups({
-              deployment: data,
-              endpointRef: testSuite.endpointRef,
-              takenColumnNames,
-            }),
-          );
+          const loadedOptions = flattenMethodGroups(buildGroupsFor(data));
           const selectedIndex = loadedOptions.findIndex(
             ({ ref }) =>
               ref.method === testSuite.endpointRef?.method &&

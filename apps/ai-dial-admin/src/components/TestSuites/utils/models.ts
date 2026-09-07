@@ -2,9 +2,12 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import {
   ExtractionWarning,
+  ResponseColumn,
+  TestCaseSchema,
   TestSuite,
   TestSuiteEndpointRef,
   TryOutCoreResponse,
+  TryOutHistoryEntry,
 } from '@/src/models/evaluation/test-suite';
 import { TryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
 
@@ -90,4 +93,15 @@ export interface TryOutColumnResults {
   shape: TryOutSectionShape;
   flatColumns?: EvaluatedColumn[];
   groups?: TryOutColumnGroupResult[];
+}
+
+export interface EvaluateTryOutColumnSectionsParams {
+  testSuite: TestSuite;
+  history?: TryOutHistoryEntry[];
+  schema?: TestCaseSchema[];
+  multiTurnLength?: number;
+  fallbackColumns?: ResponseColumn[];
+  fallbackInvocation?: TryOutInvocation;
+  fallbackResponse?: Record<string, unknown>;
+  fallbackRequest?: Record<string, unknown>;
 }

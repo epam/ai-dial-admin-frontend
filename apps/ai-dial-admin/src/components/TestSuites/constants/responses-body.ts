@@ -1,6 +1,5 @@
 /**
- * `model` carries the target's deployment id rather than a template variable: DIAL's Responses API
- * endpoint has no deployment segment in its URL, so this field is what selects the deployment.
+ * `model` carries the target's deployment id rather than a template variable.
  * `reseedResponsesModel` keeps it in step when the suite's target changes.
  */
 export const RESPONSES_BODY = (deploymentId: string) => ({

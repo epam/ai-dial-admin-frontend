@@ -37,22 +37,28 @@ interface Props {
   selectedRequestIndex?: number;
 }
 
-const CARD_CLASS: Record<ColumnExtractionStatus, string> = {
-  [ColumnExtractionStatus.Extracted]: 'border-success bg-success',
-  [ColumnExtractionStatus.Failed]: 'border-error bg-error',
-  [ColumnExtractionStatus.NotExtracted]: 'border-primary bg-layer-2',
-};
+interface ColumnStatusStyle {
+  cardClass: string;
+  badgeClass: string;
+  labelKey: string;
+}
 
-const BADGE_CLASS: Record<ColumnExtractionStatus, string> = {
-  [ColumnExtractionStatus.Extracted]: 'border-success bg-controls-accent-success-alpha-hover',
-  [ColumnExtractionStatus.Failed]: 'border-error bg-controls-error-alpha-hover',
-  [ColumnExtractionStatus.NotExtracted]: 'border-primary bg-layer-3',
-};
-
-const STATUS_LABEL_KEY: Record<ColumnExtractionStatus, string> = {
-  [ColumnExtractionStatus.Extracted]: ValidityStatusI18nKey.Valid,
-  [ColumnExtractionStatus.Failed]: ValidityStatusI18nKey.Invalid,
-  [ColumnExtractionStatus.NotExtracted]: TestSuitesI18nKey.ColumnNotExtracted,
+const COLUMN_STATUS_STYLE: Record<ColumnExtractionStatus, ColumnStatusStyle> = {
+  [ColumnExtractionStatus.Extracted]: {
+    cardClass: 'border-success bg-success',
+    badgeClass: 'border-success bg-controls-accent-success-alpha-hover',
+    labelKey: ValidityStatusI18nKey.Valid,
+  },
+  [ColumnExtractionStatus.Failed]: {
+    cardClass: 'border-error bg-error',
+    badgeClass: 'border-error bg-controls-error-alpha-hover',
+    labelKey: ValidityStatusI18nKey.Invalid,
+  },
+  [ColumnExtractionStatus.NotExtracted]: {
+    cardClass: 'border-primary bg-layer-2',
+    badgeClass: 'border-primary bg-layer-3',
+    labelKey: TestSuitesI18nKey.ColumnNotExtracted,
+  },
 };
 
 /** Stated per reason rather than through a lookup, so each key keeps its own interpolation params. */
@@ -70,21 +76,22 @@ const getNotExtractedReason = (t: ReturnType<typeof useI18n>, column: EvaluatedC
 const ColumnResultCard: FC<{ column: EvaluatedColumn }> = ({ column }) => {
   const t = useI18n();
   const isNotExtracted = column.status === ColumnExtractionStatus.NotExtracted;
-  const statusLabel = t(STATUS_LABEL_KEY[column.status]);
+  const statusStyle = COLUMN_STATUS_STYLE[column.status];
+  const statusLabel = t(statusStyle.labelKey);
   const reason = isNotExtracted ? getNotExtractedReason(t, column) : column.error;
 
   return (
     <div
       role="group"
       aria-label={t(TestSuitesI18nKey.ColumnResultLabel, { name: column.name, status: statusLabel })}
-      className={classNames('flex flex-col gap-2 rounded p-3 border', CARD_CLASS[column.status])}
+      className={classNames('flex flex-col gap-2 rounded p-3 border', statusStyle.cardClass)}
     >
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row gap-2 items-center">
           <div className="small-text-semi text-primary">{column.name}</div>
           <DialTag label={capitalize(column.type)} />
         </div>
-        <DialTag label={statusLabel} className={BADGE_CLASS[column.status]} />
+        <DialTag label={statusLabel} className={statusStyle.badgeClass} />
       </div>
       <div className="text-secondary text-sm">{column.expression}</div>
       {reason ? <div className="text-secondary text-sm">{reason}</div> : null}

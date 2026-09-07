@@ -18,8 +18,8 @@
  * - `model` is typed as a plain string and described as a deployment id, rather than carrying the
  *   document's enum of OpenAI model names — the value that belongs here is a DIAL deployment id.
  * - `model` and `input` are marked required. The document marks neither (`model` can arrive via
- *   `prompt`, and `input` via `conversation`), but DIAL's endpoint has no deployment segment in its
- *   URL, so `model` is the only deployment selector, and a test suite with no input does nothing.
+ *   `prompt`, and `input` via `conversation`), but here `model` is the only deployment selector (see
+ *   `reseedResponsesModel`), and a test suite with no input does nothing.
  * - The deep unions — `ResponseInputItem` (33 variants), `Tool` (16), `ResponseOutputItem` (28) — are
  *   represented by their discriminator plus the variants a test suite actually exercises, not
  *   inlined whole. `convertSchemaToTable` renders only top-level properties, so the full expansion

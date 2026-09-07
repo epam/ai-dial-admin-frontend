@@ -44,7 +44,6 @@ const chatResponse = {
 const mcpSuite: TestSuite = { suiteType: SuiteType.McpTool };
 const deploymentSuite: TestSuite = { suiteType: SuiteType.Deployment };
 
-// evaluateColumns is the MCP fallback: the one path whose try-out reports no extraction of its own.
 describe('evaluateColumns', () => {
   test('should resolve a simple nested path expression', async () => {
     const columns = [makeColumn()];

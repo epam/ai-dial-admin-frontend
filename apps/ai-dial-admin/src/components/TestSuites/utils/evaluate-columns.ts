@@ -1,25 +1,16 @@
 import jsonata from 'jsonata';
 
-import { resolveInvocationColumns } from '@/src/components/TestSuites/utils/column-extraction';
-import {
-  normalizeResponseBodyForColumns,
-  unwrapJsonRequestBody,
-} from '@/src/components/TestSuites/utils/column-eval-context';
+import { formatExtractedValue, resolveInvocationColumns } from '@/src/components/TestSuites/utils/column-extraction';
 import {
   ColumnExtractionStatus,
   EvaluatedColumn,
+  EvaluateTryOutColumnSectionsParams,
   TryOutColumnGroupResult,
   TryOutColumnResults,
   TryOutColumnTurnResult,
   TryOutInvocation,
 } from '@/src/components/TestSuites/utils/models';
-import {
-  ResponseColumn,
-  SuiteType,
-  TestCaseSchema,
-  TestSuite,
-  TryOutHistoryEntry,
-} from '@/src/models/evaluation/test-suite';
+import { ResponseColumn, SuiteType, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import { toRequestView } from '@/src/utils/evaluation/request-chain';
 import {
   getRequestTurnCounts,
@@ -31,12 +22,6 @@ import {
 const hasContent = (value?: Record<string, unknown>): boolean => !!value && Object.keys(value).length > 0;
 
 const historyEntryDisplayBody = (entry: TryOutHistoryEntry): unknown => entry.response?.body;
-
-const historyEntryResponse = (entry: TryOutHistoryEntry): Record<string, unknown> =>
-  normalizeResponseBodyForColumns(entry.response?.body as Record<string, unknown> | undefined) || {};
-
-const historyEntryRequest = (entry: TryOutHistoryEntry): Record<string, unknown> | undefined =>
-  unwrapJsonRequestBody(entry.resolvedRequest?.body as Record<string, unknown> | undefined);
 
 const historyEntryInvocation = (entry: TryOutHistoryEntry): TryOutInvocation => ({
   response: entry.response,
@@ -71,7 +56,7 @@ export const evaluateColumns = async (
 
         if (evaluated != null) {
           status = ColumnExtractionStatus.Extracted;
-          result = typeof evaluated === 'object' ? JSON.stringify(evaluated) : String(evaluated);
+          result = formatExtractedValue(evaluated);
         }
       } catch {
         result = '';
@@ -88,17 +73,6 @@ export const evaluateColumns = async (
     }),
   );
 };
-
-interface EvaluateTryOutColumnSectionsParams {
-  testSuite: TestSuite;
-  history?: TryOutHistoryEntry[];
-  schema?: TestCaseSchema[];
-  multiTurnLength?: number;
-  fallbackColumns?: ResponseColumn[];
-  fallbackInvocation?: TryOutInvocation;
-  fallbackResponse?: Record<string, unknown>;
-  fallbackRequest?: Record<string, unknown>;
-}
 
 /**
  * Column results for every section the Try Out panel shows.
@@ -153,9 +127,7 @@ export const evaluateTryOutColumnSections = async ({
     const turns: TryOutColumnTurnResult[] = [];
 
     for (const { turnIndex, item } of group.turns) {
-      const columns = isMcp
-        ? await evaluateColumns(requestColumns, historyEntryResponse(item), historyEntryRequest(item))
-        : resolveInvocationColumns(requestColumns, historyEntryInvocation(item));
+      const columns = resolveInvocationColumns(requestColumns, historyEntryInvocation(item));
 
       turns.push({ turnIndex, columns, responseBody: historyEntryDisplayBody(item) });
     }
