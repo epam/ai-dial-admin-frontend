@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { PlatformAsset } from '@/src/models/dial/resource';
+import { PlatformAsset, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import DuplicatePlatformAsset from '../DuplicatePlatformAsset';
 
@@ -117,6 +117,107 @@ describe('DuplicatePlatformAsset', () => {
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
       expect(onDuplicate).toHaveBeenCalledWith({ ...platformEntity, name: 'pl_Ts-copy' });
+    });
+  });
+
+  // Regression: Core never returns a real client_secret on read, so an OAuth toolset or external
+  // service copied verbatim onto the clone fails Core's write-time validation.
+  describe('a platform-bucket toolset with OAuth auth settings', () => {
+    const toolset = {
+      name: 'pl_Ts',
+      display_name: 'Platform Toolset',
+      auth_settings: { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' },
+    } as unknown as PlatformAsset;
+
+    test('resets auth_settings to NONE on duplicate', async () => {
+      const user = userEvent.setup();
+      const { onDuplicate } = renderModal(ApplicationRoute.AssetsToolsets, toolset);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+      expect(onDuplicate).toHaveBeenCalledWith({
+        ...toolset,
+        name: 'pl_Ts-copy',
+        auth_settings: { authentication_type: ToolsetAuthType.NONE },
+      });
+    });
+  });
+
+  test('leaves a platform-bucket toolset with non-OAuth auth settings unchanged on duplicate', async () => {
+    const user = userEvent.setup();
+    const toolset = {
+      name: 'pl_Ts',
+      display_name: 'Platform Toolset',
+      auth_settings: { authentication_type: ToolsetAuthType.API_KEY, api_key_header: 'X-Key' },
+    } as unknown as PlatformAsset;
+    const { onDuplicate } = renderModal(ApplicationRoute.AssetsToolsets, toolset);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+    expect(onDuplicate).toHaveBeenCalledWith({ ...toolset, name: 'pl_Ts-copy' });
+  });
+
+  describe('a platform-bucket application with external services', () => {
+    test('resets an OAuth external service to NONE on duplicate', async () => {
+      const user = userEvent.setup();
+      const application = {
+        name: 'pl_App',
+        display_name: 'Platform Application',
+        external_services: {
+          svc: {
+            display_name: 'Service',
+            auth_settings: { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' },
+          },
+        },
+      } as unknown as PlatformAsset;
+      const { onDuplicate } = renderModal(ApplicationRoute.AssetsApplications, application);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+      expect(onDuplicate).toHaveBeenCalledWith({
+        ...application,
+        name: 'pl_App-copy',
+        external_services: {
+          svc: {
+            display_name: 'Service',
+            auth_settings: { authentication_type: ToolsetAuthType.NONE },
+          },
+        },
+      });
+    });
+
+    test('resets only the OAuth entry in a mix of OAuth and non-OAuth external services', async () => {
+      const user = userEvent.setup();
+      const application = {
+        name: 'pl_App',
+        display_name: 'Platform Application',
+        external_services: {
+          oauthSvc: { auth_settings: { authentication_type: ToolsetAuthType.OAUTH } },
+          apiKeySvc: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
+        },
+      } as unknown as PlatformAsset;
+      const { onDuplicate } = renderModal(ApplicationRoute.AssetsApplications, application);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+      expect(onDuplicate).toHaveBeenCalledWith({
+        ...application,
+        name: 'pl_App-copy',
+        external_services: {
+          oauthSvc: { auth_settings: { authentication_type: ToolsetAuthType.NONE } },
+          apiKeySvc: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
+        },
+      });
+    });
+
+    test('is unaffected when the application has no external services', async () => {
+      const user = userEvent.setup();
+      const application = { name: 'pl_App', display_name: 'Platform Application' } as unknown as PlatformAsset;
+      const { onDuplicate } = renderModal(ApplicationRoute.AssetsApplications, application);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+      expect(onDuplicate).toHaveBeenCalledWith({ ...application, name: 'pl_App-copy' });
     });
   });
 });

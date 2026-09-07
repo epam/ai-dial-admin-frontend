@@ -128,7 +128,7 @@ const ResourceSourceField: FC<Props> = ({
             onChangeEntity({
               ...entity,
               application_type_schema_id: value,
-              applicationProperties: application_properties,
+              applicationProperties: { ...application_properties, ...entity.application_properties },
             } as DialApplication)
           }
           runners={runners}
