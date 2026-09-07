@@ -2088,6 +2088,8 @@ The **display name** and **description** fields SHALL be optional and SHALL be p
 
 An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
 
+A **type-specific** control — an Array row's element type, an enum row's value list (see "A column may be declared with an enum type and a closed, ordered value list") — SHALL be presented as a column of the whole editor, not as an extra field inserted into the one row that has that type: once any row offers one, every row SHALL reserve that column's cell, left empty where the row's type does not use it, so every other field keeps the same position and the same width in every row. The column's label SHALL be rendered on the first row only, alongside the other field labels, including when the first row is not a row that uses the control — a label rendered beside a mid-list row's control is what previously put a field label in the middle of the editor and shifted that row's other fields out of line with the rows above it.
+
 For a **source** table, the Partition column field's label SHALL carry an info affordance (an icon with a hover tooltip) explaining that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious. The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
 For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance, following the Partition column pattern, stating that the values are the caller's own promise the service cannot verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) and that the choice cannot be changed once the table is materialized.
@@ -2131,6 +2133,12 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **WHEN** a column row's type is Array
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
+
+#### Scenario: A type-specific column keeps every row aligned
+
+- **WHEN** a row below the first is typed Array or enum
+- **THEN** every row reserves that control's column, empty in the rows whose type does not use it
+- **AND** the column's label is shown on the first row only, alongside the other field labels
 
 #### Scenario: A column row offers display name and description
 
@@ -2224,7 +2232,8 @@ table and the "Add columns" popup of an `ACTIVE` one — and for both **source**
 the service accepts it on either.
 
 A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
-Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+Array row offers, laid out as a column of the whole editor on the terms stated for a type-specific control in
+"Define and materialize a table schema". The control SHALL present the declared values as an **ordered** list the user can reorder,
 because a value's position in the list becomes its numeric id in the physical type and the column therefore
 sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
 nothing about a list of values otherwise suggests it.
@@ -2261,6 +2270,12 @@ enrichment's **grain key**, on the same terms as any other non-nullable, non-sen
 - **WHEN** the user sets a column row's type to enum
 - **THEN** the row offers a required value-list control
 - **AND** Save is disabled while the list is empty
+
+#### Scenario: A mid-list enum row does not repeat the value column's label
+
+- **WHEN** a row below the first is typed enum
+- **THEN** its value list renders without a second copy of the column's label beside the control
+- **AND** the column's label stays on the first row, whose value cell is empty
 
 #### Scenario: Declared values are submitted in the authored order
 
