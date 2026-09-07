@@ -256,6 +256,45 @@ describe('TableDetailView header', () => {
 
     expect(screen.getByText('Raw usage events ingested from blob storage.')).toBeInTheDocument();
   });
+
+  test('shows the description of a draft table too', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending, description: 'Not materialized yet.' })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByText('Not materialized yet.')).toBeInTheDocument();
+  });
+
+  test("states the table's kind beside the status badge", () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.TypeSource)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.TypeEnrichment)).not.toBeInTheDocument();
+  });
+
+  test('states the enrichment kind for an enrichment table', () => {
+    render(
+      <TableDetailView
+        name="order_flags"
+        initialTable={table({
+          name: 'order_flags',
+          type: AnalyticsTableType.Enrichment,
+          source_table: 'orders',
+          grain: { grain_key: 'order_id' },
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.TypeEnrichment)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.TypeSource)).not.toBeInTheDocument();
+  });
 });
 
 describe('TableDetailView columns grid', () => {
@@ -438,6 +477,58 @@ describe('TableDetailView schema metadata', () => {
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.GrainKeyHint })).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.KeysNote)).toBeNull();
+  });
+
+  test('an active enrichment table names the source table it enriches', () => {
+    render(
+      <TableDetailView
+        name="order_flags"
+        initialTable={table({
+          name: 'order_flags',
+          type: AnalyticsTableType.Enrichment,
+          source_table: 'orders',
+          grain: { grain_key: 'order_id' },
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
+    expect(screen.getByText('orders')).toBeInTheDocument();
+  });
+
+  test('a draft enrichment table names its source table and shows no grain key', () => {
+    render(
+      <TableDetailView
+        name="order_flags"
+        initialTable={table({
+          name: 'order_flags',
+          type: AnalyticsTableType.Enrichment,
+          status: TableStatus.Pending,
+          source_table: 'orders',
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
+    expect(screen.getByText('orders')).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.GrainKey)).not.toBeInTheDocument();
+  });
+
+  test('a source table shows no source-table value, since it enriches nothing', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ ordering_key: ['event_id'] })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.SourceTable)).not.toBeInTheDocument();
   });
 
   test('an active enrichment table pins its grain key as a read-only row atop the columns grid', () => {

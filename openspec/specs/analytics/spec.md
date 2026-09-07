@@ -1750,13 +1750,19 @@ autocomplete and the AI panel's request context.
 
 ### Requirement: Tables catalog page
 
-The Tables page SHALL render the tables the page fetched as a grid with columns for name, type, description, column count, and lifecycle status. The status SHALL be shown with the table status badge (Draft / Active / Failed). Clicking a row (other than the actions column) SHALL navigate to that table's detail page. Each row SHALL offer an action menu with **edit** and **delete** entries, mirroring the columns grid's own per-row action menu (one kebab icon; both entries hidden for system-owned tables); delete's confirmation dialog SHALL use the danger (red confirm) variant. The **edit** action SHALL open the table-metadata edit surface (see "Table metadata editing"). The header SHALL provide actions to create a source table and to create an enrichment table. After a successful create, edit, or delete the catalog SHALL refresh client-side.
+The Tables page SHALL render the tables the page fetched as a grid with columns for name, type, the source table an enrichment enriches, description, column count, and lifecycle status. The source-table column SHALL be blank for a source table, which enriches nothing. The status SHALL be shown with the table status badge (Draft / Active / Failed). Clicking a row (other than the actions column) SHALL navigate to that table's detail page. Each row SHALL offer an action menu with **edit** and **delete** entries, mirroring the columns grid's own per-row action menu (one kebab icon; both entries hidden for system-owned tables); delete's confirmation dialog SHALL use the danger (red confirm) variant. The **edit** action SHALL open the table-metadata edit surface (see "Table metadata editing"). The header SHALL provide actions to create a source table and to create an enrichment table. After a successful create, edit, or delete the catalog SHALL refresh client-side.
 
 #### Scenario: Catalog lists tables with navigation
 
 - **WHEN** the catalog renders with tables
-- **THEN** each table appears as a row with its name, type, description, column count, and status badge
+- **THEN** each table appears as a row with its name, type, source table, description, column count, and status badge
 - **AND** clicking a row navigates to that table's detail page
+
+#### Scenario: Catalog names the source table an enrichment enriches
+
+- **WHEN** the catalog lists an enrichment table alongside a source table
+- **THEN** the enrichment's row shows the name of the table it enriches
+- **AND** the source table's row leaves that cell blank
 
 #### Scenario: Draft and active tables are visually distinct
 
@@ -1797,9 +1803,9 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name and status badge regardless of status, and, when the table has a `description`, the description SHALL be shown beneath them regardless of status too (truncated with the full value reachable via an ellipsis tooltip, as elsewhere long text is truncated).
+The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name, status badge, and kind (source or enrichment) regardless of status; the kind SHALL be presented as a neutral tag rather than a second status-colored badge, since it is fixed for the table's lifetime. When the table has a `description`, the description SHALL be shown beneath them regardless of status too — on its own row below the row that carries the name and the header actions, as a single line spanning the full header width, truncated with the full value reachable via an ellipsis tooltip (as elsewhere long text is truncated). It SHALL NOT share the title row with the header actions, which is what previously cut it to the width they left over. The header actions SHALL NOT be compressed to make room for it: whatever the description contains, every action control SHALL keep its label on one line.
 
-While the table is `ACTIVE`, the header SHALL also show a read-only schema-metadata summary: for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. This summary SHALL NOT be shown for a `PENDING`/`FAILED` table, which instead exposes the same fields as editable inputs in the schema-definition surface.
+The header SHALL also show a read-only schema-metadata summary. While the table is `ACTIVE` that summary SHALL carry, for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, the source table it enriches and its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. For a `PENDING`/`FAILED` table the summary SHALL carry an **enrichment**'s source table and nothing else: that value is fixed at create time and so is absent from the schema-definition surface, while a source table's own key, partition, and scan-metadata fields are exposed there as editable inputs instead.
 
 For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid (name, type, tag, display name, description, nullable rendered as a true/false value); the physical source name SHALL NOT be shown as its own grid column — it is an internal identifier surfaced only where an operation requires it (see "Table detail row writes", whose insert template must key by source name). Long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions; the delete action SHALL NOT be offered for a column the table's `identity_column` or `version_column` names, since the backend rejects dropping one (422, nothing repoints the pair). Scan-metadata membership SHALL be matched on the column's physical source name, which a rename may have made different from its exposed name. The column name SHALL also be editable inline in the grid — this SHALL rename the column's exposed name only; the immutable physical source name is unaffected. Renaming a scan-metadata column SHALL remain allowed: the backend repoints the stored pair in the same transaction, and the post-change refresh SHALL therefore show the summary carrying the new name.
 
@@ -1876,8 +1882,19 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 #### Scenario: Table description shown under the header
 
 - **WHEN** a table (of any status) has a non-empty `description`
-- **THEN** the description is shown under the name and status badge
+- **THEN** the description is shown under the name and status badge as one line spanning the full header width, independent of how much width the header actions occupy
+- **AND** a description too long for that line is truncated with its full value reachable via the ellipsis tooltip
 - **AND** a table with no description shows nothing in its place
+
+#### Scenario: Table detail header states the table's kind
+
+- **WHEN** a table (of any status) renders its detail page
+- **THEN** the header states whether it is a source table or an enrichment, beside the status badge
+
+#### Scenario: A long description does not reflow the header actions
+
+- **WHEN** a table whose description is long enough to overflow its line renders with its header actions
+- **THEN** each action control keeps its label on a single line
 
 #### Scenario: Source table shows its schema metadata summary
 
@@ -1901,6 +1918,13 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 - **WHEN** an `ACTIVE` **enrichment** table renders
 - **THEN** its grain key is shown in the header summary
+
+#### Scenario: Enrichment header names the source table it enriches
+
+- **WHEN** an `ACTIVE` **enrichment** table renders
+- **THEN** the source table it enriches is shown in the header summary alongside the grain key
+- **AND** a `PENDING` or `FAILED` enrichment shows that source table too, with no grain key beside it
+- **AND** a source table shows no such value, because it enriches nothing
 
 #### Scenario: Enrichment grid pins the grain key with backfilled metadata
 
