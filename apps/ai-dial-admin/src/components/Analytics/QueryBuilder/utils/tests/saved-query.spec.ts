@@ -3,7 +3,8 @@ import { describe, expect, test } from 'vitest';
 import {
   deriveSavedQueryEditor,
   toMetadataReplaceRequest,
-  savedQueryEntityName,
+  savedQueryPrimarySource,
+  savedQuerySourcesLabel,
   toBuilderRestore,
   toSavedQueryRequest,
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
@@ -313,17 +314,44 @@ describe('deriveSavedQueryEditor', () => {
   });
 });
 
-describe('savedQueryEntityName', () => {
+describe('savedQueryPrimarySource', () => {
   test('prefers the body entity', () => {
-    expect(savedQueryEntityName({ query: { entity: 'a', mode: QueryMode.Row }, source: 'b' })).toBe('a');
+    expect(savedQueryPrimarySource({ query: { entity: 'a', mode: QueryMode.Row }, source: ['b'] })).toBe('a');
   });
 
   test('falls back to the derived source for a SQL body', () => {
-    expect(savedQueryEntityName({ source: 'b' })).toBe('b');
+    expect(savedQueryPrimarySource({ source: ['b'] })).toBe('b');
+  });
+
+  test('takes the first source of a composite SQL body', () => {
+    expect(savedQueryPrimarySource({ source: ['conversations', 'dial_usage_log'] })).toBe('conversations');
+  });
+
+  test('reads a single-name source from an older service', () => {
+    expect(savedQueryPrimarySource({ source: 'dial_usage_log' as unknown as string[] })).toBe('dial_usage_log');
+  });
+
+  test('returns an empty name for an empty source list', () => {
+    expect(savedQueryPrimarySource({ source: [] })).toBe('');
   });
 
   test('returns an empty name when neither is present', () => {
-    expect(savedQueryEntityName({})).toBe('');
+    expect(savedQueryPrimarySource({})).toBe('');
+  });
+});
+
+describe('savedQuerySourcesLabel', () => {
+  test('joins every source', () => {
+    expect(savedQuerySourcesLabel(['conversations', 'dial_usage_log'])).toBe('conversations, dial_usage_log');
+  });
+
+  test('renders a single-name source from an older service', () => {
+    expect(savedQuerySourcesLabel('dial_usage_log' as unknown as string[])).toBe('dial_usage_log');
+  });
+
+  test('renders an absent or empty source as an empty label', () => {
+    expect(savedQuerySourcesLabel(void 0)).toBe('');
+    expect(savedQuerySourcesLabel([])).toBe('');
   });
 });
 
@@ -364,7 +392,7 @@ describe('toBuilderRestore', () => {
   });
 
   test('opens a SQL body in the SQL view with the stored statement intact', () => {
-    const result = restore({ sql: 'SELECT count(*) FROM dial_usage_log', source: 'dial_usage_log' });
+    const result = restore({ sql: 'SELECT count(*) FROM dial_usage_log', source: ['dial_usage_log'] });
 
     expect(result.editor).toBe(SavedQueryEditor.Sql);
     expect(result.sqlText).toBe('SELECT count(*) FROM dial_usage_log');
@@ -483,7 +511,7 @@ describe('toMetadataReplaceRequest', () => {
     description: 'For Monday',
     tag: 'Adoption',
     scope: SavedQueryScope.Personal,
-    source: 'dial_usage_log',
+    source: ['dial_usage_log'],
     query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
     time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
     result_view: QueryResultView.Chart,
