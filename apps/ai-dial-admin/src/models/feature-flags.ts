@@ -6,5 +6,6 @@ export interface FeatureFlags {
   nimEnabled: boolean;
   hfEnabled: boolean;
   analyticsEnabled: boolean;
+  analyticsConversationsEnabled: boolean;
   queryAssistantEnabled: boolean;
 }

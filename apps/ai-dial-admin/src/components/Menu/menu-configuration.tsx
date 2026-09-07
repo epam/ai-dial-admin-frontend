@@ -268,5 +268,13 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
     result = result.filter((item) => item.key !== MenuI18nKey.Analytics);
   }
 
+  if (!featureFlags.analyticsConversationsEnabled) {
+    result = result.map((group) =>
+      group.key === MenuI18nKey.Analytics
+        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsConversations) }
+        : group,
+    );
+  }
+
   return result;
 };
