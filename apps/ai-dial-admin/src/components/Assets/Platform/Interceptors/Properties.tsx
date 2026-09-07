@@ -36,7 +36,12 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
         />
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
-        <InterfacesField entity={asset} onChangeEntity={onChange} allowedTypes={INTERCEPTOR_INTERFACE_TYPES} isAsset />
+        <InterfacesField
+          interfaces={asset.interfaces}
+          onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
+          allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
+          isAsset
+        />
         <EndpointControl
           id="endpoint"
           label={t(EntityFieldsI18nKey.endpoint)}
