@@ -12,10 +12,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialSelectField: ({ label, options, value, onChange, error }: any) => (
+    DialSelectField: ({ id, label, options, value, onChange, error }: any) => (
       <label>
         <span>{label}</span>
-        <select aria-label={label} value={value} onChange={(e: any) => onChange(e.target.value)}>
+        <select id={id} aria-label={label} value={value} onChange={(e: any) => onChange(e.target.value)}>
           {options.map((o: any) => (
             <option key={o.value} value={o.value}>
               {o.label}
@@ -42,6 +42,13 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 const row = (overrides?: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
+
+// A label the user can actually read: the value list's own label is clipped (`sr-only` on its wrapper) in every
+// row but the first, because Multiselect always renders one and the editor labels that column itself.
+const visibleLabels = (container: HTMLElement, text: string) =>
+  Array.from(container.querySelectorAll('label')).filter(
+    (label) => label.textContent?.includes(text) && !label.parentElement?.className.includes('sr-only'),
+  );
 
 describe('ColumnRowsEditor', () => {
   test('a single Name field fills both source_name and name on the row', () => {
@@ -274,6 +281,49 @@ describe('ColumnRowsEditor', () => {
       );
       expect(container.querySelector('.items-start')).toBeTruthy();
       expect(container.querySelector('.items-end')).toBeNull();
+    });
+  });
+
+  // A type-specific control is a column of the whole editor, not an extra field in the one row that has that
+  // type: once any row offers one, every row reserves its cell so the fields to its right keep their place, and
+  // the column's label stays with the other labels on the first row.
+  describe('the type-specific columns', () => {
+    test('holds the element-type control only in the Array row, and its label on the first row', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Array })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(container.querySelector(`#col-element-type-${rows[1].id}`)).toBeTruthy();
+      expect(container.querySelector(`#col-element-type-${rows[0].id}`)).toBeNull();
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.ElementType)).toHaveLength(1);
+    });
+
+    test('labels the value column on the first row even when a later row is the enum row', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.EnumValues)).toHaveLength(1);
+      // Only the enum row holds the value list itself — the first row's cell stays empty.
+      expect(
+        Array.from(container.querySelectorAll('label[for^="col-enum-values-"]')).map((label) =>
+          label.getAttribute('for'),
+        ),
+      ).toEqual([`col-enum-values-${rows[1].id}`]);
+    });
+
+    test('clips the value-list label of an enum row below the first', () => {
+      const rows = [row({ type: AnalyticsFieldType.Enum }), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      expect(container.querySelectorAll('label[for^="col-enum-values-"]')).toHaveLength(2);
+      expect(visibleLabels(container, AnalyticsTablesI18nKey.EnumValues)).toHaveLength(1);
+    });
+
+    test('lays out every row with the same cells once one row needs a type-specific control', () => {
+      const rows = [row(), row({ type: AnalyticsFieldType.Enum })];
+      const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+      const [firstRow, secondRow] = Array.from(container.firstElementChild?.children ?? []);
+      expect(firstRow.children).toHaveLength(secondRow.children.length);
     });
   });
 });
