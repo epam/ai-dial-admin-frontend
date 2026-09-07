@@ -102,4 +102,25 @@ describe('PlatformApplicationView', () => {
     expect(tabLabels.indexOf(TabsI18nKey.Tools)).toBeGreaterThan(-1);
     expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeLessThan(tabLabels.indexOf(TabsI18nKey.Interceptors));
   });
+
+  test.each([
+    [[], true],
+    [['role'], false],
+    [undefined, false],
+  ])('Should set the Roles tab warning icon presence to %s for user_roles %s', (userRoles, expectedWarning) => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={{ ...mockOriginalApp, user_roles: userRoles } as AssetApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
+    expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+  });
 });

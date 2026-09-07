@@ -1,16 +1,16 @@
 'use client';
 
-import { DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNotification, DialPrimaryButton, DialSwitch, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import { getNoAvailableTitle } from '@/src/components/EntityView/Roles/utils';
+import { getNoAvailableTitle, isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -37,11 +37,17 @@ interface Props<T> {
  * tab (`Assets > Models`, `Assets > Routes`), the same way `EntityInterceptors`
  * (`components/EntityView/Interceptors/Interceptors.tsx`) is shared across multiple entity/asset
  * surfaces' Interceptors tab.
+ *
+ * Mirrors the config-entity Roles tab's layout (`EntityRoles`/`RolesGrid`), but the availability
+ * toggle binds to `userRoles` being an array vs. `undefined`/`null` rather than `RolesGrid`'s
+ * `isPublic` flag — this asset has no separate "public" concept, only Core's own three-state
+ * `userRoles`.
  */
 const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, onChange }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const isSpecificRoles = Array.isArray(asset.userRoles);
 
   /**
    * Built from `userRoles` rather than by intersecting it with the fetched list, so a role the list
@@ -82,6 +88,13 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
     [asset, onChange],
   );
 
+  const onSwitchSpecificRoles = useCallback(
+    (isOn: boolean) => {
+      onChange({ ...asset, userRoles: isOn ? [] : undefined });
+    },
+    [asset, onChange],
+  );
+
   const columnDefs = useMemo(
     () => (isReadOnlyAdmin ? BASE_COLUMNS : [...BASE_COLUMNS, ACTION_COLUMN([getRemoveOperation(onRemoveRole)])]),
     [isReadOnlyAdmin, onRemoveRole],
@@ -89,20 +102,41 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      {!isReadOnlyAdmin && (
-        <div>
-          <DialNeutralButton
-            title={t(RolesI18nKey.AddRoles)}
+      <div className="flex flex-row items-center justify-between h-[42px]">
+        <div className="flex flex-row items-center">
+          <h1 className="mr-3">
+            {t(TabsI18nKey.Roles)}: {selectedRoles.length}
+          </h1>
+          {!isReadOnlyAdmin && (
+            <DialSwitch
+              isOn={isSpecificRoles}
+              label={t(RolesI18nKey.AvailableSpecificRoles)}
+              switchId="specificRoles"
+              onChange={onSwitchSpecificRoles}
+            />
+          )}
+        </div>
+
+        {!isReadOnlyAdmin && isSpecificRoles && (
+          <DialPrimaryButton
+            label={t(RolesI18nKey.AddRoles)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenModal}
           />
-        </div>
-      )}
+        )}
+      </div>
 
-      {selectedRoles.length ? (
-        <GridView rowData={selectedRoles} columnDefs={columnDefs} />
-      ) : (
-        <DialNoDataContent title={t(getNoAvailableTitle(view))} />
+      <div className="flex-1 min-h-0">
+        <GridView
+          rowData={selectedRoles}
+          columnDefs={columnDefs}
+          emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
+          getIsEmptyData={() => !selectedRoles.length}
+        />
+      </div>
+
+      {isAssetUnavailable(asset.userRoles) && (
+        <DialNotification variant={NotificationVariant.Info} message={t(getNoAvailableTitle(view))} />
       )}
 
       <AddEntitiesGrid
