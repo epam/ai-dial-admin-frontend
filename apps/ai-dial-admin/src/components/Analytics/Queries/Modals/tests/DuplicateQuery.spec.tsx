@@ -33,7 +33,7 @@ const STRUCTURED: SavedQuery = {
   description: 'For the Monday review',
   tag: 'Adoption',
   scope: SavedQueryScope.Personal,
-  source: 'dial_usage_log',
+  source: ['dial_usage_log'],
   query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate },
   time: { mode: SavedQueryTimeMode.Relative, period: '7d' },
   result_view: QueryResultView.Chart,

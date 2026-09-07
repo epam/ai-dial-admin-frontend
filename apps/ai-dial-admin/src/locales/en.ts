@@ -2479,8 +2479,10 @@ export default {
     ResultsEmptyDescription: 'Press Run to execute the query and see results here.',
     ModeSwitcher: 'Query mode',
     DiscardQueryHeader: 'Discard current query?',
-    DiscardQueryDescription:
+    DiscardQueryDescriptionBuilder:
       'This query cannot be shown in the visual builder. Switching will drop it and reset the builder to its starting point.',
+    DiscardQueryDescriptionJson:
+      'This SQL could not be translated into a structured query. Switching to JSON will drop it and reset the builder to its starting point.',
     NotShownInBuilder: 'This query cannot be shown in the visual builder — it stays runnable here.',
     SearchFields: 'Search fields',
     NoMatchingFields: 'No matching fields',

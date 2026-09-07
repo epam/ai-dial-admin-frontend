@@ -135,8 +135,24 @@ export const deriveSavedQueryEditor = (
   return saved.query ? SavedQueryEditor.Json : SavedQueryEditor.Builder;
 };
 
-export const savedQueryEntityName = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
-  saved.query?.entity ?? saved.source ?? '';
+// A deployment may still answer with a single name rather than a list, so every read of `source` goes
+// through this rather than indexing the member: indexing a string would yield its first character.
+const savedQuerySources = (source: SavedQuery['source']): string[] => {
+  if (Array.isArray(source)) return source;
+  return typeof source === 'string' && source ? [source] : [];
+};
+
+// The one entity a saved query is treated as being about, for every consumer needing exactly one: the
+// schema prefetch, the source selector, SQL autocomplete, and the assistant's schema message. A SQL
+// body falls back to the first source, which for a composite statement is the alphabetically first
+// entity the service reports — arbitrary but stable, and better than no field suggestions at all.
+// `''` means nothing resolved, which callers read as "load no schema".
+export const savedQueryPrimarySource = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
+  saved.query?.entity ?? savedQuerySources(saved.source)[0] ?? '';
+
+// Every source a query reads, as one display string — for the Queries grid, where the full set belongs
+// on screen rather than the single primary source.
+export const savedQuerySourcesLabel = (source: SavedQuery['source']): string => savedQuerySources(source).join(', ');
 
 const parseInstant = (value: string): Date | null => {
   const date = new Date(value);
@@ -166,7 +182,7 @@ const toTimeRestore = (time: SavedQuery['time'], knownPeriods: string[]): SavedQ
 
 export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryRestore => {
   const { saved, fields, functions, knownPeriods } = input;
-  const entityName = savedQueryEntityName(saved);
+  const entityName = savedQueryPrimarySource(saved);
 
   const editor = deriveSavedQueryEditor(saved, functions);
   // Only a query the builder can hold reaches builder state. Parsing one it cannot would seed the
