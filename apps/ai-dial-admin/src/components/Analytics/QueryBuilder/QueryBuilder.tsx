@@ -306,8 +306,15 @@ const QueryBuilder: FC<Props> = ({
   };
 
   const leaveSqlBuffer = async (next: QueryBuilderView): Promise<void> => {
-    const res = await translateSqlToQuery(sqlText);
-    const translated = res.success ? (res.response?.query ?? null) : null;
+    // A round trip that fails in transit is guarded exactly like a refused translation: either way
+    // there is no body to show, and letting the rejection escape would leave the view switch half-done.
+    let translated: StructuredQuery | null = null;
+    try {
+      const res = await translateSqlToQuery(sqlText);
+      translated = res?.success ? (res.response?.query ?? null) : null;
+    } catch {
+      translated = null;
+    }
     const isRepresentable = !!translated && isBuilderRepresentable(translated, state.functions);
 
     if (!translated || (next === QueryBuilderView.Form && !isRepresentable)) {

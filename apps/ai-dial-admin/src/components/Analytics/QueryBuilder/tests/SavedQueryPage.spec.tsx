@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { executeQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
+import { executeQuery, translateSqlToQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -405,12 +405,17 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(screen.getByRole('button', { name: 'Buttons.Edit' })).toBeInTheDocument();
     });
 
-    test('leaving the SQL view does not replace a stored SQL body with builder state', async () => {
+    test('an untranslatable stored SQL body survives an attempted JSON switch', async () => {
       const user = userEvent.setup();
+      vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
       renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
 
       await screen.findByLabelText('sql-editor');
       await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+      // The switch is guarded rather than taken, so the stored SQL is still what a save sends.
+      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await user.click(saveButton()!);
 
@@ -418,6 +423,36 @@ describe('QueryBuilder — a stored saved query', () => {
       const request = sentRequest();
       expect(request.sql).toBe('SELECT count(*) FROM dial_usage_log');
       expect('query' in request).toBeFalsy();
+    });
+
+    test('a translated stored SQL body is saved as the structured query the JSON view shows', async () => {
+      const user = userEvent.setup();
+      vi.mocked(translateSqlToQuery).mockResolvedValue({
+        success: true,
+        response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
+      } as never);
+      renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+
+      await screen.findByLabelText('sql-editor');
+      await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+      await screen.findByLabelText('json-editor');
+      await user.click(saveButton()!);
+
+      await waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+      const request = sentRequest();
+      expect(request.query?.entity).toBe('dial_usage_log');
+      expect('sql' in request).toBeFalsy();
+    });
+
+    test('a failed translation round trip is guarded rather than thrown', async () => {
+      const user = userEvent.setup();
+      vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network down'));
+      renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+
+      await screen.findByLabelText('sql-editor');
+      await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+
+      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     });
 
     test('a successful save keeps the result on screen', async () => {
