@@ -17,6 +17,7 @@ const baseFlags: FeatureFlags = {
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
+  analyticsConversationsEnabled: false,
   queryAssistantEnabled: false,
 };
 
@@ -230,8 +231,8 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics group with Tables + Enrichment rules + Evaluators + Queries + Conversations when the flag is enabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
+  test('shows the Analytics group with Tables + Enrichment rules + Evaluators + Queries + Conversations when both flags are enabled', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: true });
 
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
@@ -266,7 +267,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   });
 
   test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: true });
 
     expect(group?.items.map((item) => item.key)).not.toContain(MenuI18nKey.Conversations);
   });
@@ -278,6 +279,19 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
       group.items.map((item) => item.href),
     );
     expect(allItems).not.toContain(ApplicationRoute.ConversationsTrace);
+  });
+
+  test('hides only the Conversations sub-item when its flag is disabled', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: false });
+
+    expect(group).toBeDefined();
+    expect(group?.items.map((item) => item.key)).toEqual([
+      MenuI18nKey.Tables,
+      MenuI18nKey.Pipelines,
+      MenuI18nKey.Evaluators,
+      MenuI18nKey.Queries,
+    ]);
+    expect(group?.items.map((item) => item.href)).not.toContain(ApplicationRoute.ConversationsTrace);
   });
 
   test('gating composes independently of Deployments and Evaluation', () => {

@@ -62,6 +62,7 @@ const defaultFeatureFlags: FeatureFlags = {
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
+  analyticsConversationsEnabled: false,
   queryAssistantEnabled: false,
 };
 
