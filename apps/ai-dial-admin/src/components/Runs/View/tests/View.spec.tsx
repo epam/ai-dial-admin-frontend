@@ -14,7 +14,7 @@ vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ entity, onRemove, children, tabs, onChangeActiveTab }: any) => (
+  default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab }: any) => (
     <div role="region" aria-label="simple-header">
       <div>entity-id:{entity?.id}</div>
       <button type="button" onClick={() => onRemove(entity?.id)}>
@@ -26,6 +26,11 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
         </button>
       ))}
       {children}
+      {(adaptiveActions?.trailing ?? []).map((action: any) => (
+        <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
+          {action.label}
+        </button>
+      ))}
     </div>
   ),
 }));

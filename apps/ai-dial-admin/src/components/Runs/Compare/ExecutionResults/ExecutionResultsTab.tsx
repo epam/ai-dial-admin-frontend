@@ -2,6 +2,7 @@
 
 import {
   ColDef,
+  CellClickedEvent,
   CellKeyDownEvent,
   FilterChangedEvent,
   GridApi,
@@ -34,6 +35,7 @@ import {
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import {
   getCompareRowSelectionId,
   isMatchedCompareRow,
@@ -54,7 +56,7 @@ interface Props {
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
-  onOpenRowDetail: (row: CompareAnalyticsRow) => void;
+  onOpenRowDetail: (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => void;
   executionResultsState: ExecutionResultsTabUiState;
   setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
 }
@@ -79,6 +81,7 @@ const ExecutionResultsTab: FC<Props> = ({
   const { currentTheme } = useTheme();
 
   const gridApiRef = useRef<GridApi | null>(null);
+  const cellClickHandledRef = useRef(false);
   const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
@@ -187,9 +190,23 @@ const ExecutionResultsTab: FC<Props> = ({
     });
   }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, currentTheme]);
 
+  const onCellClicked = useCallback(
+    (event: CellClickedEvent<CompareAnalyticsRow>) => {
+      if (!event.data) return;
+      cellClickHandledRef.current = true;
+      const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
+      onOpenRowDetail(event.data, { focusFieldKey: mapGridColToPivotField(colId) });
+    },
+    [onOpenRowDetail],
+  );
+
   const onRowClicked = useCallback(
     (event: RowClickedEvent<CompareAnalyticsRow>) => {
       if (!event.data) return;
+      if (cellClickHandledRef.current) {
+        cellClickHandledRef.current = false;
+        return;
+      }
       onOpenRowDetail(event.data);
     },
     [onOpenRowDetail],
@@ -264,6 +281,7 @@ const ExecutionResultsTab: FC<Props> = ({
       ...compareGridOptions,
       rowHeight: 40,
       rowClassRules,
+      onCellClicked,
       onRowClicked,
       onCellKeyDown,
       onFilterChanged: (event: FilterChangedEvent) => {
@@ -281,7 +299,7 @@ const ExecutionResultsTab: FC<Props> = ({
         syncGridUiState(event.api);
       },
     }),
-    [rowClassRules, syncGridUiState, onRowClicked, onCellKeyDown],
+    [rowClassRules, syncGridUiState, onCellClicked, onRowClicked, onCellKeyDown],
   );
 
   useEffect(() => {

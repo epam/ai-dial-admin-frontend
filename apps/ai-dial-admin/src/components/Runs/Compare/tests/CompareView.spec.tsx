@@ -243,7 +243,7 @@ describe('CompareView', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  test('opens row detail panel when a row is clicked and closes on close button', async () => {
+  test('opens bottom pivot row detail by default when a row is clicked and closes on close button', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
@@ -263,7 +263,8 @@ describe('CompareView', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
-      expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();
+      expect(screen.getByTitle('Runs.SwitchToSidebar')).toBeInTheDocument();
+      expect(screen.getByText('Run #316')).toBeInTheDocument();
     });
 
     const panelHeading = screen.getByRole('heading', { level: 3, name: 'Test Case 1' });
@@ -273,11 +274,19 @@ describe('CompareView', () => {
     await user.click(closeButton!);
 
     await waitFor(() => {
-      expect(screen.queryByText('Runs.FieldColumn')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { level: 3, name: 'Test Case 1' })).not.toBeInTheDocument();
+    });
+
+    // Close preserves bottom mode: reopening shows pivot again (SwitchToSidebar), not sidebar.
+    fireEvent.click(row!);
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Runs.SwitchToSidebar')).toBeInTheDocument();
+      expect(screen.getByText('Run #316')).toBeInTheDocument();
     });
   });
 
-  test('switches row detail to the bottom panel (pivot default) and back to the sidebar', async () => {
+  test('switches row detail from bottom pivot to sidebar table and back', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
@@ -295,11 +304,6 @@ describe('CompareView', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByTitle('Runs.SwitchToBottom'));
-
-    await waitFor(() => {
       expect(screen.getByTitle('Runs.SwitchToSidebar')).toBeInTheDocument();
     });
 
@@ -312,9 +316,16 @@ describe('CompareView', () => {
 
     await waitFor(() => {
       expect(screen.queryByTitle('Runs.SwitchToSidebar')).not.toBeInTheDocument();
+      expect(screen.getByTitle('Runs.SwitchToBottom')).toBeInTheDocument();
+      expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();
     });
 
-    expect(screen.getByTitle('Runs.SwitchToBottom')).toBeInTheDocument();
+    await user.click(screen.getByTitle('Runs.SwitchToBottom'));
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Runs.SwitchToSidebar')).toBeInTheDocument();
+      expect(screen.getByText('Run #316')).toBeInTheDocument();
+    });
   });
 
   test('closes row detail panel when switching away from Execution Results tab', async () => {
@@ -334,11 +345,11 @@ describe('CompareView', () => {
     fireEvent.click(row!);
 
     await waitFor(() => {
-      expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' }));
 
-    expect(screen.queryByText('Runs.FieldColumn')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: 'Test Case 1' })).not.toBeInTheDocument();
   });
 });

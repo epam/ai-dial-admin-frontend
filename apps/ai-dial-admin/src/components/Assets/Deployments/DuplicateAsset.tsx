@@ -32,7 +32,7 @@ import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/ut
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
 import { isDeploymentAsset } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
-import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
+import { DialApplicationResource, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
@@ -109,6 +109,20 @@ const DuplicateAsset: FC<Props> = ({
         field: 'authSettings.apiKeyHeader',
         isValid: !!toolset.auth_settings?.api_key_header,
       });
+    }
+
+    // Core never returns a real client_secret on read, so an OAuth external service copied
+    // verbatim fails Core's write-time validation with a missing-CLIENT_SECRET error.
+    const externalServices = (entity as DialApplicationResource).external_services;
+    if (externalServices) {
+      (clonedAsset as DialApplicationResource).external_services = Object.fromEntries(
+        Object.entries(externalServices).map(([key, service]) => [
+          key,
+          service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
+            ? { ...service, auth_settings: { authentication_type: ToolsetAuthType.NONE } }
+            : service,
+        ]),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
