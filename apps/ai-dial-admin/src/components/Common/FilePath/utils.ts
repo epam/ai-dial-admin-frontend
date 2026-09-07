@@ -3,6 +3,23 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
 import { getGridOptions } from '@/src/components/Common/FileManager/utils';
 import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
+import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-folder';
+
+/**
+ * The Move-to popup only ever offers `public` destinations (the `platform` bucket is flat, see
+ * `platform-applications`/`platform-toolsets`), so its source tree drops the `platform` root that
+ * `AssetsFolderContext.files` otherwise carries for `DUAL_BUCKET_VIEWS`. Views outside that set never
+ * have a `platform` root in `files` to begin with, so this is a no-op for them.
+ */
+export const excludePlatformRoot = (
+  files: (Asset | AssetWithVersion)[] = [],
+  view?: ApplicationRoute,
+): (Asset | AssetWithVersion)[] => {
+  if (!view || !DUAL_BUCKET_VIEWS.includes(view)) {
+    return files;
+  }
+  return files.filter((file) => !isPlatformBucketPath(file.path));
+};
 
 export const processAssetsData = (
   assets: (Asset | AssetWithVersion)[] = [],

@@ -12,6 +12,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 
 interface Props {
@@ -28,6 +29,10 @@ const FoldersStorageLabel: FC<Props> = ({ asset }) => {
     },
     [currentLocale],
   );
+
+  if (isPlatformBucketPath(asset.folderId)) {
+    return <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={removeTrailingSlash(asset.folderId)} />;
+  }
 
   return (
     asset.folderId && (
