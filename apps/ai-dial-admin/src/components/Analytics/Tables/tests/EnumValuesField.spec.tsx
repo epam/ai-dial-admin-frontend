@@ -24,6 +24,21 @@ describe('EnumValuesField', () => {
     expect(screen.getByText(AnalyticsTablesI18nKey.EnumValues)).toBeInTheDocument();
   });
 
+  // The column-row editor labels the value column once, on its first row; a row below that renders the same
+  // field, so the field's own label is clipped rather than repeated beside a mid-list control.
+  test('clips its own label when the caller labels the column', () => {
+    const { view } = renderField({ isLabelHidden: true });
+    const label = view.container.querySelector('label');
+
+    expect(label).toHaveTextContent(AnalyticsTablesI18nKey.EnumValues);
+    expect(label?.parentElement?.className).toContain('sr-only');
+  });
+
+  test('shows its own label when the caller labels nothing', () => {
+    const { view } = renderField();
+    expect(view.container.querySelector('label')?.parentElement?.className).not.toContain('sr-only');
+  });
+
   // The declared-order note is deliberately NOT here: anything rendered beneath the control lifts it out of
   // line with the row's other inputs, so `ColumnRowsEditor` states it once for the row set instead.
   test('renders nothing beneath the control', () => {

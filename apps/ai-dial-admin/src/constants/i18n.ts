@@ -2515,6 +2515,8 @@ export enum AnalyticsTablesI18nKey {
   Name = 'AnalyticsTables.Name',
   Description = 'AnalyticsTables.Description',
   Type = 'AnalyticsTables.Type',
+  TypeSource = 'AnalyticsTables.TypeSource',
+  TypeEnrichment = 'AnalyticsTables.TypeEnrichment',
   ColumnsCount = 'AnalyticsTables.ColumnsCount',
   System = 'AnalyticsTables.System',
   SystemReadOnly = 'AnalyticsTables.SystemReadOnly',

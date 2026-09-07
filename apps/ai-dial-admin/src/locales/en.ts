@@ -2801,6 +2801,8 @@ export default {
     Name: 'Name',
     Description: 'Description',
     Type: 'Type',
+    TypeSource: 'Source',
+    TypeEnrichment: 'Enrichment',
     ColumnsCount: 'Columns',
     System: 'System',
     SystemReadOnly: 'System table — read-only',

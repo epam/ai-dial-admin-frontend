@@ -2,6 +2,8 @@
 
 import { FC } from 'react';
 
+import classNames from 'classnames';
+
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -11,8 +13,7 @@ interface Props {
   rowId: string;
   values: string[];
   errorText?: string;
-  // Read-only: the same field, not editable. Used where the domain can be shown but never changed — the
-  // per-column edit modal, since the service refuses a domain change outright.
+  isLabelHidden?: boolean;
   disabled?: boolean;
   onChange?: (values: string[]) => void;
 }
@@ -39,7 +40,7 @@ interface Props {
  *   the private provider below, which keeps this field's row validity to itself. It renders no element of
  *   its own, so the field stays a direct flex child of the row.
  */
-const EnumValuesField: FC<Props> = ({ rowId, values, errorText, disabled, onChange }) => {
+const EnumValuesField: FC<Props> = ({ rowId, values, errorText, isLabelHidden, disabled, onChange }) => {
   const t = useI18n();
 
   return (
@@ -48,7 +49,7 @@ const EnumValuesField: FC<Props> = ({ rowId, values, errorText, disabled, onChan
         draggable
         required={!disabled}
         disabled={disabled}
-        className="flex-1 min-w-[160px]"
+        className={classNames('flex-1 min-w-[160px]', isLabelHidden && '[&>label]:sr-only')}
         elementId={`col-enum-values-${rowId}`}
         label={t(AnalyticsTablesI18nKey.EnumValues)}
         heading={t(AnalyticsTablesI18nKey.EnumValues)}
