@@ -61,10 +61,12 @@ export async function getToolset(path: string, etag: string) {
 
 export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const folderId = toolset.folderId || ROOT_FOLDER;
+  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
   return assetApi.put(
     token,
     ResourceType.TOOLSET,
-    toolset.path,
+    path,
     { ...toolset, displayVersion: toolset.version, folderId: undefined, version: undefined, path: undefined },
     { etag },
   );
