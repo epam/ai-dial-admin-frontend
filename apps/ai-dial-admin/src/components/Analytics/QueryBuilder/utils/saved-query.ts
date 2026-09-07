@@ -1,5 +1,6 @@
 import { StructuredQuery } from '@/src/models/analytics/query';
 import { ChartConfig, QueryResultView } from '@/src/models/analytics/query-builder';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   SavedQuery,
   SavedQueryCaptureInput,
@@ -123,9 +124,14 @@ export const toMetadataReplaceRequest = (saved: SavedQuery, meta: SavedQueryMeta
     chart: saved.chart,
   });
 
-export const deriveSavedQueryEditor = (saved: Pick<SavedQuery, 'sql' | 'query'>): SavedQueryEditor => {
+// `functions` is null for the saved-queries grid, which has no catalog loaded — see
+// isBuilderRepresentable for what that leaves unchecked.
+export const deriveSavedQueryEditor = (
+  saved: Pick<SavedQuery, 'sql' | 'query'>,
+  functions: QueryFunction[] | null,
+): SavedQueryEditor => {
   if (saved.sql?.trim()) return SavedQueryEditor.Sql;
-  if (saved.query && isBuilderRepresentable(saved.query)) return SavedQueryEditor.Builder;
+  if (saved.query && isBuilderRepresentable(saved.query, functions)) return SavedQueryEditor.Builder;
   return saved.query ? SavedQueryEditor.Json : SavedQueryEditor.Builder;
 };
 
@@ -162,12 +168,17 @@ export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryResto
   const { saved, fields, functions, knownPeriods } = input;
   const entityName = savedQueryEntityName(saved);
 
-  const state = saved.query
-    ? parseQuery(saved.query, fields, functions)
-    : { ...createInitialState(functions), entityName, fields };
+  const editor = deriveSavedQueryEditor(saved, functions);
+  // Only a query the builder can hold reaches builder state. Parsing one it cannot would seed the
+  // rail — and the SQL the rail generates on the way out — from a query missing whatever the parser
+  // could not keep, which is the loss this whole guard exists to prevent.
+  const state =
+    saved.query && editor === SavedQueryEditor.Builder
+      ? parseQuery(saved.query, fields, functions)
+      : { ...createInitialState(functions), entityName, fields };
 
   return {
-    editor: deriveSavedQueryEditor(saved),
+    editor,
     state,
     sqlText: saved.sql ?? '',
     jsonText: saved.query ? JSON.stringify(saved.query, null, JSON_INDENT) : '',

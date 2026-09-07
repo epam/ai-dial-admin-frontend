@@ -103,7 +103,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `analytics/Queries` | `queries` | `Analytics/Queries`, `Analytics/QueryBuilder` |
 | `analytics/Tables` | `tables` | `Analytics` |
 | `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
-| `analytics/EnrichmentRules` | `enrichment-rules` | `Analytics/EnrichmentRules` |
+| `analytics/Pipelines` | `pipelines` | `Analytics/Pipelines` |
 | `analytics/Evaluators` | `evaluators` | `Analytics/Evaluators` |
 
 ---

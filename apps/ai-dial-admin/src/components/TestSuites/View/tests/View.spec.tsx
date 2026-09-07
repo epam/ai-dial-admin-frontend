@@ -18,6 +18,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
       },
     ],
   }),
+  getDeploymentById: vi.fn().mockResolvedValue({
+    deploymentId: 'deployment-1',
+    $type: 'dial-application',
+  }),
 }));
 
 // Mock next/navigation

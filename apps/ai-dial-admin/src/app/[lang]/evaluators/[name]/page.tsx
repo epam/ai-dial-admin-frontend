@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation';
 
-import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem } from '@/src/models/analytics/rule';
+import { PipelineKind, PipelineListItem } from '@/src/models/analytics/pipeline';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
-import { getReferencingRules } from '@/src/utils/analytics/evaluator-usage';
+import { getReferencingPipelines } from '@/src/utils/analytics/evaluator-usage';
 import { getEvaluator, getEvaluators, getEvaluatorVersion } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +34,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   let evaluator: Evaluator | null = null;
   let evaluators: EvaluatorSummary[] | null = null;
-  let referencingRules: EnrichmentRuleListItem[] | null = null;
+  let referencingPipelines: PipelineListItem[] | null = null;
 
   try {
     evaluator = version ? await getEvaluatorVersion(name, version) : await getEvaluator(name);
@@ -49,10 +49,10 @@ export default async function Page({ params, searchParams }: PageProps) {
   }
 
   try {
-    const rules = await getRules();
-    referencingRules = rules ? getReferencingRules(rules, name) : null;
+    const pipelines = (await getPipelines({ kind: PipelineKind.Enrich })).data;
+    referencingPipelines = pipelines ? getReferencingPipelines(pipelines, name) : null;
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch the rules referencing the evaluator');
+    errorObjLog(e, 'Failed to fetch the pipelines referencing the evaluator');
   }
 
   if (evaluator == null) {
@@ -65,7 +65,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         evaluator={evaluator}
         summary={evaluators?.find((item) => item.name === name) ?? null}
         hasSummaryError={evaluators == null}
-        referencingRules={referencingRules}
+        referencingPipelines={referencingPipelines}
       />
     </SaveValidationContextProvider>
   );

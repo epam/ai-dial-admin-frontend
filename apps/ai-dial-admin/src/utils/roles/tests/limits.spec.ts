@@ -42,6 +42,18 @@ describe('normalizeRoleLimits', () => {
   test('coerces a safe-range numeric string to a number', () => {
     expect(normalizeRoleLimits({ minute: '10' })).toEqual({ minute: 10 });
   });
+
+  test('keeps a decimal number token as a number', () => {
+    expect(normalizeRoleLimits({ minute: 1.5 })).toEqual({ minute: 1.5 });
+  });
+
+  test('keeps a decimal numeric string token as a number', () => {
+    expect(normalizeRoleLimits({ minute: '0.25' })).toEqual({ minute: 0.25 });
+  });
+
+  test('drops NaN and Infinity tokens', () => {
+    expect(normalizeRoleLimits({ minute: NaN, day: Infinity, week: -Infinity })).toEqual({});
+  });
 });
 
 describe('toWireRoleLimits', () => {

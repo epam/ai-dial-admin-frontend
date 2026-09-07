@@ -14,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { getRootFolder } from '@/src/utils/files/root-folder';
 import { generateKey } from '@/src/utils/keys/generate-key';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
@@ -63,7 +64,12 @@ const DuplicatePlatformKeyModal: FC<Props> = ({ isOpen, names, entity, onClose }
       if (res.success) {
         setCreatedKeyValue(generated);
         setStep(DuplicateStep.Reveal);
-        fetchFiles(entity.folderId);
+        // Flat platform resources (keys, models, roles…) have `folderId: ''` on the
+        // individually-fetched entity — the `keys/platform/` prefix consumes the `platform`
+        // segment during path parsing. The list displays `fetchedFoldersData['platform/']`,
+        // so refreshing with `entity.folderId` (`''`) updates the wrong path and the new key
+        // never appears. Mirror `handleCreateAsset`'s fallback to the view's root folder.
+        fetchFiles(`${getRootFolder(ApplicationRoute.PlatformKeys)}/`);
       }
     });
   }, [entity, name, fetchFiles]);

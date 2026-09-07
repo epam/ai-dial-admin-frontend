@@ -8,7 +8,7 @@ import { ConfirmationPopupVariant, DialConfirmationPopup, DialPrimaryButton } fr
 
 import { createEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import EvaluatorProperties from '@/src/components/Analytics/Evaluators/EvaluatorProperties';
-import EvaluatorRulesGrid from '@/src/components/Analytics/Evaluators/EvaluatorRulesGrid';
+import EvaluatorPipelinesGrid from '@/src/components/Analytics/Evaluators/EvaluatorPipelinesGrid';
 import EvaluatorTypeBadge from '@/src/components/Analytics/Evaluators/EvaluatorTypeBadge';
 import EvaluatorVersionSwitcher from '@/src/components/Analytics/Evaluators/EvaluatorVersionSwitcher';
 import { useEvaluatorForm } from '@/src/components/Analytics/Evaluators/use-evaluator-form';
@@ -28,7 +28,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem } from '@/src/models/analytics/rule';
+import { PipelineListItem } from '@/src/models/analytics/pipeline';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getEvaluatorTabs } from '@/src/utils/tabs/utils';
 
@@ -36,10 +36,10 @@ interface Props {
   evaluator: Evaluator;
   summary: EvaluatorSummary | null;
   hasSummaryError?: boolean;
-  referencingRules: EnrichmentRuleListItem[] | null;
+  referencingPipelines: PipelineListItem[] | null;
 }
 
-const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, referencingRules }) => {
+const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, referencingPipelines }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
@@ -139,7 +139,7 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
         </div>
       </div>
     ) : (
-      <EvaluatorRulesGrid rules={referencingRules} />
+      <EvaluatorPipelinesGrid pipelines={referencingPipelines} />
     );
 
   return (

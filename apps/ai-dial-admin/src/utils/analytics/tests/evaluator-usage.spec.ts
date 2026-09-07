@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
 import { EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
-import { getReferencingRules, toEvaluatorRows, toEvaluatorUsage } from '@/src/utils/analytics/evaluator-usage';
+import { PipelineListItem, TriggerKind } from '@/src/models/analytics/pipeline';
+import { getReferencingPipelines, toEvaluatorRows, toEvaluatorUsage } from '@/src/utils/analytics/evaluator-usage';
 
-const rule = (over: Partial<EnrichmentRuleListItem>): EnrichmentRuleListItem => ({
+const rule = (over: Partial<PipelineListItem>): PipelineListItem => ({
   id: 'r_1',
   name: 'turn-feedback-live',
   evaluator_name: 'feedback-rollup',
@@ -113,9 +113,9 @@ describe('toEvaluatorRows', () => {
   });
 });
 
-describe('getReferencingRules', () => {
+describe('getReferencingPipelines', () => {
   test('selects only the rules naming that evaluator', () => {
-    const referencing = getReferencingRules(
+    const referencing = getReferencingPipelines(
       [rule({ id: 'r_1' }), rule({ id: 'r_2', evaluator_name: 'conversation-insights' })],
       'feedback-rollup',
     );
@@ -124,7 +124,7 @@ describe('getReferencingRules', () => {
   });
 
   test('keeps the whole rule so the grid can render its own columns', () => {
-    const [referencing] = getReferencingRules([rule({ evaluator_version: 2 })], 'feedback-rollup');
+    const [referencing] = getReferencingPipelines([rule({ evaluator_version: 2 })], 'feedback-rollup');
 
     expect(referencing).toMatchObject({
       id: 'r_1',
@@ -135,7 +135,7 @@ describe('getReferencingRules', () => {
   });
 
   test('keeps a rule that declares no version, resolved as the service returned it', () => {
-    const [referencing] = getReferencingRules(
+    const [referencing] = getReferencingPipelines(
       [
         rule({
           evaluator_version: undefined,
@@ -150,6 +150,6 @@ describe('getReferencingRules', () => {
   });
 
   test('is empty when no rule names the evaluator', () => {
-    expect(getReferencingRules([rule({})], 'conversation-insights')).toEqual([]);
+    expect(getReferencingPipelines([rule({})], 'conversation-insights')).toEqual([]);
   });
 });

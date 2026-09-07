@@ -29,7 +29,7 @@ const renderView = () =>
     <EvaluatorDetailView
       evaluator={evaluator}
       summary={{ name: evaluator.name, latest_version: 4 }}
-      referencingRules={[]}
+      referencingPipelines={[]}
     />,
   );
 

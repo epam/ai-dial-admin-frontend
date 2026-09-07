@@ -15,7 +15,13 @@ import {
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
 import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { CreateRuleDto, EnrichmentRule, RuleEnabledFilter, RulesListFilters } from '@/src/models/analytics/rule';
+import {
+  CreatePipelineDto,
+  Pipeline,
+  PipelineEnabledFilter,
+  PipelineReadResult,
+  PipelinesListFilters,
+} from '@/src/models/analytics/pipeline';
 import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
@@ -52,19 +58,23 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
   return Array.isArray(wrapped) ? (wrapped as T[]) : null;
 };
 
-export const RULES_URL = 'v1/rules';
-export const RULE_URL = (id: string): string => `${RULES_URL}/${encodeURIComponent(id)}`;
+export const PIPELINES_URL = 'v1/pipelines';
+export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
-export const RULES_LIST_URL = (filters?: RulesListFilters): string => {
+export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   const params = new URLSearchParams();
 
-  if (filters?.enabled === RuleEnabledFilter.Enabled) params.set('enabled', 'true');
-  if (filters?.enabled === RuleEnabledFilter.Disabled) params.set('enabled', 'false');
+  if (filters?.kind) params.set('kind', filters.kind);
+  if (filters?.enabled === PipelineEnabledFilter.Enabled) params.set('enabled', 'true');
+  if (filters?.enabled === PipelineEnabledFilter.Disabled) params.set('enabled', 'false');
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
 
   const query = params.toString();
-  return query ? `${RULES_URL}?${query}` : RULES_URL;
+  return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
 };
+
+const readResult = <T>(res: unknown, unwrap: (value: unknown) => T | null): PipelineReadResult<T> =>
+  res === undefined ? { data: null, isForbidden: true } : { data: unwrap(res), isForbidden: false };
 
 export const EVALUATORS_URL = 'v1/evaluators';
 export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
@@ -189,25 +199,26 @@ export class AnalyticsDataApi extends BaseApi {
     return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
   }
 
-  async getRules(filters: RulesListFilters | undefined, token: Token): Promise<EnrichmentRule[] | null> {
-    const res = await this.get<object>(RULES_LIST_URL(filters), token);
-    return unwrapList<EnrichmentRule>(res, 'items');
+  async getPipelines(filters: PipelinesListFilters | undefined, token: Token): Promise<PipelineReadResult<Pipeline[]>> {
+    const res = (await this.get<object>(PIPELINES_LIST_URL(filters), token)) as object | null | undefined;
+    return readResult(res, (value) => unwrapList<Pipeline>(value, 'pipelines'));
   }
 
-  getRule(id: string, token: Token): Promise<EnrichmentRule | null> {
-    return this.get<EnrichmentRule>(RULE_URL(id), token);
+  async getPipeline(name: string, token: Token): Promise<PipelineReadResult<Pipeline>> {
+    const res = (await this.get<Pipeline>(PIPELINE_URL(name), token)) as Pipeline | null | undefined;
+    return readResult(res, (value) => (value as Pipeline) ?? null);
   }
 
-  createRule(dto: CreateRuleDto, token: Token): Promise<ServerActionResponse> {
-    return this.postAction<CreateRuleDto>(RULES_URL, dto, token);
+  createPipeline(dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
+    return this.postAction<CreatePipelineDto>(PIPELINES_URL, dto, token);
   }
 
-  updateRule(id: string, dto: CreateRuleDto, token: Token): Promise<ServerActionResponse> {
-    return this.putAction<CreateRuleDto>(RULE_URL(id), dto, token);
+  updatePipeline(name: string, dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
+    return this.patchAction<CreatePipelineDto>(PIPELINE_URL(name), dto, token);
   }
 
-  deleteRule(id: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(RULE_URL(id), token);
+  deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(PIPELINE_URL(name), token);
   }
 
   async getEvaluators(token: Token): Promise<EvaluatorSummary[] | null> {

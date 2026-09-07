@@ -94,7 +94,7 @@ const llm: Evaluator = {
 
 const summary: EvaluatorSummary = { name: llm.name, latest_version: 4 };
 
-const renderView = () => render(<EvaluatorDetailView evaluator={llm} summary={summary} referencingRules={[]} />);
+const renderView = () => render(<EvaluatorDetailView evaluator={llm} summary={summary} referencingPipelines={[]} />);
 
 // The ui-kit switch puts role="switch" on a wrapper with no accessible name of its own, so the control is
 // reached through the wrapper rather than by label.

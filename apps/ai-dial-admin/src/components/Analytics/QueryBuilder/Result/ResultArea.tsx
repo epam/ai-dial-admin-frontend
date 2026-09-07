@@ -8,6 +8,7 @@ import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
+import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -30,7 +31,11 @@ interface Props {
 const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, chartConfig, onChangeChartConfig }) => {
   const t = useI18n();
 
-  const columns = useMemo(() => getResultColumns(result, meta?.columnLabels), [result, meta?.columnLabels]);
+  // Attached here rather than in the column builder, which stays a pure description of the columns.
+  const columns = useMemo(
+    () => getResultColumns(result, meta?.columnLabels).map((col) => ({ ...col, cellRenderer: ResultValueCell })),
+    [result, meta?.columnLabels],
+  );
   const rows = result?.rows ?? [];
   const total = getResultTotal(result);
 

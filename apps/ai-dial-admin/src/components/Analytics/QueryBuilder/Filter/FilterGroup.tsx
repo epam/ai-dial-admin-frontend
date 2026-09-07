@@ -27,9 +27,17 @@ interface Props {
   depth?: number;
   // The owning section's palette color (Filter vs Having) — tints group accents and condition chips.
   color?: QueryBuilderColor;
+  isFunctionOperandOffered?: boolean;
 }
 
-const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color = QueryBuilderColor.Grouping }) => {
+const FilterGroup: FC<Props> = ({
+  node,
+  parent,
+  fieldOptions,
+  depth = 0,
+  color = QueryBuilderColor.Grouping,
+  isFunctionOperandOffered,
+}) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
@@ -102,6 +110,7 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color =
                 fieldOptions={fieldOptions}
                 depth={depth + 1}
                 color={color}
+                isFunctionOperandOffered={isFunctionOperandOffered}
               />
             ) : (
               <FilterCondition
@@ -111,6 +120,7 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color =
                 fieldOptions={fieldOptions}
                 operatorOptions={operatorOptions}
                 color={color}
+                isFunctionOperandOffered={isFunctionOperandOffered}
               />
             ),
           )}

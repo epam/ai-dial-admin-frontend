@@ -5,6 +5,11 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
+
+import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
+import { AppRunnerOrigin } from '@/src/components//SourceField/Application/models';
+import { getRunnerOrigin } from '@/src/components//SourceField/Application/utils';
 import {
   convertJsonSchema,
   generateViewItems,
@@ -13,7 +18,6 @@ import {
   getInitialParamsView,
   getTargetUrl,
 } from '@/src/components/Applications/ParametersTab/utils';
-import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
@@ -25,13 +29,13 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   application?: DialApplication | DialApplicationResource;
@@ -73,10 +77,17 @@ const ParametersTab: FC<Props> = ({
   useEffect(() => {
     let scheme = undefined;
     const foundRunner = getAppRunner(application as DialApplication, applicationSchemes, view);
+    const isAsset = !!foundRunner && getRunnerOrigin(foundRunner) === AppRunnerOrigin.Asset;
+    const resolve = isAsset
+      ? getResolvedRunnerSchema(foundRunner.$id ?? '')
+      : getResolvedApplicationScheme(foundRunner?.$id ?? '');
     setIsSchemeLoading(true);
-    getResolvedApplicationScheme(foundRunner?.$id ?? '').then((res) => {
-      if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
-        scheme = (res.response as { schema: DialApplicationScheme }).schema;
+    resolve.then((res) => {
+      const resolved = isAsset
+        ? (res.response as DialApplicationScheme | undefined)
+        : (res.response as { schema?: DialApplicationScheme })?.schema;
+      if (res.success) {
+        scheme = resolved;
       } else {
         scheme = foundRunner ?? undefined;
       }

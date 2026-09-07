@@ -18,7 +18,7 @@ import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
-  getMetricDeclarations,
+  getDetailedMetricDeclarations,
   getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
   updateTestSuiteMetric,
@@ -59,9 +59,9 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
   const loadMetrics = useCallback(() => {
     const testSuiteId = selectedTestSuite.id as string;
 
-    return Promise.all([getTestSuiteMetrics(testSuiteId, 0, 1000), getMetricDeclarations(0, 1000)]).then(
+    return Promise.all([getTestSuiteMetrics(testSuiteId, 0, 1000), getDetailedMetricDeclarations()]).then(
       ([metricsResponse, declarationsResponse]) => {
-        const declarations = declarationsResponse?.content || [];
+        const declarations = declarationsResponse || [];
         setMetricDeclarations(declarations);
 
         const metricsWithDescriptions = mergeMetricsWithDeclarations(metricsResponse?.content || [], declarations);

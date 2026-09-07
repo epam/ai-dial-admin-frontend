@@ -1,4 +1,6 @@
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { ConfigEntityRow } from '@/src/models/dial/config-file';
 
 export enum AnalyticsTableType {
   Source = 'source',
@@ -85,8 +87,11 @@ export interface TableAccess {
   modify: string[];
 }
 
-// POST /v1/tables is identity-only: no columns, no physical keys. The physical schema is defined
-// afterwards via the draft-schema resource (see DraftSchemaDto below).
+export interface AnalyticsRoleCatalog {
+  roles: ConfigEntityRow[];
+  warnings: EntitiesI18nKey[];
+}
+
 export interface CreateSourceTableDto {
   name: string;
   type: AnalyticsTableType.Source;

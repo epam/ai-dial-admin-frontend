@@ -1,4 +1,5 @@
 export const ROW_HEIGHT = 48;
+export const TWO_LINE_ROW_HEIGHT = 64;
 export const GRID_COLUMNS_KEY = 'gridColumnsState';
 export const STACKED_LINE_HEIGHT = 22;
 export const STACKED_ROW_PADDING = 10;

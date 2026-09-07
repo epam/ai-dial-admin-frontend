@@ -1,7 +1,12 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
-import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
+import {
+  CatalogDeploymentRecord,
+  resolveCatalogDeploymentNavigation,
+  resolveDeploymentNavigationTarget,
+} from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { isFlatPlatformView, isPlatformBucketPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -10,11 +15,25 @@ import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 
+const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
+  '$type' in deployment && typeof deployment.$type === 'string';
+
 export const getAgentLinkForConversation = (
-  deployment: Record<string, string> | null,
+  deployment: CatalogDeploymentRecord | Deployment | null,
   currentLocale: string,
 ): string => {
-  const target = resolveCatalogDeploymentNavigation(deployment);
+  if (!deployment) {
+    return '';
+  }
+
+  const target = isEvalDeployment(deployment)
+    ? resolveDeploymentNavigationTarget(
+        { id: deployment.deploymentId, name: deployment.displayName },
+        deployment.$type,
+        [],
+      )
+    : resolveCatalogDeploymentNavigation(deployment);
+
   if (!target) {
     return '';
   }

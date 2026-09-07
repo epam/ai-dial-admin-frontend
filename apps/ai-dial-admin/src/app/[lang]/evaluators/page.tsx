@@ -1,4 +1,5 @@
-import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
+import { PipelineKind } from '@/src/models/analytics/pipeline';
 import EvaluatorsView from '@/src/components/Analytics/Evaluators/EvaluatorsView';
 import Page403 from '@/src/components/Page403/Page403';
 import { EvaluatorSummary, EvaluatorUsage } from '@/src/models/analytics/evaluator';
@@ -26,10 +27,10 @@ export default async function Page() {
   // Left null rather than an empty map on failure: an empty one would report every evaluator as used by
   // no rule, which is the one thing this column must never invent.
   try {
-    const rules = await getRules();
-    usage = rules ? toEvaluatorUsage(rules) : null;
+    const pipelines = (await getPipelines({ kind: PipelineKind.Enrich })).data;
+    usage = pipelines ? toEvaluatorUsage(pipelines) : null;
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch enrichment rules for evaluator usage');
+    errorObjLog(e, 'Failed to fetch enrichment pipelines for evaluator usage');
   }
 
   return (

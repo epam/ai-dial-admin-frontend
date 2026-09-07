@@ -282,7 +282,7 @@ Reference-data consumers of the admin-BE runner list SHALL continue to read it. 
 
 ### Requirement: Asset runners are selectable from asset applications
 
-The system SHALL offer app runners created through `Assets > App Runners` as source options in the App Runner picker on `Assets > Applications`, alongside the admin-BE-backed runners already offered there. The two populations SHALL be presented in a single flat grid distinguished by a `Source` column reading `Entity` or `Asset`, and each option SHALL carry an explicit origin discriminator rather than one inferred from the shape of its value.
+The system SHALL offer app runners created through `Assets > App Runners` as source options in the App Runner picker on `Assets > Applications`, alongside the admin-BE-backed runners already offered there. The two populations SHALL be presented in a single flat grid distinguished by a `Source` column reading `Configuration file` or `API`, and each option SHALL carry an explicit origin discriminator rather than one inferred from the shape of its value.
 
 The asset half SHALL be read through the Core app-runner resource path, and its rows SHALL be identified by the runner's `$id`, matching the `Assets > App Runners` list.
 
@@ -298,7 +298,7 @@ A failure to read the asset runner list SHALL degrade to the admin-BE-only list 
 
 - **WHEN** a user opens the App Runner picker on an asset application and runners exist in both `Entities > Application Runners` and `Assets > App Runners`
 - **THEN** both are listed in one grid
-- **AND** each row's `Source` column reads `Entity` or `Asset` accordingly
+- **AND** each row's `Source` column reads `Configuration file` or `API` accordingly
 
 #### Scenario: Asset rows are identified by `$id`
 

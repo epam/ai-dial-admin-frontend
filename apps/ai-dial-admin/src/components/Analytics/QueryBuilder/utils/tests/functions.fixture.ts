@@ -7,8 +7,9 @@ import {
 
 // A representative slice of the served function catalog, mirroring the backend's shape, for use in
 // query-builder unit tests. Covers each argument kind (expression, integer/numeric/string literal),
-// constraints (bounds, allowed values), distinct support, and each return type — including the
-// functions the frontend never hardcoded (width_bucket, percentile_cont, percentile_disc).
+// constraints (bounds, allowed values), distinct support, each return type — array and boolean
+// included — and the functions the frontend never hardcoded (width_bucket, percentile_cont,
+// percentile_disc).
 export const TEST_FUNCTIONS: QueryFunction[] = [
   {
     name: 'abs',
@@ -52,6 +53,30 @@ export const TEST_FUNCTIONS: QueryFunction[] = [
         constraints: { allowed_values: ['day', 'hour', 'minute', 'second', 'week'] },
       },
       { name: 'timestamp', kind: QueryFunctionArgKind.Expression },
+    ],
+  },
+  {
+    name: 'json_extract_array',
+    group: QueryFunctionGroup.Scalar,
+    signature: 'json_extract_array(json, key)',
+    returns: QueryFunctionReturnType.Array,
+    distinct_supported: false,
+    description: 'Array of text values at the literal path inside a JSON expression; projectable only.',
+    args: [
+      { name: 'json', kind: QueryFunctionArgKind.Expression },
+      { name: 'key', kind: QueryFunctionArgKind.StringLiteral },
+    ],
+  },
+  {
+    name: 'json_extract_string',
+    group: QueryFunctionGroup.Scalar,
+    signature: 'json_extract_string(json, key)',
+    returns: QueryFunctionReturnType.String,
+    distinct_supported: false,
+    description: 'Text value at the literal path inside a JSON text expression; empty when absent.',
+    args: [
+      { name: 'json', kind: QueryFunctionArgKind.Expression },
+      { name: 'key', kind: QueryFunctionArgKind.StringLiteral },
     ],
   },
   {
@@ -112,6 +137,18 @@ export const TEST_FUNCTIONS: QueryFunction[] = [
     args: [
       { name: 'fraction', kind: QueryFunctionArgKind.NumericLiteral, constraints: { min: 0, max: 1 } },
       { name: 'column', kind: QueryFunctionArgKind.Expression },
+    ],
+  },
+  {
+    name: 'starts_with',
+    group: QueryFunctionGroup.Scalar,
+    signature: 'starts_with(text, prefix)',
+    returns: QueryFunctionReturnType.Boolean,
+    distinct_supported: false,
+    description: 'True when text begins with prefix, compared case-sensitively.',
+    args: [
+      { name: 'text', kind: QueryFunctionArgKind.Expression },
+      { name: 'prefix', kind: QueryFunctionArgKind.Expression },
     ],
   },
   {

@@ -29,6 +29,7 @@ import {
   MetricOutputOption,
   OverallScoreFunctionName,
 } from './models';
+import { JSONSchema7 } from 'json-schema';
 
 const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
@@ -62,6 +63,12 @@ export const getMetricOutputOptions = (metrics?: Metric[]): MetricOutputOption[]
       label: `${metricName} — ${outputField}`,
     }));
   });
+
+export const getMetricOutputTags = (metric?: Metric) => {
+  return Object.entries(metric?.outputSchema?.properties ?? {}).map(
+    ([key, property]) => (property as JSONSchema7)?.title || key,
+  );
+};
 
 export const getAvailableOptionsForRow = (
   allOptions: MetricOutputOption[],

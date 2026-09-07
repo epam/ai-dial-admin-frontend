@@ -157,9 +157,18 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
   [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
 };
 
+// A tooltip can show a short value in place; past this the value needs the viewer instead.
+export const RESULT_TOOLTIP_MAX_CHARS = 240;
+
+// Wider than a column ever shows, so the preview is never the limit on screen, but bounded so a wide
+// result does not hold whole documents in the DOM.
+export const RESULT_PREVIEW_CHARS = 400;
+
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
   [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
+  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
+  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
 };
 
 // Which section header surfaces which aggregate-validation warning.

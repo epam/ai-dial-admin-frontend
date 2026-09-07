@@ -35,3 +35,12 @@ describe('NotificationPortal', () => {
     expect(screen.getByText('Dynamic')).toBeInTheDocument();
   });
 });
+
+describe('NotificationPortal :: announcing', () => {
+  test('is a polite live region', () => {
+    render(<NotificationPortal notifications={[]} />);
+
+    const region = screen.getByRole('status');
+    expect(region).toHaveAttribute('aria-live', 'polite');
+  });
+});

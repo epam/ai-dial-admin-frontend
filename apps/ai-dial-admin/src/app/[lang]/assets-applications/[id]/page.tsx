@@ -15,6 +15,7 @@ import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialRole } from '@/src/models/dial/role';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
@@ -42,6 +43,7 @@ export default async function Page(params: {
 
   let applicationSchemes: DialApplicationScheme[] | null = [];
   let assetRunners: ResourceInfo[] = [];
+  let roles: DialRole[] = [];
   let interceptors: DialInterceptor[] = [];
   let globalInterceptors: string[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
@@ -88,11 +90,14 @@ export default async function Page(params: {
   }
 
   // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
-  // not prevent the app from loading, and one list failing must not skip the other. Core-direct —
+  // not prevent the app from loading, and one list failing must not skip another. Core-direct —
   // matching Assets > Models / Assets > App Runners — rather than the admin-BE list, which cannot see
-  // interceptors declared in Core's configuration file, and which is a different population from
-  // `Assets > Interceptors`' own API-written one.
-  [interceptors, globalInterceptors] = await Promise.all([
+  // interceptors/roles declared in Core's configuration file, and which is a different population from
+  // `Assets > Interceptors`'/`Assets > Roles`' own API-written one. Read unconditionally for both
+  // buckets (not just the platform-bucket Roles tab that uses `roles`) to match the existing
+  // interceptors read here, which is likewise unconditional.
+  [roles, interceptors, globalInterceptors] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
     readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
     readGlobalInterceptors(token, optionWarnings),
   ]);
@@ -110,6 +115,7 @@ export default async function Page(params: {
           models={models || []}
           applications={applications || []}
           schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+          roles={roles}
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
           optionWarnings={optionWarnings}

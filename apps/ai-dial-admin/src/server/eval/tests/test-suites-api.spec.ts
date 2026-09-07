@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
   DEPLOYMENTS_URL,
+  DEPLOYMENT_BY_ID_URL,
   DEPLOYMENT_TOOLS_URL,
   METRIC_DECLARATIONS_URL,
   TEST_CASES_BULK_URL,
@@ -236,6 +237,24 @@ describe('Server :: TestSuiteApi', () => {
     await instance.getDeployment('id', 'type', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${DEPLOYMENTS_URL}/type/id`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getDeploymentById', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ $type: 'dial-model', deploymentId: 'gpt-4' }));
+    await instance.getDeploymentById('gpt-4', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DEPLOYMENT_BY_ID_URL('gpt-4')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getDeploymentById with slash-containing id', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ $type: 'dial-application', deploymentId: 'applications/folder/app' }));
+    await instance.getDeploymentById('applications/folder/app', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DEPLOYMENT_BY_ID_URL('applications/folder/app')}`,
       expect.objectContaining({ method: 'GET' }),
     );
   });

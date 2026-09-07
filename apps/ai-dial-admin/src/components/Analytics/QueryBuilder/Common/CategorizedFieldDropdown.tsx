@@ -4,7 +4,7 @@ import { FC, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialDropdown, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
+import { IconCheck, IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import FieldDropdownOption from '@/src/components/Analytics/QueryBuilder/Common/FieldDropdownOption';
@@ -106,6 +106,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
 
   const groups = useMemo(() => groupFieldOptions(options, search), [options, search]);
+  const isFunctionValue = !!value && !!functions?.some((f) => f.name === value);
   const term = search.trim().toLowerCase();
   const visibleFunctions = useMemo(
     () =>
@@ -131,7 +132,8 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
       setSearch('');
       // Start with only the group holding the current selection open (if any).
       const selectedGroup = value ? groups.find((g) => g.options.some((o) => o.name === value)) : undefined;
-      setExpandedTag(selectedGroup?.tag ?? null);
+      const functionTag = isFunctionValue ? FUNCTIONS_GROUP_KEY : null;
+      setExpandedTag(selectedGroup?.tag ?? functionTag);
     }
     setOpen(next);
   };
@@ -143,7 +145,10 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
     if (!isMulti) setOpen(false);
   };
 
-  const valueLabel = value ? options.find((o) => o.name === value)?.display_name || value : value;
+  // A picked function is not among the column options, so its label comes from the Functions group.
+  const valueLabel = value
+    ? options.find((o) => o.name === value)?.display_name || functions?.find((f) => f.name === value)?.label || value
+    : value;
 
   const onPickFunction = (name: string) => {
     onSelectFunction?.(name);
@@ -195,11 +200,27 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
                       <button
                         type="button"
                         role="option"
-                        aria-selected={false}
-                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4"
+                        aria-selected={fn.name === value}
+                        // The left gutter is reserved for the check mark exactly as a column option
+                        // reserves it, so a picked function reads as picked without a colour-only cue.
+                        className={classNames(
+                          'relative flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4',
+                          fn.name === value && 'bg-accent-primary-alpha hover:bg-accent-primary-alpha',
+                        )}
                         onClick={() => onPickFunction(fn.name)}
                       >
-                        <IconMathFunction size={12} className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)} />
+                        {fn.name === value && (
+                          <IconCheck
+                            aria-hidden
+                            size={12}
+                            className="absolute left-1.5 top-2 shrink-0 text-accent-primary"
+                          />
+                        )}
+                        <IconMathFunction
+                          aria-hidden
+                          size={12}
+                          className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)}
+                        />
                         <span className="shrink-0 font-mono dial-tiny-text text-primary">{fn.label}</span>
                         <span className="min-w-0 flex-1 truncate dial-tiny-text text-secondary">{fn.hint}</span>
                       </button>

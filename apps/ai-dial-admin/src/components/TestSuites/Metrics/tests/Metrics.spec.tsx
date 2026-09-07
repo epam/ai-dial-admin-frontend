@@ -9,7 +9,7 @@ import Metrics from '../Metrics';
 import { MetricBindingType } from '../../../../types/evaluation';
 
 const mockGetTestSuiteMetrics = vi.fn();
-const mockGetMetricDeclarations = vi.fn();
+const mockGetDetailedMetricDeclarations = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
 const mockDeleteTestSuiteMetric = vi.fn();
 const mockUpdateTestSuiteMetric = vi.fn();
@@ -17,7 +17,7 @@ const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteMetrics: (...args: unknown[]) => mockGetTestSuiteMetrics(...args),
-  getMetricDeclarations: (...args: unknown[]) => mockGetMetricDeclarations(...args),
+  getDetailedMetricDeclarations: (...args: unknown[]) => mockGetDetailedMetricDeclarations(...args),
   createTestSuiteMetric: (...args: unknown[]) => mockCreateTestSuiteMetric(...args),
   deleteTestSuiteMetric: (...args: unknown[]) => mockDeleteTestSuiteMetric(...args),
   updateTestSuiteMetric: (...args: unknown[]) => mockUpdateTestSuiteMetric(...args),
@@ -120,7 +120,7 @@ describe('Metrics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetTestSuiteMetrics.mockResolvedValue({ content: [] });
-    mockGetMetricDeclarations.mockResolvedValue({ content: [] });
+    mockGetDetailedMetricDeclarations.mockResolvedValue([]);
     mockCreateTestSuiteMetric.mockResolvedValue({ success: true, response: { id: 'created-metric' } });
     mockDeleteTestSuiteMetric.mockResolvedValue({ success: true });
     mockUpdateTestSuiteMetric.mockResolvedValue({ success: true });

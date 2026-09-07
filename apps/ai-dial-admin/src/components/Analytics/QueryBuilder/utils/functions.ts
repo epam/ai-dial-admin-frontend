@@ -1,6 +1,6 @@
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { FnArgValue } from '@/src/models/analytics/query-builder';
+import { FnArgValue, FunctionOption } from '@/src/models/analytics/query-builder';
 import {
   QueryFunction,
   QueryFunctionArg,
@@ -59,6 +59,23 @@ export const aggregateFunctions = (functions: QueryFunction[]): QueryFunction[] 
     (f) => f.group === QueryFunctionGroup.Aggregate || f.group === QueryFunctionGroup.OrderedSetAggregate,
   );
 
+const toFunctionOptions = (functions: QueryFunction[]): FunctionOption[] => {
+  const labels = functionLabels(functions);
+  return functions.map((fn) => ({ name: fn.name, label: labels.get(fn.name) ?? fn.name, hint: fn.description }));
+};
+
+// A picker's Functions group where a function stands in for a projected column: every scalar the
+// catalog serves, named and hinted from the served data alone.
+export const scalarFunctionOptions = (functions: QueryFunction[]): FunctionOption[] =>
+  toFunctionOptions(scalarFunctions(functions));
+
+// The same group where a function stands in for a compared column, minus the ones returning an array.
+// The service accepts an array result as a projected column but rejects it as an operand — and it
+// rejects the whole query for one bad predicate, so offering one here would take every other
+// condition down with it. Keyed on the served return type, never on a list of names.
+export const operandFunctionOptions = (functions: QueryFunction[]): FunctionOption[] =>
+  toFunctionOptions(scalarFunctions(functions).filter((fn) => fn.returns !== QueryFunctionReturnType.Array));
+
 // The implicit aggregate measure added when the user defines no explicit aggregate: the first
 // aggregate-group function whose arguments are all optional — which is `count` by its metadata,
 // chosen from the catalog rather than named in code. Undefined when the catalog has no such function.
@@ -112,6 +129,7 @@ const RETURN_TYPE_MAP: Partial<Record<QueryFunctionReturnType, AnalyticsFieldTyp
   [QueryFunctionReturnType.Integer]: AnalyticsFieldType.Integer,
   [QueryFunctionReturnType.Long]: AnalyticsFieldType.Long,
   [QueryFunctionReturnType.Numeric]: AnalyticsFieldType.Decimal,
+  [QueryFunctionReturnType.Boolean]: AnalyticsFieldType.Boolean,
   [QueryFunctionReturnType.Timestamp]: AnalyticsFieldType.Timestamp,
 };
 

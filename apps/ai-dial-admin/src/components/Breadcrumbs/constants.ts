@@ -239,11 +239,11 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.AnalyticsEnrichmentRules]: {
+  [ApplicationRoute.AnalyticsPipelines]: {
     segments: [
       {
-        name: 'EnrichmentRules',
-        i18nKey: MenuI18nKey.EnrichmentRules,
+        name: 'Pipelines',
+        i18nKey: MenuI18nKey.Pipelines,
       },
       { name: 'Id', href: false },
     ],

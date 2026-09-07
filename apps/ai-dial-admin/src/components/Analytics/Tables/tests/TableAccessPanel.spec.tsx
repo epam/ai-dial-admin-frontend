@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRoles, getTableAccess, replaceTableAccess } from '@/src/app/[lang]/tables/actions';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ConfigEntityRow } from '@/src/models/dial/config-file';
+import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
 vi.mock('@/src/app/[lang]/tables/actions');
 
@@ -43,55 +45,62 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const roles = [{ name: 'analytics-writer' }, { name: 'analytics-editor' }, { name: 'analytics-viewer' }];
-
-// The role groups only render once the initial fetch (access + roles catalog) resolves — before that,
-// a spinner is shown in their place. Await this once per test before using the sync `*RolesGroup`
-// helpers below.
+const toRow = (name: string): ConfigEntityRow => ({ name, displayName: name, origin: ConfigEntityOrigin.Api });
+const catalog = [toRow('analytics-writer'), toRow('analytics-editor'), toRow('analytics-viewer')];
+const renderPanel = (onClose = vi.fn()) => render(<TableAccessPanel name="events" onClose={onClose} />);
 const waitForLoaded = () => screen.findByRole('group', { name: AnalyticsTablesI18nKey.WriteRoles });
 const writeRolesGroup = () => screen.getByRole('group', { name: AnalyticsTablesI18nKey.WriteRoles });
 const modifyRolesGroup = () => screen.getByRole('group', { name: AnalyticsTablesI18nKey.ModifyRoles });
+const offeredRoles = (group: HTMLElement) =>
+  within(group)
+    .getAllByRole('checkbox')
+    .map((option) => option.parentElement?.textContent);
+
+const save = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: [] });
   (replaceTableAccess as any).mockResolvedValue({ success: true });
-  (getRoles as any).mockResolvedValue(roles);
+  (getRoles as any).mockResolvedValue({ roles: catalog, warnings: [] });
 });
 
 describe('TableAccessPanel', () => {
   test('shows a loading spinner while the initial fetch is in flight', () => {
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+    renderPanel();
 
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('group')).not.toBeInTheDocument();
   });
 
-  test('loads and checks the roles already granted', async () => {
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+  test('checks the roles already granted in the list that granted them', async () => {
+    (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: ['analytics-editor'] });
+    renderPanel();
     await waitForLoaded();
 
     expect(within(writeRolesGroup()).getByRole('checkbox', { name: 'analytics-writer' })).toBeChecked();
     expect(within(writeRolesGroup()).getByRole('checkbox', { name: 'analytics-editor' })).not.toBeChecked();
+    expect(within(modifyRolesGroup()).getByRole('checkbox', { name: 'analytics-editor' })).toBeChecked();
     expect(getTableAccess).toHaveBeenCalledWith('events');
-    expect(getRoles).toHaveBeenCalled();
+    expect(getRoles).toHaveBeenCalledOnce();
   });
 
-  test('offers every catalog role as a checkbox, not just the granted ones', async () => {
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+  test('offers every catalog role, not just the granted ones, in alphabetical order', async () => {
+    renderPanel();
     await waitForLoaded();
 
-    expect(within(writeRolesGroup()).getAllByRole('checkbox')).toHaveLength(roles.length);
-    expect(within(modifyRolesGroup()).getAllByRole('checkbox')).toHaveLength(roles.length);
+    expect(offeredRoles(writeRolesGroup())).toEqual(['analytics-editor', 'analytics-viewer', 'analytics-writer']);
+    expect(offeredRoles(modifyRolesGroup())).toEqual(['analytics-editor', 'analytics-viewer', 'analytics-writer']);
   });
 
   test('checking a new role includes it in the saved list', async () => {
     const user = userEvent.setup();
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+    renderPanel();
     await waitForLoaded();
 
     await user.click(within(writeRolesGroup()).getByRole('checkbox', { name: 'analytics-viewer' }));
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    await save(user);
 
     await waitFor(() =>
       expect(replaceTableAccess).toHaveBeenCalledWith('events', {
@@ -104,19 +113,39 @@ describe('TableAccessPanel', () => {
   test('unchecking a granted role removes it from the saved list', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<TableAccessPanel name="events" onClose={onClose} />);
+    renderPanel(onClose);
     await waitForLoaded();
 
     await user.click(within(writeRolesGroup()).getByRole('checkbox', { name: 'analytics-writer' }));
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+    await save(user);
 
     await waitFor(() => expect(replaceTableAccess).toHaveBeenCalledWith('events', { write: [], modify: [] }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  test('keeps Save disabled and does not replace when the initial load fails', async () => {
+  test('offers a granted role the catalog does not contain, and sends it back unchanged', async () => {
+    (getTableAccess as any).mockResolvedValue({ write: ['config-file-only-role'], modify: [] });
+    const user = userEvent.setup();
+    renderPanel();
+    await waitForLoaded();
+
+    expect(within(writeRolesGroup()).getByRole('checkbox', { name: 'config-file-only-role' })).toBeChecked();
+    expect(within(modifyRolesGroup()).getByRole('checkbox', { name: 'config-file-only-role' })).not.toBeChecked();
+
+    await user.click(within(modifyRolesGroup()).getByRole('checkbox', { name: 'analytics-editor' }));
+    await save(user);
+
+    await waitFor(() =>
+      expect(replaceTableAccess).toHaveBeenCalledWith('events', {
+        write: ['config-file-only-role'],
+        modify: ['analytics-editor'],
+      }),
+    );
+  });
+
+  test('keeps Save disabled and does not replace when the access load fails', async () => {
     (getTableAccess as any).mockResolvedValue(null);
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+    renderPanel();
 
     await waitFor(() => expect(getTableAccess).toHaveBeenCalledWith('events'));
 
@@ -127,27 +156,30 @@ describe('TableAccessPanel', () => {
     );
   });
 
-  test('notifies when the roles catalog fails to load, even though access loaded fine', async () => {
-    (getRoles as any).mockResolvedValue(null);
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
-
-    await waitFor(() =>
-      expect(showNotificationSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ title: AnalyticsTablesI18nKey.RolesLoadFailed }),
-      ),
-    );
-  });
-
-  test('shows both role lists and round-trips them on save', async () => {
-    (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: ['analytics-editor'] });
-    const user = userEvent.setup();
-    render(<TableAccessPanel name="events" onClose={vi.fn()} />);
+  test('reports a role-catalog failure separately and still offers the granted roles', async () => {
+    (getRoles as any).mockResolvedValue({ roles: [], warnings: [EntitiesI18nKey.OptionListUnavailable] });
+    renderPanel();
     await waitForLoaded();
 
-    expect(within(writeRolesGroup()).getByRole('checkbox', { name: 'analytics-writer' })).toBeChecked();
-    expect(within(modifyRolesGroup()).getByRole('checkbox', { name: 'analytics-editor' })).toBeChecked();
+    expect(showNotificationSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: AnalyticsTablesI18nKey.RolesLoadFailed,
+        description: EntitiesI18nKey.OptionListUnavailable,
+      }),
+    );
+    expect(showNotificationSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsTablesI18nKey.AccessLoadFailed }),
+    );
+    expect(offeredRoles(writeRolesGroup())).toEqual(['analytics-writer']);
+  });
 
-    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+  test('round-trips both lists on save when nothing is edited', async () => {
+    (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: ['analytics-editor'] });
+    const user = userEvent.setup();
+    renderPanel();
+    await waitForLoaded();
+
+    await save(user);
 
     await waitFor(() =>
       expect(replaceTableAccess).toHaveBeenCalledWith('events', {

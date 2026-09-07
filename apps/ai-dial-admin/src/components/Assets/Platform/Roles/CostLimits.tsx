@@ -75,7 +75,6 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
             <DialNumberInput
               key={key}
               id={key}
-              integer
               containerClassName="w-[240px]"
               placeholder={t(RolesI18nKey.NoLimits)}
               labelProps={{ label: t(label) }}

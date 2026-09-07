@@ -12,6 +12,7 @@ import {
   DialPlatformApplicationResource,
   DialPlatformToolsetResource,
   PlatformAsset,
+  ToolsetAuthType,
 } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
@@ -41,11 +42,39 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     view === ApplicationRoute.PlatformInterceptors ||
     isDualBucketAsset;
 
-  const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() =>
-    isRunner
-      ? ({ ...entity, $id: getClonedEntityName((entity as DialAppRunnerResource).$id, true) } as DialAppRunnerResource)
-      : ({ ...entity, name: getClonedEntityName(entity.name, true) } as DialModelResource),
-  );
+  const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() => {
+    if (isRunner) {
+      return {
+        ...entity,
+        $id: getClonedEntityName((entity as DialAppRunnerResource).$id, true),
+      } as DialAppRunnerResource;
+    }
+
+    const clone = { ...entity, name: getClonedEntityName(entity.name, true) } as PlatformAsset;
+
+    // Core never returns a real client_secret/api_key on read, so an OAuth toolset or external
+    // service copied verbatim fails Core's write-time validation with a missing-secret error.
+    if (view === ApplicationRoute.AssetsToolsets) {
+      const toolset = entity as DialPlatformToolsetResource;
+      if (toolset.auth_settings?.authentication_type === ToolsetAuthType.OAUTH) {
+        (clone as DialPlatformToolsetResource).auth_settings = { authentication_type: ToolsetAuthType.NONE };
+      }
+    } else if (view === ApplicationRoute.AssetsApplications) {
+      const externalServices = (entity as DialPlatformApplicationResource).external_services;
+      if (externalServices) {
+        (clone as DialPlatformApplicationResource).external_services = Object.fromEntries(
+          Object.entries(externalServices).map(([key, service]) => [
+            key,
+            service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
+              ? { ...service, auth_settings: { authentication_type: ToolsetAuthType.NONE } }
+              : service,
+          ]),
+        );
+      }
+    }
+
+    return clone;
+  });
 
   const onChangeId = useCallback(
     ({ name }: { name?: string }) => {

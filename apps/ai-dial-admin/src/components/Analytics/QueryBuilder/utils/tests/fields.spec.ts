@@ -19,8 +19,8 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   createAggregate,
-  createGroupByColumn,
-  createGroupByFn,
+  createColumnRow,
+  createFnRow,
   createInitialState,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -126,9 +126,10 @@ describe('sortByName', () => {
 describe('functionResultType (via havingFieldOptions)', () => {
   test('same_as_argument resolves to the operand field type; fixed returns map directly', () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = [field('latency', AnalyticsFieldType.Long), field('deployment', AnalyticsFieldType.String)];
     // max → same_as_argument (Long from latency); date_bin → timestamp; length → integer
-    const maxRow = { ...createGroupByFn(fnFixture('length'), [{ field: 'deployment' }]), alias: 'len' };
+    const maxRow = { ...createFnRow(fnFixture('length'), [{ field: 'deployment' }]), alias: 'len' };
     s.groupBy = [maxRow];
     const lenOption = havingFieldOptions(s).find((o) => o.name === 'len');
     expect(lenOption?.type).toBe(AnalyticsFieldType.Integer);
@@ -138,14 +139,15 @@ describe('functionResultType (via havingFieldOptions)', () => {
 describe('having/sort field options', () => {
   test('havingFieldOptions combines group-by columns, function aliases and aggregate aliases', () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = FIELDS;
-    const bucket = createGroupByFn(fnFixture('date_bin'), [
+    const bucket = createFnRow(fnFixture('date_bin'), [
       { literal: '5' },
       { literal: 'hour' },
       { field: 'request_time' },
     ]);
     bucket.alias = 'bucket';
-    s.groupBy = [createGroupByColumn('project_id'), bucket];
+    s.groupBy = [createColumnRow('project_id'), bucket];
     const agg = createAggregate(fnFixture('count'));
     agg.alias = 'cnt';
     s.aggregates = [agg];
@@ -156,8 +158,9 @@ describe('having/sort field options', () => {
   // derived alias, so Having and Sort must offer that same name or it stays unaddressable.
   test('havingFieldOptions offers an aliasless function entry by its derived name', () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = FIELDS;
-    const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'project_id' }]);
+    const fnRow = createFnRow(fnFixture('lower'), [{ field: 'project_id' }]);
     fnRow.alias = '';
     s.groupBy = [fnRow];
     expect(havingFieldOptions(s).map((o) => o.name)).toContain('project_id (Lowercase)');
@@ -165,6 +168,7 @@ describe('having/sort field options', () => {
 
   test('havingFieldOptions offers an aliasless aggregate by its derived name', () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = [{ ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' }];
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = '';
@@ -176,14 +180,14 @@ describe('having/sort field options', () => {
   test('havingFieldOptions offers the implicit count column when there are no aggregates', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['Count', 'project_id']);
   });
 
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual([
       '_ingested_at',
       'event_id',
@@ -200,7 +204,7 @@ describe('having/sort field options', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
     s.mode = QueryMode.Aggregate;
-    s.groupBy = [createGroupByColumn('project_id')];
+    s.groupBy = [createColumnRow('project_id')];
     const agg = createAggregate(
       fnFixture('sum'),
       [{ field: 'project_id' }],
@@ -313,6 +317,7 @@ describe('fieldDisplayName', () => {
 describe('havingFieldOptions label projection', () => {
   test('plain group-by columns keep their schema label and description; aliases carry neither', () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = [
       {
         ...field('project_id', AnalyticsFieldType.String, 'lineage'),
@@ -321,8 +326,8 @@ describe('havingFieldOptions label projection', () => {
       },
     ];
     s.groupBy = [
-      createGroupByColumn('project_id'),
-      { ...createGroupByFn(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'p' },
+      createColumnRow('project_id'),
+      { ...createFnRow(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'p' },
     ];
     const options = havingFieldOptions(s);
     expect(options.find((o) => o.name === 'project_id')).toMatchObject({
@@ -392,6 +397,7 @@ describe('uniqueAlias', () => {
 describe('takenColumnNames / prefilledAlias', () => {
   const state = () => {
     const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
     s.fields = [{ ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' }];
     return s;
   };
@@ -402,9 +408,9 @@ describe('takenColumnNames / prefilledAlias', () => {
     const s = state();
     s.aggregates = [{ ...createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'a'), aliasEdited: true }];
     s.groupBy = [
-      { ...createGroupByFn(fnFixture('lower'), [{ field: 'total_tokens' }], 'b'), aliasEdited: true },
-      createGroupByColumn('total_tokens'),
-      createGroupByFn(fnFixture('upper'), [{ field: 'total_tokens' }]),
+      { ...createFnRow(fnFixture('lower'), [{ field: 'total_tokens' }], 'b'), aliasEdited: true },
+      createColumnRow('total_tokens'),
+      createFnRow(fnFixture('upper'), [{ field: 'total_tokens' }]),
     ];
     expect(takenColumnNames(s)).toEqual(['total_tokens', 'b', 'Total tokens (Uppercase)', 'a']);
   });
@@ -461,14 +467,14 @@ describe('computed column names agree across paths', () => {
 
   test('a derived name never collides with a plain group-by column of the same name', () => {
     const s = labeled();
-    s.groupBy = [createGroupByColumn('Total tokens (Sum)')];
+    s.groupBy = [createColumnRow('Total tokens (Sum)')];
     s.aggregates = [createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }])];
     expect([...computedColumnNames(s).values()]).toEqual(['Total tokens (Sum) 2']);
   });
 
   test('a row whose required argument is unfilled is neither named nor offered', () => {
     const s = labeled();
-    s.groupBy = [createGroupByFn(fnFixture('lower'))];
+    s.groupBy = [createFnRow(fnFixture('lower'))];
     expect(computedColumnNames(s).size).toBe(0);
     expect(sortFieldOptions(s).map((o) => o.name)).not.toContain('Lowercase');
   });
@@ -480,5 +486,37 @@ describe('computed column names agree across paths', () => {
       { ...createAggregate(fnFixture('avg'), [{ field: 'latency' }], 'mine'), aliasEdited: true },
     ];
     expect([...computedColumnNames(s).values()]).toEqual(['mine', 'mine']);
+  });
+});
+
+describe('sortFieldOptions — row mode', () => {
+  const rowState = () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = [field('project_id', AnalyticsFieldType.String)];
+    return s;
+  };
+
+  test('offers the schema fields plus every function column alias', () => {
+    const s = rowState();
+    s.select = [
+      createColumnRow('project_id'),
+      { ...createFnRow(fnFixture('length'), [{ field: 'project_id' }]), alias: 'len' },
+    ];
+
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['len', 'project_id']);
+  });
+
+  test('an incomplete function column is not offered', () => {
+    const s = rowState();
+    s.select = [createFnRow(fnFixture('length'))];
+
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
+  });
+
+  test('group-by rows do not leak into row-mode options', () => {
+    const s = rowState();
+    s.groupBy = [{ ...createFnRow(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'lowered' }];
+
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
   });
 });

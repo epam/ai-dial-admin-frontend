@@ -9,7 +9,8 @@ import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import MethodTabContent from '../MethodTabContent';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getDeployments: vi.fn().mockResolvedValue({ success: true, response: [] }),
+  getDeployment: vi.fn().mockResolvedValue(null),
+  getDeploymentById: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/RequestTemplate', () => ({

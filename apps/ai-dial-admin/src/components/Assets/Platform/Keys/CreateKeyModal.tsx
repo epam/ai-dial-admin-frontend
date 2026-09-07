@@ -26,6 +26,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { withSourceColumn } from '@/src/utils/config-entities/source-column';
 import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
+import { getRootFolder } from '@/src/utils/files/root-folder';
 import { generateKey } from '@/src/utils/keys/generate-key';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
@@ -138,7 +139,9 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
         if (res.success) {
           setCreatedKeyValue(generated);
           setStep(CreateStep.Reveal);
-          fetchFiles(asset.folderId);
+          // `asset` is seeded as `{ name, project }` with no `folderId` — the list displays
+          // `fetchedFoldersData['platform/']`, so refresh the view's root folder, not `undefined`.
+          fetchFiles(`${getRootFolder(ApplicationRoute.PlatformKeys)}/`);
         }
       });
       return;

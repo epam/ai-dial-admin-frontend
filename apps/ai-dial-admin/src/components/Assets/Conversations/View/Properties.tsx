@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { DialIconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import { getAllDeployments } from '@/src/app/[lang]/conversations/actions';
+import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -11,6 +11,7 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialConversation } from '@/src/models/dial/conversation';
+import { Deployment } from '@/src/models/evaluation/deployment';
 
 interface Props {
   selectedConversation: DialConversation;
@@ -20,25 +21,45 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const [isModelLoading, setIsModelLoading] = useState(true);
-  const [deployments, setDeployments] = useState<Record<string, string>[]>([]);
+  const [deployment, setDeployment] = useState<Deployment | null>(null);
 
   const model = selectedConversation.model?.id as string;
 
-  const deployment = useMemo(() => deployments.find((d) => d.reference === model) ?? null, [deployments, model]);
+  const agentLink = useMemo(() => getAgentLinkForConversation(deployment, currentLocale), [deployment, currentLocale]);
 
   const openResourceInNewTab = () => {
-    window.open(getAgentLinkForConversation(deployment, currentLocale), '_blank');
+    if (!agentLink) {
+      return;
+    }
+    window.open(agentLink, '_blank');
   };
 
   useEffect(() => {
-    getAllDeployments()
+    if (!model) {
+      setDeployment(null);
+      setIsModelLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsModelLoading(true);
+
+    getDeploymentById(model)
       .then((data) => {
-        setDeployments((data?.response as Record<string, string>[] | undefined) ?? []);
+        if (!cancelled) {
+          setDeployment(data);
+        }
       })
       .finally(() => {
-        setIsModelLoading(false);
+        if (!cancelled) {
+          setIsModelLoading(false);
+        }
       });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [model]);
 
   return (
     <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>
@@ -55,11 +76,13 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
           ) : (
             <>
               <DialTooltip tooltip={model}>{model}</DialTooltip>
-              <DialIconButton
-                onClick={() => openResourceInNewTab()}
-                className="text-secondary size-auto"
-                icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-              />
+              {!!agentLink && (
+                <DialIconButton
+                  onClick={() => openResourceInNewTab()}
+                  className="text-secondary size-auto"
+                  icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                />
+              )}
             </>
           )}
         </div>

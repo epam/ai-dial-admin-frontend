@@ -51,7 +51,9 @@ const stored = {
 };
 
 const renderView = () =>
-  render(<EvaluatorDetailView evaluator={llm} summary={{ name: llm.name, latest_version: 4 }} referencingRules={[]} />);
+  render(
+    <EvaluatorDetailView evaluator={llm} summary={{ name: llm.name, latest_version: 4 }} referencingPipelines={[]} />,
+  );
 
 const version3: Evaluator = { ...llm, version: 3, model: 'gemini-1.5-pro' };
 
@@ -167,7 +169,7 @@ describe('EvaluatorDetailView — the typed JSON reaches the request', () => {
   test('switching version while the editor holds unsaved edits replaces them without asking', async () => {
     const user = userEvent.setup();
     const view = render(
-      <EvaluatorDetailView evaluator={llm} summary={{ name: llm.name, latest_version: 4 }} referencingRules={[]} />,
+      <EvaluatorDetailView evaluator={llm} summary={{ name: llm.name, latest_version: 4 }} referencingPipelines={[]} />,
     );
     await user.click(within(screen.getByRole('switch')).getByRole('checkbox'));
     const area = screen.getByLabelText('json document');
@@ -179,7 +181,7 @@ describe('EvaluatorDetailView — the typed JSON reaches the request', () => {
       <EvaluatorDetailView
         evaluator={version3}
         summary={{ name: llm.name, latest_version: 4 }}
-        referencingRules={[]}
+        referencingPipelines={[]}
       />,
     );
 

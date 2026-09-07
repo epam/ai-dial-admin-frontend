@@ -118,6 +118,14 @@ export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
   },
 };
 
+export const SINGLE_ROW_SELECTION_NO_CHECKBOX: Partial<GridOptions> = {
+  rowSelection: {
+    mode: 'singleRow',
+    enableClickSelection: true,
+    checkboxes: false,
+  },
+};
+
 export const DIFF_ROW_CLASS_RULES: GridOptions['rowClassRules'] = {
   'ag-error-row ag-error-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED,
   'ag-new-row ag-new-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED,

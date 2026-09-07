@@ -25,10 +25,14 @@ export enum FilterNodeKind {
   Predicate = 'predicate',
 }
 
+// One condition. Its left operand is either a schema column (fn = null, named by `field`) or a
+// scalar-function call, named the same way an ExpressionRow names one.
 export interface FilterPredicateNode {
   id: string;
   kind: FilterNodeKind.Predicate;
   field: string;
+  fn: string | null;
+  args: FnArgValue[];
   op: QueryOperator;
   valueType: QueryValueType;
   value: string;
@@ -51,12 +55,13 @@ export interface FnArgValue {
   literal?: string;
 }
 
-// One Group by entry: a plain column (fn = null) or a scalar-function expression. When fn is a
-// catalog function name, `args` holds one value slot per that function's catalog argument (in
-// order) and `field` is unused; when fn is null the row is a plain column named by `field`.
-// `aliasEdited` marks the alias as owned by the user: a function row's alias is derived from its
-// function and arguments and rederived as they change, until the user types one of their own.
-export interface GroupByRow {
+// One entry of a column list the user assembles — a Group by key or a row-mode projection column:
+// a plain column (fn = null, named by `field`) or a scalar-function expression (fn is a catalog
+// function name, `args` holds one value slot per that function's catalog argument in order, and
+// `field` is unused). `aliasEdited` marks the alias as owned by the user: a function row's alias is
+// derived from its function and arguments and rederived as they change, until the user types one of
+// their own.
+export interface ExpressionRow {
   id: string;
   fn: string | null;
   field: string;
@@ -64,6 +69,10 @@ export interface GroupByRow {
   aliasEdited: boolean;
   args: FnArgValue[];
 }
+
+export type GroupByRow = ExpressionRow;
+
+export type SelectRow = ExpressionRow;
 
 // One aggregate metric: a catalog function (aggregate / ordered_set_aggregate group) with one arg
 // value slot per catalog argument, an optional distinct flag, and an alias.
@@ -112,7 +121,7 @@ export interface QueryBuilderState {
   mode: QueryMode;
   distinct: boolean;
   filter: FilterGroupNode;
-  select: string[];
+  select: SelectRow[];
   groupBy: GroupByRow[];
   aggregates: AggregateRow[];
   having: FilterGroupNode;
@@ -183,6 +192,8 @@ export type QueryRunRequest =
 export enum QueryBuilderWarning {
   MissingGroupByField = 'MissingGroupByField',
   EmptyAggregate = 'EmptyAggregate',
+  DroppedProjectionColumn = 'DroppedProjectionColumn',
+  DroppedCondition = 'DroppedCondition',
 }
 
 // The builder's own color language, mirroring how the same query reads in the Monaco JSON view:

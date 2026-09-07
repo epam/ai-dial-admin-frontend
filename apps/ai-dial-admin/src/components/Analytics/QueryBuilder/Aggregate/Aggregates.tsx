@@ -5,7 +5,7 @@ import { DialCheckbox, SelectOption } from '@epam/ai-dial-ui-kit';
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
-import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
+import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Common/FnArgEditor';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';

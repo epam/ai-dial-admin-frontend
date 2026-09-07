@@ -1,8 +1,10 @@
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { TabsI18nKey } from '@/src/constants/i18n';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialRole } from '@/src/models/dial/role';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PlatformApplicationView from '../View';
@@ -37,6 +39,7 @@ describe('PlatformApplicationView', () => {
   const mockModels: DialModel[] = [];
   const mockApplications: DialApplication[] = [];
   const mockSchemes: DialApplicationScheme[] = [];
+  const mockRoles: DialRole[] = [];
   const mockInterceptors: DialInterceptor[] = [];
   const mockEtag = 'etag-123';
 
@@ -56,10 +59,47 @@ describe('PlatformApplicationView', () => {
         models={mockModels}
         applications={mockApplications}
         schemes={mockSchemes}
+        roles={mockRoles}
         interceptors={mockInterceptors}
       />,
     );
 
     expect(screen.getByText('platform-app')).toBeTruthy();
+  });
+
+  test('renders a Roles tab positioned before Interceptors', () => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={mockOriginalApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
+    expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeGreaterThan(-1);
+    expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeLessThan(tabLabels.indexOf(TabsI18nKey.Interceptors));
+  });
+
+  test('renders a Roles tab before Interceptors even when the MCP Tools tab is present', () => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={{ ...mockOriginalApp, mcp: { endpoint: 'http://mcp' } } as AssetApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
+    expect(tabLabels.indexOf(TabsI18nKey.Tools)).toBeGreaterThan(-1);
+    expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeLessThan(tabLabels.indexOf(TabsI18nKey.Interceptors));
   });
 });

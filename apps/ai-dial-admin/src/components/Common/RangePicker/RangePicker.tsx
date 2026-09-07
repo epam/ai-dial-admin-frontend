@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 
 import { RangeFsmState, differenceInCalendarDays, hydrate, reduce, toCommit, toDisplayRange } from './range-fsm';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 // @ts-ignore
 import 'react-datepicker/dist/react-datepicker.css';
 

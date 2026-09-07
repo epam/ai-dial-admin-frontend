@@ -83,6 +83,18 @@ describe('RoleCostLimit', () => {
     expect(typeof lastCall.costLimit.day).toBe('number');
   });
 
+  test('entering a decimal value into a token field writes a decimal number', () => {
+    const onChangeRole = vi.fn();
+    render(<RoleCostLimit selectedRole={role({ costLimit: { minute: 100 } })} onChangeRole={onChangeRole} />);
+
+    const dayField = screen.getByRole('textbox', { name: RolesI18nKey.PerDay });
+    fireEvent.change(dayField, { target: { value: '1.5' } });
+
+    const lastCall = onChangeRole.mock.calls.at(-1)?.[0];
+    expect(lastCall.costLimit.day).toBe(1.5);
+    expect(typeof lastCall.costLimit.day).toBe('number');
+  });
+
   test('clearing a token field removes the key entirely rather than writing an empty string', () => {
     const onChangeRole = vi.fn();
     render(<RoleCostLimit selectedRole={role({ costLimit: { minute: 100, day: 250 } })} onChangeRole={onChangeRole} />);

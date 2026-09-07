@@ -5,11 +5,12 @@ import classNames from 'classnames';
 
 interface Props {
   items: string[];
+  tagClassName?: string;
 }
 
 const GAP_WIDTH = 8;
 
-const TagsCellRenderer: FC<Props> = ({ items }) => {
+const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
   if (!items) {
     return;
   }
@@ -69,8 +70,10 @@ const TagsCellRenderer: FC<Props> = ({ items }) => {
     return () => observer.disconnect();
   }, [recalculateVisibleItems]);
 
-  const itemClassName =
-    'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden';
+  const itemClassName = classNames(
+    'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden',
+    tagClassName,
+  );
 
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
