@@ -1621,6 +1621,7 @@ export default {
     BaseUrl: 'Base URL',
     BaseUrlPlaceholder: 'Enter {type} host',
     InfoBaseUrl: 'Base URL - service host',
+    InfoEndpoint: 'Endpoint - overrides this interface for the upstream; unset fields fall back to its own',
   },
   Images: {
     ImagesListTitle: 'Images',

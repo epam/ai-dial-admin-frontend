@@ -92,7 +92,11 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
         />
       )}
 
-      <InterfacesField entity={model} onChangeEntity={onChangeModel} allowedTypes={MODEL_INTERFACE_TYPES} />
+      <InterfacesField
+        interfaces={model.interfaces}
+        onChangeInterfaces={(interfaces) => onChangeModel({ ...model, interfaces })}
+        allowedTypes={MODEL_INTERFACE_TYPES}
+      />
 
       <UpstreamEndpoints
         entity={model}

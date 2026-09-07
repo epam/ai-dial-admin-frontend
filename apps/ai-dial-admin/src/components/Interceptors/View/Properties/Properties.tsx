@@ -61,8 +61,8 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         onChangeValues={(defaults) => onChangeInterceptor({ ...selectedInterceptor, defaults })}
       />
       <InterfacesField
-        entity={selectedInterceptor}
-        onChangeEntity={onChangeInterceptor}
+        interfaces={selectedInterceptor.interfaces}
+        onChangeInterfaces={(interfaces) => onChangeInterceptor({ ...selectedInterceptor, interfaces })}
         allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
       />
       <OverrideNameControl entity={selectedInterceptor as any} onChangeEntity={onChangeInterceptor} />
