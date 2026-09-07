@@ -5,9 +5,10 @@ import { createPortal } from 'react-dom';
 
 import Grafana from '@/public/images/icons/grafana.svg';
 import IconCompare from '@/public/images/icons/difference.svg';
-import { DialGhostButton, DialLinkButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconColumns2, IconFileExport } from '@tabler/icons-react';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
+import { AdaptiveHeaderActionsConfig } from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
@@ -61,16 +62,41 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
 
   const isCompareDisabled = run.status !== RunStatus.COMPLETED || !run.testSuiteId;
 
-  const grafanaLeadingActions = run.grafanaExploreUrl ? (
-    <>
-      <DialLinkButton
-        iconBefore={<Grafana />}
-        label={t(RunsI18nKey.GrafanaRun)}
-        onClick={() => window.open(run.grafanaExploreUrl, '_blank')}
-      />
-      <div className="w-px h-6 bg-layer-4" />
-    </>
-  ) : null;
+  const adaptiveActions = useMemo((): AdaptiveHeaderActionsConfig => {
+    const leading = run.grafanaExploreUrl
+      ? [
+          {
+            id: 'grafana',
+            label: t(RunsI18nKey.GrafanaRun),
+            icon: <Grafana />,
+            onClick: () => window.open(run.grafanaExploreUrl, '_blank'),
+            appearance: 'link' as const,
+            dividerAfter: true,
+          },
+        ]
+      : [];
+
+    const trailing = [
+      {
+        id: 'export',
+        label: t(ButtonsI18nKey.Export),
+        icon: <IconFileExport {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: onOpenExportModal,
+        disabled: run.status === RunStatus.RUNNING,
+        appearance: 'neutral' as const,
+      },
+      {
+        id: 'compare',
+        label: t(ActionMenuOperationI18nKey.Compare),
+        icon: <IconCompare className="mx-1 size-5 [&_path]:fill-current" />,
+        onClick: onOpenCompare,
+        disabled: isCompareDisabled,
+        appearance: 'neutral' as const,
+      },
+    ];
+
+    return { leading, trailing };
+  }, [run.grafanaExploreUrl, run.status, t, onOpenExportModal, onOpenCompare, isCompareDisabled]);
 
   const columnsTabsTrailing =
     activeTab === EntityViewTab.ExtractionResult ? (
@@ -94,22 +120,9 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           tabs={tabs}
           activeTab={activeTab}
           onChangeActiveTab={onChangeActiveTab}
-          leadingActions={grafanaLeadingActions}
+          adaptiveActions={adaptiveActions}
           tabsTrailing={columnsTabsTrailing}
-        >
-          <DialNeutralButton
-            label={t(ButtonsI18nKey.Export)}
-            iconBefore={<IconFileExport {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onOpenExportModal}
-            disabled={run.status === RunStatus.RUNNING}
-          />
-          <DialNeutralButton
-            label={t(ActionMenuOperationI18nKey.Compare)}
-            iconBefore={<IconCompare className="mx-1 size-5 [&_path]:fill-current" />}
-            onClick={onOpenCompare}
-            disabled={isCompareDisabled}
-          />
-        </SimpleEntityHeader>
+        />
 
         <div className="flex-1 overflow-auto min-h-0">
           <TabsContent activeTab={activeTab} run={run} tabState={tabState} />

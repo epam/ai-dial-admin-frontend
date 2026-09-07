@@ -15,20 +15,41 @@ import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   field: RowDetailField;
+  /** Defaults to `field.primaryRaw` when omitted. */
+  raw?: string | null;
+  /** Defaults to `field.primaryFailed` when omitted. */
+  isFailed?: boolean;
   className?: string;
+  'data-compare-diff'?: string;
+  /** When set, opens this instead of the single-value FullscreenValueViewer (e.g. compare dual-run popup). */
+  onOpenFullscreen?: () => void;
 }
 
 const VALUE_CELL_BASE =
   'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-full min-h-10 flex items-start self-stretch';
 
-const PivotValueCell: FC<Props> = ({ field, className }) => {
+const PivotValueCell: FC<Props> = ({
+  field,
+  raw: rawProp,
+  isFailed: isFailedProp,
+  className,
+  'data-compare-diff': dataCompareDiff,
+  onOpenFullscreen,
+}) => {
   const t = useI18n();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const failedLabel = t(RunsI18nKey.MetricFailedText);
-  const raw = field.primaryRaw;
+  const raw = rawProp !== undefined ? rawProp : field.primaryRaw;
+  const isFailed = isFailedProp !== undefined ? isFailedProp : (field.primaryFailed ?? false);
   const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
 
-  const onOpen = useCallback(() => setIsPopupOpen(true), []);
+  const onOpen = useCallback(() => {
+    if (onOpenFullscreen) {
+      onOpenFullscreen();
+      return;
+    }
+    setIsPopupOpen(true);
+  }, [onOpenFullscreen]);
   const onClose = useCallback(() => setIsPopupOpen(false), []);
 
   return (
@@ -37,6 +58,7 @@ const PivotValueCell: FC<Props> = ({ field, className }) => {
         type="button"
         onClick={onOpen}
         data-field-key={field.fieldKey}
+        {...(dataCompareDiff ? { 'data-compare-diff': dataCompareDiff } : {})}
         className={mergeClasses(VALUE_CELL_BASE, 'relative group text-left hover:bg-layer-4 bg-layer-3', className)}
       >
         {isStatusRow ? (
@@ -44,7 +66,7 @@ const PivotValueCell: FC<Props> = ({ field, className }) => {
         ) : (
           <FieldValue
             raw={raw}
-            isFailed={field.primaryFailed ?? false}
+            isFailed={isFailed}
             isScoreIndicator={field.isScoreIndicator}
             failedLabel={failedLabel}
             fill
@@ -57,7 +79,9 @@ const PivotValueCell: FC<Props> = ({ field, className }) => {
           <OpenPopup />
         </span>
       </button>
-      {isPopupOpen && <FullscreenValueViewer isOpen fieldLabel={field.label} value={raw ?? ''} onClose={onClose} />}
+      {!onOpenFullscreen && isPopupOpen && (
+        <FullscreenValueViewer isOpen fieldLabel={field.label} value={raw ?? ''} onClose={onClose} />
+      )}
     </>
   );
 };

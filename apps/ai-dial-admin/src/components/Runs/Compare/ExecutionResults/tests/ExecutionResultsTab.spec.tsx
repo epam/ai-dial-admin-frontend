@@ -407,4 +407,32 @@ describe('ExecutionResultsTab', () => {
       );
     });
   });
+
+  test('calls onOpenRowDetail with focusFieldKey when a mapped cell is clicked', async () => {
+    const onOpenRowDetail = vi.fn();
+
+    renderExecutionResultsTab({ onOpenRowDetail });
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    });
+
+    let statusCell: HTMLElement | null = null;
+    await waitFor(() => {
+      statusCell = document.querySelector('.ag-center-cols-container .ag-row [col-id="status"]');
+      expect(statusCell).toBeTruthy();
+    });
+
+    fireEvent.click(statusCell!);
+
+    await waitFor(() => {
+      expect(onOpenRowDetail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'result-1',
+          testCaseName: 'Test Case 1',
+        }),
+        { focusFieldKey: 'executionStatus' },
+      );
+    });
+  });
 });

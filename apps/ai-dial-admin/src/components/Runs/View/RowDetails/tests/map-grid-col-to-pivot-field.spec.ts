@@ -22,8 +22,18 @@ describe('mapGridColToPivotField', () => {
     expect(mapGridColToPivotField('aidial_rag_eval.retrieval_f1')).toBe('f1');
   });
 
-  test('returns extracted column keys as-is including underscores', () => {
+  test('maps compare secondary and delta column prefixes to the same pivot field', () => {
+    expect(mapGridColToPivotField('cmp_status')).toBe('executionStatus');
+    expect(mapGridColToPivotField('cmp_http')).toBe('httpStatusCode');
+    expect(mapGridColToPivotField('cmp_duration')).toBe('execDurationMs');
+    expect(mapGridColToPivotField('delta_Overall Accuracy_Precision')).toBe('Precision');
+  });
+
+  test('maps extracted and cmp_extracted columns to the field key', () => {
     expect(mapGridColToPivotField('answer')).toBe('answer');
     expect(mapGridColToPivotField('context_urls')).toBe('context_urls');
+    expect(mapGridColToPivotField('extracted_answer')).toBe('answer');
+    expect(mapGridColToPivotField('cmp_extracted_answer')).toBe('answer');
+    expect(mapGridColToPivotField('extracted_context_urls')).toBe('context_urls');
   });
 });

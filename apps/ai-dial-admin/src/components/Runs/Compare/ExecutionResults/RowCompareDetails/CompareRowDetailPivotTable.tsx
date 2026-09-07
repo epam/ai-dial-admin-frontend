@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -8,19 +8,19 @@ import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
-import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
-import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
+import PivotValueCell from '@/src/components/Runs/View/RowDetails/PivotValueCell';
 import { getPivotGridTemplateColumns } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
+import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 import {
   CompareDiffPivotPosition,
   getCompareDiffPivotCellProps,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
-import { EXECUTION_STATUS_FIELD_KEY, SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
+import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import FullscreenDiffViewer from '@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer';
 import { DiffViewState } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
@@ -35,14 +35,12 @@ interface Props {
   hasComparedMatch: boolean;
   showDiffsOnly: boolean;
   hideHighlights: boolean;
+  focusFieldKey?: string | null;
 }
 
 const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
 const LEFT_CELL_STICKY = 'sticky left-0';
 const VALUE_CELL_BASE = 'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-10 flex items-center';
-
-const diffDataAttr = (props: ReturnType<typeof getCompareDiffPivotCellProps>) =>
-  props['data-compare-diff'] ? { 'data-compare-diff': props['data-compare-diff'] } : {};
 
 const CompareRowDetailPivotTable: FC<Props> = ({
   sections,
@@ -51,6 +49,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   hasComparedMatch,
   showDiffsOnly,
   hideHighlights,
+  focusFieldKey,
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +69,10 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const columns = useMemo(() => flattenPivotFields(filteredSections), [filteredSections]);
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
-  const failedLabel = t(RunsI18nKey.MetricFailedText);
+
+  useEffect(() => {
+    scrollPivotToField(scrollContainerRef.current, focusFieldKey);
+  }, [focusFieldKey, columns]);
 
   const renderValueCell = (
     key: string,
@@ -82,28 +84,17 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   ) => {
     const diffKind = hideHighlights ? MetricDeltaKind.Empty : field.diffKind;
     const props = getCompareDiffPivotCellProps(diffKind, position);
-    const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
 
     return (
-      <button
+      <PivotValueCell
         key={key}
-        type="button"
-        onClick={() => onOpenDiff(field)}
-        className={mergeClasses(VALUE_CELL_BASE, rowBg, 'text-left hover:bg-layer-4', props.className)}
-        {...diffDataAttr(props)}
-      >
-        {isStatusRow ? (
-          <StatusValue raw={raw} />
-        ) : (
-          <FieldValue
-            raw={raw}
-            isFailed={isFailed}
-            isScoreIndicator={field.isScoreIndicator}
-            failedLabel={failedLabel}
-            singleLine
-          />
-        )}
-      </button>
+        field={field}
+        raw={raw}
+        isFailed={isFailed}
+        className={mergeClasses(rowBg, 'h-10 min-h-10 items-center self-auto', props.className)}
+        data-compare-diff={props['data-compare-diff']}
+        onOpenFullscreen={() => onOpenDiff(field)}
+      />
     );
   };
 
@@ -157,7 +148,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
           )}
 
           {/* Secondary run row */}
-          <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-2 gap-2')}>
+          <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
             <CompareRunIndexBadge runIndex={RUN_COMPARE_SECONDARY_INDEX} />
             <DialEllipsisTooltip
               text={hasComparedMatch ? comparedRunName : t(RunsI18nKey.RunCompareNoMatch)}
@@ -171,13 +162,13 @@ const CompareRowDetailPivotTable: FC<Props> = ({
                 column.field,
                 column.field.secondaryRaw,
                 column.field.secondaryFailed ?? false,
-                'bg-layer-2',
+                'bg-layer-3',
                 'bottom',
               )
             ) : (
               <div
                 key={`secondary-${column.sectionKey}-${column.field.fieldKey}`}
-                className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-2')}
+                className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}
               >
                 <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareNoMatch)}</span>
               </div>

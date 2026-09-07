@@ -5,8 +5,3 @@ export type RowDetailFieldFilter = TextGridFilter;
 export type RowDetailValueFilter = TextGridFilter;
 
 export type RowDetailDeltaFilter = NumericGridFilter;
-
-export enum RowDetailViewMode {
-  Table = 'table',
-  Pivot = 'pivot',
-}

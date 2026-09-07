@@ -1,3 +1,5 @@
+## ADDED Requirements
+
 ### Requirement: Compare page row click opens bottom detail by default
 
 On the dedicated Run Comparison page Execution Results tab, clicking a grid row SHALL open the row-detail panel at the bottom (pivot) by default. Closing the panel SHALL preserve bottom mode so the next row click reopens the bottom panel. The user MAY switch to the right sidebar (table) and back via the panel header.
@@ -89,3 +91,11 @@ The grid row corresponding to the open detail SHALL be highlighted with the `ag-
 #### Scenario: Row highlight cleared on close
 - **WHEN** the detail panel closes
 - **THEN** the previously highlighted row loses the active-detail styling
+
+## REMOVED Requirements
+
+### Requirement: Row click in compare mode opens the bottom drawer
+### Requirement: Drawer toolbar shows run names as column labels
+### Requirement: Pin/unpin and sidebar-switch controls hidden in run-compare mode
+### Requirement: Compared run result missing shows a placeholder
+### Requirement: Exiting run-compare mode closes the drawer
