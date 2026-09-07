@@ -7,6 +7,7 @@ import { removeModel, updateModel } from '@/src/app/[lang]/platform-models/actio
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -34,7 +35,6 @@ interface Props {
 
 const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, globalInterceptors, optionWarnings }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels);
   const router = useRouter();
   const { fetchFiles } = useModelsFolder();
   const { showNotification } = useNotification();
@@ -52,6 +52,11 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
     }),
     [isEditorEnabled],
+  );
+
+  const tabs = useMemo(
+    () => getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, isAssetUnavailable(selectedModel.userRoles)),
+    [t, selectedModel.userRoles],
   );
 
   useEffect(() => {

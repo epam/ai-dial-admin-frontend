@@ -44,7 +44,7 @@ describe('Route asset TabsContent', () => {
       />,
     );
 
-    expect(screen.getByTitle(RolesI18nKey.AddRoles)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: RolesI18nKey.AddRoles })).toBeInTheDocument();
     expect(screen.queryByText(RolesI18nKey.NotAvailableRoute)).not.toBeInTheDocument();
   });
 
