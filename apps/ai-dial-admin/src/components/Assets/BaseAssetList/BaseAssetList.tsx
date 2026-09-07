@@ -338,12 +338,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const platformAsset = asset as unknown as PlatformAsset;
       // A platform-bucket application/toolset row duplicates the same flat, unversioned way the six
       // other flat platform views already do (design.md D2/`platform-applications`/
-      // `platform-toolsets`) — the row's own path decides it, since neither dual-bucket view is
-      // itself flagged `isFlatPlatformView`.
-      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(
-        view,
-        platformAsset.path || platformAsset.folderId,
-      );
+      // `platform-toolsets`) — the row's own `folderId` decides it (reliably `'platform/'` for a
+      // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to be
+      // needed here and was the cause of Issue #4420's `Modals.tsx` counterpart — `.path` never
+      // carries the bucket prefix, so it always won the `||` and made this check false for a
+      // platform-bucket row).
+      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, platformAsset.folderId);
       if (isFlatPlatformView(view) || isPlatformDualBucketDuplicate) {
         const duplicate = getPlatformAssetDuplicate(view, platformAsset);
         // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
