@@ -6,6 +6,7 @@ import {
   ButtonAppearance,
   DialDangerButton,
   DialDropdown,
+  DialGhostButton,
   DialIconButton,
   DialLinkButton,
   DialNeutralButton,
@@ -24,7 +25,7 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   actions: AdaptiveHeaderActionsConfig;
-  deleteAction: AdaptiveHeaderAction;
+  deleteAction?: AdaptiveHeaderAction;
   buttonsClassName?: string;
 }
 
@@ -45,6 +46,8 @@ const renderExpandedAction = (action: AdaptiveHeaderAction, buttonsClassName?: s
     button = <DialLinkButton key={key} {...common} />;
   } else if (action.appearance === 'danger') {
     button = <DialDangerButton key={key} {...common} appearance={ButtonAppearance.Outlined} />;
+  } else if (action.appearance === 'ghost') {
+    button = <DialGhostButton key={key} {...common} />;
   } else {
     button = <DialNeutralButton key={key} {...common} />;
   }
@@ -85,15 +88,15 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
     const observer = new ResizeObserver(update);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [leading.length, trailing.length, deleteAction.label]);
+  }, [leading.length, trailing.length, deleteAction?.label]);
 
   const renderExpandedActions = () => [
     ...leading.map((action) => renderExpandedAction(action, buttonsClassName)),
-    renderExpandedAction(deleteAction, buttonsClassName),
+    ...(deleteAction ? [renderExpandedAction(deleteAction, buttonsClassName)] : []),
     ...trailing.map((action) => renderExpandedAction(action, buttonsClassName)),
   ];
 
-  const menuActions = [...leading, ...trailing, deleteAction];
+  const menuActions = [...leading, ...trailing, ...(deleteAction ? [deleteAction] : [])];
   const dropdownItems: DropdownItem[] = menuActions.map((action) => ({
     key: action.id,
     disabled: action.disabled,
