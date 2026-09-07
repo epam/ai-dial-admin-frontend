@@ -58,4 +58,21 @@ describe('PlatformToolsetView', () => {
     const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
     expect(tabLabels).toEqual([TabsI18nKey.Properties, TabsI18nKey.Tools, TabsI18nKey.Roles]);
   });
+
+  test.each([
+    [[], true],
+    [['role'], false],
+    [undefined, false],
+  ])('Should set the Roles tab warning icon presence to %s for user_roles %s', (userRoles, expectedWarning) => {
+    render(
+      <PlatformToolsetView
+        etag={mockEtag}
+        originalToolset={{ ...mockOriginalToolset, user_roles: userRoles } as AssetToolset}
+        roles={mockRoles}
+      />,
+    );
+
+    const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
+    expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+  });
 });

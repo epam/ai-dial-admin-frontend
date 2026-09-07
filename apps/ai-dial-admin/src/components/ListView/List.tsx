@@ -82,13 +82,13 @@ const ListEntities = <T extends object>({
       )}
     >
       {listLabel && (
-        <div className="flex flex-row flex-wrap justify-between mb-3 items-center h-[40px]">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-row justify-between mb-3 items-center h-[40px] min-w-0 gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <h2>{listLabel}</h2>
             {listLabelAddon}
           </div>
 
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
             <ResetFiltersButton gridApi={gridApi} />
             {isEnableColumnPanel &&
               (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (

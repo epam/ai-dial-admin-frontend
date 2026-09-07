@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type AdaptiveHeaderActionAppearance = 'link' | 'neutral' | 'danger';
+export type AdaptiveHeaderActionAppearance = 'link' | 'neutral' | 'danger' | 'ghost';
 
 export interface AdaptiveHeaderAction {
   id: string;
@@ -14,8 +14,8 @@ export interface AdaptiveHeaderAction {
 }
 
 export interface AdaptiveHeaderActionsConfig {
-  /** Rendered before Delete when expanded; first in the overflow menu. */
+  /** Rendered first when expanded; first in the overflow menu. */
   leading?: AdaptiveHeaderAction[];
-  /** Rendered after Delete when expanded; before Delete in the overflow menu. */
+  /** Rendered after leading (and Delete, when present) when expanded; before Delete in the overflow menu. */
   trailing?: AdaptiveHeaderAction[];
 }

@@ -16,6 +16,7 @@ import TabsContent from '@/src/components/Assets/Toolsets/View/TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -73,15 +74,23 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
   // (`ToolsetView.tsx`) is unaffected. Inserted right after `Tools` and before the
   // conditionally-appended `Audit` tab, matching the admin-BE `Toolsets` entity's own
   // `[Properties, Tools, Roles, Audit]` ordering.
-  const tabs = useMemo(
-    () => getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags).toSpliced(2, 0, rolesTab(t)),
-    [t, featureFlags],
-  );
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+
+  const selectedToolsetUserRoles = (selectedToolset as unknown as DialPlatformToolsetResource).user_roles;
+
+  const tabs = useMemo(
+    () =>
+      getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags).toSpliced(
+        2,
+        0,
+        rolesTab(t, isAssetUnavailable(selectedToolsetUserRoles)),
+      ),
+    [t, featureFlags, selectedToolsetUserRoles],
+  );
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({

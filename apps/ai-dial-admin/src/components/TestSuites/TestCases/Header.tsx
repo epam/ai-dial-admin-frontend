@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -8,9 +8,6 @@ import {
   ButtonVariant,
   DialButtonDropdown,
   DialConfirmationPopup,
-  DialDangerButton,
-  DialGhostButton,
-  DialNeutralButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import {
@@ -25,6 +22,11 @@ import {
   IconUnlink,
 } from '@tabler/icons-react';
 
+import AdaptiveHeaderActions from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/AdaptiveHeaderActions';
+import {
+  AdaptiveHeaderAction,
+  AdaptiveHeaderActionsConfig,
+} from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -111,68 +113,83 @@ const HeaderButtons: FC<Props> = ({
     onAttachDataset?.(selectedDatasetId);
   };
 
-  const tryOpenAttachModal = () => {
+  const tryOpenAttachModal = useCallback(() => {
     if (onBeforeAttach && !onBeforeAttach()) {
       return;
     }
     setIsAttachModalOpen(true);
-  };
+  }, [onBeforeAttach]);
+
+  const adaptiveActions = useMemo((): AdaptiveHeaderActionsConfig => {
+    if (isReadOnly) {
+      const leading: AdaptiveHeaderAction[] = [
+        {
+          id: 'export',
+          label: t(ButtonsI18nKey.ExportCsv),
+          icon: <IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />,
+          onClick: () => onExport?.(),
+          appearance: 'ghost',
+          dividerAfter: true,
+        },
+        {
+          id: 'detach',
+          label: t(TestSuitesI18nKey.DetachFromDataset),
+          icon: <IconUnlink {...BASE_BUTTON_ICON_PROPS} />,
+          onClick: () => setIsDetachConfirmOpen(true),
+          appearance: 'ghost',
+        },
+        {
+          id: 'change',
+          label: t(TestSuitesI18nKey.ChangeDataset),
+          icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
+          onClick: tryOpenAttachModal,
+          appearance: 'ghost',
+        },
+      ];
+      return { leading };
+    }
+
+    const leading: AdaptiveHeaderAction[] = [
+      {
+        id: 'attach',
+        label: t(TestSuitesI18nKey.AttachDataset),
+        icon: <IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: tryOpenAttachModal,
+        appearance: 'ghost',
+      },
+      {
+        id: 'add',
+        label: t(ButtonsI18nKey.Add),
+        icon: <IconPlus {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onAdd?.(),
+      },
+    ];
+    const trailing: AdaptiveHeaderAction[] = showBatchDelete
+      ? [
+          {
+            id: 'delete',
+            label: t(ButtonsI18nKey.Delete),
+            icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
+            onClick: () => onBatchDelete?.(),
+            appearance: 'danger',
+          },
+        ]
+      : [];
+    return { leading, trailing };
+  }, [isReadOnly, t, onExport, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
 
   return (
-    <div className="flex gap-4 items-center">
-      {isReadOnly && (
-        <>
-          <DialGhostButton
-            label={t(ButtonsI18nKey.ExportCsv)}
-            iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onExport}
-          />
-          <div className="w-px h-5 bg-layer-4" />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.DetachFromDataset)}
-            iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsDetachConfirmOpen(true)}
-          />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.ChangeDataset)}
-            iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={tryOpenAttachModal}
-          />
-        </>
-      )}
-
+    <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
       {!isReadOnly && (
-        <>
-          <DialButtonDropdown
-            label={t(TestSuitesI18nKey.More)}
-            items={moreItems}
-            variant={ButtonVariant.Primary}
-            appearance={ButtonAppearance.Ghost}
-          />
-          <DialGhostButton
-            label={t(TestSuitesI18nKey.AttachDataset)}
-            iconBefore={<IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={tryOpenAttachModal}
-          />
-        </>
-      )}
-
-      {!isReadOnly && (
-        <DialNeutralButton
-          label={t(ButtonsI18nKey.Add)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onAdd}
+        <DialButtonDropdown
+          label={t(TestSuitesI18nKey.More)}
+          items={moreItems}
+          variant={ButtonVariant.Primary}
+          appearance={ButtonAppearance.Ghost}
         />
       )}
 
-      {showBatchDelete && (
-        <DialDangerButton
-          label={t(ButtonsI18nKey.Delete)}
-          appearance={ButtonAppearance.Outlined}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onBatchDelete}
-        />
-      )}
+      <AdaptiveHeaderActions actions={adaptiveActions} />
 
       {datasetTag}
 
