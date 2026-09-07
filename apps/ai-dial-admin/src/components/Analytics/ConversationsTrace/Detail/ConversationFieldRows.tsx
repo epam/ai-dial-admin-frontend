@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import { FC } from 'react';
 
 import ConversationTermList from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationTermList';
-import FieldCaveat from '@/src/components/Analytics/ConversationsTrace/FieldCaveat';
+import FieldCaveat from '@/src/components/Common/FieldCaveat/FieldCaveat';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -64,7 +64,7 @@ const ConversationFieldRows: FC<Props> = ({ fields, layout }) => {
           <div key={field.labelKey} className="flex min-w-0 flex-col gap-0.5">
             <dt className="flex items-center gap-1 text-secondary dial-tiny-text">
               {t(field.labelKey)}
-              {field.hintKey && <FieldCaveat caveat={t(field.hintKey)} />}
+              {field.hintKey && <FieldCaveat hint={t(field.hintKey)} />}
             </dt>
             <dd className="min-w-0 text-primary dial-base-semi-text">
               <FieldValue field={field} className={field.accentClassName} isClamped />

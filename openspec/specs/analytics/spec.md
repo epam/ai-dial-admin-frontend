@@ -2088,9 +2088,9 @@ The **display name** and **description** fields SHALL be optional and SHALL be p
 
 An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
 
-For a **source** table, the Partition column field's label SHALL carry an info affordance (an icon with a hover tooltip) explaining that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious. The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
+For a **source** table, the Partition column field's label SHALL carry an info affordance whose text includes the fact that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious; the affordance and the rest of its text follow "Table schema keys are explained where they are chosen and where they are read". The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
-For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance, following the Partition column pattern, stating that the values are the caller's own promise the service cannot verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) and that the choice cannot be changed once the table is materialized.
+For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
 
 Because the scan requires **both** members and the backend accepts one alone — producing a table that is permanently unscannable, since `POST /v1/tables/{name}/schema` answers 409 once the table is `ACTIVE` and no `PATCH` member sets the pair — the surface SHALL treat the pair as all-or-nothing: while exactly one of the two is chosen, Save SHALL be disabled and the empty field SHALL show a validation message naming the other as required alongside it. Choosing neither SHALL be valid and SHALL leave the table unscannable, which is the correct declaration for a source whose row identity is its whole ordering key.
 
@@ -2162,8 +2162,8 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 #### Scenario: Partition column restriction is explained via a tooltip
 
 - **WHEN** a source table's schema-definition surface renders
-- **THEN** the Partition column field's label shows an info icon
-- **AND** hovering it shows a tooltip explaining that only Date/Timestamp columns are selectable
+- **THEN** the Partition column field's label carries a focusable info affordance
+- **AND** its hint text states that only Date/Timestamp columns are selectable
 
 #### Scenario: Granularity is hidden until a partition column is chosen
 
@@ -2215,6 +2215,63 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **WHEN** the schema-definition surface renders a `FAILED` source whose definition already stores `identity_column` and `version_column`
 - **THEN** both selects are seeded with those stored values
 - **AND** both are required, because omitting a member on re-post leaves the stored value unchanged rather than clearing it
+
+### Requirement: Table schema keys are explained where they are chosen and where they are read
+
+Every physical-key field of a table SHALL carry an info affordance on its label, on both surfaces that
+present it: the schema-definition surface of a `PENDING`/`FAILED` table, and the read-only
+schema-metadata summary of an `ACTIVE` table. The fields are **Ordering key**, **Partition column**,
+**Granularity**, **Identity column** and **Version column** for a source, and **Grain key** for an
+enrichment.
+
+Each hint SHALL lead with what the choice gives the reader, and SHALL state its restrictions after
+that, in language that does not require knowledge of the storage engine: no engine, part, granule, or
+SQL-clause vocabulary. Each hint SHALL carry at least the following, and SHALL NOT contradict it:
+
+| Field | The hint SHALL state |
+| --- | --- |
+| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first |
+| Partition column | Rows are grouped into time chunks and a query filtered on this column skips the chunks it does not cover; most tables need no partition; only Date and Timestamp columns are eligible |
+| Granularity | How much time one chunk covers, and that too many small chunks read slower rather than faster |
+| Identity column | With Version column, it lets pipelines read the table in batches without handling a row twice; the value must differ in every row, uniqueness is not validated, and repeated values cause skipped rows; eligible columns are non-empty and not sensitive |
+| Version column | It is how a pipeline tells which rows are new since its last pass; the value is expected at write time and must never move backwards, is not validated, and a backdated value causes missed rows; eligible columns are non-empty, non-sensitive Timestamp columns |
+| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row |
+
+On the schema-definition surface the key fields SHALL be grouped under a **Keys** sub-header carrying a
+single note stating that the keys are set once, when the table is created, and are fixed afterwards.
+That statement SHALL appear only in the group note, and SHALL NOT be repeated in the individual hints.
+The `ACTIVE` summary SHALL NOT carry the note — its values are already read-only.
+
+The info affordance SHALL be a focusable control whose accessible name is the hint text, so the hint is
+reachable by keyboard and addressable by assistive technology; the icon inside it SHALL NOT contribute a
+competing name. A non-focusable icon SHALL NOT be used for this purpose anywhere on either surface.
+
+#### Scenario: Every key field on the draft surface is explained
+
+- **WHEN** a `PENDING` **source** table's schema-definition surface renders with a partition column
+  chosen
+- **THEN** the Ordering key, Partition column, Granularity, Identity column, and Version column labels
+  each carry an info affordance
+- **AND** a `PENDING` **enrichment** table's surface carries one on its Grain key label
+
+#### Scenario: The one-time nature of the keys is stated once
+
+- **WHEN** a `PENDING` table's schema-definition surface renders
+- **THEN** its key fields appear under a Keys sub-header whose note states that the keys are set at
+  creation and fixed afterwards
+- **AND** no individual key hint repeats that statement
+
+#### Scenario: An active table's key summary carries the same explanations
+
+- **WHEN** an `ACTIVE` source table with an ordering key, a partition, and a scan-metadata pair renders
+- **THEN** each summarized key's label carries the same info affordance as the draft surface
+- **AND** an `ACTIVE` enrichment table's grain key label carries its own
+- **AND** neither summary shows the Keys group note
+
+#### Scenario: A hint is reachable by keyboard and named for assistive technology
+
+- **WHEN** a key field's info affordance renders on either surface
+- **THEN** it is a control that can be focused by keyboard, and its accessible name is the hint text
 
 ### Requirement: A column may be declared with an enum type and a closed, ordered value list
 

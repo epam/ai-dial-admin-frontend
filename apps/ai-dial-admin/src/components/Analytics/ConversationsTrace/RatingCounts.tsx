@@ -4,7 +4,7 @@ import { IconThumbDown, IconThumbDownFilled, IconThumbUp, IconThumbUpFilled } fr
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import FieldCaveat from '@/src/components/Analytics/ConversationsTrace/FieldCaveat';
+import FieldCaveat from '@/src/components/Common/FieldCaveat/FieldCaveat';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ConversationRatingCounts } from '@/src/models/analytics/conversations-trace';
@@ -70,7 +70,7 @@ const RatingCounts: FC<Props> = ({ counts, isPeriodScoped = false, className }) 
         />
         {hasNegativeRatingCaveat(counts) && (
           <FieldCaveat
-            caveat={t(ConversationsTraceI18nKey.RatingDownCaveat, {
+            hint={t(ConversationsTraceI18nKey.RatingDownCaveat, {
               unestablished: negativeRatingGap(counts),
               down: counts.rating_down ?? 0,
               captured: counts.captured_form ?? 0,
