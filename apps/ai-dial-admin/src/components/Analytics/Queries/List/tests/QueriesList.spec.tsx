@@ -29,6 +29,7 @@ interface GridProps {
     field?: string;
     headerName?: string;
     valueGetter?: (params: { data: SavedQuery }) => unknown;
+    filterValueGetter?: (params: { data: SavedQuery }) => unknown;
     cellRendererParams?: { items: { id: string; onClick: (entity?: SavedQuery) => void; hidden?: unknown }[] };
   }[];
   emptyDataProps?: { title?: string };
@@ -94,6 +95,23 @@ describe('QueriesList', () => {
     const scope = column('scope');
     expect(scope?.valueGetter?.({ data: PERSONAL })).toBe('Queries.ScopePersonal');
     expect(scope?.valueGetter?.({ data: COMMON })).toBe('Queries.ScopeCommon');
+  });
+
+  test('lists every source a query reads, comma-separated', () => {
+    renderList();
+    const source = column('source');
+    const joined = baseQuery({ sql: 'SELECT 1', source: ['conversations', 'dial_usage_log'] });
+
+    expect(source?.valueGetter?.({ data: joined })).toBe('conversations, dial_usage_log');
+    expect(source?.filterValueGetter?.({ data: joined })).toBe('conversations, dial_usage_log');
+  });
+
+  test('renders an empty source cell rather than failing', () => {
+    renderList();
+    const source = column('source');
+
+    expect(source?.valueGetter?.({ data: baseQuery({ source: [] }) })).toBe('');
+    expect(source?.valueGetter?.({ data: baseQuery({}) })).toBe('');
   });
 
   test('derives the editor column from the body rather than a stored field', () => {
