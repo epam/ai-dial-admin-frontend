@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { CustomCellRendererProps } from 'ag-grid-react';
 
 import ActionCellRenderer from '../ActionCellRenderer';
@@ -22,20 +23,44 @@ const renderCell = (item: ActionMenuOperationDeclaration<Row>, data: Row | undef
   );
 
 describe('ActionCellRenderer', () => {
-  test('renders the icon when data is present and not hidden', () => {
+  test('renders the operation as a button named after it', () => {
     renderCell({
       icon,
       id: 'try',
+      label: 'Try_out',
       onClick: vi.fn(),
     });
 
+    expect(screen.getByRole('button', { name: 'Try_out' })).toBeInTheDocument();
     expect(screen.getByText('icon')).toBeInTheDocument();
+  });
+
+  test('invokes the operation on click with the row data and index', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    renderCell({ icon, id: 'try', label: 'Try_out', onClick });
+
+    await user.click(screen.getByRole('button', { name: 'Try_out' }));
+
+    expect(onClick).toHaveBeenCalledWith({ id: '1' }, 0);
+  });
+
+  test('invokes the operation from the keyboard', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    renderCell({ icon, id: 'try', label: 'Try_out', onClick });
+
+    await user.tab();
+    await user.keyboard('{Enter}');
+
+    expect(onClick).toHaveBeenCalledWith({ id: '1' }, 0);
   });
 
   test('returns null when hidden is true', () => {
     const { container } = renderCell({
       icon,
       id: 'try',
+      label: 'Try_out',
       onClick: vi.fn(),
       hidden: () => true,
     });

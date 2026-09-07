@@ -12,6 +12,7 @@ import {
   DialEllipsisTooltip,
   DialFormPopup,
   DialGhostButton,
+  DialLabelledText,
   DialNeutralButton,
   DialPrimaryButton,
   PopupSize,
@@ -24,6 +25,7 @@ import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/Connect
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
@@ -38,7 +40,6 @@ import {
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -397,27 +398,72 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           {table.type === AnalyticsTableType.Source ? (
             <>
               {!!table.ordering_key?.length && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.OrderingKey)} text={table.ordering_key.join(', ')} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.OrderingKey)}
+                      hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
+                    />
+                  }
+                  text={table.ordering_key.join(', ')}
+                />
               )}
               {table.partition_by && (
                 <>
-                  <LabelledText label={t(AnalyticsTablesI18nKey.PartitionColumn)} text={table.partition_by.column} />
-                  <LabelledText
-                    label={t(AnalyticsTablesI18nKey.Granularity)}
+                  <DialLabelledText
+                    label={
+                      <KeyFieldLabel
+                        label={t(AnalyticsTablesI18nKey.PartitionColumn)}
+                        hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
+                      />
+                    }
+                    text={table.partition_by.column}
+                  />
+                  <DialLabelledText
+                    label={
+                      <KeyFieldLabel
+                        label={t(AnalyticsTablesI18nKey.Granularity)}
+                        hint={t(AnalyticsTablesI18nKey.GranularityHint)}
+                      />
+                    }
                     text={capitalize(table.partition_by.granularity)}
                   />
                 </>
               )}
               {table.identity_column && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.IdentityColumn)} text={table.identity_column} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.IdentityColumn)}
+                      hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
+                    />
+                  }
+                  text={table.identity_column}
+                />
               )}
               {table.version_column && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.VersionColumn)} text={table.version_column} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.VersionColumn)}
+                      hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
+                    />
+                  }
+                  text={table.version_column}
+                />
               )}
             </>
           ) : (
             !!table.grain?.grain_key && (
-              <LabelledText label={t(AnalyticsTablesI18nKey.GrainKey)} text={table.grain.grain_key} />
+              <DialLabelledText
+                label={
+                  <KeyFieldLabel
+                    label={t(AnalyticsTablesI18nKey.GrainKey)}
+                    hint={t(AnalyticsTablesI18nKey.GrainKeyHint)}
+                  />
+                }
+                text={table.grain.grain_key}
+              />
             )
           )}
         </div>

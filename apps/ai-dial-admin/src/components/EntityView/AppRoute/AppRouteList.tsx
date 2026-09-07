@@ -31,14 +31,21 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col relative gap-y-4 overflow-auto">
+    <div className="flex-1 min-h-0 flex flex-col relative gap-y-4 overflow-auto" role="tablist">
       {activeRouteIndex == null && <DialNoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
       {activeRouteIndex != null && !!routes?.length
         ? routes.map((route, index) => {
             return (
-              <button
+              <div
                 key={route.name}
                 role="tab"
+                tabIndex={0}
+                aria-selected={activeRouteIndex === index}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  onClick(index);
+                }}
                 className={classNames(
                   'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full small cursor-pointer hover:text-accent-primary',
                   activeRouteIndex === index
@@ -50,14 +57,14 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                   <DialEllipsisTooltip text={route.name} />
                 </span>
                 {!disabled && (
-                  <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
+                  <div className="invisible group-hover:visible focus-within:visible text-primary mx-2 flex flex-row gap-2">
                     <ActionsDropdown
                       items={[getOperation(() => onRemove(route.name))]}
                       icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
                     />
                   </div>
                 )}
-              </button>
+              </div>
             );
           })
         : null}
