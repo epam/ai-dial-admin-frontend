@@ -515,6 +515,7 @@ export default {
     Open: 'Open',
     None: 'None',
     BulkActions: 'Bulk actions',
+    Actions: 'Actions',
     AddAdditionalProperties: 'Add additional properties',
     Build: 'Build',
     Deploy: 'Deploy',
