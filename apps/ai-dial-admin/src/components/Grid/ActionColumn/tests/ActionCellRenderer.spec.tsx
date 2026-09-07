@@ -31,8 +31,8 @@ describe('ActionCellRenderer', () => {
       onClick: vi.fn(),
     });
 
-    expect(screen.getByRole('button', { name: 'Try_out' })).toBeInTheDocument();
-    expect(screen.getByText('icon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Try_out' })).toBeTruthy();
+    expect(screen.getByText('icon')).toBeTruthy();
   });
 
   test('invokes the operation on click with the row data and index', async () => {
