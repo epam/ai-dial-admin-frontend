@@ -417,6 +417,7 @@ export enum ButtonsI18nKey {
   Open = 'Buttons.Open',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
+  Actions = 'Buttons.Actions',
   AddAdditionalProperties = 'Buttons.AddAdditionalProperties',
   Build = 'Buttons.Build',
   Deploy = 'Buttons.Deploy',
