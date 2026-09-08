@@ -18,6 +18,10 @@ Things that cost time or fail silently if you don't know them:
   won't resolve.
 - **`npm run test` always runs with coverage.** While iterating use
   `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate.
+- **The typecheck gate covers app source only.** `npm run typecheck` (also `.husky/pre-push`) runs
+  `tsc -p tsconfig.app.json`, which excludes `*.spec.ts(x)`. The spec project still has 725 real errors —
+  fixtures that no longer match production types, untyped mocks — so a green test run does not mean a test
+  is type-correct. Check one with `npx tsc -p tsconfig.spec.json --noEmit` from `apps/ai-dial-admin/`.
 - **Test mocks are centralized in `apps/ai-dial-admin/test-setup.tsx`**, and its mocked `t()` returns
   the i18n key as-is — so component tests assert keys, not translated text. Add missing mocks there,
   not inline in a spec.
