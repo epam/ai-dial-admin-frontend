@@ -191,9 +191,6 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
           />
         </PipelineSection>
       )}
-      rather than a deliberate mode, and the moment to say so is registration. Stated on its own so it it is actually
-      required: the service refuses a `sql` evaluator with no binding, while it accepts an `llm` one without any — so
-      showing it before an evaluator resolves would be an optional field, and
       {(!isModal || form.isBindingsReady) && (
         <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionBindings)} isModal={isModal} isExpanded>
           {isModal && <span className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.OutputBindings)}</span>}
