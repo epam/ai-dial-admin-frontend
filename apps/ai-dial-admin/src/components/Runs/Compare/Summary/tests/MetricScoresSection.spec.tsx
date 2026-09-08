@@ -155,4 +155,22 @@ describe('Compare Summary :: MetricScoresSection', () => {
 
     expect(onSelectMetric).toHaveBeenCalledWith('ragas.context_recall');
   });
+
+  test('keeps metric scores visible when the compared run has none', () => {
+    const empty: MetricScoresData = { overallScore: 0, statistics: [], byStatistic: {} };
+    render(<Controlled compared={empty} />);
+
+    const group = screen.getByRole('group', { name: 'ragas' });
+    expect(within(group).getByText('p:context_recall:0.8')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
+  });
+
+  test('keeps metric scores visible when the primary run has none', () => {
+    const empty: MetricScoresData = { overallScore: 0, statistics: [], byStatistic: {} };
+    render(<Controlled primary={empty} />);
+
+    const group = screen.getByRole('group', { name: 'ragas' });
+    expect(within(group).getByText('c:context_recall:0.3')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
+  });
 });
