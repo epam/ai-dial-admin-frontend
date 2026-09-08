@@ -32,7 +32,7 @@ context: |
   - Build: `npm run build`
   - Lint: `npm run lint` (also pre-commit via husky/lint-staged)
   - Typecheck: `npm run typecheck` (also pre-push via husky) — app source only;
-    `*.spec.ts(x)` are excluded until their 725 errors are cleared
+    `*.spec.ts(x)` are excluded until their 722 errors are cleared
   - Format: `npm run format` (check) / `npm run format:write` (apply)
   - Tests: `npm run test` (also pre-push via husky)
   - Single test file: `npx vitest run src/path/to/file.spec.ts` (run from apps/ai-dial-admin/)
