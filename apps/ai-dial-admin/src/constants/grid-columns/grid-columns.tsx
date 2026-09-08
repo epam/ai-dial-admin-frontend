@@ -393,7 +393,7 @@ export const PICKER_RUNNER_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'origin',
     headerName: t(EntitiesI18nKey.Source),
     valueFormatter: ({ value }) =>
-      value === AppRunnerOrigin.Asset ? t(SourceI18nKey.AssetRunner) : t(SourceI18nKey.EntityRunner),
+      value === AppRunnerOrigin.Platform ? t(SourceI18nKey.PlatformRunner) : t(SourceI18nKey.ConfigRunner),
   },
   AUTHOR_COLUMN,
   { ...UPDATED_AT_COLUMN, filter: false },
