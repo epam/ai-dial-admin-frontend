@@ -220,7 +220,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
-          getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
+          getExportOperation(onOpenExportModal, (_, node) => node.data?.status !== RunStatus.COMPLETED),
           getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED),
           getCancelOperation(onOpenCancelModal),
           getDeleteOperation(onOpenDeleteModal),

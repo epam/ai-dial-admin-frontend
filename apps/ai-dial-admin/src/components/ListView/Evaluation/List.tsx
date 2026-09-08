@@ -292,7 +292,7 @@ const EvaluationListView = <T extends object>({
   }
 
   if (route === ApplicationRoute.Runs) {
-    actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
+    actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status !== RunStatus.COMPLETED));
     actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
     actionColumn.push(getCancelOperation(onOpenCancelModal));
   }

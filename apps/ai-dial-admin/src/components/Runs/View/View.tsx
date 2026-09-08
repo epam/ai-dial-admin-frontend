@@ -108,7 +108,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
         label: t(ButtonsI18nKey.Export),
         icon: <IconFileExport {...BASE_BUTTON_ICON_PROPS} />,
         onClick: onOpenExportModal,
-        disabled: selectedRun.status === RunStatus.RUNNING,
+        disabled: selectedRun.status !== RunStatus.COMPLETED,
         appearance: 'neutral' as const,
       },
       {
