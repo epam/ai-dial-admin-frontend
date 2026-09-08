@@ -47,12 +47,27 @@ export const resolvePivotFieldWidthTier = (field: RowDetailField): PivotColumnWi
 export const resolvePivotFieldColumnWidth = (field: RowDetailField): number =>
   PIVOT_COLUMN_WIDTH_BY_TIER[resolvePivotFieldWidthTier(field)];
 
+export const getPivotGridMinWidth = (
+  columns: PivotColumn[],
+  options?: { includeStickyLabelColumn?: boolean },
+): number => {
+  const includeStickyLabelColumn = options?.includeStickyLabelColumn !== false;
+  const fieldsWidth = columns.reduce((sum, column) => sum + resolvePivotFieldColumnWidth(column.field), 0);
+
+  return includeStickyLabelColumn ? fieldsWidth + ROW_DETAIL_PIVOT_LEFT_COL_WIDTH : fieldsWidth;
+};
+
 export const getPivotGridTemplateColumns = (
   columns: PivotColumn[],
   options?: { includeStickyLabelColumn?: boolean },
 ): string => {
   const includeStickyLabelColumn = options?.includeStickyLabelColumn !== false;
-  const fieldColumns = columns.map((column) => `${resolvePivotFieldColumnWidth(column.field)}px`).join(' ');
+  const fieldColumns = columns
+    .map((column) => {
+      const width = resolvePivotFieldColumnWidth(column.field);
+      return `minmax(${width}px, ${width}fr)`;
+    })
+    .join(' ');
 
   if (!includeStickyLabelColumn) {
     return fieldColumns || '';
