@@ -85,6 +85,30 @@ describe('AdaptiveHeaderActions', () => {
     expect(items.map((item) => item.key)).toEqual(['export', 'delete']);
   });
 
+  test('collapses leading actions without a delete action', () => {
+    stubResizeObserver(200, 500);
+
+    render(
+      <AdaptiveHeaderActions
+        actions={{
+          leading: [
+            {
+              id: 'export',
+              label: 'Export',
+              icon: <span>export-icon</span>,
+              onClick: vi.fn(),
+              appearance: 'ghost',
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
+    const items = dropdownItemsSpy.mock.calls.at(-1)?.[0] as { key: string }[];
+    expect(items.map((item) => item.key)).toEqual(['export']);
+  });
+
   test('renders expanded action buttons when there is enough space', async () => {
     stubResizeObserver(800, 300);
     const user = userEvent.setup();

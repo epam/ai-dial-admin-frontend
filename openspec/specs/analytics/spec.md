@@ -233,7 +233,7 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 #### Scenario: A query's data is fetched on the server
 
 - **WHEN** the user navigates to `/queries/{id}`
-- **THEN** the page awaits that saved query, the queryable entities, the function catalog, and the schema of the query's own source on the server
+- **THEN** the page awaits that saved query, the queryable entities, the function catalog, and the schema of the query's primary source on the server
 - **AND** if the saved query cannot be read the page resolves to a not-found result
 
 ### Requirement: Query Builder layout and view switcher
@@ -263,12 +263,12 @@ The builder SHALL be reachable only through a saved query. There SHALL be no rou
 
 ### Requirement: Query Builder initial data loading and state
 
-The query page SHALL prefetch, on the server, the queryable entities, the function catalog, the stored saved query, and the schema of that query's own source, passing them to the client builder. The client SHALL seed its `QueryBuilderState` (entity name + fields, and the mode/filter/select/sort/page the stored query specifies) from those props without a mount-time fetch. The toolbar SHALL show the entity selector. Changing the selected entity SHALL load its schema client-side via the `getEntitySchema` server action and reset builder selections that may reference stale fields. When no entities were provided, the builder SHALL show the entities-load-failed empty state.
+The query page SHALL prefetch, on the server, the queryable entities, the function catalog, the stored saved query, and the schema of that query's primary source, passing them to the client builder. The client SHALL seed its `QueryBuilderState` (entity name + fields, and the mode/filter/select/sort/page the stored query specifies) from those props without a mount-time fetch. The toolbar SHALL show the entity selector, holding the primary source. Changing the selected entity SHALL load its schema client-side via the `getEntitySchema` server action and reset builder selections that may reference stale fields. When no entities were provided, the builder SHALL show the entities-load-failed empty state.
 
 #### Scenario: Builder is seeded from server-fetched props
 
-- **WHEN** the page prefetched a non-empty entities list, the stored query, and that query's source schema
-- **THEN** the builder renders with that source selected, its fields available, and the stored query reflected
+- **WHEN** the page prefetched a non-empty entities list, the stored query, and that query's primary-source schema
+- **THEN** the builder renders with the primary source selected, its fields available, and the stored query reflected
 - **AND** no client-side entities/schema/query request is issued on mount
 
 #### Scenario: Changing entity reloads schema and resets selections
@@ -1167,6 +1167,8 @@ The SQL editor SHALL auto-format its contents — there SHALL be no manual "Form
 
 SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
 
+Leaving the SQL view for the **JSON** view is guarded the same way, by the same translation and the same popup — see "Switching from the SQL view to JSON translates the SQL buffer". The two switches differ only in where a successful translation lands: the Builder switch requires a builder-representable body, while the JSON switch shows any translated body.
+
 #### Scenario: Translatable SQL hydrates the builder without a prompt
 
 - **WHEN** the user edits SQL that translates to a builder-representable query and selects the Builder view
@@ -1182,7 +1184,7 @@ SQL and JSON are "written" modes: they can hold queries the visual builder canno
 #### Scenario: Confirming drops the written query and resets the builder
 
 - **WHEN** the confirmation popup is shown and the user confirms
-- **THEN** the view switches to the Builder view
+- **THEN** the view switches to the view that was requested
 - **AND** the written query is discarded
 - **AND** the builder state is reset to its initial defaults for the selected entity
 
@@ -1197,6 +1199,60 @@ SQL and JSON are "written" modes: they can hold queries the visual builder canno
 - **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
 - **THEN** no confirmation is shown
 - **AND** the builder reflects that query
+
+### Requirement: Switching from the SQL view to JSON translates the SQL buffer
+
+The JSON view SHALL show the query the user actually authored, never a body derived from builder state the SQL was never hydrated into. When the user leaves the SQL view for the JSON view with an **edited** SQL buffer, that SQL SHALL be translated through `POST /v1/queries/translate-sql` — the same endpoint and the same failure semantics as the Builder switch.
+
+On a successful translation the JSON view SHALL show the translated body and the SQL buffer SHALL be cleared, so the body on screen is the body a save would persist. A translated body the visual builder can represent SHALL additionally hydrate the builder; one it cannot SHALL leave the JSON buffer marked as diverged, so a later switch to the Builder still goes through the written-mode guard.
+
+On a rejected translation — a composite statement (a join, a CTE, a derived table, or a subquery), or any SQL the DSL cannot express — the same danger confirmation popup used for the Builder switch SHALL be shown. Confirming SHALL discard the SQL, reset the builder to its defaults for the selected source, and open the JSON view on that default body rather than on an empty buffer. Cancelling SHALL leave the user in the SQL view with the text unchanged.
+
+The popup SHALL describe the switch the user actually asked for. Its header is shared, but its description SHALL name the destination: the Builder switch SHALL state that the query cannot be shown in the visual builder, while the JSON switch SHALL state that the SQL could not be translated into a structured query — the JSON view can display any structured body, so the failure there is the translation, not the display. Neither description SHALL name the construct the DSL lacks.
+
+An empty or unedited generated SQL buffer SHALL NOT be translated: the JSON view SHALL be filled from the current builder state, as it is when entering JSON from the Builder view.
+
+#### Scenario: Translatable SQL is shown as its translated body
+
+- **WHEN** the user edits SQL that the service translates and selects the JSON view
+- **THEN** the JSON view shows the translated body
+- **AND** the SQL buffer is cleared
+- **AND** no confirmation is shown
+
+#### Scenario: A translated body the builder cannot hold stays diverged
+
+- **WHEN** the edited SQL translates to a query the visual builder cannot represent and the user selects the JSON view
+- **THEN** the JSON view shows that body
+- **AND** switching from there to the Builder view goes through the written-mode confirmation
+
+#### Scenario: A composite statement asks for confirmation
+
+- **WHEN** the user edits SQL that joins two entities, which the service refuses to translate, and selects the JSON view
+- **THEN** a confirmation popup warns that the current query will be dropped
+- **AND** its description states that the SQL could not be translated into a structured query, not that it cannot be shown in the visual builder
+- **AND** the JSON view is not shown while the popup is open
+
+#### Scenario: The Builder switch keeps its own wording
+
+- **WHEN** the same untranslatable SQL is switched to the Builder view instead
+- **THEN** the popup description states that the query cannot be shown in the visual builder
+
+#### Scenario: Confirming opens JSON on the default body
+
+- **WHEN** that confirmation is shown and the user confirms
+- **THEN** the JSON view is shown holding the default body for the selected source
+- **AND** the SQL buffer is discarded
+
+#### Scenario: Cancelling keeps the SQL view
+
+- **WHEN** that confirmation is shown and the user cancels
+- **THEN** the SQL view stays open with its text unchanged
+
+#### Scenario: Unedited SQL is not translated
+
+- **WHEN** the SQL buffer is empty, or holds SQL the page generated from the builder and the user has not edited, and the user selects the JSON view
+- **THEN** no translation request is sent
+- **AND** the JSON view shows the body derived from the current builder state
 
 ### Requirement: A query the visual builder cannot hold stays in the written views
 
@@ -1263,7 +1319,7 @@ The write payload SHALL consist of exactly these nine members: `name`, `descript
 
 The response's optional members SHALL be modelled as optional rather than nullable: the service omits absent members rather than emitting `null`.
 
-`source` SHALL be treated as server-derived and read-only. `generation` SHALL be treated as a change counter for display only; because the service accepts no precondition header, concurrent writes are last-write-wins and the frontend SHALL NOT present a conflict-resolution affordance.
+`source` SHALL be modelled as a **list of entity names**, not a single name: a SQL body may be a composite statement — a join, a CTE, a derived table, or a subquery — that reads from several entities, and the service returns every entity the body reads. The service returns the list non-empty and sorted alphabetically, and returns exactly one element for a structured body. The frontend SHALL treat it as server-derived and read-only, SHALL NOT assume a particular element is the query's outer or governing entity, and SHALL tolerate a response whose `source` is absent or empty rather than failing to render the query. Because a deployment may still run a service build that returns `source` as a single name, the frontend SHALL accept that form too and read it as a one-element list. `generation` SHALL be treated as a change counter for display only; because the service accepts no precondition header, concurrent writes are last-write-wins and the frontend SHALL NOT present a conflict-resolution affordance.
 
 #### Scenario: The write payload carries only the nine accepted members
 
@@ -1280,6 +1336,56 @@ The response's optional members SHALL be modelled as optional rather than nullab
 
 - **WHEN** the query being saved was authored in the Builder or JSON view
 - **THEN** the payload carries `query` and omits `sql`
+
+#### Scenario: A multi-entity source is read as a list
+
+- **WHEN** the service returns a saved query whose `source` names two entities
+- **THEN** both are retained as the query's sources
+- **AND** neither is treated as the only source
+
+#### Scenario: An older service's single-name source still works
+
+- **WHEN** the service returns a saved query whose `source` is a single name rather than a list
+- **THEN** it is read as a one-element list
+- **AND** the query's primary source is that name, not its first character
+
+### Requirement: A saved query's primary source
+
+A saved query's `source` is a set of entities, so every surface that needs exactly one entity — the
+server-side schema prefetch, the toolbar's source selector, the SQL editor's autocomplete, and the
+assistant's schema message — SHALL use the query's **primary source**, derived in one place from the
+stored query alone: the structured body's `entity` when the query carries a structured body,
+otherwise the first element of `source`. Because the service sorts `source` alphabetically, the
+primary source of a composite SQL query is its alphabetically first entity: an arbitrary but stable
+pick, chosen so field autocomplete keeps working rather than being switched off for composite
+queries.
+
+The frontend SHALL NOT infer a primary source from the SQL text, and SHALL NOT merge the schemas of
+several sources into one field list. A query with neither a structured body nor a non-empty `source`
+SHALL resolve to no primary source, and the page SHALL then load no schema rather than requesting
+one for an empty entity name.
+
+#### Scenario: A structured body's own entity is the primary source
+
+- **WHEN** a saved query carries a structured body targeting `dial_usage_log` and a one-element `source`
+- **THEN** its primary source is `dial_usage_log`
+
+#### Scenario: A single-source SQL body resolves to that source
+
+- **WHEN** a saved query carries a SQL body and a one-element `source`
+- **THEN** its primary source is that element
+
+#### Scenario: A composite SQL body resolves to its first source
+
+- **WHEN** a saved query carries a SQL body joining two entities, so `source` holds both sorted alphabetically
+- **THEN** its primary source is the first of the two
+- **AND** the fields offered to the SQL autocomplete are that entity's fields only
+
+#### Scenario: No source at all loads no schema
+
+- **WHEN** a saved query carries neither a structured body nor a non-empty `source`
+- **THEN** no entity schema is requested
+- **AND** the builder renders without fields rather than reporting a failed schema load
 
 ### Requirement: Saved query server API layer
 
@@ -1299,7 +1405,7 @@ The server API layer SHALL expose the saved-query endpoints of the analytics dat
 
 The Analytics group SHALL provide a `/queries` page listing the saved queries visible to the caller. The page SHALL be an `async` server component gated by the same Analytics access check the other Analytics pages use, resolving to a 403 page when access is denied. Because the service returns every visible row unpaged and offers no server-side sorting or filtering, the page SHALL fetch the full list on the server and the grid SHALL sort and filter client-side.
 
-The service lists one scope per call, so the page SHALL fetch both the caller's personal scope and the common scope and present them as one list. The grid SHALL show, at minimum, the query's name, description, source, tag, scope, the editor its body opens in, the author's display email, and its created and updated timestamps. The editor column SHALL be derived from the body — a SQL body is SQL, a structured body the visual builder can represent is Builder, and any other structured body is JSON — and SHALL NOT be read from a stored field. The author column SHALL tolerate an absent value, which the service reports whenever there is no email to record.
+The service lists one scope per call, so the page SHALL fetch both the caller's personal scope and the common scope and present them as one list. The grid SHALL show, at minimum, the query's name, description, sources, tag, scope, the editor its body opens in, the author's display email, and its created and updated timestamps. The Source column SHALL render **every** entity the query reads, comma-separated in the order the service returns them, and its sorting, text filtering, and tooltip SHALL all read that same rendered text so a multi-source row is filterable by any of its entity names. A row whose `source` is absent or empty SHALL render an empty Source cell rather than failing. The editor column SHALL be derived from the body — a SQL body is SQL, a structured body the visual builder can represent is Builder, and any other structured body is JSON — and SHALL NOT be read from a stored field. The author column SHALL tolerate an absent value, which the service reports whenever there is no email to record.
 
 Activating a row SHALL navigate to that query's page. Each row SHALL offer an actions menu with Open in new tab, Edit, and Delete. The page SHALL offer a Create action. When the caller has no visible saved queries the grid SHALL show an empty state.
 
@@ -1308,6 +1414,12 @@ Activating a row SHALL navigate to that query's page. Each row SHALL offer an ac
 - **WHEN** the caller has personal saved queries and common saved queries exist
 - **THEN** the grid lists both
 - **AND** each row shows its scope
+
+#### Scenario: A multi-source query lists every source
+
+- **WHEN** a listed saved query reads from two entities
+- **THEN** its Source cell shows both names, comma-separated
+- **AND** filtering the Source column by either name keeps the row
 
 #### Scenario: The editor column is derived from the body
 
@@ -1403,7 +1515,9 @@ A saved query SHALL be deletable from the Queries grid's row actions menu, behin
 
 The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Builder seeded from the stored saved query. The page SHALL be an `async` server component gated by the same Analytics access check as the other Analytics pages, and SHALL resolve to a not-found result when the query cannot be read — the service reports a query the caller may not see as absent rather than forbidden, so the two cases SHALL be indistinguishable to the user.
 
-The page SHALL fetch the schema of **the stored query's own source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
+The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
+
+A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder or JSON view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
 
 The stored time intent SHALL be applied to the toolbar time filter: a relative intent selects that period, an absolute intent selects that custom range, and an absent intent leaves the toolbar at its default. A relative period the frontend does not recognise SHALL leave the toolbar unchanged and SHALL NOT prevent the query from loading.
 
@@ -1428,6 +1542,13 @@ The stored time intent SHALL be applied to the toolbar time filter: a relative i
 
 - **WHEN** the user opens a query whose source is not the first queryable entity
 - **THEN** the fields available to the builder are that source's fields
+
+#### Scenario: A composite query opens with its primary source's schema
+
+- **WHEN** the user opens a query whose SQL joins two entities
+- **THEN** the SQL view shows the stored statement
+- **AND** the schema requested is that of the query's primary source, so the toolbar shows that entity and its fields are available
+- **AND** the page does not report a failed schema load
 
 #### Scenario: An unreadable query is not found
 
@@ -1629,13 +1750,19 @@ autocomplete and the AI panel's request context.
 
 ### Requirement: Tables catalog page
 
-The Tables page SHALL render the tables the page fetched as a grid with columns for name, type, description, column count, and lifecycle status. The status SHALL be shown with the table status badge (Draft / Active / Failed). Clicking a row (other than the actions column) SHALL navigate to that table's detail page. Each row SHALL offer an action menu with **edit** and **delete** entries, mirroring the columns grid's own per-row action menu (one kebab icon; both entries hidden for system-owned tables); delete's confirmation dialog SHALL use the danger (red confirm) variant. The **edit** action SHALL open the table-metadata edit surface (see "Table metadata editing"). The header SHALL provide actions to create a source table and to create an enrichment table. After a successful create, edit, or delete the catalog SHALL refresh client-side.
+The Tables page SHALL render the tables the page fetched as a grid with columns for name, type, the source table an enrichment enriches, description, column count, and lifecycle status. The source-table column SHALL be blank for a source table, which enriches nothing. The status SHALL be shown with the table status badge (Draft / Active / Failed). Clicking a row (other than the actions column) SHALL navigate to that table's detail page. Each row SHALL offer an action menu with **edit** and **delete** entries, mirroring the columns grid's own per-row action menu (one kebab icon; both entries hidden for system-owned tables); delete's confirmation dialog SHALL use the danger (red confirm) variant. The **edit** action SHALL open the table-metadata edit surface (see "Table metadata editing"). The header SHALL provide actions to create a source table and to create an enrichment table. After a successful create, edit, or delete the catalog SHALL refresh client-side.
 
 #### Scenario: Catalog lists tables with navigation
 
 - **WHEN** the catalog renders with tables
-- **THEN** each table appears as a row with its name, type, description, column count, and status badge
+- **THEN** each table appears as a row with its name, type, source table, description, column count, and status badge
 - **AND** clicking a row navigates to that table's detail page
+
+#### Scenario: Catalog names the source table an enrichment enriches
+
+- **WHEN** the catalog lists an enrichment table alongside a source table
+- **THEN** the enrichment's row shows the name of the table it enriches
+- **AND** the source table's row leaves that cell blank
 
 #### Scenario: Draft and active tables are visually distinct
 
@@ -1676,9 +1803,9 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name and status badge regardless of status, and, when the table has a `description`, the description SHALL be shown beneath them regardless of status too (truncated with the full value reachable via an ellipsis tooltip, as elsewhere long text is truncated).
+The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name, status badge, and kind (source or enrichment) regardless of status; the kind SHALL be presented as a neutral tag rather than a second status-colored badge, since it is fixed for the table's lifetime. When the table has a `description`, the description SHALL be shown beneath them regardless of status too — on its own row below the row that carries the name and the header actions, as a single line spanning the full header width, truncated with the full value reachable via an ellipsis tooltip (as elsewhere long text is truncated). It SHALL NOT share the title row with the header actions, which is what previously cut it to the width they left over. The header actions SHALL NOT be compressed to make room for it: whatever the description contains, every action control SHALL keep its label on one line.
 
-While the table is `ACTIVE`, the header SHALL also show a read-only schema-metadata summary: for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. This summary SHALL NOT be shown for a `PENDING`/`FAILED` table, which instead exposes the same fields as editable inputs in the schema-definition surface.
+The header SHALL also show a read-only schema-metadata summary. While the table is `ACTIVE` that summary SHALL carry, for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, the source table it enriches and its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. For a `PENDING`/`FAILED` table the summary SHALL carry an **enrichment**'s source table and nothing else: that value is fixed at create time and so is absent from the schema-definition surface, while a source table's own key, partition, and scan-metadata fields are exposed there as editable inputs instead.
 
 For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid (name, type, tag, display name, description, nullable rendered as a true/false value); the physical source name SHALL NOT be shown as its own grid column — it is an internal identifier surfaced only where an operation requires it (see "Table detail row writes", whose insert template must key by source name). Long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions; the delete action SHALL NOT be offered for a column the table's `identity_column` or `version_column` names, since the backend rejects dropping one (422, nothing repoints the pair). Scan-metadata membership SHALL be matched on the column's physical source name, which a rename may have made different from its exposed name. The column name SHALL also be editable inline in the grid — this SHALL rename the column's exposed name only; the immutable physical source name is unaffected. Renaming a scan-metadata column SHALL remain allowed: the backend repoints the stored pair in the same transaction, and the post-change refresh SHALL therefore show the summary carrying the new name.
 
@@ -1755,8 +1882,19 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 #### Scenario: Table description shown under the header
 
 - **WHEN** a table (of any status) has a non-empty `description`
-- **THEN** the description is shown under the name and status badge
+- **THEN** the description is shown under the name and status badge as one line spanning the full header width, independent of how much width the header actions occupy
+- **AND** a description too long for that line is truncated with its full value reachable via the ellipsis tooltip
 - **AND** a table with no description shows nothing in its place
+
+#### Scenario: Table detail header states the table's kind
+
+- **WHEN** a table (of any status) renders its detail page
+- **THEN** the header states whether it is a source table or an enrichment, beside the status badge
+
+#### Scenario: A long description does not reflow the header actions
+
+- **WHEN** a table whose description is long enough to overflow its line renders with its header actions
+- **THEN** each action control keeps its label on a single line
 
 #### Scenario: Source table shows its schema metadata summary
 
@@ -1780,6 +1918,13 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 - **WHEN** an `ACTIVE` **enrichment** table renders
 - **THEN** its grain key is shown in the header summary
+
+#### Scenario: Enrichment header names the source table it enriches
+
+- **WHEN** an `ACTIVE` **enrichment** table renders
+- **THEN** the source table it enriches is shown in the header summary alongside the grain key
+- **AND** a `PENDING` or `FAILED` enrichment shows that source table too, with no grain key beside it
+- **AND** a source table shows no such value, because it enriches nothing
 
 #### Scenario: Enrichment grid pins the grain key with backfilled metadata
 
@@ -2088,9 +2233,9 @@ The **display name** and **description** fields SHALL be optional and SHALL be p
 
 An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
 
-For a **source** table, the Partition column field's label SHALL carry an info affordance (an icon with a hover tooltip) explaining that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious. The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
+For a **source** table, the Partition column field's label SHALL carry an info affordance whose text includes the fact that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious; the affordance and the rest of its text follow "Table schema keys are explained where they are chosen and where they are read". The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
-For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance, following the Partition column pattern, stating that the values are the caller's own promise the service cannot verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) and that the choice cannot be changed once the table is materialized.
+For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
 
 Because the scan requires **both** members and the backend accepts one alone — producing a table that is permanently unscannable, since `POST /v1/tables/{name}/schema` answers 409 once the table is `ACTIVE` and no `PATCH` member sets the pair — the surface SHALL treat the pair as all-or-nothing: while exactly one of the two is chosen, Save SHALL be disabled and the empty field SHALL show a validation message naming the other as required alongside it. Choosing neither SHALL be valid and SHALL leave the table unscannable, which is the correct declaration for a source whose row identity is its whole ordering key.
 
@@ -2132,6 +2277,12 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
 
+#### Scenario: A type-specific column keeps every row aligned
+
+- **WHEN** a row below the first is typed Array or enum
+- **THEN** every row reserves that control's column, empty in the rows whose type does not use it
+- **AND** the column's label is shown on the first row only, alongside the other field labels
+
 #### Scenario: A column row offers display name and description
 
 - **WHEN** a `PENDING` table's schema-definition surface renders its column rows
@@ -2162,8 +2313,8 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 #### Scenario: Partition column restriction is explained via a tooltip
 
 - **WHEN** a source table's schema-definition surface renders
-- **THEN** the Partition column field's label shows an info icon
-- **AND** hovering it shows a tooltip explaining that only Date/Timestamp columns are selectable
+- **THEN** the Partition column field's label carries a focusable info affordance
+- **AND** its hint text states that only Date/Timestamp columns are selectable
 
 #### Scenario: Granularity is hidden until a partition column is chosen
 
@@ -2216,6 +2367,63 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **THEN** both selects are seeded with those stored values
 - **AND** both are required, because omitting a member on re-post leaves the stored value unchanged rather than clearing it
 
+### Requirement: Table schema keys are explained where they are chosen and where they are read
+
+Every physical-key field of a table SHALL carry an info affordance on its label, on both surfaces that
+present it: the schema-definition surface of a `PENDING`/`FAILED` table, and the read-only
+schema-metadata summary of an `ACTIVE` table. The fields are **Ordering key**, **Partition column**,
+**Granularity**, **Identity column** and **Version column** for a source, and **Grain key** for an
+enrichment.
+
+Each hint SHALL lead with what the choice gives the reader, and SHALL state its restrictions after
+that, in language that does not require knowledge of the storage engine: no engine, part, granule, or
+SQL-clause vocabulary. Each hint SHALL carry at least the following, and SHALL NOT contradict it:
+
+| Field | The hint SHALL state |
+| --- | --- |
+| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first |
+| Partition column | Rows are grouped into time chunks and a query filtered on this column skips the chunks it does not cover; most tables need no partition; only Date and Timestamp columns are eligible |
+| Granularity | How much time one chunk covers, and that too many small chunks read slower rather than faster |
+| Identity column | With Version column, it lets pipelines read the table in batches without handling a row twice; the value must differ in every row, uniqueness is not validated, and repeated values cause skipped rows; eligible columns are non-empty and not sensitive |
+| Version column | It is how a pipeline tells which rows are new since its last pass; the value is expected at write time and must never move backwards, is not validated, and a backdated value causes missed rows; eligible columns are non-empty, non-sensitive Timestamp columns |
+| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row |
+
+On the schema-definition surface the key fields SHALL be grouped under a **Keys** sub-header carrying a
+single note stating that the keys are set once, when the table is created, and are fixed afterwards.
+That statement SHALL appear only in the group note, and SHALL NOT be repeated in the individual hints.
+The `ACTIVE` summary SHALL NOT carry the note — its values are already read-only.
+
+The info affordance SHALL be a focusable control whose accessible name is the hint text, so the hint is
+reachable by keyboard and addressable by assistive technology; the icon inside it SHALL NOT contribute a
+competing name. A non-focusable icon SHALL NOT be used for this purpose anywhere on either surface.
+
+#### Scenario: Every key field on the draft surface is explained
+
+- **WHEN** a `PENDING` **source** table's schema-definition surface renders with a partition column
+  chosen
+- **THEN** the Ordering key, Partition column, Granularity, Identity column, and Version column labels
+  each carry an info affordance
+- **AND** a `PENDING` **enrichment** table's surface carries one on its Grain key label
+
+#### Scenario: The one-time nature of the keys is stated once
+
+- **WHEN** a `PENDING` table's schema-definition surface renders
+- **THEN** its key fields appear under a Keys sub-header whose note states that the keys are set at
+  creation and fixed afterwards
+- **AND** no individual key hint repeats that statement
+
+#### Scenario: An active table's key summary carries the same explanations
+
+- **WHEN** an `ACTIVE` source table with an ordering key, a partition, and a scan-metadata pair renders
+- **THEN** each summarized key's label carries the same info affordance as the draft surface
+- **AND** an `ACTIVE` enrichment table's grain key label carries its own
+- **AND** neither summary shows the Keys group note
+
+#### Scenario: A hint is reachable by keyboard and named for assistive technology
+
+- **WHEN** a key field's info affordance renders on either surface
+- **THEN** it is a control that can be focused by keyboard, and its accessible name is the hint text
+
 ### Requirement: A column may be declared with an enum type and a closed, ordered value list
 
 The column-type vocabulary the schema editors offer SHALL include **enum**, a string column whose value set is
@@ -2224,7 +2432,8 @@ table and the "Add columns" popup of an `ACTIVE` one — and for both **source**
 the service accepts it on either.
 
 A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
-Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+Array row offers, laid out as a column of the whole editor on the terms stated for a type-specific control in
+"Define and materialize a table schema". The control SHALL present the declared values as an **ordered** list the user can reorder,
 because a value's position in the list becomes its numeric id in the physical type and the column therefore
 sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
 nothing about a list of values otherwise suggests it.
@@ -2261,6 +2470,12 @@ enrichment's **grain key**, on the same terms as any other non-nullable, non-sen
 - **WHEN** the user sets a column row's type to enum
 - **THEN** the row offers a required value-list control
 - **AND** Save is disabled while the list is empty
+
+#### Scenario: A mid-list enum row does not repeat the value column's label
+
+- **WHEN** a row below the first is typed enum
+- **THEN** its value list renders without a second copy of the column's label beside the control
+- **AND** the column's label stays on the first row, whose value cell is empty
 
 #### Scenario: Declared values are submitted in the authored order
 

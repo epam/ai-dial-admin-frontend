@@ -71,6 +71,7 @@ describe('Assets Toolset :: server actions', () => {
 
     const result = await updateToolset(
       {
+        name: 'my-toolset',
         folderId: 'public',
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
@@ -82,8 +83,9 @@ describe('Assets Toolset :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.TOOLSET,
-      'test',
+      'publicmy-toolset__1.0',
       {
+        name: 'my-toolset',
         folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
         path: undefined,
@@ -93,6 +95,45 @@ describe('Assets Toolset :: server actions', () => {
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('updateToolset recomputes a folder-qualified path from folderId + versioned name, matching createToolset', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'stale-path',
+        version: '2.0',
+      },
+      'etag',
+    );
+
+    const [, , path] = (assetApi.put as any).mock.calls[0];
+    expect(path).toBe('public/my-toolset__2.0');
+  });
+
+  test('updateToolset writes to the platform-prefixed path when folderId is the platform bucket', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'platform/',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'my-toolset',
+        version: undefined,
+      },
+      'etag-1',
+    );
+
+    const [, type, path, , options] = (assetApi.put as any).mock.calls[0];
+    expect(type).toBe(ResourceType.TOOLSET);
+    expect(path).toBe('platform/my-toolset');
+    expect(path).not.toContain('__');
+    expect(options).toEqual({ etag: 'etag-1' });
   });
 
   test('updateToolset without a concrete etag still passes it through', async () => {

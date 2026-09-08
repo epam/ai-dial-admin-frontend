@@ -12,6 +12,7 @@ import {
   DialEllipsisTooltip,
   DialFormPopup,
   DialGhostButton,
+  DialLabelledText,
   DialNeutralButton,
   DialPrimaryButton,
   PopupSize,
@@ -24,6 +25,7 @@ import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/Connect
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
@@ -38,7 +40,6 @@ import {
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -340,85 +341,150 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
-      <div className="flex flex-row mb-8 justify-between items-center gap-4">
-        <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex flex-col mb-8 gap-2">
+        <div className="flex flex-row justify-between items-center gap-4">
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="truncate">{name}</h1>
             <TableStatusBadge status={table.status} />
+            {/* Neutral chip, not a second colored pill: the kind is a fixed identity fact, unlike the
+                status beside it, and the catalog grid is the only other place that states it. */}
+            <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
+              {t(isEnrichment ? AnalyticsTablesI18nKey.TypeEnrichment : AnalyticsTablesI18nKey.TypeSource)}
+            </span>
             {isSystem && (
               <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
                 {t(AnalyticsTablesI18nKey.SystemReadOnly)}
               </span>
             )}
           </div>
-          {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
-        </div>
-        {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
-          <div className="flex items-center gap-4">
-            {canManageRoles && (
-              <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
-            )}
-            {canDelete && (
-              <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-            )}
-            {isActive ? (
-              <>
-                {canModify && (
-                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
-                )}
-                {canWrite && !isEnrichment && (
-                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
-                )}
-                {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
-                    which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
-                {canConnect && (
+          {/* shrink-0 keeps the actions at their natural width, so no description length can squeeze a
+              button label onto a second line; the title next to them truncates instead. */}
+          {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
+            <div className="flex shrink-0 items-center gap-4">
+              {canManageRoles && (
+                <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
+              )}
+              {canDelete && (
+                <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
+              )}
+              {isActive ? (
+                <>
+                  {canModify && (
+                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+                  )}
+                  {canWrite && !isEnrichment && (
+                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                  )}
+                  {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
+                      which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
+                  {canConnect && (
+                    <DialPrimaryButton
+                      label={t(AnalyticsTablesI18nKey.Connect)}
+                      onClick={() => setConnectOpen(true)}
+                      iconBefore={<IconPlugConnected size={18} />}
+                    />
+                  )}
+                </>
+              ) : (
+                canModify && (
                   <DialPrimaryButton
-                    label={t(AnalyticsTablesI18nKey.Connect)}
-                    onClick={() => setConnectOpen(true)}
-                    iconBefore={<IconPlugConnected size={18} />}
+                    label={t(ButtonsI18nKey.Save)}
+                    disabled={!draft.canMaterialize}
+                    onClick={onSubmitDefineSchema}
                   />
-                )}
-              </>
-            ) : (
-              canModify && (
-                <DialPrimaryButton
-                  label={t(ButtonsI18nKey.Save)}
-                  disabled={!draft.canMaterialize}
-                  onClick={onSubmitDefineSchema}
-                />
-              )
-            )}
-          </div>
-        )}
+                )
+              )}
+            </div>
+          )}
+        </div>
+        {/* Its own row rather than a share of the title row, so the single line spans the full header
+            width instead of whatever the actions leave over — the same ellipsis, several times the text,
+            and the rest still in the tooltip. */}
+        {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
       </div>
 
-      {isActive && (
+      {/* The summary is otherwise ACTIVE-only, because a draft's keys live in DraftSchemaEditor as
+          editable inputs. An enrichment's source table has no such input — it is fixed at create — so
+          it shows at any status, including while the draft schema is being defined. */}
+      {(isActive || isEnrichment) && (
         <div className="flex flex-wrap gap-8 mb-6">
           {table.type === AnalyticsTableType.Source ? (
             <>
               {!!table.ordering_key?.length && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.OrderingKey)} text={table.ordering_key.join(', ')} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.OrderingKey)}
+                      hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
+                    />
+                  }
+                  text={table.ordering_key.join(', ')}
+                />
               )}
               {table.partition_by && (
                 <>
-                  <LabelledText label={t(AnalyticsTablesI18nKey.PartitionColumn)} text={table.partition_by.column} />
-                  <LabelledText
-                    label={t(AnalyticsTablesI18nKey.Granularity)}
+                  <DialLabelledText
+                    label={
+                      <KeyFieldLabel
+                        label={t(AnalyticsTablesI18nKey.PartitionColumn)}
+                        hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
+                      />
+                    }
+                    text={table.partition_by.column}
+                  />
+                  <DialLabelledText
+                    label={
+                      <KeyFieldLabel
+                        label={t(AnalyticsTablesI18nKey.Granularity)}
+                        hint={t(AnalyticsTablesI18nKey.GranularityHint)}
+                      />
+                    }
                     text={capitalize(table.partition_by.granularity)}
                   />
                 </>
               )}
               {table.identity_column && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.IdentityColumn)} text={table.identity_column} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.IdentityColumn)}
+                      hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
+                    />
+                  }
+                  text={table.identity_column}
+                />
               )}
               {table.version_column && (
-                <LabelledText label={t(AnalyticsTablesI18nKey.VersionColumn)} text={table.version_column} />
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.VersionColumn)}
+                      hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
+                    />
+                  }
+                  text={table.version_column}
+                />
               )}
             </>
           ) : (
-            !!table.grain?.grain_key && (
-              <LabelledText label={t(AnalyticsTablesI18nKey.GrainKey)} text={table.grain.grain_key} />
-            )
+            <>
+              {/* No KeyFieldLabel hint: unlike the keys beside it, the source table is not chosen on the
+                  draft surface — it is fixed at create — so there is no explanation to keep in step. */}
+              {table.source_table && (
+                <DialLabelledText label={t(AnalyticsTablesI18nKey.SourceTable)} text={table.source_table} />
+              )}
+              {!!table.grain?.grain_key && (
+                <DialLabelledText
+                  label={
+                    <KeyFieldLabel
+                      label={t(AnalyticsTablesI18nKey.GrainKey)}
+                      hint={t(AnalyticsTablesI18nKey.GrainKeyHint)}
+                    />
+                  }
+                  text={table.grain.grain_key}
+                />
+              )}
+            </>
           )}
         </div>
       )}

@@ -7,6 +7,7 @@ import { removeRoute, updateRoute } from '@/src/app/[lang]/platform-routes/actio
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -31,7 +32,6 @@ interface Props {
 
 const RouteAssetView: FC<Props> = ({ etag, originalRoute, roles, optionWarnings }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.PlatformRoutes);
   const router = useRouter();
   const { fetchFiles } = useRoutesFolder();
   const { showNotification } = useNotification();
@@ -49,6 +49,11 @@ const RouteAssetView: FC<Props> = ({ etag, originalRoute, roles, optionWarnings 
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
     }),
     [isEditorEnabled],
+  );
+
+  const tabs = useMemo(
+    () => getTabsForAsset(t, ApplicationRoute.PlatformRoutes, undefined, isAssetUnavailable(selectedRoute.userRoles)),
+    [t, selectedRoute.userRoles],
   );
 
   useEffect(() => {

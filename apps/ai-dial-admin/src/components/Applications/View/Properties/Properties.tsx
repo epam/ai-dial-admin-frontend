@@ -35,6 +35,7 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
   const { codeAppEditorUrl } = useAppContext();
 
   const application = props.entity as DialApplication;
+  const onChangeApplication = props.onChangeEntity as (entity: DialApplication) => void;
 
   const appRunner = useMemo(() => getAppRunner(application, runners), [application, runners]);
 
@@ -63,15 +64,15 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         label={t(EntitiesI18nKey.SourceType)}
         sourceItems={APPLICATION_SOURCE_ITEMS}
         entity={application}
-        onChange={props.onChangeEntity as (entity: DialApplication) => void}
+        onChange={onChangeApplication}
         runners={runners}
         getContainers={getApplicationContainers}
         isEntityImmutable={true}
         codeAppEditorUrl={codeAppEditorUrl}
       />
       <InterfacesField
-        entity={application}
-        onChangeEntity={props.onChangeEntity as (entity: DialApplication) => void}
+        interfaces={application.interfaces}
+        onChangeInterfaces={(interfaces) => onChangeApplication({ ...application, interfaces })}
         allowedTypes={APPLICATION_INTERFACE_TYPES}
       />
       <OverrideNameControl entity={props.entity as any} onChangeEntity={props.onChangeEntity} />

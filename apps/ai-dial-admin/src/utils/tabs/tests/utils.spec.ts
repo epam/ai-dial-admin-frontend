@@ -216,6 +216,22 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes)).toEqual([propertiesTab(t), rolesTab(t)]);
   });
 
+  test('threads rolesWarning into the Roles tab for PlatformRoutes', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes, undefined, true)).toEqual([
+      propertiesTab(t),
+      rolesTab(t, true),
+    ]);
+  });
+
+  test('threads rolesWarning into the Roles tab for PlatformModels', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, true)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      rolesTab(t, true),
+      interceptorsTab(t),
+    ]);
+  });
+
   test('returns correct tabs for key', () => {
     expect(getKeyTabs(t)).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });

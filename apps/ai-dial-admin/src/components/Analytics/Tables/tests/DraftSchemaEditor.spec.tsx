@@ -208,14 +208,20 @@ describe('DraftSchemaEditor source', () => {
       />,
     );
 
-    const identity = screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, { exact: false });
+    const identity = screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, {
+      exact: false,
+      selector: 'select',
+    });
     expect(Array.from(identity.querySelectorAll('option')).map((o) => o.textContent)).toEqual([
       AnalyticsTablesI18nKey.PartitionNone,
       'order_id',
       'seen_at',
     ]);
 
-    const version = screen.getByLabelText(AnalyticsTablesI18nKey.VersionColumn, { exact: false });
+    const version = screen.getByLabelText(AnalyticsTablesI18nKey.VersionColumn, {
+      exact: false,
+      selector: 'select',
+    });
     expect(Array.from(version.querySelectorAll('option')).map((o) => o.textContent)).toEqual([
       AnalyticsTablesI18nKey.PartitionNone,
       'seen_at',
@@ -226,9 +232,10 @@ describe('DraftSchemaEditor source', () => {
     const draft = fixtureDraft({ identityNames: ['order_id'] });
     render(<DraftSchemaEditor table={source} draft={draft} />);
 
-    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, { exact: false }), {
-      target: { value: 'order_id' },
-    });
+    fireEvent.change(
+      screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, { exact: false, selector: 'select' }),
+      { target: { value: 'order_id' } },
+    );
 
     expect(draft.update).toHaveBeenCalledWith('identityColumn', 'order_id');
   });
@@ -264,6 +271,27 @@ describe('DraftSchemaEditor source', () => {
     render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
     expect(screen.queryByText(AnalyticsTablesI18nKey.ScanPairIncomplete)).not.toBeInTheDocument();
   });
+
+  // A hint nobody can reach explains nothing, so each one hangs off a control with the hint as its
+  // accessible name rather than a bare icon.
+  test('every key field carries a hint reachable as a named control', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft({ partitionColumn: 'event_time' })} />);
+
+    [
+      AnalyticsTablesI18nKey.OrderingKeyHint,
+      AnalyticsTablesI18nKey.PartitionColumnHint,
+      AnalyticsTablesI18nKey.GranularityHint,
+      AnalyticsTablesI18nKey.IdentityColumnHint,
+      AnalyticsTablesI18nKey.VersionColumnHint,
+    ].forEach((hint) => expect(screen.getByRole('button', { name: hint })).toBeInTheDocument());
+  });
+
+  test('states the keys are fixed after creation once, in the Keys group note', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft({ partitionColumn: 'event_time' })} />);
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.Keys)).toBeInTheDocument();
+    expect(screen.getAllByText(AnalyticsTablesI18nKey.KeysNote)).toHaveLength(1);
+  });
 });
 
 describe('DraftSchemaEditor enrichment', () => {
@@ -277,5 +305,12 @@ describe('DraftSchemaEditor enrichment', () => {
     render(<DraftSchemaEditor table={enrichment} draft={fixtureDraft()} />);
     expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.VersionColumn)).not.toBeInTheDocument();
+  });
+
+  test('the grain key carries its own hint, reachable as a named control', () => {
+    render(<DraftSchemaEditor table={enrichment} draft={fixtureDraft()} />);
+
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.GrainKeyHint })).toBeInTheDocument();
+    expect(screen.getAllByText(AnalyticsTablesI18nKey.KeysNote)).toHaveLength(1);
   });
 });

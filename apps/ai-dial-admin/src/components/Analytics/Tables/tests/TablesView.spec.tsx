@@ -42,7 +42,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     return (
       <div>
         <div>catalog rows: {rowData?.length ?? 0}</div>
-        <div>cols: {columnDefs?.map((c) => c.colId).join('|')}</div>
+        <div>cols: {columnDefs?.map((c) => c.colId ?? c.field).join('|')}</div>
         <div>row actions: {items.map((i) => i.id).join('|')}</div>
         {rowData?.map((row) => (
           <div key={row.name}>
@@ -93,6 +93,12 @@ describe('TablesView', () => {
     render(<TablesView initialTables={TABLES} />);
 
     expect(screen.getByText(/^cols:/)).toHaveTextContent('status');
+  });
+
+  test('the grid includes a source-table column', () => {
+    render(<TablesView initialTables={TABLES} />);
+
+    expect(screen.getByText(/^cols:/)).toHaveTextContent('source_table');
   });
 
   test('the row action menu offers Edit and Delete', () => {

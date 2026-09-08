@@ -120,8 +120,8 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           codeAppEditorUrl={codeAppEditorUrl}
         />
         <InterfacesField
-          entity={asset}
-          onChangeEntity={onChange}
+          interfaces={asset.interfaces}
+          onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
           isAsset
         />

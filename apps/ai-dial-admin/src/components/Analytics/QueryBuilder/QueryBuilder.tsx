@@ -44,6 +44,7 @@ import { createGroup, createInitialState, createPredicate } from '@/src/componen
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   DEFAULT_CHART_CONFIG,
+  JSON_INDENT,
   LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY,
   WARNING_I18N,
 } from '@/src/constants/analytics/query-builder';
@@ -197,7 +198,7 @@ const QueryBuilder: FC<Props> = ({
     [timestampField, getCurrentTimeRange],
   );
   const query = useMemo(() => buildQuery(state, timeBound), [state, timeBound]);
-  const json = useMemo(() => JSON.stringify(query, null, 2), [query]);
+  const json = useMemo(() => JSON.stringify(query, null, JSON_INDENT), [query]);
   const contextValue = useMemo(() => ({ state, refresh, patch }), [state, refresh, patch]);
   const isAggregate = state.mode === QueryMode.Aggregate;
   const isJsonView = view === QueryBuilderView.Json;
@@ -247,15 +248,8 @@ const QueryBuilder: FC<Props> = ({
       : []),
   ];
 
-  // Written modes (SQL, diverged JSON) can hold queries the Builder cannot display; switching to the
-  // Builder then requires confirming that the written query is dropped. SQL ⇄ JSON stays unguarded.
-  // Generated (unedited) SQL is the builder's own query in another notation — never guarded.
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
 
-  // The AI, JSON, and SQL paths can each adopt a different entity than the one whose schema is loaded.
-  // Fields must follow the query's entity: running with a stale schema makes the toolbar time bound
-  // resolve its timestamp column against the wrong entity (e.g. "source_name_8"), which the backend
-  // then rejects as an unknown field. Re-fetch the schema whenever the entity changes.
   const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
     if (!entityName || entityName === state.entityName) return state.fields;
     if (!entities.some((e) => e.name === entityName)) return state.fields;
@@ -311,27 +305,48 @@ const QueryBuilder: FC<Props> = ({
     setSqlLoading(false);
   };
 
+  const leaveSqlBuffer = async (next: QueryBuilderView): Promise<void> => {
+    // A round trip that fails in transit is guarded exactly like a refused translation: either way
+    // there is no body to show, and letting the rejection escape would leave the view switch half-done.
+    let translated: StructuredQuery | null = null;
+    try {
+      const res = await translateSqlToQuery(sqlText);
+      translated = res?.success ? (res.response?.query ?? null) : null;
+    } catch {
+      translated = null;
+    }
+    const isRepresentable = !!translated && isBuilderRepresentable(translated, state.functions);
+
+    if (!translated || (next === QueryBuilderView.Form && !isRepresentable)) {
+      setPendingView(next);
+      return;
+    }
+
+    if (isRepresentable) {
+      await hydrateBuilderFromQuery(translated);
+    }
+    setSqlText('');
+    setSqlError(null);
+    lastGeneratedSql.current = '';
+
+    if (next === QueryBuilderView.Json) {
+      setJsonText(JSON.stringify(translated, null, JSON_INDENT));
+      setJsonInvalid(false);
+      setJsonDiverged(!isRepresentable);
+    }
+    setView(next);
+  };
+
   const onChangeView = async (next: QueryBuilderView) => {
     if (next === view) return;
-    if (next === QueryBuilderView.Form) {
-      // Edited SQL: try to translate it back into the builder; only guard when that can't be shown.
-      if (isSqlView && sqlEdited) {
-        const res = await translateSqlToQuery(sqlText);
-        if (res.success && res.response?.query && isBuilderRepresentable(res.response.query, state.functions)) {
-          await hydrateBuilderFromQuery(res.response.query);
-          setSqlText('');
-          setSqlError(null);
-          lastGeneratedSql.current = '';
-          setView(next);
-          return;
-        }
-        setPendingView(next);
-        return;
-      }
-      if (isJsonView && jsonDiverged) {
-        setPendingView(next);
-        return;
-      }
+    const isStructuredView = next === QueryBuilderView.Form || next === QueryBuilderView.Json;
+    if (isSqlView && sqlEdited && isStructuredView) {
+      await leaveSqlBuffer(next);
+      return;
+    }
+    if (next === QueryBuilderView.Form && isJsonView && jsonDiverged) {
+      setPendingView(next);
+      return;
     }
     if (next === QueryBuilderView.Json && !jsonDiverged) {
       setJsonText(json);
@@ -350,14 +365,17 @@ const QueryBuilder: FC<Props> = ({
     setSqlText('');
     setSqlError(null);
     lastGeneratedSql.current = '';
-    setJsonText('');
     setJsonInvalid(false);
     setJsonDiverged(false);
-    setState({
+    const resetState = {
       ...createInitialState(state.functions),
       entityName: state.entityName,
       fields: state.fields,
-    });
+    };
+    setState(resetState);
+    setJsonText(
+      pendingView === QueryBuilderView.Json ? JSON.stringify(buildQuery(resetState, timeBound), null, JSON_INDENT) : '',
+    );
     setView(pendingView ?? QueryBuilderView.Form);
     setPendingView(null);
   };
@@ -676,9 +694,13 @@ const QueryBuilder: FC<Props> = ({
         />
       )}
 
-      {/* The written-mode guard, distinct from discarding unsaved changes: this one resets the builder
-          to its starting defaults, that one reverts to the last saved query. */}
-      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
+      {pendingView !== null && (
+        <DiscardQueryPopup
+          destination={pendingView}
+          onConfirm={onConfirmDiscard}
+          onCancel={() => setPendingView(null)}
+        />
+      )}
     </QueryBuilderContext.Provider>
   );
 };
