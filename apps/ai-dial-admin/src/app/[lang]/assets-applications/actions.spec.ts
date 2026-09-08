@@ -128,7 +128,7 @@ describe('Assets application :: server actions', () => {
     const result = await updateApp(
       {
         folderId: 'public',
-        applicationProperties: { key: 'value' },
+        application_properties: { key: 'value' },
         defaults: { key: 'value' },
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
@@ -144,7 +144,7 @@ describe('Assets application :: server actions', () => {
       {
         folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
-        applicationProperties: { key: 'value' },
+        application_properties: { key: 'value' },
         defaults: { key: 'value' },
         path: undefined,
         version: undefined,
