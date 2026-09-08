@@ -1,8 +1,8 @@
-import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, DialIconButton, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { IconDotsVertical, IconDownload, IconUpload, IconWorldCog } from '@tabler/icons-react';
 
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
@@ -45,7 +45,11 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
   return (
     <div>
       <DialDropdown items={dropdownItems} listClassName="w-[150px]">
-        <IconDotsVertical className="cursor-pointer" />
+        <DialIconButton
+          aria-label={t(ButtonsI18nKey.Actions)}
+          icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} />}
+          className="cursor-pointer"
+        />
       </DialDropdown>
     </div>
   );

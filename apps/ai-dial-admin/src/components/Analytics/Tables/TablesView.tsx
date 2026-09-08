@@ -124,6 +124,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
     () => [
       { headerName: t(AnalyticsTablesI18nKey.Name), field: 'name', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', flex: 1 },
+      // Populated for an enrichment only; a source table enriches nothing, so its cell stays blank.
+      { headerName: t(AnalyticsTablesI18nKey.SourceTable), field: 'source_table', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnsCount),

@@ -3,19 +3,8 @@ import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 
-const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
-  dashboardEnabled: false,
-  deploymentsEnabled: false,
-  evaluationEnabled: false,
-  mcpRegistryEnabled: false,
-  nimEnabled: false,
-  hfEnabled: false,
-  analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
-  queryAssistantEnabled: false,
-  ...overrides,
-});
 import {
+  activitiesTab,
   applicationRunnersTab,
   applicationsTab,
   appRouteTab,
@@ -100,6 +89,19 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 
 const t = vi.fn((id) => id);
+
+const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
+  dashboardEnabled: false,
+  deploymentsEnabled: false,
+  evaluationEnabled: false,
+  mcpRegistryEnabled: false,
+  nimEnabled: false,
+  hfEnabled: false,
+  analyticsEnabled: false,
+  analyticsConversationsEnabled: false,
+  queryAssistantEnabled: false,
+  ...overrides,
+});
 
 describe('Entities :: tabs', () => {
   test('Should return tabs for models', () => {
@@ -196,6 +198,30 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('returns only Dashboard and Traces tabs for PlatformModels when dashboardEnabled is true', () => {
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.PlatformModels);
+    expect(tabs).toEqual([
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+    ]);
+    expect(tabs).not.toContainEqual(activitiesTab(t));
+    expect(tabs).not.toContainEqual(conversationsTab(t));
+  });
+
+  test('returns four tabs without Audit for PlatformModels without dashboardEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+    ]);
+  });
+
+  test('appends Audit as the fifth and last tab for PlatformModels with dashboardEnabled', () => {
+    const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ dashboardEnabled: true }));
+    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
+  });
+
   test('returns correct tabs for toolset', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.ActivityAudit);
     expect(tabs).toEqual([propertiesTab(t)]);
@@ -214,6 +240,22 @@ describe('Entities :: tabs', () => {
 
   test('returns Properties and Roles for AssetsRoutes — Route has no features or configuration endpoint, but is a RoleBasedEntity', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes)).toEqual([propertiesTab(t), rolesTab(t)]);
+  });
+
+  test('threads rolesWarning into the Roles tab for PlatformRoutes', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes, undefined, true)).toEqual([
+      propertiesTab(t),
+      rolesTab(t, true),
+    ]);
+  });
+
+  test('threads rolesWarning into the Roles tab for PlatformModels', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, true)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      rolesTab(t, true),
+      interceptorsTab(t),
+    ]);
   });
 
   test('returns correct tabs for key', () => {

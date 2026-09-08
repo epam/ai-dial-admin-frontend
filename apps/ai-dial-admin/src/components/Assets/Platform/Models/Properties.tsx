@@ -82,7 +82,12 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
         />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
 
-        <InterfacesField entity={asset} onChangeEntity={onChange} allowedTypes={MODEL_INTERFACE_TYPES} isAsset />
+        <InterfacesField
+          interfaces={asset.interfaces}
+          onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
+          allowedTypes={MODEL_INTERFACE_TYPES}
+          isAsset
+        />
         <EndpointControl
           id="endpoint"
           label={t(EntityFieldsI18nKey.endpoint)}

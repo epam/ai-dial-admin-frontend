@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -72,6 +73,10 @@ const TabsContent: FC<Props> = ({
           onChangeEntity={onChange}
           view={ApplicationRoute.PlatformModels}
         />
+      )}
+
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit entity={selectedModel} view={ApplicationRoute.PlatformModels} />
       )}
     </>
   );

@@ -7,7 +7,9 @@ import { removeModel, updateModel } from '@/src/app/[lang]/platform-models/actio
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -34,7 +36,7 @@ interface Props {
 
 const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, globalInterceptors, optionWarnings }) => {
   const t = useI18n();
-  const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels);
+  const { featureFlags } = useAppContext();
   const router = useRouter();
   const { fetchFiles } = useModelsFolder();
   const { showNotification } = useNotification();
@@ -52,6 +54,12 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
     }),
     [isEditorEnabled],
+  );
+
+  const tabs = useMemo(
+    () =>
+      getTabsForAsset(t, ApplicationRoute.PlatformModels, featureFlags, isAssetUnavailable(selectedModel.userRoles)),
+    [t, featureFlags, selectedModel.userRoles],
   );
 
   useEffect(() => {

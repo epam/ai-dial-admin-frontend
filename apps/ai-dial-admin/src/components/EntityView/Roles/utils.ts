@@ -23,13 +23,18 @@ import { cellRenderParams } from './constants';
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels)
     return RolesI18nKey.NotAvailableModel;
-  if (view === ApplicationRoute.Applications) return RolesI18nKey.NotAvailableApplication;
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
+    return RolesI18nKey.NotAvailableApplication;
   if (view === ApplicationRoute.PlatformRoutes) return RolesI18nKey.NotAvailableRoute;
   return RolesI18nKey.NotAvailableToolSet;
 };
 
 export const isDisableRole = (entity: EntityRoleLimits) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
+};
+
+export const isAssetUnavailable = (userRoles: string[] | null | undefined) => {
+  return Array.isArray(userRoles) && userRoles.length === 0;
 };
 
 export const getRolesGridData = (entity: EntityRoleLimits, roles: DialRole[]): RolesGridData[] => {

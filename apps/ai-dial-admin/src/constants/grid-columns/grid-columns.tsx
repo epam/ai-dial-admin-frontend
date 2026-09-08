@@ -39,7 +39,10 @@ import {
   TelemetryI18nKey,
   TestSuitesI18nKey,
 } from '@/src/constants/i18n';
-import { deriveSavedQueryEditor } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import {
+  deriveSavedQueryEditor,
+  savedQuerySourcesLabel,
+} from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
 import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
@@ -1781,10 +1784,12 @@ export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
     ...baseStringFilter,
   },
   {
-    field: 'source',
     colId: 'source',
     headerName: t(QueriesI18nKey.Source),
     hide: false,
+    valueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
+    tooltipValueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
+    filterValueGetter: (params) => savedQuerySourcesLabel((params.data as SavedQuery)?.source),
     ...baseStringFilter,
   },
   { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },

@@ -2,10 +2,10 @@
 
 import { FC } from 'react';
 
-import { DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { IconInfoCircle } from '@tabler/icons-react';
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
+import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import { PARTITION_GRANULARITY_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -35,15 +35,6 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
     scanPairIncomplete,
   } = draft;
 
-  const labelWithHint = (label: string, hint: string) => (
-    <span className="flex items-center gap-1">
-      <span>{label}</span>
-      <DialTooltip tooltip={<span>{hint}</span>}>
-        <IconInfoCircle size={14} className="text-secondary" />
-      </DialTooltip>
-    </span>
-  );
-
   // The pair is all-or-nothing: mark whichever half is still empty, so the disabled Save has a visible cause.
   // Once the table stores a pair, clearing both is not an escape route either — hence the separate message.
   const pairError = scanPairIncomplete
@@ -63,13 +54,24 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
         <ColumnRowsEditor rows={form.columns} errors={columnErrors} onChange={(rows) => update('columns', rows)} />
       </div>
 
+      <div className="flex flex-col gap-1">
+        <span className="dial-small-semi text-primary">{t(AnalyticsTablesI18nKey.Keys)}</span>
+        {/* The one sentence every key shares — stated here so no individual hint has to carry it. */}
+        <p className="dial-small-text text-secondary">{t(AnalyticsTablesI18nKey.KeysNote)}</p>
+      </div>
+
       {isSource ? (
         <>
           <DialSelectField
             id="draft-ordering-key"
             multiple
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={t(AnalyticsTablesI18nKey.OrderingKey)}
+            label={
+              <KeyFieldLabel
+                label={t(AnalyticsTablesI18nKey.OrderingKey)}
+                hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
+              />
+            }
             required
             options={columnOptions}
             value={form.orderingKey}
@@ -78,10 +80,12 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           <DialSelectField
             id="draft-partition-col"
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={labelWithHint(
-              t(AnalyticsTablesI18nKey.PartitionColumn),
-              t(AnalyticsTablesI18nKey.PartitionColumnHint),
-            )}
+            label={
+              <KeyFieldLabel
+                label={t(AnalyticsTablesI18nKey.PartitionColumn)}
+                hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
+              />
+            }
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...temporalNames.map((s) => ({ value: s, label: s })),
@@ -93,7 +97,12 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
             <DialSelectField
               id="draft-partition-gran"
               containerClassName={STANDARD_CONTROL_WIDTH}
-              label={t(AnalyticsTablesI18nKey.Granularity)}
+              label={
+                <KeyFieldLabel
+                  label={t(AnalyticsTablesI18nKey.Granularity)}
+                  hint={t(AnalyticsTablesI18nKey.GranularityHint)}
+                />
+              }
               options={PARTITION_GRANULARITY_OPTIONS}
               value={form.granularity}
               onChange={(v) => update('granularity', v as PartitionGranularity | '')}
@@ -102,10 +111,12 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           <DialSelectField
             id="draft-identity-col"
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={labelWithHint(
-              t(AnalyticsTablesI18nKey.IdentityColumn),
-              t(AnalyticsTablesI18nKey.IdentityColumnHint),
-            )}
+            label={
+              <KeyFieldLabel
+                label={t(AnalyticsTablesI18nKey.IdentityColumn)}
+                hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
+              />
+            }
             required={scanPairRequired}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
@@ -119,7 +130,12 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           <DialSelectField
             id="draft-version-col"
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={labelWithHint(t(AnalyticsTablesI18nKey.VersionColumn), t(AnalyticsTablesI18nKey.VersionColumnHint))}
+            label={
+              <KeyFieldLabel
+                label={t(AnalyticsTablesI18nKey.VersionColumn)}
+                hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
+              />
+            }
             required={scanPairRequired}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
@@ -135,7 +151,9 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
         <DialSelectField
           id="draft-grain-key"
           containerClassName={STANDARD_CONTROL_WIDTH}
-          label={t(AnalyticsTablesI18nKey.GrainKey)}
+          label={
+            <KeyFieldLabel label={t(AnalyticsTablesI18nKey.GrainKey)} hint={t(AnalyticsTablesI18nKey.GrainKeyHint)} />
+          }
           required
           options={grainOptions}
           value={form.grainKey}

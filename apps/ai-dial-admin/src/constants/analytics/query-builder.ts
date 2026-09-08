@@ -124,9 +124,8 @@ export const DEFAULT_CURSOR_LIMIT = 100;
 
 export const UNTAGGED_KEY = 'untagged';
 
-// Alias of the count() column added to aggregate queries that define no aggregates of their own.
-// Deliberately shorter than the label an authored count row derives ("Row count"): this name is only
-// ever a result-grid header, never something the user typed or can edit.
+export const JSON_INDENT = 2;
+
 export const IMPLICIT_COUNT_ALIAS = 'Count';
 
 export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';

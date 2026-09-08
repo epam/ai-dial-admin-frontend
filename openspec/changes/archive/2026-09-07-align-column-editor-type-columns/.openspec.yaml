@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-09-07
+goal: Keep the column-row editor's fields aligned by reserving a column for each
+  type-specific control and labelling it on the first row

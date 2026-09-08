@@ -34,6 +34,8 @@ interface CreateEntityBase extends BaseEntity {
   version?: string;
   displayVersion?: string;
   folderId?: string;
+  userRoles?: string[];
+  user_roles?: string[];
 }
 
 interface Props<T> {
@@ -80,7 +82,24 @@ const CreateEntity = <T extends CreateEntityBase>({
     }
 
     if (route === ApplicationRoute.PlatformModels) {
-      return { name: '', description: '', displayVersion: DEFAULT_NEW_ENTITY_VERSION, ...initialValues } as T;
+      return {
+        name: '',
+        description: '',
+        displayVersion: DEFAULT_NEW_ENTITY_VERSION,
+        userRoles: [],
+        ...initialValues,
+      } as T;
+    }
+
+    if (route === ApplicationRoute.PlatformRoutes) {
+      return { name: '', description: '', userRoles: [], ...initialValues } as T;
+    }
+
+    if (
+      isPlatformDualBucketCreate &&
+      (route === ApplicationRoute.AssetsApplications || route === ApplicationRoute.AssetsToolsets)
+    ) {
+      return { name: '', description: '', user_roles: [], ...initialValues } as T;
     }
 
     return { name: '', description: '', ...initialValues } as T;
