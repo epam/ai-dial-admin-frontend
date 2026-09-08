@@ -26,14 +26,14 @@ describe('buildAppRunnerOptions', () => {
   it('references an entity runner by its bare $id', () => {
     const [option] = buildAppRunnerOptions([entityRunner], []);
 
-    expect(option.origin).toBe(AppRunnerOrigin.Entity);
+    expect(option.origin).toBe(AppRunnerOrigin.Config);
     expect(option.reference).toBe('http://entity-runner');
   });
 
   it('references an asset runner by its Core resource name', () => {
     const [option] = buildAppRunnerOptions([], [assetRunner]);
 
-    expect(option.origin).toBe(AppRunnerOrigin.Asset);
+    expect(option.origin).toBe(AppRunnerOrigin.Platform);
     expect(option.reference).toBe('schemas/platform/http%3A%2F%2Fasdqwe');
   });
 
@@ -63,7 +63,7 @@ describe('buildAppRunnerOptions', () => {
   it('merges both populations, entity rows first', () => {
     const options = buildAppRunnerOptions([entityRunner], [assetRunner]);
 
-    expect(options.map((o) => o.origin)).toEqual([AppRunnerOrigin.Entity, AppRunnerOrigin.Asset]);
+    expect(options.map((o) => o.origin)).toEqual([AppRunnerOrigin.Config, AppRunnerOrigin.Platform]);
   });
 
   it('tolerates either list being absent', () => {
@@ -94,7 +94,7 @@ describe('PICKER_RUNNER_COLUMNS', () => {
   it('renders the Source cell per origin', () => {
     const format = columns.find((c) => c.field === 'origin')?.valueFormatter as (p: { value: string }) => string;
 
-    expect(format({ value: AppRunnerOrigin.Asset })).toBe(SourceI18nKey.AssetRunner);
-    expect(format({ value: AppRunnerOrigin.Entity })).toBe(SourceI18nKey.EntityRunner);
+    expect(format({ value: AppRunnerOrigin.Platform })).toBe(SourceI18nKey.PlatformRunner);
+    expect(format({ value: AppRunnerOrigin.Config })).toBe(SourceI18nKey.ConfigRunner);
   });
 });

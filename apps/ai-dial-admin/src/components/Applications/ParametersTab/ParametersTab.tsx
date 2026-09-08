@@ -6,10 +6,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
-import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
-import { AppRunnerOrigin } from '@/src/components//SourceField/Application/models';
-import { getRunnerOrigin } from '@/src/components//SourceField/Application/utils';
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import {
   convertJsonSchema,
   generateViewItems,
@@ -75,22 +72,11 @@ const ParametersTab: FC<Props> = ({
   const [isAddClicked, setIsAddClicked] = useState(false);
 
   useEffect(() => {
-    let scheme = undefined;
     const foundRunner = getAppRunner(application as DialApplication, applicationSchemes, view);
-    const isAsset = !!foundRunner && getRunnerOrigin(foundRunner) === AppRunnerOrigin.Asset;
-    const resolve = isAsset
-      ? getResolvedRunnerSchema(foundRunner.$id ?? '')
-      : getResolvedApplicationScheme(foundRunner?.$id ?? '');
+
     setIsSchemeLoading(true);
-    resolve.then((res) => {
-      const resolved = isAsset
-        ? (res.response as DialApplicationScheme | undefined)
-        : (res.response as { schema?: DialApplicationScheme })?.schema;
-      if (res.success) {
-        scheme = resolved;
-      } else {
-        scheme = foundRunner ?? undefined;
-      }
+    resolveAppRunnerScheme(foundRunner).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
+      const scheme = resolvedScheme ?? resolvedRunner;
       setIsSchemeLoading(false);
       setScheme(scheme);
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);

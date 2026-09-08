@@ -1,13 +1,18 @@
 'use client';
 
-import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  DialInputPopup,
+  DialLabel,
+  DialLoader,
+  DialNeutralButton,
+  DialSelectField,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -20,6 +25,7 @@ import { createSchemaSource, getSchemaSourceId } from '@/src/utils/entities/appl
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { AppRunnerOrigin } from './models';
+import { resolveAppRunnerScheme } from './resolve-app-runner';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
 import { getRunnerOrigin } from './utils';
 
@@ -60,6 +66,7 @@ const AppRunners: FC<Props> = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
+  const [isRunnerResolving, setIsRunnerResolving] = useState(false);
   const isMobile = useIsMobileScreen();
 
   const currentValue = entity ? getSchemaSourceId(entity.source) : selectedValue;
@@ -93,44 +100,43 @@ const AppRunners: FC<Props> = ({
   }, [runners, isMergedSource]);
 
   const handleRunnerSelect = useCallback(
-    (value?: string) => {
+    async (value?: string) => {
       onCloseModal();
-
-      let applicationProperties;
-      const baseEntity: DialApplication = {
-        ...entity,
-        source: value ? createSchemaSource(value) : undefined,
-        endpoint: undefined,
-        mcp: undefined,
-      };
 
       const runner = runners?.find((r) => r.$id === value);
 
       if (!runner && entity) {
-        onChange?.(baseEntity);
+        onChange?.({ ...entity, source: undefined, endpoint: undefined, mcp: undefined });
         return;
       }
 
-      const isAsset = !!runner && getRunnerOrigin(runner) === AppRunnerOrigin.Asset;
-      const resolve = isAsset
-        ? getResolvedRunnerSchema(runner.$id ?? '')
-        : getResolvedApplicationScheme(runner?.$id ?? '');
+      setIsRunnerResolving(true);
 
-      resolve.then((res) => {
-        const resolved = isAsset
-          ? (res.response as DialApplicationScheme | undefined)
-          : (res.response as { schema?: DialApplicationScheme })?.schema;
-        const scheme: DialApplicationScheme | undefined = res.success && resolved ? resolved : runner;
-        applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, unknown>;
+      try {
+        const { runner: resolvedRunner, scheme } = await resolveAppRunnerScheme(runner);
+        const resolvedId = resolvedRunner?.$id ?? value;
+        const applicationProperties = getSchemaDefaults((scheme ?? resolvedRunner) as JSONSchema7) as Record<
+          string,
+          unknown
+        >;
+        const baseEntity: DialApplication = {
+          ...entity,
+          source: resolvedId ? createSchemaSource(resolvedId) : undefined,
+          endpoint: undefined,
+          mcp: undefined,
+        };
+
         if (entity) {
           onChange?.({
             ...baseEntity,
             applicationProperties: { ...baseEntity.applicationProperties, ...applicationProperties },
           });
         } else if (onChangeValue) {
-          onChangeValue(value, applicationProperties);
+          onChangeValue(resolvedId, applicationProperties);
         }
-      });
+      } finally {
+        setIsRunnerResolving(false);
+      }
     },
     [entity, onChange, onChangeValue, onCloseModal, runners],
   );
@@ -139,7 +145,7 @@ const AppRunners: FC<Props> = ({
 
   const openInNewTab = useCallback(() => {
     const url =
-      selectedRunner && getRunnerOrigin(selectedRunner) === AppRunnerOrigin.Asset
+      selectedRunner && getRunnerOrigin(selectedRunner) === AppRunnerOrigin.Platform
         ? `/${currentLocale}${getUrnForEntity(ApplicationRoute.PlatformAppRunners, selectedRunner)}`
         : `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${currentValue}`)}`;
     window.open(url, '_blank');
@@ -150,25 +156,31 @@ const AppRunners: FC<Props> = ({
   }, [currentValue, dropdownItems]);
 
   return !isEntityImmutable ? (
-    <DialSelectField
-      value={currentValue}
-      searchable={true}
-      required
-      id="sourceEntity"
-      className="w-full mt-1"
-      disabled={isFieldDisabled}
-      options={dropdownItems}
-      label={label}
-      placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
-      onChange={(runner) => handleRunnerSelect(runner as string)}
-    />
+    isRunnerResolving ? (
+      <div className="relative w-full h-10">
+        <DialLoader size={18} />
+      </div>
+    ) : (
+      <DialSelectField
+        value={currentValue}
+        searchable={true}
+        required
+        id="sourceEntity"
+        className="w-full mt-1"
+        disabled={isFieldDisabled || isRunnerResolving}
+        options={dropdownItems}
+        label={label}
+        placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
+        onChange={(runner) => handleRunnerSelect(runner as string)}
+      />
+    )
   ) : (
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
         <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
           <DialLabel label={label} required htmlFor="sourceEntity" />
           <DialInputPopup
-            disabled={isFieldDisabled}
+            disabled={isFieldDisabled || isRunnerResolving}
             placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
             open={isModalOpen}
             onOpen={onOpenModal}

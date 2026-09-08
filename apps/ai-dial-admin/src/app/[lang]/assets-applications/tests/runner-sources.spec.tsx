@@ -37,7 +37,7 @@ describe('Assets > Applications :: runner sources', () => {
 
     const runners = runnersPassedToList(await Page());
 
-    expect(runners.map((r) => r.origin)).toEqual([AppRunnerOrigin.Entity, AppRunnerOrigin.Asset]);
+    expect(runners.map((r) => r.origin)).toEqual([AppRunnerOrigin.Config, AppRunnerOrigin.Platform]);
     expect(runners.map((r) => r.reference)).toEqual(['urn:runner:entity', 'schemas/platform/http%3A%2F%2Fasdqwe']);
   });
 
@@ -48,7 +48,7 @@ describe('Assets > Applications :: runner sources', () => {
     const runners = runnersPassedToList(await Page());
 
     expect(runners).toHaveLength(1);
-    expect(runners[0].origin).toBe(AppRunnerOrigin.Entity);
+    expect(runners[0].origin).toBe(AppRunnerOrigin.Config);
   });
 
   test('still offers asset runners when the admin-BE read fails', async () => {
@@ -58,7 +58,7 @@ describe('Assets > Applications :: runner sources', () => {
     const runners = runnersPassedToList(await Page());
 
     expect(runners).toHaveLength(1);
-    expect(runners[0].origin).toBe(AppRunnerOrigin.Asset);
+    expect(runners[0].origin).toBe(AppRunnerOrigin.Platform);
   });
 });
 
