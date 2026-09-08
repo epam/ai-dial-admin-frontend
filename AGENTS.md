@@ -33,8 +33,12 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is one master spec** — `openspec/specs/analytics/spec.md`. Don't create per-feature
-  analytics specs.
+- **Analytics is a root index plus nine sub-capabilities** under `openspec/specs/analytics/` —
+  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `conversations-listing`,
+  `conversation-trace-listing`, `conversation-trace-detail`, `pipelines`, `evaluators`. Address one as
+  `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
+  shares, plus a routing table naming what each sub-capability answers — add a row when you add one.
+  Never create a top-level `analytics-*` spec folder.
 - **Pre-commit runs lint-staged plus the agent-config validator; pre-push runs the suite.** Don't skip
   hooks.
 
