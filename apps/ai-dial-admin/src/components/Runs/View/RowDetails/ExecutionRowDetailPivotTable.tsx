@@ -5,7 +5,10 @@ import { FC, useEffect, useMemo, useRef } from 'react';
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
-import { getPivotGridTemplateColumns } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
+import {
+  getPivotGridMinWidth,
+  getPivotGridTemplateColumns,
+} from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
@@ -30,6 +33,7 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey }) =>
     () => getPivotGridTemplateColumns(columns, { includeStickyLabelColumn: false }),
     [columns],
   );
+  const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns, { includeStickyLabelColumn: false }), [columns]);
 
   useEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
@@ -43,10 +47,11 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey }) =>
     <div className="relative flex flex-col flex-1 min-h-0 rounded overflow-hidden">
       <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-auto">
         <div
-          className="dial-tiny-text grid w-max min-w-full h-full"
+          className="dial-tiny-text grid w-full h-full"
           style={{
             gridTemplateColumns,
             gridTemplateRows: 'auto auto 1fr',
+            minWidth: gridMinWidth,
           }}
         >
           {columns.map((column) => {

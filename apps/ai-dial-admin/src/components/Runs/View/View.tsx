@@ -15,7 +15,7 @@ import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -114,7 +114,9 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
       {
         id: 'compare',
         label: t(ActionMenuOperationI18nKey.Compare),
-        icon: <IconCompare className="mx-1 size-5 [&_path]:fill-current" />,
+        icon: (
+          <IconCompare width={BASE_BUTTON_ICON_SIZE} height={BASE_BUTTON_ICON_SIZE} className="[&_path]:fill-current" />
+        ),
         onClick: onOpenCompare,
         disabled: isCompareDisabled,
         appearance: 'neutral' as const,

@@ -19,7 +19,7 @@ import {
 import { GridApi, IRowNode } from 'ag-grid-community';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -276,7 +276,9 @@ export function getCompareOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconCompare {...BASE_BUTTON_ICON_PROPS} className="mx-1" />,
+    icon: (
+      <IconCompare width={BASE_BUTTON_ICON_SIZE} height={BASE_BUTTON_ICON_SIZE} className="[&_path]:fill-current" />
+    ),
     id: ActionMenuOperationI18nKey.Compare,
     label: ActionMenuOperationI18nKey.Compare,
     onClick,

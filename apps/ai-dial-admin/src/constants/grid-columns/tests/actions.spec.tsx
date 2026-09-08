@@ -1,4 +1,5 @@
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
+import IconCompare from '@/public/images/icons/difference.svg';
 
 import {
   IconCopy,
@@ -17,7 +18,7 @@ import {
   IconPencilMinus,
 } from '@tabler/icons-react';
 
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { describe, expect, test, vi } from 'vitest';
 import {
   getCompareChangesOperation,
@@ -36,6 +37,7 @@ import {
   getStopOperation,
   getTryOutOperation,
   getEditOperation,
+  getCompareOperation,
 } from '../actions';
 
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -126,6 +128,15 @@ describe('Actions :: getResourceRollbackOperation', () => {
     const res = getPreviewOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperationI18nKey.Preview);
     expect(res.icon).toEqual(<IconEye {...BASE_BUTTON_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set COMPARE_OPERATION without extra horizontal margin', () => {
+    const res = getCompareOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperationI18nKey.Compare);
+    expect(res.icon).toEqual(
+      <IconCompare width={BASE_BUTTON_ICON_SIZE} height={BASE_BUTTON_ICON_SIZE} className="[&_path]:fill-current" />,
+    );
     expect(res.onClick).toEqual(CLICK);
   });
 
