@@ -193,6 +193,54 @@ describe('TryOutRequestPreview section labels', () => {
     expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
   });
 
+  test('inherits request #0 attribute bindings on a later tab with no inputBindings', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: null }]);
+
+    render(
+      <TryOutRequestPreview
+        testSuite={{ ...combinedSuite, additionalRequests: [{}] }}
+        testCaseId="case-st"
+        schema={schema}
+        initialTestCase={{ id: 'case-st', createdAt: 0, data: { prompt: 'once' } }}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={1}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:prompt=once')).toBeInTheDocument();
+    });
+  });
+
+  test('fills per-turn attribute bindings from single-turn data without multiTurnData', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: null }]);
+
+    const singleTurnMultiRequestCase: TestCase = {
+      id: 'case-st',
+      createdAt: 0,
+      data: { prompt: 'once', shared: 'value' },
+    };
+
+    render(
+      <TryOutRequestPreview
+        testSuite={combinedSuite}
+        testCaseId="case-st"
+        schema={schema}
+        initialTestCase={singleTurnMultiRequestCase}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={0}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:prompt=once')).toBeInTheDocument();
+    });
+  });
+
   test('keeps a single Variables section for single-turn cases', async () => {
     getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: 'once' }]);
 

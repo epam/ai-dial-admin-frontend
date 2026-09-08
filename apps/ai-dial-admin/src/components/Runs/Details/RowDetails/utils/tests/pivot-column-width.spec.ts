@@ -12,6 +12,7 @@ import {
 import { RowDetailField, PivotColumnWidthTier } from '@/src/components/Runs/Details/RowDetails/models';
 import { PivotColumn } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
 import {
+  getPivotGridMinWidth,
   getPivotGridTemplateColumns,
   resolvePivotFieldColumnWidth,
   resolvePivotFieldWidthTier,
@@ -69,7 +70,7 @@ describe('resolvePivotFieldColumnWidth', () => {
 });
 
 describe('getPivotGridTemplateColumns', () => {
-  test('builds fixed per-column grid template from pivot columns', () => {
+  test('builds minmax tracks that grow in proportion to assigned widths', () => {
     const columns = [
       pivotColumn('executionStatus'),
       pivotColumn('httpStatusCode'),
@@ -77,7 +78,7 @@ describe('getPivotGridTemplateColumns', () => {
     ];
 
     expect(getPivotGridTemplateColumns(columns)).toBe(
-      `${ROW_DETAIL_PIVOT_LEFT_COL_WIDTH}px ${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}px ${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}px ${ROW_DETAIL_PIVOT_SCORE_COL_WIDTH}px`,
+      `${ROW_DETAIL_PIVOT_LEFT_COL_WIDTH}px minmax(${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}px, ${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}fr) minmax(${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}px, ${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}fr) minmax(${ROW_DETAIL_PIVOT_SCORE_COL_WIDTH}px, ${ROW_DETAIL_PIVOT_SCORE_COL_WIDTH}fr)`,
     );
   });
 
@@ -90,10 +91,28 @@ test('omits sticky left column when includeStickyLabelColumn is false', () => {
   const columns = [pivotColumn('executionStatus'), pivotColumn('httpStatusCode')];
 
   expect(getPivotGridTemplateColumns(columns, { includeStickyLabelColumn: false })).toBe(
-    `${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}px ${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}px`,
+    `minmax(${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}px, ${ROW_DETAIL_PIVOT_STATUS_COL_WIDTH}fr) minmax(${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}px, ${ROW_DETAIL_PIVOT_HTTP_COL_WIDTH}fr)`,
   );
 });
 
 test('returns empty string when no fields and sticky label column omitted', () => {
   expect(getPivotGridTemplateColumns([], { includeStickyLabelColumn: false })).toBe('');
+});
+
+describe('getPivotGridMinWidth', () => {
+  test('sums sticky label and field track widths', () => {
+    const columns = [pivotColumn('executionStatus'), pivotColumn('httpStatusCode')];
+
+    expect(getPivotGridMinWidth(columns)).toBe(
+      ROW_DETAIL_PIVOT_LEFT_COL_WIDTH + ROW_DETAIL_PIVOT_STATUS_COL_WIDTH + ROW_DETAIL_PIVOT_HTTP_COL_WIDTH,
+    );
+  });
+
+  test('omits sticky label width when includeStickyLabelColumn is false', () => {
+    const columns = [pivotColumn('executionStatus'), pivotColumn('httpStatusCode')];
+
+    expect(getPivotGridMinWidth(columns, { includeStickyLabelColumn: false })).toBe(
+      ROW_DETAIL_PIVOT_STATUS_COL_WIDTH + ROW_DETAIL_PIVOT_HTTP_COL_WIDTH,
+    );
+  });
 });

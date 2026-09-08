@@ -37,6 +37,16 @@ export const buildTurnEffectiveData = (
 export const perTurnFieldNames = (schema: TestCaseSchema[] | undefined): Set<string> =>
   new Set((schema ?? []).filter((field) => field.perTurn).map((field) => field.name));
 
+/** Request-specific bindings win; names missing on that request keep the fallback (request #0) mapping. */
+export const mergeRequestBindings = (
+  requestBindings: InputBinding[] | undefined,
+  fallbackBindings: InputBinding[] | undefined,
+): InputBinding[] => {
+  const byVariable = new Map((fallbackBindings ?? []).map((binding) => [binding.templateVariable, binding]));
+  (requestBindings ?? []).forEach((binding) => byVariable.set(binding.templateVariable, binding));
+  return [...byVariable.values()];
+};
+
 /**
  * Resolve template variables for one turn: constant → dataField → variable name → default → null.
  */
