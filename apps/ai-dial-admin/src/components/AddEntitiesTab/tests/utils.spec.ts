@@ -243,7 +243,7 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
   });
 
   test('Should return same data', () => {
-    const existing = [];
+    const existing: EntitiesGridData[] = [];
     const result = getAvailableEntities(existing, data);
     expect(result).toEqual(data);
   });
