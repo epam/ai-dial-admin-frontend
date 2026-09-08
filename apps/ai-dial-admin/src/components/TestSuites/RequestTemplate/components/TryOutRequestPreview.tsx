@@ -10,6 +10,7 @@ import {
   convertVariableIntoInitialRequest,
   perTurnFieldNames,
   buildTurnEffectiveData,
+  mergeRequestBindings,
   resolveVariablesForTurn,
 } from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -117,11 +118,18 @@ const TryOutRequestPreview: FC<Props> = ({
 
     for (let requestIndex = 0; requestIndex < turnCounts.length; requestIndex++) {
       const turnCount = turnCounts[requestIndex];
-      const bindings = toRequestView(testSuite, requestIndex).inputBindings || [];
+      const bindings = mergeRequestBindings(
+        toRequestView(testSuite, requestIndex).inputBindings,
+        testSuite.inputBindings,
+      );
       const turns: TryOutSectionGroup<{ variables: TemplateVariable[] }>['turns'] = [];
 
       for (let turnIndex = 0; turnIndex < turnCount; turnIndex++) {
-        const turnData = turnCount > 1 && multiTurnData ? multiTurnData[turnIndex] : (multiTurnData?.[0] ?? {});
+        // Single-turn cases keep per-turn fields on `data`; multi-turn cases put them in multiTurnData.
+        const turnData =
+          turnCount > 1 && multiTurnData
+            ? (multiTurnData[turnIndex] ?? {})
+            : (multiTurnData?.[0] ?? testCase?.data ?? {});
         const effectiveData = buildTurnEffectiveData(testCase?.data, turnData, perTurnFields);
         turns.push({
           turnIndex,

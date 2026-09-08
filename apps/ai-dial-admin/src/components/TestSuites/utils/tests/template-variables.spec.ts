@@ -5,6 +5,7 @@ import {
   generateInputBindingsRowData,
   generateVariablesRowData,
   hasIncompleteInputBindings,
+  mergeRequestBindings,
   perTurnFieldNames,
   resolveVariablesForTurn,
 } from '../template-variables';
@@ -33,6 +34,23 @@ describe('buildTurnEffectiveData', () => {
 
   test('returns empty object when both maps are missing', () => {
     expect(buildTurnEffectiveData(undefined, undefined, new Set(['prompt']))).toEqual({});
+  });
+});
+
+describe('mergeRequestBindings', () => {
+  test('fills gaps from fallback bindings when the request has none', () => {
+    expect(mergeRequestBindings([], [{ templateVariable: 'user_message', dataField: 'message' }])).toEqual([
+      { templateVariable: 'user_message', dataField: 'message' },
+    ]);
+  });
+
+  test('lets request-specific bindings override the same variable on the fallback', () => {
+    expect(
+      mergeRequestBindings(
+        [{ templateVariable: 'user_message', dataField: 'other' }],
+        [{ templateVariable: 'user_message', dataField: 'message' }],
+      ),
+    ).toEqual([{ templateVariable: 'user_message', dataField: 'other' }]);
   });
 });
 
