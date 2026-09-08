@@ -9,7 +9,10 @@ import DiffMiniMap from '@/src/components/Common/DiffMiniMap/DiffMiniMap';
 import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
 import PivotValueCell from '@/src/components/Runs/View/RowDetails/PivotValueCell';
-import { getPivotGridTemplateColumns } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
+import {
+  getPivotGridMinWidth,
+  getPivotGridTemplateColumns,
+} from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
@@ -69,6 +72,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const columns = useMemo(() => flattenPivotFields(filteredSections), [filteredSections]);
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
+  const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns), [columns]);
 
   useEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
@@ -104,7 +108,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
         ref={scrollContainerRef}
         className="flex-1 min-h-0 overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div className="dial-tiny-text grid w-max min-w-full" style={{ gridTemplateColumns }}>
+        <div className="dial-tiny-text grid w-full" style={{ gridTemplateColumns, minWidth: gridMinWidth }}>
           {/* Section header row */}
           <div className={classNames(HEADER_CELL_BASE, LEFT_CELL_STICKY, 'z-30 border-r')} aria-hidden />
           {columns.map((column) => {
