@@ -1,13 +1,25 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AssetModel } from '@/src/models/dial/deployment-asset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
   useIsReadOnlyAdmin: vi.fn(() => false),
+}));
+
+const { onRenderEntityAudit } = vi.hoisted(() => ({
+  onRenderEntityAudit: vi.fn<(props: { entity: AssetModel; view: ApplicationRoute }) => void>(),
+}));
+
+vi.mock('@/src/components/EntityTabs/Audit/EntityAudit', () => ({
+  default: (props: { entity: AssetModel; view: ApplicationRoute }) => {
+    onRenderEntityAudit(props);
+    return null;
+  },
 }));
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
@@ -19,12 +31,16 @@ vi.mock('@/src/app/[lang]/models/actions', () => ({
 const model = (overrides: Partial<AssetModel> = {}) =>
   ({ name: 'gpt-4', path: 'gpt-4', folderId: '', ...overrides }) as AssetModel;
 
-const renderTabs = (onChange: (m: AssetModel) => void, overrides: Partial<AssetModel> = {}) => {
+const renderTabs = (
+  onChange: (m: AssetModel) => void,
+  overrides: Partial<AssetModel> = {},
+  activeTab: EntityViewTab = EntityViewTab.Properties,
+) => {
   const selected = model(overrides);
 
-  return render(
+  render(
     <TabsContent
-      activeTab={EntityViewTab.Properties}
+      activeTab={activeTab}
       selectedModel={selected}
       originalModel={selected}
       roles={[]}
@@ -32,6 +48,8 @@ const renderTabs = (onChange: (m: AssetModel) => void, overrides: Partial<AssetM
       onChange={onChange}
     />,
   );
+
+  return selected;
 };
 
 /**
@@ -59,5 +77,26 @@ describe('Model asset TabsContent :: a removed field stays removed', () => {
     await user.clear(screen.getByDisplayValue('cl100k_base'));
 
     expect(onChange.mock.calls.at(-1)?.[0]).toMatchObject({ name: 'gpt-4', displayName: 'Kept' });
+  });
+});
+
+describe('Model asset TabsContent :: Audit tab', () => {
+  beforeEach(() => {
+    onRenderEntityAudit.mockClear();
+  });
+
+  test('Should render the audit view for the selected model under the platform models route', () => {
+    const selected = renderTabs(vi.fn(), {}, EntityViewTab.Audit);
+
+    expect(onRenderEntityAudit).toHaveBeenCalledOnce();
+    expect(onRenderEntityAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ entity: selected, view: ApplicationRoute.PlatformModels }),
+    );
+  });
+
+  test('Should not render the audit view on the Properties tab', () => {
+    renderTabs(vi.fn(), {}, EntityViewTab.Properties);
+
+    expect(onRenderEntityAudit).not.toHaveBeenCalled();
   });
 });
