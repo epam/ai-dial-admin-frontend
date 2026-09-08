@@ -28,7 +28,7 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
   const [error, setError] = useState<string | null>(null);
 
   const path =
-    runner && getRunnerOrigin(runner) === AppRunnerOrigin.Asset ? (runner as AppRunnerOption).path : undefined;
+    runner && getRunnerOrigin(runner) === AppRunnerOrigin.Platform ? (runner as AppRunnerOption).path : undefined;
 
   useEffect(() => {
     setRoutes(null);

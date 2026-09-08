@@ -14,6 +14,9 @@ vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
 
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: true, response: { properties: {} } }),
+  getRunner: vi
+    .fn()
+    .mockResolvedValue({ success: true, response: { $id: 'http://asdqwe', path: 'http%3A%2F%2Fasdqwe' } }),
 }));
 
 vi.mock('@/src/utils/schema', () => ({
@@ -41,7 +44,7 @@ vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => fa
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
+import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 const ASSET_ID = 'http://asdqwe';
 
@@ -89,7 +92,7 @@ describe('AppRunners :: merged picker', () => {
     expect(screen.queryByRole('option', { name: 'urn:runner:entity' })).toBeNull();
   });
 
-  test('selecting an asset runner stores its $id', async () => {
+  test('selecting a platform runner fetches its content and stores the content $id', async () => {
     const onChangeValue = vi.fn();
     render(
       <AppRunners
@@ -102,8 +105,29 @@ describe('AppRunners :: merged picker', () => {
 
     await selectRunner(ASSET_ID);
 
-    await waitFor(() => expect(onChangeValue).toHaveBeenCalled());
+    await waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
     expect(onChangeValue).toHaveBeenCalledWith('http://asdqwe', { propA: 'default-a' });
+  });
+
+  test('a platform runner whose content $id was edited resolves and stores the corrected id, not the picker option $id', async () => {
+    vi.mocked(getRunner).mockResolvedValueOnce({
+      success: true,
+      response: { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' },
+    });
+    const onChangeValue = vi.fn();
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={onChangeValue}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
+
+    await selectRunner(ASSET_ID);
+
+    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
+    expect(onChangeValue).toHaveBeenCalledWith('http://asdqwe/edited', { propA: 'default-a' });
   });
 
   test('selecting an entity runner still stores its bare $id', async () => {
@@ -123,7 +147,7 @@ describe('AppRunners :: merged picker', () => {
     expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' });
   });
 
-  test('an asset selection resolves against Core using the asset $id', async () => {
+  test('a platform selection resolves against Core using the content $id', async () => {
     vi.mocked(getResolvedRunnerSchema).mockClear();
     vi.mocked(getResolvedApplicationScheme).mockClear();
 

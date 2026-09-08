@@ -110,7 +110,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const interceptorsRef = useRef(entityInterceptors);
 
   useEffect(() => {
-    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Asset && appRunnerInterceptors) {
+    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Platform && appRunnerInterceptors) {
       setRunnerInterceptors(appRunnerInterceptors);
     }
   }, [appRunnerInterceptors, appRunner, interceptors]);
