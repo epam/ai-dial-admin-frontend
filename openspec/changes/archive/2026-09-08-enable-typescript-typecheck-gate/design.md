@@ -28,11 +28,13 @@ So the uncovered area is exactly: every test file, and every source file no rout
 
 ## Decisions
 
-**Gate on pre-push, not CI.** Chosen by the user on 2026-09-08 over "CI + pre-push" and "CI only".
-`.husky/pre-push` already runs the suite, so the typecheck joins a hook developers cannot miss, and it
-fails in ~7 s instead of a 3-5 min CI round trip. Trade-off accepted knowingly: `git push --no-verify`
-bypasses it, and a PR whose author bypassed the hook is not stopped by anything. Revisit by adding a
-`typecheck` job to `pr.yml` — the target is already there, so that is a five-line follow-up.
+**Gate on pre-commit and in CI.** Decided in two steps on 2026-09-08. First choice was pre-push over
+"CI + pre-push" and "CI only", on the grounds that the hook already ran the suite. Revised the same day
+once both projects were timed: 1.8 s and 2.2 s incremental (6.9 s / 9.7 s cold), which is cheap enough to
+pay per commit rather than per push, and a commit is where the author still has the change in mind. The
+CI job went in with it, because `--no-verify` bypasses any hook and a PR needs something that cannot be
+skipped. Cost accepted: a commit made mid-refactor can fail on a file the author did not touch, since
+`tsc` is project-wide and not staged-file-scoped; `git commit --no-verify` is the escape hatch.
 
 **Typecheck the app project only; keep the spec project measurable but ungated.** The spec project's 725
 errors across 154 files cannot land as one reviewable PR, and a gate that always fails is the state this
@@ -62,7 +64,7 @@ re-adding fields to a shared context for a component nothing renders. `SchemeRen
 
 ## Risks / Trade-offs
 
-- **`--no-verify` skips the gate** → accepted above; the CI job stays a five-line follow-up.
+- **`--no-verify` skips the hook** → the CI `typecheck` job is the backstop, and it is blocking.
 - **Pre-push gets slower** → cold run measured at 7.2 s, and `incremental: true` writes
   `tsconfig.app.tsbuildinfo` (already covered by `*.tsbuildinfo` in `.gitignore`) so repeat runs are
   cheaper. The suite it precedes takes minutes.

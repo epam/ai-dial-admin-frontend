@@ -1,4 +1,1 @@
-# Fast gate first: the app-source typecheck runs in seconds, the suite in minutes.
-# Spec files are not covered yet — see openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate.
-npm run typecheck
 npm run test

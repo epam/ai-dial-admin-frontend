@@ -18,10 +18,12 @@ Things that cost time or fail silently if you don't know them:
   won't resolve.
 - **`npm run test` always runs with coverage.** While iterating use
   `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate.
-- **The typecheck gate covers app source only.** `npm run typecheck` (also `.husky/pre-push`) runs
-  `tsc -p tsconfig.app.json`, which excludes `*.spec.ts(x)`. The spec project still has 722 real errors —
-  fixtures that no longer match production types, untyped mocks — so a green test run does not mean a test
-  is type-correct. Check one with `npx tsc -p tsconfig.spec.json --noEmit` from `apps/ai-dial-admin/`.
+- **The typecheck gate covers app source only.** `npm run typecheck` (also `.husky/pre-commit`, and a
+  blocking CI job) runs `tsc -p tsconfig.app.json`, which excludes `*.spec.ts(x)`. The spec project still
+  has ~720 real errors — fixtures that no longer match production types, untyped mocks — so a green test
+  run does not mean a test is type-correct. `npm run typecheck:specs` reports them: pre-commit prints the
+  count and CI puts the worst files in the job summary, but neither blocks, because blocking on a known
+  720 would stop every commit. Make it a gate once the count reaches zero.
 - **Test mocks are centralized in `apps/ai-dial-admin/test-setup.tsx`**, and its mocked `t()` returns
   the i18n key as-is — so component tests assert keys, not translated text. Add missing mocks there,
   not inline in a spec.
@@ -37,9 +39,15 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is one master spec** — `openspec/specs/analytics/spec.md`. Don't create per-feature
-  analytics specs.
-- **Pre-commit runs lint-staged plus the agent-config validator; pre-push runs the suite.** Don't skip
+- **Analytics is a root index plus nine sub-capabilities** under `openspec/specs/analytics/` —
+  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `conversations-listing`,
+  `conversation-trace-listing`, `conversation-trace-detail`, `pipelines`, `evaluators`. Address one as
+  `analytics/<sub>`; `analytics/spec.md` is the index and carries only what every page shares plus the
+  routing table. Never create a top-level `analytics-*` spec folder.
+- **Analytics archives keep only `proposal.md` and `design.md`** — archiving a change whose deltas
+  touch `analytics/*` deletes its `tasks.md` and `specs/` delta, because the delta is already folded
+  into the consolidated specs. Analytics-only; every other capability keeps the stock layout.
+- **Pre-commit runs lint-staged, the agent-config validator and the typecheck; pre-push runs the suite.** Don't skip
   hooks.
 
 ## Hard constraints
