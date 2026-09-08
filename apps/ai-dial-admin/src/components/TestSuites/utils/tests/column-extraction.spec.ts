@@ -51,7 +51,6 @@ describe('resolveInvocationColumns', () => {
     ]);
   });
 
-  // See formatExtractedValue's JSDoc: a legitimately falsy value must stay Extracted.
   test.each([
     ['false', false, 'false'],
     ['zero', 0, '0'],
@@ -204,11 +203,6 @@ describe('resolveInvocationColumns', () => {
     });
   });
 
-  /**
-   * The reproduced bug: a streaming Responses API try-out. `response.body` is an SSE envelope with no
-   * `id` and no `output`, so evaluating the columns in the browser resolved nothing and both rendered
-   * as Invalid — while the backend had extracted both.
-   */
   test('a streaming Responses API response shows both reported columns', () => {
     const results = resolveInvocationColumns([column(), column({ name: 'id', expression: 'id' })], {
       response: {

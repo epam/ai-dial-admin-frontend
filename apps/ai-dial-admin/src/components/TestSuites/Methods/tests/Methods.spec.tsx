@@ -249,8 +249,6 @@ describe('Methods component', () => {
     });
 
     test('renders from features.responses_api when Core reports no interfaces', async () => {
-      // Shape observed on the wire for a Responses-capable model: Core omits `interfaces` and
-      // reports support through the passed-through `features` flag instead.
       mockGetDeployment.mockResolvedValue({
         ...mockDeployment,
         deploymentId: 'deepseek-ocr-2',

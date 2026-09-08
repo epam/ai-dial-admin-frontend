@@ -207,7 +207,6 @@ export interface ExtractionWarning {
   error: string;
 }
 
-/** The invoked endpoint's own reply, as reported inside a try-out envelope. */
 export interface TryOutCoreResponse {
   statusCode: number;
   body?: unknown;

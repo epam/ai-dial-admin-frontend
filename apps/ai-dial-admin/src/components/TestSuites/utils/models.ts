@@ -18,14 +18,12 @@ export interface ParsedTemplateParam {
 }
 
 export interface MethodOption {
-  /** Endpoint reference stored on the suite when this option is selected. */
   ref: TestSuiteEndpointRef;
   /**
    * Readable URL for the sidebar. Kept out of `ref` because `relativeUrlPattern` is a regex the
    * final path is validated against, not something a user should have to read.
    */
   displayUrl: string;
-  /** Suite fields written when this option is selected. */
   seed: Partial<TestSuite>;
 }
 
@@ -64,13 +62,11 @@ export interface EvaluatedColumn {
   result: string;
   /** Backend error text, set only for `Failed` and only when a warning named the column. */
   error?: string;
-  /** Set only for `NotExtracted`. */
   reason?: NotExtractedReason;
   /** Response status behind a `RequestFailed` reason. */
   statusCode?: number;
 }
 
-/** The part of a try-out envelope one invocation's column results are derived from. */
 export interface TryOutInvocation {
   response?: TryOutCoreResponse;
   extractedColumns?: Record<string, unknown>;

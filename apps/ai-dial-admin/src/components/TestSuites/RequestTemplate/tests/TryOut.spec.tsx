@@ -225,7 +225,6 @@ describe('TryOut Columns tab request binding', () => {
     expect(screen.queryByRole('tab', { name: TabsI18nKey.Columns })).not.toBeInTheDocument();
   });
 
-  // Client-side evaluation survives only for MCP, so this binding guard now belongs to an MCP suite.
   test('binds $request to the request body, not the request envelope, for an MCP suite', async () => {
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
       success: true,

@@ -32,8 +32,6 @@ export interface Deployment {
  * DIAL Core's per-deployment feature flags, passed through verbatim by the Evaluation Framework
  * (its DTO types the property as a free-form object). Field names are Core's wire names, so they
  * stay snake_case and keep Core's spelling rather than this repo's boolean naming convention.
- *
- * Only the flags this app reads are declared; add others as they are needed.
  */
 export interface DeploymentFeatures {
   responses_api?: boolean;

@@ -257,11 +257,6 @@ describe('evaluateColumns', () => {
     expect(results.every(({ status }) => status === ColumnExtractionStatus.Extracted)).toBe(true);
   });
 
-  /**
-   * Why the backend path exists: the Responses API SSE envelope is not a shape client-side evaluation
-   * understands, so even the trivial `id` resolves to nothing. This is the state the Columns tab
-   * displayed before it read the reported extraction.
-   */
   test('cannot resolve a Responses API SSE envelope, not even a top-level field', async () => {
     const sseBody = {
       events: [
@@ -473,7 +468,6 @@ describe('evaluateTryOutColumnSections', () => {
       expect(results.flatColumns).toEqual([]);
     });
 
-    // The expression would resolve against this body; a non-MCP suite must not try it.
     test('a non-MCP suite never evaluates locally, even when the expression would resolve', async () => {
       const results = await evaluateTryOutColumnSections({
         testSuite: deploymentSuite,

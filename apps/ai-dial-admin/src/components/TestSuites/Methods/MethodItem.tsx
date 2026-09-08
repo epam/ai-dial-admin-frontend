@@ -12,7 +12,6 @@ interface Props {
   item: TestSuiteEndpointRef;
   isActive: boolean;
   onClick: (index: number) => void;
-  /** Readable URL shown instead of `item.relativeUrlPattern`, which may be a regex. */
   label?: string;
 }
 

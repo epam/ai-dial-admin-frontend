@@ -88,10 +88,6 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
-  /**
-   * The whole try-out envelope, not just its inner response: the reported extraction lives beside
-   * `history` on the envelope, so keeping them together stops them drifting out of step.
-   */
   const [tryOutResult, setTryOutResult] = useState<TryOutResponse | null>(null);
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);

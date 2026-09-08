@@ -29,14 +29,12 @@
  * property with only `oneOf` renders a blank Type cell in the schema table.
  */
 
-/** DIAL's Responses API prefix. Stated once here; every URL form below is built from it. */
 export const RESPONSES_URL_PREFIX = '/openai/v1';
 
 export const RESPONSES_RELATIVE_URL = `${RESPONSES_URL_PREFIX}/responses`;
 export const RESPONSE_ITEM_RELATIVE_URL_PATTERN = `${RESPONSES_RELATIVE_URL}/[^/]+`;
 export const RESPONSE_CANCEL_RELATIVE_URL_PATTERN = `${RESPONSE_ITEM_RELATIVE_URL_PATTERN}/cancel`;
 
-/** Readable forms shown in the method sidebar, with the placeholder in place of the id regex. */
 export const RESPONSE_ITEM_DISPLAY_URL = `${RESPONSES_RELATIVE_URL}/{response_id}`;
 export const RESPONSE_CANCEL_DISPLAY_URL = `${RESPONSE_ITEM_DISPLAY_URL}/cancel`;
 
@@ -74,7 +72,6 @@ const RESPONSE_ID_PARAMETER = {
   },
 };
 
-/** `ResponseInputText` / `ResponseInputImage` / `ResponseInputFile` — the content parts of a message. */
 const INPUT_CONTENT_PART = {
   oneOf: [
     {
@@ -113,12 +110,6 @@ const INPUT_CONTENT_PART = {
   ],
 };
 
-/**
- * One entry of the `input` array. The document's `ResponseInputItem` is a 33-variant union
- * discriminated on `type`; the message variants are what a test suite sends, and the remaining
- * variants (tool calls, tool outputs, reasoning, compaction, item references) are the items a model
- * produced, replayed back on a later turn.
- */
 const INPUT_ITEM = {
   oneOf: [
     {
@@ -165,10 +156,6 @@ const INPUT_ITEM = {
   ],
 };
 
-/**
- * One entry of `tools`. The document's `Tool` union has 16 variants discriminated on `type`; only
- * `function` and `custom` carry a caller-defined shape, so the rest are covered by the discriminator.
- */
 const TOOL = {
   oneOf: [
     {
@@ -210,7 +197,6 @@ const TOOL = {
   ],
 };
 
-/** `Reasoning` — shared by the request and the response. */
 const REASONING = {
   type: 'object',
   description: 'Configuration for reasoning models.',
@@ -235,7 +221,6 @@ const REASONING = {
   },
 };
 
-/** `ResponseTextConfig` — shared by the request and the response. */
 const TEXT_CONFIG = {
   type: 'object',
   description: 'Configuration for the textual output, including structured-output formats.',
@@ -256,7 +241,6 @@ const TEXT_CONFIG = {
   },
 };
 
-/** `ToolChoice` — a keyword, or an object naming the tool to force. */
 const TOOL_CHOICE = {
   type: 'string',
   description:
@@ -277,7 +261,6 @@ const TOOL_CHOICE = {
   ],
 };
 
-/** `ResponsePrompt` — a reference to a stored prompt template. */
 const PROMPT_REFERENCE = {
   type: 'object',
   description: 'Reference to a prompt template and its variables.',

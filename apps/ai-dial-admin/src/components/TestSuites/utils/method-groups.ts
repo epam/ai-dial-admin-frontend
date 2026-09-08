@@ -33,11 +33,6 @@ const isResponsesEndpoint = (endpointRef?: TestSuiteEndpointRef): boolean =>
   !!endpointRef?.relativeUrlPattern && RESPONSES_URL_PATTERNS.has(endpointRef.relativeUrlPattern);
 
 /**
- * `features.responses_api` is the signal that actually arrives: DIAL Core omits `interfaces` for
- * models fetched through its `/openai/...` API, so a Responses-capable model reports its support
- * only through that flag. `interfaces` is still honoured because it is the documented field and is
- * authoritative wherever Core does populate it.
- *
  * An absent signal means "not reported" rather than "supports nothing", so the group is also kept
  * for a suite already configured against a Responses method — otherwise reopening such a suite
  * would leave its selected method unreachable.
@@ -124,5 +119,4 @@ export const buildMethodGroups = ({
   return groups;
 };
 
-/** Flat, index-addressable list of every offered option, in the order the sidebar renders them. */
 export const flattenMethodGroups = (groups: MethodGroup[]): MethodOption[] => groups.flatMap((group) => group.options);

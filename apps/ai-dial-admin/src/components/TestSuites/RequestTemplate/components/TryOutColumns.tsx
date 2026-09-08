@@ -29,7 +29,6 @@ interface Props {
   schema?: TestCaseSchema[];
   multiTurnData?: Record<string, unknown>[];
   columns?: ResponseColumn[];
-  /** The try-out's own reported extraction, for the single-invocation case. */
   invocation?: TryOutInvocation;
   /** Normalized response and request bodies — used only by the MCP fallback. */
   response?: Record<string, unknown>;
