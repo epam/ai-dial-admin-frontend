@@ -43,6 +43,14 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
       return t(EntitiesI18nKey.Image);
     case ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST:
       return t(EntitiesI18nKey.GlobalFirewall);
+    case ActivityAuditResourceType.TABLE:
+      return t(EntitiesI18nKey.Table);
+    case ActivityAuditResourceType.TABLE_COLUMN:
+      return t(EntitiesI18nKey.AnalyticsTableColumn);
+    case ActivityAuditResourceType.PIPELINE:
+      return t(EntitiesI18nKey.AnalyticsPipeline);
+    case ActivityAuditResourceType.SAVED_QUERY:
+      return t(EntitiesI18nKey.AnalyticsSavedQuery);
   }
 
   return value;

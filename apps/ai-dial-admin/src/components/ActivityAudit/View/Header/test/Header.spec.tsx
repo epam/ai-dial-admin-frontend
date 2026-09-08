@@ -1,9 +1,12 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import ViewHeader from '../Header';
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
+
+const resourceLinkButton = () => screen.getByRole('button', { name: ActivityAuditI18nKey.OpenResourceInNewTab });
 
 describe('ViewHeader', () => {
   const baseActivity: DialActivity = {
@@ -32,12 +35,13 @@ describe('ViewHeader', () => {
     expect(screen.getByText('userId')).toBeInTheDocument();
   });
 
-  test('calls openResourceInNewTab when resource external link is clicked', () => {
+  test('opens the resource page in a new tab when the resource external link is clicked', async () => {
+    const user = userEvent.setup();
     global.open = vi.fn();
     render(<ViewHeader activity={baseActivity} />);
-    const buttons = screen.getAllByRole('button');
-    // The first button is for resource external link
-    fireEvent.click(buttons[0]);
+
+    await user.click(resourceLinkButton());
+
     expect(global.open).toHaveBeenCalledWith('/en/models/123', '_blank');
   });
 
@@ -86,6 +90,52 @@ describe('ViewHeader', () => {
 
     expect(screen.getByText(ActivityAuditI18nKey.ResourceId)).toBeInTheDocument();
     expect(screen.getByText('mcp-deploy-1')).toBeInTheDocument();
-    expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
+    expect(resourceLinkButton()).toBeInTheDocument();
+  });
+});
+
+describe('ViewHeader — analytics activities', () => {
+  const analyticsActivity: DialActivity = {
+    activityType: ActivityAuditType.Update,
+    resourceType: ActivityAuditResourceType.TABLE,
+    resourceId: 'orders',
+    epochTimestampMs: 123456789,
+    initiatedEmail: 'user@example.com',
+    initiatedAuthor: 'userId',
+    activityId: 'act-1',
+    revision: 2,
+  };
+
+  const renderHeader = (activity?: Partial<DialActivity>) =>
+    render(<ViewHeader activity={{ ...analyticsActivity, ...activity }} />);
+
+  test('links a table activity to its table page', async () => {
+    const user = userEvent.setup();
+    global.open = vi.fn();
+    renderHeader();
+
+    await user.click(resourceLinkButton());
+
+    expect(global.open).toHaveBeenCalledWith('/en/tables/orders', '_blank');
+  });
+
+  test('links a column activity to the table page its identifier carries', async () => {
+    const user = userEvent.setup();
+    global.open = vi.fn();
+    renderHeader({ resourceType: ActivityAuditResourceType.TABLE_COLUMN, resourceId: 'orders:total' });
+
+    expect(screen.getByText('orders:total')).toBeInTheDocument();
+    await user.click(resourceLinkButton());
+
+    expect(global.open).toHaveBeenCalledWith('/en/tables/orders', '_blank');
+  });
+
+  test('omits the external link when the resource type resolves to no page', () => {
+    const { container } = renderHeader({ resourceType: 'BrandNewBackendType' as ActivityAuditResourceType });
+
+    expect(screen.getByText(ActivityAuditI18nKey.ResourceId)).toBeInTheDocument();
+    expect(screen.getByText('orders')).toBeInTheDocument();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(container.innerHTML).not.toContain('/en/undefined');
   });
 });

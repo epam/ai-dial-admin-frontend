@@ -17,10 +17,17 @@ import {
   ActivityAuditEntity,
   ActivityAuditResourceType,
   DiffStatus,
+  isAnalyticsResource,
   isContainerDeploymentResource,
   isImageDefinitionResource,
 } from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import {
+  buildAnalyticsDiff,
+  hasAnalyticsColumnBuckets,
+  omitAnalyticsColumnBuckets,
+  setAnalyticsColumnDiffs,
+} from './analytics-diffs';
 import { isAppRunnerParameter, isRoleSharingParameter, sortKeys } from './compare-helpers';
 import { setObjectsArrayDiff } from './set-objects-array-diffs';
 import { setRolesDiffs } from './set-roles-diffs';
@@ -126,6 +133,8 @@ const ADMIN_SECTION_ORDER: EntityParameterKeys[] = [
   EntityParameterKeys.DOMAINS,
 ];
 
+const ANALYTICS_SECTION_ORDER: EntityParameterKeys[] = [EntityParameterKeys.COLUMNS];
+
 const isEmptyPrimitive = (v: unknown): boolean => v == null || v === '';
 
 const applyDiffStatus = (result: Record<string, ActivityAuditDiff[]>, status: DiffStatus): void => {
@@ -164,6 +173,10 @@ export const generateCurrentResource = (
   isCurrent?: boolean,
   t?: (str: string) => string,
 ): Record<string, ActivityAuditDiff[]> => {
+  if (isAnalyticsResource(type)) {
+    return buildAnalyticsDiff(current, compare, isCurrent);
+  }
+
   const result: Record<string, ActivityAuditDiff[]> = {
     properties: [],
   };
@@ -629,22 +642,33 @@ export const createSectionFromDiffs = (
   current: Record<string, ActivityAuditDiff[]>,
   compare: Record<string, ActivityAuditDiff[]>,
 ): ActivityAuditSection => {
-  const sectionNames = [EntityParameterKeys.PROPERTIES, ...CONTAINER_SECTION_ORDER, ...ADMIN_SECTION_ORDER];
+  const sectionNames = [
+    EntityParameterKeys.PROPERTIES,
+    ...CONTAINER_SECTION_ORDER,
+    ...ADMIN_SECTION_ORDER,
+    ...ANALYTICS_SECTION_ORDER,
+  ];
   const sections: ActivityAuditSection = {};
+
+  const hasColumnBuckets = hasAnalyticsColumnBuckets(current) || hasAnalyticsColumnBuckets(compare);
+  const currentGeneric = hasColumnBuckets ? omitAnalyticsColumnBuckets(current) : current;
+  const compareGeneric = hasColumnBuckets ? omitAnalyticsColumnBuckets(compare) : compare;
 
   sectionNames.forEach((name) => {
     if (name == EntityParameterKeys.ROLES) {
-      setRolesDiffs(sections, current, compare);
+      setRolesDiffs(sections, currentGeneric, compareGeneric);
     } else if (
       name === EntityParameterKeys.UPSTREAMS ||
       name === EntityParameterKeys.DEFAULTS ||
       name === EntityParameterKeys.APP_PROPERTIES ||
       name === EntityParameterKeys.METADATA
     ) {
-      setObjectsArrayDiff(sections, name, current, compare);
+      setObjectsArrayDiff(sections, name, currentGeneric, compareGeneric);
+    } else if (name === EntityParameterKeys.COLUMNS) {
+      setAnalyticsColumnDiffs(sections, current, compare);
     } else {
-      const currentItem = current[name];
-      const compareItem = compare[name];
+      const currentItem = currentGeneric[name];
+      const compareItem = compareGeneric[name];
       if (currentItem?.length || compareItem?.length) {
         sections[name] = [{ current: currentItem, compare: compareItem }];
       }
