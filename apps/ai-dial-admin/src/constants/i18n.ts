@@ -1589,6 +1589,7 @@ export enum InterfacesI18nKey {
   BaseUrl = 'Interfaces.BaseUrl',
   BaseUrlPlaceholder = 'Interfaces.BaseUrlPlaceholder',
   InfoBaseUrl = 'Interfaces.InfoBaseUrl',
+  InfoEndpoint = 'Interfaces.InfoEndpoint',
 }
 
 export enum ImagesI18nKey {

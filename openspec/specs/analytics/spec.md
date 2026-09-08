@@ -2277,6 +2277,12 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
 
+#### Scenario: A type-specific column keeps every row aligned
+
+- **WHEN** a row below the first is typed Array or enum
+- **THEN** every row reserves that control's column, empty in the rows whose type does not use it
+- **AND** the column's label is shown on the first row only, alongside the other field labels
+
 #### Scenario: A column row offers display name and description
 
 - **WHEN** a `PENDING` table's schema-definition surface renders its column rows
@@ -2426,7 +2432,8 @@ table and the "Add columns" popup of an `ACTIVE` one — and for both **source**
 the service accepts it on either.
 
 A column row typed enum SHALL offer a **required** value-list control in place of the element-type control an
-Array row offers. The control SHALL present the declared values as an **ordered** list the user can reorder,
+Array row offers, laid out as a column of the whole editor on the terms stated for a type-specific control in
+"Define and materialize a table schema". The control SHALL present the declared values as an **ordered** list the user can reorder,
 because a value's position in the list becomes its numeric id in the physical type and the column therefore
 sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
 nothing about a list of values otherwise suggests it.
@@ -2463,6 +2470,12 @@ enrichment's **grain key**, on the same terms as any other non-nullable, non-sen
 - **WHEN** the user sets a column row's type to enum
 - **THEN** the row offers a required value-list control
 - **AND** Save is disabled while the list is empty
+
+#### Scenario: A mid-list enum row does not repeat the value column's label
+
+- **WHEN** a row below the first is typed enum
+- **THEN** its value list renders without a second copy of the column's label beside the control
+- **AND** the column's label stays on the first row, whose value cell is empty
 
 #### Scenario: Declared values are submitted in the authored order
 

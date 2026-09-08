@@ -45,6 +45,16 @@ export interface DialModelLimit {
 
 export type DialEndpointExtraData = string | object;
 
+// Per-interface override for a DialModelEndpoint, peer of DialDeploymentInterface/DialResourceInterface
+// but carrying the upstream's own fields (a complete endpoint, not a base url) rather than one base_url.
+// Every field left unset here falls back to the DialModelEndpoint's own namesake for that interface.
+export interface DialUpstreamInterface {
+  endpoint?: string;
+  key?: string;
+  extraData?: DialEndpointExtraData;
+  secretExtraData?: DialEndpointExtraData;
+}
+
 export interface DialModelEndpoint {
   id?: string;
   endpoint?: string;
@@ -54,6 +64,7 @@ export interface DialModelEndpoint {
   extraData?: DialEndpointExtraData;
   secretExtraData?: DialEndpointExtraData;
   responsesEndpoint?: string;
+  interfaces?: Record<string, DialUpstreamInterface>;
 }
 
 export enum DialModelType {

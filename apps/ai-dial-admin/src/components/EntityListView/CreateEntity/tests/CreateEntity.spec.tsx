@@ -133,6 +133,121 @@ describe('CreateEntity', () => {
     expect(createModel.mock.calls[0][0]).toMatchObject({ displayVersion: '1.0.0' });
   });
 
+  test('starts a new platform model with userRoles: []', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createModel = vi.fn().mockResolvedValue({ success: true, response: { name: 'model1' } });
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformModels}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createModel}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createModel).toHaveBeenCalled());
+    expect(createModel.mock.calls[0][0]).toMatchObject({ userRoles: [] });
+  });
+
+  test('starts a new platform route with userRoles: []', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createRoute = vi.fn().mockResolvedValue({ success: true, response: { name: 'route1' } });
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformRoutes}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createRoute}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+      target: { value: 'route1' },
+    });
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createRoute).toHaveBeenCalled());
+    expect(createRoute.mock.calls[0][0]).toMatchObject({ userRoles: [] });
+  });
+
+  test('starts a new platform-bucket application with user_roles: []', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createApp = vi.fn().mockResolvedValue({ success: true, response: { name: 'platform-app' } });
+    const context = () => ({ filePath: 'platform/', fetchFiles: vi.fn() });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsApplications}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createApp}
+        context={context as any}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    expect(createApp.mock.calls[0][0]).toMatchObject({ user_roles: [] });
+  });
+
+  test('starts a new platform-bucket toolset with user_roles: []', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createToolset = vi.fn().mockResolvedValue({ success: true, response: { name: 'platform-toolset' } });
+    const context = () => ({ filePath: 'platform/', fetchFiles: vi.fn() });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsToolsets}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createToolset}
+        context={context as any}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createToolset).toHaveBeenCalled());
+    expect(createToolset.mock.calls[0][0]).toMatchObject({ user_roles: [] });
+  });
+
+  test('leaves the admin-BE (public-bucket) application create body without userRoles/user_roles', async () => {
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    const createApp = vi.fn().mockResolvedValue({ success: true, response: { name: 'app1' } });
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsApplications}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createApp}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createApp).toHaveBeenCalled());
+    expect(createApp.mock.calls[0][0]).not.toHaveProperty('userRoles');
+    expect(createApp.mock.calls[0][0]).not.toHaveProperty('user_roles');
+  });
+
   test('navigates to a path built from folderId + name for AssetsSkills, with no version suffix', async () => {
     const push = vi.fn();
     (useRouter as Mock).mockReturnValue({ push });

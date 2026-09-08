@@ -69,4 +69,17 @@ describe('Model asset :: detail view tab set', () => {
     expect(siblingTabIds).not.toContain(EntityViewTab.Audit);
     expect(siblingTabIds).toContain(EntityViewTab.Properties);
   });
+
+  test('Should show a warning on the Roles tab when rolesWarning is true', () => {
+    const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, true);
+    expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.warning).toBe(true);
+  });
+
+  test.each([false, undefined])(
+    'Should not show a warning on the Roles tab when rolesWarning is %s',
+    (rolesWarning) => {
+      const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, rolesWarning);
+      expect(tabs.find((tab) => tab.id === EntityViewTab.Roles)?.warning).toBeFalsy();
+    },
+  );
 });

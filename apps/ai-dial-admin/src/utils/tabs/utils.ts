@@ -90,9 +90,10 @@ export const featuresTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Features),
 });
 
-export const rolesTab = (t: (key: string) => string) => ({
+export const rolesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Roles,
   label: t(TabsI18nKey.Roles),
+  warning,
 });
 
 export const interceptorsTab = (t: (key: string) => string) => ({
@@ -429,6 +430,7 @@ export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
   featureFlags?: FeatureFlags,
+  rolesWarning?: boolean,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t), appRouteTab(t)];
@@ -444,7 +446,7 @@ export const getTabsForAsset = (
     return [propertiesTab(t), conversationTab(t)];
   }
   if (view === ApplicationRoute.PlatformModels) {
-    const tabs = [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)];
+    const tabs = [propertiesTab(t), featuresTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
     if (featureFlags?.dashboardEnabled) {
       tabs.push(auditTab(t));
     }
@@ -457,7 +459,7 @@ export const getTabsForAsset = (
     return [propertiesTab(t), parameterSchemaTab(t)];
   }
   if (view === ApplicationRoute.PlatformRoutes) {
-    return [propertiesTab(t), rolesTab(t)];
+    return [propertiesTab(t), rolesTab(t, rolesWarning)];
   }
   if (view === ApplicationRoute.PlatformKeys) {
     return [propertiesTab(t), rolesTab(t)];

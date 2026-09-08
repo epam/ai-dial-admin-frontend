@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { updateRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { DialRouteResource } from '@/src/models/dial/resource';
+import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RouteAssetView from '../View';
 
 vi.mock('@/src/app/[lang]/platform-routes/actions', () => ({
@@ -13,10 +14,13 @@ vi.mock('@/src/app/[lang]/platform-routes/actions', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ onSave }: any) => (
-    <button type="button" onClick={onSave}>
-      save
-    </button>
+  default: ({ onSave, tabs }: any) => (
+    <>
+      <button type="button" onClick={onSave}>
+        save
+      </button>
+      <div data-tabs={JSON.stringify(tabs)} />
+    </>
   ),
 }));
 
@@ -54,5 +58,16 @@ describe('RouteAssetView', () => {
     render(<RouteAssetView etag="etag" originalRoute={route()} roles={[]} />);
 
     expect(screen.getByText('tabs-content')).toBeInTheDocument();
+  });
+
+  test.each([
+    [[], true],
+    [['role'], false],
+    [undefined, false],
+  ])('Should set the Roles tab warning to %s for userRoles %s', (userRoles, expectedWarning) => {
+    const { container } = render(<RouteAssetView etag="etag" originalRoute={route({ userRoles })} roles={[]} />);
+
+    const tabs = JSON.parse(container.querySelector('[data-tabs]')!.getAttribute('data-tabs')!);
+    expect(tabs.find((tab: { id: string }) => tab.id === EntityViewTab.Roles).warning).toBe(expectedWarning);
   });
 });

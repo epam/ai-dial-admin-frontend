@@ -7,7 +7,9 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import ExtraDataField from '@/src/components/UpstreamEndpoints/ExtraData/ExtraDataField';
+import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
@@ -18,7 +20,8 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
+import { InterfaceFieldVariant } from '@/src/models/dial/interfaces';
+import { DialEndpointExtraData, DialModelEndpoint, DialUpstreamInterface } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
@@ -256,6 +259,13 @@ const Endpoint: FC<Props> = ({
                 containerClassName="w-full"
                 onChange={onChangeSecretExtraData}
               />
+              <InterfacesField<DialUpstreamInterface>
+                interfaces={endpoint.interfaces}
+                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                allowedTypes={MODEL_INTERFACE_TYPES}
+                variant={InterfaceFieldVariant.Endpoint}
+                disabled={disabled}
+              />
             </>
           )}
         </div>
@@ -289,6 +299,16 @@ const Endpoint: FC<Props> = ({
                 isSecret
                 containerClassName="flex-1 min-w-0"
                 onChange={onChangeSecretExtraData}
+              />
+            </div>
+            <div className="mt-2 w-full">
+              <InterfacesField<DialUpstreamInterface>
+                interfaces={endpoint.interfaces}
+                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                allowedTypes={MODEL_INTERFACE_TYPES}
+                variant={InterfaceFieldVariant.Endpoint}
+                disabled={disabled}
+                className="w-full"
               />
             </div>
           </>

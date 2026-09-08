@@ -13,6 +13,7 @@ import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHead
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
+import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -52,9 +53,13 @@ interface Props {
  * the existing MCP-conditional `toolsTab` splice so both conditional insertions stay visible at one
  * call site.
  */
-const withPlatformApplicationTabs = (t: (key: string) => string, baseTabs: ReturnType<typeof getTabsForAsset>) => {
+const withPlatformApplicationTabs = (
+  t: (key: string) => string,
+  baseTabs: ReturnType<typeof getTabsForAsset>,
+  rolesWarning?: boolean,
+) => {
   const interceptorsIndex = baseTabs.findIndex((tab) => tab.id === EntityViewTab.Interceptors);
-  return baseTabs.toSpliced(interceptorsIndex, 0, rolesTab(t));
+  return baseTabs.toSpliced(interceptorsIndex, 0, rolesTab(t, rolesWarning));
 };
 
 /**
@@ -86,14 +91,13 @@ const PlatformApplicationView: FC<Props> = ({
   const getReqRef = useRef(useProtectedRequest());
   const { visualizerConnector } = useAppContext();
 
-  const [tabs, setTabs] = useState(
-    withPlatformApplicationTabs(t, getTabsForAsset(t, ApplicationRoute.AssetsApplications)),
-  );
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+
+  const selectedAppUserRoles = (selectedApp as unknown as DialPlatformApplicationResource).user_roles;
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -111,16 +115,18 @@ const PlatformApplicationView: FC<Props> = ({
 
   // MCP-configured applications get a Tools tab the same way the public Apps view does — MCP is fully
   // supported for platform-bucket applications, unlike `function`/code-runtime apps.
-  useEffect(() => {
+  const tabs = useMemo(() => {
     const appRunner = getAppRunner(originalApp, schemes, ApplicationRoute.AssetsApplications);
-    const baseTabs = withPlatformApplicationTabs(t, getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+    const baseTabs = withPlatformApplicationTabs(
+      t,
+      getTabsForAsset(t, ApplicationRoute.AssetsApplications),
+      isAssetUnavailable(selectedAppUserRoles),
+    );
     if (originalApp.mcp?.endpoint || appRunner?.['dial:applicationTypeMcp']) {
-      setTabs(baseTabs.toSpliced(1, 0, toolsTab(t)));
-    } else {
-      setTabs(baseTabs);
+      return baseTabs.toSpliced(1, 0, toolsTab(t));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalApp.mcp?.endpoint]);
+    return baseTabs;
+  }, [t, originalApp, schemes, selectedAppUserRoles]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
