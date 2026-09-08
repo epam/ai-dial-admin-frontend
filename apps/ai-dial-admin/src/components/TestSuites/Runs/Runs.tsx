@@ -5,14 +5,16 @@ import { createPortal } from 'react-dom';
 
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
-import { removeRun } from '@/src/app/[lang]/runs/actions';
+import { cancelRun, removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCancelOperation,
   getCompareOperation,
   getDeleteOperation,
   getExportOperation,
@@ -47,6 +49,8 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportRun, setSelectedExportRun] = useState<Run | undefined>(undefined);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [selectedCancelRun, setSelectedCancelRun] = useState<Run | undefined>(undefined);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
 
@@ -160,6 +164,31 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     [refreshGrid],
   );
 
+  const onOpenCancelModal = useCallback((run?: Run) => {
+    setSelectedCancelRun(run);
+    setIsCancelModalOpen(true);
+  }, []);
+
+  const onCloseCancelModal = useCallback(() => {
+    setSelectedCancelRun(undefined);
+    setIsCancelModalOpen(false);
+  }, []);
+
+  const onCancelRun = useCallback(
+    async (id: string) => {
+      const response = await cancelRun(id);
+      if (response.success) {
+        gridApi?.forEachNode((node) => {
+          if (node.data?.id === id) {
+            node.setData({ ...node.data, status: RunStatus.CANCELLED });
+          }
+        });
+      }
+      return response;
+    },
+    [gridApi],
+  );
+
   useEffect(() => {
     runRefreshRef.current = refreshGrid;
   }, [refreshGrid, runRefreshRef]);
@@ -193,12 +222,13 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           getOpenInNewTabOperation(onOpenInNewTabAction),
           getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
           getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED),
+          getCancelOperation(onOpenCancelModal),
           getDeleteOperation(onOpenDeleteModal),
         ],
         true,
       ),
     ],
-    [onCompareRun, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
+    [onCompareRun, onOpenCancelModal, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
 
   return (
@@ -222,6 +252,12 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       {isExportModalOpen &&
         selectedExportRun?.id &&
         createPortal(<ExportRunModal runId={selectedExportRun.id} onClose={onCloseExportModal} />, document.body)}
+      {isCancelModalOpen &&
+        selectedCancelRun &&
+        createPortal(
+          <RunCancelModal run={selectedCancelRun} onClose={onCloseCancelModal} onCancelRun={onCancelRun} />,
+          document.body,
+        )}
       {compareRunModal}
     </>
   );

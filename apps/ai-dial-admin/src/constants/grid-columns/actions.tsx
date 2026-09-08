@@ -9,6 +9,7 @@ import {
   IconPencilMinus,
   IconPlayerPause,
   IconPlayerPlay,
+  IconPlayerStop,
   IconRefreshDot,
   IconReload,
   IconReplace,
@@ -20,6 +21,7 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { RunStatus } from '@/src/models/evaluation/run';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import IconCompare from '@/public/images/icons/difference.svg';
@@ -224,6 +226,16 @@ export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOp
         node.data.status !== CONTAINER_STATUS.FAILED
       );
     },
+  };
+}
+
+export function getCancelOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerStop {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperationI18nKey.Stop,
+    label: ActionMenuOperationI18nKey.Stop,
+    onClick,
+    hidden: (_: GridApi, node: IRowNode) => node.data?.status !== RunStatus.RUNNING,
   };
 }
 
