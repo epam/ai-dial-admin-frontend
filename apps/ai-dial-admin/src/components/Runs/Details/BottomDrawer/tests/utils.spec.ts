@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { MetricBindings } from '@/src/models/evaluation/metric';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import { buildComparisonSections, valuesAreEqual } from '../utils';
+import { MetricBindingType } from '@/src/types/evaluation';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'r1',
   responseStatusCode: 200,
   runIndex: 0,
-  executionStatus: 'SUCCESS' as const,
+  executionStatus: ExtractionResultStatus.SUCCESS,
   execDurationMs: 1000,
   testCaseData: { input: 'hello' },
   extractedColumns: { answer: 'world' },
@@ -146,8 +147,8 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       'eval.accuracy': {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -167,7 +168,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };
@@ -190,7 +191,7 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [],
-        inputBindings: [{ property: 'input', source: { $type: 'TestCase', columnName: 'Capital' } }],
+        inputBindings: [{ property: 'input', source: { $type: MetricBindingType.TestCase, columnName: 'Capital' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -211,7 +212,9 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [],
-        inputBindings: [{ property: 'actual_output', source: { $type: 'Response', columnName: 'answer' } }],
+        inputBindings: [
+          { property: 'actual_output', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
+        ],
       },
     };
     const sections = buildComparisonSections(
@@ -231,7 +234,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'rubric', source: { $type: 'Constant' } }],
+        configBindings: [{ property: 'rubric', source: { $type: MetricBindingType.Constant } }],
         inputBindings: [],
       },
     };
@@ -253,13 +256,13 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.8 } } });
     const activeBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };
     const pinnedBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-3.5' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-3.5' } }],
         inputBindings: [],
       },
     };
@@ -284,8 +287,8 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: {} });
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -311,8 +314,8 @@ describe('buildComparisonSections', () => {
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.9 } } });
     const pinnedBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
-        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: MetricBindingType.Response, columnName: 'answer' } }],
       },
     };
     const sections = buildComparisonSections(
@@ -362,11 +365,11 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       zMetric: {
-        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        configBindings: [{ property: 'p', source: { $type: MetricBindingType.Constant, value: 'v' } }],
         inputBindings: [],
       },
       aMetric: {
-        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        configBindings: [{ property: 'p', source: { $type: MetricBindingType.Constant, value: 'v' } }],
         inputBindings: [],
       },
     };
@@ -389,8 +392,8 @@ describe('buildComparisonSections', () => {
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [
-          { property: 'model', source: { $type: 'Constant', value: 'gpt-4' } },
-          { property: 'threshold', source: { $type: 'Constant', value: '0.5' } },
+          { property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } },
+          { property: 'threshold', source: { $type: MetricBindingType.Constant, value: '0.5' } },
         ],
         inputBindings: [],
       },
@@ -407,7 +410,7 @@ describe('buildComparisonSections', () => {
     const result = makeResult();
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
-        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        configBindings: [{ property: 'model', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } }],
         inputBindings: [],
       },
     };

@@ -59,7 +59,7 @@ const FIELDS: AnalyticsEntityField[] = [
 
 const DEEP_JSON = JSON.stringify({
   entity: 'dial_usage_log',
-  mode: 'row',
+  mode: QueryMode.Row,
   filter: {
     op: 'and',
     args: [
@@ -72,7 +72,7 @@ const DEEP_JSON = JSON.stringify({
               {
                 op: 'eq',
                 args: [
-                  { type: 'field', name: 'project_id' },
+                  { type: QueryExprType.Field, name: 'project_id' },
                   { type: 'value', value_type: 'string', value: 'x' },
                 ],
               },
@@ -206,7 +206,11 @@ describe('QueryBuilder', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
       response: {
-        query: { entity: 'dial_usage_log', mode: 'row', select: [{ expr: { type: 'field', name: 'project_id' } }] },
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' } }],
+        },
       },
     });
     renderBuilder();
@@ -296,7 +300,11 @@ describe('QueryBuilder', () => {
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
       response: {
-        query: { entity: 'dial_usage_log', mode: 'row', select: [{ expr: { type: 'field', name: 'project_id' } }] },
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' } }],
+        },
       },
     });
     renderBuilder();
@@ -441,7 +449,7 @@ describe('QueryBuilder', () => {
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
     const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
-    expect(sent.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+    expect(sent.select).toEqual([{ expr: { type: QueryExprType.Field, name: 'project_id' } }]);
   });
 });
 
@@ -519,7 +527,7 @@ describe('QueryBuilder AI view', () => {
               {
                 op: 'eq',
                 args: [
-                  { type: 'field', name: 'project_id' },
+                  { type: QueryExprType.Field, name: 'project_id' },
                   { type: 'value', value_type: 'string', value: 'p1' },
                 ],
               },
