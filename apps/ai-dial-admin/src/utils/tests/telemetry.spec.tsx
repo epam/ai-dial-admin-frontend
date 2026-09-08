@@ -223,7 +223,8 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
       { $eq: { left: 'project_id', right: "'Project1'" } },
     ]);
   });
-  -test('returns $in operator for multiple values with Equal condition', () => {
+
+  test('returns $in operator for multiple values with Equal condition', () => {
     const filters = [
       { type: FILTER_TYPE.Entity, value: ['Entity1', 'Entity2', 'Entity3'], condition: FILTER_OPERATOR.Equal },
     ];
@@ -271,6 +272,11 @@ describe('Utils :: telemetry :: getEntityFilterName', () => {
   test('returns null when no entity is provided', () => {
     expect(getEntityFilterName(ApplicationRoute.AssetsToolsets, undefined)).toBeNull();
     expect(getEntityFilterName(ApplicationRoute.Toolsets, undefined)).toBeNull();
+  });
+
+  test('returns the bare model name for a platform model asset, ignoring its path', () => {
+    const entity = { name: 'gpt-4', path: 'gpt-4' } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.PlatformModels, entity)).toEqual('gpt-4');
   });
 });
 
