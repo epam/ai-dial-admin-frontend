@@ -2,7 +2,13 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getTable, getTableAccess, updateTableSchema } from '@/src/app/[lang]/tables/actions';
+import {
+  defineTableSchema,
+  getTable,
+  getTableAccess,
+  updateTable,
+  updateTableSchema,
+} from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
 import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -642,6 +648,34 @@ describe('TableDetailView lifecycle status', () => {
     );
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  // The column form presents no description or tag-order field, so a metadata PUT from it could never
+  // change anything — and since a failed PUT suppresses the schema POST, sending one would only add a new
+  // way for this path to fail. The JSON editor's two-request save is covered in TableDraftJsonEditor.spec.
+  test('saving from the column form sends the schema request and no metadata request', async () => {
+    vi.mocked(defineTableSchema).mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({
+          status: TableStatus.Pending,
+          ordering_key: ['event_id'],
+          columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
+        })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(defineTableSchema).toHaveBeenCalledWith(
+      'dial_usage_log',
+      expect.objectContaining({ ordering_key: ['event_id'] }),
+    );
+    expect(updateTable).not.toHaveBeenCalled();
   });
 });
 
