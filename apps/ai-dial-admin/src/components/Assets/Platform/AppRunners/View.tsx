@@ -21,12 +21,12 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialApplicationResource, DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
+import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -216,12 +216,10 @@ const AppRunnerAssetView: FC<Props> = ({
               onClose={onCloseCreateAssetAppModal}
               onCreate={onCreate}
               context={useAppsFolder}
-              initialValues={
-                {
-                  application_type_schema_id: originalRunner.$id,
-                  applicationProperties,
-                } as unknown as AssetWithVersion
-              }
+              initialValues={{
+                source: originalRunner.$id ? createSchemaSource(originalRunner.$id) : undefined,
+                applicationProperties,
+              }}
             />,
             document.body,
           )}
