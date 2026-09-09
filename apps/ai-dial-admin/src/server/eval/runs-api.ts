@@ -10,6 +10,7 @@ import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 export const RUNS_URL = `${API}/test-suite-runs`;
 export const RUN_URL = (id: string) => `${RUNS_URL}/${id}`;
 export const RUN_COSTS_URL = (id: string) => `${RUN_URL(id)}/costs`;
+export const RUN_CANCEL_URL = (id: string) => `${RUN_URL(id)}/cancel`;
 export const RUN_RESULTS_URL = `${API}/analytics/test-case-results`;
 export class RunsApi extends BaseApi {
   getRuns(
@@ -38,6 +39,10 @@ export class RunsApi extends BaseApi {
 
   removeRun(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(RUN_URL(id), token);
+  }
+
+  cancelRun(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(RUN_CANCEL_URL(id), {}, token);
   }
 
   getRunResults(token: Token, filters: FilterDto[]): Promise<{ content: ExtractionResult[] } | null> {

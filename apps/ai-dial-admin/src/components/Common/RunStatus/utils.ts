@@ -9,6 +9,8 @@ export const getStatusLabel = (status: RunStatus, t: (key: string) => string) =>
       return t(RunsI18nKey.Running);
     case RunStatus.FAILED:
       return t(RunsI18nKey.Failed);
+    case RunStatus.CANCELLED:
+      return t(RunsI18nKey.Cancelled);
     default:
       return '';
   }
