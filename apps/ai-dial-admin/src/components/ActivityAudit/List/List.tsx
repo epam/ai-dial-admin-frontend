@@ -69,6 +69,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { getTimeFilterOptions } from '@/src/utils/time-filter/since-creation-option';
 import {
   ActivityAuditResourceType,
   ActivityAuditType,
@@ -105,9 +106,18 @@ const ActivityAuditList: FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  // The one option list for this surface: the shared presets, plus a "Since Creation" row anchored to
+  // the entity in scope when it carries a usable timestamp. Every consumer of a period id in this file
+  // resolves against this same list — the hook, both `TimeFilter` mounts and the datasource — because
+  // the anchored id resolves nowhere else.
+  const timeFilterOptions = useMemo(
+    () => getTimeFilterOptions(entity?.createdAt, t(TelemetryI18nKey.SinceCreation)),
+    [entity, t],
+  );
   const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
     defaultTimeFilter,
     onTimeFilterChange,
+    timePeriodOptions: timeFilterOptions,
   });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
   const [rollbackBlockReason, setRollbackBlockReason] = useState<RollbackI18nKey | null>(null);
@@ -199,9 +209,11 @@ const ActivityAuditList: FC<Props> = ({
           resolvedActivitiesRef.current = {};
         }
 
+        // Resolved per request, not per memo: a preset's window — and an anchored option's end date —
+        // is relative to "now", and `onRefresh` re-runs this closure without recreating the memo.
         const actualTimeRange = isCustom
           ? { startDate: getStartOfDay(timeRange.startDate), endDate: getEndOfDay(timeRange.endDate) }
-          : getTimeRangeById(timePeriod || '');
+          : getTimeRangeById(timePeriod || '', timeFilterOptions);
         gridApi?.setGridOption('loading', true);
         const sorts = getRequestSorts(params.sortModel);
         const filters = [
@@ -335,6 +347,7 @@ const ActivityAuditList: FC<Props> = ({
       isCustom,
       timePeriod,
       timeRange,
+      timeFilterOptions,
       gridApi,
       entity,
       entityType,
@@ -556,6 +569,7 @@ const ActivityAuditList: FC<Props> = ({
               onTimePeriodChange={handleTimePeriodChange}
               timeRange={timeRange}
               onTimeRangeChange={handleTimeRangeChange}
+              timePeriodOptions={timeFilterOptions}
             />
           )}
           <div className="flex gap-4">
@@ -583,6 +597,7 @@ const ActivityAuditList: FC<Props> = ({
                 onTimePeriodChange={handleTimePeriodChange}
                 timeRange={timeRange}
                 onTimeRangeChange={handleTimeRangeChange}
+                timePeriodOptions={timeFilterOptions}
               />
               <ResetFiltersButton gridApi={gridApi} />
             </div>

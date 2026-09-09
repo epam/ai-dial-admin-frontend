@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode, useEffect } from 'react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   ColDef,
@@ -26,9 +26,11 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
 
+// Mutable so tests can select the anchored `Since Creation` id without the real hook resolving it.
+let timePeriodMock = 'last_7_days';
 vi.mock('@/src/hooks/use-time-filter', () => ({
   useTimeFilter: () => ({
-    timePeriod: 'last_7_days',
+    timePeriod: timePeriodMock,
     timeRange: { startDate: new Date(0), endDate: new Date(0) },
     isCustom: false,
     onTimePeriodChange: vi.fn(),
@@ -36,11 +38,15 @@ vi.mock('@/src/hooks/use-time-filter', () => ({
   }),
 }));
 
+// Captures the whole props object (not just `onTimePeriodChange`) so a test can assert the option
+// list `List.tsx` builds and passes down, while keeping the `change-period` button other tests click.
+const timeFilterPropsMock = vi.fn();
 vi.mock('@/src/components/Common/TimeFilter/TimeFilter', () => ({
   __esModule: true,
-  default: ({ onTimePeriodChange }: { onTimePeriodChange: (period: string) => void }) => (
-    <button onClick={() => onTimePeriodChange('last_24_hours')}>change-period</button>
-  ),
+  default: (props: { onTimePeriodChange: (period: string) => void }) => {
+    timeFilterPropsMock(props);
+    return <button onClick={() => props.onTimePeriodChange('last_24_hours')}>change-period</button>;
+  },
 }));
 
 vi.mock('@/src/components/ListView/Header/ResetFiltersButton', () => ({
@@ -128,6 +134,11 @@ import {
   RollbackI18nKey,
   TelemetryI18nKey,
 } from '@/src/constants/i18n';
+import {
+  SINCE_CREATION_PERIOD_ID,
+  TimeFilterOption,
+  timePeriodOptionsConfig,
+} from '@/src/constants/global-time-filter';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
@@ -201,9 +212,11 @@ beforeEach(() => {
   // preselect block, so a value left behind by one test would reach the next one.
   sessionStorage.clear();
   isReadOnlyAdminMock = false;
+  timePeriodMock = 'last_7_days';
   featureFlagsMock.analyticsEnabled = false;
   showNotificationMock.mockClear();
   listViewPropsMock.mockClear();
+  timeFilterPropsMock.mockClear();
   gridApiMock.setGridOption.mockClear();
   gridApiMock.setFilterModel.mockClear();
   getActivitiesMock.mockClear().mockResolvedValue(emptyPage);
@@ -854,5 +867,67 @@ describe('ActivityAuditList :: Config entity audit tab', () => {
       ]),
     );
     expect(getAnalyticsActivitiesMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('ActivityAuditList :: Since Creation option', () => {
+  const entityWithCreatedAt = { name: 'gpt-4', createdAt: '2026-01-01T00:00:00.000Z' } as BaseEntity;
+  const entityWithoutCreatedAt = { name: 'gpt-4' } as BaseEntity;
+
+  const lastTimeFilterOptions = (): TimeFilterOption[] =>
+    (timeFilterPropsMock.mock.calls.at(-1)?.[0] as { timePeriodOptions: TimeFilterOption[] }).timePeriodOptions;
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('lists Since Creation after every sliding preset when the entity carries a usable createdAt', () => {
+    render(<ActivityAuditList entity={entityWithCreatedAt} entityType={ActivityAuditResourceType.MODEL} />);
+
+    const options = lastTimeFilterOptions();
+    expect(options.slice(0, -1)).toEqual(timePeriodOptionsConfig);
+    expect(options.at(-1)).toMatchObject({
+      value: SINCE_CREATION_PERIOD_ID,
+      label: TelemetryI18nKey.SinceCreation,
+    });
+  });
+
+  test('omits Since Creation when the entity has no usable createdAt', () => {
+    render(<ActivityAuditList entity={entityWithoutCreatedAt} entityType={ActivityAuditResourceType.MODEL} />);
+
+    expect(lastTimeFilterOptions()).toEqual(timePeriodOptionsConfig);
+  });
+
+  test('omits Since Creation on the global activity-audit list with no entity in scope', () => {
+    render(<ActivityAuditList />);
+
+    expect(lastTimeFilterOptions()).toEqual(timePeriodOptionsConfig);
+  });
+
+  test('requests activity from the creation timestamp to the current request time when Since Creation is selected', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-05T10:00:00.000Z'));
+    timePeriodMock = SINCE_CREATION_PERIOD_ID;
+
+    render(<ActivityAuditList entity={entityWithCreatedAt} entityType={ActivityAuditResourceType.MODEL} />);
+    await requestRows();
+
+    expect(getActivitiesMock).toHaveBeenCalledWith(
+      PAGE_SIZE,
+      0,
+      [],
+      expect.arrayContaining([
+        {
+          column: 'epochTimestampMs',
+          operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
+          value: new Date('2026-01-01T00:00:00.000Z').getTime().toString(),
+        },
+        {
+          column: 'epochTimestampMs',
+          operator: FilterOperatorDto.LESS_THAN_OR_EQUAL,
+          value: new Date('2026-03-05T10:00:00.000Z').getTime().toString(),
+        },
+      ]),
+    );
   });
 });
