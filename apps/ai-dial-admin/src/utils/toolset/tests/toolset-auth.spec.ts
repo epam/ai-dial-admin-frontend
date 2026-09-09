@@ -50,6 +50,23 @@ describe('toolset-auth utils', () => {
     });
   });
 
+  // Regression (Issue #4447): Core's `DeploymentService.findDeployment` resolves a platform-bucket
+  // toolset by bare name via the merged config store — the sign-in/sign-out `url` must be the bare
+  // name alone, with neither the `toolsets/` prefix nor the `platform/` bucket segment.
+  test('getToolsetBasicBody strips the platform bucket segment and prefix for a platform-bucket toolset', () => {
+    const toolset = {
+      name: 'toolset1',
+      path: 'platform/toolset1',
+      authSettings: { authenticationType: ToolsetAuthType.API_KEY },
+    } as any;
+    const result = getToolsetBasicBody(toolset, ToolsetAuthCredentialLevel.USER);
+    expect(result).toMatchObject({
+      url: 'toolset1',
+      credentialsLevel: ToolsetAuthCredentialLevel.USER,
+      authenticationType: ToolsetAuthType.API_KEY,
+    });
+  });
+
   test('encodeToolsetRedirectState encodes state to base64url', () => {
     const state = { foo: 'bar', baz: 'qux' };
     const encoded = encodeToolsetRedirectState(state);
