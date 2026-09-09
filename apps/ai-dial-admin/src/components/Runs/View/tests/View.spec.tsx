@@ -1,8 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { getRun } from '@/src/app/[lang]/runs/actions';
 import { RunStatus } from '@/src/models/evaluation/run';
 import RunView from '../View';
+
+vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  cancelRun: vi.fn(),
+  getRun: vi.fn(),
+}));
 
 const openCompareRunMock = vi.fn();
 
@@ -47,6 +53,25 @@ vi.mock('../ExtractionResult', () => ({
   default: ({ run }: any) => (
     <div role="region" aria-label="extraction-result-tab">
       <div>run-id:{run?.id}</div>
+    </div>
+  ),
+}));
+
+vi.mock('@/src/components/Runs/Cancel/RunCancelModal', () => ({
+  default: ({ onClose, onSuccess }: any) => (
+    <div role="dialog" aria-label="cancel-run-modal">
+      <button type="button" onClick={onClose}>
+        Close Cancel Modal
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          onSuccess?.();
+        }}
+      >
+        Confirm Cancel
+      </button>
     </div>
   ),
 }));
@@ -124,5 +149,48 @@ describe('Runs View :: View', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ActionMenuOperation.Compare' }));
 
     expect(openCompareRunMock).toHaveBeenCalledWith(run);
+  });
+
+  test('shows the Stop action for a running run', () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+    render(<RunView run={{ id: 'run-8', status: RunStatus.RUNNING } as any} onRemove={onRemove} />);
+
+    expect(screen.getByRole('button', { name: 'Buttons.Stop' })).toBeInTheDocument();
+  });
+
+  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])(
+    'hides the Stop action for a %s run',
+    (status) => {
+      const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+      render(<RunView run={{ id: 'run-9', status } as any} onRemove={onRemove} />);
+
+      expect(screen.queryByRole('button', { name: 'Buttons.Stop' })).not.toBeInTheDocument();
+    },
+  );
+
+  test('opens the confirmation modal instead of cancelling immediately when Stop is clicked', () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+    render(<RunView run={{ id: 'run-10', status: RunStatus.RUNNING } as any} onRemove={onRemove} />);
+
+    expect(screen.queryByRole('dialog', { name: 'cancel-run-modal' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons.Stop' }));
+
+    expect(screen.getByRole('dialog', { name: 'cancel-run-modal' })).toBeInTheDocument();
+  });
+
+  test('reflects the cancelled status locally after a successful cancel, without refetching the run', async () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+    render(<RunView run={{ id: 'run-11', status: RunStatus.RUNNING } as any} onRemove={onRemove} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buttons.Stop' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Buttons.Stop' })).not.toBeInTheDocument());
+    expect(getRun).not.toHaveBeenCalled();
   });
 });

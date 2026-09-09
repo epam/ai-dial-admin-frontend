@@ -28,6 +28,11 @@ export async function removeRun(id: string) {
   return runsApi.removeRun(id, token);
 }
 
+export async function cancelRun(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return runsApi.cancelRun(id, token);
+}
+
 export async function getRunResults(filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRunResults(token, filters);
