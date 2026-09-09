@@ -31,6 +31,9 @@ context: |
   - Dev server: `npm start` (localhost:4200)
   - Build: `npm run build`
   - Lint: `npm run lint` (also pre-commit via husky/lint-staged)
+  - Typecheck: `npm run typecheck` (also pre-commit via husky, and a blocking CI job) — app source only
+  - Typecheck (spec files): `npm run typecheck:specs` — reported, never blocking, until its ~720 errors
+    are cleared; pre-commit prints the count, CI puts the worst files in the job summary
   - Format: `npm run format` (check) / `npm run format:write` (apply)
   - Tests: `npm run test` (also pre-push via husky)
   - Single test file: `npx vitest run src/path/to/file.spec.ts` (run from apps/ai-dial-admin/)

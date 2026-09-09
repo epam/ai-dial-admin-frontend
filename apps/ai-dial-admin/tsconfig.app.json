@@ -15,17 +15,19 @@
         "name": "next"
       }
     ],
-    "types": ["node", "@testing-library/jest-dom"]
+    "types": ["node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
-    "../../apps/ai-dial-admin/.next/types/**/*.ts",
-    "../../dist/apps/ai-dial-admin/.next/types/**/*.ts",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": ["node_modules", "**.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  // Source only: the generated `.next/types` route validators are deliberately absent, because they
+  // are build output that goes stale the moment a route moves — `next build` checks those itself
+  // through tsconfig.json. Spec files belong to tsconfig.spec.json.
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "next-env.d.ts"],
+  "exclude": [
+    "node_modules",
+    "**.config.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "test-setup.tsx"
+  ]
 }
