@@ -882,6 +882,232 @@ this change will do; the risk is bounded because D13 is fail-open — if the par
 resolved to a `Table` `Delete`, one row would be missing from one tab, and the falsifier is a
 `Pipeline` `Delete` row absent from a tab whose pipeline's target table was just dropped.
 
+### D15 — The no-snapshot empty state lives in `EntityDiff`, keyed on the sections it already computes (follow-up, issue #4485)
+
+Files this decision governs, and no others:
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`,
+`apps/ai-dial-admin/src/constants/i18n.ts`, `apps/ai-dial-admin/src/locales/en.ts`, and the new spec
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx`.
+Three files the task brief named are deliberately **not** in scope, each for a stated reason:
+`AuditView.tsx` (see the placement decision below), `View/utils/generate-diffs.ts` and
+`View/utils/analytics-diffs.ts` (their empty-bucket output is the *input* to this decision, not the
+thing being changed), and `src/utils/audit/get-activity-audit-detail-data.ts` (the resolver's
+`settled()` already does the right thing — it logs and returns absent — and widening it is the
+rejected alternative below). Spec delta:
+`specs/activity-audit-diff-empty-state/spec.md`.
+
+#### D15.1 — Where the delta lives: a new `activity-audit-diff-empty-state` capability
+
+The requirement is resource-type agnostic and lives on a component every audit detail page renders
+through, so it goes into a new capability rather than into any existing one. D1's own test decides
+this: a capability's Purpose paragraph says what it is about, and a requirement that contradicts that
+paragraph does not belong in it.
+
+*Alternatives rejected:*
+
+- **`activity-audit-analytics-view`** — this change's own new capability, and the tempting home
+  because analytics is the only reproduction. Rejected: its Purpose is the analytics view of the
+  audit page. A reader asking why a *container* audit diff shows an empty state would never look
+  there, and at archive time a behaviour of the shared diff engine would be filed under analytics —
+  precisely the mistake D1 rejected when it declined to fold analytics into
+  `activity-audit-deployments-view`.
+- **`activity-audit-deployments-detail`** — the other candidate, and the one with the most diff
+  requirements in it. Rejected for the mirror-image reason: its Purpose scopes it to
+  deployment-manager activities (image, firewall, container sections), and 24 of its 25 requirements
+  name a deployment-manager resource type.
+- **Fold it into the analytics view's existing *Analytics snapshots are resolved per resource type*
+  as a MODIFIED block.** Rejected twice over: it is the wrong capability (above), and that
+  requirement's text does not become false — it asks for "no error page and no notification" for a
+  missing snapshot, and an empty state is neither. Per D1's rule, only a requirement whose text
+  literally becomes false is modified. The new capability's Purpose carries the cross-reference
+  instead, so a reader of either one finds the other.
+
+#### D15.2 — Q2: the empty state lives in `EntityDiff`, not in `AuditView`
+
+`EntityDiff` computes `sections = createSectionFromDiffs(currentEntity, compareEntity)` at line 22
+and renders `Object.entries(sections).map(...)` at line 33. So `Object.keys(sections).length === 0` is
+not an approximation of "the body renders nothing" — it *is* that condition, in the same component,
+one line above the render. When it holds, `EntityDiff` renders the empty state in place of the whole
+`relative flex-1` block (the scroll container **and** `DiffMiniMap`, which has nothing to map) and
+suppresses `DiffLegend`; when it does not hold, the render path is unchanged.
+
+The legend fix is the same line of reasoning and therefore the same item, not a second ticket. Today
+line 47 gates the legend on `Object.keys(currentEntity).length && Object.keys(compareEntity).length`
+— the raw diff buckets, which always carry the `properties` key even when its array is empty, so the
+gate is true for the exact case the body is blank. Reading `sections` instead makes the two checks
+agree by construction rather than by coincidence, which is the whole defect: two answers to one
+question from two disagreeing sources.
+
+*Alternatives rejected:*
+
+- **Compute the condition in `AuditView` from the raw `activityRevision` / `previousRevision` /
+  `entity` values and render the empty state instead of `EntityDiff`.** Rejected on three counts.
+  (1) `both raw values absent` is strictly *narrower* than `the body renders nothing`: two present
+  snapshots whose every key is suppressed (`CONTAINER_HIDDEN_KEYS`, `IMAGE_HIDDEN_KEYS`) also produce
+  no section, so the blank page would stay reachable. (2) To be exact, `AuditView` would have to call
+  `createSectionFromDiffs` itself — computing the sections twice, in a component that has no other
+  reason to know the diff engine's shape. (3) It fixes nothing for the legend, which lives inside
+  `EntityDiff`; the condition would have to be threaded down as a prop, leaving two predicates for
+  one question, which is the defect. `EntityDiff` has exactly one caller today (`AuditView.tsx:284`,
+  confirmed by grep), so nothing is lost by deciding it one level down, and a second caller inherits
+  the fix.
+- **Make `createSectionFromDiffs` always emit a `properties` section so the body renders an empty
+  grid.** Rejected: not additive. It changes what every resource type's diff renders, an empty AG
+  Grid with headers is not an empty state, and it would alter `DiffSection`'s `Changes only`
+  behaviour for surfaces already browser-verified.
+- **Lift `filterNotEmptySections` into `EntityDiff` so the empty state also covers the case where
+  every section is filtered away.** Rejected, and this is the sharpest of the three: `DiffSection`
+  returns `null` when `filterNotEmptySections` yields nothing (`DiffSection.tsx:63`), so
+  `Changes only` on an all-unchanged comparison is a *second* blank-body path. Catching it would
+  duplicate per-section filtering one level up, and — decisively — the message would then be a lie:
+  the snapshot is present, the viewer chose a filter, and telling them the resource has no recorded
+  history would be worse than the blank body. The spec states that boundary and pins it with a
+  scenario, so a later implementer cannot quietly widen the predicate to "no visible rows".
+
+#### D15.3 — Q1: one message, because the two cases are not distinguishable without changing the API client
+
+Traced, not assumed. `base-api.ts:172-186` logs and returns `null` for every non-2xx except `403`,
+which returns `undefined`; `getResponse` (`:255-262`) falls back to `res.text()` for a body that is
+not JSON, so an empty `200` arrives as `''`; and `settled()`
+(`get-activity-audit-detail-data.ts:163-170`) maps a thrown error to `null`. By the time
+`ActivityAuditDetailData` types both revision fields `| null`, a `404 revision_not_found`, a `500`, a
+dropped connection and an empty body are one value. The second case BA named — *this revision is
+empty* — additionally has no producer: it would need a snapshot endpoint to answer `2xx` with a JSON
+object carrying no leaves, and every documented snapshot carries at least its own name.
+
+*Superseded in part by D15.5 — the description string below was shipped, seen in the browser and then
+removed on the owner's instruction. The reasoning in this sub-section is unaffected and still holds;
+only the number of strings changed, from one pair to one title.*
+
+So: **one** title/description pair, `ActivityAudit.SnapshotUnavailableTitle` and
+`ActivityAudit.SnapshotUnavailableDescription`, in the app's existing
+`*EmptyStateTitle` / `*EmptyStateDescription` register (`FileManager.*`), rendered through
+`DialNoDataContent` from ui-kit — the component this app already uses for every empty state
+(`ConversationsTraceView`, `ApplicationAppRoutes`, `Tools`, and eleven more call sites), not new
+markup. Copy: *No snapshot for this revision* / *This resource's recorded history begins after this
+revision, so there is no state to compare.* BA's draft, with the consequence clause added; non-blaming
+and free of failure vocabulary, per the owner.
+
+*Alternatives rejected:*
+
+- **Widen `base-api.ts` (or the resolver) to carry the HTTP status so a `404` can be worded
+  differently from a failure.** Rejected, and named as rejected rather than passed up as a decision
+  because the owner ruled it out in the brief: a status code in the return shape of every API method
+  is a large change to buy a second sentence. If a later requirement genuinely needs the distinction,
+  the cheap version is a discriminated result inside `getActivityAuditDetailData` alone, never in the
+  shared client.
+- **Reuse `Basic.NoData` or `Entities.NoActivityAudit`.** Rejected: `Basic.NoData` says nothing about
+  why, which the non-blaming framing needs; `Entities.NoActivityAudit` (`'No Activities'`) is a
+  different state — the activity *list* is empty — and reusing it would conflate "nothing happened"
+  with "something happened and its snapshot is not recorded". Iteration 1 deliberately left that key
+  unused where AG Grid shows its own default, and this follow-up does not revisit it either.
+- **Two strings, with the second one never reachable.** Rejected: an unreachable branch and a message
+  nobody can ever see, both of which have to be maintained and translated. One honest string beats
+  two that guess.
+
+#### D15.4 — The additive-scope guarantee, and what would falsify it
+
+The guarantee is structural, not a matter of care. `EntityDiff`'s body is
+`Object.entries(sections).map(...)` and nothing else; the new branch is taken on
+`Object.keys(sections).length === 0`. So the empty state can appear **only** where the body renders
+zero children, and the previous render path is entered unchanged for every input that produces at
+least one section. No shipped diff surface that renders content is touched — for containers, images,
+roles, the firewall and analytics tables alike, a non-empty `sections` map takes the same branch it
+takes today.
+
+What would falsify it, in the order it would show up:
+
+1. **A resource type whose diff renders content outside the `sections` walk.** None does today —
+   `EntityDiff` renders the scroll container, `DiffMiniMap` and `DiffLegend`, and nothing reads the
+   raw buckets except the legend gate this change is fixing. It would show up as a diff that used to
+   render something and now shows the empty state; the regression check is the existing suites under
+   `View/DiffReport/tests/` and `View/utils/tests/` staying green.
+2. **A section emitted with empty `current` and `compare` arrays**, which would make `sections`
+   non-empty while `DiffSection` returns `null` — a blank body with no empty state. Not reachable
+   today: `createSectionFromDiffs:672` only emits a section when one side has length, and
+   `setAnalyticsColumnDiffs` / `setObjectsArrayDiff` are subject to the same check. It would show up
+   as a still-blank page for some other resource type; the fix would then be in
+   `createSectionFromDiffs`, not here.
+3. **The `Changes only` path being mistaken for this one** (D15.2's third rejected alternative). The
+   scenario *A filter that hides every row does not produce the empty state* exists to fail loudly if
+   an implementer keys the predicate on visible rows instead.
+
+*Accepted, recorded so it is a decision and not an oversight:* the same empty state appears if a
+snapshot request fails with a `403` or a `500`, and its description then names a cause that is not
+the real one. Bounded three ways — the real status is already in the server log
+(`base-api.ts:174-176` logs status, URL and traceparent for exactly this reason), the copy asserts
+nothing about the viewer or about a failure, and the alternative (a status-carrying API client) is
+rejected above. The falsifier is a `403`-producing install where the diff body reports missing
+history for a resource whose history exists; it would surface as a support question, not as a broken
+page.
+
+*Two smaller consequences, stated so nobody re-decides them mid-implementation:* the JSON toggle is
+untouched — `AuditView` renders `JsonView` instead of `EntityDiff` in that mode, and two `{}` bodies
+side by side is today's behaviour and out of scope. And no `aria-live` region is added beyond the
+status role on the empty state itself: `.claude/rules/a11y.md` asks for a live region where a state
+change has *no* persistent visible text confirmation, and this state is persistent visible text; the
+status role is there so the `Comparison` switch into it is announced and so the state is addressable
+by role, not to narrate it twice.
+
+#### D15.5 — The owner cut the description; the title now carries the whole message
+
+Files this decision governs, and no others:
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`,
+`apps/ai-dial-admin/src/constants/i18n.ts`, `apps/ai-dial-admin/src/locales/en.ts`,
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx`.
+
+**What was reversed.** D15.3 specified a title/description pair. The description —
+`ActivityAudit.SnapshotUnavailableDescription`, *This resource's recorded history begins after this
+revision, so there is no state to compare.* — was implemented, rendered as `DialNoDataContent`'s
+`description` prop and verified in the browser by task 10.2, both of whose scenarios passed. **The
+owner then removed the sentence**, verbatim instruction: *«`This resource's recorded history begins
+after this revision, so there is no state to compare.` — убери»*. The enum member, the `en.ts` string
+and the `description` prop all go; `DialNoDataContentProps.description` is optional, so the prop is
+absent rather than empty. `ActivityAudit.SnapshotUnavailableTitle` → *No snapshot for this revision*
+is unchanged and is now the entire copy of the empty state.
+
+This is a deliberate change to something already working, not a defect. It is folded into task 10.1
+rather than added as a 10.4: 10.1 is the item that owns these keys and is not yet ticked, and an item
+that undoes an unticked item's own work would put two contradictory instructions in one list.
+
+**What it does not change.** D15.3's reasoning — that a `404`, a `500`, a dropped connection and a
+non-JSON body arrive at the render layer as one indistinguishable absent value, so the copy must not
+claim to tell them apart — is untouched and still correct. It is the reason the answer is *fewer*
+strings, never more. Nor does the reversal revive the rejected alternative behind it: widening
+`base-api.ts` to carry an HTTP status remains rejected, on the owner's own ruling in the brief, and
+`base-api.ts` stays untouched by this change. D15.2 (placement in `EntityDiff`, keyed on `sections`),
+D15.4 (the additive-scope guarantee) and the `role="status"` decision are all unaffected — the branch,
+its predicate and its accessibility treatment are the same; only what is inside it is shorter. Nothing
+in D15.1 changes: the delta stays in `activity-audit-diff-empty-state`, and the analytics view's
+*Analytics snapshots are resolved per resource type* is still not modified.
+
+**Does the title alone still satisfy the requirement's own constraint?** The constraint, from BA's
+Answer 3, is two-part: the copy must not conflate *this resource has no recorded revision* with *this
+revision is empty*, and it must not read as a failure. Judgment: **yes, and no better title is
+needed.**
+
+- *Not conflated.* D15.3 established that the second condition has **no producer** — no code path
+  yields a fetched-but-empty snapshot as distinct from `null`. There is one reachable state, and *No
+  snapshot for this revision* names it precisely: it asserts that the snapshot artefact does not
+  exist, which is not what a copy for an empty revision would say (that would be *nothing changed*
+  vocabulary — `Compare.*`'s register, or `Basic.NoData`). The distinction was always carried by the
+  title; the description carried the *why*, and the *why* is what the owner cut.
+- *Not a failure.* No error vocabulary, no "unable", "failed" or "went wrong", no attribution to the
+  viewer. It is a statement of absence in the same register as the app's other
+  `*EmptyStateTitle` strings, rendered through the same `DialNoDataContent` every other empty state
+  uses — so it reads as an empty state, not as a broken page, structurally and not only lexically.
+
+**What is genuinely lost, and the falsifier.** The viewer now learns *that* there is no snapshot but
+not *that this is expected* — that the audit trail simply starts later than the resource does. The
+falsifier is a reader who cannot tell an unavailable snapshot from an empty one, or who reads the
+absence as breakage and files a bug against the audit page. Where it would show up first: a support
+question of the form "why is this revision blank", not a failing test — no test can detect a message
+that is true but unhelpful. Two things bound it: the `Comparison` control is still rendered above the
+empty state, so the state is visibly attached to a revision the viewer chose, and D15.4's accepted
+`403`/`500` consequence is *reduced* by this reversal rather than worsened — the description was the
+part that named a cause which, for a genuine failure, would have been the wrong one. A bare title
+asserts only absence, which is true in every case that reaches this branch.
+
 ## Risks / Trade-offs
 
 - **D3 contradicts one sentence of the proposal.** → It is called out here and in the return, so EM

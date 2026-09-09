@@ -112,6 +112,60 @@ spec, "Every changed entity is its own activity"), never a compound one:
 Rollback is absent for the same reason as Tables: the analytics backend exposes no mutating audit
 endpoint for any resource type it tracks.
 
+## Follow-up: No-snapshot empty state (issue #4485, found verifying #4475)
+
+Diagnosed against the live local analytics backend while verifying #4475: toggling `enabled` on a
+pre-existing pipeline (`conversations_rollup`, whose history predates the analytics audit trail) opens
+a detail page whose diff body is completely blank — the header and the `Comparison`/`View` selectors
+and the Create/Update/Delete legend all render; nothing renders between them.
+`GET /v1/pipelines/conversations_rollup/revision/{61,60}` both answer `404 revision_not_found`;
+`base-api.ts:172-186` turns that into `null`, `buildAnalyticsDiff` (`analytics-diffs.ts:199-248`)
+returns `{ properties: [] }` for a null side, and `createSectionFromDiffs` (`generate-diffs.ts:641-678`)
+never turns an empty array into a section — so `EntityDiff` (`:33`) renders nothing between the header
+and the legend, and its own legend gate (`:47`) counts diff-bucket **keys** rather than **rows**, so
+the legend renders under nothing.
+
+**Spec gap, not a defect.** *Analytics snapshots are resolved per resource type*
+(`specs/activity-audit-analytics-view/spec.md:405-435`) already anticipates the backend answer by
+name — "a resource whose creation predates the audit trail" — and asks only for "an empty **side** of
+the comparison"; there is no scenario for both sides absent at once.
+
+**The owner's decision:** an explicit empty state — stating that the snapshot is unavailable because
+the resource's recorded history begins after this point — with the legend hidden whenever there is
+nothing left to label. Wording distinguishes *this resource has no recorded revision* from *this
+revision is empty*; no existing i18n key says either (checked `ActivityAudit.*`, `Compare.*`,
+`Basic.NoData`), so a new pair is added following the app's existing
+`*EmptyStateTitle`/`*EmptyStateDescription` naming (`FileManager.*`).
+
+**Scope: not analytics-specific.** `generateCurrentResource` — the generic, non-analytics diff path
+(`generate-diffs.ts:169-225`) — has the identical structural gap: when both snapshots are `null`,
+neither of its branches runs and it returns the same empty `{ properties: [] }`. The deployment-manager
+backend's own snapshot contract documents the identical 404-on-missing-revision behavior for its own
+entities (`ai-dial-admin-deployment-manager-backend/specs/014-auditing/contracts/revisions-api.md`:
+`GET /deployments/{id}/revision/{revision}` → "404 Not Found: If the deployment did not exist at the
+given revision"), so a container or image whose creation predates that service's own audit-trail
+rollout reaches the exact same both-null path through this same shared code. The admin (Core) backend's
+live behavior could not be verified locally, but nothing in the frontend distinguishes it either. The
+empty state is therefore written for **any** activity whose both revision passes come back empty, in
+`AuditView`/`EntityDiff` — not gated on `isAnalyticsResource` — even though the only reproduction
+available today is an analytics one.
+
+**What stays in, what stays out.** The legend's gate is fixed in the same change — same file, same
+root cause, and it should read the rendered `sections` map (already computed in `EntityDiff`) rather
+than the raw diff-bucket keys — not filed as a separate defect. Distinguishing "no recorded revision"
+from "revision recorded, genuinely empty" requires reading the raw `activityRevision` /
+`previousRevision` / `entity` values before they reach `generateCurrentResource` (both collapse to the
+same empty bucket downstream); which layer performs that check is SA's placement decision. Filed as
+issue #4485.
+
+A second, narrower defect QA raised while verifying this — column attribute rows
+(`enum_values`/`element_type`/`tag`/`display_name`/`description`) that are empty on both sides of a
+comparison are silently dropped, because the existing `restoreEmptyValueRows` fix
+(`analytics-diffs.ts:222`) is applied to `result.properties` and never to a column's own bucket
+(`:228-242`) — is out of scope here and filed separately as issue #4486, not worked in this change:
+fixing it would add rows to the table diff, a shipped surface already verified in the browser, with no
+scenario asking for it.
+
 ## Capabilities
 
 ### New Capabilities
@@ -135,6 +189,10 @@ spec, per `openspec/config.yaml`.
   carrying today's one frame, Audit carrying the Activities list — replacing the "one frame" framing
   in "The detail page is one frame with a transform section chosen by kind", and states the tab's
   gating condition (the feature flag only, no pipeline-status condition — see above).
+- `activity-audit-analytics-view` (follow-up): gains the no-snapshot empty state and the legend fix
+  described above. Whether the requirement's wording is scoped to analytics resource types or written
+  resource-type-agnostic (per the scope note above) is SA's call to make in the delta; this proposal
+  records the grounding either way.
 
 *(The precise requirement/scenario wording is the architect's, not this proposal's.)*
 
@@ -176,7 +234,7 @@ spec, per `openspec/config.yaml`.
   `TelemetryI18nKey.ActivityViewConfig` / `ActivityViewDeployments`), the Properties/Audit tab labels
   on the tables view (`TabsI18nKey.Properties` / `TabsI18nKey.Audit` already exist), and labels for
   the new resource types. The Pipelines follow-up reuses the same Properties/Audit tab labels; no new
-  keys.
+  keys. The no-snapshot follow-up adds a title/description pair for the empty state.
 - **Contexts**: none. `AppContext` already carries the flag; `NotificationContext` is untouched.
 - **Authorization**: none added. The analytics backend authorizes its activity feed at exactly the bar reading the
   catalog already requires, so anyone who can open a table's detail view can read its history.
@@ -210,10 +268,15 @@ spec, per `openspec/config.yaml`.
 - **No Dashboard / Traces / Conversations sub-tabs on the analytics Audit tab.** They report DIAL
   request telemetry keyed by a deployment name and have no meaning for a catalog table or a
   pipeline.
-- **No analytics-specific diff rendering.** A table snapshot goes through the generic diff engine.
-  The bespoke section shaping that `activity-audit-deployments-detail` defines for containers, images
-  and the global firewall is not replicated; if a table's `columns` array reads poorly as a generic
-  diff, that is a follow-up.
+- **No analytics-specific diff rendering beyond what is already scoped.** A table snapshot goes
+  through the generic diff engine. The bespoke section shaping that `activity-audit-deployments-detail`
+  defines for containers, images and the global firewall is not replicated. The no-snapshot empty
+  state (above) is deliberately the one exception written generically rather than analytics-only,
+  because the gap it closes is structural to the shared diff engine, not to an analytics-specific
+  section.
+- **No change to the empty-collection-drop fix already on this branch, nor to its per-column
+  analogue.** The no-snapshot empty state is orthogonal to whether a present snapshot's empty-valued
+  fields are retained; the per-column gap QA found is filed as its own issue (#4486), not worked here.
 - **No entity-namespaced audit detail route** (`/tables/{name}/{activityId}`, `/pipelines/{name}/{activityId}`).
   Rows open the existing global `/activity-audit/{activityId}` page. The deployment feature added
   namespaced routes in a separate change; the same split applies here.
@@ -223,3 +286,4 @@ spec, per `openspec/config.yaml`.
 - **No changes to the analytics backend.** Every endpoint this change calls already exists and is already specified.
 - **No change to what the audit list stores or how it pages.** Time filter, infinite row model,
   column-state persistence and parent/child aggregation are reused as they are.
+</content>

@@ -1029,6 +1029,7 @@ export enum ActivityAuditI18nKey {
   ActivityDetails = 'ActivityAudit.ActivityDetails',
   BeforeAfter = 'ActivityAudit.BeforeAfter',
   BeforeCurrent = 'ActivityAudit.BeforeCurrent',
+  SnapshotUnavailableTitle = 'ActivityAudit.SnapshotUnavailableTitle',
 }
 
 export enum RollbackI18nKey {

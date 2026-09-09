@@ -1069,6 +1069,7 @@ export default {
     ActivityDetails: 'Activity details',
     BeforeAfter: 'Before/After',
     BeforeCurrent: 'Before/Current state',
+    SnapshotUnavailableTitle: 'No snapshot for this revision',
   },
   Rollback: {
     State: 'Rollback state',

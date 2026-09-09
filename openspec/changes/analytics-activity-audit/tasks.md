@@ -630,3 +630,147 @@ Notes for EM before dispatch:
       in the reporter. Same caveats as 8.1: `tsc` is red repo-wide, `*.spec.tsx` files are
       eslint-ignored, so compare against `development` rather than expecting zero. Anything this turns
       up is a new dispatch to the role that owns the file, not an edit from this task.
+
+## 10. Follow-up: the no-snapshot empty state (issue #4485)
+
+Sections 1–8 shipped in PR #4456 and section 9 in PR #4480; nothing in either is reopened or
+renumbered. This is the third iteration of the **same** change — one branch, one pull request. Read
+**design.md D15** before starting, and only D15: its five sub-sections (D15.1 where the delta lives,
+D15.2 the placement, D15.3 the single message, D15.4 the additive-scope guarantee, D15.5 the owner's
+reversal that cut the description) name the files each governs in their first lines, so an item can
+find its part without reading the other fourteen decisions. The acceptance criteria are the four scenarios in
+`specs/activity-audit-diff-empty-state/spec.md`.
+
+Notes for EM before dispatch:
+
+- **The whole section is one source file plus i18n.** `EntityDiff.tsx` is 54 lines; the fix is a
+  branch on a value it already computes and a corrected legend gate. Three of the four files named in
+  the brief are deliberately **not** in scope, and D15's opening paragraph says why for each:
+  `AuditView.tsx` (the condition is exact one level down and duplicated one level up),
+  `View/utils/generate-diffs.ts` / `View/utils/analytics-diffs.ts` (their empty output is this
+  decision's input) and `src/utils/audit/get-activity-audit-detail-data.ts` (its `settled()` already
+  logs and returns absent; widening it is a rejected alternative). If an implementer reports that one
+  of them must change, that is a `BLOCKED`, not a quiet widening.
+- **`src/components/ActivityAudit/View/tests/AuditView.spec.tsx` needs no edit and must not get
+  one.** It mocks `EntityDiff` at line 9, so it is blind to this change by construction — which is
+  also the reason the new behaviour needs its own spec file rather than a case added there.
+- **The delta is in a new capability**, `specs/activity-audit-diff-empty-state/`, not in
+  `specs/activity-audit-analytics-view/`. The requirement is resource-type agnostic and the analytics
+  view spec's own *Analytics snapshots are resolved per resource type* is **not** modified — its text
+  stays true, since an empty state is neither an error page nor a notification (design.md D15.1).
+- **Correction to the caveat 8.1 and 9.6 both carry.** `tsc` is *no longer* red repo-wide:
+  `npx tsc -p tsconfig.app.json --noEmit` from `apps/ai-dial-admin/` exits 0 over ~1978 files, and
+  `npm run typecheck` is now a pre-commit step and a blocking CI job. A red app typecheck on this
+  section is therefore **yours** and blocks. `tsconfig.app.json` excludes both `*.spec.ts` and
+  `*.spec.tsx`, so the new spec file is typechecked only by `npm run typecheck:specs`, which is red
+  by design and does not block. Judge that one by error kind, never by count.
+- **Issue #4486 is out of scope and stays out.** Extending `restoreEmptyValueRows` to the per-column
+  bucket would add rows to the table diff — a shipped surface verified in the browser — with no
+  scenario asking for it. Nothing in this section touches `analytics-diffs.ts`.
+
+- [x] 10.1 In `src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`, render an explicit empty
+      state when the comparison produces no section, and fix the legend gate to consult the same
+      value (design.md D15.2). Three edits, all inside the 54-line component:
+
+      1. `const hasSections = Object.keys(sections).length > 0;` immediately after the existing
+         `createSectionFromDiffs` call at line 22 — the sections map is what the body renders, so this
+         is the render condition itself and not an approximation of it.
+      2. When `hasSections` is false, render `DialNoDataContent` from `@epam/ai-dial-ui-kit` in place
+         of the entire `relative flex-1 min-h-0 mb-4` block — the scroll container **and**
+         `DiffMiniMap`, which has nothing to map — inside a wrapper carrying `role="status"`, so the
+         switch into this state via the `Comparison` control is announced and the state is
+         addressable by role. Pass **`title` only**:
+         `ActivityAuditI18nKey.SnapshotUnavailableTitle`, through the existing `useI18n()`
+         (`EntityDiff` has no `t` today — add the hook). Do **not** pass `description` — the title is
+         the whole message, on the owner's instruction (design.md D15.5); `description` is optional
+         on `DialNoDataContentProps`, so it is simply absent, not empty-stringed. Keep the outer
+         `flex flex-col size-full min-h-0 mt-8 pt-8` container as it is; centre the empty state within
+         it with Tailwind tokens only, no hardcoded colour.
+      3. Replace the legend gate at line 47 —
+         `!!Object.keys(currentEntity)?.length && !!Object.keys(compareEntity)?.length` — with
+         `hasSections`. That gate is the reported half of the defect: the raw buckets always carry the
+         `properties` key even when its array is empty, so it is true exactly when the body is blank.
+         `currentEntity` / `compareEntity` stay as props and stay the input to
+         `createSectionFromDiffs`; nothing else about them changes.
+
+      Do **not** key the branch on `diffView`, on the raw props, or on whether any row is visible —
+      design.md D15.2's third rejected alternative says why, and scenario *A filter that hides every
+      row does not produce the empty state* fails if you do.
+
+      i18n, in the same item because it is one line and nothing else consumes it: add
+      `SnapshotUnavailableTitle = 'ActivityAudit.SnapshotUnavailableTitle'` to `ActivityAuditI18nKey`
+      in `src/constants/i18n.ts` (the enum ends with `BeforeCurrent`), and to the `ActivityAudit`
+      block in `src/locales/en.ts` (ends with `BeforeCurrent`) the string
+      `No snapshot for this revision` — verbatim, from design.md D15.3. `en.ts` is the only locale
+      file (there is no other file under `src/locales/` that holds strings). **Exactly one key.** No
+      other key is added, moved or reworded; in particular `Entities.NoActivityAudit` and
+      `Basic.NoData` are left exactly as they are.
+
+      **Note on the diff, so a reader is not confused by a key that appears and disappears.** An
+      earlier pass of this same item also added
+      `SnapshotUnavailableDescription = 'ActivityAudit.SnapshotUnavailableDescription'` with the
+      string `This resource's recorded history begins after this revision, so there is no state to
+      compare.`, rendered as `DialNoDataContent`'s `description`. The owner removed that sentence
+      after seeing it in the browser (design.md D15.5) — the title carries the whole message. This
+      item therefore ends with the title alone. If the second key, its `en.ts` string or its use in
+      `EntityDiff.tsx` is present in the working tree, remove all three as part of this item; it is
+      this item's own work being corrected, not a separate removal task, which is why there is no
+      10.4. The `EntityDiff.spec.tsx` cases below assert the title and assert that the description
+      key is **absent**, so a re-introduction fails a test rather than passing review.
+
+      Tests. Add `src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx` — a new
+      file; there is no `EntityDiff` spec today, which is how the legend gate shipped wrong. (If the
+      earlier pass of this item already created it, amend it in place rather than rewriting it: the
+      four empty-state cases each assert the description key today and must stop.) Stub
+      `DiffSection` (render its `name` prop as text, so "a section was rendered" is observable) and
+      `DiffMiniMap` (its observer scheduling is irrelevant here), and leave `DiffLegend` real, so the
+      legend is asserted through the `ButtonsI18nKey.Create` / `Update` / `Delete` keys the global
+      `t()` mock returns as-is. Cases: both sides `{ properties: [] }` — the reported shape — giving a
+      `role="status"` region carrying `SnapshotUnavailableTitle` and **not** containing
+      `ActivityAudit.SnapshotUnavailableDescription` (assert the absence, so the removed sentence
+      cannot come back unnoticed), no legend, no section stub and no minimap stub;
+      the same with `type` set to `ActivityAuditResourceType.TABLE` and again to a non-analytics type
+      such as `ActivityAuditResourceType.MODEL`, both behaving identically (the requirement is
+      resource-type agnostic); both sides `{}` behaving the same; one populated `properties` bucket on
+      both sides giving one section stub, a rendered legend and **no** `status` region; a populated
+      bucket on one side only behaving the same way (one section, legend rendered — unchanged from
+      today); and `diffView={DiffView.DIFF}` with a populated bucket still giving no empty state and a
+      rendered legend, which pins that the predicate ignores the filter — note in the case's own
+      comment that `DiffSection` is stubbed here on purpose, so this pins `EntityDiff`'s condition and
+      not the filter's own behaviour, which `DiffSection.spec.tsx` already covers. Verify with
+      `npx vitest run src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx src/components/ActivityAudit/View/DiffReport/tests/DiffSection.spec.tsx src/components/ActivityAudit/View/tests/AuditView.spec.tsx --reporter=dot`
+      — the last two are the regression check and must stay green **unmodified**.
+
+- [x] 10.2 Run the `spec-browser-verify` skill against the two scenarios of this section that cross a
+      boundary the unit tests mock away, and against those only. Local stack booted with
+      `ANALYTICS_ENABLED=true` and `DIAL_ANALYTICS_API_URL` pointing at the running analytics service;
+      the app is on `http://localhost:4200`, not 3000. The case reproduces today and reproducing it
+      destroys nothing: `conversations_rollup` is a pipeline whose history predates the analytics
+      audit trail, so `GET /v1/pipelines/conversations_rollup/revision/{n}` answers
+      `404 revision_not_found` for both sides of any of its activities — which is how the defect was
+      found. Toggling `enabled` on it produces a fresh `Update` activity if none is at hand. Verify,
+      on that activity's `/activity-audit/{activityId}` page: (1) the diff body showing the empty
+      state with its title and **no** sentence beneath it (the description was removed on the owner's
+      instruction — design.md D15.5; a re-run must not report its absence as a `fail`), addressable
+      as a status region, with the header and the
+      `Comparison` / `View` controls still rendered above it and no error page and no notification;
+      and (2) no Create / Update / Delete legend anywhere beneath it. The other two scenarios are
+      deliberately **not** sent: *A comparison that produces at least one section is unchanged* is
+      what a component renders from its own props, already covered by 10.1 and by the container detail
+      page that 7.1 verified, and *A filter that hides every row does not produce the empty state* is
+      a props-level filter interaction 10.1 pins. Resolve every `fail` verdict before the change is
+      complete.
+
+- [ ] 10.3 From `apps/ai-dial-admin/`, run
+      `npx vitest run --reporter=dot --coverage --coverage.reporter=text-summary` and confirm the
+      coverage gate in `vitest.config.ts` is not regressed; run
+      `npx tsc -p tsconfig.app.json --noEmit` and expect **0** errors (see the correction in this
+      section's notes — it is a blocking
+      CI job now, and a failure here is this section's, not pre-existing); from the repository root
+      run `npm run lint 2>&1 | tail -30` and `npm run format`, and resolve any findings. The cheap
+      reporter forms are deliberate: the defaults print ~3 900 lines to say "0 failures", while the
+      dot reporter still prints every failure in full and the thresholds live in the config rather
+      than in the reporter. `*.spec.tsx` files are eslint-ignored, so lint is a statement about source
+      files only, and `npm run typecheck:specs` stays red by design — judge it by error kind, never by
+      count. Anything this turns up is a new dispatch to the role that owns the file, not an edit from
+      this task.
