@@ -212,7 +212,9 @@ describe('buildContainerSelection', () => {
     expect(result.source?.containerId).toBe('app-container');
     expect(result.source?.completionEndpointPath).toBeTruthy();
     expect(result.endpoint).toBe('');
-    expect(result.baseEndpoint).toBe('');
+    // `buildContainerSelection` clears all three endpoint shapes in one object, so a model carries the
+    // adapter's `baseEndpoint` too — the model type does not declare it.
+    expect((result as Record<string, unknown>).baseEndpoint).toBe('');
   });
 
   test('default (Interceptors): writes containerId, clears endpoint, no completionEndpointPath', () => {

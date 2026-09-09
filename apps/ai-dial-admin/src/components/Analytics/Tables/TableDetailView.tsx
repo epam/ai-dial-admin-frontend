@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ColDef, GridApi, ICellRendererParams, IRowNode, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import { GridApi, IRowNode } from 'ag-grid-community';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
@@ -12,9 +12,9 @@ import {
   DialEllipsisTooltip,
   DialFormPopup,
   DialGhostButton,
-  DialLabelledText,
   DialNeutralButton,
   DialPrimaryButton,
+  DialTabs,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlugConnected } from '@tabler/icons-react';
@@ -23,10 +23,10 @@ import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
-import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
+import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
+import TableProperties from '@/src/components/Analytics/Tables/TableProperties';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
@@ -39,15 +39,11 @@ import {
   parseRowsJson,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
-import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
-import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
-import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { capitalize } from '@/src/constants/analytics/tables';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -63,6 +59,7 @@ import {
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
@@ -76,16 +73,6 @@ interface Props {
   flightUri: string;
 }
 
-// Renders the column name with a trailing sensitive marker; editing still swaps in the cell editor.
-// The dot is tooltip-less — the grid's cell tooltip (see the name column's tooltipValueGetter) carries
-// the sensitive note, so the two don't double up.
-const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({ value, data }) => (
-  <span className="flex items-center gap-1.5">
-    <span className="truncate">{value}</span>
-    {data?.sensitive && <SensitiveIndicator />}
-  </span>
-);
-
 // The grain-key row is pinned to the grid's top (see `grainKeyRow` below) rather than a real editable
 // column, so its inline rename and row actions are disabled wherever this check is used.
 const isPinnedRow = (_api: GridApi, node: IRowNode) => Boolean(node.rowPinned);
@@ -94,8 +81,13 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  // `/tables/[id]` has no feature-flag guard, so a bookmarked link reaches this view on an install with
+  // analytics off. Gating the tab strip here is what keeps the Audit tab — and its activity request —
+  // out of that install.
+  const { featureFlags } = useAppContext();
 
   const [table, setTable] = useState<AnalyticsTable>(initialTable);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
@@ -298,45 +290,21 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
     [onDrop, isDropRestricted],
   );
 
-  const columnDefs = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: t(AnalyticsTablesI18nKey.ColumnName),
-        field: 'name',
-        editable: (params) => canModify && !params.node.rowPinned,
-        cellRenderer: ColumnNameCellRenderer,
-        // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
-        tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
-          [params.data?.name, params.data?.sensitive ? t(AnalyticsTablesI18nKey.Sensitive) : '']
-            .filter(Boolean)
-            .join(' — '),
-        flex: 2,
-      },
-      {
-        headerName: t(AnalyticsTablesI18nKey.Type),
-        field: 'type',
-        cellRenderer: TypeCellRenderer,
-        // An enum column's declared domain, reachable without opening the edit modal. It rides the cell's
-        // own tooltip rather than the badge's: the badge is a non-focusable span, so a tooltip on it would
-        // be mouse-only, while the grid cell is reachable by keyboard navigation.
-        tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
-          params.data?.enum_values?.length ? params.data.enum_values.join(', ') : '',
-        flex: 1,
-      },
-      { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
-      // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
-      { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },
-      { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
-      {
-        headerName: t(AnalyticsTablesI18nKey.Nullable),
-        colId: 'nullable',
-        flex: 1,
-        cellDataType: false,
-        valueGetter: (params: ValueGetterParams<AnalyticsTableColumn>) => String(Boolean(params.data?.nullable)),
-      },
-      ...(canModify ? [ACTION_COLUMN(actions)] : []),
-    ],
-    [t, actions, canModify],
+  // Audit is offered only on an active table: a table that was never materialized has no columns and no
+  // recorded activities, so the tab could only ever be empty (design.md D12). FAILED and an unreported
+  // status take the same branch as a draft — the branch that already renders the draft schema editor.
+  // On an active table it needs no permission the detail view does not already require.
+  const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
+
+  const properties = (
+    <TableProperties
+      table={table}
+      grainKeyRow={grainKeyRow}
+      draft={draft}
+      actions={actions}
+      canModify={canModify}
+      onRenameCell={onRenameCell}
+    />
   );
 
   return (
@@ -403,110 +371,24 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
         {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
       </div>
 
-      {/* The summary is otherwise ACTIVE-only, because a draft's keys live in DraftSchemaEditor as
-          editable inputs. An enrichment's source table has no such input — it is fixed at create — so
-          it shows at any status, including while the draft schema is being defined. */}
-      {(isActive || isEnrichment) && (
-        <div className="flex flex-wrap gap-8 mb-6">
-          {table.type === AnalyticsTableType.Source ? (
-            <>
-              {!!table.ordering_key?.length && (
-                <DialLabelledText
-                  label={
-                    <KeyFieldLabel
-                      label={t(AnalyticsTablesI18nKey.OrderingKey)}
-                      hint={t(AnalyticsTablesI18nKey.OrderingKeyHint)}
-                    />
-                  }
-                  text={table.ordering_key.join(', ')}
-                />
-              )}
-              {table.partition_by && (
-                <>
-                  <DialLabelledText
-                    label={
-                      <KeyFieldLabel
-                        label={t(AnalyticsTablesI18nKey.PartitionColumn)}
-                        hint={t(AnalyticsTablesI18nKey.PartitionColumnHint)}
-                      />
-                    }
-                    text={table.partition_by.column}
-                  />
-                  <DialLabelledText
-                    label={
-                      <KeyFieldLabel
-                        label={t(AnalyticsTablesI18nKey.Granularity)}
-                        hint={t(AnalyticsTablesI18nKey.GranularityHint)}
-                      />
-                    }
-                    text={capitalize(table.partition_by.granularity)}
-                  />
-                </>
-              )}
-              {table.identity_column && (
-                <DialLabelledText
-                  label={
-                    <KeyFieldLabel
-                      label={t(AnalyticsTablesI18nKey.IdentityColumn)}
-                      hint={t(AnalyticsTablesI18nKey.IdentityColumnHint)}
-                    />
-                  }
-                  text={table.identity_column}
-                />
-              )}
-              {table.version_column && (
-                <DialLabelledText
-                  label={
-                    <KeyFieldLabel
-                      label={t(AnalyticsTablesI18nKey.VersionColumn)}
-                      hint={t(AnalyticsTablesI18nKey.VersionColumnHint)}
-                    />
-                  }
-                  text={table.version_column}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              {/* No KeyFieldLabel hint: unlike the keys beside it, the source table is not chosen on the
-                  draft surface — it is fixed at create — so there is no explanation to keep in step. */}
-              {table.source_table && (
-                <DialLabelledText label={t(AnalyticsTablesI18nKey.SourceTable)} text={table.source_table} />
-              )}
-              {!!table.grain?.grain_key && (
-                <DialLabelledText
-                  label={
-                    <KeyFieldLabel
-                      label={t(AnalyticsTablesI18nKey.GrainKey)}
-                      hint={t(AnalyticsTablesI18nKey.GrainKeyHint)}
-                    />
-                  }
-                  text={table.grain.grain_key}
-                />
-              )}
-            </>
+      {/* One fallback for both conditions: with analytics disabled, or on a table that is not active,
+          the Properties body is the whole view — no tab strip, and no Audit tab to issue an analytics
+          activity request from. */}
+      {featureFlags.analyticsEnabled && isActive ? (
+        <>
+          <div className="mb-6">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+          </div>
+          {activeTab === EntityViewTab.Properties && properties}
+          {activeTab === EntityViewTab.Audit && (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <TableAudit table={table} />
+            </div>
           )}
-        </div>
+        </>
+      ) : (
+        properties
       )}
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-        {isActive ? (
-          <GridView
-            columnDefs={columnDefs}
-            rowData={columns}
-            getRowId={(params) => params.data.name}
-            additionalGridOptions={{
-              pinnedTopRowData: grainKeyRow ? [grainKeyRow] : undefined,
-              onCellValueChanged: (e) => {
-                if (e.colDef.field === 'name') onRenameCell(e.oldValue as string, e.newValue as string);
-              },
-            }}
-            emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoColumns) }}
-          />
-        ) : (
-          <DraftSchemaEditor table={table} draft={draft} />
-        )}
-      </div>
 
       {confirmOpen && (
         <DialConfirmationPopup

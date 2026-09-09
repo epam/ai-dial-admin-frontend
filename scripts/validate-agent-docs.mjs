@@ -156,7 +156,12 @@ const checkFormatting = async (src, file) => {
     resolveConfig: true,
   });
   if (info.ignored || !info.inferredParser) return; // prettier wouldn't format it
-  const config = (await prettier.resolveConfig(file)) ?? {};
+  // `editorconfig: true` is what the prettier CLI does by default, and the CLI is what
+  // `npm run format`, lint-staged and CI all run. Without it this gate resolves a different
+  // config than the repository's own formatter — printWidth 80 instead of the 120 that
+  // .editorconfig sets — so a line between 81 and 120 characters made the two contradict
+  // each other: whichever form satisfied one was rejected by the other.
+  const config = (await prettier.resolveConfig(file, { editorconfig: true })) ?? {};
   let formatted = false;
   try {
     formatted = await prettier.check(src, { ...config, filepath: file });

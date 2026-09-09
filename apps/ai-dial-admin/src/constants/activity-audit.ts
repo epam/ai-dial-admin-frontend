@@ -39,6 +39,7 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
   [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
   [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
+  [ApplicationRoute.AnalyticsTables]: ActivityAuditResourceType.TABLE,
 };
 
 export const CONTAINER_TYPE_TO_AUDIT: Record<CONTAINER_TYPE, ActivityAuditResourceType> = {

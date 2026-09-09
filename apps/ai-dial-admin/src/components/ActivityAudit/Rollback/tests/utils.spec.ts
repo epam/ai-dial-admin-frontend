@@ -58,7 +58,7 @@ describe('getSystemRollbackColumns', () => {
   });
 
   test('returns empty array for unknown type', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.UNKNOWN as any, t);
+    const cols = getSystemRollbackColumns('UnknownResourceType' as ActivityAuditResourceType, t);
     expect(cols).toEqual([]);
   });
 });

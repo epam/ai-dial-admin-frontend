@@ -117,7 +117,7 @@ describe('Export Config Utils :: getComponents', () => {
 
   test('Should return components for custom core config', () => {
     const res = getComponents(ExportType.Custom, {
-      [EntityType.ENTITIES]: [
+      entities: [
         { name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.ROLE] },
         { name: 'Application', type: MenuI18nKey.Applications, dependencies: [EntityType.ROLE] },
         { name: 'Route', type: MenuI18nKey.Routes, dependencies: [EntityType.ROLE] },
@@ -137,7 +137,7 @@ describe('Export Config Utils :: getComponents', () => {
 
   test('Should return tabs for custom core config with correct dependencies', () => {
     const res = getComponents(ExportType.Custom, {
-      [EntityType.ENTITIES]: [{ name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.APPLICATION] }],
+      entities: [{ name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.APPLICATION] }],
     });
 
     expect(res).toEqual([

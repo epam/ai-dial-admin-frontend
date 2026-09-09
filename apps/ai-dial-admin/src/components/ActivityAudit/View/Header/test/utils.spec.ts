@@ -8,7 +8,7 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 
-import { resolveEntityAuditType } from '../utils';
+import { getAuditResourceHref, resolveEntityAuditType } from '../utils';
 
 describe('resolveEntityAuditType', () => {
   test('resolves NIM container to NimDeployment', () => {
@@ -81,5 +81,45 @@ describe('resolveEntityAuditType', () => {
 
   test('returns undefined when entity is undefined and route is not mapped', () => {
     expect(resolveEntityAuditType(undefined, ApplicationRoute.Dashboard)).toBeUndefined();
+  });
+});
+
+describe('getAuditResourceHref', () => {
+  test('resolves a table activity to its table page', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE, 'orders')).toBe('/tables/orders');
+  });
+
+  test('resolves a column activity to the page of the table its identifier carries', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE_COLUMN, 'orders:total')).toBe('/tables/orders');
+  });
+
+  test('resolves a pipeline and a saved query to their own pages', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.PIPELINE, 'daily-load')).toBe('/pipelines/daily-load');
+    expect(getAuditResourceHref(ActivityAuditResourceType.SAVED_QUERY, 'q-1')).toBe('/queries/q-1');
+  });
+
+  test('resolves a non-analytics type through the shared auditResourceRoute map', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.MODEL, 'gpt-4')).toBe('/models/gpt-4');
+    expect(getAuditResourceHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'mcp-1')).toBe('/mcp-containers/mcp-1');
+  });
+
+  test('encodes the resource identifier in both the analytics and the shared branch', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE, 'my orders/2024')).toBe('/tables/my%20orders%2F2024');
+    expect(getAuditResourceHref(ActivityAuditResourceType.MODEL, 'gpt 4/turbo')).toBe('/models/gpt%204%2Fturbo');
+  });
+
+  test('returns undefined for a resource type with no known route', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.ADMIN_PROPERTIES, 'settings')).toBeUndefined();
+    expect(getAuditResourceHref('BrandNewBackendType' as ActivityAuditResourceType, 'whatever')).toBeUndefined();
+  });
+
+  test('returns undefined when the resource type or the resource identifier is missing', () => {
+    expect(getAuditResourceHref(undefined, 'orders')).toBeUndefined();
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE, undefined)).toBeUndefined();
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE, '')).toBeUndefined();
+  });
+
+  test('returns undefined for a column identifier with no table half', () => {
+    expect(getAuditResourceHref(ActivityAuditResourceType.TABLE_COLUMN, ':total')).toBeUndefined();
   });
 });

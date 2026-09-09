@@ -187,7 +187,7 @@ describe('getCorrectPublication', () => {
 
     expect(result.applicationResources).toHaveLength(1);
     expect(result.applicationResources![0].applicationResource.defaults).toEqual({});
-    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({});
+    expect(result.applicationResources![0].applicationResource.application_properties).toEqual({});
   });
 
   it('should handle publication with undefined applicationResources', () => {
@@ -197,6 +197,6 @@ describe('getCorrectPublication', () => {
 
     expect(result.applicationResources).toHaveLength(1);
     expect(result.applicationResources![0].applicationResource.defaults).toEqual({});
-    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({});
+    expect(result.applicationResources![0].applicationResource.application_properties).toEqual({});
   });
 });

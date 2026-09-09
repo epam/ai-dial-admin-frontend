@@ -5,7 +5,7 @@ import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Runs/Compare/Heat
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 vi.mock('@/src/components/Runs/Compare/HeatMap/HeatMapTestCaseHeader', () => ({
   default: () => null,
@@ -26,7 +26,7 @@ const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   testCaseName: 'BLR',
   runIndex: 0,
   responseStatusCode: 200,
-  executionStatus: 'SUCCESS',
+  executionStatus: ExtractionResultStatus.SUCCESS,
   metricValues: {},
   ...overrides,
 });

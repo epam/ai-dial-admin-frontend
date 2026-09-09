@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import { DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import { auditResourceRoute } from '@/src/constants/activity-audit';
+import { getAuditResourceHref } from '@/src/components/ActivityAudit/View/Header/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -22,11 +22,10 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
   const currentLocale = useCurrentLocale();
   const epochTimestamp = useLocalDateTimeString(activity.epochTimestampMs);
 
-  const openResourceInNewTab = (activity: DialActivity) => {
-    window.open(
-      `/${currentLocale}${auditResourceRoute[activity.resourceType]}/${encodeURIComponent(activity.resourceId)}`,
-      '_blank',
-    );
+  const resourceHref = getAuditResourceHref(activity.resourceType, activity.resourceId);
+
+  const openResourceInNewTab = (href: string) => {
+    window.open(`/${currentLocale}${href}`, '_blank');
   };
 
   return (
@@ -49,11 +48,12 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
             <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
               <div className="flex flex-row gap-1 items-center">
                 <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
-                {activity.activityType != ActivityAuditType.Delete && (
+                {activity.activityType !== ActivityAuditType.Delete && resourceHref && (
                   <DialIconButton
-                    onClick={() => openResourceInNewTab(activity)}
+                    onClick={() => openResourceInNewTab(resourceHref)}
                     className="text-secondary size-auto"
-                    icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                    aria-label={t(ActivityAuditI18nKey.OpenResourceInNewTab)}
+                    icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
                   />
                 )}
               </div>

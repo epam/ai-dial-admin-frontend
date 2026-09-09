@@ -9,6 +9,7 @@ import {
   generateCurrentResource,
   mergeEntityMaps,
 } from '../generate-diffs';
+import { getColumnBucketKey, isColumnBucketKey } from '../analytics-diffs';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
 
 describe('Activity audit :: generateCurrentResource ', () => {
@@ -921,5 +922,115 @@ describe('Container detail :: nodePool rows', () => {
     const result = generateCurrentResource(current, compare, containerType, true);
     expect(propRows(result, 'displayName')).toHaveLength(1);
     expect(computeRows(result, 'nodePoolId')).toEqual([]);
+  });
+});
+
+describe('Analytics revision :: generateCurrentResource routes analytics types to the analytics builder', () => {
+  const olderTable: ActivityAuditEntity = {
+    name: 'orders',
+    grain: { grain_key: 'order_id' },
+    ordering_key: ['created_at', 'id'],
+    tag_order: ['pii', 'internal'],
+    columns: [{ name: 'amount', type: 'DECIMAL' }],
+  };
+  const newerTable: ActivityAuditEntity = {
+    ...olderTable,
+    columns: [
+      { name: 'amount', type: 'DECIMAL' },
+      { name: 'total', type: 'DECIMAL' },
+    ],
+  };
+
+  test('renders the fields the generic object path has no handler for', () => {
+    const result = generateCurrentResource(olderTable, newerTable, ActivityAuditResourceType.TABLE, false);
+    const parameters = result.properties.map((row) => row.parameter);
+
+    expect(parameters).toContain('grain.grain_key');
+    expect(parameters).toContain('ordering_key');
+    expect(parameters).toContain('tag_order');
+  });
+
+  test('drops the same fields for a resource type outside analytics, as it does today', () => {
+    const result = generateCurrentResource(olderTable, newerTable, ActivityAuditResourceType.MODEL, false);
+    const parameters = result.properties.map((row) => row.parameter);
+
+    expect(parameters).not.toContain('grain.grain_key');
+    expect(parameters).not.toContain('ordering_key');
+    expect(Object.keys(result).filter(isColumnBucketKey)).toEqual([]);
+  });
+
+  test('emits a column bucket per column for every analytics resource type', () => {
+    [
+      ActivityAuditResourceType.TABLE,
+      ActivityAuditResourceType.TABLE_COLUMN,
+      ActivityAuditResourceType.PIPELINE,
+      ActivityAuditResourceType.SAVED_QUERY,
+    ].forEach((type) => {
+      const result = generateCurrentResource(olderTable, newerTable, type, false);
+      expect(Object.keys(result).filter(isColumnBucketKey)).toEqual([
+        getColumnBucketKey('amount'),
+        getColumnBucketKey('total'),
+      ]);
+    });
+  });
+
+  test('createSectionFromDiffs collects the column buckets into one name-ordered columns section', () => {
+    const before = generateCurrentResource(newerTable, olderTable, ActivityAuditResourceType.TABLE, true);
+    const after = generateCurrentResource(olderTable, newerTable, ActivityAuditResourceType.TABLE, false);
+
+    const sections = createSectionFromDiffs(before, after);
+
+    expect(Object.keys(sections)).toEqual([EntityParameterKeys.PROPERTIES, EntityParameterKeys.COLUMNS]);
+    expect(sections[EntityParameterKeys.COLUMNS]).toHaveLength(2);
+    expect(sections[EntityParameterKeys.COLUMNS].map((section) => section.label)).toEqual(['amount', 'total']);
+    expect(sections[EntityParameterKeys.COLUMNS][1].diffStatus).toBe(DiffStatus.ADDED);
+    expect(sections[EntityParameterKeys.COLUMNS][0].diffStatus).toBeUndefined();
+  });
+
+  test('a column whose name matches a container or admin section does not create that section', () => {
+    const snapshot: ActivityAuditEntity = {
+      name: 'orders',
+      columns: [
+        { name: 'metadata', type: 'STRING' },
+        { name: 'defaults', type: 'STRING' },
+      ],
+    };
+    const diffs = generateCurrentResource(snapshot, snapshot, ActivityAuditResourceType.TABLE, true);
+
+    const sections = createSectionFromDiffs(diffs, diffs);
+
+    expect(Object.keys(sections)).toEqual([EntityParameterKeys.PROPERTIES, EntityParameterKeys.COLUMNS]);
+    expect(sections[EntityParameterKeys.METADATA]).toBeUndefined();
+    expect(sections[EntityParameterKeys.DEFAULTS]).toBeUndefined();
+  });
+});
+
+describe('Analytics revision :: container sections are unchanged by the analytics branch', () => {
+  const containerType = ActivityAuditResourceType.MCP_DEPLOYMENT;
+  const previous: ActivityAuditEntity = {
+    displayName: 'Interceptor',
+    resources: { requests: { cpu: '100m', memory: '256Mi' }, limits: { cpu: '500m', memory: '1Gi' } },
+    scaling: { minReplicas: 1, maxReplicas: 1, scaleToZeroDelaySeconds: 0 },
+    metadata: { envs: [{ name: 'A', description: '', value: { $type: 'simple', value: '1' }, mountType: 'content' }] },
+  };
+  const latest: ActivityAuditEntity = {
+    ...previous,
+    metadata: { envs: [{ name: 'A', description: '', value: { $type: 'simple', value: '2' }, mountType: 'content' }] },
+  };
+
+  test('keeps the Compute, Autoscaling and Environment variables sections', () => {
+    const before = generateCurrentResource(latest, previous, containerType, true);
+    const after = generateCurrentResource(previous, latest, containerType, false);
+
+    const sections = createSectionFromDiffs(before, after);
+
+    expect(Object.keys(sections)).toEqual([
+      EntityParameterKeys.PROPERTIES,
+      EntityParameterKeys.SCALING,
+      EntityParameterKeys.METADATA,
+      EntityParameterKeys.RESOURCES,
+    ]);
+    expect(sections[EntityParameterKeys.METADATA]).toHaveLength(1);
+    expect(sections[EntityParameterKeys.COLUMNS]).toBeUndefined();
   });
 });
