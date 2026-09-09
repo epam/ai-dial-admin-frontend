@@ -17,7 +17,7 @@ const fromCorePermission = (permission: CoreAppRunnerRoutePermission): RoutePerm
   permission.toLowerCase() as RoutePermission;
 
 /** Core declares `dial:extraData` as a string; the editors hold it as either a string or an object. */
-const toCoreExtraData = (extraData?: DialEndpointExtraData): string | undefined => {
+const toCoreExtraData = (extraData?: DialEndpointExtraData | null): string | undefined => {
   if (extraData == null) {
     return undefined;
   }
