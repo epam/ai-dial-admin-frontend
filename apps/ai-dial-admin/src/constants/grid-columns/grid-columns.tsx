@@ -1353,6 +1353,7 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
 
       return displayName || name;
     },
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     ...DESCRIPTION_COLUMN,
@@ -1361,6 +1362,7 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
     wrapText: true,
     tooltipValueGetter: () => undefined,
     minWidth: METRIC_DESCRIPTION_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     colId: 'outups',
@@ -1381,12 +1383,14 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
       tagClassName: '!border-accent-tertiary !bg-accent-tertiary-alpha',
     }),
     maxWidth: METRIC_OUTPUTS_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     field: 'providerId',
     colId: 'providerId',
     headerName: t(EntityFieldsI18nKey.provider),
     maxWidth: METRIC_PROVIDER_COLUMN_WIDTH,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
 ];
 
