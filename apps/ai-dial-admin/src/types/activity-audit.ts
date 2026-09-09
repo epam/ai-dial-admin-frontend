@@ -90,6 +90,8 @@ const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
 ]);
 
+const PARENT_RESOURCE_TYPES = new Set<string>([ActivityAuditResourceType.TABLE]);
+
 export const isImageDefinitionResource = (type?: string): boolean =>
   !!type && IMAGE_DEFINITION_RESOURCE_TYPES.has(type);
 
@@ -103,3 +105,5 @@ export const isDeploymentManagerResource = (type?: string): boolean =>
   !!type && DEPLOYMENT_MANAGER_RESOURCE_TYPES.has(type);
 
 export const isAnalyticsResource = (type?: string): boolean => !!type && ANALYTICS_RESOURCE_TYPES.has(type);
+
+export const hasChildResourceActivities = (type?: string): boolean => !!type && PARENT_RESOURCE_TYPES.has(type);

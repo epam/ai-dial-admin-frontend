@@ -3,21 +3,32 @@
 ## Purpose
 
 Defines the `Deployments` view of the Activity Audit page: how it sources activities from the deployment-manager backend (`POST /api/v1/activities` at `DIAL_DEPLOYMENTS_API_URL`), the dedicated column set and singular resource-type labels it renders, the rollback / row-action / parent-child differences from the existing `Config` view, per-view AG Grid column-state persistence, filter handling, and the i18n keys required to localize the new labels.
-
 ## Requirements
-
 ### Requirement: View selector exposes a Deployments option
 
-The Activity Audit page SHALL render a `Deployments` option in the `View` dropdown alongside the existing `Config` option. The dropdown SHALL offer exactly these two views — there SHALL be no disabled placeholder option for a view with no fetcher behind it. The default selection on initial page load SHALL remain `Config`. Selecting `Deployments` SHALL be available to all users including read-only admins.
+The Activity Audit page SHALL render a `Deployments` option in the `View` dropdown alongside the
+existing `Config` option, and — when `featureFlags.analyticsEnabled` is true — an `Analytics` option
+alongside both (see the `activity-audit-analytics-view` capability for that view's own behavior). The
+dropdown SHALL offer exactly the views that have a fetcher behind them: `Config` and `Deployments`
+always, `Analytics` when the analytics feature is enabled — there SHALL be no disabled placeholder
+option for a view with no fetcher behind it. The default selection on initial page load SHALL remain
+`Config`. Selecting any offered option SHALL be available to all users including read-only admins.
 
 #### Scenario: Deployments option visible on initial render
-- **WHEN** the user opens `/activity-audit` for the first time
+- **WHEN** the user opens `/activity-audit` for the first time with the analytics feature disabled
 - **THEN** the `View` dropdown shows exactly the options `Config` and `Deployments`
+- **AND** the dropdown value is `Config`
+
+#### Scenario: Analytics option joins the list when the analytics feature is enabled
+- **WHEN** the user opens `/activity-audit` for the first time with `featureFlags.analyticsEnabled` true
+- **THEN** the `View` dropdown shows exactly the options `Config`, `Deployments`, and `Analytics`
 - **AND** the dropdown value is `Config`
 
 #### Scenario: Read-only admin can switch to Deployments view
 - **WHEN** a read-only admin opens the View dropdown
 - **THEN** the `Deployments` option is enabled and selectable
+- **AND** the `Analytics` option, when offered, is likewise enabled and selectable
+
 ### Requirement: Deployments view fetches activities from the deployment-manager backend
 
 When the selected view is `Deployments`, the grid datasource SHALL call the `getDeploymentActivities` server action, which forwards the request to `POST /api/v1/activities` at `DIAL_DEPLOYMENTS_API_URL`. Pagination, sorting, and filter request shape SHALL mirror the existing `getActivities` action so the AG Grid infinite row model is reused unchanged. Results SHALL render in the same grid component used by the Config view.
@@ -196,3 +207,4 @@ The locale dictionary SHALL include new keys for: the `Deployments` view option 
 - **WHEN** the grid renders a row with `resourceType: "AdapterDeployment"`
 - **THEN** the displayed string is the value of the corresponding i18n key resolved through `useI18n`
 - **AND** the key exists in `apps/ai-dial-admin/src/locales/en.ts`
+

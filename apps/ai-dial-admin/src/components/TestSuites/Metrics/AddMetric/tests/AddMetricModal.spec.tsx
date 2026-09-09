@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import AddMetricModal from '../AddMetricModal';
+import { MetricStep } from '../constants';
 
 const mockGetMetricLatestVersion = vi.fn();
 const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
@@ -25,12 +26,18 @@ vi.mock('../utils', () => ({
   isReservedSystemFunctionCondition: (condition?: string) => condition?.trim() === 'name()',
 }));
 
+const REORDERED_COLUMNS = ['displayName', 'providerId', 'description', 'outups'];
+
 vi.mock('../MetricSelection', () => ({
-  default: ({ metrics, onSelectMetric }: any) => (
+  default: ({ metrics, columnOrder, onSelectMetric, onChangeColumnOrder }: any) => (
     <div role="region" aria-label="metric-selection">
       <span>{`metrics:${metrics?.length ?? 0}`}</span>
+      <span>{`columnOrder:${(columnOrder ?? []).join(',')}`}</span>
       <button type="button" onClick={() => onSelectMetric('metric-1')}>
         Select metric
+      </button>
+      <button type="button" onClick={() => onChangeColumnOrder(REORDERED_COLUMNS)}>
+        Reorder columns
       </button>
     </div>
   ),
@@ -68,7 +75,16 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
         {footer}
       </div>
     ) : null,
-  DialSteps: ({ currentStep }: any) => <nav aria-label="steps">{currentStep}</nav>,
+  DialSteps: ({ steps, currentStep, onChangeStep }: any) => (
+    <nav aria-label="steps">
+      {currentStep}
+      {steps.map((step: { id: string }) => (
+        <button key={step.id} type="button" onClick={() => onChangeStep(step.id)}>
+          {`go:${step.id}`}
+        </button>
+      ))}
+    </nav>
+  ),
   DialLoader: () => <div role="progressbar" aria-label="loading" />,
   DialNeutralButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
@@ -129,6 +145,27 @@ describe('AddMetricModal', () => {
     await waitFor(() => {
       expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('metric-1');
     });
+  });
+
+  test('keeps the chosen column order when returning from configuration to metric selection', async () => {
+    const user = userEvent.setup();
+    const orderText = `columnOrder:${REORDERED_COLUMNS.join(',')}`;
+
+    render(
+      <AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} metricDeclarations={metricDeclarations} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Reorder columns' }));
+
+    expect(screen.getByText(orderText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: `go:${MetricStep.Configuration}` }));
+
+    expect(screen.queryByRole('region', { name: 'metric-selection' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: `go:${MetricStep.AddMetric}` }));
+
+    expect(screen.getByText(orderText)).toBeInTheDocument();
   });
 
   test('renders edit mode without steps and loads metric details', async () => {

@@ -58,10 +58,11 @@ export const ACTIVITY_AUDIT_VIEW_CONFIG: Record<ActivityAuditView, ActivityAudit
   },
   [ActivityAuditView.Analytics]: {
     fetchActivities: getAnalyticsActivities,
-    // No `onRollback` and no `isSingleEntity`: the analytics view offers no row rollback, and it
-    // keeps `Resource type` / `Resource identifier` visible in an entity tab too, because the
-    // feed carries both `Table` and `TableColumn` rows.
-    getColumns: ({ t, open }) => getAnalyticsActivityAuditColumns(t, open),
+    // No `onRollback`: the analytics view offers no row rollback in any mode. `isSingleEntity` is
+    // forwarded, and the caller decides it from the tab's resource type — a table Audit tab keeps
+    // `Resource type` / `Resource identifier` because its feed carries both `Table` and
+    // `TableColumn` rows, while a pipeline tab carries one of each and hides them.
+    getColumns: ({ t, open, isSingleEntity }) => getAnalyticsActivityAuditColumns(t, open, isSingleEntity),
     hasParentChildAggregation: false,
     // Deleting a table records a `Delete` per column, each naming the table activity as its
     // parent; the parent's own detail view already renders every one of those columns as

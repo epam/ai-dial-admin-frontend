@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { ColDef, GridOptions, IRowNode, RowSelectedEvent } from 'ag-grid-community';
+import { ColDef, ColumnMovedEvent, ColumnState, GridOptions, IRowNode, RowSelectedEvent } from 'ag-grid-community';
 import { ComponentProps } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,6 +24,12 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     return <section aria-label="metrics-grid" />;
   },
 }));
+
+const buildColumnMovedEvent = (columnState: ColumnState[], isFinished: boolean) =>
+  ({
+    finished: isFinished,
+    api: { getColumnState: () => columnState },
+  }) as unknown as ColumnMovedEvent<Metric>;
 
 const buildRowSelectedEvent = (metric: Metric, isSelected: boolean) => {
   const refreshCells = vi.fn();
@@ -170,6 +176,51 @@ describe('MetricSelection', () => {
     expect(setSelected).toHaveBeenCalledOnce();
     expect(setSelected).toHaveBeenCalledWith(true);
     expect(ensureNodeVisible).toHaveBeenCalledWith(nodes[1], 'middle');
+  });
+
+  test('reports the moved column order once the drag has finished', () => {
+    const onChangeColumnOrder = vi.fn();
+    renderMetricSelection({ onChangeColumnOrder });
+    const event = buildColumnMovedEvent(
+      [{ colId: 'displayName' }, { colId: 'providerId' }, { colId: 'description' }, { colId: 'outups' }],
+      true,
+    );
+
+    capturedGridProps?.additionalGridOptions?.onColumnMoved?.(event);
+
+    expect(onChangeColumnOrder).toHaveBeenCalledOnce();
+    expect(onChangeColumnOrder).toHaveBeenCalledWith(['displayName', 'providerId', 'description', 'outups']);
+  });
+
+  test('does not report an order while the column is still being dragged', () => {
+    const onChangeColumnOrder = vi.fn();
+    renderMetricSelection({ onChangeColumnOrder });
+
+    capturedGridProps?.additionalGridOptions?.onColumnMoved?.(buildColumnMovedEvent([{ colId: 'displayName' }], false));
+
+    expect(onChangeColumnOrder).not.toHaveBeenCalled();
+  });
+
+  test('restores a previously chosen column order', () => {
+    renderMetricSelection({ columnOrder: ['displayName', 'providerId', 'description', 'outups'] });
+
+    expect(capturedGridProps?.columnDefs?.map((col) => col.colId)).toEqual([
+      'displayName',
+      'providerId',
+      'description',
+      'outups',
+    ]);
+  });
+
+  test('falls back to the declared column order when none was chosen', () => {
+    renderMetricSelection({ columnOrder: [] });
+
+    expect(capturedGridProps?.columnDefs?.map((col) => col.colId)).toEqual([
+      'displayName',
+      'description',
+      'outups',
+      'providerId',
+    ]);
   });
 
   test('does not preselect anything when no metric is chosen yet', () => {

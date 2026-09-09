@@ -433,3 +433,344 @@ fixed list of section names — so a table snapshot's `columns`, `grain`, `parti
       typecheck error counts against `development` rather than expecting zero, and treat lint as a
       statement about source files only. Anything this turns up is a new dispatch to the role that owns
       the file, not an edit from this task.
+
+## 9. Follow-up: the Pipelines Audit tab (issue #4475)
+
+Sections 1–8 are shipped (PR #4456, commit `6eefaf287`); nothing in them is reopened or renumbered.
+This section is the second iteration of the **same** change — one branch, one pull request. Read
+**design.md D14** before starting, and only D14: its four sub-sections (D14.1 the column set, D14.2
+the gate, D14.3 the tab shell, D14.4 why D13 is left alone) name the files each one governs in its
+first lines, so an item can find its part without reading the other thirteen decisions.
+
+Notes for EM before dispatch:
+
+- **The spec delta moved.** `specs/analytics/spec.md` under this change held the *tables* requirements
+  and is now `specs/analytics/tables/spec.md`, relocated verbatim — same requirement titles, same
+  scenario titles, same text. The analytics capability was split into a root index plus nine
+  sub-capabilities after this change was written, and `analytics/spec.md` now carries only what every
+  Analytics page shares, so archiving the delta where it sat would have folded table requirements into
+  that index. No task implements the move; it is already done. D1 carries a correction line.
+- **Nothing about Analytics → Queries enters this section.** `/queries/{id}` renders `QueryBuilder`,
+  not an entity detail view; it is issue #4476, filed and deliberately not worked. The proposal's
+  Non-goals say so, and that is binding.
+- **Do not touch D13's suppression** (`src/utils/audit/deleted-parent-suppression.ts` and its facet).
+  A pipeline row can never be suppressed by it — see D14.4 — and widening it would go past what the
+  analytics backend's own spec says happens. No task in this section has it in scope.
+- **9.2 is the shared-code item and is the whole regression surface of this iteration.** It changes
+  what `isSingleEntity` means on a list that serves `Config`, `Deployments` and the shipped Tables
+  Audit tab. Every existing assertion in `src/components/ActivityAudit/List/tests/List.spec.tsx` and
+  `src/components/ActivityAudit/List/tests/view-config.spec.ts` must be kept and stay green, with
+  exactly **one** exception named in the task — the assertion that pins today's behaviour of Analytics
+  ignoring the flag. Its four source files move together; do not split them across items or batches.
+- **`PipelineDetailFrame.tsx` must keep its name and its path** (9.4), for the same reason D6 kept
+  `TableDetailView.tsx`: other work edits this area, and a move-plus-diff is not reviewable. There is
+  no `PipelineProperties.tsx` extraction — D14.3 says why.
+- Two files attract two items each and are therefore never in the same batch:
+  `src/constants/activity-audit.ts` (6.2 added the tables entry, 9.3 adds the pipelines one — 6.2 is
+  shipped, so this only matters if 6.2 is ever re-run) and nothing else. 9.1/9.3 and 9.2/9.4 have
+  disjoint scopes and are batched in pairs.
+
+- [x] 9.1 In `src/types/activity-audit.ts`, add `hasChildResourceActivities(type?: string): boolean`
+      beside the existing `isAnalyticsResource` / `isDeploymentManagerResource` /
+      `isContainerDeploymentResource` predicates, backed by a module-level
+      `PARENT_RESOURCE_TYPES` set holding **exactly** `ActivityAuditResourceType.TABLE`. It answers one
+      question — does this resource type own activities of another resource type? — and `Table` owns
+      `TableColumn`. Nothing else is in the set: a `Pipeline` resource id is its name and the analytics
+      backend records no child type under a pipeline, and no admin or deployment-manager type has a
+      child type either. Do not name it after pipelines or tables; it is consumed three times in 9.2
+      and the name has to say what it tests (design.md D14.1). Extend
+      `src/types/tests/activity-audit.spec.ts` with a `hasChildResourceActivities` describe block:
+      true for `TABLE`; false for `TABLE_COLUMN`, `PIPELINE`, `SAVED_QUERY`, `MODEL`,
+      `MCP_DEPLOYMENT` and `undefined`; and one case asserting no member of the set is a
+      deployment-manager or admin type, so a later addition to it fails here rather than in the
+      `Config` view. Verify with `npx vitest run src/types/tests/activity-audit.spec.ts --reporter=dot`.
+
+- [x] 9.2 Thread that predicate through the shared audit list so an Audit tab whose resource type owns
+      no child activities asks an exact question and renders as a single-entity view (design.md D14.1).
+      Four source files, which move together:
+
+      1. `src/utils/audit/entity-audit-filters.ts` — apply the `Analytics` branch (the
+         `resourceType in "Table,TableColumn"` + `resourceId co <name>` pair D3 needs) only when
+         `hasChildResourceActivities(entityType)` is true; otherwise fall through to the exact
+         `resourceId eq` + `resourceType eq` pair the function already builds for `Config` and
+         `Deployments`. For a pipeline that is the whole query — no `co` widening, no client-side
+         narrowing. Update the function's doc comment, which currently states the analytics shape
+         unconditionally.
+      2. `src/components/ActivityAudit/List/utils.tsx` — give
+         `getAnalyticsActivityAuditColumns(t, open, isSingleEntity?)` a third parameter and pass it to
+         `ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity)`. **No edit to
+         `ACTIVITY_AUDIT_COLUMNS`**: that call with the flag true already yields no expander, no
+         `Version`, and no `Resource type` / `Resource identifier`.
+      3. `src/components/ActivityAudit/List/view-config.ts` — the `Analytics` entry's `getColumns`
+         stops discarding `isSingleEntity` and forwards it. Replace the comment above it, which says
+         the entry deliberately ignores the flag.
+      4. `src/components/ActivityAudit/List/List.tsx` — compute
+         `isSingleEntity: !!entity && !hasChildResourceActivities(entityType)` in `columnDefs`, and gate
+         `analyticsTableScope` on the same predicate so `isResourceIdInTableScope` does not run for a
+         tab where nothing can be narrowed. For `Config` and `Deployments` the computed value is
+         identical to today's `!!entity` — no entity type of theirs is in the predicate's set — so
+         both views are unchanged by construction.
+
+      Tests. Extend `src/utils/audit/tests/entity-audit-filters.spec.ts` with the `Analytics` +
+      `PIPELINE` case (exact `eq` pair, no `co`, no `in`) while keeping the `Analytics` + `TABLE` cases
+      exactly as they are. Extend `src/components/ActivityAudit/List/tests/utils.spec.tsx` with a
+      `getAnalyticsActivityAuditColumns` single-entity case (no `resourceType` / `resourceId` column,
+      still no rollback action) beside the existing multi-type one. Extend
+      `src/components/ActivityAudit/List/tests/List.spec.tsx` with a
+      `ActivityAuditList :: Analytics pipeline audit tab` describe block mirroring the existing
+      `Analytics entity audit tab` one, rendered with
+      `entity={{ name: 'daily_rollup' }} entityType={ActivityAuditResourceType.PIPELINE}
+      viewMode={ActivityAuditView.Analytics}`, asserting: the request carrying
+      `{resourceType eq Pipeline}` + `{resourceId eq daily_rollup}` and **neither** a `co` nor an `in`
+      filter; every row of a page reaching `successCallback` unfiltered, including a `Create` row;
+      `lastColumnDefs()` carrying neither `resourceType` nor `resourceId` nor `version` nor
+      `expanderColumn`, and carrying `activityType`, `epochTimestampMs`, `initiatedEmail`, `activityId`
+      and `parentActivityId`; a row whose `parentActivityId` is set reaching the grid with it intact; a
+      `Pipeline` `Delete` row with no `parentActivityId` still listed (D13 suppresses nothing here);
+      the row action menu offering `Open in a new tab` and no `Rollback`; a row-body click calling
+      `window.open('/activity-audit/abc-123', '_blank')` and never a `/pipelines/` URL; an empty page
+      leaving the grid empty with no notification; and a time-period change re-requesting with the
+      updated `ge` / `le` filters.
+
+      **The one existing assertion that changes, and the only one:** in
+      `src/components/ActivityAudit/List/tests/view-config.spec.ts`, the case
+      `Analytics delegates to the analytics column factory and passes it no rollback handler` expects
+      `getAnalyticsActivityAuditColumns` to have been called with exactly `(t, open)` while passing
+      `isSingleEntity: true`. That expectation *is* the behaviour being changed, so its argument list
+      gains the flag — keep the case, keep its name's meaning (no rollback handler is still the point),
+      and add a second case for the flag-false call. Everything else in that file and in
+      `List.spec.tsx` stays as written, including the entire existing
+      `ActivityAuditList :: Analytics entity audit tab` block: it renders with
+      `entityType={ActivityAuditResourceType.TABLE}`, so the predicate answers true for it and the
+      Tables tab's request, columns and narrowing are untouched. Verify with
+      `npx vitest run src/utils/audit/tests/entity-audit-filters.spec.ts src/components/ActivityAudit/List/tests/utils.spec.tsx src/components/ActivityAudit/List/tests/view-config.spec.ts src/components/ActivityAudit/List/tests/List.spec.tsx --reporter=dot`.
+
+- [x] 9.3 Add `src/components/Analytics/Pipelines/PipelineAudit.tsx` — the exact analogue of
+      `src/components/Analytics/Tables/TableAudit.tsx`: it takes the `Pipeline`
+      (`src/models/analytics/pipeline.ts`) and renders `EntityAudit` with
+      `entity={{ name: pipeline.name }}` memoized on `pipeline.name` (a valid `BaseEntity`; do not cast
+      and do not widen `EntityAudit`'s props — design.md D4, and the memo is load-bearing because
+      `ActivityAuditList` keys its AG Grid datasource on the `entity` reference),
+      `view={ApplicationRoute.AnalyticsPipelines}` and `viewMode={ActivityAuditView.Analytics}`. A
+      `Pipeline` has no `description`, so the projection carries `name` alone. In
+      `src/constants/activity-audit.ts` add
+      `[ApplicationRoute.AnalyticsPipelines]: ActivityAuditResourceType.PIPELINE` to
+      `routeAuditResource` — the forward, route → resource-type map that `resolveEntityAuditType` reads
+      — and **not** to `auditResourceRoute`, the reverse map beneath it, which the audit list's
+      entity-namespaced href builder also reads and which design.md D5/D10 deliberately keep free of
+      analytics entries. `getAuditTabs` needs no edit: `ApplicationRoute.AnalyticsPipelines` matches
+      none of its telemetry branches, so it already returns `[activitiesTab(t)]` alone. Add
+      `src/components/Analytics/Pipelines/tests/PipelineAudit.spec.tsx`, modelled on
+      `src/components/Analytics/Tables/tests/TableAudit.spec.tsx`: mock `EntityAudit`, assert the three
+      props it receives, that the projected entity carries the pipeline's name, that the reference is
+      stable across a re-render with an equal pipeline, that
+      `resolveEntityAuditType(entity, ApplicationRoute.AnalyticsPipelines)` resolves to
+      `ActivityAuditResourceType.PIPELINE`, and that
+      `getAuditTabs(t, {dashboardEnabled: true, analyticsEnabled: true}, ApplicationRoute.AnalyticsPipelines)`
+      is `[EntityViewTab.Activities]` and nothing else. Verify with
+      `npx vitest run src/components/Analytics/Pipelines/tests/PipelineAudit.spec.tsx --reporter=dot`.
+
+- [x] 9.4 Turn `src/components/Analytics/Pipelines/Common/PipelineDetailFrame.tsx` into the tab shell
+      described in design.md D14.3, without renaming or moving the file and without extracting a
+      Properties component. `PipelineDetailView.tsx`, `EnrichDetailView.tsx` and
+      `AggregateDetailView.tsx` are **not** in scope and need no edit: the strip goes inside the frame,
+      so both kinds get it in one place and the form hook that owns the draft stays mounted above it.
+      Add a `DialTabs` strip carrying `EntityViewTab.Properties` and `EntityViewTab.Audit` (labels
+      `TabsI18nKey.Properties` / `TabsI18nKey.Audit`, both of which already exist — no new i18n key in
+      this section) between the identity row and the existing body container, with `Properties`
+      selected initially, and render `PipelineAudit` from 9.3 under the Audit tab in place of the
+      `PipelineReadOnlyFacts` + `children` + `PipelineStateSection` body. The identity row is
+      unchanged: badge, name, copy control, `ChangedEntityButtons`, the enable/disable control and
+      `JsonToggle` all stay above the strip and stay visible from either tab, so a pending edit is
+      still discardable and savable while the history is on screen. Two conditions decide the strip,
+      and one fallback serves both: render it only when `useAppContext().featureFlags.analyticsEnabled`
+      is true **and** `isEditorEnabled` is false; otherwise render exactly what the component renders
+      today. There is **no** pipeline-status condition — `enabled` is a runtime toggle and not a
+      lifecycle state, and gating on it would hide the history of the toggle itself (design.md D14.2).
+      Turning the JSON editor off must leave `Properties` selected. Add
+      `src/components/Analytics/Pipelines/tests/PipelineDetailTabs.spec.tsx` — a new file, because
+      `tests/PipelineDetailView.spec.tsx` uses the global `AppContext` mock from `test-setup.tsx`,
+      whose `featureFlags` is `{ deploymentsEnabled: true }`, so the strip is off in all of its cases
+      and in `tests/PipelineDetailPermissions.spec.tsx` (`featureFlags: {}`) and both files stay green
+      unmodified; the new file mocks `@/src/context/AppContext` locally with `analyticsEnabled: true`
+      and stubs `PipelineAudit` the way `TableDetailView.spec.tsx` stubs `TableAudit`, so its absence
+      stands for "no analytics activity request issued". Cases: `Properties` selected on open with the
+      read-only facts and runtime state beneath it; the badge, name and enable/disable control still
+      above the strip while `Audit` is selected; the strip rendered and `Audit` selectable on a
+      pipeline whose `enabled` is false; `Audit` present for a caller who is not a full admin (a local
+      `isFullAdmin: false`, as `PipelineDetailPermissions.spec.tsx` does); an edited field still
+      presented with the `Discard` / `Save` bar after switching to `Audit` and back; no strip rendered
+      while the JSON editor is enabled, and the strip back with `Properties` selected after it is
+      disabled; and, with `analyticsEnabled: false`, no strip, no `Audit` tab and the audit stub never
+      rendered. Verify with
+      `npx vitest run src/components/Analytics/Pipelines/tests/PipelineDetailTabs.spec.tsx src/components/Analytics/Pipelines/tests/PipelineDetailView.spec.tsx src/components/Analytics/Pipelines/tests/PipelineDetailPermissions.spec.tsx src/components/Analytics/Pipelines/tests/PipelineJsonEditor.spec.tsx --reporter=dot`.
+
+- [x] 9.5 Run the `spec-browser-verify` skill against the three scenarios of this section that cross a
+      boundary the unit tests mock away, and against those only. Local stack booted with
+      `ANALYTICS_ENABLED=true` and `DIAL_ANALYTICS_API_URL` pointing at a running analytics service
+      that holds at least one registered pipeline; the app is on `http://localhost:4200`. Verify:
+      (1) `/pipelines/{name}` opening on `Properties` with a `Properties` / `Audit` strip below the
+      identity row and the enabled badge, name and enable/disable control above it; (2) the `Audit`
+      tab listing that pipeline's activities from the real analytics feed, with no `Resource type` and
+      no `Resource identifier` column and no `Rollback` in the row menu; (3) a pipeline registered
+      during the session showing its `Create` row in the tab — the one fact BA could only take from
+      the backend's spec text. Everything else in section 9 is a component or filter assertion the
+      unit tests in 9.1–9.4 already settle, and is deliberately **not** sent to the browser.
+      **Nothing in this task deletes anything in the live stack**: the scenario *A pipeline delete
+      recorded by its target table's deletion is listed* is accepted on the ADAS spec's text (see
+      design.md D14.4) and stays with 9.2's unit tests. Resolve every `fail` verdict before the change
+      is complete.
+
+- [x] 9.6 From `apps/ai-dial-admin/`, run
+      `npx vitest run --reporter=dot --coverage --coverage.reporter=text-summary` and confirm the
+      coverage gate in `vitest.config.ts` is not regressed; from the repository root run
+      `npm run lint 2>&1 | tail -30` and `npm run format`, and resolve any findings. The cheap forms
+      are deliberate: the default reporters print ~3 900 lines to say "0 failures", and the dot
+      reporter still prints every failure in full while the thresholds live in the config rather than
+      in the reporter. Same caveats as 8.1: `tsc` is red repo-wide, `*.spec.tsx` files are
+      eslint-ignored, so compare against `development` rather than expecting zero. Anything this turns
+      up is a new dispatch to the role that owns the file, not an edit from this task.
+
+## 10. Follow-up: the no-snapshot empty state (issue #4485)
+
+Sections 1–8 shipped in PR #4456 and section 9 in PR #4480; nothing in either is reopened or
+renumbered. This is the third iteration of the **same** change — one branch, one pull request. Read
+**design.md D15** before starting, and only D15: its five sub-sections (D15.1 where the delta lives,
+D15.2 the placement, D15.3 the single message, D15.4 the additive-scope guarantee, D15.5 the owner's
+reversal that cut the description) name the files each governs in their first lines, so an item can
+find its part without reading the other fourteen decisions. The acceptance criteria are the four scenarios in
+`specs/activity-audit-diff-empty-state/spec.md`.
+
+Notes for EM before dispatch:
+
+- **The whole section is one source file plus i18n.** `EntityDiff.tsx` is 54 lines; the fix is a
+  branch on a value it already computes and a corrected legend gate. Three of the four files named in
+  the brief are deliberately **not** in scope, and D15's opening paragraph says why for each:
+  `AuditView.tsx` (the condition is exact one level down and duplicated one level up),
+  `View/utils/generate-diffs.ts` / `View/utils/analytics-diffs.ts` (their empty output is this
+  decision's input) and `src/utils/audit/get-activity-audit-detail-data.ts` (its `settled()` already
+  logs and returns absent; widening it is a rejected alternative). If an implementer reports that one
+  of them must change, that is a `BLOCKED`, not a quiet widening.
+- **`src/components/ActivityAudit/View/tests/AuditView.spec.tsx` needs no edit and must not get
+  one.** It mocks `EntityDiff` at line 9, so it is blind to this change by construction — which is
+  also the reason the new behaviour needs its own spec file rather than a case added there.
+- **The delta is in a new capability**, `specs/activity-audit-diff-empty-state/`, not in
+  `specs/activity-audit-analytics-view/`. The requirement is resource-type agnostic and the analytics
+  view spec's own *Analytics snapshots are resolved per resource type* is **not** modified — its text
+  stays true, since an empty state is neither an error page nor a notification (design.md D15.1).
+- **Correction to the caveat 8.1 and 9.6 both carry.** `tsc` is *no longer* red repo-wide:
+  `npx tsc -p tsconfig.app.json --noEmit` from `apps/ai-dial-admin/` exits 0 over ~1978 files, and
+  `npm run typecheck` is now a pre-commit step and a blocking CI job. A red app typecheck on this
+  section is therefore **yours** and blocks. `tsconfig.app.json` excludes both `*.spec.ts` and
+  `*.spec.tsx`, so the new spec file is typechecked only by `npm run typecheck:specs`, which is red
+  by design and does not block. Judge that one by error kind, never by count.
+- **Issue #4486 is out of scope and stays out.** Extending `restoreEmptyValueRows` to the per-column
+  bucket would add rows to the table diff — a shipped surface verified in the browser — with no
+  scenario asking for it. Nothing in this section touches `analytics-diffs.ts`.
+
+- [x] 10.1 In `src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`, render an explicit empty
+      state when the comparison produces no section, and fix the legend gate to consult the same
+      value (design.md D15.2). Three edits, all inside the 54-line component:
+
+      1. `const hasSections = Object.keys(sections).length > 0;` immediately after the existing
+         `createSectionFromDiffs` call at line 22 — the sections map is what the body renders, so this
+         is the render condition itself and not an approximation of it.
+      2. When `hasSections` is false, render `DialNoDataContent` from `@epam/ai-dial-ui-kit` in place
+         of the entire `relative flex-1 min-h-0 mb-4` block — the scroll container **and**
+         `DiffMiniMap`, which has nothing to map — inside a wrapper carrying `role="status"`, so the
+         switch into this state via the `Comparison` control is announced and the state is
+         addressable by role. Pass **`title` only**:
+         `ActivityAuditI18nKey.SnapshotUnavailableTitle`, through the existing `useI18n()`
+         (`EntityDiff` has no `t` today — add the hook). Do **not** pass `description` — the title is
+         the whole message, on the owner's instruction (design.md D15.5); `description` is optional
+         on `DialNoDataContentProps`, so it is simply absent, not empty-stringed. Keep the outer
+         `flex flex-col size-full min-h-0 mt-8 pt-8` container as it is; centre the empty state within
+         it with Tailwind tokens only, no hardcoded colour.
+      3. Replace the legend gate at line 47 —
+         `!!Object.keys(currentEntity)?.length && !!Object.keys(compareEntity)?.length` — with
+         `hasSections`. That gate is the reported half of the defect: the raw buckets always carry the
+         `properties` key even when its array is empty, so it is true exactly when the body is blank.
+         `currentEntity` / `compareEntity` stay as props and stay the input to
+         `createSectionFromDiffs`; nothing else about them changes.
+
+      Do **not** key the branch on `diffView`, on the raw props, or on whether any row is visible —
+      design.md D15.2's third rejected alternative says why, and scenario *A filter that hides every
+      row does not produce the empty state* fails if you do.
+
+      i18n, in the same item because it is one line and nothing else consumes it: add
+      `SnapshotUnavailableTitle = 'ActivityAudit.SnapshotUnavailableTitle'` to `ActivityAuditI18nKey`
+      in `src/constants/i18n.ts` (the enum ends with `BeforeCurrent`), and to the `ActivityAudit`
+      block in `src/locales/en.ts` (ends with `BeforeCurrent`) the string
+      `No snapshot for this revision` — verbatim, from design.md D15.3. `en.ts` is the only locale
+      file (there is no other file under `src/locales/` that holds strings). **Exactly one key.** No
+      other key is added, moved or reworded; in particular `Entities.NoActivityAudit` and
+      `Basic.NoData` are left exactly as they are.
+
+      **Note on the diff, so a reader is not confused by a key that appears and disappears.** An
+      earlier pass of this same item also added
+      `SnapshotUnavailableDescription = 'ActivityAudit.SnapshotUnavailableDescription'` with the
+      string `This resource's recorded history begins after this revision, so there is no state to
+      compare.`, rendered as `DialNoDataContent`'s `description`. The owner removed that sentence
+      after seeing it in the browser (design.md D15.5) — the title carries the whole message. This
+      item therefore ends with the title alone. If the second key, its `en.ts` string or its use in
+      `EntityDiff.tsx` is present in the working tree, remove all three as part of this item; it is
+      this item's own work being corrected, not a separate removal task, which is why there is no
+      10.4. The `EntityDiff.spec.tsx` cases below assert the title and assert that the description
+      key is **absent**, so a re-introduction fails a test rather than passing review.
+
+      Tests. Add `src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx` — a new
+      file; there is no `EntityDiff` spec today, which is how the legend gate shipped wrong. (If the
+      earlier pass of this item already created it, amend it in place rather than rewriting it: the
+      four empty-state cases each assert the description key today and must stop.) Stub
+      `DiffSection` (render its `name` prop as text, so "a section was rendered" is observable) and
+      `DiffMiniMap` (its observer scheduling is irrelevant here), and leave `DiffLegend` real, so the
+      legend is asserted through the `ButtonsI18nKey.Create` / `Update` / `Delete` keys the global
+      `t()` mock returns as-is. Cases: both sides `{ properties: [] }` — the reported shape — giving a
+      `role="status"` region carrying `SnapshotUnavailableTitle` and **not** containing
+      `ActivityAudit.SnapshotUnavailableDescription` (assert the absence, so the removed sentence
+      cannot come back unnoticed), no legend, no section stub and no minimap stub;
+      the same with `type` set to `ActivityAuditResourceType.TABLE` and again to a non-analytics type
+      such as `ActivityAuditResourceType.MODEL`, both behaving identically (the requirement is
+      resource-type agnostic); both sides `{}` behaving the same; one populated `properties` bucket on
+      both sides giving one section stub, a rendered legend and **no** `status` region; a populated
+      bucket on one side only behaving the same way (one section, legend rendered — unchanged from
+      today); and `diffView={DiffView.DIFF}` with a populated bucket still giving no empty state and a
+      rendered legend, which pins that the predicate ignores the filter — note in the case's own
+      comment that `DiffSection` is stubbed here on purpose, so this pins `EntityDiff`'s condition and
+      not the filter's own behaviour, which `DiffSection.spec.tsx` already covers. Verify with
+      `npx vitest run src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx src/components/ActivityAudit/View/DiffReport/tests/DiffSection.spec.tsx src/components/ActivityAudit/View/tests/AuditView.spec.tsx --reporter=dot`
+      — the last two are the regression check and must stay green **unmodified**.
+
+- [x] 10.2 Run the `spec-browser-verify` skill against the two scenarios of this section that cross a
+      boundary the unit tests mock away, and against those only. Local stack booted with
+      `ANALYTICS_ENABLED=true` and `DIAL_ANALYTICS_API_URL` pointing at the running analytics service;
+      the app is on `http://localhost:4200`, not 3000. The case reproduces today and reproducing it
+      destroys nothing: `conversations_rollup` is a pipeline whose history predates the analytics
+      audit trail, so `GET /v1/pipelines/conversations_rollup/revision/{n}` answers
+      `404 revision_not_found` for both sides of any of its activities — which is how the defect was
+      found. Toggling `enabled` on it produces a fresh `Update` activity if none is at hand. Verify,
+      on that activity's `/activity-audit/{activityId}` page: (1) the diff body showing the empty
+      state with its title and **no** sentence beneath it (the description was removed on the owner's
+      instruction — design.md D15.5; a re-run must not report its absence as a `fail`), addressable
+      as a status region, with the header and the
+      `Comparison` / `View` controls still rendered above it and no error page and no notification;
+      and (2) no Create / Update / Delete legend anywhere beneath it. The other two scenarios are
+      deliberately **not** sent: *A comparison that produces at least one section is unchanged* is
+      what a component renders from its own props, already covered by 10.1 and by the container detail
+      page that 7.1 verified, and *A filter that hides every row does not produce the empty state* is
+      a props-level filter interaction 10.1 pins. Resolve every `fail` verdict before the change is
+      complete.
+
+- [x] 10.3 From `apps/ai-dial-admin/`, run
+      `npx vitest run --reporter=dot --coverage --coverage.reporter=text-summary` and confirm the
+      coverage gate in `vitest.config.ts` is not regressed; run
+      `npx tsc -p tsconfig.app.json --noEmit` and expect **0** errors (see the correction in this
+      section's notes — it is a blocking
+      CI job now, and a failure here is this section's, not pre-existing); from the repository root
+      run `npm run lint 2>&1 | tail -30` and `npm run format`, and resolve any findings. The cheap
+      reporter forms are deliberate: the defaults print ~3 900 lines to say "0 failures", while the
+      dot reporter still prints every failure in full and the thresholds live in the config rather
+      than in the reporter. `*.spec.tsx` files are eslint-ignored, so lint is a statement about source
+      files only, and `npm run typecheck:specs` stays red by design — judge it by error kind, never by
+      count. Anything this turns up is a new dispatch to the role that owns the file, not an edit from
+      this task.

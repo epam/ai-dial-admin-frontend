@@ -124,7 +124,8 @@ describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => 
   test('builds its columns for the Analytics view, so no expander and no Version column are added', () => {
     getAnalyticsActivityAuditColumns(t, vi.fn());
 
-    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics);
+    // The third argument is the single-entity flag, undefined for a caller that omits it.
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, void 0);
   });
 
   test('offers Open in new tab as the only row action and never a rollback one', () => {
@@ -141,6 +142,24 @@ describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => 
 
     const actions = (cols[2] as { actions: { type: string }[] }).actions;
     expect(actions).toHaveLength(0);
+  });
+
+  test('forwards the single-entity flag, so a one-resource tab drops Resource type and identifier', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn(), true);
+
+    // The column set itself is `ACTIVITY_AUDIT_COLUMNS`' to build: with the flag true it emits
+    // neither `resourceType` nor `resourceId`, which `List.spec.tsx` asserts against the real one.
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, true);
+    expect(cols[2].colId).toBe('actions');
+  });
+
+  test('offers no rollback action on a single-entity tab either', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn(), true);
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+    expect(getResourceRollbackOperation).not.toHaveBeenCalled();
   });
 });
 

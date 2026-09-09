@@ -8,10 +8,12 @@ import {
   DialConfirmationPopup,
   DialDangerButton,
   DialPrimaryButton,
+  DialTabs,
 } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import { updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineReadOnlyFacts from '@/src/components/Analytics/Pipelines/Common/PipelineReadOnlyFacts';
 import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
@@ -28,6 +30,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
+import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { buildPipelineDto, getPipelineInput, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
@@ -43,7 +46,7 @@ interface Props {
 const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const t = useI18n();
   const router = useRouter();
-  const { isFullAdmin } = useAppContext();
+  const { isFullAdmin, featureFlags } = useAppContext();
   const { showNotification } = useNotification();
   const { dispatch, jsonErrors } = useSaveValidationContext();
 
@@ -53,6 +56,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const [isTogglePromptOpen, setIsTogglePromptOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [documentSeed, setDocumentSeed] = useState<PipelineDraft | null>(null);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
+
+  const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
 
   const readSource = getPipelineInput(pipeline.inputs) || target?.source_table;
 
@@ -88,6 +94,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   const onToggleEditor = useCallback(() => {
     if (!isEditorEnabled) setDocumentSeed(draftDocument);
+    // The strip is withdrawn with the rest of the body while the document is on screen, so leaving
+    // the editor has to bring it back on Properties rather than on whatever was selected before.
+    setActiveTab(EntityViewTab.Properties);
     setIsEditorEnabled((prev) => !prev);
   }, [isEditorEnabled, draftDocument]);
 
@@ -163,6 +172,23 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     <DialPrimaryButton {...toggleProps} />
   );
 
+  // One fallback for both conditions: with analytics disabled, or while the JSON editor holds the
+  // view, the Properties body is everything below the identity row — no strip, and no Audit tab to
+  // issue an analytics activity request from. There is no pipeline-status condition: `enabled` is a
+  // runtime toggle, and gating on it would hide the history of the toggle itself.
+  const isTabStripShown = !!featureFlags.analyticsEnabled && !isEditorEnabled;
+  const isAuditShown = isTabStripShown && activeTab === EntityViewTab.Audit;
+
+  const properties = (
+    <>
+      <PipelineReadOnlyFacts pipeline={pipeline} readSource={readSource} />
+      <div className="flex flex-col gap-y-6 pt-6">
+        {children}
+        <PipelineStateSection state={pipeline.state} />
+      </div>
+    </>
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative gap-4">
       <div className="flex flex-row items-start justify-between gap-4">
@@ -209,18 +235,20 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         />
       )}
 
+      {isTabStripShown && (
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+      )}
+
       <div className="flex-1 overflow-auto min-h-0 flex flex-col">
-        {isEditorEnabled ? (
+        {isEditorEnabled && (
           <EntityJsonEditor entity={documentSeed} setSelectedEntity={form.replaceDraft} readonly={!isFullAdmin} />
-        ) : (
-          <>
-            <PipelineReadOnlyFacts pipeline={pipeline} readSource={readSource} />
-            <div className="flex flex-col gap-y-6 pt-6">
-              {children}
-              <PipelineStateSection state={pipeline.state} />
-            </div>
-          </>
         )}
+        {isAuditShown && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <PipelineAudit pipeline={pipeline} />
+          </div>
+        )}
+        {!isEditorEnabled && !isAuditShown && properties}
       </div>
     </div>
   );

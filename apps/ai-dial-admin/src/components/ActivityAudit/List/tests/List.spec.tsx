@@ -782,6 +782,173 @@ describe('ActivityAuditList :: Analytics entity audit tab', () => {
   });
 });
 
+describe('ActivityAuditList :: Analytics pipeline audit tab', () => {
+  const PIPELINE_NAME = 'daily_rollup';
+
+  const renderPipelineTab = () =>
+    render(
+      <ActivityAuditList
+        entity={{ name: PIPELINE_NAME } as BaseEntity}
+        entityType={ActivityAuditResourceType.PIPELINE}
+        viewMode={ActivityAuditView.Analytics}
+      />,
+    );
+
+  const pipelineActivity = (overrides: Partial<DialActivity> = {}) =>
+    activity({ resourceType: ActivityAuditResourceType.PIPELINE, resourceId: PIPELINE_NAME, ...overrides });
+
+  const lastFeedFilters = (): FilterDto[] =>
+    (getAnalyticsActivitiesMock.mock.calls[getAnalyticsActivitiesMock.mock.calls.length - 1][3] ?? []) as FilterDto[];
+
+  test('requests the analytics feed with the exact resource-type and resource-id pair', async () => {
+    renderPipelineTab();
+    await requestRows();
+
+    expect(getAnalyticsActivitiesMock).toHaveBeenCalledWith(
+      PAGE_SIZE,
+      0,
+      [],
+      expect.arrayContaining([
+        {
+          column: RESOURCE_ID_FIELD,
+          value: PIPELINE_NAME,
+          operator: FilterOperatorDto.EQUALS,
+        },
+        {
+          column: RESOURCE_TYPE_FIELD,
+          value: ActivityAuditResourceType.PIPELINE,
+          operator: FilterOperatorDto.EQUALS,
+        },
+      ]),
+    );
+  });
+
+  test('sends neither a substring nor a resource-type inclusion filter', async () => {
+    renderPipelineTab();
+    await requestRows();
+
+    const operators = lastFeedFilters().map((filter) => filter.operator);
+    expect(operators).not.toContain(FilterOperatorDto.CONTAINS);
+    expect(operators).not.toContain(FilterOperatorDto.INCLUDES);
+  });
+
+  test('lists every activity the feed answers with, dropping none client-side', async () => {
+    getAnalyticsActivitiesMock.mockResolvedValue(
+      onePage([
+        pipelineActivity({ activityId: 'created', activityType: ActivityAuditType.Create }),
+        pipelineActivity({ activityId: 'updated', activityType: ActivityAuditType.Update }),
+        pipelineActivity({ activityId: 'deleted', activityType: ActivityAuditType.Delete }),
+      ]),
+    );
+    renderPipelineTab();
+    const { successCallback } = await requestRows();
+
+    const [rows] = successCallback.mock.calls[0] as [DialActivity[]];
+    expect(rows.map((row) => row.activityId)).toEqual(['created', 'updated', 'deleted']);
+  });
+
+  test('renders the single-entity column set, with neither resource column nor Version nor an expander', () => {
+    renderPipelineTab();
+
+    const fields = lastColumnDefs().map((column) => column.field);
+    expect(fields).not.toContain(RESOURCE_TYPE_FIELD);
+    expect(fields).not.toContain(RESOURCE_ID_FIELD);
+    expect(fields).not.toContain('version');
+    expect(fields).not.toContain('expanderColumn');
+    expect(fields).toContain('activityType');
+    expect(fields).toContain('epochTimestampMs');
+    expect(fields).toContain('initiatedEmail');
+    expect(fields).toContain('activityId');
+    expect(fields).toContain('parentActivityId');
+  });
+
+  test('lists a bulk-bumped update with the parent identifier the backend supplied', async () => {
+    const tableUpdate = activity({
+      activityId: 'table-update',
+      resourceId: 'orders',
+      resourceType: ActivityAuditResourceType.TABLE,
+      activityType: ActivityAuditType.Update,
+    });
+    getAnalyticsActivitiesMock.mockImplementation((...args: unknown[]) =>
+      ((args[3] ?? []) as FilterDto[]).some((filter) => filter.column === 'activityId')
+        ? Promise.resolve(onePage([tableUpdate]))
+        : Promise.resolve(onePage([pipelineActivity({ activityId: 'bumped', parentActivityId: 'table-update' })])),
+    );
+    renderPipelineTab();
+    const { successCallback } = await requestRows();
+
+    const [rows] = successCallback.mock.calls[0] as [DialActivity[]];
+    expect(rows.map((row) => row.activityId)).toEqual(['bumped']);
+    expect(rows[0].parentActivityId).toBe('table-update');
+  });
+
+  test('lists a Delete recorded by the target table deletion, which carries no parent', async () => {
+    getAnalyticsActivitiesMock.mockResolvedValue(
+      onePage([pipelineActivity({ activityId: 'target-dropped', activityType: ActivityAuditType.Delete })]),
+    );
+    renderPipelineTab();
+    const { successCallback } = await requestRows();
+
+    const [rows] = successCallback.mock.calls[0] as [DialActivity[]];
+    expect(rows.map((row) => row.activityId)).toEqual(['target-dropped']);
+    expect(rows[0].parentActivityId).toBeUndefined();
+  });
+
+  test('offers Open in a new tab and no Rollback row action', () => {
+    renderPipelineTab();
+
+    expect(rowActionIds()).toEqual([ActionMenuOperationI18nKey.Open_in_new_tab]);
+    expect(rowActionIds()).not.toContain(ActionMenuOperationI18nKey.Resource_rollback);
+  });
+
+  test('opens the global audit detail page in a new tab on a row body click', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    renderPipelineTab();
+
+    lastListViewProps().additionalGridOptions?.onCellClicked?.({
+      data: pipelineActivity(),
+      colDef: { field: 'activityId' },
+      node: { setSelected: vi.fn() },
+    } as never);
+
+    expect(openSpy).toHaveBeenCalledWith('/activity-audit/abc-123', '_blank');
+    expect(openSpy).not.toHaveBeenCalledWith(expect.stringContaining('/pipelines/'), expect.anything());
+    openSpy.mockRestore();
+  });
+
+  test('reports an empty grid without a notification for a pipeline with no recorded history', async () => {
+    renderPipelineTab();
+    const { successCallback, failCallback } = await requestRows();
+
+    expect(successCallback).toHaveBeenCalledWith([], 0);
+    expect(failCallback).not.toHaveBeenCalled();
+    expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('re-requests the list with the time-range filters when the time period changes', async () => {
+    renderPipelineTab();
+    getAnalyticsActivitiesMock.mockClear();
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'change-period' }));
+    });
+    await requestRows();
+
+    expect(getAnalyticsActivitiesMock).toHaveBeenCalledWith(
+      PAGE_SIZE,
+      0,
+      [],
+      expect.arrayContaining([
+        expect.objectContaining({
+          column: 'epochTimestampMs',
+          operator: FilterOperatorDto.GREATER_THAN_OR_EQUAL,
+        }),
+        expect.objectContaining({ column: 'epochTimestampMs', operator: FilterOperatorDto.LESS_THAN_OR_EQUAL }),
+      ]),
+    );
+  });
+});
+
 describe('ActivityAuditList :: Config view parent/child aggregation', () => {
   test('aggregates child activities under their parent and fetches them by parent identifier', async () => {
     const parent = activity({

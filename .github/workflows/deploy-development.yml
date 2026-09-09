@@ -1,8 +1,8 @@
 name: Deploy development
 
 on:
-  workflow_dispatch:
-  registry_package:
+  workflow_dispatch: # manual run
+  registry_package: # on new package version (main path)
 
 jobs:
   trigger:
