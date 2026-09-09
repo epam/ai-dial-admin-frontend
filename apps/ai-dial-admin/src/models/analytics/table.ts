@@ -125,6 +125,17 @@ export interface DraftEnrichmentSchemaDto {
 
 export type DraftSchemaDto = DraftSourceSchemaDto | DraftEnrichmentSchemaDto;
 
+// The JSON-editor draft document (see draft-document.ts): the column form's schema DTO plus the
+// table's catalog metadata, widened with an index signature so a member this console does not read or
+// write — pasted from another environment's `GET /v1/tables/{name}` response — still type-checks. The
+// document itself is never sent as-is; `splitDraftDocument` carves each request body out of it as a
+// narrower subset (see design.md D3).
+export type DraftTableDocument = DraftSchemaDto & {
+  description?: string;
+  tag_order?: string[];
+  [key: string]: unknown;
+};
+
 // PUT /v1/tables/{name} — table catalog metadata merge-patch: absent/null leaves a field unchanged,
 // `tag_order: []` clears it, a non-empty `tag_order` replaces it.
 export interface UpdateTableDto {
