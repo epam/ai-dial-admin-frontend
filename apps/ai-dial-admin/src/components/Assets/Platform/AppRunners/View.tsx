@@ -7,26 +7,24 @@ import { createPortal } from 'react-dom';
 import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import { createApp } from '@/src/app/[lang]/assets-applications/actions';
+import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
+import { DialApplicationResource, DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
-import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { toRunnerReference } from '@/src/utils/app-runners/runner-reference';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -164,6 +162,8 @@ const AppRunnerAssetView: FC<Props> = ({
     });
   }, [selectedRunner, etag, showNotification, t, router, fetchFiles]);
 
+  const onCreate = (entity: DialResource) => createApp(entity as DialApplicationResource);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
@@ -214,10 +214,10 @@ const AppRunnerAssetView: FC<Props> = ({
               view={ApplicationRoute.AssetsApplications}
               isModalOpen={isCreateAssetAppModalOpen}
               onClose={onCloseCreateAssetAppModal}
-              onCreate={createApp as (entity: DialResource) => Promise<ServerActionResponse>}
+              onCreate={onCreate}
               context={useAppsFolder}
               initialValues={{
-                source: originalRunner.$id ? createSchemaSource(toRunnerReference(originalRunner.$id)) : undefined,
+                source: originalRunner.$id ? createSchemaSource(originalRunner.$id) : undefined,
                 applicationProperties,
               }}
             />,
