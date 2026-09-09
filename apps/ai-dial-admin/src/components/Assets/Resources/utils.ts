@@ -70,7 +70,13 @@ export const getLevels = (): ToolsetAuthCredentialLevel[] => {
 
 export const setUrl = (view: ApplicationRoute, selectedToolset: unknown) => {
   if (typeof window !== 'undefined') {
-    const url = `${getUrnForEntity(view, selectedToolset)}&`;
+    const urn = getUrnForEntity(view, selectedToolset);
+    // A public-bucket toolset's URN already carries `?path=...` (from `getEntityPath`'s versioned
+    // branch), so the callback page's appended `code=...` needs `&`. A platform-bucket toolset's URN
+    // is a bare encoded name with no query string at all (flat entities need no `?path=`), so it
+    // needs `?` instead — hardcoding `&` here produced a malformed `{name}&code=...` redirect for the
+    // platform bucket (Issue #4447).
+    const url = `${urn}${urn.includes('?') ? '&' : '?'}`;
     localStorage.setItem(urlKey, url);
   }
 };
