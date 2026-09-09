@@ -119,3 +119,7 @@ export const getPathFromUrl = (url?: string): string => {
 
   return decodeURIComponent(url.replace(/^files\//, ''));
 };
+
+/** DIAL file ids are storage paths (`public/...`). Leftover schema values after a type change are not. */
+export const toFileSelectPath = (value: unknown): string =>
+  typeof value === 'string' && value.includes('/') ? value : '';
