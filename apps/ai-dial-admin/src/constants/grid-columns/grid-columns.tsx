@@ -1343,6 +1343,7 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
     field: 'displayName',
     colId: 'displayName',
     headerName: t(TestSuitesI18nKey.Metric),
+    lockPosition: 'left',
     cellRenderer: RadioNameCellRenderer,
     cellRendererParams: { groupName: METRIC_RADIO_GROUP_NAME },
     tooltipValueGetter: () => undefined,
