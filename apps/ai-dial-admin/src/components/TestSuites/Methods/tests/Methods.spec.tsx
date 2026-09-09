@@ -248,34 +248,39 @@ describe('Methods component', () => {
       expect(groupNames).toEqual(['TestSuites.ChatInterface', 'TestSuites.Responses', 'TestSuites.Other']);
     });
 
-    test('renders from features.responses_api when Core reports no interfaces', async () => {
-      mockGetDeployment.mockResolvedValue({
-        ...mockDeployment,
-        deploymentId: 'deepseek-ocr-2',
-        interfaces: undefined,
-        features: { chat_completion: true, responses_api: true },
-      });
-
-      render(
-        <Methods testSuite={{ endpointRef: {} } as any} selectedTarget={selectedApplication} onChange={onChange} />,
-      );
+    test('renders for the full declared interface list', async () => {
+      renderWithInterfaces(['chat', 'openaiChatCompletions', 'openaiResponses', 'anthropicMessages']);
 
       expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'POST /openai/v1/responses' })).toBeInTheDocument();
     });
 
-    test('is absent when features reports responses_api false', async () => {
-      mockGetDeployment.mockResolvedValue({
-        ...mockDeployment,
-        features: { chat_completion: true, responses_api: false },
-      });
-
-      render(
-        <Methods testSuite={{ endpointRef: {} } as any} selectedTarget={selectedApplication} onChange={onChange} />,
-      );
+    test('is absent for a target declaring only anthropicMessages', async () => {
+      renderWithInterfaces(['chat', 'anthropicMessages']);
 
       await screen.findByRole('button', { name: 'POST /chat/completions' });
       expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+    });
+
+    test('is absent when the declared interface list is empty', async () => {
+      renderWithInterfaces([]);
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+    });
+
+    test.each([
+      ['no interfaces are reported', undefined],
+      ['the declared list is empty', []],
+      ['the declared list omits openaiResponses', ['chat', 'anthropicMessages']],
+      ['the declared list includes openaiResponses', ['chat', 'openaiResponses']],
+    ])('keeps the custom routes group when %s', async (_label, interfaces) => {
+      renderWithInterfaces(interfaces as string[] | undefined);
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.Other' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET /api/users' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST /api/users' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'GET /api/data' })).toBeInTheDocument();
     });
 
     test('stays visible for a suite already selecting a Responses method', async () => {

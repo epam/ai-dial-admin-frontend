@@ -18,7 +18,7 @@ import {
 import { generateMethodPathCombinations } from '@/src/components/TestSuites/utils/method';
 import { BuildMethodGroupsParams, MethodGroup, MethodOption } from '@/src/components/TestSuites/utils/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import { uniquifyResponseColumns } from '@/src/utils/evaluation/request-chain';
@@ -33,14 +33,12 @@ const isResponsesEndpoint = (endpointRef?: TestSuiteEndpointRef): boolean =>
   !!endpointRef?.relativeUrlPattern && RESPONSES_URL_PATTERNS.has(endpointRef.relativeUrlPattern);
 
 /**
- * An absent signal means "not reported" rather than "supports nothing", so the group is also kept
- * for a suite already configured against a Responses method — otherwise reopening such a suite
- * would leave its selected method unreachable.
+ * An unreported `interfaces` list means "not reported" rather than "supports nothing", so the group
+ * is also kept for a suite already configured against a Responses method — otherwise reopening such
+ * a suite would leave its selected method unreachable.
  */
 const shouldOfferResponses = (deployment?: Deployment | null, endpointRef?: TestSuiteEndpointRef): boolean =>
-  deployment?.features?.responses_api === true ||
-  !!deployment?.interfaces?.includes(DeploymentInterfaceType.OpenAIResponses) ||
-  isResponsesEndpoint(endpointRef);
+  !!deployment?.interfaces?.includes(DeploymentApiInterface.OpenAIResponses) || isResponsesEndpoint(endpointRef);
 
 const buildChatInterfaceGroup = (takenColumnNames: string[]): MethodGroup => ({
   titleKey: TestSuitesI18nKey.ChatInterface,

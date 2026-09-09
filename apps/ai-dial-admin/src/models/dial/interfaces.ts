@@ -1,13 +1,24 @@
 /**
- * DIAL Core's `InterfaceType` vocabulary, shared by the Core config `interfaces` map and by the
- * Evaluation Framework's reported `interfaces` array. Only a subset of these is configurable per
- * entity type — see the `*_INTERFACE_TYPES` allowlists in `@/src/constants/deployment-interfaces`.
+ * The APIs a deployment declares support for, as reported in `Deployment.interfaces`. Read-only and
+ * authoritative: a deployment serves an API listed here and no other.
+ *
+ * Distinct from `DeploymentInterfaceType`, which is the *configurable* map keying an interface to a
+ * base URL. Three values coincide, but the two are different fields with different lifecycles — one
+ * is edited here, the other is declared by the deployment.
+ */
+export enum DeploymentApiInterface {
+  Chat = 'chat',
+  OpenAIChatCompletions = 'openaiChatCompletions',
+  OpenAIResponses = 'openaiResponses',
+  AnthropicMessages = 'anthropicMessages',
+}
+
+/**
+ * Interfaces configurable per entity through the Core config `interfaces` map. Which of these an
+ * entity type may declare is set by the `*_INTERFACE_TYPES` allowlists in
+ * `@/src/constants/deployment-interfaces`; every member carries a label in `InterfacesField`.
  */
 export enum DeploymentInterfaceType {
-  Chat = 'chat',
-  Embedding = 'embedding',
-  Mcp = 'mcp',
-  CustomUi = 'custom_ui',
   OpenAIChatCompletions = 'openaiChatCompletions',
   OpenAIResponses = 'openaiResponses',
   AnthropicMessages = 'anthropicMessages',

@@ -1,91 +1,88 @@
 ## Purpose
 
 Governs which invocation methods a test suite offers for a deployment target, so that DIAL's OpenAI
-Responses API operations become selectable — and only for deployments that report supporting that
+Responses API operations become selectable — and only for deployments that declare supporting that
 interface.
 
 ## ADDED Requirements
 
-### Requirement: Responses support is read from the single-deployment fetch
+### Requirement: Supported APIs are read from the deployment's declared interfaces
 
-A single-deployment response can report Responses API support two ways, and method selection SHALL
-treat either as sufficient, reading both from the single-deployment fetch for the selected target:
+A deployment declares the APIs it supports in `interfaces`, an array of interface wire values drawn
+from `chat`, `openaiChatCompletions`, `openaiResponses` and `anthropicMessages`. That declaration is
+authoritative: method selection SHALL read it from the single-deployment fetch for the selected
+target and SHALL NOT infer API support from any other field.
 
-- `features.responses_api` — DIAL Core's per-deployment feature flag, passed through verbatim. This
-  is the signal that actually arrives for models, because Core does not report `interfaces` for
-  deployments fetched through its `/openai/...` API.
-- `interfaces` — an array of interface wire values containing `openaiResponses`. Authoritative
-  wherever Core populates it.
+The deployment listing response carries a short projection without `interfaces`, so support SHALL NOT
+be inferred from a listing-backed deployment record.
 
-The deployment listing response carries neither field, so support SHALL NOT be inferred from any
-listing-backed deployment record.
+An absent or empty `interfaces` array means "not reported" and SHALL NOT be treated as "supports
+nothing" beyond the visibility of the API groups this capability gates. In particular, the
+`/chat/completions` method SHALL remain offered regardless of what `interfaces` reports, and the
+methods derived from the deployment's own routes SHALL be unaffected by it.
 
-An absent signal means "not reported" and SHALL NOT be treated as "supports nothing" beyond the
-Responses group's own visibility, which this capability governs. In particular, the
-`/chat/completions` method SHALL remain offered regardless of which signals are present.
+#### Scenario: Support read from the declared interface list
 
-#### Scenario: Support read from the Core feature flag
-
-- **WHEN** a user opens method selection for a test suite whose target reports
-  `features.responses_api` as `true` and carries no `interfaces` property
+- **WHEN** a user opens method selection for a test suite whose target declares `interfaces` as
+  `["chat", "openaiChatCompletions", "openaiResponses", "anthropicMessages"]`
 - **THEN** the Responses API methods are offered
 
-#### Scenario: Support read from the interfaces array
+#### Scenario: Declared list omitting the Responses value
 
-- **WHEN** the selected target reports `interfaces` containing `openaiResponses`
-- **THEN** the Responses API methods are offered
-
-#### Scenario: Feature flag reported false
-
-- **WHEN** the selected target reports `features.responses_api` as `false`
+- **WHEN** the selected target declares `interfaces` as `["chat", "anthropicMessages"]`
 - **THEN** no Responses API method is offered
 
-#### Scenario: Chat completions unaffected by a reported signal set that omits it
+#### Scenario: Chat completions unaffected by a declared list that omits it
 
-- **WHEN** the selected target reports `interfaces` as `["openaiResponses"]`, with no chat value
+- **WHEN** the selected target declares `interfaces` as `["openaiResponses"]`, with no chat value
 - **THEN** the `/chat/completions` method is still offered
 
-#### Scenario: Neither signal present leaves chat completions offered
+#### Scenario: No declared list leaves chat completions offered
 
-- **WHEN** the selected target's record has neither an `interfaces` nor a `features` property
+- **WHEN** the selected target's record has no `interfaces` property
 - **THEN** the `/chat/completions` method is offered and no Responses API method is
 
-### Requirement: Responses API methods form their own group, gated on reported support
+#### Scenario: Custom routes unaffected by the declared list
+
+- **WHEN** the selected target declares routes of its own, for any value of `interfaces` — absent,
+  empty, with the Responses value, or without it
+- **THEN** the methods derived from those routes are offered unchanged
+
+### Requirement: Responses API methods form their own group, gated on the declared interfaces
 
 Method selection SHALL present a distinct, labelled "Responses" group listing the Responses API
 operations, ordered after the "Chat interface" group and before the group of methods derived from the
 deployment's own routes.
 
-The group SHALL render when any of the following holds, and SHALL be absent otherwise:
+The group SHALL render when either of the following holds, and SHALL be absent otherwise:
 
-- the selected target reports `features.responses_api` as `true`; or
-- the selected target reports `interfaces` containing `openaiResponses`; or
+- the selected target declares `interfaces` containing `openaiResponses`; or
 - the test suite being edited already selects a Responses API method.
 
-The third condition exists so that a suite already configured against a Responses API method keeps
-its selection visible and re-selectable even when the target stops reporting support.
+The second condition exists so that a suite already configured against a Responses API method keeps
+its selection visible and re-selectable even when the target stops declaring support.
 
-#### Scenario: Group present when the interface is reported
+#### Scenario: Group present when the interface is declared
 
-- **WHEN** the selected target reports `interfaces` containing `openaiResponses`
+- **WHEN** the selected target declares `interfaces` containing `openaiResponses`
 - **THEN** a "Responses" group is rendered between the "Chat interface" group and the routes group
 
-#### Scenario: Group absent when a reported interface set omits the Responses value
+#### Scenario: Group absent when a declared list omits the Responses value
 
-- **WHEN** the selected target reports `interfaces` as `["chat", "openaiChatCompletions"]` and the
+- **WHEN** the selected target declares `interfaces` as `["chat", "openaiChatCompletions"]` and the
   suite does not select a Responses API method
 - **THEN** no "Responses" group is rendered
 
-#### Scenario: Group absent when nothing is reported
+#### Scenario: Group absent when nothing is declared
 
-- **WHEN** the selected target's record reports neither `features.responses_api` nor an `interfaces`
-  entry for it, and the suite does not select a Responses API method
+- **WHEN** the selected target's record has no `interfaces` property, or declares it empty, and the
+  suite does not select a Responses API method
 - **THEN** no "Responses" group is rendered
 
 #### Scenario: Saved selection keeps the group visible
 
-- **WHEN** the suite being edited selects a Responses API method, and the selected target reports
-  neither signal
+- **WHEN** the suite being edited selects a Responses API method, and the selected target declares no
+  `interfaces`
 - **THEN** the "Responses" group is rendered and the suite's selected method is shown as active
 
 ### Requirement: The group lists the four Responses API operations

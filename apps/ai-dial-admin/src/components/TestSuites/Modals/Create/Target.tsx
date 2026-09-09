@@ -7,9 +7,9 @@ import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS, MCP_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { MCP_INTERFACE_FILTER } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from './types';
@@ -70,7 +70,7 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
 
     setIsLoading(true);
 
-    getDeployments(type, activeTab === TargetTab.Mcp ? DeploymentInterfaceType.Mcp : void 0).then((res) => {
+    getDeployments(type, activeTab === TargetTab.Mcp ? MCP_INTERFACE_FILTER : void 0).then((res) => {
       const filtered = res?.response || [];
       deploymentsByTabRef.current.set(activeTab, filtered);
       setDeployments(filtered);

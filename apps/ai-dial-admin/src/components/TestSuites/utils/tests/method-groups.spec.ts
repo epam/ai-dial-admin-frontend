@@ -2,24 +2,28 @@ import { describe, expect, test } from 'vitest';
 
 import { buildMethodGroups, flattenMethodGroups } from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
 import { Deployment } from '@/src/models/evaluation/deployment';
 
-const deployment = (
-  interfaces?: DeploymentInterfaceType[],
-  routes?: Deployment['routes'],
-  features?: Deployment['features'],
-): Deployment =>
+const deployment = (interfaces?: DeploymentApiInterface[], routes?: Deployment['routes']): Deployment =>
   ({
     $type: 'dial-model',
     deploymentId: 'gpt-4o',
     interfaces,
     routes,
-    features,
   }) as Deployment;
 
-const featuresDeployment = (responsesApi?: boolean): Deployment =>
-  deployment(undefined, undefined, { responses_api: responsesApi });
+const ROUTES = { 'route-1': { paths: ['/api/users'], methods: ['GET'] } } as Deployment['routes'];
+
+const routeOptions = (params: Parameters<typeof buildMethodGroups>[0]) =>
+  buildMethodGroups(params)
+    .find((group) => group.titleKey === TestSuitesI18nKey.Other)
+    ?.options.map(({ ref, displayUrl, seed }) => [
+      ref.method,
+      ref.relativeUrlPattern,
+      displayUrl,
+      seed.requestTemplate?.urlTemplate,
+    ]);
 
 const titles = (params: Parameters<typeof buildMethodGroups>[0]) =>
   buildMethodGroups(params)
@@ -33,13 +37,13 @@ describe('buildMethodGroups', () => {
     });
 
     test('omits the group when the reported interfaces do not include openaiResponses', () => {
-      const interfaces = [DeploymentInterfaceType.Chat, DeploymentInterfaceType.OpenAIChatCompletions];
+      const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIChatCompletions];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.ChatInterface]);
     });
 
     test('includes the group when openaiResponses is reported', () => {
-      const interfaces = [DeploymentInterfaceType.Chat, DeploymentInterfaceType.OpenAIResponses];
+      const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIResponses];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
         TestSuitesI18nKey.ChatInterface,
@@ -83,35 +87,28 @@ describe('buildMethodGroups', () => {
       expect(titleKeys).not.toContain(TestSuitesI18nKey.Responses);
     });
 
-    test('includes the group when features.responses_api is true and interfaces are absent', () => {
-      expect(titles({ deployment: featuresDeployment(true) })).toEqual([
+    test('omits the group when the reported interfaces are empty', () => {
+      expect(titles({ deployment: deployment([]) })).toEqual([TestSuitesI18nKey.ChatInterface]);
+    });
+
+    test('includes the group for the full declared interface list', () => {
+      const interfaces = [
+        DeploymentApiInterface.Chat,
+        DeploymentApiInterface.OpenAIChatCompletions,
+        DeploymentApiInterface.OpenAIResponses,
+        DeploymentApiInterface.AnthropicMessages,
+      ];
+
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([
         TestSuitesI18nKey.ChatInterface,
         TestSuitesI18nKey.Responses,
       ]);
     });
 
-    test('omits the group when features.responses_api is false', () => {
-      expect(titles({ deployment: featuresDeployment(false) })).toEqual([TestSuitesI18nKey.ChatInterface]);
-    });
+    test('omits the group for a target declaring only anthropicMessages', () => {
+      const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.AnthropicMessages];
 
-    test('omits the group when features is present but carries no responses_api flag', () => {
-      expect(titles({ deployment: featuresDeployment(undefined) })).toEqual([TestSuitesI18nKey.ChatInterface]);
-    });
-
-    test('includes the group when features.responses_api is true even though interfaces omit it', () => {
-      const withBoth = deployment([DeploymentInterfaceType.Chat], undefined, { responses_api: true });
-
-      expect(titles({ deployment: withBoth })).toContain(TestSuitesI18nKey.Responses);
-    });
-
-    test('seeds the create-response body from a features-gated deployment', () => {
-      const groups = buildMethodGroups({ deployment: featuresDeployment(true) });
-      const create = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses)?.options[0];
-
-      expect(create?.seed.requestTemplate?.body?.content).toEqual({
-        model: 'gpt-4o',
-        input: '${{user_message}}',
-      });
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.ChatInterface]);
     });
 
     test('omits the group when there is no deployment at all', () => {
@@ -121,9 +118,7 @@ describe('buildMethodGroups', () => {
 
   describe('group order and contents', () => {
     test('orders chat interface, responses, then routes', () => {
-      const routes = { 'route-1': { paths: ['/api/users'], methods: ['GET'] } } as Deployment['routes'];
-
-      expect(titles({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses], routes) })).toEqual([
+      expect(titles({ deployment: deployment([DeploymentApiInterface.OpenAIResponses], ROUTES) })).toEqual([
         TestSuitesI18nKey.ChatInterface,
         TestSuitesI18nKey.Responses,
         TestSuitesI18nKey.Other,
@@ -131,7 +126,7 @@ describe('buildMethodGroups', () => {
     });
 
     test('lists the four Responses operations in order', () => {
-      const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses]) });
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
 
       expect(responses?.options.map(({ ref }) => [ref.method, ref.relativeUrlPattern])).toEqual([
@@ -143,7 +138,7 @@ describe('buildMethodGroups', () => {
     });
 
     test('shows the readable URL rather than the regex pattern', () => {
-      const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses]) });
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
 
       expect(responses?.options.map(({ displayUrl }) => displayUrl)).toEqual([
@@ -161,10 +156,38 @@ describe('buildMethodGroups', () => {
     });
   });
 
+  describe('custom routes group', () => {
+    const expected = [['GET', '/api/users', '/api/users', '/api/users']];
+
+    test.each([
+      ['interfaces are not reported', undefined],
+      ['the reported interfaces are empty', []],
+      ['the reported interfaces omit openaiResponses', [DeploymentApiInterface.OpenAIChatCompletions]],
+      ['the reported interfaces include openaiResponses', [DeploymentApiInterface.OpenAIResponses]],
+    ])('derives routes from the deployment when %s', (_label, interfaces) => {
+      expect(
+        routeOptions({ deployment: deployment(interfaces as DeploymentApiInterface[] | undefined, ROUTES) }),
+      ).toEqual(expected);
+    });
+
+    test('offers chat interface and routes for a target declaring no API interfaces', () => {
+      expect(titles({ deployment: deployment(undefined, ROUTES) })).toEqual([
+        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.Other,
+      ]);
+    });
+
+    test('keeps routes addressable after the Responses group', () => {
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses], ROUTES) });
+
+      expect(flattenMethodGroups(groups).at(-1)?.displayUrl).toBe('/api/users');
+    });
+  });
+
   describe('create-response seed', () => {
     const createSeed = (takenColumnNames?: string[]) => {
       const groups = buildMethodGroups({
-        deployment: deployment([DeploymentInterfaceType.OpenAIResponses]),
+        deployment: deployment([DeploymentApiInterface.OpenAIResponses]),
         takenColumnNames,
       });
 
@@ -201,7 +224,7 @@ describe('buildMethodGroups', () => {
 
   describe('response-scoped seeds', () => {
     const responseScopedSeeds = () => {
-      const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses]) });
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
 
       return responses?.options.slice(1).map(({ seed }) => seed) ?? [];
@@ -225,7 +248,7 @@ describe('buildMethodGroups', () => {
 
   describe('path patterns', () => {
     test('reject a path that omits the DIAL Responses prefix', () => {
-      const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses]) });
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const item = groups
         .find((group) => group.titleKey === TestSuitesI18nKey.Responses)
         ?.options.find(({ ref }) => ref.method === 'GET');
@@ -237,7 +260,7 @@ describe('buildMethodGroups', () => {
     });
 
     test('accept the seeded placeholder path and a concrete response id, and reject an unrelated path', () => {
-      const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses]) });
+      const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const cancel = groups
         .find((group) => group.titleKey === TestSuitesI18nKey.Responses)
         ?.options.find(({ ref }) => ref.relativeUrlPattern?.endsWith('/cancel'));
@@ -253,8 +276,7 @@ describe('buildMethodGroups', () => {
 
 describe('flattenMethodGroups', () => {
   test('flattens options in group order, so an index addresses one option', () => {
-    const routes = { 'route-1': { paths: ['/api/users'], methods: ['GET'] } } as Deployment['routes'];
-    const groups = buildMethodGroups({ deployment: deployment([DeploymentInterfaceType.OpenAIResponses], routes) });
+    const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses], ROUTES) });
 
     expect(flattenMethodGroups(groups).map(({ displayUrl }) => displayUrl)).toEqual([
       '/chat/completions',

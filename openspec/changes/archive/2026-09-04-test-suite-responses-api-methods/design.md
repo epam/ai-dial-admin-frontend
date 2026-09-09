@@ -41,6 +41,11 @@ See `proposal.md` — Why. The constraints that shape the approach:
 
 ## Decisions
 
+> **Superseded before merge (2026-09-09).** DIAL confirmed that `interfaces` is the definitive
+> declaration of a deployment's supported APIs, drawn from `chat`, `openaiChatCompletions`,
+> `openaiResponses` and `anthropicMessages`. D1 and D1a below record the decisions as originally
+> taken; D1b states what the branch actually ships. The delta spec under `specs/` reflects D1b.
+
 ### D1. Extend `DeploymentInterfaceType` to all eight wire values
 
 The Evaluation Framework's `interfaces` array and the existing `interface` query parameter draw on the
@@ -82,6 +87,36 @@ flags this app reads.
 
 *Alternative rejected:* replacing `interfaces` with `features` outright. It would discard a field the
 backend documents and populates for non-model deployment types, for no saving.
+
+### D1b. `interfaces` is definitive: two enums, one gate
+
+`interfaces` is authoritative, so the gate is `interfaces` containing `openaiResponses` **or** an
+already-selected Responses method. `features.responses_api` and `DeploymentFeatures` are removed —
+a single reader of a signal the backend no longer treats as primary is dead weight, and keeping a
+second signal would let a stale `features` flag contradict a definitive `interfaces`.
+
+D1's rejected alternative becomes the accepted one, because the premise changed. The two fields are
+not one vocabulary in two places:
+
+- `DeploymentApiInterface` — the APIs a deployment *declares support for*, read-only, exactly the
+  four values above.
+- `DeploymentInterfaceType` — the interfaces *configurable* per entity in the Core config map, keyed
+  to a base URL: `openaiChatCompletions`, `openaiResponses`, `anthropicMessages`,
+  `openaiEmbeddings`.
+
+Three values coincide, and TypeScript keeping the two unassignable is a feature, not the cost D1
+feared: nothing compares across them (`supportsResponsesInterface` reads the config map,
+`shouldOfferResponses` reads the declared list). Splitting them returns `DeploymentInterfaceType` to
+its four labelled members, so `getInterfaceTypeLabel` is exhaustive again and D1's `default: return
+type` consequence is reverted — `InterfacesField.tsx` is untouched by this change.
+
+`Target.tsx`'s `'mcp'` becomes `MCP_INTERFACE_FILTER` in `constants/deployment-interfaces.ts`. It
+narrows a deployment *listing*; it is neither a declared API nor a configurable interface row, so it
+belongs to neither enum.
+
+*Unchanged:* the "Other" group. `buildRoutesGroup` reads only `deployment.routes`, and `DEFAULT_SUITE`
+is untouched, so custom endpoints are independent of `interfaces` in both directions. Pinned by unit
+and component cases covering `interfaces` absent, empty, without the Responses value, and with it.
 
 ### D2. Grouping as a pure, data-only helper
 
