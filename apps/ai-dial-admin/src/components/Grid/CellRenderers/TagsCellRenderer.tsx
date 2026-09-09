@@ -2,6 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
+import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   items: string[];
@@ -70,7 +71,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
     return () => observer.disconnect();
   }, [recalculateVisibleItems]);
 
-  const itemClassName = classNames(
+  const itemClassName = mergeClasses(
     'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden',
     tagClassName,
   );
