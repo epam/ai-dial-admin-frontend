@@ -8,7 +8,7 @@ import { DEPLOYMENT_IMAGE_DEP } from '@/src/utils/entities/get-export-deps';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('@/src/components/AddEntitiesTab/utils');
 
-const mockGetAvailableEntities = AddEntitiesUtils.getAvailableEntities;
+const mockGetAvailableEntities = vi.mocked(AddEntitiesUtils.getAvailableEntities);
 
 describe('Export Config Utils :: getButtonTitle', () => {
   const mockTranslate = (v: string) => v;
@@ -171,7 +171,7 @@ describe('Export Config Utils :: getAvailableData', () => {
 
     const selectedTopics = ['topic1'];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered' }]);
 
     const result = getAvailableData(EntityType.MODEL, tabData, customExportData, 'MODEL', selectedTopics);
 
@@ -179,7 +179,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('m3', MenuI18nKey.Models, ['topic1'])],
       [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2'])],
     );
-    expect(result).toEqual(['filtered']);
+    expect(result).toEqual([{ name: 'filtered' }]);
   });
 
   test('should return all available MODEL entities when selectedTopics is empty', () => {
@@ -190,9 +190,9 @@ describe('Export Config Utils :: getAvailableData', () => {
       MODEL: [entity('m3', MenuI18nKey.Models, ['topic1'])],
     };
 
-    const selectedTopics = [];
+    const selectedTopics: string[] = [];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered' }]);
 
     const result = getAvailableData(EntityType.MODEL, tabData, customExportData, 'MODEL', selectedTopics);
 
@@ -200,7 +200,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('m3', MenuI18nKey.Models, ['topic1'])],
       [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2'])],
     );
-    expect(result).toEqual(['filtered']);
+    expect(result).toEqual([{ name: 'filtered' }]);
   });
 
   test('should filter and return available APPLICATION entities based on selected topics', () => {
@@ -213,7 +213,7 @@ describe('Export Config Utils :: getAvailableData', () => {
 
     const selectedTopics = ['topic1'];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-apps']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered-apps' }]);
 
     const result = getAvailableData(EntityType.APPLICATION, tabData, customExportData, 'APPLICATION', selectedTopics);
 
@@ -221,7 +221,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('a3', MenuI18nKey.Applications, ['topic1'])],
       [entity('a1', MenuI18nKey.Applications, ['topic1'])],
     );
-    expect(result).toEqual(['filtered-apps']);
+    expect(result).toEqual([{ name: 'filtered-apps' }]);
   });
 
   test('should return all available APPLICATION entities when selectedTopics is empty', () => {
@@ -232,9 +232,9 @@ describe('Export Config Utils :: getAvailableData', () => {
       APPLICATION: [entity('a3', MenuI18nKey.Applications, ['topic1'])],
     };
 
-    const selectedTopics = [];
+    const selectedTopics: string[] = [];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-apps']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered-apps' }]);
 
     const result = getAvailableData(EntityType.APPLICATION, tabData, customExportData, 'APPLICATION', selectedTopics);
 
@@ -242,7 +242,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('a3', MenuI18nKey.Applications, ['topic1'])],
       [entity('a1', MenuI18nKey.Applications, ['topic1'])],
     );
-    expect(result).toEqual(['filtered-apps']);
+    expect(result).toEqual([{ name: 'filtered-apps' }]);
   });
 
   test('should filter and return available TOOLSET entities based on selected topics', () => {
@@ -255,7 +255,7 @@ describe('Export Config Utils :: getAvailableData', () => {
 
     const selectedTopics = ['topic1'];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-toolsets']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered-toolsets' }]);
 
     const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET', selectedTopics);
 
@@ -263,7 +263,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
       [entity('t1', MenuI18nKey.Toolsets, ['topic1'])],
     );
-    expect(result).toEqual(['filtered-toolsets']);
+    expect(result).toEqual([{ name: 'filtered-toolsets' }]);
   });
 
   test('should return all available TOOLSET entities when selectedTopics is empty', () => {
@@ -274,9 +274,9 @@ describe('Export Config Utils :: getAvailableData', () => {
       TOOLSET: [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
     };
 
-    const selectedTopics = [];
+    const selectedTopics: string[] = [];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-toolsets']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered-toolsets' }]);
 
     const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET', selectedTopics);
 
@@ -284,7 +284,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
       [entity('t1', MenuI18nKey.Toolsets, ['topic1'])],
     );
-    expect(result).toEqual(['filtered-toolsets']);
+    expect(result).toEqual([{ name: 'filtered-toolsets' }]);
   });
 
   test('should handle APPLICATION_TYPE_SCHEMA entities with selected topics', () => {
@@ -297,7 +297,7 @@ describe('Export Config Utils :: getAvailableData', () => {
 
     const selectedTopics = ['topic1'];
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-schemas']);
+    mockGetAvailableEntities.mockReturnValue([{ name: 'filtered-schemas' }]);
 
     const result = getAvailableData(
       EntityType.APPLICATION_TYPE_SCHEMA,
@@ -311,7 +311,7 @@ describe('Export Config Utils :: getAvailableData', () => {
       [entity('schema2', MenuI18nKey.ApplicationRunners, ['topic2'])],
       [entity('schema1', MenuI18nKey.ApplicationRunners, ['topic1'])],
     );
-    expect(result).toEqual(['filtered-schemas']);
+    expect(result).toEqual([{ name: 'filtered-schemas' }]);
   });
 
   test('should return empty array when no data is available for APPLICATION_TYPE_SCHEMA', () => {
