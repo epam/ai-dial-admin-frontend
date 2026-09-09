@@ -112,10 +112,21 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
         isSingleEntity: true,
       });
 
-      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open);
+      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, true);
       expect(getActivityAuditColumns).not.toHaveBeenCalled();
       expect(getDeploymentActivityAuditColumns).not.toHaveBeenCalled();
       expect(columns).toEqual([{ colId: 'analytics-columns' }]);
+    });
+
+    test('Analytics passes the single-entity flag on as it is given, without a rollback handler', () => {
+      ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Analytics].getColumns({
+        t,
+        open,
+        onRollback,
+        isSingleEntity: false,
+      });
+
+      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, false);
     });
   });
 

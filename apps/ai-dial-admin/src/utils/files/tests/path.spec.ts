@@ -7,6 +7,7 @@ import {
   checkSelectedPath,
   extractVersionByPath,
   getFolderNameAndPath,
+  toFileSelectPath,
   getListOfPathsToBulkDelete,
   getListOfPathsToMove,
   getPathSegments,
@@ -466,5 +467,28 @@ describe('Utils :: files :: extractVersionByPath', () => {
     const path = 'item__';
     const result = extractVersionByPath(path);
     expect(result).toBeNull();
+  });
+});
+
+describe('Utils :: files :: toFileSelectPath', () => {
+  test('returns a storage path unchanged', () => {
+    expect(toFileSelectPath('public/docs/file.txt')).toBe('public/docs/file.txt');
+    expect(toFileSelectPath('applications/suite-1/files/notes.pdf')).toBe('applications/suite-1/files/notes.pdf');
+  });
+
+  test('returns empty for leftover schema values that are not paths', () => {
+    expect(toFileSelectPath(true)).toBe('');
+    expect(toFileSelectPath(false)).toBe('');
+    expect(toFileSelectPath(12)).toBe('');
+    expect(toFileSelectPath({ path: 'public/a' })).toBe('');
+    expect(toFileSelectPath('hello')).toBe('');
+    expect(toFileSelectPath('true')).toBe('');
+    expect(toFileSelectPath('file.pdf')).toBe('');
+  });
+
+  test('returns empty for missing values', () => {
+    expect(toFileSelectPath('')).toBe('');
+    expect(toFileSelectPath(null)).toBe('');
+    expect(toFileSelectPath(undefined)).toBe('');
   });
 });

@@ -91,12 +91,40 @@ describe('getEntityAuditFilters', () => {
       expect(filters[0].value).toBe(`${ActivityAuditResourceType.TABLE},${ActivityAuditResourceType.TABLE_COLUMN}`);
     });
 
-    test('ignores the entity type it is given, because the request carries two resource types', () => {
+    test('widens the query only for an entity type that owns child activities', () => {
       const filters = getEntityAuditFilters({ name: 'orders' }, void 0, ActivityAuditView.Analytics);
 
       expect(filters).toEqual([
-        { column: 'resourceType', value: 'Table,TableColumn', operator: FilterOperatorDto.INCLUDES },
-        { column: 'resourceId', value: 'orders', operator: FilterOperatorDto.CONTAINS },
+        { column: 'resourceId', value: 'orders', operator: FilterOperatorDto.EQUALS },
+        { column: 'resourceType', value: void 0, operator: FilterOperatorDto.EQUALS },
+      ]);
+    });
+
+    test('asks for the exact pair on a pipeline, whose resource type owns no child activities', () => {
+      const filters = getEntityAuditFilters(
+        { name: 'daily_rollup' },
+        ActivityAuditResourceType.PIPELINE,
+        ActivityAuditView.Analytics,
+      );
+
+      expect(filters).toEqual([
+        { column: 'resourceId', value: 'daily_rollup', operator: FilterOperatorDto.EQUALS },
+        { column: 'resourceType', value: ActivityAuditResourceType.PIPELINE, operator: FilterOperatorDto.EQUALS },
+      ]);
+      expect(filters.some((filter) => filter.operator === FilterOperatorDto.CONTAINS)).toBe(false);
+      expect(filters.some((filter) => filter.operator === FilterOperatorDto.INCLUDES)).toBe(false);
+    });
+
+    test('asks for the exact pair on a saved query too, so only a parent type is widened', () => {
+      const filters = getEntityAuditFilters(
+        { name: 'weekly_report' },
+        ActivityAuditResourceType.SAVED_QUERY,
+        ActivityAuditView.Analytics,
+      );
+
+      expect(filters).toEqual([
+        { column: 'resourceId', value: 'weekly_report', operator: FilterOperatorDto.EQUALS },
+        { column: 'resourceType', value: ActivityAuditResourceType.SAVED_QUERY, operator: FilterOperatorDto.EQUALS },
       ]);
     });
   });
