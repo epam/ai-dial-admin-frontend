@@ -65,7 +65,6 @@ describe('Assets translator :: server actions', () => {
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TRANSLATOR, 'to-responses', {
-      name: 'to-responses',
       in: DeploymentInterfaceType.AnthropicMessages,
       out: DeploymentInterfaceType.OpenAIResponses,
       baseUrl: 'http://dial-bedrock-translator/to-responses',
@@ -98,7 +97,7 @@ describe('Assets translator :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.TRANSLATOR,
       'to-responses',
-      { name: 'to-responses' },
+      {},
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
