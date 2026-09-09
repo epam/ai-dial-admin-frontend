@@ -62,6 +62,8 @@ const AddMetricModal: FC<Props> = ({
   const [metricName, setMetricName] = useState<string | undefined>('');
   const [condition, setCondition] = useState<string>('');
 
+  const [metricColumnOrder, setMetricColumnOrder] = useState<string[]>([]);
+
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
   const [isJsonView, setIsJsonView] = useState(false);
@@ -191,7 +193,9 @@ const AddMetricModal: FC<Props> = ({
             <MetricSelection
               metrics={metricDeclarations || []}
               selectedMetricId={selectedMetricId}
+              columnOrder={metricColumnOrder}
               onSelectMetric={setSelectedMetricId}
+              onChangeColumnOrder={setMetricColumnOrder}
             />
           )}
 
