@@ -30,9 +30,8 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialResource } from '@/src/models/dial/resource';
+import { DialApplicationResource, DialResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
-import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
@@ -168,6 +167,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     [setSelectedRunner, setIsSkipRefresh],
   );
 
+  const onCreate = (entity: DialResource) => createApp(entity as DialApplicationResource);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
@@ -236,7 +237,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
                 setIsCreateAssetAppModalOpen(false);
                 dispatch({ type: ValidationActionType.Reset });
               }}
-              onCreate={createApp as (entity: DialResource) => Promise<ServerActionResponse>}
+              onCreate={onCreate}
               context={useAppsFolder}
               initialValues={{
                 source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
