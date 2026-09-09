@@ -165,12 +165,15 @@ module, including the provider as a pass-through, and hands out a controllable `
 The new page spec mirrors `app/[lang]/evaluators/tests/detail-page.spec.tsx`: assert the returned element
 is the provider and that the view under it receives the expected props, and keep the `notFound` branch.
 
-### D7. The toggle is offered exactly where Save is offered
+### D7. The toggle lives in the same permission arm Save does
 
 *Files: `apps/ai-dial-admin/src/components/Analytics/Tables/TableDetailView.tsx`.*
 
 Render `JsonToggle` (`src/components/EntityHeaderControls/JsonToggle/JsonToggle.tsx`) beside the Save
-button, inside the same `!isActive && canModify` arm. It already renders a `DialSwitch` labelled with
+button, inside the same `!isActive && canModify` arm. (D9 later withdrew Save from the *unchanged*
+header, so the two no longer sit side by side in every state — the toggle is an ordinary action and Save
+belongs to the changed header. What this decision fixes is the permission arm both live in, which D9
+does not move.) It already renders a `DialSwitch` labelled with
 `EntitiesI18nKey.JSONEditor`, so it is reachable by role and needs no new i18n key.
 
 The rule page put its toggle *outside* the full-admin guard to give a reader a read-only document view.
@@ -201,6 +204,208 @@ Note for whoever edits `TableDetailView.spec.tsx`: it already mocks `JsonEditorB
 labelled `rows-json` for the write-rows popup. Do not reuse that label for the draft editor; the new
 spec mocks `EntityJsonEditor` one level higher and does not need it.
 
+### D9. The draft header adopts `ChangedEntityButtons`, and "changed" is a built-DTO comparison
+
+*Files: `apps/ai-dial-admin/src/components/Analytics/Tables/TableDetailView.tsx`,
+`apps/ai-dial-admin/src/components/Analytics/Tables/use-draft-schema-form.ts`,
+`apps/ai-dial-admin/src/components/Analytics/Tables/utils.ts`.*
+
+Added as a follow-up: the shipped header renders `Save` + `JsonToggle` unconditionally and tracks no
+changed state, so it does not follow the changed-entity convention every other entity view here does.
+`EvaluatorDetailView.tsx` is the closest exemplar and this decision copies it line for line; the
+differences are the two named below.
+
+**What is reused, and what stays hand-rolled.** `ChangedEntityButtons`
+(`EntityHeaderControls/Buttons/ChangedEntityButtons.tsx`) is used as-is, with `onDiscard`, `onSave`
+and `disableSave`, exactly as both `EvaluatorDetailView` and `PipelineDetailFrame` use it. It owns the
+Discard confirmation (`EntityView/Modals/Discard/Discard.tsx`) so the caller supplies no modal.
+`SimpleButtonsWrapper` is **not** adopted: it owns Delete, the whole header row and the JSON toggle,
+so adopting it would restructure the `ACTIVE` arm too, which the owner's boundary forbids. Both
+exemplars reach for `ChangedEntityButtons` directly for the same reason.
+
+The inline marker gate in `TableDetailView` — `useSaveValidationContext`,
+`showEditorErrorNotifications`, the `onTryToSave` short-circuit — is therefore **not** removed. Only
+`SimpleButtonsWrapper` contains that logic; `ChangedEntityButtons` does not, and both exemplars keep
+their own `onTryToSave` beside it. This change makes `TableDetailView` the **fourth** consumer of the
+same fifteen lines, which strengthens the extraction candidate already recorded under Non-Goals
+without making it this change's business.
+
+**What counts as changed.** `use-draft-schema-form.ts` gains `isChanged`, `reset` and `baselineDto`,
+the shape `use-evaluator-form.ts` already exposes. The comparison is between **built DTOs**, as
+`PipelineDetailFrame` does it, not between form objects: `createDraftSchemaForm` mints a fresh
+`ColumnRow.id` per call (`nextColumnId()`), so `form` deep-compared against a re-derived baseline form
+is *never* equal and `isChanged` would be permanently true. Comparing
+`buildDraftSchemaDto(form, table.type)` against the same function applied to
+`createDraftSchemaForm(table)` sidesteps ids entirely and is the honest question anyway — whether what
+would be submitted differs from what is stored. The cost is that a half-typed, not-yet-valid column row
+does not register as a change until it becomes submittable; accepted, because such a row cannot be
+saved either.
+
+This forces one small extraction: `buildDto` must be callable on an arbitrary form, so its body moves
+to a pure `buildDraftSchemaDto(form: DraftSchemaForm, type: AnalyticsTableType): DraftSchemaDto` in
+`Tables/utils.ts` (utils.md's placement) and the hook's `buildDto` delegates to it. Behaviour-preserving:
+the 18 existing cases in `tests/use-draft-schema-form.spec.ts` are its regression.
+
+In the view, `storedDocument = buildDraftDocument(table, draft.baselineDto)` — the same name and role
+`PipelineDetailFrame` gives it — serves twice: as the document baseline and as what Discard restores.
+So no extra seed state is introduced, and the combined flag is
+
+```
+isChangeBarShown = !isActive && canModify && (draft.isChanged || isDocumentChanged || hasJsonErrors)
+```
+
+with `hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length)` — the exemplars' `hasJsonErrors`
+term, which exists because `EntityJsonEditor` forwards only a *successful* parse, so a broken document
+can otherwise read as unchanged. `!isActive` is in the expression rather than implied by where the JSX
+sits: it makes the owner's ACTIVE boundary structural instead of incidental.
+
+**Discard.** `dispatch({ type: ValidationActionType.Reset })` **before** the two resets — the comment in
+`EvaluatorDetailView.onDiscard` records why: `EntityJsonEditor` keeps its editor id across the remount,
+so a stale marker would hold the change bar up on its own. Then `draft.reset()`, then
+`setDraftDocument(storedDocument)` when a document exists. Handing a different object reference is what
+makes the restore visible: `EntityJsonEditor` re-seeds and bumps `editorInstanceKey` precisely when
+`entity !== lastEntityFromEditorRef.current`, which is the documented "remount when `entity` is reset
+externally (e.g. discard)" path, and the inverse of the guard D2 depends on. Setting the document to
+`null` instead would look correct and do nothing — the seeding effect returns early on a null `entity`
+and Monaco would keep showing the discarded text.
+
+Edge examined: discarding a form-only change hands back the *same* `storedDocument` reference the
+document already holds, so no remount happens. That is correct — the document did not change — and is
+called out here because it looks like a missed reset.
+
+**What Save does.** Its behaviour and its gate are unchanged —
+`disableSave={!isEditorEnabled && !draft.canMaterialize}`, which is exactly `SimpleButtonsWrapper`'s
+`isDisableSave = isEditorEnabled ? false : !isValid` with this screen's own validity source, so
+`ChangedEntityButtons` needs no new prop. What changes is where Save lives: it moves inside
+`ChangedEntityButtons` while the draft is changed, and it is **not rendered at all** while the draft is
+unchanged. The header's false branch therefore loses Save along with nothing else — it keeps Manage
+access, Delete table and the toggle — and the whole header takes the shape `SimpleButtonsWrapper`
+already has: `isChanged ? <ChangedEntityButtons …/> : <ordinary actions + toggle>`. An unchanged entity
+offers no Save anywhere else in this console, and this screen now follows that.
+
+**The owner's decision, and what it costs.** The first draft of D9 kept Save in the unchanged header,
+arguing that Save here materializes the table rather than persisting an edit, so an untouched `FAILED`
+draft should stay re-submittable. The owner decided otherwise: Save is shown when there are changes that
+make saving meaningful, and disabled when something required is missing. The `FAILED` re-submit argument
+was put to him explicitly, together with a compromise (Save shown when changed **or** when the status is
+`FAILED`), and he chose his rule without the exception. The accepted consequence, recorded here so a
+later reader does not mistake it for an oversight: **an untouched `FAILED` draft can no longer be
+re-submitted — its author must first make an edit that either surface registers as a change.** The delta
+pins it with its own scenario, "An untouched FAILED draft offers no Save", and the Risks section records
+what would falsify the trade-off.
+
+No new i18n keys: `ChangedEntityButtons` renders `ButtonsI18nKey.Discard`/`Save` and the modal renders
+`EntitiesI18nKey.DiscardChanges*` itself. No live region either — the header swap is itself persistent
+visible text, and no other consumer of this convention announces it.
+
+**Testing notes**, so they are not rediscovered: `DraftSchemaEditor` is mocked as an inert `<div>` in
+both existing Tables specs, so a case that needs a column-form edit must mock it as a control that
+calls its `draft.update(...)` prop. `createPortal` is mocked inline suite-wide, so the Discard
+confirmation renders in place and is reachable by role. `test-setup.tsx` mocks `SaveValidationContext`
+suite-wide, so a case that needs markers needs the spec-local `vi.mock` that
+`TableDraftJsonEditor.spec.tsx` already sets up. And `t()` returns keys, so the Save button's accessible
+name stays `ButtonsI18nKey.Save` once the header has swapped — but seven existing cases query it on an
+*untouched* draft, where there is now no Save at all, so they need a change made first; task 6.4 names
+them.
+
+### D10. The withdrawn toggle retires the "leave and re-enter the editor" scenario
+
+*Files: `openspec/changes/add-table-draft-schema-json-editor/specs/analytics/tables/spec.md`,
+`apps/ai-dial-admin/src/components/Analytics/Tables/tests/TableDraftJsonEditor.spec.tsx`,
+`apps/ai-dial-admin/src/components/Analytics/Tables/tests/TableDraftChangedHeader.spec.tsx`.
+No source file changes under this decision — `TableDetailView.tsx` is untouched by it.*
+
+**The contradiction.** Task 6.4 found, while writing tests, that two parts of this change's own delta
+could not both hold. "JSON editor for a table draft" said the document is not re-seeded "when the
+editor is re-opened after being toggled off" and pinned it with the scenario *Leaving and re-entering
+the editor keeps the edited document* (edit the document, toggle off, toggle on, see it as you left
+it). D9 then withdrew the JSON-editor toggle as soon as **either** surface changes. Editing the
+document makes the draft changed, which withdraws the toggle, which makes the toggle-off/toggle-on
+round trip unreachable: `JsonToggle` renders only in `isChangeBarShown`'s false branch, and no other
+control flips `isEditorEnabled`. 6.4 left the two affected tests `test.skip` rather than rename them
+into something weaker, which was the right call — the premise, not the test, was wrong.
+
+**The ruling, and whose it is.** The owner was given two options: retire the stale scenario, or keep
+the toggle inside the changed bar. The argument for keeping it was that a stray character would
+otherwise lock the author into the editor, with only Save or a Discard that throws away both surfaces.
+He rejected that argument in these words: *"это правильное следствие случайный символ чаще всего с
+json будет подсвечен потому что поломает схему, тут все ожидаемо"* — a stray character in JSON is
+usually flagged as a parse error, so being held in the editor until it is fixed is the expected
+consequence, not a trap. **So the toggle stays withdrawn while the draft is changed, and the stale
+scenario goes.** Do not reintroduce the toggle into the changed header.
+
+**What replaced it in the delta.** The scenario is retired, not reworded in place: what it asserted
+(an edited document survives leaving and returning) describes a path that cannot be walked. The
+guarantee underneath it — an in-progress document is never silently re-seeded — keeps its own
+scenario, *An in-progress document survives a re-render*. In its slot the delta now carries *Opening
+the editor and leaving it does not change what the column form submits*, which is the same
+independence claim on the one path that is still reachable: open the editor without editing (the draft
+must stay **unchanged**, so the toggle must still be there), toggle off, edit the column form, save,
+and see `defineTableSchema` alone. That case is worth keeping because `isDocumentChanged` compared by
+reference rather than by value would make merely opening the editor mark the draft changed and make
+the toggle vanish under the author's cursor — a real regression class with no other test on it.
+
+The requirement's prose was corrected to match: seeding happens **once** and is never repeated except
+by Discard, but that is now recorded as a statement about the implementation, because a later entry
+into the editor is reachable only from an unchanged draft, where a seed and a re-seed are identical.
+The same paragraph now says where the two surfaces' independence remains observable — in what a save
+from each surface submits.
+
+**The two skipped tests stay skipped, and nothing tracks them.** Both live in
+`apps/ai-dial-admin/src/components/Analytics/Tables/tests/TableDraftJsonEditor.spec.tsx`, left
+`test.skip` by task 6.4 with their bodies and their explanatory comments intact:
+
+1. `'leaving and re-entering the editor shows the document as the author left it'`
+2. `"a document edit leaves the column form's own submission unchanged"`
+
+An earlier revision of task 6.7 had them deleted. **The owner ruled otherwise, three times and
+unambiguously** — the skips are not this change's work (*«сделаем отдельной задачей, не в этом
+ченже»*), **no ticket was filed** for them (*«не делай тикетов никаких»*), and 6.7 was narrowed to the
+replacement case alone (*«сузить 6.7, скипы не трогаем»*). So they remain in the tree exactly as they
+are, and **nothing outside this repository records that they exist**: this paragraph is the only
+tracking there is. A later reader who wants them addressed has to open a task for them deliberately.
+
+**They are not the same kind of skip, and treating them alike gets it wrong.**
+
+- The **first is dead**. It asserts the retired toggle-off/toggle-on round trip, which no longer
+  exists as a claim in the delta and cannot be walked in the UI. Nothing is lost by its being skipped;
+  the guarantee underneath it — an in-progress document is never silently re-seeded — is held by the
+  live sibling case `'an unrelated re-render leaves the edited document alone'`. If it is ever
+  un-skipped it should be deleted, not repaired.
+- The **second is alive but unproven**. Its claim — *a document edit leaves the column form's own
+  submission unchanged* — is a guarantee this delta still makes (the paragraph above pins the two
+  surfaces' independence to what each save submits, and *Saving from the column form sends only the
+  schema request* states it). It is skipped only because its **mechanics** used the withdrawn toggle
+  to reach the column form's Save, not because its claim went away. **While it stays skipped that
+  guarantee is unproven by test**, except for the part the replacement case picks up.
+
+**Exactly how much the replacement case picks up.** The new case in
+`tests/TableDraftChangedHeader.spec.tsx` opens the editor **without writing to the document**, toggles
+off, edits the column form and saves. So it proves the independence claim for a document that has been
+**seeded into state but never edited**: a non-null `draftDocument` does not leak into the column form's
+submission, and `defineTableSchema` goes out alone with the form's own body. **What stays uncovered is
+the same claim with a document whose content diverges from the seed** — the author types into the
+editor, leaves, and saves from the form. Nothing in the code distinguishes the two (the form path reads
+`draft.buildDto()` and never touches `draftDocument`), but that is an argument from the implementation,
+not a test, and it is the whole of the residual. That state is currently unreachable through the UI —
+once the document is edited the toggle is gone — so the residual becomes observable only if D10's
+reversal is ever taken and the toggle returns to the changed bar. At that moment the second skipped
+test becomes both reachable and repairable, and it should be repaired rather than deleted.
+
+The replacement case also carries a guard the skipped pair never had: `isDocumentChanged` compared by
+reference instead of by value would make merely *opening* the editor mark the draft changed and make
+the toggle vanish under the author's cursor. That regression class has no other test on it.
+
+**The residual case, and how to reverse this cheaply.** One case was flagged to the owner and he did
+not object to it: a *deliberate* switch — an author who pastes a document and wants to consult the
+column form before finishing. If that is ever reported, the reversal is small and it is this decision,
+not D9's rule, that gets undone. The mechanism: `ChangedEntityButtons`
+(`EntityHeaderControls/Buttons/ChangedEntityButtons.tsx`) already renders a `children` slot between
+Discard and Save (line 54), so `JsonToggle` can be passed into the changed bar with **no new prop on
+any shared component** — which is why it was a live option rather than a rewrite. Restoring the
+scenario would then mean un-skipping the second of the two tests above, whose body is still in the
+tree; the first would be deleted rather than restored, because its claim is retired for good.
+
 ## Alternatives rejected
 
 - **Round-trip the document through `DraftSchemaForm` so both surfaces stay one draft** (the pipeline
@@ -221,7 +426,43 @@ spec mocks `EntityJsonEditor` one level higher and does not need it.
 - **A `DRAFT_DOCUMENT_DROPPED_FIELDS` constant plus a filter loop** — rejected in D3; the destructure is
   the same rule in one place.
 - **Extract the shared toggle/marker wiring now** — rejected in Non-Goals; it would rewrite two pages
-  this change does not own.
+  this change does not own. D9 makes this the fourth consumer, which strengthens the case without
+  changing the answer for this change.
+- **Adopt `SimpleButtonsWrapper` for the whole table header** (D9) — rejected: it owns Delete, the
+  header row and the JSON toggle, so it would restructure the `ACTIVE` arm the owner ruled out of scope.
+  Both existing consumers of the convention in Analytics use `ChangedEntityButtons` directly.
+- **Show the changed header for JSON-document edits only, leaving the column form's header as it is**
+  (D9) — rejected: a header that swaps for one surface of one screen and not the other is exactly the
+  invented shape `AGENTS.md` warns about, and it would leave the two surfaces of the same draft
+  behaving differently for no reason a reader could infer.
+- **Compare `DraftSchemaForm` objects to decide `isChanged`** (D9) — rejected: `createDraftSchemaForm`
+  mints a fresh `ColumnRow.id` per call, so the comparison is never equal and the change bar would be
+  stuck on. Built-DTO comparison, as `PipelineDetailFrame` does it, has no ids in it.
+- **Discard by setting the document to `null` so the next entry re-seeds** (D9) — rejected: with a null
+  `entity` the editor's seeding effect returns early and Monaco keeps showing the discarded text, so the
+  discard would appear to do nothing while the editor is open.
+- **Leave the editor and return to the column form on Discard** (D9) — rejected: neither exemplar
+  changes the active surface on discard, and an author who discards a document expects to see it
+  restored rather than to be moved.
+- **Keep Save in the unchanged header so an untouched `FAILED` draft stays re-submittable** (D9's first
+  draft) — rejected by the owner, who ruled that Save is shown when there are changes that make saving
+  meaningful and disabled when something required is missing. The `FAILED` re-submit argument was put to
+  him with a compromise (Save when changed **or** `FAILED`) and he chose his rule without the exception.
+  What it costs is recorded in D9 and under Risks.
+- **Keep the JSON-editor toggle inside the changed bar, through `ChangedEntityButtons`' `children`
+  slot** (D10) — rejected by the owner. It was the cheap option technically (the slot exists, no new
+  prop on a shared component), and the argument for it was that a stray character otherwise locks the
+  author into the editor with only Save or a both-surfaces Discard as ways out. He ruled that being
+  held there is the expected consequence, because a stray character in JSON is normally flagged as a
+  parse error. The stale scenario was retired instead. D10 names the slot so the reversal stays cheap.
+- **Reword "Leaving and re-entering the editor keeps the edited document" into something the withdrawn
+  toggle still permits** (D10) — rejected as unfalsifiable: every reachable re-entry starts from an
+  unchanged draft, where the seed and a re-seed are byte-identical, so no test could tell the rule from
+  its negation. The reachable half of the claim went into a differently-titled scenario about a
+  seeded-but-unedited document instead.
+- **A `FAILED`-only exception — Save shown while unchanged if the status is `FAILED`** (D9) — rejected by
+  the same ruling. It is also the cheapest reversal if the trade-off is falsified: one extra term in
+  `isChangeBarShown`.
 
 ## Risks / Trade-offs
 
@@ -247,6 +488,39 @@ spec mocks `EntityJsonEditor` one level higher and does not need it.
   gets "leave unchanged", while an author who empties the array gets "clear". → That is the endpoint's
   documented semantics (`UpdateTableDto` in `models/analytics/table.ts`) and the document is the request,
   so it is stated rather than hidden.
+- **(D9) The JSON toggle is withdrawn while the column form is dirty**, so an author who starts typing
+  columns and then decides to paste JSON must Discard first. → Accepted. It is what both exemplars do
+  and what `SimpleButtonsWrapper` does, and it is the price of the two surfaces holding independent
+  state (D1). It also *retires* the shipped risk directly above about JSON edits being stranded by a
+  toggle-and-save: once either surface is dirty the toggle is gone, so the stranding path no longer
+  exists. Worth revisiting only if an author reports the reverse annoyance.
+- **(D9) `isChanged` lags a half-typed column row.** A row whose name is not yet a valid identifier
+  produces no DTO change, so the header stays in its ordinary state until the row becomes submittable.
+  → Accepted; nothing unsubmittable can be lost, and the alternative is an id-stripping form comparison
+  that is more code for a worse question.
+- **(D9, the owner's decision) An untouched `FAILED` draft cannot be retried.** A failed activation is
+  frequently a ClickHouse condition rather than a wrong document, and re-submitting the same definition
+  now requires making an edit first — typing into the document, or touching a column row and undoing it.
+  → Accepted on the owner's ruling, with his argument recorded in D9. **What would falsify it:** authors
+  routinely needing to re-submit an unchanged `FAILED` definition — a retry that begins with a no-op
+  edit, or a request for a Retry action on the failure indication. The reversal is one extra term in
+  `isChangeBarShown`.
+- **(D9) The two existing Tables specs assert today's header, in seven cases.**
+  `TableDetailView.spec.tsx` asserts Save present on an untouched `PENDING` table, asserts it disabled
+  on one, and saves an untouched but complete draft from the column form; `TableDraftJsonEditor.spec.tsx`
+  opens the editor and saves without editing in four cases, and one of its titles says "beside Save".
+  Any case that toggles the editor *after* typing will also now find no toggle. → Mitigated by naming
+  the reconciliation in task 6.4 rather than leaving a worker to discover seven red tests. None of them
+  is a behaviour regression: each needs an edit inserted before it reaches the header.
+- **(D10, the owner's ruling) An author cannot leave the editor once the document is dirty.** The only
+  ways out are Save, or a Discard that restores both surfaces to the stored state — there is no
+  "park the document and go look at the column form". → Accepted on the owner's ruling, whose reason is
+  quoted in D10: a stray character in JSON is normally flagged as a parse error, so being held until it
+  is fixed reads as expected rather than as a trap. **What would falsify it:** authors asking to consult
+  the column form mid-edit — a paste followed by "what did the form say the ordering key was", a request
+  to keep the toggle live, or a Discard used as a way to escape the editor rather than to undo. The
+  reversal is D10's: pass `JsonToggle` into `ChangedEntityButtons`' `children` slot, and restore the
+  retired scenario and its two tests.
 - **Delta size.** The two MODIFIED requirements are restated in full, as the house format demands; the
   edits inside them are two sentences and two scenarios. Reviewers should diff against
   `openspec/specs/analytics/tables/spec.md` rather than read the restatement as new text.

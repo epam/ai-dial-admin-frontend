@@ -2,18 +2,20 @@
 
 ### Requirement: JSON editor for a table draft
 
-For a table that is not yet materialized (`status` `PENDING` or `FAILED`) and that the caller may modify, the table detail view SHALL offer a JSON-editor toggle beside the header **Save** action, and the two authoring surfaces SHALL be mutually exclusive: while the editor is the active surface the column-by-column schema-definition surface SHALL NOT be rendered, and toggling the editor off SHALL restore it. The toggle SHALL NOT be offered on an `ACTIVE` table, whose schema is patched through the scoped add/drop/rename/update surface instead.
+For a table that is not yet materialized (`status` `PENDING` or `FAILED`) and that the caller may modify, the table detail view SHALL offer a JSON-editor toggle among the header's ordinary actions while the draft has no unsaved changes — once either surface has been edited the toggle is withdrawn with the header's other ordinary actions, as "A changed table draft's header offers Discard and Save" specifies — and the two authoring surfaces SHALL be mutually exclusive: while the editor is the active surface the column-by-column schema-definition surface SHALL NOT be rendered, and toggling the editor off SHALL restore it. The toggle SHALL NOT be offered on an `ACTIVE` table, whose schema is patched through the scoped add/drop/rename/update surface instead.
 
 The edited document SHALL be the schema body the column form would submit for the table's kind — for a **source** `columns`, `ordering_key`, `partition_by`, `identity_column`, `version_column`; for an **enrichment** `columns`, `grain_key`, `cardinality` — plus the table's catalog metadata `description` and `tag_order`, which the column form presents no field for. A member the column form would omit (an unset partition, an unset scan-metadata pair) SHALL be absent from the seeded document rather than present and empty.
 
-The document SHALL be seeded **once**, when the editor is first opened, from the current column-form state and the table's stored `description`/`tag_order`. It SHALL NOT be re-seeded on a re-render, nor when the editor is re-opened after being toggled off — an author's in-progress document is not discarded by leaving the surface. After the first seed the two surfaces hold independent state: an edit to the document SHALL NOT change the column form, and an edit to the column form SHALL NOT change the document.
+The document SHALL be seeded **once**, when the editor is first opened, from the current column-form state and the table's stored `description`/`tag_order`. It SHALL NOT be re-seeded thereafter — not on a re-render, and not on a later entry into the editor — so an in-progress document is never silently replaced. The single action that does re-seed it is **Discard**, specified in "A changed table draft's header offers Discard and Save"; nothing else replaces the author's document. After the first seed the two surfaces hold independent state: an edit to the document SHALL NOT change the column form, and an edit to the column form SHALL NOT change the document.
+
+Two consequences of the toggle's withdrawal, stated because they bound what the two paragraphs above can be observed to mean. A later entry into the editor is reachable only from an **unchanged** draft — once either surface has been edited the toggle is gone — so seeding once and re-seeding from the stored state are indistinguishable on every reachable path, and the seed-once rule is a statement about the implementation rather than an observable one. For the same reason the two surfaces can never be visited in sequence after a change, so their independence is observable only in what a save from each surface submits: "Saving from the column form sends only the schema request" and "A successful save sends the metadata update before the schema" are what pin it.
 
 While the editor is the active surface, the column form's own completeness rules (at least one valid column, a non-empty ordering key, a complete-or-absent scan-metadata pair, a non-empty grain key, no invalid column row) SHALL NOT gate Save. The only client-side gate SHALL be that the document parses as JSON, reported by the editor's own parse markers: with markers present, Save SHALL send neither request and SHALL surface the parse errors as notifications. No client-side validation of the document's *content* SHALL be performed — an incomplete or otherwise unacceptable document is a service rejection (the data-access service parses request bodies strictly and answers 422 on an unknown property or a missing required field), and that rejection SHALL be shown as-is.
 
 #### Scenario: The editor toggle takes over the draft surface
 
 - **WHEN** the detail view of a `PENDING` or `FAILED` table renders for a caller who may modify it
-- **THEN** a JSON-editor toggle is offered beside Save, and activating it replaces the column-by-column schema-definition surface with the JSON document
+- **THEN** a JSON-editor toggle is offered among the header's ordinary actions, and activating it replaces the column-by-column schema-definition surface with the JSON document
 - **AND** on an `ACTIVE` table no such toggle is offered
 
 #### Scenario: A source draft's document is its schema plus catalog metadata
@@ -33,16 +35,16 @@ While the editor is the active surface, the column form's own completeness rules
 - **WHEN** the author has edited the document and the surrounding view re-renders from an unrelated state change
 - **THEN** the editor still shows the author's edited document, not a fresh seed
 
-#### Scenario: Leaving and re-entering the editor keeps the edited document
+#### Scenario: Opening the editor and leaving it does not change what the column form submits
 
-- **WHEN** the author edits the document, toggles the editor off, and toggles it on again
-- **THEN** the document is shown as the author left it
-- **AND** the column form's own values are unchanged by the document edits
+- **WHEN** the author opens the editor on an unchanged draft, makes no edit, toggles the editor off, then edits the column form and saves
+- **THEN** the draft still reads as unchanged while the editor is open and after it is closed, so the toggle stays offered throughout
+- **AND** the save sends `defineTableSchema` alone, carrying the column form's own body and no `updateTable`
 
 #### Scenario: The column form's completeness rules do not gate Save in the editor
 
-- **WHEN** the editor is the active surface and the document parses but omits a member the column form requires — a source document with no `ordering_key`
-- **THEN** Save is available and submitting it sends the requests, so the service's answer decides the outcome
+- **WHEN** the editor is the active surface, the author has edited the document, and it parses but omits a member the column form requires — a source document with no `ordering_key`
+- **THEN** the Save the changed header offers is enabled, and submitting it sends the requests, so the service's answer decides the outcome
 
 #### Scenario: A document that does not parse blocks the save
 
@@ -91,7 +93,7 @@ The schema request SHALL be sent only if the metadata request succeeded. On succ
 
 #### Scenario: A successful save sends the metadata update before the schema
 
-- **WHEN** the editor is the active surface, the document is acceptable to the service, and the author saves
+- **WHEN** the editor is the active surface, the author has edited the document into one the service accepts, and saves
 - **THEN** `updateTable` is sent before `defineTableSchema`, the success notification is raised, and the refreshed view shows the table `ACTIVE` with its live column surface
 
 #### Scenario: A failed metadata update blocks the schema request
@@ -103,6 +105,80 @@ The schema request SHALL be sent only if the metadata request succeeded. On succ
 
 - **WHEN** `updateTable` succeeds and `defineTableSchema` fails
 - **THEN** the service's error is shown as-is, the view stays on the draft surface with the document intact, and saving again re-sends both requests
+
+### Requirement: A changed table draft's header offers Discard and Save
+
+For a table that is not yet materialized (`status` `PENDING` or `FAILED`) and that the caller may modify, the detail view SHALL adopt this console's changed-entity header convention, which every other entity view already follows: while the draft has unsaved changes the header's ordinary actions give way to **Discard** and **Save**.
+
+A draft SHALL be treated as **changed** when either authoring surface differs from the table's stored state:
+
+- the **column-by-column surface**, when the schema body it would submit differs from the schema body the table's stored definition yields — so a `PENDING` table whose form has not been touched and a `FAILED` table freshly seeded from its stored definition are both *unchanged*;
+- the **JSON document**, when it differs from the document that same stored state seeds.
+
+While the JSON editor is the active surface, unresolved parse markers SHALL additionally count as changed, because a marker suppresses the parse and the last successfully parsed document therefore cannot be compared — leaving the header in its ordinary state would offer no way out of a broken document but to fix it.
+
+While the draft is changed the header SHALL present **Discard** and **Save**, and SHALL withdraw its ordinary actions — **Manage access**, **Delete table** and the JSON-editor toggle. Discard SHALL be confirmed through this console's shared discard confirmation before it takes effect. Both actions SHALL be presented only to a caller who may modify the table; a caller who may only view, delete or manage access SHALL never see them, and SHALL keep whichever ordinary actions its permissions already allow.
+
+While the draft is **unchanged** the header SHALL present its ordinary actions — **Manage access**, **Delete table** and the JSON-editor toggle — and SHALL offer **neither Save nor Discard**, exactly as this console's convention behaves on every other entity view. Save is therefore reachable only while the draft is changed. One consequence is accepted deliberately: an untouched `FAILED` draft SHALL NOT be re-submittable as-is — its author must first make an edit that either surface registers as a change.
+
+Save's **disabled** state SHALL follow the active surface, and SHALL be the convention's:
+
+- from the **column-by-column surface**, Save SHALL be disabled while that surface's own completeness rules are unmet — the rules "Define and materialize a table schema" states;
+- from the **JSON editor**, Save SHALL NOT be disabled; its only client-side gate SHALL be the parse markers "JSON editor for a table draft" specifies.
+
+Save SHALL send from each surface exactly the requests that surface already sends: "Saving a table draft as metadata then schema" in the editor, `defineTableSchema` alone from the column form.
+
+**Discard** SHALL restore both surfaces to the table's stored state: the column form to the values the stored definition seeds, and — if a document has been seeded — the JSON document to the document that stored state yields. Any parse markers and the notifications they raised SHALL be cleared first, so a stale marker cannot hold the changed header up on its own. The active surface SHALL NOT change: an author who discards while the editor is open stays in the editor, looking at the restored document.
+
+Nothing about an `ACTIVE` table SHALL change. The changed-entity header SHALL NOT be presented there, and that view's own actions — Add columns, Add rows, Connect — SHALL be presented exactly as today.
+
+#### Scenario: Editing the JSON document swaps the header's actions
+
+- **WHEN** the JSON editor is the active surface on a modifiable draft and the author edits the document
+- **THEN** the header offers Discard and Save
+- **AND** Manage access, Delete table and the JSON-editor toggle are no longer offered
+
+#### Scenario: Editing the column form swaps the header's actions
+
+- **WHEN** the author changes a value on a modifiable draft's column-by-column surface
+- **THEN** the header offers Discard and Save, and Manage access, Delete table and the JSON-editor toggle are no longer offered
+
+#### Scenario: An untouched draft keeps its ordinary header actions
+
+- **WHEN** a modifiable draft renders and neither surface has been edited
+- **THEN** the header offers Manage access, Delete table and the JSON-editor toggle
+- **AND** it offers neither Save nor Discard
+
+#### Scenario: An untouched FAILED draft offers no Save
+
+- **WHEN** the detail view of a `FAILED` table renders for a caller who may modify it, both surfaces seeded from the table's stored definition and neither edited
+- **THEN** no Save action is offered, so the stored definition cannot be re-submitted until an edit makes the draft changed
+
+#### Scenario: Unresolved parse markers hold the changed header up
+
+- **WHEN** the JSON editor is the active surface and the document carries parse-error markers
+- **THEN** the header offers Discard and Save even though the last successfully parsed document is unchanged
+
+#### Scenario: Discard restores both surfaces to the stored state
+
+- **WHEN** the draft is changed and the author confirms Discard
+- **THEN** the column form shows the values the table's stored definition seeds, the JSON document shows the document that stored state yields, the editor is still the active surface if it was, and the header returns to its ordinary actions
+
+#### Scenario: Discard is confirmed before it takes effect
+
+- **WHEN** the author activates Discard on a changed draft
+- **THEN** a discard confirmation is presented, and dismissing it leaves both surfaces and the header as they were
+
+#### Scenario: The changed header is offered only to a caller who may modify
+
+- **WHEN** a draft's detail view renders for a caller who may delete or manage access but may not modify
+- **THEN** neither Discard nor Save is offered in any state, and the actions that caller's permissions do allow are presented as before
+
+#### Scenario: An ACTIVE table's header is untouched
+
+- **WHEN** the detail view of an `ACTIVE` table renders for a caller with full permissions
+- **THEN** no Discard action is offered
+- **AND** Manage access, Delete table, Add columns, Add rows and Connect are presented exactly as before this change
 
 ## MODIFIED Requirements
 
@@ -124,17 +200,17 @@ Because the scan requires **both** members and the backend accepts one alone —
 
 A selection SHALL be cleared when the column it references stops qualifying — renamed, removed, retyped, or flipped to nullable or sensitive in the column rows — so the submission can never carry a stale or now-invalid column name. For a `FAILED` table, both selects SHALL be seeded from the values the definition already stores, because an omitted member leaves any stored value unchanged rather than clearing it; when the definition stores either member, both selects SHALL be required (the pair cannot be cleared by re-posting).
 
-While the column-by-column surface is the active one, submitting the schema (a header **Save** action) SHALL send the whole document via `defineTableSchema` (`POST /v1/tables/{name}/schema`) and SHALL send no other request — that surface has no `description` or `tag_order` field, so a save from it can never change catalog metadata. `defineTableSchema` defines the schema **and** materializes the table in the same call — there is no separate save-draft step, and no way to persist an incomplete schema. Each submitted column SHALL carry `display_name` and `description` only when the corresponding field is non-blank, and SHALL omit either key otherwise. The submitted payload SHALL carry `identity_column`/`version_column` only when chosen, and SHALL omit either key when unset. Save SHALL be disabled until the schema is complete for its kind (a source needs at least one valid column, a non-empty ordering key, and a complete-or-absent scan-metadata pair; an enrichment needs a grain key), since the backend rejects an incomplete submission (422) without persisting it. On success the view SHALL refresh showing the table `ACTIVE` with its live column surface. On a backend (ClickHouse) failure the table becomes `FAILED`; the detail view SHALL present the same schema-definition surface with an indication that activation failed, allowing the user to adjust the schema and resubmit. While the table is not `ACTIVE`, the write-rows action SHALL NOT be offered.
+While the column-by-column surface is the active one, submitting the schema (a header **Save** action) SHALL send the whole document via `defineTableSchema` (`POST /v1/tables/{name}/schema`) and SHALL send no other request — that surface has no `description` or `tag_order` field, so a save from it can never change catalog metadata. `defineTableSchema` defines the schema **and** materializes the table in the same call — there is no separate save-draft step, and no way to persist an incomplete schema. Each submitted column SHALL carry `display_name` and `description` only when the corresponding field is non-blank, and SHALL omit either key otherwise. The submitted payload SHALL carry `identity_column`/`version_column` only when chosen, and SHALL omit either key when unset. Save SHALL be disabled until the schema is complete for its kind (a source needs at least one valid column, a non-empty ordering key, and a complete-or-absent scan-metadata pair; an enrichment needs a grain key), since the backend rejects an incomplete submission (422) without persisting it. While the draft is unchanged the header offers no Save to disable — see "A changed table draft's header offers Discard and Save", which also states that this completeness gate governs the column-by-column surface only. On success the view SHALL refresh showing the table `ACTIVE` with its live column surface. On a backend (ClickHouse) failure the table becomes `FAILED`; the detail view SHALL present the same schema-definition surface with an indication that activation failed, allowing the user to adjust the schema and resubmit. While the table is not `ACTIVE`, the write-rows action SHALL NOT be offered.
 
 #### Scenario: Saving from the column form sends only the schema request
 
-- **WHEN** the column-by-column surface is the active one and the user saves a complete draft
+- **WHEN** the column-by-column surface is the active one and the user, having edited it into a complete draft, saves
 - **THEN** `defineTableSchema` is sent and `updateTable` is not sent
 
 #### Scenario: Save is gated on a complete schema
 
-- **WHEN** a source table's schema has no ordering key (or no columns), or an enrichment's schema has no grain key
-- **THEN** the Save action is disabled
+- **WHEN** the author has edited a draft's column-by-column surface and a source table's schema still has no ordering key (or no columns), or an enrichment's schema still has no grain key
+- **THEN** the Save action the changed header offers is disabled
 - **AND** once the schema is complete the Save action is enabled
 
 #### Scenario: Save defines and activates the table

@@ -135,7 +135,9 @@ beforeEach(() => {
 });
 
 describe('TableDetailView — entering the JSON editor on a draft', () => {
-  test('offers the toggle beside Save on a PENDING table', () => {
+  // Renamed: an untouched PENDING draft's header offers no Save at all (see
+  // TableDraftChangedHeader.spec.tsx) — this case's body never queried it and still holds.
+  test('offers the toggle on an untouched PENDING table', () => {
     renderView();
 
     expect(screen.getByRole('switch')).toBeInTheDocument();
@@ -206,14 +208,23 @@ describe('TableDetailView — the document is seeded once and kept', () => {
 
     await openEditor(user);
     await write(user, { ...documentOf(), description: 'Edited in the editor.' });
-    // Opening the delete confirmation is a state change with nothing to do with the document.
-    await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable }));
+    // Delete table is withdrawn once the draft is changed, so it can no longer stand in for "an
+    // unrelated state change" here — opening and dismissing the discard confirmation is the state
+    // change still available while the header is in its changed state.
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.ContinueEditing }));
 
-    expect(screen.getByText(AnalyticsTablesI18nKey.DeleteConfirmTitle)).toBeInTheDocument();
     expect(documentOf()).toMatchObject({ description: 'Edited in the editor.' });
   });
 
-  test('leaving and re-entering the editor shows the document as the author left it', async () => {
+  // Skipped deliberately; the scenario it proved has been retired, not broken. The changed-entity
+  // header withdraws the JSON-editor toggle the instant either surface is changed, so once a document
+  // edit exists there is no control left to "leave" by — nothing turns it back on except Discard,
+  // which restores the stored document, or a successful Save. The body is kept rather than deleted so
+  // the path is cheap to restore if that ruling is ever reversed. See D10 in
+  // openspec/changes/add-table-draft-schema-json-editor/design.md for the ruling and for how to
+  // reverse it.
+  test.skip('leaving and re-entering the editor shows the document as the author left it', async () => {
     const user = userEvent.setup();
     renderView();
 
@@ -225,7 +236,13 @@ describe('TableDetailView — the document is seeded once and kept', () => {
     expect(documentOf()).toMatchObject({ description: 'Edited in the editor.', retention_days: 7 });
   });
 
-  test("a document edit leaves the column form's own submission unchanged", async () => {
+  // Skipped for the same mechanical reason as the case above — it needs the withdrawn toggle — but
+  // note the difference: the guarantee this one proves, that a document edit does not change what the
+  // column form submits, is still in the spec. Only this route to it is unreachable. Partial cover
+  // lives in TableDraftChangedHeader.spec.tsx, for a document that is seeded but never edited; D10 in
+  // openspec/changes/add-table-draft-schema-json-editor/design.md records exactly what is left
+  // unproven.
+  test.skip("a document edit leaves the column form's own submission unchanged", async () => {
     const user = userEvent.setup();
     renderView();
 
@@ -245,11 +262,14 @@ describe('TableDetailView — the document is seeded once and kept', () => {
 describe('TableDetailView — saving the draft document', () => {
   test("the column form's completeness rules do not gate Save in the editor", async () => {
     const user = userEvent.setup();
-    // No columns and no ordering key: the column form would refuse to submit this draft.
+    // No columns and no ordering key: the column form would refuse to submit this draft — and an
+    // unchanged draft offers no Save at all to check that against, so the claim is proved once inside
+    // the editor with a change registered.
     renderView(sourceDraft({ columns: [], ordering_key: [], partition_by: undefined }));
-    expect(saveButton()).toBeDisabled();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).not.toBeInTheDocument();
 
     await openEditor(user);
+    await write(user, { ...documentOf(), description: 'Edited in the editor.' });
 
     expect(saveButton()).toBeEnabled();
     await save(user);
@@ -263,10 +283,13 @@ describe('TableDetailView — saving the draft document', () => {
     renderView();
 
     await openEditor(user);
+    // A changed draft is a precondition for the header to offer Save at all; editing only the
+    // metadata half of the document keeps the schema body exactly as seeded.
+    await write(user, { ...documentOf(), description: 'Raw usage events, edited.' });
     await save(user);
 
     expect(updateTable).toHaveBeenCalledWith('dial_usage_log', {
-      description: 'Raw usage events.',
+      description: 'Raw usage events, edited.',
       tag_order: ['core', 'billing'],
     });
     // Exact, not `objectContaining`: the schema body must carry no catalog metadata at all.
@@ -289,6 +312,7 @@ describe('TableDetailView — saving the draft document', () => {
     renderView();
 
     await openEditor(user);
+    await write(user, { ...documentOf(), description: 'Edited in the editor.' });
     await save(user);
 
     expect(mocks.showNotification).toHaveBeenCalledWith(
@@ -309,6 +333,7 @@ describe('TableDetailView — saving the draft document', () => {
     renderView();
 
     await openEditor(user);
+    await write(user, { ...documentOf(), description: 'Edited in the editor.' });
     await save(user);
 
     expect(defineTableSchema).not.toHaveBeenCalled();

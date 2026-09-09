@@ -48,12 +48,13 @@ import {
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -74,6 +75,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -125,6 +127,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
 
   const draft = useDraftSchemaForm(table, sourceTable, t);
+
+  // The DTO the table's stored definition yields, turned into the same document shape the editor
+  // seeds from — serves both as the document's unchanged baseline and as what Discard restores.
+  const storedDocument = useMemo(() => buildDraftDocument(table, draft.baselineDto), [table, draft.baselineDto]);
+  // Only meaningful once the document has been seeded; before that there is nothing to compare.
+  const isDocumentChanged = Boolean(draftDocument) && !isEqualSkippingUndefined(draftDocument, storedDocument);
+  // EntityJsonEditor forwards only a successful parse, so text the caller broke never reaches
+  // draftDocument — without the markers there is no Discard to back out of it and no Save to be told
+  // what is wrong.
+  const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
+  const isChangeBarShown = !isActive && canModify && (draft.isChanged || isDocumentChanged || hasJsonErrors);
 
   // An enrichment's grain key is a column on its source table (draft: populates grain-key options;
   // active: backfills the pinned grain-key row's type/tag/display metadata, which the enrichment table's
@@ -238,6 +251,16 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const onToggleEditor = () => {
     if (!draftDocument) setDraftDocument(buildDraftDocument(table, draft.buildDto()));
     setIsEditorEnabled((prev) => !prev);
+  };
+
+  // The dispatch has to precede the two resets — as in EvaluatorDetailView.onDiscard: EntityJsonEditor
+  // keeps its editor id across the remount, so a stale marker would otherwise hold the changed header up
+  // on its own. The active surface does not change: discarding while the editor is open leaves the
+  // author in the editor, looking at the restored document.
+  const onDiscard = () => {
+    dispatch({ type: ValidationActionType.Reset });
+    draft.reset();
+    if (draftDocument) setDraftDocument(storedDocument);
   };
 
   const onDrop = useCallback(
@@ -403,43 +426,51 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
               button label onto a second line; the title next to them truncates instead. */}
           {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
             <div className="flex shrink-0 items-center gap-4">
-              {canManageRoles && (
-                <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
-              )}
-              {canDelete && (
-                <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-              )}
-              {isActive ? (
+              {isChangeBarShown ? (
+                <ChangedEntityButtons
+                  disableSave={!isEditorEnabled && !draft.canMaterialize}
+                  onDiscard={onDiscard}
+                  onSave={onTryToSave}
+                />
+              ) : (
                 <>
-                  {canModify && (
-                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
-                  )}
-                  {canWrite && !isEnrichment && (
-                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
-                  )}
-                  {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
-                      which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
-                  {canConnect && (
-                    <DialPrimaryButton
-                      label={t(AnalyticsTablesI18nKey.Connect)}
-                      onClick={() => setConnectOpen(true)}
-                      iconBefore={<IconPlugConnected size={18} />}
+                  {canManageRoles && (
+                    <DialNeutralButton
+                      label={t(AnalyticsTablesI18nKey.ManageAccess)}
+                      onClick={() => setAccessOpen(true)}
                     />
+                  )}
+                  {canDelete && (
+                    <DialDangerButton
+                      label={t(AnalyticsTablesI18nKey.DeleteTable)}
+                      onClick={() => setConfirmOpen(true)}
+                    />
+                  )}
+                  {isActive ? (
+                    <>
+                      {canModify && (
+                        <DialNeutralButton
+                          label={t(AnalyticsTablesI18nKey.AddColumns)}
+                          onClick={() => setAddOpen(true)}
+                        />
+                      )}
+                      {canWrite && !isEnrichment && (
+                        <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                      )}
+                      {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
+                          which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
+                      {canConnect && (
+                        <DialPrimaryButton
+                          label={t(AnalyticsTablesI18nKey.Connect)}
+                          onClick={() => setConnectOpen(true)}
+                          iconBefore={<IconPlugConnected size={18} />}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                   )}
                 </>
-              ) : (
-                canModify && (
-                  <>
-                    {/* In editor mode the column form's completeness rules do not apply: the document
-                        is submitted as written and the service decides. */}
-                    <DialPrimaryButton
-                      label={t(ButtonsI18nKey.Save)}
-                      disabled={!isEditorEnabled && !draft.canMaterialize}
-                      onClick={onTryToSave}
-                    />
-                    <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
-                  </>
-                )
               )}
             </div>
           )}

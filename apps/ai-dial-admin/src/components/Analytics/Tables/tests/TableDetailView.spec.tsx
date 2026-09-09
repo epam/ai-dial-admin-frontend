@@ -112,8 +112,40 @@ vi.mock('@/src/components/Analytics/Tables/EditColumnPopup', () => ({
 
 // The draft-schema surface's own behavior (completeness gating, column/key controls) is covered in
 // DraftSchemaEditor.spec.tsx; here we only assert TableDetailView renders it for a non-active table.
+// The button is a control that calls the same `draft.update` prop a real column edit would, since an
+// inert stand-in cannot drive a form edit and the changed-entity header needs one to swap into view.
 vi.mock('@/src/components/Analytics/Tables/DraftSchemaEditor', () => ({
-  default: () => <div>draft-schema-editor</div>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default: ({ draft }: any) => (
+    <>
+      <span>draft-schema-editor</span>
+      <button
+        type="button"
+        onClick={() =>
+          // Appends rather than replaces, so a table whose ordering key already names an existing
+          // column keeps referencing a valid one.
+          draft.update('columns', [
+            ...draft.form.columns,
+            {
+              id: 'edited-column',
+              source_name: 'edited_column',
+              name: 'edited_column',
+              type: AnalyticsFieldType.String,
+              element_type: '',
+              enum_values: [],
+              tag: '',
+              display_name: '',
+              description: '',
+              nullable: false,
+              sensitive: false,
+            },
+          ])
+        }
+      >
+        edit-column-form
+      </button>
+    </>
+  ),
 }));
 
 // Defaults to ACTIVE so the permission-gating tests below exercise the live (add-rows/add-columns) surface;
@@ -198,7 +230,8 @@ describe('TableDetailView action gating', () => {
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
   });
 
-  test('a not-yet-active table shows Save in place of Connect and the Add buttons', () => {
+  test('a not-yet-active table shows Save in place of Connect and the Add buttons', async () => {
+    const user = userEvent.setup();
     render(
       <TableDetailView
         name="dial_usage_log"
@@ -207,6 +240,9 @@ describe('TableDetailView action gating', () => {
         flightUri=""
       />,
     );
+    // The draft is unchanged on render, and the changed-entity header — where Save lives — is offered
+    // only once the draft has a change to save.
+    await user.click(screen.getByRole('button', { name: 'edit-column-form' }));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
@@ -637,7 +673,8 @@ describe('TableDetailView lifecycle status', () => {
     expect(screen.getByText(AnalyticsTablesI18nKey.StatusPending)).toBeInTheDocument();
   });
 
-  test('a PENDING table shows a header Save action, disabled until the draft is complete', () => {
+  test('a PENDING table shows a header Save action, disabled until the draft is complete', async () => {
+    const user = userEvent.setup();
     render(
       <TableDetailView
         name="dial_usage_log"
@@ -646,6 +683,9 @@ describe('TableDetailView lifecycle status', () => {
         flightUri=""
       />,
     );
+    // A changed draft is a precondition for Save to be offered at all; the column-form edit here adds
+    // a column but no ordering key, so the draft is changed and still incomplete.
+    await user.click(screen.getByRole('button', { name: 'edit-column-form' }));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
   });
@@ -669,6 +709,9 @@ describe('TableDetailView lifecycle status', () => {
       />,
     );
 
+    // A stored, complete definition is still unchanged on render, and the changed-entity header offers
+    // no Save to disable; the column-form edit here registers the change the header requires.
+    await user.click(screen.getByRole('button', { name: 'edit-column-form' }));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     expect(defineTableSchema).toHaveBeenCalledWith(
