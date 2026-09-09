@@ -9,7 +9,7 @@ import {
   getRun,
 } from '@/src/app/[lang]/runs/actions';
 import { getMetricLatestVersion, getTestSuite } from '@/src/app/[lang]/test-suites/actions';
-import { intersectStatistics, unionMetricOptions } from '@/src/components/Runs/Compare/Summary/utils';
+import { unionMetricOptions, unionStatistics } from '@/src/components/Runs/Compare/Summary/utils';
 import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
 import { AVG_METRIC_EVAL_DURATION_ALIAS, OVERALL_METRIC_SCORE_NAME } from '@/src/components/Runs/Summary/constants';
 import {
@@ -24,6 +24,7 @@ import {
   buildAvgMetricEvalDurationQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  fillUnscoredMetricBars,
   parseAvgRunTimeMs,
   parseComparisonMetricScores,
   parseMetricScores,
@@ -122,13 +123,19 @@ export const useSummaryOverviewData = ({
   const { selectedStatistic } = summaryState;
 
   const enrichedPrimaryScores = useMemo(
-    () => (primaryMetricScores ? attachMetricInfo(primaryMetricScores, metricInfoByName) : primaryMetricScores),
-    [primaryMetricScores, metricInfoByName],
+    () =>
+      primaryMetricScores
+        ? attachMetricInfo(fillUnscoredMetricBars(primaryMetricScores, primaryMetricOptions), metricInfoByName)
+        : primaryMetricScores,
+    [primaryMetricScores, primaryMetricOptions, metricInfoByName],
   );
 
   const enrichedComparedScores = useMemo(
-    () => (comparedMetricScores ? attachMetricInfo(comparedMetricScores, metricInfoByName) : comparedMetricScores),
-    [comparedMetricScores, metricInfoByName],
+    () =>
+      comparedMetricScores
+        ? attachMetricInfo(fillUnscoredMetricBars(comparedMetricScores, comparedMetricOptions), metricInfoByName)
+        : comparedMetricScores,
+    [comparedMetricScores, comparedMetricOptions, metricInfoByName],
   );
 
   const metricOptions = useMemo(
@@ -137,11 +144,11 @@ export const useSummaryOverviewData = ({
   );
 
   useEffect(() => {
-    if (!primaryMetricScores || !comparedMetricScores) {
+    if (!enrichedPrimaryScores || !enrichedComparedScores) {
       return;
     }
 
-    const statistics = intersectStatistics(primaryMetricScores.statistics, comparedMetricScores.statistics);
+    const statistics = unionStatistics(enrichedPrimaryScores.statistics, enrichedComparedScores.statistics);
     const isStaleOverall = selectedStatistic === OVERALL_METRIC_SCORE_NAME;
     const isMissingSelection = selectedStatistic == null || !statistics.includes(selectedStatistic);
     if (!isStaleOverall && !isMissingSelection) {
@@ -152,7 +159,7 @@ export const useSummaryOverviewData = ({
     if (defaultStatistic) {
       setSummaryState({ selectedStatistic: defaultStatistic });
     }
-  }, [primaryMetricScores, comparedMetricScores, selectedStatistic, setSummaryState]);
+  }, [enrichedPrimaryScores, enrichedComparedScores, selectedStatistic, setSummaryState]);
 
   useEffect(() => {
     let cancelled = false;

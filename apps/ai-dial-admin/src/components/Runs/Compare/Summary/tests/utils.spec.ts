@@ -4,7 +4,7 @@ import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/mo
 import {
   getCompareBarGroups,
   getCompareMetricStatCards,
-  intersectStatistics,
+  unionStatistics,
   maxBarValue,
   unionMetricOptions,
 } from '../utils';
@@ -36,8 +36,10 @@ const COMPARED_SCORES: MetricScoresData = {
 };
 
 describe('Compare Summary :: utils', () => {
-  test('intersectStatistics keeps shared stats in canonical control order', () => {
-    expect(intersectStatistics(['MAX', 'AVG', 'P90'], ['P90', 'AVG', 'MIN'])).toEqual(['AVG', 'P90']);
+  test('unionStatistics keeps stats from either run in canonical control order', () => {
+    expect(unionStatistics(['MAX', 'AVG', 'P90'], ['P90', 'AVG', 'MIN'])).toEqual(['AVG', 'P90', 'MAX', 'MIN']);
+    expect(unionStatistics(['AVG', 'P90'], [])).toEqual(['AVG', 'P90']);
+    expect(unionStatistics([], ['AVG'])).toEqual(['AVG']);
   });
 
   test('unionMetricOptions prefers primary option on name collision and sorts alphabetically', () => {
@@ -93,6 +95,15 @@ describe('Compare Summary :: utils', () => {
   test('getCompareBarGroups returns empty when statistic or primary is missing', () => {
     expect(getCompareBarGroups(null, COMPARED_SCORES, 'AVG')).toEqual([]);
     expect(getCompareBarGroups(PRIMARY_SCORES, COMPARED_SCORES, null)).toEqual([]);
+  });
+
+  test("getCompareBarGroups keeps one run's groups when the other has no scores", () => {
+    const empty: MetricScoresData = { overallScore: 0, statistics: [], byStatistic: {} };
+    const groups = getCompareBarGroups(PRIMARY_SCORES, empty, 'AVG');
+
+    expect(groups.map((group) => group.name)).toEqual(['ragas', 'aidial']);
+    expect(groups[0].data).toEqual({ context_recall: 0.8, noise_sensitivity: 0.5 });
+    expect(groups[0].compareData).toEqual({ context_recall: null, noise_sensitivity: null });
   });
 
   test('getCompareMetricStatCards merges primary and compared values', () => {
