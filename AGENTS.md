@@ -42,8 +42,9 @@ Things that cost time or fail silently if you don't know them:
 - **Analytics is a root index plus nine sub-capabilities** under `openspec/specs/analytics/` —
   `query-builder`, `query-viewer`, `saved-queries`, `tables`, `conversations-listing`,
   `conversation-trace-listing`, `conversation-trace-detail`, `pipelines`, `evaluators`. Address one as
-  `analytics/<sub>`; `analytics/spec.md` is the index and carries only what every page shares plus the
-  routing table. Never create a top-level `analytics-*` spec folder.
+  `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
+  shares, plus a routing table naming what each sub-capability answers — add a row when you add one.
+  Never create a top-level `analytics-*` spec folder.
 - **Analytics archives keep only `proposal.md` and `design.md`** — archiving a change whose deltas
   touch `analytics/*` deletes its `tasks.md` and `specs/` delta, because the delta is already folded
   into the consolidated specs. Analytics-only; every other capability keeps the stock layout.
