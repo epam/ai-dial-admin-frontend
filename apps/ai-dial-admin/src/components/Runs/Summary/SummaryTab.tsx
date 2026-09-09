@@ -19,6 +19,7 @@ import { MetricInfo, MetricOption, MetricScoresData } from './models';
 import {
   attachMetricInfo,
   buildMetricScoresQuery,
+  fillUnscoredMetricBars,
   parseMetricScores,
   toMetricInfoByName,
   toMetricOptions,
@@ -38,26 +39,30 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const { selectedStatistic } = summaryState;
 
   const enrichedMetricScores = useMemo(
-    () => (metricScores ? attachMetricInfo(metricScores, metricInfoByName) : metricScores),
-    [metricScores, metricInfoByName],
+    () =>
+      metricScores
+        ? attachMetricInfo(fillUnscoredMetricBars(metricScores, metricOptions), metricInfoByName)
+        : metricScores,
+    [metricScores, metricOptions, metricInfoByName],
   );
 
   useEffect(() => {
-    if (!metricScores) {
+    if (!enrichedMetricScores) {
       return;
     }
 
     const isStaleOverall = selectedStatistic === OVERALL_METRIC_SCORE_NAME;
-    const isMissingSelection = selectedStatistic == null;
+    const isMissingSelection =
+      selectedStatistic == null || !enrichedMetricScores.statistics.includes(selectedStatistic);
     if (!isStaleOverall && !isMissingSelection) {
       return;
     }
 
-    const defaultStatistic = metricScores.statistics[0] ?? null;
+    const defaultStatistic = enrichedMetricScores.statistics[0] ?? null;
     if (defaultStatistic) {
       setSummaryState({ selectedStatistic: defaultStatistic });
     }
-  }, [metricScores, selectedStatistic, setSummaryState]);
+  }, [enrichedMetricScores, selectedStatistic, setSummaryState]);
 
   useEffect(() => {
     if (!run?.testSuiteId) {

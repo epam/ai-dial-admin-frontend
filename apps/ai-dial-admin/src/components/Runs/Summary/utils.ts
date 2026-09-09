@@ -47,6 +47,7 @@ import {
   MetricScoreGroup,
   MetricScoresData,
   MetricStatCard,
+  MetricStatistic,
   TestCaseStatusCounts,
 } from './models';
 
@@ -223,6 +224,55 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
     return { group: metricName, bar: metricName };
   }
   return { group: metricName.slice(0, lastDot), bar: metricName.slice(lastDot + 1) };
+};
+
+/**
+ * Ensures every configured metric appears in Metric Scores, even when `metric_score_results` has no
+ * per-statistic rows (e.g. the metric 422'd on every test case). Missing bars are `null` so
+ * `DialAnalyticsBarGroup` can render an em dash. When the run has configured metrics but no
+ * statistic rows, AVG is seeded so the section has a selectable statistic.
+ */
+export const fillUnscoredMetricBars = (data: MetricScoresData, options: MetricOption[]): MetricScoresData => {
+  if (options.length === 0) {
+    return data;
+  }
+
+  const placeholderBarsByGroup = new Map<string, Record<string, number | null>>();
+  for (const option of options) {
+    const { group, bar } = splitMetricName(option.name);
+    const bars = placeholderBarsByGroup.get(group) ?? {};
+    if (!(bar in bars)) {
+      bars[bar] = null;
+    }
+    placeholderBarsByGroup.set(group, bars);
+  }
+
+  const statistics = data.statistics.length > 0 ? data.statistics : [MetricStatistic.Avg];
+  const byStatistic: Record<string, MetricScoreGroup[]> = {};
+
+  for (const statistic of statistics) {
+    const existing = data.byStatistic[statistic] ?? [];
+    const byName = new Map(existing.map((group) => [group.name, { ...group, bars: { ...group.bars } }]));
+
+    for (const [groupName, placeholderBars] of placeholderBarsByGroup) {
+      const group = byName.get(groupName);
+      if (!group) {
+        byName.set(groupName, { name: groupName, bars: { ...placeholderBars } });
+        continue;
+      }
+      for (const [bar, value] of Object.entries(placeholderBars)) {
+        if (!(bar in group.bars)) {
+          group.bars[bar] = value;
+        }
+      }
+    }
+
+    byStatistic[statistic] = [...byName.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+  }
+
+  return { ...data, statistics: sortMetricStatistics(statistics), byStatistic };
 };
 
 /**

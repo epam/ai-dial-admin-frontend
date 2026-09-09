@@ -95,14 +95,14 @@ const Endpoint: FC<Props> = ({
   }, [dispatch, idValidationField, isModelView, isIdRequiredForResponses]);
 
   const onChangeExtraData = useCallback(
-    (extraData: DialEndpointExtraData) => {
+    (extraData: DialEndpointExtraData | undefined | null) => {
       updateEndpoint({ ...endpoint, extraData });
     },
     [endpoint, updateEndpoint],
   );
 
   const onChangeSecretExtraData = useCallback(
-    (secretExtraData: DialEndpointExtraData) => {
+    (secretExtraData: DialEndpointExtraData | undefined | null) => {
       updateEndpoint({ ...endpoint, secretExtraData });
     },
     [endpoint, updateEndpoint],

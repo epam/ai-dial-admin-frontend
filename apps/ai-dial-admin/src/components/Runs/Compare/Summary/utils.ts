@@ -4,9 +4,9 @@ import { getMetricStatCards } from '@/src/components/Runs/Summary/utils';
 
 import { CompareBarGroup, CompareMetricStatCard } from './models';
 
-/** Statistics present on both runs, in canonical Metric Scores control order. */
-export const intersectStatistics = (primary: string[], compared: string[]): string[] =>
-  sortMetricStatistics(primary.filter((statistic) => compared.includes(statistic)));
+/** Statistics present on either run, in canonical Metric Scores control order. */
+export const unionStatistics = (primary: string[], compared: string[]): string[] =>
+  sortMetricStatistics([...new Set([...primary, ...compared])]);
 
 /** Unions metric dropdown options by name; primary options win on collision. Sorted A–Z to match Metric Scores. */
 export const unionMetricOptions = (primary: MetricOption[], compared: MetricOption[]): MetricOption[] => {
@@ -24,8 +24,8 @@ export const unionMetricOptions = (primary: MetricOption[], compared: MetricOpti
 
 /** Unions bar keys; missing side gets explicit null so DialAnalyticsBar can show "—". */
 const alignBarMaps = (
-  primaryBars: Record<string, number>,
-  comparedBars: Record<string, number>,
+  primaryBars: Record<string, number | null>,
+  comparedBars: Record<string, number | null>,
 ): { data: Record<string, number | null>; compareData: Record<string, number | null> } => {
   const keys = new Set([...Object.keys(primaryBars), ...Object.keys(comparedBars)]);
   const data: Record<string, number | null> = {};
