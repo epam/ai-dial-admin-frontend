@@ -1,12 +1,14 @@
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Mock, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '../utils';
 
+type RemoveNotification = Parameters<typeof clearResolvedErrors>[1];
+
 describe('clearResolvedErrors', () => {
-  let mockRemoveNotification: ReturnType<typeof vi.fn>;
+  let mockRemoveNotification: Mock<RemoveNotification>;
 
   beforeEach(() => {
-    mockRemoveNotification = vi.fn();
+    mockRemoveNotification = vi.fn<RemoveNotification>();
   });
 
   test('should remove notification when error is resolved', () => {

@@ -1,3 +1,4 @@
+import { ColDef, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -8,6 +9,16 @@ import {
   renderCell,
 } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
+
+// `ColDef.valueGetter` is `string | ValueGetterFunc`, so it cannot be called through the union.
+// Narrowing here fails loudly if a column stops carrying a getter, instead of silently skipping.
+const valueGetterOf = (column?: ColDef): ValueGetterFunc => {
+  const valueGetter = column?.valueGetter;
+  if (typeof valueGetter !== 'function') {
+    throw new Error(`column ${column?.field} has no valueGetter function`);
+  }
+  return valueGetter;
+};
 
 describe('renderCell', () => {
   test('blank for null/undefined', () => {
@@ -60,9 +71,9 @@ describe('getResultColumns', () => {
     };
     const dottedCol = getResultColumns(result).find((c) => c.field === 'test.test');
 
-    const value = dottedCol?.valueGetter?.({
+    const value = valueGetterOf(dottedCol)({
       data: { event_id: '1', 'test.test': 'test_value' },
-    } as Parameters<NonNullable<typeof dottedCol.valueGetter>>[0]);
+    } as ValueGetterParams);
 
     expect(value).toBe('test_value');
   });

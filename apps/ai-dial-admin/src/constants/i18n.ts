@@ -251,6 +251,9 @@ export enum EntitiesI18nKey {
   SaveParametersTitle = 'Entities.SaveParametersTitle',
   SaveParametersDescription = 'Entities.SaveParametersDescription',
   Table = 'Entities.Table',
+  AnalyticsTableColumn = 'Entities.AnalyticsTableColumn',
+  AnalyticsPipeline = 'Entities.AnalyticsPipeline',
+  AnalyticsSavedQuery = 'Entities.AnalyticsSavedQuery',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
   NewVersion = 'Entities.NewVersion',
@@ -783,6 +786,7 @@ export enum TelemetryI18nKey {
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
   ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
+  ActivityViewAnalytics = 'Telemetry.ActivityView.Analytics',
 }
 
 export enum RoutesI18nKey {
@@ -862,6 +866,10 @@ export enum CompareI18nKey {
   After = 'Compare.After',
   CompareVersions = 'Compare.CompareVersions',
   Version = 'Compare.Version',
+  Added = 'Compare.Added',
+  Removed = 'Compare.Removed',
+  Changed = 'Compare.Changed',
+  ColumnGroup = 'Compare.ColumnGroup',
 }
 
 export enum PromptsI18nKey {
@@ -1012,6 +1020,7 @@ export enum ActivityAuditI18nKey {
   ActivityType = 'ActivityAudit.ActivityType',
   ResourceType = 'ActivityAudit.ResourceType',
   ResourceId = 'ActivityAudit.ResourceId',
+  OpenResourceInNewTab = 'ActivityAudit.OpenResourceInNewTab',
   Time = 'ActivityAudit.Time',
   Initiated = 'ActivityAudit.Initiated',
   UserId = 'ActivityAudit.UserId',

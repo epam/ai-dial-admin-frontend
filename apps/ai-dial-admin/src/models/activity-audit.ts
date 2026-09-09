@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { FilterDto, SortDto } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
 import {
   ActivityAuditEntity,
   ActivityAuditResourceType,
@@ -43,6 +44,16 @@ export interface FlatRow {
 export interface ActivityAuditDiffSection {
   current: ActivityAuditDiff[];
   compare: ActivityAuditDiff[];
+  label?: string;
+  diffStatus?: DiffStatus;
+}
+
+export interface ActivityAuditDiffGroup {
+  index: number;
+  currentData?: ActivityAuditDiff[];
+  compareData?: ActivityAuditDiff[];
+  label?: string;
+  diffStatus?: DiffStatus;
 }
 
 export type ActivityAuditSection = Record<string, ActivityAuditDiffSection[]>;
@@ -73,7 +84,7 @@ export type ImageSourceShape = Record<string, unknown> & {
 };
 
 // Resolver bundle picked by `pickActivityHandlers` per activity branch
-// (admin / image / firewall / container).
+// (admin / image / firewall / container / analytics).
 export interface ResolverHandlers {
   filter: (activity: DialActivity) => FilterDto[];
   fetchSnapshot: (activity: DialActivity, revision: number, token: Token) => Promise<ActivityAuditEntity | null>;
@@ -83,6 +94,16 @@ export interface ResolverHandlers {
 // Duck types for the API instances the resolver factories consume.
 export interface RevisionApi {
   getRevisionDetails: (url: string, token: Token) => Promise<ActivityAuditEntity | null>;
+}
+
+// One backend of the detail page's activity fallback chain. `backend` and `route` carry no
+// behaviour: they exist so a probe that *rejects* — an upstream that is down, or whose host
+// variable is unset — can be named in the log, which is the only place it is distinguishable from
+// the backend simply not owning the activity.
+export interface ActivityLookupSource {
+  backend: string;
+  route: string;
+  getActivityById: (id: string, token: Token) => Promise<ServerActionResponse<DialActivity> | null>;
 }
 
 export interface ListApi {

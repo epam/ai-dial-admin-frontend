@@ -8,6 +8,7 @@ import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
 import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
@@ -156,7 +157,7 @@ describe('ExtractionResultTab', () => {
               id: 'r1',
               responseStatusCode: 200,
               runIndex: 0,
-              executionStatus: 'SUCCESS',
+              executionStatus: ExtractionResultStatus.SUCCESS,
               testCaseName: 'Test Case 1',
             },
           ],

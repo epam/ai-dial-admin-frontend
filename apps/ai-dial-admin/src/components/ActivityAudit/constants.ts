@@ -53,6 +53,7 @@ export enum EntityParameterKeys {
   PROBE_PROPERTIES = 'probeProperties',
   ENDPOINT_CONFIGURATION = 'endpointConfiguration',
   CONFIGURATION = 'configuration',
+  COLUMNS = 'columns',
 }
 
 export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];

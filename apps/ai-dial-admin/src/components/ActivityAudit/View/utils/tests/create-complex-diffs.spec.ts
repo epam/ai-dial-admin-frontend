@@ -1,5 +1,5 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { PricingType } from '@/src/models/dial/model';
 import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
@@ -25,37 +25,37 @@ import {
 
 describe('Activity audit :: compareSimpleTypes', () => {
   test('should push REMOVE when val1 is defined and val2 is null', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'value1', void 0);
     expect(diffs).toEqual([{ parameter: 'key', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('should push ADD when val1 is null and val2 is defined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', void 0, 'value2');
     expect(diffs).toEqual([{ parameter: 'key', value: 'value2', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push CHANGE when val1 and val2 are different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'old', 'new');
     expect(diffs).toEqual([{ parameter: 'key', value: 'new', pairedValue: 'old', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when val1 and val2 are the same', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'key', 'same', 'same');
     expect(diffs).toEqual([{ parameter: 'key', value: 'same' }]);
   });
 
   test('should handle number types and push CHANGE if different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'count', 1, 2);
     expect(diffs).toEqual([{ parameter: 'count', value: '2', pairedValue: '1', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should handle boolean types and push CHANGE if different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'enabled', true, false);
     expect(diffs).toEqual([
       { parameter: 'enabled', value: 'false', pairedValue: 'true', diffStatus: DiffStatus.CHANGED },
@@ -63,13 +63,13 @@ describe('Activity audit :: compareSimpleTypes', () => {
   });
 
   test('should push unchanged value for boolean true === true', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'flag', true, true);
     expect(diffs).toEqual([{ parameter: 'flag', value: 'true' }]);
   });
 
   test('should push unchanged value for number 42 === 42', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareSimpleTypes(diffs, 'answer', 42, 42);
     expect(diffs).toEqual([{ parameter: 'answer', value: '42' }]);
   });
@@ -77,31 +77,31 @@ describe('Activity audit :: compareSimpleTypes', () => {
 
 describe('Activity audit :: fillSimpleTypes', () => {
   test('should push string value as-is', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'name', 'John');
     expect(diffs).toEqual([{ parameter: 'name', value: 'John' }]);
   });
 
   test('should convert number to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'age', 30);
     expect(diffs).toEqual([{ parameter: 'age', value: '30' }]);
   });
 
   test('should convert boolean true to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'active', true);
     expect(diffs).toEqual([{ parameter: 'active', value: 'true' }]);
   });
 
   test('should convert boolean false to string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'active', false);
     expect(diffs).toEqual([{ parameter: 'active', value: 'false' }]);
   });
 
   test('should push empty string when value is undefined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillSimpleTypes(diffs, 'optional', undefined);
     expect(diffs).toEqual([{ parameter: 'optional', value: '' }]);
   });

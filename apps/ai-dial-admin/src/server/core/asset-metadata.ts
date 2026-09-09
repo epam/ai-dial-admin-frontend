@@ -122,12 +122,20 @@ const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
  * path already sets on create/update — hence the explicit `isDualBucketPlatform` flag rather than
  * inferring it from `prefix`, which flat platform-only prefixes (`MODELS_PREFIX` et al.) already bake
  * their fixed `platform/` segment into and would otherwise match too.
+ *
+ * The same flag governs `path`: a genuinely flat platform-only entity has `path === name` by design
+ * (no bucket to qualify against — `getEntityPath`'s flat-platform branch relies on this). A dual-bucket
+ * platform resource's `path` must instead be bucket-qualified (`platform/{name}`), matching the shape
+ * `metadataFields` already gives a public-bucket resource's `path` — every downstream consumer
+ * (delete, discovered-tools, sign-in/out) trusts `.path` as the complete, Core-addressable path, and a
+ * bare name resolves to no bucket at all (`ResourceDescriptorFactory.fromAnyUrl` in `ai-dial-core`
+ * requires `{type}/{bucket}/{path}`).
  */
 const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string, isDualBucketPlatform = false) => {
   const { path, folderId, name } = parseEncodedFlatPath(metadata.url, prefix);
   return {
     name,
-    path,
+    path: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/${name}` : path,
     folderId: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/` : folderId,
     author: metadata.author ?? '',
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,

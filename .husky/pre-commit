@@ -47,3 +47,19 @@ fi
 if [ -n "$agent_files" ]; then
   node scripts/validate-agent-docs.mjs
 fi
+
+# Types are checked at commit time, not at push time: both projects run in ~2s once
+# `.tsbuildinfo` is warm (6.9s / 9.7s cold), so the feedback is worth the wait here.
+#
+# The app project is a hard gate — it is at zero errors and MUST stay there. The spec project is
+# reported only: it still carries the errors catalogued in
+# openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md, so failing on them
+# would block every commit. `|| true` is load-bearing twice over: husky runs this hook with `sh -e`, and
+# both the tsc run and a `grep` that matches nothing exit non-zero.
+npm run typecheck
+
+spec_type_errors=$(npm run --silent typecheck:specs 2>&1 | grep -c 'error TS' || true)
+
+if [ "$spec_type_errors" -gt 0 ]; then
+  echo "pre-commit: $spec_type_errors type error(s) in *.spec.ts(x) — reported, not blocking. See \`npm run typecheck:specs\`."
+fi

@@ -85,6 +85,40 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     expect(getRevisionRouteForEntityType(type, id)).toBe(`/deployments/${id}/revision/`);
   });
 
+  test('returns correct route for TABLE', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.TABLE, 'orders')).toBe(`/tables/orders/revision/`);
+  });
+
+  test('returns the owning table route for TABLE_COLUMN', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.TABLE_COLUMN, 'orders:total')).toBe(
+      `/tables/orders/revision/`,
+    );
+  });
+
+  test('returns correct route for PIPELINE', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.PIPELINE, 'daily_rollup')).toBe(
+      `/pipelines/daily_rollup/revision/`,
+    );
+  });
+
+  test('returns correct route for SAVED_QUERY', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.SAVED_QUERY, 'q1')).toBe(
+      `/saved-queries/q1/revision/`,
+    );
+  });
+
+  // Documents the URL each analytics route becomes once the resolver appends the revision
+  // and the analytics client prefixes `v1`. The prefix is asserted against the client in
+  // src/server/analytics/tests/audit-api.spec.ts; this pins only this function's half.
+  test.each([
+    [ActivityAuditResourceType.TABLE, 'orders', 7, 'v1/tables/orders/revision/7'],
+    [ActivityAuditResourceType.TABLE_COLUMN, 'orders:total', 7, 'v1/tables/orders/revision/7'],
+    [ActivityAuditResourceType.PIPELINE, 'daily_rollup', 3, 'v1/pipelines/daily_rollup/revision/3'],
+    [ActivityAuditResourceType.SAVED_QUERY, 'q1', 3, 'v1/saved-queries/q1/revision/3'],
+  ])('documents the analytics snapshot url composed for %s', (type, resourceId, revision, expected) => {
+    expect(`v1${getRevisionRouteForEntityType(type, resourceId)}${revision}`).toBe(expected);
+  });
+
   test('returns null for unknown type', () => {
     expect(getRevisionRouteForEntityType('UNKNOWN' as any, id)).toBeNull();
   });
