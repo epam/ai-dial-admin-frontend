@@ -761,7 +761,7 @@ Notes for EM before dispatch:
       a props-level filter interaction 10.1 pins. Resolve every `fail` verdict before the change is
       complete.
 
-- [ ] 10.3 From `apps/ai-dial-admin/`, run
+- [x] 10.3 From `apps/ai-dial-admin/`, run
       `npx vitest run --reporter=dot --coverage --coverage.reporter=text-summary` and confirm the
       coverage gate in `vitest.config.ts` is not regressed; run
       `npx tsc -p tsconfig.app.json --noEmit` and expect **0** errors (see the correction in this

@@ -134,8 +134,9 @@ the comparison"; there is no scenario for both sides absent at once.
 the resource's recorded history begins after this point — with the legend hidden whenever there is
 nothing left to label. Wording distinguishes *this resource has no recorded revision* from *this
 revision is empty*; no existing i18n key says either (checked `ActivityAudit.*`, `Compare.*`,
-`Basic.NoData`), so a new pair is added following the app's existing
-`*EmptyStateTitle`/`*EmptyStateDescription` naming (`FileManager.*`).
+`Basic.NoData`); a single key, `ActivityAuditI18nKey.SnapshotUnavailableTitle`, was added — the owner
+cut the initial draft's explanatory sentence after seeing it rendered, so the title is the whole of
+the copy and there is no matching `*EmptyStateDescription` key.
 
 **Scope: not analytics-specific.** `generateCurrentResource` — the generic, non-analytics diff path
 (`generate-diffs.ts:169-225`) — has the identical structural gap: when both snapshots are `null`,
@@ -286,4 +287,3 @@ spec, per `openspec/config.yaml`.
 - **No changes to the analytics backend.** Every endpoint this change calls already exists and is already specified.
 - **No change to what the audit list stores or how it pages.** Time filter, infinite row model,
   column-state persistence and parent/child aggregation are reused as they are.
-</content>
