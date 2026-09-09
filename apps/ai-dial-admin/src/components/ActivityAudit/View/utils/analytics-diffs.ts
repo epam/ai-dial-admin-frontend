@@ -147,6 +147,27 @@ const getExtraColumnParameters = (...columns: (object | undefined)[]): string[] 
 
 const union = (...keyLists: string[][]): string[] => Array.from(new Set(keyLists.flat()));
 
+/**
+ * Restore rows the shared comparator dropped for having an empty rendered
+ * value — the case an empty collection (`inputs: []`) or an all-empty nested
+ * object falls into, since `collectLeaves` renders both as `''`. The
+ * comparator's own drop rule stays untouched for every other caller; this
+ * only re-inserts a plain, unchanged-looking row for a parameter this
+ * snapshot actually carries, so an analytics field is never silently absent.
+ *
+ * @param {ActivityAuditDiff[]} rows - output of `compareNestedFlatObject` / `fillNestedFlatObject`,
+ *   a subsequence of `parameters` in the same order
+ * @param {string[]} parameters - every parameter the snapshot(s) carry, in emission order
+ * @returns {ActivityAuditDiff[]} - one row per parameter, gaps filled with an empty value
+ */
+const restoreEmptyValueRows = (rows: ActivityAuditDiff[], parameters: string[]): ActivityAuditDiff[] => {
+  let cursor = 0;
+  return parameters.map((parameter) => {
+    if (rows[cursor]?.parameter === parameter) return rows[cursor++];
+    return { parameter, value: '' };
+  });
+};
+
 export const getColumnBucketKey = (name: string): string => `${COLUMNS_BUCKET_PREFIX}${name}`;
 
 export const isColumnBucketKey = (key: string): boolean => key.startsWith(COLUMNS_BUCKET_PREFIX);
@@ -198,6 +219,7 @@ export const buildAnalyticsDiff = (
   } else {
     fillNestedFlatObject(result.properties, snapshotRows(compare, parameters));
   }
+  result.properties = restoreEmptyValueRows(result.properties, parameters);
 
   const currentColumns = getColumnsByName(current);
   const compareColumns = getColumnsByName(compare);
