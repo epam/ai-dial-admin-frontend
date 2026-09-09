@@ -1,4 +1,6 @@
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { ANTHROPIC_MESSAGES_ANSWER_EXPRESSION, ANTHROPIC_MESSAGES_BODY } from './anthropic-messages-body';
+import { ANTHROPIC_MESSAGES_RELATIVE_URL, CREATE_MESSAGE_METHOD } from './anthropic-messages-method';
 import { CHAT_COMPLETION_BODY } from './chat-completion-body';
 import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import { CHAT_COMPLETION_METHOD } from './chat-completion-method';
@@ -40,6 +42,25 @@ export const RESPONSES_SUITE = (deploymentId: string) => ({
       name: 'answer',
       displayName: 'answer',
       expression: RESPONSES_ANSWER_EXPRESSION,
+      type: TestCaseItemType.STRING,
+    },
+  ],
+});
+
+export const ANTHROPIC_MESSAGES_SUITE = (deploymentId: string) => ({
+  endpointRef: CREATE_MESSAGE_METHOD,
+  requestTemplate: {
+    urlTemplate: ANTHROPIC_MESSAGES_RELATIVE_URL,
+    body: {
+      contentType: APPLICATION_JSON_TYPE,
+      content: ANTHROPIC_MESSAGES_BODY(deploymentId),
+    },
+  },
+  responseColumns: [
+    {
+      name: 'answer',
+      displayName: 'answer',
+      expression: ANTHROPIC_MESSAGES_ANSWER_EXPRESSION,
       type: TestCaseItemType.STRING,
     },
   ],

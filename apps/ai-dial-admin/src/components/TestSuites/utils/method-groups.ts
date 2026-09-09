@@ -1,5 +1,10 @@
+import {
+  ANTHROPIC_MESSAGES_RELATIVE_URL,
+  CREATE_MESSAGE_METHOD,
+} from '@/src/components/TestSuites/constants/anthropic-messages-method';
 import { CHAT_COMPLETION_METHOD } from '@/src/components/TestSuites/constants/chat-completion-method';
 import {
+  ANTHROPIC_MESSAGES_SUITE,
   CHAT_COMPLETION_RELATIVE_URL,
   CHAT_COMPLETION_SUITE,
   DEFAULT_SUITE,
@@ -87,6 +92,36 @@ const buildResponsesGroup = (deploymentId: string, takenColumnNames: string[]): 
   };
 };
 
+const isAnthropicMessagesEndpoint = (endpointRef?: TestSuiteEndpointRef): boolean =>
+  endpointRef?.method === CREATE_MESSAGE_METHOD.method &&
+  endpointRef?.relativeUrlPattern === CREATE_MESSAGE_METHOD.relativeUrlPattern;
+
+/**
+ * Unlike Responses, Anthropic Messages support has no features-flag equivalent — Core reports it
+ * only through `interfaces` — so this is a 2-way OR (interfaces + sticky) rather than a 3-way OR.
+ */
+const shouldOfferAnthropicMessages = (deployment?: Deployment | null, endpointRef?: TestSuiteEndpointRef): boolean =>
+  !!deployment?.interfaces?.includes(DeploymentApiInterface.AnthropicMessages) ||
+  isAnthropicMessagesEndpoint(endpointRef);
+
+const buildAnthropicMessagesGroup = (deploymentId: string, takenColumnNames: string[]): MethodGroup => {
+  const createSuite = ANTHROPIC_MESSAGES_SUITE(deploymentId);
+
+  return {
+    titleKey: TestSuitesI18nKey.AnthropicMessages,
+    options: [
+      {
+        ref: CREATE_MESSAGE_METHOD,
+        displayUrl: ANTHROPIC_MESSAGES_RELATIVE_URL,
+        seed: {
+          ...createSuite,
+          responseColumns: uniquifyResponseColumns(createSuite.responseColumns, takenColumnNames),
+        },
+      },
+    ],
+  };
+};
+
 const buildRoutesGroup = (deployment?: Deployment | null): MethodGroup => ({
   titleKey: TestSuitesI18nKey.Other,
   options: generateMethodPathCombinations(deployment?.routes).map((route) => ({
@@ -110,6 +145,10 @@ export const buildMethodGroups = ({
 
   if (shouldOfferResponses(deployment, endpointRef)) {
     groups.push(buildResponsesGroup(deployment?.deploymentId ?? '', takenColumnNames));
+  }
+
+  if (shouldOfferAnthropicMessages(deployment, endpointRef)) {
+    groups.push(buildAnthropicMessagesGroup(deployment?.deploymentId ?? '', takenColumnNames));
   }
 
   groups.push(buildRoutesGroup(deployment));

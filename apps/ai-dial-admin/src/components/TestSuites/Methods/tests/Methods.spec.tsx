@@ -330,4 +330,85 @@ describe('Methods component', () => {
       expect(updater(previous).responseColumns).toEqual([]);
     });
   });
+
+  describe('Anthropic Messages group', () => {
+    const selectedApplication: any = { deploymentId: 'claude-3', $type: 'dial-model' };
+
+    const renderWithInterfaces = (interfaces?: string[], testSuite: any = { endpointRef: {} }) => {
+      mockGetDeployment.mockResolvedValue({ ...mockDeployment, deploymentId: 'claude-3', interfaces });
+
+      return render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
+    };
+
+    test('is absent when the deployment reports no interfaces', async () => {
+      renderWithInterfaces();
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.AnthropicMessages' })).not.toBeInTheDocument();
+    });
+
+    test('is absent when the reported interfaces omit anthropicMessages', async () => {
+      renderWithInterfaces(['chat', 'openaiChatCompletions']);
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.AnthropicMessages' })).not.toBeInTheDocument();
+    });
+
+    test('renders the create-message operation when anthropicMessages is reported', async () => {
+      renderWithInterfaces(['chat', 'anthropicMessages']);
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.AnthropicMessages' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'POST /anthropic/v1/messages' })).toBeInTheDocument();
+    });
+
+    test('is absent when a features property is truthy, since there is no features-flag equivalent', async () => {
+      mockGetDeployment.mockResolvedValue({
+        ...mockDeployment,
+        deploymentId: 'claude-3',
+        interfaces: undefined,
+        features: { chat_completion: true, responses_api: true },
+      });
+
+      render(
+        <Methods testSuite={{ endpointRef: {} } as any} selectedTarget={selectedApplication} onChange={onChange} />,
+      );
+
+      await screen.findByRole('button', { name: 'POST /chat/completions' });
+      expect(screen.queryByRole('group', { name: 'TestSuites.AnthropicMessages' })).not.toBeInTheDocument();
+    });
+
+    test('stays visible for a suite already selecting the Anthropic Messages method', async () => {
+      renderWithInterfaces(undefined, {
+        endpointRef: { method: 'POST', relativeUrlPattern: '/anthropic/v1/messages' },
+      });
+
+      expect(await screen.findByRole('group', { name: 'TestSuites.AnthropicMessages' })).toBeInTheDocument();
+    });
+
+    test('marks the saved Anthropic Messages method as current', async () => {
+      renderWithInterfaces(['anthropicMessages'], {
+        endpointRef: { method: 'POST', relativeUrlPattern: '/anthropic/v1/messages' },
+      });
+
+      const create = await screen.findByRole('button', { name: 'POST /anthropic/v1/messages' });
+
+      expect(create).toHaveAttribute('aria-current', 'true');
+      expect(screen.getByRole('button', { name: 'POST /chat/completions' })).toHaveAttribute('aria-current', 'false');
+    });
+
+    test('seeds the create-message suite with the target deployment id', async () => {
+      const user = userEvent.setup();
+      renderWithInterfaces(['anthropicMessages']);
+
+      await user.click(await screen.findByRole('button', { name: 'POST /anthropic/v1/messages' }));
+
+      const updater = onChange.mock.calls.at(-1)?.[0];
+      expect(updater({}).requestTemplate.body.content).toEqual({
+        model: 'claude-3',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: '${{user_message}}' }],
+      });
+      expect(updater({}).responseColumns[0]).toEqual(expect.objectContaining({ name: 'answer' }));
+    });
+  });
 });

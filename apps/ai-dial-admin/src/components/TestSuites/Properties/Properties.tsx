@@ -6,6 +6,7 @@ import { DialInputPopup, DialLabel, DialNeutralButton } from '@epam/ai-dial-ui-k
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import { reseedAnthropicMessagesModel } from '@/src/components/TestSuites/utils/anthropic-messages-model';
 import { reseedResponsesModel } from '@/src/components/TestSuites/utils/responses-model';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -49,7 +50,8 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const onUpdate = useCallback(
     (suite: TestSuite) => {
       setIsAppModalOpen(false);
-      onChange(reseedResponsesModel(suite, suite.deploymentRef?.id ?? ''));
+      const deploymentId = suite.deploymentRef?.id ?? '';
+      onChange(reseedAnthropicMessagesModel(reseedResponsesModel(suite, deploymentId), deploymentId));
     },
     [onChange],
   );

@@ -102,13 +102,66 @@ describe('buildMethodGroups', () => {
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
         TestSuitesI18nKey.ChatInterface,
         TestSuitesI18nKey.Responses,
+        TestSuitesI18nKey.AnthropicMessages,
       ]);
     });
 
     test('omits the group for a target declaring only anthropicMessages', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.AnthropicMessages];
 
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([
+        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.AnthropicMessages,
+      ]);
+    });
+
+    test('omits the group when there is no deployment at all', () => {
+      expect(titles({})).toEqual([TestSuitesI18nKey.ChatInterface]);
+    });
+  });
+
+  describe('Anthropic Messages group gating', () => {
+    test('omits the group when interfaces are not reported', () => {
+      expect(titles({ deployment: deployment() })).toEqual([TestSuitesI18nKey.ChatInterface]);
+    });
+
+    test('omits the group when the reported interfaces do not include anthropicMessages', () => {
+      const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIChatCompletions];
+
       expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.ChatInterface]);
+    });
+
+    test('includes the group when anthropicMessages is reported', () => {
+      const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.AnthropicMessages];
+
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([
+        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.AnthropicMessages,
+      ]);
+    });
+
+    test('includes the group for a suite already selecting the create-message method, without the interface', () => {
+      const titleKeys = titles({
+        deployment: deployment(),
+        endpointRef: { method: 'POST', relativeUrlPattern: '/anthropic/v1/messages' },
+      });
+
+      expect(titleKeys).toContain(TestSuitesI18nKey.AnthropicMessages);
+    });
+
+    test('omits the group for a suite selecting an unrelated method', () => {
+      const titleKeys = titles({
+        deployment: deployment(),
+        endpointRef: { method: 'POST', relativeUrlPattern: '/chat/completions' },
+      });
+
+      expect(titleKeys).not.toContain(TestSuitesI18nKey.AnthropicMessages);
+    });
+
+    test('features have no effect: a truthy features property does not enable the group on its own', () => {
+      const withFeatures = { ...deployment(), features: { responses_api: true } } as Deployment;
+
+      expect(titles({ deployment: withFeatures })).not.toContain(TestSuitesI18nKey.AnthropicMessages);
     });
 
     test('omits the group when there is no deployment at all', () => {

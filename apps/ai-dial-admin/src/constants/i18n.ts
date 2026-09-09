@@ -1825,6 +1825,7 @@ export enum TestSuitesI18nKey {
   Other = 'TestSuites.Other',
   ChatInterface = 'TestSuites.ChatInterface',
   Responses = 'TestSuites.Responses',
+  AnthropicMessages = 'TestSuites.AnthropicMessages',
   MethodChangeWarning = 'TestSuites.MethodChangeWarning',
   ImportSuccess = 'TestSuites.ImportSuccess',
   ImportFailed = 'TestSuites.ImportFailed',

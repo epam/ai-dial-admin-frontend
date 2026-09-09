@@ -1867,6 +1867,7 @@ export default {
     Other: 'Other',
     ChatInterface: 'Chat interface',
     Responses: 'Responses',
+    AnthropicMessages: 'Anthropic Messages',
     ChangeMethod: 'Change method',
     ChangeMethodDisabledWhileTryOutOpen: 'Close Try out to change the method',
     RequestBodyPreview: 'Request body preview',
