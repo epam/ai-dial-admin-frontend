@@ -33,10 +33,14 @@ export default defineConfig(() => ({
     threads: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
-    reporters: ['default'],
+    // 'dot' prints one character per file and every failure in full; the default reporter prints a
+    // line per spec file (971 of them here), which is output nobody reads and agents pay for.
+    reporters: ['dot'],
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
-      reporter: ['text', 'html', 'clover', 'json'],
+      // 'text-summary' is six lines; 'text' is one row per source file (2 950 of them here).
+      // The machine-readable reporters are untouched, so CI artifacts and thresholds are the same.
+      reporter: ['text-summary', 'html', 'clover', 'json'],
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
       thresholds: {
