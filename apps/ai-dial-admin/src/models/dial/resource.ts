@@ -1,6 +1,6 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
-import { DialResourceInterface } from '@/src/models/dial/interfaces';
+import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
 import { AttachmentPaths, DialAppRoute, RouteResponse } from '@/src/models/dial/route';
@@ -215,6 +215,26 @@ export interface DialRouteResource extends ModifiedEntity {
 }
 
 /**
+ * A translator resource (`translators/platform/{name}`) as returned by Core. Flat and unversioned
+ * like `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`, and — unlike any of
+ * those — a plain POJO on Core (`Translator` extends neither `Deployment` nor `RoleBasedEntity`), so
+ * it has no `displayName`/`description`/`endpoint`/`features`/`userRoles`. `in`/`out` reuse the same
+ * `DeploymentInterfaceType` enum `interfaces` fields elsewhere already key by — Core's `InterfaceType`
+ * and this enum carry the same four values.
+ */
+export interface DialTranslatorResource extends ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+  in?: DeploymentInterfaceType;
+  out?: DeploymentInterfaceType;
+  baseUrl?: string;
+}
+
+/**
  * A role resource (`roles/platform/{name}`) as returned by Core. Flat and unversioned like
  * `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`. `Role` is a plain class — it
  * extends neither `RoleBasedEntity` (no `userRoles`) nor `Deployment` (no `displayName`/
@@ -307,6 +327,7 @@ export type PlatformAsset =
   | DialModelResource
   | DialAppRunnerResource
   | DialInterceptorResource
+  | DialTranslatorResource
   | DialRouteResource
   | DialRoleResource
   | DialKeyResource

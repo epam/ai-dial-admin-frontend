@@ -91,6 +91,13 @@ const CreateEntity = <T extends CreateEntityBase>({
       } as T;
     }
 
+    if (route === ApplicationRoute.PlatformTranslators) {
+      return {
+        name: '',
+        ...initialValues,
+      } as T;
+    }
+
     if (route === ApplicationRoute.PlatformRoutes) {
       return { name: '', description: '', userRoles: [], ...initialValues } as T;
     }

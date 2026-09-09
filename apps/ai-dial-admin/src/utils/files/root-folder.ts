@@ -14,6 +14,7 @@ const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformAppRunners,
   ApplicationRoute.PlatformInterceptors,
+  ApplicationRoute.PlatformTranslators,
   ApplicationRoute.PlatformRoutes,
   ApplicationRoute.PlatformRoles,
   ApplicationRoute.PlatformKeys,
