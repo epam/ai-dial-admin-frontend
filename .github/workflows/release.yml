@@ -9,6 +9,7 @@ on:
         type: boolean
         default: false
         description: Promote release to stable (for release-* branches only)
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -18,7 +19,6 @@ permissions:
   packages: write
   security-events: write
   id-token: write
-
 
 jobs:
   release:

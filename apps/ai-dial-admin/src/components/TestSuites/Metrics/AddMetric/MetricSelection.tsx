@@ -2,10 +2,11 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
+import { ColumnMovedEvent, FirstDataRenderedEvent, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 
 import { TWO_LINE_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { applyColumnStateOrderToColDefs } from '@/src/components/Grid/utils';
 import { SINGLE_ROW_SELECTION_NO_CHECKBOX } from '@/src/constants/ag-grid';
 import { METRIC_SELECTION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -15,13 +16,41 @@ import { Metric } from '@/src/models/evaluation/metric';
 interface Props {
   selectedMetricId?: string;
   metrics: Metric[];
+  columnOrder?: string[];
   onSelectMetric?: (metricId: string) => void;
+  onChangeColumnOrder?: (columnOrder: string[]) => void;
 }
 
-const MetricSelection: FC<Props> = ({ metrics, selectedMetricId, onSelectMetric }) => {
+const MetricSelection: FC<Props> = ({
+  metrics,
+  selectedMetricId,
+  columnOrder,
+  onSelectMetric,
+  onChangeColumnOrder,
+}) => {
   const t = useI18n();
 
-  const columnDefs = useMemo(() => METRIC_SELECTION_COLUMNS(t), [t]);
+  const columnDefs = useMemo(() => {
+    const defs = METRIC_SELECTION_COLUMNS(t);
+
+    return columnOrder?.length
+      ? applyColumnStateOrderToColDefs(
+          defs,
+          columnOrder.map((colId) => ({ colId })),
+        )
+      : defs;
+  }, [t, columnOrder]);
+
+  const onColumnMoved = useCallback(
+    (event: ColumnMovedEvent<Metric>) => {
+      if (!event.finished) {
+        return;
+      }
+
+      onChangeColumnOrder?.(event.api.getColumnState().map(({ colId }) => colId));
+    },
+    [onChangeColumnOrder],
+  );
 
   const onRowSelected = useCallback(
     (event: RowSelectedEvent<Metric>) => {
@@ -56,8 +85,9 @@ const MetricSelection: FC<Props> = ({ metrics, selectedMetricId, onSelectMetric 
       rowHeight: TWO_LINE_ROW_HEIGHT,
       onRowSelected,
       onFirstDataRendered,
+      onColumnMoved,
     }),
-    [onRowSelected, onFirstDataRendered],
+    [onRowSelected, onFirstDataRendered, onColumnMoved],
   );
 
   return (
