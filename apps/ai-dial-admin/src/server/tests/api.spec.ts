@@ -16,14 +16,14 @@ describe('Server - api', () => {
 
   test('Should check error with status code', async () => {
     fetch.mockResponseOnce(JSON.stringify('Error get'), { status: 400 });
-    (new BaseApi({ host: '' }) as any).get(TEST_GET_URL).then((res) => {
+    (new BaseApi({ host: '' }) as any).get(TEST_GET_URL).then((res: string | null) => {
       expect(res).toBeNull();
     });
   });
 
   test('Should check return texts', async () => {
     fetch.mockResponseOnce(JSON.stringify('Response text'), { status: 200, headers: {} });
-    (new BaseApi({ host: '' }) as any).get(TEST_GET_URL).then((res) => {
+    (new BaseApi({ host: '' }) as any).get(TEST_GET_URL).then((res: string) => {
       expect(JSON.parse(res)).toBe('Response text');
     });
   });
@@ -40,7 +40,7 @@ describe('Server - api', () => {
       status: 400,
       error: JSON.stringify({ message: 'message', error: 'header', requestId: null }),
     } as any);
-    (new BaseApi({ host: '' }) as any).getAction(TEST_GET_URL).then((res) => {
+    (new BaseApi({ host: '' }) as any).getAction(TEST_GET_URL).then((res: unknown) => {
       expect(res).toEqual(error);
     });
   });

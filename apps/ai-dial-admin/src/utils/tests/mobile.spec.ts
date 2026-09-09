@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MockInstance, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { isMediumScreen, isOnlyMediumScreen, isSmallScreen } from '../mobile';
 describe('Utils :: window size', () => {
-  let windowSpy;
+  let windowSpy: MockInstance;
 
   beforeEach(() => {
     windowSpy = vi.spyOn(window, 'window', 'get');

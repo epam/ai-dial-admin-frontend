@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ActivityAuditResourceType,
+  isAnalyticsResource,
   isContainerDeploymentResource,
   isDeploymentManagerResource,
   isGlobalFirewallResource,
@@ -123,5 +124,51 @@ describe('activity-audit predicates :: isContainerDeploymentResource', () => {
 
   test('returns false for undefined', () => {
     expect(isContainerDeploymentResource(undefined)).toBe(false);
+  });
+});
+
+describe('activity-audit predicates :: isAnalyticsResource', () => {
+  const analyticsTypes = [
+    ActivityAuditResourceType.TABLE,
+    ActivityAuditResourceType.TABLE_COLUMN,
+    ActivityAuditResourceType.PIPELINE,
+    ActivityAuditResourceType.SAVED_QUERY,
+  ];
+
+  test.each(analyticsTypes)('returns true for %s', (type) => {
+    expect(isAnalyticsResource(type)).toBe(true);
+  });
+
+  test('covers the four PascalCase values the analytics backend emits', () => {
+    expect(analyticsTypes).toEqual(['Table', 'TableColumn', 'Pipeline', 'SavedQuery']);
+  });
+
+  test.each([
+    ActivityAuditResourceType.MODEL,
+    ActivityAuditResourceType.APPLICATION,
+    ActivityAuditResourceType.ROLE,
+    ActivityAuditResourceType.TOOLSET,
+  ])('returns false for admin-backend %s', (type) => {
+    expect(isAnalyticsResource(type)).toBe(false);
+  });
+
+  test.each([
+    ActivityAuditResourceType.MCP_DEPLOYMENT,
+    ActivityAuditResourceType.NIM_DEPLOYMENT,
+    ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+    ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+  ])('returns false for deployment-manager %s', (type) => {
+    expect(isAnalyticsResource(type)).toBe(false);
+  });
+
+  test('returns false for undefined', () => {
+    expect(isAnalyticsResource(undefined)).toBe(false);
+  });
+
+  test.each(analyticsTypes)('leaves the existing resource-set predicates answering false for %s', (type) => {
+    expect(isDeploymentManagerResource(type)).toBe(false);
+    expect(isContainerDeploymentResource(type)).toBe(false);
+    expect(isImageDefinitionResource(type)).toBe(false);
+    expect(isGlobalFirewallResource(type)).toBe(false);
   });
 });

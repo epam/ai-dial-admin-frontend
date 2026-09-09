@@ -31,8 +31,13 @@ grep -rl "<term>" openspec/specs/         # when you don't know the capability n
 `.claude/reference/areas.md` maps routes and component folders to areas, which is usually the
 fastest way from a file you're editing to the capability that governs it.
 
-**Analytics is one master spec** — `openspec/specs/analytics/spec.md`. Don't look for, or create,
-per-feature analytics specs.
+**Analytics is a folder of sub-capabilities**, not one spec. `openspec/specs/analytics/spec.md` is a
+short index — read its routing table, then open the single sub-capability that answers the question:
+`analytics/query-builder` (authoring a query: Form, JSON, SQL, AI views), `analytics/query-viewer`
+(running one and reading the result), `analytics/saved-queries`, `analytics/tables`,
+`analytics/conversations-listing`, `analytics/conversation-trace-listing`,
+`analytics/conversation-trace-detail`, `analytics/pipelines`, `analytics/evaluators`. Don't create a
+top-level `analytics-*` folder.
 
 ## Change history — why it is that way
 

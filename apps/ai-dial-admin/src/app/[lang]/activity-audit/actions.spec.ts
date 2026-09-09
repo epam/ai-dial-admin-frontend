@@ -4,13 +4,14 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import {
   getActivities,
+  getAnalyticsActivities,
   getEntitiesForRevision,
   getRevisionDetails,
   getRevisions,
   systemRollbackToRevision,
   getActivityById,
 } from './actions';
-import { activityAuditApi } from '@/src/app/api/api';
+import { activityAuditApi, analyticsAuditApi } from '@/src/app/api/api';
 import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { SortDirectionDto } from '@/src/types/request';
@@ -38,6 +39,30 @@ describe('Activity audit :: server action', () => {
 
     expect(activityAuditApi.getActivitiesList).toHaveBeenCalledWith(pageSize, pageNumber, TOKEN_MOCK, sorts, filters);
     expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should call the analytics getActivitiesList action with the user token', async () => {
+    (analyticsAuditApi.getActivitiesList as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const sorts = [{ column: 'epochTimestampMs', direction: SortDirectionDto.DESC }] as SortDto[];
+    const filters = [{ column: 'resourceType', value: 'Table' }] as FilterDto[];
+
+    const result = await getAnalyticsActivities(25, 0, sorts, filters);
+
+    expect(analyticsAuditApi.getActivitiesList).toHaveBeenCalledWith(25, 0, TOKEN_MOCK, sorts, filters);
+    expect(activityAuditApi.getActivitiesList).not.toHaveBeenCalled();
+    expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should forward an incremented page number for a subsequent analytics block', async () => {
+    (analyticsAuditApi.getActivitiesList as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const sorts = [{ column: 'epochTimestampMs', direction: SortDirectionDto.DESC }] as SortDto[];
+    const filters = [{ column: 'resourceType', value: 'Table' }] as FilterDto[];
+
+    await getAnalyticsActivities(25, 1, sorts, filters);
+
+    expect(analyticsAuditApi.getActivitiesList).toHaveBeenCalledWith(25, 1, TOKEN_MOCK, sorts, filters);
   });
 
   test('Should call getRevisionDetails action', async () => {

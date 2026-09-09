@@ -69,3 +69,44 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
     expect(notification.description).toContain('public/MyApp__1.0');
   });
 });
+
+describe('DeleteConfirmationModal :: in-flight confirm', () => {
+  beforeEach(() => {
+    showNotification.mockClear();
+  });
+
+  test('ignores a second Delete click while the first remove is in flight', async () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn(), refresh: vi.fn() } as unknown as ReturnType<
+      typeof useRouter
+    >);
+
+    let resolveRemove: (value: { success: boolean }) => void = () => {};
+    const onRemoveEntity = vi.fn(
+      () =>
+        new Promise((resolve: (value: { success: boolean }) => void) => {
+          resolveRemove = resolve;
+        }),
+    );
+    const onCloseModal = vi.fn();
+
+    render(
+      <DeleteConfirmationModal
+        view={ApplicationRoute.Runs}
+        entity={{ id: 'run-1' } as never}
+        onRemoveEntity={onRemoveEntity}
+        onCloseModal={onCloseModal}
+      />,
+    );
+
+    const deleteButton = screen.getByRole('button', { name: 'Buttons.Delete' });
+    fireEvent.click(deleteButton);
+    fireEvent.click(deleteButton);
+
+    expect(onRemoveEntity).toHaveBeenCalledTimes(1);
+
+    resolveRemove({ success: true });
+
+    await waitFor(() => expect(onCloseModal).toHaveBeenCalledTimes(1));
+    expect(onRemoveEntity).toHaveBeenCalledTimes(1);
+  });
+});

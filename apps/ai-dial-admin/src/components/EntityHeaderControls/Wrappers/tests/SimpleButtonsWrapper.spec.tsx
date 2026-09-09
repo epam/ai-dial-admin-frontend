@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import SimpleButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/SimpleButtonsWrapper';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -38,7 +39,9 @@ const openDeleteModal = async () => {
 describe('SimpleButtonsWrapper :: getAssetContext forwarding', () => {
   test('forwards getAssetContext to DeleteConfirmationModal when provided', async () => {
     const fetchFiles = vi.fn();
-    const getAssetContext = vi.fn(() => ({ fetchFiles, filePath: 'platform/' }));
+    // The fake carries only what the wrapper forwards; the cast happens once, here.
+    const assetContext = { fetchFiles, filePath: 'platform/' } as unknown as AssetsFolderContext;
+    const getAssetContext = vi.fn<() => AssetsFolderContext>(() => assetContext);
 
     render(<SimpleButtonsWrapper {...baseProps} getAssetContext={getAssetContext} />);
 

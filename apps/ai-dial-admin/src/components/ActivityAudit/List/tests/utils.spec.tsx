@@ -1,6 +1,7 @@
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import {
   getActivityAuditColumns,
+  getAnalyticsActivityAuditColumns,
   getAuditActivityHref,
   getDeploymentActivityAuditColumns,
   getEndOfDay,
@@ -11,8 +12,10 @@ import {
 } from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
-import { describe, expect, test, vi } from 'vitest';
-import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { getResourceRollbackOperation } from '@/src/constants/grid-columns/actions';
+import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ActivityAuditResourceType, ActivityAuditType, ActivityAuditView } from '@/src/types/activity-audit';
 import type { FilterDto } from '@/src/models/request';
 import { DialActivity } from '@/src/models/activity-audit';
 
@@ -29,11 +32,15 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
 vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
   const actual = (await vi.importActual('@/src/types/activity-audit')) as { ActivityAuditView: Record<string, string> };
   return {
-    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) =>
-      view === actual.ActivityAuditView.Deployments
-        ? [{ colId: 'd1' }, { colId: 'd2' }]
-        : [{ colId: 'a' }, { colId: 'b' }],
-    ),
+    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) => {
+      if (view === actual.ActivityAuditView.Deployments) {
+        return [{ colId: 'd1' }, { colId: 'd2' }];
+      }
+      if (view === actual.ActivityAuditView.Analytics) {
+        return [{ colId: 'an1' }, { colId: 'an2' }];
+      }
+      return [{ colId: 'a' }, { colId: 'b' }];
+    }),
     RESOURCE_TYPE_COLUMN: 'resourceType',
   };
 });
@@ -98,6 +105,45 @@ describe('Activity Audit List utils :: getDeploymentActivityAuditColumns', () =>
   });
 });
 
+describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => {
+  const t = (s: string) => s;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('returns the analytics column set with the action column at the end', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    expect(cols).toHaveLength(3);
+    expect(cols[0]).toEqual({ colId: 'an1' });
+    expect(cols[1]).toEqual({ colId: 'an2' });
+    expect(cols[2].colId).toBe('actions');
+  });
+
+  test('builds its columns for the Analytics view, so no expander and no Version column are added', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics);
+  });
+
+  test('offers Open in new tab as the only row action and never a rollback one', () => {
+    const cols = getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+    expect(getResourceRollbackOperation).not.toHaveBeenCalled();
+  });
+
+  test('returns an empty action list when no open handler is provided', () => {
+    const cols = getAnalyticsActivityAuditColumns(t);
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(0);
+  });
+});
+
 describe('Activity Audit List utils :: getGridFilters', () => {
   const mockStartDate = new Date('2024-01-01T00:00:00.000Z');
   const mockEndDate = new Date('2024-01-02T00:00:00.000Z');
@@ -149,6 +195,8 @@ describe('Activity Audit List utils :: getGridFilters', () => {
   });
 
   describe('resourceType label-aware filter transform', () => {
+    // This map is hand-built, so these tests prove the transform, not the real label → enum map the
+    // app passes in. That map is guarded in `src/constants/grid-columns/tests/formatters.spec.ts`.
     const labelMap = {
       'global firewall': [ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST],
       'adapter container': [ActivityAuditResourceType.ADAPTER_DEPLOYMENT],
@@ -390,10 +438,18 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('');
   });
 
-  test('returns empty href for a resource type not registered in auditResourceRoute', () => {
+  test('returns empty href for a resource type not registered in auditResourceRoute, including the analytics types design.md D5 keeps out of it', () => {
     const mockEntity = { name: 'entity' };
-    const href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1');
-    expect(href).toBe('');
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1')).toBe('');
+
+    // Guard for design.md D5: analytics rows open the global detail page, so `auditResourceRoute`
+    // must stay free of analytics entries. Registering `Table` there to fix the audit detail
+    // header's external link would make these hrefs `/tables/entity/1`, an entity-namespaced audit
+    // route this change deliberately does not create — a 404 on every analytics row click. The
+    // header resolves its link through `View/Header/utils.ts` instead.
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.TABLE, '1')).toBe('');
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.TABLE_COLUMN, '1')).toBe('');
   });
 });
 

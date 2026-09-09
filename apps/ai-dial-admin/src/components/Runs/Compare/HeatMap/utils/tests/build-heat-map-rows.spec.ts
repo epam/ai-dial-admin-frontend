@@ -11,7 +11,7 @@ import {
 import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   id: 'result-1',
@@ -19,7 +19,7 @@ const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   testCaseName: 'Test Case 1',
   runIndex: 0,
   responseStatusCode: 200,
-  executionStatus: 'SUCCESS',
+  executionStatus: ExtractionResultStatus.SUCCESS,
   metricValues: {},
   ...overrides,
 });

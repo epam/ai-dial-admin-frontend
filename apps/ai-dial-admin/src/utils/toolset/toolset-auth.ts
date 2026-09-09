@@ -1,6 +1,8 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialToolsetResource, ToolsetAuthType as ResourceToolsetAuthType } from '@/src/models/dial/resource';
 import { Toolset, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { stripPrefix } from '@/src/server/publications/path';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 export const getToolsetSignInBody = (
   toolset: Toolset | DialToolsetResource,
@@ -21,12 +23,25 @@ export const getToolsetSignInBody = (
   return { ...body, apiKey };
 };
 
+/**
+ * `url` feeds Core's `DeploymentService.findDeployment`, which resolves a platform-bucket
+ * toolset by bare name via the merged config store — before ever reaching the resource-path
+ * parse a public-bucket toolset needs `toolsets/{path}` for (see `ToolsetOpsApi`'s doc comment).
+ * So a platform-bucket `.path` must have its `platform/` segment stripped and skip the
+ * `toolsets/` prefix entirely, unlike a public-bucket path.
+ */
 export const getToolsetBasicBody = (toolset: Toolset | DialToolsetResource, level: string) => {
   const authType =
     (toolset as Toolset).authSettings?.authenticationType ||
     (toolset as DialToolsetResource).auth_settings?.authentication_type;
+  const path = (toolset as AssetToolset).path;
+  const url = isPlatformBucketPath(path)
+    ? stripPrefix(path as string, `${PLATFORM_ROOT_FOLDER}/`)
+    : path
+      ? `toolsets/${path}`
+      : toolset.name;
   return {
-    url: (toolset as AssetToolset).path ? `toolsets/${(toolset as AssetToolset).path}` : toolset.name,
+    url,
     credentialsLevel: level,
     authenticationType: authType,
   };

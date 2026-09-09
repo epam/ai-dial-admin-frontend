@@ -4,9 +4,27 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTableAccess, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
-import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
+
+// The view is only reachable with analytics on in practice, so that is the default here; the flag-off
+// case is asserted explicitly below.
+const featureFlags = { analyticsEnabled: true };
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ featureFlags }),
+}));
+
+// The Audit tab's own contract (the projected entity, the view and the view mode it hands EntityAudit)
+// is covered in TableAudit.spec.tsx; here it stands in for "the activities list rendered", and its
+// absence stands in for "no analytics activity request issued".
+const auditPropsSpy = vi.fn();
+vi.mock('@/src/components/Analytics/Tables/TableAudit', () => ({
+  default: (props: { table: AnalyticsTable }) => {
+    auditPropsSpy(props);
+    return <div>table-audit</div>;
+  },
+}));
 
 // Monaco is heavy and not meaningful in jsdom — assert on the value/onChange contract instead.
 vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
@@ -111,6 +129,7 @@ const setPerms = (over: Partial<typeof permissions>) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  featureFlags.analyticsEnabled = true;
   Object.assign(permissions, {
     canCreate: true,
     canDelete: true,
@@ -297,240 +316,10 @@ describe('TableDetailView header', () => {
   });
 });
 
-describe('TableDetailView columns grid', () => {
-  test('the grid includes Display name and Description columns', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
-
-    const headers = screen.getByText(/^headers:/);
-    expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.DisplayName);
-    expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.Description);
-  });
-});
-
+// The read-only key summary and the columns grid itself now live in TableProperties; their cases moved
+// with them to TableProperties.spec.tsx. What stays here is the grain-key row, which TableDetailView
+// resolves against the source table before handing it down.
 describe('TableDetailView schema metadata', () => {
-  test('an active source table shows its ordering key, partition column, and granularity', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({
-          ordering_key: ['event_id', 'request_time'],
-          partition_by: { column: 'request_time', granularity: PartitionGranularity.Day },
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.OrderingKey)).toBeInTheDocument();
-    expect(screen.getByText('event_id, request_time')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.PartitionColumn)).toBeInTheDocument();
-    expect(screen.getByText('request_time')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.Granularity)).toBeInTheDocument();
-    expect(screen.getByText('Day')).toBeInTheDocument();
-  });
-
-  test('an active source table with no partition hides partition column and granularity', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({ ordering_key: ['event_id'] })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.OrderingKey)).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.PartitionColumn)).not.toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.Granularity)).not.toBeInTheDocument();
-  });
-
-  test('an active source table shows its declared scan-metadata pair', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({
-          // Distinct from both pair values so each assertion below matches exactly one node.
-          ordering_key: ['total'],
-          identity_column: 'event_id',
-          version_column: 'request_time',
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.IdentityColumn)).toBeInTheDocument();
-    expect(screen.getByText('event_id')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumn)).toBeInTheDocument();
-    expect(screen.getByText('request_time')).toBeInTheDocument();
-  });
-
-  test('a source declaring no scan metadata shows neither label and no substitute message', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({ ordering_key: ['event_id'] })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.VersionColumn)).not.toBeInTheDocument();
-  });
-
-  test('a source declaring only one member shows that one and omits the other', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({ ordering_key: ['event_id'], version_column: 'request_time' })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumn)).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
-  });
-
-  test('a system scan-metadata column absent from the columns grid still renders in the summary', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({
-          ordering_key: ['event_id'],
-          identity_column: 'event_id',
-          // A `_`-prefixed system column: legitimately not among `columns`.
-          version_column: '_ingested_at',
-          columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText('_ingested_at')).toBeInTheDocument();
-    expect(screen.getByText('columns: 1')).toBeInTheDocument();
-  });
-
-  test('an active enrichment table shows its grain key', () => {
-    render(
-      <TableDetailView
-        name="order_flags"
-        initialTable={table({
-          name: 'order_flags',
-          type: AnalyticsTableType.Enrichment,
-          source_table: 'orders',
-          grain: { grain_key: 'order_id' },
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.GrainKey)).toBeInTheDocument();
-    expect(screen.getByText('order_id')).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.OrderingKey)).not.toBeInTheDocument();
-  });
-
-  // The summary is where a key is read rather than chosen, so it carries the same explanations the draft
-  // surface does — minus the group note, whose point is that the values can still be set.
-  test('an active source table explains every summarized key', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({
-          ordering_key: ['event_id'],
-          partition_by: { column: 'request_time', granularity: PartitionGranularity.Day },
-          identity_column: 'event_id',
-          version_column: 'request_time',
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    [
-      AnalyticsTablesI18nKey.OrderingKeyHint,
-      AnalyticsTablesI18nKey.PartitionColumnHint,
-      AnalyticsTablesI18nKey.GranularityHint,
-      AnalyticsTablesI18nKey.IdentityColumnHint,
-      AnalyticsTablesI18nKey.VersionColumnHint,
-    ].forEach((hint) => expect(screen.getByRole('button', { name: hint })).toBeInTheDocument());
-    expect(screen.queryByText(AnalyticsTablesI18nKey.KeysNote)).toBeNull();
-  });
-
-  test('an active enrichment table explains its grain key', () => {
-    render(
-      <TableDetailView
-        name="order_flags"
-        initialTable={table({
-          name: 'order_flags',
-          type: AnalyticsTableType.Enrichment,
-          source_table: 'orders',
-          grain: { grain_key: 'order_id' },
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.GrainKeyHint })).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.KeysNote)).toBeNull();
-  });
-
-  test('an active enrichment table names the source table it enriches', () => {
-    render(
-      <TableDetailView
-        name="order_flags"
-        initialTable={table({
-          name: 'order_flags',
-          type: AnalyticsTableType.Enrichment,
-          source_table: 'orders',
-          grain: { grain_key: 'order_id' },
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
-    expect(screen.getByText('orders')).toBeInTheDocument();
-  });
-
-  test('a draft enrichment table names its source table and shows no grain key', () => {
-    render(
-      <TableDetailView
-        name="order_flags"
-        initialTable={table({
-          name: 'order_flags',
-          type: AnalyticsTableType.Enrichment,
-          status: TableStatus.Pending,
-          source_table: 'orders',
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
-    expect(screen.getByText('orders')).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.GrainKey)).not.toBeInTheDocument();
-  });
-
-  test('a source table shows no source-table value, since it enriches nothing', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({ ordering_key: ['event_id'] })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.queryByText(AnalyticsTablesI18nKey.SourceTable)).not.toBeInTheDocument();
-  });
-
   test('an active enrichment table pins its grain key as a read-only row atop the columns grid', () => {
     render(
       <TableDetailView
@@ -599,19 +388,6 @@ describe('TableDetailView schema metadata', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByText('pinned: none')).toBeInTheDocument();
-  });
-
-  test('a PENDING table does not show the read-only metadata row (the draft editor covers it)', () => {
-    render(
-      <TableDetailView
-        name="dial_usage_log"
-        initialTable={table({ status: TableStatus.Pending, ordering_key: ['event_id'] })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    expect(screen.queryByText(AnalyticsTablesI18nKey.OrderingKey)).not.toBeInTheDocument();
   });
 });
 
@@ -930,5 +706,105 @@ describe('TableDetailView scan-metadata column guards', () => {
     );
 
     expect(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+  });
+});
+
+describe('TableDetailView tabs', () => {
+  const renderView = (overrides: Partial<AnalyticsTable> = {}) =>
+    render(<TableDetailView name="dial_usage_log" initialTable={table(overrides)} apiBaseUrl="" flightUri="" />);
+
+  test('opens an ACTIVE table with Properties selected and the columns grid beneath the strip', () => {
+    renderView({ status: TableStatus.Active });
+
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Properties })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Audit })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(TabsI18nKey.Properties);
+    expect(screen.getByText(/^columns:/)).toBeInTheDocument();
+    expect(screen.queryByText('table-audit')).not.toBeInTheDocument();
+  });
+
+  // A table that was never materialized has no audit history to show, so the tab is not offered at all
+  // rather than offered empty — and the unmounted TableAudit is what "no activity request" means here.
+  test('renders no tab strip, no Audit tab and no activity request on a PENDING table', () => {
+    renderView({ status: TableStatus.Pending });
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Audit })).not.toBeInTheDocument();
+    expect(screen.queryByText('table-audit')).not.toBeInTheDocument();
+    expect(auditPropsSpy).not.toHaveBeenCalled();
+    // The draft schema editor is the whole body instead, directly beneath the header.
+    expect(screen.getByText('draft-schema-editor')).toBeInTheDocument();
+  });
+
+  // The gate is `isActive`, not `!isPending`: a table whose materialization failed, and one whose status
+  // the backend does not report, have no more history than one that never started.
+  test.each([TableStatus.Failed, undefined])('renders no tab strip for the %s status either', (status) => {
+    renderView({ status });
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(auditPropsSpy).not.toHaveBeenCalled();
+    expect(screen.getByText('draft-schema-editor')).toBeInTheDocument();
+  });
+
+  test('keeps the header and every permitted header action above the tab strip while Audit is selected', async () => {
+    const user = userEvent.setup();
+    renderView({ status: TableStatus.Active, description: 'Raw usage events.' });
+
+    await user.click(screen.getByRole('tab', { name: TabsI18nKey.Audit }));
+
+    const propertiesTab = screen.getByRole('tab', { name: TabsI18nKey.Properties });
+    [
+      AnalyticsTablesI18nKey.ManageAccess,
+      AnalyticsTablesI18nKey.DeleteTable,
+      AnalyticsTablesI18nKey.AddColumns,
+      AnalyticsTablesI18nKey.AddRows,
+      AnalyticsTablesI18nKey.Connect,
+    ].forEach((label) => {
+      const action = screen.getByRole('button', { name: label });
+      // The action precedes the tab strip in document order — i.e. it is rendered above it, not inside
+      // the Properties tab.
+      expect(action.compareDocumentPosition(propertiesTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+    expect(screen.getByRole('heading', { name: 'dial_usage_log' })).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.StatusActive)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.TypeSource)).toBeInTheDocument();
+    expect(screen.getByText('Raw usage events.')).toBeInTheDocument();
+  });
+
+  test('shows the activities list for the table when the Audit tab is selected on an ACTIVE table', async () => {
+    const user = userEvent.setup();
+    renderView({ status: TableStatus.Active });
+
+    await user.click(screen.getByRole('tab', { name: TabsI18nKey.Audit }));
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(TabsI18nKey.Audit);
+    expect(screen.getByText('table-audit')).toBeInTheDocument();
+    expect(auditPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ table: expect.objectContaining({ name: 'dial_usage_log' }) }),
+    );
+    expect(screen.queryByText(/^columns:/)).not.toBeInTheDocument();
+  });
+
+  test('offers the Audit tab on an ACTIVE table to a viewer who can neither write nor modify it', async () => {
+    const user = userEvent.setup();
+    setPerms({});
+    renderView({ status: TableStatus.Active });
+
+    await user.click(screen.getByRole('tab', { name: TabsI18nKey.Audit }));
+
+    expect(screen.getByText('table-audit')).toBeInTheDocument();
+  });
+
+  // The table is ACTIVE, so the flag alone decides.
+  test('renders no tab strip, no Audit tab and no activity request when analytics is disabled', () => {
+    featureFlags.analyticsEnabled = false;
+    renderView({ status: TableStatus.Active });
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Audit })).not.toBeInTheDocument();
+    expect(screen.queryByText('table-audit')).not.toBeInTheDocument();
+    expect(auditPropsSpy).not.toHaveBeenCalled();
+    // The Properties body is the whole view instead.
+    expect(screen.getByText(/^columns:/)).toBeInTheDocument();
   });
 });
