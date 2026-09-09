@@ -1380,7 +1380,7 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
     },
     cellRendererParams: (params: { value: string[] }) => ({
       items: params.value,
-      tagClassName: '!border-accent-tertiary !bg-accent-tertiary-alpha',
+      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
     }),
     maxWidth: METRIC_OUTPUTS_COLUMN_WIDTH,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
