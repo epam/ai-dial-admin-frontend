@@ -60,7 +60,7 @@ const allTables = [enrichment, otherEnrichment, sourceTable, otherSource];
 
 const renderForm = (params?: Parameters<typeof useEnrichForm>[0]) => renderHook(() => useEnrichForm(params));
 
-type Form = { current: ReturnType<typeof usePipelineForm> };
+type Form = { current: ReturnType<typeof useEnrichForm> };
 
 const fillRequired = async (result: Form) => {
   act(() =>

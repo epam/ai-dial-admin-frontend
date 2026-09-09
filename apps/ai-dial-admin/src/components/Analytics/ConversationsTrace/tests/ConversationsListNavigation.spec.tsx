@@ -20,10 +20,10 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   },
 }));
 
-const leafColumns = (columns: Column[]): ColDef<ConversationRow>[] =>
-  columns.flatMap((column) =>
-    'children' in column ? leafColumns(column.children as Column[]) : [column as ColDef<ConversationRow>],
-  );
+// Deliberately not `ColDef<ConversationRow>`: a leaf can be a composed column (the rating cell) whose
+// `field` is not a key of the row, and the row-typed `field` would make that comparison impossible.
+const leafColumns = (columns: Column[]): ColDef[] =>
+  columns.flatMap((column) => ('children' in column ? leafColumns(column.children as Column[]) : [column as ColDef]));
 
 const CHAT_ID = 'conversations/eRxsos/chathub-claude4__E2E';
 

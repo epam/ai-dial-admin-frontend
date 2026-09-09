@@ -55,7 +55,7 @@ describe('Activity audit :: generateStringFromObject', () => {
 
   test('should correctly handle character-based pricing when translator is provided', () => {
     const pricing = {
-      unit: PricingType.Character,
+      unit: PricingType.CharWithoutWhitespace,
       rate: 0.001,
     };
 
@@ -88,7 +88,7 @@ describe('Activity audit :: convertPricing', () => {
 
   test('should format character-based pricing correctly (unit = Character)', () => {
     const pricing = {
-      unit: PricingType.Character,
+      unit: PricingType.CharWithoutWhitespace,
       input: 0.002,
       output: 0.003,
     };
@@ -99,7 +99,7 @@ describe('Activity audit :: convertPricing', () => {
 
   test('should multiply numeric values by 1,000,000 only when unit is Token', () => {
     const tokenPricing = { unit: PricingType.Token, rate: 0.001 };
-    const charPricing = { unit: PricingType.Character, rate: 0.001 };
+    const charPricing = { unit: PricingType.CharWithoutWhitespace, rate: 0.001 };
 
     const tokenResult = convertPricing(tokenPricing, t);
     const charResult = convertPricing(charPricing, t);
@@ -138,7 +138,7 @@ describe('Activity audit :: convertPricing', () => {
 
   test('should handle string values gracefully in non-token mode', () => {
     const pricing = {
-      unit: PricingType.Character,
+      unit: PricingType.CharWithoutWhitespace,
       currency: 'USD',
     };
 

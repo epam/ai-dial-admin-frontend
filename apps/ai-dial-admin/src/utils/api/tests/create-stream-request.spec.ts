@@ -34,7 +34,7 @@ describe('Utils :: api :: streamRequest', () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, true);
 
@@ -48,7 +48,7 @@ describe('Utils :: api :: streamRequest', () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
 
@@ -63,7 +63,7 @@ describe('Utils :: api :: streamRequest', () => {
     // try/catch swallowed into a promise that never resolves — hanging any caller awaiting it.
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
-    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, 'Brand™.txt', mockToken, false);
 
@@ -110,7 +110,7 @@ describe('Utils :: api :: streamRequest', () => {
 
   describe('streamRequest error handling', () => {
     test('returns promise resolving to null on error', async () => {
-      (sendRequest as vi.Mock).mockImplementation(() => {
+      vi.mocked(sendRequest).mockImplementation(() => {
         throw new Error('fail');
       });
       const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
