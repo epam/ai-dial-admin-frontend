@@ -8,7 +8,7 @@ import { createInitialState } from '@/src/components/Analytics/QueryBuilder/util
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryBuilderState } from '@/src/models/analytics/query-builder';
-import { QueryAssistantMessage, QueryAssistantRole } from '@/src/models/analytics/query-assistant';
+import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
 import { generateQuery } from '@/src/app/[lang]/queries/actions';
 
 vi.mock('@/src/app/[lang]/queries/actions');
@@ -31,7 +31,8 @@ const FIELDS: AnalyticsEntityField[] = [
   { name: 'project_id', type: AnalyticsFieldType.String, source: 'project_id', display_name: 'Project' },
 ];
 
-// The panel reads the selected source from the builder context, the same place the other sections do.
+// The panel reads nothing from the builder context any more; a state is still provided so a test can
+// prove the request ignores whichever source is selected.
 const builderState = (overrides?: Partial<QueryBuilderState>): QueryBuilderState => ({
   ...createInitialState(TEST_FUNCTIONS),
   entityName: 'dial_usage_log',
@@ -51,8 +52,6 @@ const renderPanel = (
   );
   return props;
 };
-
-const sentMessages = () => vi.mocked(generateQuery).mock.calls[0][0] as QueryAssistantMessage[];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -92,8 +91,6 @@ describe('AiPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
     expect(onRunMessage).toHaveBeenCalledWith('SELECT 1', 1);
-    // The request leads with a schema message the transcript never shows, followed by the turns.
-    expect(sentMessages()[sentMessages().length - 1]).toEqual({ role: 'user', content: 'cost by deployment' });
   });
 
   test('sending a message scrolls the new user message into view', async () => {
@@ -170,7 +167,7 @@ describe('AiPanel', () => {
     expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
   });
 
-  test('leads the request with the selected source and its columns', async () => {
+  test('sends the visible transcript and nothing else', async () => {
     const user = userEvent.setup();
     vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
     renderPanel();
@@ -179,27 +176,30 @@ describe('AiPanel', () => {
     await user.click(sendButton());
 
     await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
-    const [first] = sentMessages();
-    expect(first.role).toBe(QueryAssistantRole.System);
-    expect(first.content).toContain('dial_usage_log');
-    expect(first.content).toContain('request_time (timestamp)');
-    expect(first.content).toContain('project_id (string)');
-    expect(first.content).toContain('Project');
+    expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'cost by project' }]);
   });
 
-  test('keeps the schema message out of the visible transcript', async () => {
+  test('sends both earlier turns along with the new request on a second send', async () => {
     const user = userEvent.setup();
-    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    vi.mocked(generateQuery).mockResolvedValue(reply('first answer') as never);
     renderPanel();
 
     await user.type(promptBox(), 'cost by project');
     await user.click(sendButton());
+    await screen.findByText('first answer');
 
-    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
-    expect(screen.queryByText(/Columns of/)).toBeNull();
+    await user.type(promptBox(), 'now group by day');
+    await user.click(sendButton());
+
+    await waitFor(() => expect(generateQuery).toHaveBeenCalledTimes(2));
+    expect(generateQuery).toHaveBeenLastCalledWith([
+      { role: QueryAssistantRole.User, content: 'cost by project' },
+      { role: QueryAssistantRole.Assistant, content: 'first answer' },
+      { role: QueryAssistantRole.User, content: 'now group by day' },
+    ]);
   });
 
-  test('describes the source selected at send time, not the one selected first', async () => {
+  test('sends the same request whichever source the toolbar has selected', async () => {
     const user = userEvent.setup();
     vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
     renderPanel({}, builderState({ entityName: 'other_table', fields: [] }));
@@ -208,8 +208,6 @@ describe('AiPanel', () => {
     await user.click(sendButton());
 
     await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
-    const [first] = sentMessages();
-    expect(first.content).toContain('other_table');
-    expect(first.content).toContain('column list is unavailable');
+    expect(generateQuery).toHaveBeenCalledWith([{ role: QueryAssistantRole.User, content: 'anything' }]);
   });
 });
