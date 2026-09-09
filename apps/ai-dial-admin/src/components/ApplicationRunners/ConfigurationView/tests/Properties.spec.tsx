@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ComponentProps } from 'react';
+import { Mock, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Properties from '../Properties';
 
@@ -51,6 +52,8 @@ vi.mock('../ExtendedProperties', () => ({
   default: ({ runner }: any) => <section aria-label="extended-properties">extended:{runner?.$id}</section>,
 }));
 
+type OnChangeRunner = NonNullable<ComponentProps<typeof Properties>['onChangeRunner']>;
+
 describe('ApplicationRunners :: ConfigurationView :: Properties', () => {
   const baseRunner = {
     $id: 'runner-1',
@@ -60,11 +63,11 @@ describe('ApplicationRunners :: ConfigurationView :: Properties', () => {
   } as any;
 
   const names = ['runner-1', 'runner-2'];
-  let onChangeRunner: ReturnType<typeof vi.fn>;
+  let onChangeRunner: Mock<OnChangeRunner>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    onChangeRunner = vi.fn();
+    onChangeRunner = vi.fn<OnChangeRunner>();
   });
 
   test('renders editable controls when runner is mutable', () => {

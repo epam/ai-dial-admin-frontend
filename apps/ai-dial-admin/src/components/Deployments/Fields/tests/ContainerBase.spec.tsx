@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ComponentProps } from 'react';
+import { Mock, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
@@ -32,6 +33,8 @@ vi.mock('@/src/components/BaseControls/Topics', () => ({
   ),
 }));
 
+type SetContainer = NonNullable<ComponentProps<typeof ContainerBase>['setContainer']>;
+
 describe('ContainerBase', () => {
   const baseContainer: Container = {
     $type: CONTAINER_TYPE.MCP,
@@ -45,11 +48,11 @@ describe('ContainerBase', () => {
     topics: ['existing-topic'],
   };
 
-  let setContainer: ReturnType<typeof vi.fn>;
+  let setContainer: Mock<SetContainer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    setContainer = vi.fn();
+    setContainer = vi.fn<SetContainer>();
   });
 
   test('renders TopicsControl in non-modal mode', () => {

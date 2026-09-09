@@ -1,4 +1,4 @@
-import { ColDef, ColGroupDef, ColumnState, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ColumnState, ValueFormatterFunc, ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { applyColumnStateOrderToGroupedColDefs } from '@/src/components/Grid/utils';
@@ -76,8 +76,17 @@ const columns = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColDef[] =>
 
 const column = (fieldName: string): ColDef => columns().find((col) => col.field === fieldName) as ColDef;
 
+// `ColDef.valueFormatter` is `string | ValueFormatterFunc`, so it cannot be called through the union.
+const valueFormatterOf = (column: ColDef): ValueFormatterFunc => {
+  const { valueFormatter } = column;
+  if (typeof valueFormatter !== 'function') {
+    throw new Error(`column ${column.field} has no valueFormatter function`);
+  }
+  return valueFormatter;
+};
+
 const format = (fieldName: string, value: unknown): string =>
-  column(fieldName).valueFormatter?.({ value } as ValueFormatterParams) as string;
+  valueFormatterOf(column(fieldName))({ value } as ValueFormatterParams);
 
 const groups = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColGroupDef[] =>
   CONVERSATIONS_TRACE_COLUMN_GROUPS(t, schemaFields);

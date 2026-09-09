@@ -44,14 +44,14 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId identifying the bucket', () => {
+  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId and path both identifying the bucket', () => {
     const content = { endpoint: 'https://app' };
     const meta = metadata({ url: 'applications/platform/my-app', author: 'alice', createdAt: 100, updatedAt: 111 });
 
     expect(mergeApplicationResource(content, meta)).toEqual({
       endpoint: 'https://app',
       name: 'my-app',
-      path: 'my-app',
+      path: 'platform/my-app',
       folderId: 'platform/',
       author: 'alice',
       createdAt: '100',
@@ -75,14 +75,14 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId identifying the bucket', () => {
+  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId and path both identifying the bucket', () => {
     const content = { endpoint: 'https://ts' };
     const meta = metadata({ url: 'toolsets/platform/my-toolset', author: 'bob', createdAt: 200, updatedAt: 222 });
 
     expect(mergeToolsetResource(content, meta)).toEqual({
       endpoint: 'https://ts',
       name: 'my-toolset',
-      path: 'my-toolset',
+      path: 'platform/my-toolset',
       folderId: 'platform/',
       author: 'bob',
       createdAt: '200',

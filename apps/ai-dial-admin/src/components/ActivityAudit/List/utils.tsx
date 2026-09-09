@@ -111,6 +111,26 @@ export const getDeploymentActivityAuditColumns = (
 };
 
 /**
+ * Generate columns with actions for the analytics activity audit grid.
+ * `Open in new tab` is the only row action: the analytics backend exposes no endpoint
+ * that writes an audit record, revision or snapshot, so no rollback is offered here.
+ *
+ * @param {(activity: DialActivity) => void} open - open in new tab action
+ * @returns {ColDef[]} - columns
+ */
+export const getAnalyticsActivityAuditColumns = (
+  t: (key: string) => string,
+  open?: (activity?: DialActivity) => void,
+): ColDef[] => {
+  const actions = [];
+  if (open) {
+    actions.push(getOpenInNewTabOperation(open));
+  }
+
+  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics), ACTION_COLUMN(actions)];
+};
+
+/**
  * Generate filters for grid data request
  *
  * @param {Record<string, GridFilter>} gridFilter - grid filter object

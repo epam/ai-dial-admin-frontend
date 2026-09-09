@@ -17,13 +17,13 @@ beforeEach(() => {
 describe('Export Config Utils :: getPreviewTabs', () => {
   test('should return tabs and convertedData correctly with roles, keys, applicationRunners, and models', () => {
     const mockEntities: any[] = [{ id: 'e1' }, { id: 'e2' }, { id: 'e3' }];
-    entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getModelsForEntitiesGrid.mockReturnValue(mockEntities);
-    entitiesUtils.getRolesForEntitiesGrid.mockReturnValue([{ id: 'e1' }]);
-    entitiesUtils.getKeysForEntitiesGrid.mockReturnValue([{ id: 'e1' }, { id: 'e1' }]);
-    entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getRunnersForEntitiesGrid.mockReturnValue([{ id: 'e1' }]);
+    vi.mocked(entitiesUtils.getApplicationsForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getModelsForEntitiesGrid).mockReturnValue(mockEntities);
+    vi.mocked(entitiesUtils.getRolesForEntitiesGrid).mockReturnValue([{ id: 'e1' }]);
+    vi.mocked(entitiesUtils.getKeysForEntitiesGrid).mockReturnValue([{ id: 'e1' }, { id: 'e1' }]);
+    vi.mocked(entitiesUtils.getRoutesForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getToolsetsForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getRunnersForEntitiesGrid).mockReturnValue([{ id: 'e1' }]);
 
     const data = {
       roles: [{ id: 'role1' }],
@@ -56,10 +56,10 @@ describe('Export Config Utils :: getPreviewTabs', () => {
   });
 
   test('should not add tabs for empty categories', () => {
-    entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getModelsForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
+    vi.mocked(entitiesUtils.getApplicationsForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getModelsForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getRoutesForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getToolsetsForEntitiesGrid).mockReturnValue([]);
 
     const data = {
       roles: [],
@@ -76,7 +76,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
 
   test('should handle interceptors and files correctly', () => {
     const mockEntities = [{ id: 'int1' }];
-    entitiesUtils.getInterceptorsForEntitiesGrid.mockReturnValue(mockEntities);
+    vi.mocked(entitiesUtils.getInterceptorsForEntitiesGrid).mockReturnValue(mockEntities);
     const data = {
       interceptors: [{ id: 'int1' }],
       files: [{ id: 'file1' }],
@@ -99,7 +99,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     };
 
     const mockEntities = [{ id: 'adapter1' }];
-    entitiesUtils.getAdaptersForEntitiesGrid.mockReturnValue(mockEntities);
+    vi.mocked(entitiesUtils.getAdaptersForEntitiesGrid).mockReturnValue(mockEntities);
 
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
@@ -114,7 +114,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     };
 
     const mockEntities = [{ id: 'interceptorRunner1' }];
-    entitiesUtils.getInterceptorTemplatesForEntitiesGrid.mockReturnValue(mockEntities);
+    vi.mocked(entitiesUtils.getInterceptorTemplatesForEntitiesGrid).mockReturnValue(mockEntities);
 
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
@@ -126,10 +126,10 @@ describe('Export Config Utils :: getPreviewTabs', () => {
   test('should merge entities from applications and routes as well', () => {
     const mockEntitiesFromApplications = [{ id: 'app1' }];
     const mockEntitiesFromRoutes = [{ id: 'route1' }];
-    entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue(mockEntitiesFromApplications);
-    entitiesUtils.getModelsForEntitiesGrid.mockReturnValue([]);
-    entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue(mockEntitiesFromRoutes);
-    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
+    vi.mocked(entitiesUtils.getApplicationsForEntitiesGrid).mockReturnValue(mockEntitiesFromApplications);
+    vi.mocked(entitiesUtils.getModelsForEntitiesGrid).mockReturnValue([]);
+    vi.mocked(entitiesUtils.getRoutesForEntitiesGrid).mockReturnValue(mockEntitiesFromRoutes);
+    vi.mocked(entitiesUtils.getToolsetsForEntitiesGrid).mockReturnValue([]);
 
     const data = {
       applications: [{ id: 'application1' }],

@@ -894,76 +894,23 @@ the builder has no editor for either, so showing them was showing something the 
 - **WHEN** the same query calls a function the catalog does list, in a position the builder edits, with arguments of the declared kinds
 - **THEN** the query is representable and hydrates into the Builder view with that call intact
 
-### Requirement: The query assistant is given the selected source and its columns
-
-A request to the query assistant SHALL lead with a system message describing the source currently
-selected in the toolbar: its entity name, and for each of its fields the field's name, type, and the
-display name and description the schema defines. A field the schema marks sensitive SHALL be marked as
-such, so the assistant can avoid proposing a literal comparison the service would refuse to store.
-
-The message SHALL carry **schema only**. No row data, and no value read out of the queried store, SHALL
-be sent to the assistant deployment.
-
-The message SHALL NOT appear in the visible transcript, and SHALL be built per request from the source
-selected at that moment — so changing the source mid-conversation makes the next request describe the new
-one. It SHALL state the selected source as the one to prefer rather than as a restriction, because a
-generated query targeting a different entity is still honoured (see "Running a message's query loads it
-into the builder and executes it").
-
-When the selected source has no loaded field list, the message SHALL say so rather than name columns.
-
-#### Scenario: The request names the selected source and its columns
-
-- **WHEN** the user sends a request with an entity selected whose schema has loaded
-- **THEN** the first message sent is a system message naming that entity
-- **AND** it lists each of that entity's fields with its type
-
-#### Scenario: Schema labels are included
-
-- **WHEN** a listed field's schema defines a display name or a description
-- **THEN** the system message carries them alongside that field's name and type
-
-#### Scenario: A sensitive column is flagged
-
-- **WHEN** a listed field is marked sensitive in the schema
-- **THEN** the system message marks it as not to be compared to a literal value
-
-#### Scenario: No row data is sent
-
-- **WHEN** any request is sent to the assistant
-- **THEN** the system message contains only entity and field names, types, and schema labels
-
-#### Scenario: The schema message is not part of the conversation
-
-- **WHEN** the user sends a request
-- **THEN** the schema message is absent from the visible transcript
-
-#### Scenario: Changing the source changes the next request
-
-- **WHEN** the user selects a different source and sends another request
-- **THEN** the system message on that request describes the newly selected source
-
-#### Scenario: An unavailable column list is stated rather than invented
-
-- **WHEN** the selected source has no loaded fields
-- **THEN** the system message says the column list is unavailable and names no columns
-
-### Requirement: The selected source is read from the builder context
+### Requirement: The SQL editor reads the selected source from the builder context
 
 Every part of the query builder that needs the selected entity, its fields, or the served function
 catalog SHALL read them from the shared query-builder context rather than receive them as props, so a
 single value decides which source is in play. This SHALL include the SQL editor's schema-aware
-autocomplete and the AI panel's request context.
+autocomplete. The AI panel SHALL NOT be among them: it sends no source information, so it reads no
+source at all and the toolbar selection SHALL NOT change what it sends.
 
 #### Scenario: SQL autocomplete follows the selected source
 
 - **WHEN** the user selects a different source and opens the SQL view
 - **THEN** the editor's completions offer that source's fields
 
-#### Scenario: The assistant follows the selected source
+#### Scenario: The assistant request is independent of the selected source
 
 - **WHEN** the user selects a different source and sends a request to the assistant
-- **THEN** the request describes that source
+- **THEN** the messages sent are unchanged by that selection
 
 ### Requirement: Query Assistant feature flag derives from deployment config
 
@@ -1041,30 +988,40 @@ generation request is in flight. All text SHALL be provided through i18n.
 - **WHEN** a generation request is in progress
 - **THEN** the Send action is disabled and a loading indicator is shown
 
-### Requirement: Generate calls the assistant and shows the proposed query
+### Requirement: Generate sends the transcript and shows the proposed query
 
 Activating Send SHALL append the user's request as a new message in the visible transcript and call
-the `generateQuery` server action with a system message describing the selected source (see "The query
-assistant is given the selected source and its columns") followed by the full accumulated `messages[]`,
-which posts to the configured deployment's chat-completions endpoint on DIAL Core (`QueryAssistantApi`,
-reusing `DIAL_CORE_API_URL` and Bearer auth). On success the assistant's reply SHALL be appended as a new
-message in the transcript, rendered as-is (no SQL extraction applied to the rendered text). When the reply
-contains an extractable SQL block, that message additionally renders the extracted SQL read-only with its
-own Copy and Run actions (see "Each assistant message with extracted SQL offers inline Run and Copy"). On
-failure the system SHALL surface an error notification (header, message, and request id when
-available); the just-sent user message SHALL remain visible in the transcript and no assistant message
-SHALL be appended, so the user can retry or continue the conversation without losing what they asked.
+the `generateQuery` server action with the accumulated transcript — the user and assistant turns and
+nothing else — which posts to the configured deployment's chat-completions endpoint on DIAL Core
+(`QueryAssistantApi`, reusing `DIAL_CORE_API_URL` and Bearer auth). The admin console SHALL NOT add a
+message of its own to the request: the assistant deployment owns its system prompt and resolves any
+schema it needs through its own tools. Because the console sends no schema, no row data and no value
+read out of the queried store can reach the assistant deployment by construction.
+
+On success the assistant's reply SHALL be appended as a new message in the transcript, rendered as-is
+(no SQL extraction applied to the rendered text). When the reply contains an extractable SQL block, that
+message additionally renders the extracted SQL read-only with its own Copy and Run actions (see "Each
+assistant message with extracted SQL offers inline Run and Copy"). On failure the system SHALL surface an
+error notification (header, message, and request id when available); the just-sent user message SHALL
+remain visible in the transcript and no assistant message SHALL be appended, so the user can retry or
+continue the conversation without losing what they asked.
 
 #### Scenario: Successful generation appends to the transcript
 
 - **WHEN** the user submits a request and the assistant returns a reply
 - **THEN** the user's request and the assistant's reply both appear as new messages in the transcript
 
-#### Scenario: The schema message leads the request
+#### Scenario: The request carries the transcript and nothing else
 
 - **WHEN** the user submits a request
-- **THEN** the messages sent begin with the system message describing the selected source
-- **AND** end with the user's request
+- **THEN** the messages sent are exactly the visible transcript, beginning with its first turn and ending
+  with the user's request
+- **AND** no system message is present
+
+#### Scenario: No schema and no row data are sent
+
+- **WHEN** any request is sent to the assistant
+- **THEN** the request carries no entity name, no field list, and no value read out of the queried store
 
 #### Scenario: Reply without SQL is a plain conversational turn
 

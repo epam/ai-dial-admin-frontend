@@ -321,7 +321,7 @@ describe('Folder Utils :: findFolderSiblings', () => {
       },
       {
         path: '/root/file1.txt',
-        nodeType: DialFileNodeType.FILE,
+        nodeType: DialFileNodeType.ITEM,
       },
     ],
   };
@@ -358,7 +358,7 @@ describe('Folder Utils :: findFolderSiblings', () => {
         },
         {
           path: '/parent/fileA.txt',
-          nodeType: DialFileNodeType.FILE,
+          nodeType: DialFileNodeType.ITEM,
         },
       ],
     };
@@ -383,7 +383,7 @@ describe('Folder Utils :: findFolderChildren', () => {
           },
           {
             path: '/root/folder1/file1.txt',
-            nodeType: DialFileNodeType.FILE,
+            nodeType: DialFileNodeType.ITEM,
           },
         ],
       },
@@ -412,11 +412,11 @@ describe('Folder Utils :: findFolderChildren', () => {
       items: [
         {
           path: '/files/fileA.txt',
-          nodeType: DialFileNodeType.FILE,
+          nodeType: DialFileNodeType.ITEM,
         },
         {
           path: '/files/fileB.md',
-          nodeType: DialFileNodeType.FILE,
+          nodeType: DialFileNodeType.ITEM,
         },
       ],
     };

@@ -1,5 +1,17 @@
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { getTableNameFromAnalyticsResourceId } from '@/src/utils/audit/analytics-resource-id';
 
+/**
+ * Resolve the snapshot route for one resource at one revision. The route is relative
+ * to the backend that owns the resource, and this table spans two of them: the four
+ * analytics types (`isAnalyticsResource`) resolve against the analytics backend, every
+ * other type against the admin backend. A route must therefore be issued through the
+ * client for its own resource type — the caller picks the client, this only names the path.
+ *
+ * @param {string} [type] - the activity's resource type
+ * @param {string} [id] - the resource identifier, `<table>:<column>` for a table column
+ * @returns {string | null} the route with a trailing separator for the revision, or null when the type has no snapshot route
+ */
 export const getRevisionRouteForEntityType = (type?: string, id?: string): string | null => {
   switch (type) {
     case ActivityAuditResourceType.MODEL:
@@ -40,6 +52,16 @@ export const getRevisionRouteForEntityType = (type?: string, id?: string): strin
       return `/deployments/${id}/revision/`;
     case ActivityAuditResourceType.ADMIN_PROPERTIES:
       return `/admin-settings/revision/`;
+    case ActivityAuditResourceType.TABLE:
+      return `/tables/${id}/revision/`;
+    // A column has no snapshot endpoint of its own: it resolves to the owning
+    // table's snapshot at the same revision, which does contain the change.
+    case ActivityAuditResourceType.TABLE_COLUMN:
+      return `/tables/${getTableNameFromAnalyticsResourceId(id)}/revision/`;
+    case ActivityAuditResourceType.PIPELINE:
+      return `/pipelines/${id}/revision/`;
+    case ActivityAuditResourceType.SAVED_QUERY:
+      return `/saved-queries/${id}/revision/`;
     default:
       return null;
   }
