@@ -1,6 +1,6 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE, NO_LIMITS_KEY, UNLIMITED_KEY } from '@/src/constants/role';
-import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
+import { ActivityAuditDiff, ActivityAuditDiffGroup, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 
 export const roleLimitsKeys = ['minute', 'day', 'week', 'month', 'enabled'];
@@ -77,30 +77,28 @@ export const getDiffCount = (sections: ActivityAuditDiffSection[], diffStatus?: 
  * @param {string} name - section title
  * @param {?DiffView} [diffView] - variable to control showing only changes or all values
  * @param {?ActivityAuditResourceType} [type] - resource type
- * @returns {*} - sections data compare and current with index
+ * @returns {ActivityAuditDiffGroup[]} - renderable groups: both sides with the
+ *   index, plus the section's own label and status when it carries them
  */
 export const filterNotEmptySections = (
   sections: ActivityAuditDiffSection[],
   name: string,
   diffView?: DiffView,
   type?: ActivityAuditResourceType,
-) => {
-  return sections.reduce<{ index: number; currentData?: ActivityAuditDiff[]; compareData?: ActivityAuditDiff[] }[]>(
-    (acc, item, index) => {
-      const current = getRowDataByParameter(item.current, name, index, type);
-      const compare = getRowDataByParameter(item.compare, name, index, type);
+): ActivityAuditDiffGroup[] => {
+  return sections.reduce<ActivityAuditDiffGroup[]>((acc, item, index) => {
+    const current = getRowDataByParameter(item.current, name, index, type);
+    const compare = getRowDataByParameter(item.compare, name, index, type);
 
-      const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.diffStatus);
-      const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.diffStatus);
+    const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.diffStatus);
+    const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.diffStatus);
 
-      const hasData = (currentData && currentData.length > 0) || (compareData && compareData.length > 0);
+    const hasData = (currentData && currentData.length > 0) || (compareData && compareData.length > 0);
 
-      if (hasData) {
-        acc.push({ index, currentData, compareData });
-      }
+    if (hasData) {
+      acc.push({ index, currentData, compareData, label: item.label, diffStatus: item.diffStatus });
+    }
 
-      return acc;
-    },
-    [],
-  );
+    return acc;
+  }, []);
 };

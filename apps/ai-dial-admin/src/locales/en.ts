@@ -264,6 +264,9 @@ export default {
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
     Table: 'Table',
+    AnalyticsTableColumn: 'Table column',
+    AnalyticsPipeline: 'Pipeline',
+    AnalyticsSavedQuery: 'Saved query',
     Form: 'Generated form',
     Ui: 'Application custom UI',
     NewVersion: 'New Version',
@@ -543,6 +546,10 @@ export default {
     After: 'After',
     CompareVersions: 'Compare versions',
     Version: 'Version',
+    Added: 'Added',
+    Removed: 'Removed',
+    Changed: 'Changed',
+    ColumnGroup: 'Column {name}',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
@@ -800,6 +807,7 @@ export default {
     ActivityView: {
       Config: 'Config',
       Deployments: 'Deployments',
+      Analytics: 'Analytics',
     },
   },
   Routes: {
@@ -1052,6 +1060,7 @@ export default {
     ActivityType: 'Activity type',
     ResourceType: 'Resource type',
     ResourceId: 'Resource Identifier',
+    OpenResourceInNewTab: 'Open resource in a new tab',
     Time: 'Time',
     Initiated: 'Initiated',
     UserId: 'User ID',

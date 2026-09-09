@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { activityAuditApi, deploymentAuditApi } from '@/src/app/api/api';
+import { activityAuditApi, analyticsAuditApi, deploymentAuditApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto, SortDto } from '@/src/models/request';
@@ -20,6 +20,16 @@ export async function getDeploymentActivities(
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentAuditApi.getActivitiesList(pageSize, pageNumber, token, sorts, filters);
+}
+
+export async function getAnalyticsActivities(
+  pageSize: number,
+  pageNumber: number,
+  sorts: SortDto[],
+  filters: FilterDto[],
+) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsAuditApi.getActivitiesList(pageSize, pageNumber, token, sorts, filters);
 }
 
 export async function getRevisionDetails(url: string) {
