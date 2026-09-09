@@ -114,12 +114,12 @@ describe('App runner asset :: create asset application action', () => {
     );
   });
 
-  test('Should seed the source with the runner Core resource reference, not the bare id', async () => {
+  test('Should seed the source with the raw runner $id Core resolves the schema by', async () => {
     await openCreateModal();
 
     expect(lastInitialValues().source).toEqual({
       $type: SOURCE_TYPE.SCHEMA,
-      applicationTypeSchemaId: 'schemas/platform/https%3A%2F%2Fhost%2Frunner',
+      applicationTypeSchemaId: 'https://host/runner',
     });
   });
 

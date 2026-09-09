@@ -2137,6 +2137,7 @@ export enum RunsI18nKey {
   Completed = 'Runs.Status.Completed',
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
+  Cancelled = 'Runs.Status.Cancelled',
   MetricFailedText = 'Runs.MetricFailedText',
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',
@@ -2184,6 +2185,10 @@ export enum RunsI18nKey {
   RunCompareHeatMapTooltipDelta = 'Runs.RunCompareHeatMapTooltipDelta',
   RunCompareHeatMapNotApplicable = 'Runs.RunCompareHeatMapNotApplicable',
   RequestsInChain = 'Runs.RequestsInChain',
+  CancelRunModalTitle = 'Runs.CancelRunModalTitle',
+  CancelRunModalDescription = 'Runs.CancelRunModalDescription',
+  CancelRunSuccess = 'Runs.CancelRunSuccess',
+  CancelRunSuccessDescription = 'Runs.CancelRunSuccessDescription',
 }
 
 export enum ExportRunI18nKey {
@@ -2329,6 +2334,7 @@ export enum ActionMenuOperationI18nKey {
   Install = 'ActionMenuOperation.Install',
   Run = 'ActionMenuOperation.Run',
   Stop = 'ActionMenuOperation.Stop',
+  Cancel = 'ActionMenuOperation.Cancel',
   CreateNewVersion = 'ActionMenuOperation.CreateNewVersion',
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',

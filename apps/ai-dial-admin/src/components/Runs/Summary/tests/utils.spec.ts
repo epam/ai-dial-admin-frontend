@@ -17,6 +17,7 @@ import {
   buildDistributionQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  fillUnscoredMetricBars,
   getMetricFieldPath,
   getMetricOutputDescriptions,
   getMetricOutputFields,
@@ -296,6 +297,50 @@ describe('Runs Summary :: metric info', () => {
     };
 
     expect(attachMetricInfo(data, {})).toEqual(data);
+  });
+
+  test('fillUnscoredMetricBars seeds AVG with null bars when a metric is configured but has no scores', () => {
+    const filled = fillUnscoredMetricBars({ overallScore: 0, statistics: [], byStatistic: {} }, [
+      { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'c1' },
+    ]);
+
+    expect(filled.statistics).toEqual(['AVG']);
+    expect(filled.byStatistic).toEqual({
+      AVG: [{ name: 'Exact Match', bars: { exact_match: null } }],
+    });
+    expect(filled.overallScore).toBe(0);
+  });
+
+  test('fillUnscoredMetricBars adds missing configured bars without overwriting existing scores', () => {
+    const filled = fillUnscoredMetricBars(
+      {
+        overallScore: 0.8,
+        statistics: ['AVG', 'P90'],
+        byStatistic: {
+          AVG: [{ name: 'Exact Match', bars: { exact_match: 1 } }],
+          P90: [{ name: 'Exact Match', bars: { exact_match: 1 } }],
+        },
+      },
+      [
+        { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'c1' },
+        { name: 'Ragas.faithfulness', field: 'metric::Ragas::faithfulness', computationId: 'c1' },
+      ],
+    );
+
+    expect(filled.byStatistic.AVG).toEqual([
+      { name: 'Exact Match', bars: { exact_match: 1 } },
+      { name: 'Ragas', bars: { faithfulness: null } },
+    ]);
+    expect(filled.byStatistic.P90).toEqual([
+      { name: 'Exact Match', bars: { exact_match: 1 } },
+      { name: 'Ragas', bars: { faithfulness: null } },
+    ]);
+  });
+
+  test('fillUnscoredMetricBars leaves data unchanged when there are no configured metrics', () => {
+    const data: MetricScoresData = { overallScore: null, statistics: [], byStatistic: {} };
+
+    expect(fillUnscoredMetricBars(data, [])).toEqual(data);
   });
 });
 

@@ -2302,6 +2302,7 @@ export default {
       Completed: 'Completed',
       Running: 'Running',
       Failed: 'Failed',
+      Cancelled: 'Cancelled',
     },
     MetricFailedText: 'Metric evaluation failed',
     NumericDiff: 'Numeric',
@@ -2347,6 +2348,11 @@ export default {
     RunCompareHeatMapTooltipDelta: 'Delta:',
     RunCompareHeatMapNotApplicable: 'N/A',
     RequestsInChain: 'Requests in chain',
+    CancelRunModalTitle: 'Stop run',
+    CancelRunModalDescription:
+      'Are you sure you want to stop this run? Test cases already completed will be preserved.',
+    CancelRunSuccess: 'Run stopped',
+    CancelRunSuccessDescription: 'The run has been stopped.',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',
@@ -2412,6 +2418,7 @@ export default {
     Install: 'Install',
     Run: 'Run',
     Stop: 'Stop',
+    Cancel: 'Cancel',
     CreateNewVersion: 'Create new version',
     Try_out: 'Try out',
     Edit: 'Edit',

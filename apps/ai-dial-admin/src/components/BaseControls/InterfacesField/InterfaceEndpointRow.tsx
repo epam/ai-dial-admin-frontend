@@ -74,45 +74,49 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
   return (
     <div className="flex flex-col gap-y-2">
       <p className="dial-body-text font-semibold text-primary">{typeLabel}</p>
-      <div className="flex items-start gap-x-2">
-        <DialInput
-          id={fieldId}
-          labelProps={{ label: t(EntityFieldsI18nKey.endpoint) }}
-          placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
-          value={value.endpoint || ''}
-          onChange={onChangeEndpoint}
-          disabled={disabled}
-          error={error?.text}
-          invalid={!!error}
-          containerClassName={STANDARD_CONTROL_WIDTH}
-        />
-        <DialPasswordInput
-          id={`${fieldId}-key`}
-          labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-          placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-          value={value.key}
-          onChange={(key?: string) => onChange({ ...value, key })}
-          disabled={disabled}
-          containerClassName="flex-1"
-        />
+      <div className="flex flex-row flex-1 gap-x-2">
+        <div className="flex flex-col flex-1 gap-y-2">
+          <div className="flex flex-row gap-x-2">
+            <DialInput
+              id={fieldId}
+              labelProps={{ label: t(EntityFieldsI18nKey.endpoint) }}
+              placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
+              value={value.endpoint || ''}
+              onChange={onChangeEndpoint}
+              disabled={disabled}
+              error={error?.text}
+              invalid={!!error}
+              containerClassName={STANDARD_CONTROL_WIDTH}
+            />
+            <DialPasswordInput
+              id={`${fieldId}-key`}
+              labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+              placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+              value={value.key}
+              onChange={(key?: string) => onChange({ ...value, key })}
+              disabled={disabled}
+              containerClassName="flex-1"
+            />
+          </div>
+          <div className="flex flex-row gap-x-2 w-full">
+            <ExtraDataField
+              label={t(EntityFieldsI18nKey.extraData)}
+              value={value.extraData}
+              disabled={disabled}
+              containerClassName="flex-1 min-w-0"
+              onChange={(extraData) => onChange({ ...value, extraData })}
+            />
+            <ExtraDataField
+              label={t(EntityFieldsI18nKey.secretExtraData)}
+              value={value.secretExtraData}
+              disabled={disabled}
+              isSecret
+              containerClassName="flex-1 min-w-0"
+              onChange={(secretExtraData) => onChange({ ...value, secretExtraData })}
+            />
+          </div>
+        </div>
         {!disabled && <DialRemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} className="mt-7" />}
-      </div>
-      <div className="flex flex-row gap-x-2 w-full">
-        <ExtraDataField
-          label={t(EntityFieldsI18nKey.extraData)}
-          value={value.extraData}
-          disabled={disabled}
-          containerClassName="flex-1 min-w-0"
-          onChange={(extraData) => onChange({ ...value, extraData })}
-        />
-        <ExtraDataField
-          label={t(EntityFieldsI18nKey.secretExtraData)}
-          value={value.secretExtraData}
-          disabled={disabled}
-          isSecret
-          containerClassName="flex-1 min-w-0"
-          onChange={(secretExtraData) => onChange({ ...value, secretExtraData })}
-        />
       </div>
     </div>
   );
