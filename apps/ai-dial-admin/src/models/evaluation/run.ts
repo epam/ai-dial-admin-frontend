@@ -82,6 +82,7 @@ export enum RunStatus {
   COMPLETED = 'COMPLETED',
   RUNNING = 'RUNNING',
   FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
 /** Averages from GET /api/v1/test-suite-runs/{id}/costs (null when no usage-log rows for that phase). */
