@@ -26,6 +26,10 @@ const makeItem = (importAction: string, next: Partial<BaseEntity>, prev?: Partia
   prev: prev as BaseEntity,
 });
 
+// `getConfigurationPreview` types its buckets as `BaseEntity[]`, which has no `id`; these fixtures track
+// identity by one, so read it through the record shape instead of pretending the field is on the type.
+const idOf = (entity?: BaseEntity): unknown => (entity as { id?: unknown } | undefined)?.id;
+
 describe('ConfigurationPreview.utils', () => {
   const t = (v: string) => v;
   const compare = () => void 0;
@@ -80,11 +84,11 @@ describe('ConfigurationPreview.utils', () => {
     expect(prevData[EntityType.MODEL].length).toBe(previewData[EntityType.MODEL].length);
     expect(prevData[EntityType.APPLICATION].length).toBe(previewData[EntityType.APPLICATION].length);
 
-    expect(prevData[EntityType.MODEL][0]?.id).toBe(1);
-    expect(prevData[EntityType.APPLICATION][0]?.id).toBe(2);
+    expect(idOf(prevData[EntityType.MODEL][0])).toBe(1);
+    expect(idOf(prevData[EntityType.APPLICATION][0])).toBe(2);
 
-    expect(previewData[EntityType.MODEL][0].id).toBe(1);
-    expect(previewData[EntityType.APPLICATION][0].id).toBe(2);
+    expect(idOf(previewData[EntityType.MODEL][0])).toBe(1);
+    expect(idOf(previewData[EntityType.APPLICATION][0])).toBe(2);
 
     expect(prevData[EntityType.ROUTE]).toEqual([]);
   });
@@ -102,8 +106,8 @@ describe('ConfigurationPreview.utils', () => {
 
     expect(previewData[EntityType.MODEL]).toHaveLength(1);
     expect(previewData[EntityType.ROLE]).toHaveLength(1);
-    expect(previewData[EntityType.MODEL][0].id).toBe(1);
-    expect(previewData[EntityType.ROLE][0].id).toBe(2);
+    expect(idOf(previewData[EntityType.MODEL][0])).toBe(1);
+    expect(idOf(previewData[EntityType.ROLE][0])).toBe(2);
   });
 
   test('getConfigurationPreview handles empty config correctly with prevData', () => {
@@ -134,11 +138,11 @@ describe('ConfigurationPreview.utils', () => {
     expect(prevData[EntityType.MODEL].length).toBe(previewData[EntityType.MODEL].length);
     expect(prevData[EntityType.ROLE].length).toBe(previewData[EntityType.ROLE].length);
 
-    expect(prevData[EntityType.MODEL][0]?.id).toBe(1);
-    expect(prevData[EntityType.ROLE][0]?.id).toBe(2);
+    expect(idOf(prevData[EntityType.MODEL][0])).toBe(1);
+    expect(idOf(prevData[EntityType.ROLE][0])).toBe(2);
 
-    expect(previewData[EntityType.MODEL][0].id).toBe(1);
-    expect(previewData[EntityType.ROLE][0].id).toBe(2);
+    expect(idOf(previewData[EntityType.MODEL][0])).toBe(1);
+    expect(idOf(previewData[EntityType.ROLE][0])).toBe(2);
 
     expect(prevData[EntityType.ROUTE]).toEqual([]);
   });
@@ -160,7 +164,7 @@ describe('ConfigurationPreview.utils', () => {
   test('getActionClassName returns correct class', () => {
     expect(getActionClassName(ImportConfigurationAction.CREATE)).toBe('bg-accent-primary');
     expect(getActionClassName(ImportConfigurationAction.UPDATE)).toBe('bg-orange-400');
-    expect(getActionClassName(ImportConfigurationAction.OTHER)).toBe('bg-controls-disable');
+    expect(getActionClassName(ImportConfigurationAction.SKIP)).toBe('bg-controls-disable');
   });
 
   test('getComponentColDefs returns correct columns for MODEL', () => {

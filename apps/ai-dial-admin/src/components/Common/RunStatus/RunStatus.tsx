@@ -39,6 +39,15 @@ const RunStatusComponent: FC<Props> = ({ status }) => {
           </DialTooltip>
         </>
       )}
+
+      {status === RunStatus.CANCELLED && (
+        <>
+          <div className="size-[10px] rounded-full bg-secondary"></div>
+          <DialTooltip tooltip={statusLabel}>
+            <span>{statusLabel}</span>
+          </DialTooltip>
+        </>
+      )}
     </div>
   );
 };

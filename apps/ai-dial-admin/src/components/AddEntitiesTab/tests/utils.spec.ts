@@ -228,7 +228,7 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
   });
 
   test('Should return filtered data', () => {
-    const existing = [{ key: 'key', type: MenuI18nKey.Key, route: ApplicationRoute.Keys }];
+    const existing = [{ key: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys }];
     const result = getAvailableEntities(existing, [
       { name: 'model', type: MenuI18nKey.Models, route: ApplicationRoute.Models },
       { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
@@ -243,7 +243,7 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
   });
 
   test('Should return same data', () => {
-    const existing = [];
+    const existing: EntitiesGridData[] = [];
     const result = getAvailableEntities(existing, data);
     expect(result).toEqual(data);
   });

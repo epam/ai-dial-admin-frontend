@@ -37,7 +37,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns prompt publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.PromptPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.PromptPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.PromptUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.PromptUnpublishDeclineModalTitle,
@@ -55,7 +55,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns file publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.FilePublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.FilePublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.FileUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.FileUnpublishDeclineModalTitle,
@@ -73,7 +73,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns application publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
@@ -91,7 +91,7 @@ describe('getModalsTranslations', () => {
   });
 
   test('returns toolset publication unpublish translations', () => {
-    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.REMOVE);
+    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.DELETE);
     expect(result).toEqual({
       ApproveModalTitle: PublicationsI18nKey.ToolsetUnpublishApproveModalTitle,
       DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,

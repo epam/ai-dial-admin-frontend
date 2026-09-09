@@ -1,8 +1,8 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
 export enum AppRunnerOrigin {
-  Entity = 'entity',
-  Asset = 'asset',
+  Config = 'config',
+  Platform = 'platform',
 }
 
 export interface AppRunnerOption extends DialApplicationScheme {

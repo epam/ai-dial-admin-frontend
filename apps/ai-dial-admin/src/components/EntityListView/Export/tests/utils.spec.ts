@@ -4,7 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { PromptsI18nKey, FoldersI18nKey, ApplicationsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 
 describe('getModalTitle', () => {
-  const t = (key) => key;
+  const t = (key: string) => key;
 
   test('returns Prompts export title', () => {
     expect(getModalTitle(ApplicationRoute.Prompts, t)).toBe(PromptsI18nKey.Export);
