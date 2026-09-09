@@ -14,15 +14,29 @@ import type { CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { encodeCorePath } from '@/src/server/publications/path';
+import { encodeCorePath, stripPrefix } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { normalizeUrl } from '@/src/utils/url';
+
+/**
+ * Resolves the Core deployment id an MCP route's `{id}`/`{deployment_name}` segment needs for a
+ * given resource path. Mirrors `ToolsetOpsApi.discoveredTools`'s doc comment: a platform-bucket
+ * toolset/application is config-managed and registered in Core's merged config store by bare
+ * name, so its id must be the bare name alone — neither the resource-type prefix nor the
+ * `platform/` bucket segment — while a public-bucket resource still needs the full
+ * `{resourceType}/{path}` the resource-path fallback resolves.
+ */
+const buildMcpDeploymentId = (path: string, resourceType: ResourceType): string =>
+  isPlatformBucketPath(path)
+    ? stripPrefix(path, `${PLATFORM_ROOT_FOLDER}/`)
+    : `${RESOURCE_TYPE_PREFIX[resourceType]}${path}`;
 
 /** Builds the absolute Core MCP endpoint URL for a toolset path. */
 export const buildToolsetMcpUrl = (host: string, path: string): URL => {
-  const prefixedPath = encodeCorePath(`${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}${path}`);
-  return new URL(`${normalizeUrl(host)}v1/toolset/${prefixedPath}/mcp`);
+  const id = encodeCorePath(buildMcpDeploymentId(path, ResourceType.TOOLSET));
+  return new URL(`${normalizeUrl(host)}v1/toolset/${id}/mcp`);
 };
 
 /**
@@ -30,11 +44,11 @@ export const buildToolsetMcpUrl = (host: string, path: string): URL => {
  * route is deployment-scoped (`/v1/deployments/{deployment_name}/mcp`), not resource-path-scoped
  * like the toolset route — but `DeploymentService.findDeployment` resolves a custom
  * application's `deployment_name` as its full resource URL (same as `ToolSetService`), so the
- * same prefixed-path construction as `buildToolsetMcpUrl` applies here too.
+ * same deployment-id resolution as `buildToolsetMcpUrl` applies here too.
  */
 export const buildApplicationMcpUrl = (host: string, path: string): URL => {
-  const prefixedPath = encodeCorePath(`${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}${path}`);
-  return new URL(`${normalizeUrl(host)}v1/deployments/${prefixedPath}/mcp`);
+  const id = encodeCorePath(buildMcpDeploymentId(path, ResourceType.APPLICATION));
+  return new URL(`${normalizeUrl(host)}v1/deployments/${id}/mcp`);
 };
 
 /**

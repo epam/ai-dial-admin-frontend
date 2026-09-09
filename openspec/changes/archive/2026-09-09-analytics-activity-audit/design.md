@@ -116,6 +116,14 @@ absence, its detail-page resolution) goes into a **new** capability spec,
 The Analytics-**feature** side — the tables detail view's tab set and the Audit tab's content — goes
 into the analytics master spec, `openspec/specs/analytics/spec.md`, per `openspec/config.yaml`.
 
+**Corrected by D14 (the Pipelines follow-up): the path in the paragraph above is stale.** The analytics
+capability was split into a root index plus nine sub-capabilities after this decision was written, and
+`openspec/specs/analytics/spec.md` now carries only what every Analytics page shares. The tables
+requirements therefore live in `specs/analytics/tables/spec.md` under this change, and the pipelines
+ones in `specs/analytics/pipelines/spec.md`. Everything else in D1 — the split between the audit
+capability and the Analytics feature, the cross-reference line, and the rule about not modifying a
+requirement whose every statement stays true — is unchanged. See D14.
+
 *Alternatives rejected:*
 
 - **Amend `activity-audit-deployments-view` in place with the analytics requirements.** Rejected: it
@@ -671,6 +679,435 @@ carry, this rule would hide it, and the fix is to narrow the predicate to `Table
 (filtered out), so that deletion is invisible under that filter. That is what a filter does, and
 clearing it shows the parent row; no mitigation is specified.
 
+### D14 — The Pipelines Audit tab (follow-up, issue #4475)
+
+Files this section governs: `src/components/Analytics/Pipelines/PipelineAudit.tsx` (new),
+`src/components/Analytics/Pipelines/Common/PipelineDetailFrame.tsx`,
+`src/types/activity-audit.ts`, `src/constants/activity-audit.ts`,
+`src/utils/audit/entity-audit-filters.ts`, `src/components/ActivityAudit/List/List.tsx`,
+`src/components/ActivityAudit/List/view-config.ts`,
+`src/components/ActivityAudit/List/utils.tsx`. Spec deltas:
+`specs/analytics/pipelines/spec.md` and the column-set paragraph of
+`specs/activity-audit-analytics-view/spec.md`.
+
+This is one further iteration of the same change, not a second change: one branch, one pull request,
+tasks numbered from 9. Nothing in sections 1–8 is reopened. Three things are settled here and
+nothing else: the column set (D14.1), the gate (D14.2), and where the tab strip goes (D14.3).
+`/queries/{id}` is out (issue #4476 — `QueryBuilder` is not an entity detail view), evaluators are
+out permanently (the analytics backend does not audit them), and **D13 is not touched** — see D14.4.
+
+**Where the delta lives.** `specs/analytics/spec.md` under this change held the tables requirements;
+it was relocated **verbatim** to `specs/analytics/tables/spec.md`, and the new requirements go to
+`specs/analytics/pipelines/spec.md`. The reason is the analytics split that happened after D1 was
+written: `analytics/spec.md` is now the index and carries only what every Analytics page shares, so
+archiving the delta where it was would have folded table requirements into that index. D1 carries a
+correction line pointing here.
+
+#### D14.1 — The Pipelines tab reads as a single-entity view, decided from the resource type
+
+The Pipelines tab's feed carries exactly one resource type and one resource identifier, so
+`Resource type` / `Resource identifier` would print the same pair (`Pipeline` / `<name>`) on every
+row. The tab therefore uses the single-entity column set — the one every other per-entity Audit tab
+in the app uses — while still offering no `Rollback`, which no other view's single-entity set can say.
+
+**The mechanism: one predicate over the resource type, consulted where `isSingleEntity` is already
+derived.** Add `hasChildResourceActivities(type?: string)` to `src/types/activity-audit.ts`, beside
+`isAnalyticsResource` and `isDeploymentManagerResource`, backed by a set holding exactly
+`ActivityAuditResourceType.TABLE`. It answers "does this resource type own activities of another
+resource type?" — true for `Table`, which owns `TableColumn`; false for everything else, including
+every admin and deployment-manager type. Then:
+
+- `List.tsx` computes `isSingleEntity: !!entity && !hasChildResourceActivities(entityType)` instead of
+  `!!entity`. For `Config` and `Deployments` the value is **identical** — none of their entity types
+  is in the set — so those two views are unchanged by construction, and the existing
+  `Config entity audit tab :: keeps the single-entity column set` test is the check.
+- `ACTIVITY_AUDIT_VIEW_CONFIG[Analytics].getColumns` stops discarding `isSingleEntity` and forwards
+  it: `getAnalyticsActivityAuditColumns(t, open, isSingleEntity)`, which passes it to
+  `ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity)`. No edit to
+  `ACTIVITY_AUDIT_COLUMNS`: that call already yields no expander, no `Version`, and — with the flag
+  true — no `Resource type` / `Resource identifier`.
+- The same predicate decides the **request**. `getEntityAuditFilters`' `Analytics` branch (the
+  `resourceType in "Table,TableColumn"` + `resourceId co <name>` pair D3 needs) applies only when
+  `hasChildResourceActivities(entityType)`; otherwise the function falls through to the exact
+  `resourceId eq` + `resourceType eq` pair it already builds for `Config` and `Deployments`. That is
+  the whole query for a pipeline: a `Pipeline` resource id is its name and is never compound, so
+  there is nothing to widen and nothing to narrow back.
+- The same predicate gates `analyticsTableScope` in `List.tsx`, so `isResourceIdInTableScope` does not
+  run for a pipeline tab. It would be harmless there (a pipeline's id matches its own name exactly),
+  but a narrowing predicate that runs where nothing can be narrowed is a trap for the next reader.
+
+**This changes `isSingleEntity`'s meaning, deliberately.** It becomes "this list is about a single
+entity — one resource type, one identifier" rather than "an entity was passed". A table Audit tab is
+genuinely not that: it is about a table *and its columns*, which is exactly why D3 keeps both columns
+visible there. The sharpened meaning is what makes one flag serve both tabs.
+
+*One existing assertion changes and it must:*
+`view-config.spec.ts :: Analytics delegates to the analytics column factory and passes it no rollback
+handler` asserts `getAnalyticsActivityAuditColumns` is called with exactly `(t, open)` while passing
+`isSingleEntity: true`. That assertion encodes the behaviour being changed — Analytics ignoring the
+flag — so its argument list gains the flag. **Every other assertion in `view-config.spec.ts` and
+`List.spec.tsx` stays, unmodified, and must stay green**, including the whole
+`ActivityAuditList :: Analytics entity audit tab` block: that block renders with
+`entityType={ActivityAuditResourceType.TABLE}`, so the predicate answers true for it and the Tables
+tab's request, columns and narrowing are untouched.
+
+*Alternatives rejected:*
+
+- **Live with the two redundant columns.** Rejected: it is not wrong, but it makes the one tab in the
+  app that is about a single resource look like a multi-resource list, and it wastes the two widest
+  columns on constants. It is also the cheapest to reverse if this is judged wrong — delete the
+  predicate's use in three places.
+- **Thread an `isSingleEntity` argument per call site, from `PipelineAudit`/`TableAudit` through
+  `EntityAudit` down to the list.** Rejected twice over: it widens a shared component's props to fit
+  one caller, which `use-don't-edit-shared-components` forbids, and it puts a presentation decision in
+  the hands of every future caller, so the next Analytics tab gets it wrong by omission. The fact is
+  about the resource type, not about the caller.
+- **A second Analytics-scoped entry in `ACTIVITY_AUDIT_VIEW_CONFIG`.** Rejected: the config is keyed
+  by `ActivityAuditView`, which is the `View` selector's enum — a fourth member would add a fourth
+  option to that dropdown and to the per-view storage keys. Making the key a pair (view, resource
+  type) would grow the record from three entries to a dozen to express one boolean.
+- **Branch inside `getAnalyticsActivityAuditColumns` on the entity.** Rejected: the column factory
+  takes `t` and a callback and knows nothing about entities; giving it one would make it the second
+  place that knows which resource types have children.
+
+*What would falsify this:* the analytics backend giving `Pipeline` a child resource type — a
+per-binding or per-measure activity, say. Then a pipeline tab carries two resource types, the two
+columns are needed again, and the fix is one member added to the predicate's set, plus the `co`
+branch in `getEntityAuditFilters` and the scope narrowing that member then inherits. That is the whole
+reason the decision is keyed on a predicate over the type rather than on `resourceType === 'Pipeline'`
+spelled out at each site.
+
+#### D14.2 — The gate is the analytics flag alone; there is no pipeline-status condition
+
+`featureFlags.analyticsEnabled` from `useAppContext`, and nothing else. D12's second condition —
+`table.status === TableStatus.Active` — has no analogue, and BA's finding is confirmed against
+`PipelineDetailFrame` and the pipelines spec:
+
+- there is no registration lifecycle to gate on. `POST /v1/pipelines` creates a pipeline whole
+  (*The create modal collects a complete pipeline of one kind in one request*), so there is no
+  `pending` state in which a pipeline exists with no history. Every registered pipeline carries at
+  least a `Create` activity;
+- `enabled` is **not** that condition and must not be used as one. It is a runtime toggle; a disabled
+  pipeline is fully registered, and toggling it is itself an audited `Update`
+  (`PATCH /v1/pipelines/{name}`, with no exception for the flag). Gating on it would hide history
+  exactly when someone asks who turned the pipeline off;
+- `state` (last run, lag, failures) describes execution, not registration, and a pipeline that has
+  never run still has a `Create`.
+
+The **route** is not guarded, for the same reason as D12: `/pipelines/[name]/page.tsx` guards on
+`isAnalyticsForbidden()`, which is an authorization probe against the analytics service
+(`analyticsDataApi.checkAccess` → `403`), not a read of `ANALYTICS_ENABLED`. So a bookmarked link
+opens this view on an analytics-disabled install, and the tab condition is the only thing that keeps
+it from issuing an activity request. Do not add a `notFound()` on the flag — that is a decision about
+the whole pipelines feature, out of scope here exactly as it was in D12.
+
+*Alternatives rejected:* a status-shaped condition invented from `enabled` (see above — it hides the
+history of the toggle itself); rendering the Audit tab disabled with a tooltip on some pipelines
+(there is no pipeline for which it would be empty by construction, so there is nothing to explain);
+gating on `isFullAdmin` (the analytics backend authorizes a pipeline's activity feed at exactly the
+bar reading the pipeline already requires — the ADAS *Resource-specific narrowing of the audit
+surface* requirement — so a permission gate here would hide history from readers the backend serves).
+
+*What would falsify this:* a pipeline the analytics feed answers with `total: 0` for. The tab then
+shows an empty grid, which is specified (*Pipeline with no recorded history*) and is a real case for a
+pipeline registered before the audit trail existed — but if it turns out to be the *common* case, D12's
+argument applies and the gate needs a second condition. It was **not** measured against a live backend
+in this iteration: it rests on the ADAS `audit-trail` spec's text that a `Create` is recorded
+synchronously on `POST /v1/pipelines`. That is why *A newly registered pipeline lists its Create
+activity* is one of the two scenarios sent to the browser.
+
+#### D14.3 — `PipelineDetailFrame` becomes the shell; the tab strip sits below the identity row
+
+The strip goes **inside `PipelineDetailFrame`**, between the identity row and the body, and the Audit
+tab replaces only the body. `PipelineDetailView` (31 lines, the kind switch) and the two kind views
+are untouched, so both kinds get the tab in one place and the file every open PR on this area touches
+stays where it is.
+
+Two facts force it inside the frame rather than above it:
+
+1. **The draft lives above the frame.** `useEnrichForm` / `useAggregateForm` are called in
+   `EnrichDetailView` / `AggregateDetailView` and passed down as `form`. A strip in
+   `PipelineDetailView` that swapped out `<EnrichDetailView/>` for the Audit tab would unmount the
+   hook and silently discard a pending edit — and take the `Discard` / `Save` bar with it.
+2. **The identity row is the header.** The badge, the name, the change bar, the enable/disable control
+   and the JSON toggle all live in the frame's top row, and D6's rule applies unchanged: header
+   actions stay above the strip and are visible from either tab. There is nothing to extract — unlike
+   `TableDetailView`, the frame's body is already three components deep, so the Properties content
+   needs no new file.
+
+**The JSON editor and the strip are never on screen together.** *The pipeline JSON editor takes the
+whole view* already requires that everything below the identity row is withdrawn while the editor is
+open; the strip is below that row, so it is withdrawn with the rest, and leaving the editor brings it
+back with `Properties` selected. That reading needs no modification to the JSON requirements and it
+keeps their invariant intact: the strip cannot become a second way to park a pending document edit
+behind a presentation the caller switched away from.
+
+*Alternatives rejected:*
+
+- **The strip above the frame, in `PipelineDetailView`.** Rejected: it discards pending edits (see
+  above) and hides the header, the status badge and the save bar behind the Audit tab.
+- **A new `PipelineDetailShell` wrapping the frame.** Rejected: it would have to receive `form` and
+  the pipeline to render the identity row, i.e. it would be the frame with a different name, and it
+  would split one 229-line component into two files that only ever appear together.
+- **Extract a `PipelineProperties.tsx` the way D6 extracted `TableProperties.tsx`.** Rejected as
+  unnecessary here: `TableDetailView` had ~350 lines of body inline, while the frame's body is already
+  `PipelineReadOnlyFacts` + `children` + `PipelineStateSection`. Extracting would be a move with no
+  reader benefit and would collide with the same open PRs.
+- **Withhold the JSON toggle while the Audit tab is selected.** Rejected: *The pipeline detail page
+  can be edited as JSON instead of as fields* says the toggle is offered to every caller, and making
+  it depend on the selected tab would narrow a shipped requirement to buy a smoother transition.
+  Enabling the editor from the Audit tab withdrawing the strip is abrupt but coherent, and it is the
+  same rule read from the other direction.
+- **Keep the strip visible while the editor is open.** Rejected: it makes *the page presents the
+  document and nothing else below the identity row* literally false, for no gain.
+
+#### D14.4 — D13 is not extended, and that is a decision rather than an omission
+
+A pipeline row can never be suppressed by D13, structurally. D13 fires only on a resolved parent whose
+`resourceType` is `Table` **and** whose `activityType` is `Delete`. A `Pipeline` activity has a parent
+in exactly one case — the bulk generation bump — and that parent is always a `Table` **`Update`**; the
+`Pipeline` `Delete` recorded when its *target* table is deleted carries **no** `parentActivityId` at
+all, because a pipeline's owner for this purpose is the table it reads, not the one it writes. An
+unparented row is never looked up against the predicate, and D13 is fail-open on an unresolved parent
+anyway.
+
+So no code change, and none should be made: widening the suppression to catch the target-table case
+would extend it past what the ADAS spec says happens, which is the failure mode D13's own rejected
+alternative (*suppress by resource type*) exists to avoid. The pipelines delta states the
+non-suppression as a requirement so a later edit to D13 has something to fail against.
+
+*Not verified live, accepted on the spec's text:* that the target-table `Delete` genuinely carries no
+parent in a real response. Reproducing it means deleting a table in a live stack, which no task in
+this change will do; the risk is bounded because D13 is fail-open — if the parent were present and
+resolved to a `Table` `Delete`, one row would be missing from one tab, and the falsifier is a
+`Pipeline` `Delete` row absent from a tab whose pipeline's target table was just dropped.
+
+### D15 — The no-snapshot empty state lives in `EntityDiff`, keyed on the sections it already computes (follow-up, issue #4485)
+
+Files this decision governs, and no others:
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`,
+`apps/ai-dial-admin/src/constants/i18n.ts`, `apps/ai-dial-admin/src/locales/en.ts`, and the new spec
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx`.
+Three files the task brief named are deliberately **not** in scope, each for a stated reason:
+`AuditView.tsx` (see the placement decision below), `View/utils/generate-diffs.ts` and
+`View/utils/analytics-diffs.ts` (their empty-bucket output is the *input* to this decision, not the
+thing being changed), and `src/utils/audit/get-activity-audit-detail-data.ts` (the resolver's
+`settled()` already does the right thing — it logs and returns absent — and widening it is the
+rejected alternative below). Spec delta:
+`specs/activity-audit-diff-empty-state/spec.md`.
+
+#### D15.1 — Where the delta lives: a new `activity-audit-diff-empty-state` capability
+
+The requirement is resource-type agnostic and lives on a component every audit detail page renders
+through, so it goes into a new capability rather than into any existing one. D1's own test decides
+this: a capability's Purpose paragraph says what it is about, and a requirement that contradicts that
+paragraph does not belong in it.
+
+*Alternatives rejected:*
+
+- **`activity-audit-analytics-view`** — this change's own new capability, and the tempting home
+  because analytics is the only reproduction. Rejected: its Purpose is the analytics view of the
+  audit page. A reader asking why a *container* audit diff shows an empty state would never look
+  there, and at archive time a behaviour of the shared diff engine would be filed under analytics —
+  precisely the mistake D1 rejected when it declined to fold analytics into
+  `activity-audit-deployments-view`.
+- **`activity-audit-deployments-detail`** — the other candidate, and the one with the most diff
+  requirements in it. Rejected for the mirror-image reason: its Purpose scopes it to
+  deployment-manager activities (image, firewall, container sections), and 24 of its 25 requirements
+  name a deployment-manager resource type.
+- **Fold it into the analytics view's existing *Analytics snapshots are resolved per resource type*
+  as a MODIFIED block.** Rejected twice over: it is the wrong capability (above), and that
+  requirement's text does not become false — it asks for "no error page and no notification" for a
+  missing snapshot, and an empty state is neither. Per D1's rule, only a requirement whose text
+  literally becomes false is modified. The new capability's Purpose carries the cross-reference
+  instead, so a reader of either one finds the other.
+
+#### D15.2 — Q2: the empty state lives in `EntityDiff`, not in `AuditView`
+
+`EntityDiff` computes `sections = createSectionFromDiffs(currentEntity, compareEntity)` at line 22
+and renders `Object.entries(sections).map(...)` at line 33. So `Object.keys(sections).length === 0` is
+not an approximation of "the body renders nothing" — it *is* that condition, in the same component,
+one line above the render. When it holds, `EntityDiff` renders the empty state in place of the whole
+`relative flex-1` block (the scroll container **and** `DiffMiniMap`, which has nothing to map) and
+suppresses `DiffLegend`; when it does not hold, the render path is unchanged.
+
+The legend fix is the same line of reasoning and therefore the same item, not a second ticket. Today
+line 47 gates the legend on `Object.keys(currentEntity).length && Object.keys(compareEntity).length`
+— the raw diff buckets, which always carry the `properties` key even when its array is empty, so the
+gate is true for the exact case the body is blank. Reading `sections` instead makes the two checks
+agree by construction rather than by coincidence, which is the whole defect: two answers to one
+question from two disagreeing sources.
+
+*Alternatives rejected:*
+
+- **Compute the condition in `AuditView` from the raw `activityRevision` / `previousRevision` /
+  `entity` values and render the empty state instead of `EntityDiff`.** Rejected on three counts.
+  (1) `both raw values absent` is strictly *narrower* than `the body renders nothing`: two present
+  snapshots whose every key is suppressed (`CONTAINER_HIDDEN_KEYS`, `IMAGE_HIDDEN_KEYS`) also produce
+  no section, so the blank page would stay reachable. (2) To be exact, `AuditView` would have to call
+  `createSectionFromDiffs` itself — computing the sections twice, in a component that has no other
+  reason to know the diff engine's shape. (3) It fixes nothing for the legend, which lives inside
+  `EntityDiff`; the condition would have to be threaded down as a prop, leaving two predicates for
+  one question, which is the defect. `EntityDiff` has exactly one caller today (`AuditView.tsx:284`,
+  confirmed by grep), so nothing is lost by deciding it one level down, and a second caller inherits
+  the fix.
+- **Make `createSectionFromDiffs` always emit a `properties` section so the body renders an empty
+  grid.** Rejected: not additive. It changes what every resource type's diff renders, an empty AG
+  Grid with headers is not an empty state, and it would alter `DiffSection`'s `Changes only`
+  behaviour for surfaces already browser-verified.
+- **Lift `filterNotEmptySections` into `EntityDiff` so the empty state also covers the case where
+  every section is filtered away.** Rejected, and this is the sharpest of the three: `DiffSection`
+  returns `null` when `filterNotEmptySections` yields nothing (`DiffSection.tsx:63`), so
+  `Changes only` on an all-unchanged comparison is a *second* blank-body path. Catching it would
+  duplicate per-section filtering one level up, and — decisively — the message would then be a lie:
+  the snapshot is present, the viewer chose a filter, and telling them the resource has no recorded
+  history would be worse than the blank body. The spec states that boundary and pins it with a
+  scenario, so a later implementer cannot quietly widen the predicate to "no visible rows".
+
+#### D15.3 — Q1: one message, because the two cases are not distinguishable without changing the API client
+
+Traced, not assumed. `base-api.ts:172-186` logs and returns `null` for every non-2xx except `403`,
+which returns `undefined`; `getResponse` (`:255-262`) falls back to `res.text()` for a body that is
+not JSON, so an empty `200` arrives as `''`; and `settled()`
+(`get-activity-audit-detail-data.ts:163-170`) maps a thrown error to `null`. By the time
+`ActivityAuditDetailData` types both revision fields `| null`, a `404 revision_not_found`, a `500`, a
+dropped connection and an empty body are one value. The second case BA named — *this revision is
+empty* — additionally has no producer: it would need a snapshot endpoint to answer `2xx` with a JSON
+object carrying no leaves, and every documented snapshot carries at least its own name.
+
+*Superseded in part by D15.5 — the description string below was shipped, seen in the browser and then
+removed on the owner's instruction. The reasoning in this sub-section is unaffected and still holds;
+only the number of strings changed, from one pair to one title.*
+
+So: **one** title/description pair, `ActivityAudit.SnapshotUnavailableTitle` and
+`ActivityAudit.SnapshotUnavailableDescription`, in the app's existing
+`*EmptyStateTitle` / `*EmptyStateDescription` register (`FileManager.*`), rendered through
+`DialNoDataContent` from ui-kit — the component this app already uses for every empty state
+(`ConversationsTraceView`, `ApplicationAppRoutes`, `Tools`, and eleven more call sites), not new
+markup. Copy: *No snapshot for this revision* / *This resource's recorded history begins after this
+revision, so there is no state to compare.* BA's draft, with the consequence clause added; non-blaming
+and free of failure vocabulary, per the owner.
+
+*Alternatives rejected:*
+
+- **Widen `base-api.ts` (or the resolver) to carry the HTTP status so a `404` can be worded
+  differently from a failure.** Rejected, and named as rejected rather than passed up as a decision
+  because the owner ruled it out in the brief: a status code in the return shape of every API method
+  is a large change to buy a second sentence. If a later requirement genuinely needs the distinction,
+  the cheap version is a discriminated result inside `getActivityAuditDetailData` alone, never in the
+  shared client.
+- **Reuse `Basic.NoData` or `Entities.NoActivityAudit`.** Rejected: `Basic.NoData` says nothing about
+  why, which the non-blaming framing needs; `Entities.NoActivityAudit` (`'No Activities'`) is a
+  different state — the activity *list* is empty — and reusing it would conflate "nothing happened"
+  with "something happened and its snapshot is not recorded". Iteration 1 deliberately left that key
+  unused where AG Grid shows its own default, and this follow-up does not revisit it either.
+- **Two strings, with the second one never reachable.** Rejected: an unreachable branch and a message
+  nobody can ever see, both of which have to be maintained and translated. One honest string beats
+  two that guess.
+
+#### D15.4 — The additive-scope guarantee, and what would falsify it
+
+The guarantee is structural, not a matter of care. `EntityDiff`'s body is
+`Object.entries(sections).map(...)` and nothing else; the new branch is taken on
+`Object.keys(sections).length === 0`. So the empty state can appear **only** where the body renders
+zero children, and the previous render path is entered unchanged for every input that produces at
+least one section. No shipped diff surface that renders content is touched — for containers, images,
+roles, the firewall and analytics tables alike, a non-empty `sections` map takes the same branch it
+takes today.
+
+What would falsify it, in the order it would show up:
+
+1. **A resource type whose diff renders content outside the `sections` walk.** None does today —
+   `EntityDiff` renders the scroll container, `DiffMiniMap` and `DiffLegend`, and nothing reads the
+   raw buckets except the legend gate this change is fixing. It would show up as a diff that used to
+   render something and now shows the empty state; the regression check is the existing suites under
+   `View/DiffReport/tests/` and `View/utils/tests/` staying green.
+2. **A section emitted with empty `current` and `compare` arrays**, which would make `sections`
+   non-empty while `DiffSection` returns `null` — a blank body with no empty state. Not reachable
+   today: `createSectionFromDiffs:672` only emits a section when one side has length, and
+   `setAnalyticsColumnDiffs` / `setObjectsArrayDiff` are subject to the same check. It would show up
+   as a still-blank page for some other resource type; the fix would then be in
+   `createSectionFromDiffs`, not here.
+3. **The `Changes only` path being mistaken for this one** (D15.2's third rejected alternative). The
+   scenario *A filter that hides every row does not produce the empty state* exists to fail loudly if
+   an implementer keys the predicate on visible rows instead.
+
+*Accepted, recorded so it is a decision and not an oversight:* the same empty state appears if a
+snapshot request fails with a `403` or a `500`, and its description then names a cause that is not
+the real one. Bounded three ways — the real status is already in the server log
+(`base-api.ts:174-176` logs status, URL and traceparent for exactly this reason), the copy asserts
+nothing about the viewer or about a failure, and the alternative (a status-carrying API client) is
+rejected above. The falsifier is a `403`-producing install where the diff body reports missing
+history for a resource whose history exists; it would surface as a support question, not as a broken
+page.
+
+*Two smaller consequences, stated so nobody re-decides them mid-implementation:* the JSON toggle is
+untouched — `AuditView` renders `JsonView` instead of `EntityDiff` in that mode, and two `{}` bodies
+side by side is today's behaviour and out of scope. And no `aria-live` region is added beyond the
+status role on the empty state itself: `.claude/rules/a11y.md` asks for a live region where a state
+change has *no* persistent visible text confirmation, and this state is persistent visible text; the
+status role is there so the `Comparison` switch into it is announced and so the state is addressable
+by role, not to narrate it twice.
+
+#### D15.5 — The owner cut the description; the title now carries the whole message
+
+Files this decision governs, and no others:
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/EntityDiff.tsx`,
+`apps/ai-dial-admin/src/constants/i18n.ts`, `apps/ai-dial-admin/src/locales/en.ts`,
+`apps/ai-dial-admin/src/components/ActivityAudit/View/DiffReport/tests/EntityDiff.spec.tsx`.
+
+**What was reversed.** D15.3 specified a title/description pair. The description —
+`ActivityAudit.SnapshotUnavailableDescription`, *This resource's recorded history begins after this
+revision, so there is no state to compare.* — was implemented, rendered as `DialNoDataContent`'s
+`description` prop and verified in the browser by task 10.2, both of whose scenarios passed. **The
+owner then removed the sentence**, verbatim instruction: *«`This resource's recorded history begins
+after this revision, so there is no state to compare.` — убери»*. The enum member, the `en.ts` string
+and the `description` prop all go; `DialNoDataContentProps.description` is optional, so the prop is
+absent rather than empty. `ActivityAudit.SnapshotUnavailableTitle` → *No snapshot for this revision*
+is unchanged and is now the entire copy of the empty state.
+
+This is a deliberate change to something already working, not a defect. It is folded into task 10.1
+rather than added as a 10.4: 10.1 is the item that owns these keys and is not yet ticked, and an item
+that undoes an unticked item's own work would put two contradictory instructions in one list.
+
+**What it does not change.** D15.3's reasoning — that a `404`, a `500`, a dropped connection and a
+non-JSON body arrive at the render layer as one indistinguishable absent value, so the copy must not
+claim to tell them apart — is untouched and still correct. It is the reason the answer is *fewer*
+strings, never more. Nor does the reversal revive the rejected alternative behind it: widening
+`base-api.ts` to carry an HTTP status remains rejected, on the owner's own ruling in the brief, and
+`base-api.ts` stays untouched by this change. D15.2 (placement in `EntityDiff`, keyed on `sections`),
+D15.4 (the additive-scope guarantee) and the `role="status"` decision are all unaffected — the branch,
+its predicate and its accessibility treatment are the same; only what is inside it is shorter. Nothing
+in D15.1 changes: the delta stays in `activity-audit-diff-empty-state`, and the analytics view's
+*Analytics snapshots are resolved per resource type* is still not modified.
+
+**Does the title alone still satisfy the requirement's own constraint?** The constraint, from BA's
+Answer 3, is two-part: the copy must not conflate *this resource has no recorded revision* with *this
+revision is empty*, and it must not read as a failure. Judgment: **yes, and no better title is
+needed.**
+
+- *Not conflated.* D15.3 established that the second condition has **no producer** — no code path
+  yields a fetched-but-empty snapshot as distinct from `null`. There is one reachable state, and *No
+  snapshot for this revision* names it precisely: it asserts that the snapshot artefact does not
+  exist, which is not what a copy for an empty revision would say (that would be *nothing changed*
+  vocabulary — `Compare.*`'s register, or `Basic.NoData`). The distinction was always carried by the
+  title; the description carried the *why*, and the *why* is what the owner cut.
+- *Not a failure.* No error vocabulary, no "unable", "failed" or "went wrong", no attribution to the
+  viewer. It is a statement of absence in the same register as the app's other
+  `*EmptyStateTitle` strings, rendered through the same `DialNoDataContent` every other empty state
+  uses — so it reads as an empty state, not as a broken page, structurally and not only lexically.
+
+**What is genuinely lost, and the falsifier.** The viewer now learns *that* there is no snapshot but
+not *that this is expected* — that the audit trail simply starts later than the resource does. The
+falsifier is a reader who cannot tell an unavailable snapshot from an empty one, or who reads the
+absence as breakage and files a bug against the audit page. Where it would show up first: a support
+question of the form "why is this revision blank", not a failing test — no test can detect a message
+that is true but unhelpful. Two things bound it: the `Comparison` control is still rendered above the
+empty state, so the state is visibly attached to a revision the viewer chose, and D15.4's accepted
+`403`/`500` consequence is *reduced* by this reversal rather than worsened — the description was the
+part that named a cause which, for a genuine failure, would have been the wrong one. A bare title
+asserts only absence, which is true in every case that reaches this branch.
+
 ## Risks / Trade-offs
 
 - **D3 contradicts one sentence of the proposal.** → It is called out here and in the return, so EM
@@ -761,7 +1198,10 @@ rather than by the route being unreachable:
 2. the detail-page resolver skips its third fallback (`isValueTruthy(process.env.ANALYTICS_ENABLED)`,
    server-side — D8);
 3. the table detail view renders no tab strip and no Audit tab (client flag — D12; the same
-   condition also hides the tab on a non-active table whatever the flag says).
+   condition also hides the tab on a non-active table whatever the flag says);
+4. the pipeline detail view renders no tab strip and no Audit tab (client flag — D14.2; there is no
+   second condition, and `/pipelines/{name}` is no more route-guarded on the flag than
+   `/tables/{name}` is).
 
 Condition 3 is load-bearing and was previously assumed away: `/tables/{name}` has **no** feature-flag
 guard, so a bookmarked link renders the detail view on an analytics-disabled install. A hidden menu

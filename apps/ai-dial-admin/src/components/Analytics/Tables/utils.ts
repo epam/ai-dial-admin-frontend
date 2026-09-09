@@ -13,6 +13,8 @@ import {
   AnalyticsTable,
   AnalyticsTableColumn,
   AnalyticsTableType,
+  Cardinality,
+  DraftSchemaDto,
 } from '@/src/models/analytics/table';
 import {
   ColumnEditValues,
@@ -49,6 +51,15 @@ export const createColumnRow = (): ColumnRow => ({
   nullable: false,
   sensitive: false,
 });
+
+export const getSourceColumnNames = (columns: ColumnRow[]): string[] => {
+  const seen = new Set<string>();
+  columns.forEach((c) => {
+    const s = c.source_name.trim();
+    if (s) seen.add(s);
+  });
+  return [...seen];
+};
 
 export const getTemporalColumnNames = (columns: ColumnRow[]): string[] => {
   const seen = new Set<string>();
@@ -219,6 +230,40 @@ export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
         ...(r.sensitive ? { sensitive: true } : {}),
       };
     });
+
+// The schema body a draft's column-by-column surface would submit. Pure and callable on *any* form, not
+// just the live one, so the same builder can be applied to a freshly seeded baseline form and the two
+// DTOs compared — which is how `useDraftSchemaForm` decides `isChanged`. Comparing the forms themselves
+// cannot work: `createDraftSchemaForm` mints a new `ColumnRow.id` on every call, so a re-derived
+// baseline form never deep-equals the live one (design.md D9).
+export const buildDraftSchemaDto = (form: DraftSchemaForm, type: AnalyticsTableType): DraftSchemaDto => {
+  const columns = toTableColumns(form.columns);
+
+  if (type !== AnalyticsTableType.Source) {
+    return {
+      columns,
+      ...(form.grainKey.trim() ? { grain_key: form.grainKey.trim() } : {}),
+      cardinality: Cardinality.ZeroOrOne,
+    };
+  }
+
+  const sourceNames = getSourceColumnNames(form.columns);
+  const orderingKey = form.orderingKey.filter((k) => sourceNames.includes(k));
+
+  return {
+    columns,
+    ...(orderingKey.length ? { ordering_key: orderingKey } : {}),
+    ...(form.partitionColumn && form.granularity && getTemporalColumnNames(form.columns).includes(form.partitionColumn)
+      ? { partition_by: { column: form.partitionColumn, granularity: form.granularity } }
+      : {}),
+    ...(form.identityColumn && getIdentityColumnNames(form.columns).includes(form.identityColumn)
+      ? { identity_column: form.identityColumn }
+      : {}),
+    ...(form.versionColumn && getVersionColumnNames(form.columns).includes(form.versionColumn)
+      ? { version_column: form.versionColumn }
+      : {}),
+  };
+};
 
 // A type-shaped placeholder value for the write-rows template, so the example stays valid JSON for the
 // column's actual type instead of always suggesting a string (which the backend would reject for e.g. a

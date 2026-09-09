@@ -6,6 +6,7 @@
 scripts/.agent-docs-fixtures*
 
 .github
+.ort.yml
 .claude
 .cursor
 openspec
