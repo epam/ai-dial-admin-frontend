@@ -72,6 +72,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const modalSize = hasRelatedArtefacts(view) ? PopupSize.Md : PopupSize.Sm;
 
   const [selectedVersion, setSelectedVersion] = useState(entity?.version);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const isRemovingRef = useRef(false);
 
   const name = useMemo(() => {
     if (view === ApplicationRoute.Datasets) return entity.name;
@@ -115,6 +117,12 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [existingVersions, t]);
 
   const onConfirmRemoving = useCallback(() => {
+    if (isRemovingRef.current) {
+      return;
+    }
+    isRemovingRef.current = true;
+    setIsRemoving(true);
+
     let entityKeys: string[];
 
     if (!selectedVersion) {
@@ -161,9 +169,14 @@ const DeleteConfirmationModal = <T extends Artefact>({
             router.push(view);
           }
           router.refresh();
+        } else {
+          isRemovingRef.current = false;
+          setIsRemoving(false);
         }
       })
       .catch((error) => {
+        isRemovingRef.current = false;
+        setIsRemoving(false);
         showNotification(getErrorNotification(error.message));
       });
   }, [
@@ -196,6 +209,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
       onClose={onCloseModal}
       size={modalSize}
       confirmLabel={t(ButtonsI18nKey.Delete)}
+      isLoading={isRemoving}
     >
       <div className="flex flex-col gap-y-4 px-6 py-2 size-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>

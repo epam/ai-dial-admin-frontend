@@ -17,18 +17,15 @@ import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
-import { getActivities, getDeploymentActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import {
-  getActivityAuditColumns,
-  getAuditActivityHref,
-  getDeploymentActivityAuditColumns,
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
   processActivitiesData,
 } from '@/src/components/ActivityAudit/List/utils';
+import { ACTIVITY_AUDIT_VIEW_CONFIG } from '@/src/components/ActivityAudit/List/view-config';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -39,6 +36,7 @@ import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, EXPANDER_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, CompareI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -50,6 +48,9 @@ import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 import { clearAuditListPreselect, readAuditListPreselect } from '@/src/utils/audit-list-preselect';
+import { isResourceIdInTableScope } from '@/src/utils/audit/analytics-resource-id';
+import { filterOutDeletedTableChildren, getUnresolvedParentIds } from '@/src/utils/audit/deleted-parent-suppression';
+import { getEntityAuditFilters } from '@/src/utils/audit/entity-audit-filters';
 import {
   needsDeploymentLifecycleCheck,
   resolveDeploymentRollbackBlockReason,
@@ -97,6 +98,7 @@ const ActivityAuditList: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { featureFlags } = useAppContext();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -121,9 +123,13 @@ const ActivityAuditList: FC<Props> = ({
     return viewMode ?? ActivityAuditView.Config;
   });
   const effectiveViewType = viewMode ?? activityViewType;
+  const viewConfig = ACTIVITY_AUDIT_VIEW_CONFIG[effectiveViewType];
   const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
   const hasAppliedPreselectRef = useRef(false);
   const childrenCacheRef = useRef<Record<string, DialActivity[]>>({});
+  // Activities resolved during one list pass, keyed by their own identifier: every fetched row
+  // plus every parent the suppression lookup answered for.
+  const resolvedActivitiesRef = useRef<Record<string, DialActivity>>({});
   const rowBufferRef = useRef<DialActivity[]>([]);
   const apiPageRef = useRef(0);
   const apiExhaustedRef = useRef(false);
@@ -138,22 +144,26 @@ const ActivityAuditList: FC<Props> = ({
 
   const openInNewTab = useCallback(
     (activity?: DialActivity) => {
-      if (effectiveViewType === ActivityAuditView.Deployments && !isDeploymentManagerResource(activity?.resourceType)) {
+      if (!viewConfig.isRowNavigable(activity?.resourceType)) {
         return;
       }
       onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
     },
-    [effectiveViewType],
+    [viewConfig],
   );
 
   const openInNewTabForEntity = useCallback(
     (activity?: DialActivity) => {
-      const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, activity?.activityId);
+      const href = viewConfig.getEntityActivityHref({
+        entity,
+        entityType: entityType as ActivityAuditResourceType,
+        activityId: activity?.activityId,
+      });
       if (href) {
         window.open(href, '_blank');
       }
     },
-    [entity, entityType],
+    [entity, entityType, viewConfig],
   );
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
@@ -171,7 +181,10 @@ const ActivityAuditList: FC<Props> = ({
       .finally(() => setIsCheckingState(false));
   }, []);
 
-  const isDeploymentsView = effectiveViewType === ActivityAuditView.Deployments;
+  // The analytics entity feed is requested with a `co` (substring) match on the table name, so it
+  // also answers with a similarly named table's rows — they are dropped before the row buffer.
+  const analyticsTableScope =
+    effectiveViewType === ActivityAuditView.Analytics && entity ? getEntityAuditFilterId(entity) : void 0;
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -183,6 +196,7 @@ const ActivityAuditList: FC<Props> = ({
           apiPageRef.current = 0;
           apiExhaustedRef.current = false;
           childrenCacheRef.current = {};
+          resolvedActivitiesRef.current = {};
         }
 
         const actualTimeRange = isCustom
@@ -191,24 +205,54 @@ const ActivityAuditList: FC<Props> = ({
         gridApi?.setGridOption('loading', true);
         const sorts = getRequestSorts(params.sortModel);
         const filters = [
-          ...(entity
-            ? [
-                {
-                  column: 'resourceId',
-                  value: getEntityAuditFilterId(entity),
-                  operator: FilterOperatorDto.EQUALS,
-                } as FilterDto,
-                {
-                  column: RESOURCE_TYPE_COLUMN,
-                  value: entityType,
-                  operator: FilterOperatorDto.EQUALS,
-                } as FilterDto,
-              ]
-            : []),
+          ...getEntityAuditFilters(entity, entityType, effectiveViewType),
           ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
-        const fetchActivities = isDeploymentsView ? getDeploymentActivities : getActivities;
+        const { fetchActivities, hasParentChildAggregation, hasDeletedParentSuppression } = viewConfig;
+
+        /**
+         * The rows of a page the list should show, once the per-column children of a table
+         * deletion have been dropped.
+         *
+         * A child row carries only `parentActivityId`, so the parent has to be held to tell a
+         * column of a deleted table from a column dropped out of a living one. Every row of the
+         * page is cached first — a parent that arrived in the same page then costs nothing, the
+         * common case — and the page's remaining parents are asked for in one request carrying no
+         * other filter, because a `Resource type` filter the reader applied would otherwise hide
+         * the very parent being resolved. One request is enough: a page holds at most `PAGE_SIZE`
+         * rows and therefore at most `PAGE_SIZE` distinct parent identifiers.
+         *
+         * Fail-open in both directions: a rejected lookup leaves the page's parents unresolved
+         * rather than failing the grid, and an unresolved parent leaves its child listed.
+         */
+        const getListedRows = async (pageRows: DialActivity[]): Promise<DialActivity[]> => {
+          pageRows.forEach((row) => {
+            resolvedActivitiesRef.current[row.activityId] = row;
+          });
+
+          const unresolvedParentIds = getUnresolvedParentIds(pageRows, resolvedActivitiesRef.current);
+
+          if (unresolvedParentIds.length > 0) {
+            try {
+              const parentsRes = await fetchActivities(PAGE_SIZE, 0, sorts, [
+                {
+                  column: 'activityId',
+                  value: unresolvedParentIds.join(','),
+                  operator: FilterOperatorDto.INCLUDES,
+                },
+              ]);
+              parentsRes?.data.forEach((parent) => {
+                resolvedActivitiesRef.current[parent.activityId] = parent;
+              });
+            } catch {
+              // Deliberately swallowed: hiding a row on the absence of evidence is the failure
+              // mode an audit surface must not have, so a failed lookup shows the page instead.
+            }
+          }
+
+          return filterOutDeletedTableChildren(pageRows, resolvedActivitiesRef.current);
+        };
 
         try {
           while (rowBufferRef.current.length < endRow && !apiExhaustedRef.current) {
@@ -221,10 +265,21 @@ const ActivityAuditList: FC<Props> = ({
               break;
             }
 
-            if (isDeploymentsView || entity) {
-              rowBufferRef.current.push(...res.data);
+            const scopedRows = analyticsTableScope
+              ? res.data.filter((activity) => isResourceIdInTableScope(activity.resourceId, analyticsTableScope))
+              : res.data;
+
+            // Suppression happens here, at the same point the table-scope narrowing already
+            // drops rows: before the row buffer, so the buffer, the page boundaries and the
+            // end-of-list signal count only rows that are shown.
+            const rows = hasDeletedParentSuppression ? await getListedRows(scopedRows) : scopedRows;
+
+            // `hasParentChildAggregation` states the view's stance; entity mode has always listed
+            // rows flat whatever the view, so both conditions have to hold.
+            if (!hasParentChildAggregation || entity) {
+              rowBufferRef.current.push(...rows);
             } else {
-              const missingParentIds = res.data
+              const missingParentIds = rows
                 .filter((a) => !a.parentActivityId && !childrenCacheRef.current[a.activityId])
                 .map((a) => a.activityId);
 
@@ -257,7 +312,7 @@ const ActivityAuditList: FC<Props> = ({
                 });
               }
 
-              rowBufferRef.current.push(...processActivitiesData(res.data, childrenCacheRef.current));
+              rowBufferRef.current.push(...processActivitiesData(rows, childrenCacheRef.current));
             }
 
             if (page + 1 >= (res?.totalPages ?? 1)) {
@@ -276,7 +331,18 @@ const ActivityAuditList: FC<Props> = ({
       },
     }),
 
-    [isCustom, timePeriod, timeRange, gridApi, entity, entityType, isDeploymentsView, resourceTypeLabelMap],
+    [
+      isCustom,
+      timePeriod,
+      timeRange,
+      gridApi,
+      entity,
+      entityType,
+      effectiveViewType,
+      viewConfig,
+      analyticsTableScope,
+      resourceTypeLabelMap,
+    ],
   );
 
   useEffect(() => {
@@ -291,6 +357,7 @@ const ActivityAuditList: FC<Props> = ({
     }
     gridApi.setFilterModel(null);
     childrenCacheRef.current = {};
+    resolvedActivitiesRef.current = {};
     gridApi.setGridOption('datasource', gridDataSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveViewType]);
@@ -326,12 +393,12 @@ const ActivityAuditList: FC<Props> = ({
     rowClassRules: {
       'ag-activity-row-clickable': (params) => {
         const data = params.data as DialActivity & { children?: DialActivity[] };
-        if (isDeploymentsView && !isDeploymentManagerResource(data?.resourceType)) return false;
+        if (!viewConfig.isRowNavigable(data?.resourceType)) return false;
         return !data?.children?.length;
       },
     },
     onCellClicked: (e) => {
-      if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
+      if (!viewConfig.isRowNavigable(e.data?.resourceType)) {
         return;
       }
       if (e.data?.activityType === ActivityAuditType.Rollback || e.data?.activityType === ActivityAuditType.Import) {
@@ -351,26 +418,14 @@ const ActivityAuditList: FC<Props> = ({
   };
 
   const columnDefs = useMemo(() => {
-    if (entity) {
-      return getActivityAuditColumns(
-        t,
-        openInNewTabForEntity,
-        isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
-        void 0,
-        true,
-      );
-    }
-    if (isDeploymentsView) {
-      return getDeploymentActivityAuditColumns(t, openInNewTab, isReadOnlyAdmin ? undefined : onOpenConfirmationModal);
-    }
-    return getActivityAuditColumns(
+    const canRollback = viewConfig.hasRollback && !isReadOnlyAdmin;
+    return viewConfig.getColumns({
       t,
-      openInNewTab,
-      isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
-      void 0,
-      void 0,
-    );
-  }, [entity, isDeploymentsView, t, openInNewTab, openInNewTabForEntity, isReadOnlyAdmin, onOpenConfirmationModal]);
+      open: entity ? openInNewTabForEntity : openInNewTab,
+      onRollback: canRollback ? onOpenConfirmationModal : void 0,
+      isSingleEntity: !!entity,
+    });
+  }, [entity, viewConfig, t, openInNewTab, openInNewTabForEntity, isReadOnlyAdmin, onOpenConfirmationModal]);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
@@ -467,25 +522,32 @@ const ActivityAuditList: FC<Props> = ({
     setActivityViewType(val);
   }, []);
 
-  const activityViewOptions = useMemo(
-    () => [
+  // The Analytics option is absent — not disabled — when the feature is off, so an installation
+  // without analytics never issues a request to the analytics activity feed.
+  const activityViewOptions = useMemo(() => {
+    const options = [
       { value: ActivityAuditView.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
       { value: ActivityAuditView.Deployments, label: t(TelemetryI18nKey.ActivityViewDeployments) },
-    ],
-    [t],
-  );
+    ];
+
+    if (featureFlags.analyticsEnabled) {
+      options.push({ value: ActivityAuditView.Analytics, label: t(TelemetryI18nKey.ActivityViewAnalytics) });
+    }
+
+    return options;
+  }, [t, featureFlags.analyticsEnabled]);
 
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
       <ListView
-        key={!entity ? activityViewType : void 0}
+        key={!entity ? effectiveViewType : void 0}
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
         title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
         onGridReady={onGridReady}
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
-        storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${activityViewType.toLowerCase()}` : void 0}
+        storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${effectiveViewType.toLowerCase()}` : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           {entity && (
@@ -526,6 +588,11 @@ const ActivityAuditList: FC<Props> = ({
             </div>
           )}
 
+          {/*
+            The page-level system rollback is a Config-view affordance, not a per-view one: the
+            Deployments view declares `hasRollback` (its rows offer a rollback) and has never
+            rendered this button, so the view identity — not the config flag — is the condition.
+          */}
           {!entity && !isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,3 +1,4 @@
+import { ColDef, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
 import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { getTestCaseColumns, getSchemaFieldGridColumns, getValidityStatusColumn } from '../columns';
@@ -7,6 +8,15 @@ import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { GridRowType } from '@/src/types/grid-row-type';
+
+// `ColDef.valueGetter` is `string | ValueGetterFunc`, so it cannot be called through the union.
+const valueGetterOf = (column?: ColDef): ValueGetterFunc => {
+  const valueGetter = column?.valueGetter;
+  if (typeof valueGetter !== 'function') {
+    throw new Error(`column ${column?.field} has no valueGetter function`);
+  }
+  return valueGetter;
+};
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
   name,
@@ -132,9 +142,9 @@ describe('getTestCaseColumns', () => {
     const promptColumn = result.find((column) => column.field === 'prompt');
 
     expect(promptColumn).toBeDefined();
-    expect(promptColumn?.valueGetter?.({ data: { prompt: 'fallback value', data: undefined } } as never)).toBe(
-      'fallback value',
-    );
+    expect(
+      valueGetterOf(promptColumn)({ data: { prompt: 'fallback value', data: undefined } } as ValueGetterParams),
+    ).toBe('fallback value');
   });
 });
 

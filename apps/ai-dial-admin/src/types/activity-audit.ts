@@ -28,6 +28,7 @@ export enum ActivityAuditType {
 export enum ActivityAuditView {
   Config = 'Config',
   Deployments = 'Deployments',
+  Analytics = 'Analytics',
 }
 
 export enum ActivityAuditResourceType {
@@ -54,6 +55,10 @@ export enum ActivityAuditResourceType {
   INTERCEPTOR_IMAGE_DEFINITION = 'InterceptorImageDefinition',
   MCP_IMAGE_DEFINITION = 'McpImageDefinition',
   IMAGE_BUILD_DOMAIN_WHITELIST = 'ImageBuildDomainWhitelist',
+  TABLE = 'Table',
+  TABLE_COLUMN = 'TableColumn',
+  PIPELINE = 'Pipeline',
+  SAVED_QUERY = 'SavedQuery',
 }
 
 const IMAGE_DEFINITION_RESOURCE_TYPES = new Set<string>([
@@ -70,6 +75,13 @@ const CONTAINER_DEPLOYMENT_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.MCP_DEPLOYMENT,
   ActivityAuditResourceType.NIM_DEPLOYMENT,
   ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
+]);
+
+const ANALYTICS_RESOURCE_TYPES = new Set<string>([
+  ActivityAuditResourceType.TABLE,
+  ActivityAuditResourceType.TABLE_COLUMN,
+  ActivityAuditResourceType.PIPELINE,
+  ActivityAuditResourceType.SAVED_QUERY,
 ]);
 
 const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
@@ -89,3 +101,5 @@ export const isContainerDeploymentResource = (type?: string): boolean =>
 
 export const isDeploymentManagerResource = (type?: string): boolean =>
   !!type && DEPLOYMENT_MANAGER_RESOURCE_TYPES.has(type);
+
+export const isAnalyticsResource = (type?: string): boolean => !!type && ANALYTICS_RESOURCE_TYPES.has(type);

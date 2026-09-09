@@ -20,6 +20,11 @@ describe('Run status :: getStatusLabel', () => {
     expect(result).toBe('Runs.Status.Running');
   });
 
+  test('correct label for CANCELLED status', () => {
+    const result = getStatusLabel(RunStatus.CANCELLED, mockT);
+    expect(result).toBe('Runs.Status.Cancelled');
+  });
+
   test('returns empty string for unknown status', () => {
     const result = getStatusLabel('UNKNOWN' as RunStatus, mockT);
     expect(result).toBe('');

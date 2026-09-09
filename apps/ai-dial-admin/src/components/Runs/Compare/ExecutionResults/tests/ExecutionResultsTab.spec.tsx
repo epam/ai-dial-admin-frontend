@@ -7,6 +7,7 @@ import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models
 import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 
 import ExecutionResultsTab from '../ExecutionResultsTab';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
@@ -27,6 +28,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 const defaultRunProps = {
   primaryRunName: 'Run #316',
   comparedRunName: 'Run #317',
+  onlyMatchingTestCases: false,
 };
 
 const defaultDisplayPanelProps = {
@@ -64,6 +66,9 @@ const ControlledExecutionResultsTab: FC<
         executionResultsState={executionResultsState}
         setExecutionResultsState={setExecutionResultsState}
         {...props}
+        // after the spread: `props` is a `Partial`, so it would otherwise widen a required prop to
+        // `boolean | undefined`
+        onlyMatchingTestCases={props.onlyMatchingTestCases ?? false}
       />
     </div>
   );
@@ -98,7 +103,7 @@ describe('ExecutionResultsTab', () => {
             testCaseId: 'tc-1',
             responseStatusCode: 200,
             runIndex: 0,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 1',
             metricValues: {
               Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
@@ -109,7 +114,7 @@ describe('ExecutionResultsTab', () => {
             testCaseId: 'tc-2',
             responseStatusCode: 200,
             runIndex: 1,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 2',
             metricValues: {
               Accuracy: { precision: 0.7 },
@@ -141,7 +146,7 @@ describe('ExecutionResultsTab', () => {
         testCaseId: 'tc-1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         testCaseName: 'Test Case 1',
         metricValues: { Accuracy: { precision: 0.5 } },
       },
@@ -312,7 +317,7 @@ describe('ExecutionResultsTab', () => {
         testCaseName: 'Test Case 1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         metricValues: { Accuracy: { precision: 0.5 } },
         _compared: null,
       },

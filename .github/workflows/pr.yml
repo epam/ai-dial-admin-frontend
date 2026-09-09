@@ -34,8 +34,43 @@ jobs:
       - name: Validate agent configuration
         run: npm run validate:agent-docs
 
+  # Types are the one thing neither `npm run lint` nor vitest sees: eslint ignores `*.spec.ts(x)` and
+  # vitest strips types through esbuild. The app project is a hard gate at zero errors. The spec project
+  # is reported only — it still carries the errors catalogued in
+  # openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md, and this step exits
+  # 0 on purpose so those never turn a PR red. Whoever removes the last one should make it a gate too.
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Typecheck app source
+        run: npm run typecheck
+      - name: Report spec-file type errors
+        run: |
+          npm run --silent typecheck:specs > spec-typecheck.log 2>&1 || true
+          count=$(grep -c 'error TS' spec-typecheck.log || true)
+          {
+            echo "## Spec-file type errors: ${count}"
+            echo
+            echo "Reported, not gated. \`npm run typecheck:specs\` from the repository root reproduces this."
+            echo
+            echo "### Files with the most errors"
+            echo '```'
+            grep -oE '^[^(]*\.(ts|tsx)' spec-typecheck.log | sort | uniq -c | sort -rn | head -15 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+
   run_tests:
-    uses: epam/ai-dial-ci/.github/workflows/node_pr.yml@4.10.0
+    uses: epam/ai-dial-ci/.github/workflows/node_pr.yml@4.11.0
     secrets: inherit
     with:
       node-version: 24

@@ -13,6 +13,7 @@ import {
   getTopics,
   numberValueFormatter,
   priceValueFormatter,
+  ResourceTypeLabelMap,
   sourceTypeFormatter,
   sourceValueFormatter,
   toNumberOrNull,
@@ -21,6 +22,7 @@ import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import en from '@/src/locales/en';
 
 const t = (s: string) => s;
 
@@ -99,6 +101,26 @@ describe('Formatters :: getFormattedResourceType', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, t);
     expect(res).toBe(EntitiesI18nKey.GlobalFirewall);
   });
+
+  test('returns the Table label for the analytics Table resource type', () => {
+    expect(getFormattedResourceType(ActivityAuditResourceType.TABLE, t)).toBe(EntitiesI18nKey.Table);
+  });
+
+  test('returns the Table column label for the analytics TableColumn resource type', () => {
+    expect(getFormattedResourceType(ActivityAuditResourceType.TABLE_COLUMN, t)).toBe(
+      EntitiesI18nKey.AnalyticsTableColumn,
+    );
+  });
+
+  test('returns the Pipeline label for the analytics Pipeline resource type', () => {
+    expect(getFormattedResourceType(ActivityAuditResourceType.PIPELINE, t)).toBe(EntitiesI18nKey.AnalyticsPipeline);
+  });
+
+  test('returns the Saved query label for the analytics SavedQuery resource type', () => {
+    expect(getFormattedResourceType(ActivityAuditResourceType.SAVED_QUERY, t)).toBe(
+      EntitiesI18nKey.AnalyticsSavedQuery,
+    );
+  });
 });
 
 describe('Formatters :: buildResourceTypeLabelMap', () => {
@@ -140,6 +162,118 @@ describe('Formatters :: buildResourceTypeLabelMap', () => {
     const map = buildResourceTypeLabelMap(altT);
 
     expect(map[`xx:${EntitiesI18nKey.GlobalFirewall}`.toLowerCase()]).toEqual([
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+    ]);
+  });
+});
+
+type LocaleNode = string | { [key: string]: LocaleNode };
+
+/**
+ * The label map's collision risk lives in the rendered English labels, not in the i18n keys: with the
+ * identity `t` used above, every label is a distinct key and no collision can be observed. This block
+ * therefore resolves keys through the shipped dictionary, and throws on a key it cannot find, so a
+ * label whose key is missing from `en.ts` fails here rather than being silently pinned to the key.
+ */
+const translateWithEnDictionary = (key: string): string => {
+  let node: LocaleNode | undefined = en as LocaleNode;
+  for (const part of key.split('.')) {
+    node = typeof node === 'object' ? node[part] : void 0;
+  }
+  if (typeof node !== 'string') {
+    throw new Error(`Missing en locale entry for "${key}"`);
+  }
+  return node;
+};
+
+/**
+ * Mirrors `expandResourceTypeFilter` (`ActivityAudit/List/utils.tsx`), which narrows a `contains`
+ * needle to `equals` only while exactly one enum member matches. Duplicated rather than imported so
+ * that this spec stays within the constants layer; the filter transform keeps its own tests.
+ */
+const resolveNeedleToTypes = (map: ResourceTypeLabelMap, needle: string): ActivityAuditResourceType[] => {
+  const lowered = needle.toLowerCase();
+  const matched = new Set<ActivityAuditResourceType>();
+  for (const [label, types] of Object.entries(map)) {
+    if (label.includes(lowered)) {
+      for (const type of types) {
+        matched.add(type);
+      }
+    }
+  }
+  return [...matched];
+};
+
+describe('Formatters :: buildResourceTypeLabelMap — analytics additions guard', () => {
+  const labelOf = (key: EntitiesI18nKey) => translateWithEnDictionary(key).toLowerCase();
+  const buildMap = () => buildResourceTypeLabelMap(translateWithEnDictionary);
+
+  test('renders the guarded labels from the shipped en dictionary', () => {
+    expect(translateWithEnDictionary(EntitiesI18nKey.GlobalFirewall)).toBe('Global firewall');
+    expect(translateWithEnDictionary(EntitiesI18nKey.Image)).toBe('Image');
+    expect(translateWithEnDictionary(EntitiesI18nKey.ModelServingLabel)).toBe('Model serving');
+    expect(translateWithEnDictionary(EntitiesI18nKey.AdapterContainer)).toBe('Adapter container');
+    expect(translateWithEnDictionary(EntitiesI18nKey.ApplicationContainer)).toBe('Application container');
+    expect(translateWithEnDictionary(EntitiesI18nKey.InterceptorContainer)).toBe('Interceptor container');
+    expect(translateWithEnDictionary(EntitiesI18nKey.McpContainer)).toBe('MCP container');
+    expect(translateWithEnDictionary(EntitiesI18nKey.Table)).toBe('Table');
+    expect(translateWithEnDictionary(EntitiesI18nKey.AnalyticsTableColumn)).toBe('Table column');
+    expect(translateWithEnDictionary(EntitiesI18nKey.AnalyticsPipeline)).toBe('Pipeline');
+    expect(translateWithEnDictionary(EntitiesI18nKey.AnalyticsSavedQuery)).toBe('Saved query');
+  });
+
+  test('still resolves the global firewall label to exactly ImageBuildDomainWhitelist', () => {
+    expect(buildMap()[labelOf(EntitiesI18nKey.GlobalFirewall)]).toEqual([
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+    ]);
+  });
+
+  test('still resolves the image label to exactly the four image definition types', () => {
+    expect(new Set(buildMap()[labelOf(EntitiesI18nKey.Image)])).toEqual(
+      new Set([
+        ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
+        ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
+        ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
+        ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+      ]),
+    );
+  });
+
+  test('still resolves the model serving label to exactly NimDeployment and InferenceDeployment', () => {
+    expect(new Set(buildMap()[labelOf(EntitiesI18nKey.ModelServingLabel)])).toEqual(
+      new Set([ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
+    );
+  });
+
+  test('still resolves each container label to exactly one deployment type', () => {
+    const map = buildMap();
+
+    expect(map[labelOf(EntitiesI18nKey.AdapterContainer)]).toEqual([ActivityAuditResourceType.ADAPTER_DEPLOYMENT]);
+    expect(map[labelOf(EntitiesI18nKey.ApplicationContainer)]).toEqual([
+      ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
+    ]);
+    expect(map[labelOf(EntitiesI18nKey.InterceptorContainer)]).toEqual([
+      ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
+    ]);
+    expect(map[labelOf(EntitiesI18nKey.McpContainer)]).toEqual([ActivityAuditResourceType.MCP_DEPLOYMENT]);
+  });
+
+  test('gives each analytics type a label of its own, equal to no pre-existing label', () => {
+    const map = buildMap();
+
+    expect(map[labelOf(EntitiesI18nKey.Table)]).toEqual([ActivityAuditResourceType.TABLE]);
+    expect(map[labelOf(EntitiesI18nKey.AnalyticsTableColumn)]).toEqual([ActivityAuditResourceType.TABLE_COLUMN]);
+    expect(map[labelOf(EntitiesI18nKey.AnalyticsPipeline)]).toEqual([ActivityAuditResourceType.PIPELINE]);
+    expect(map[labelOf(EntitiesI18nKey.AnalyticsSavedQuery)]).toEqual([ActivityAuditResourceType.SAVED_QUERY]);
+  });
+
+  test('keeps the Global Firewall audit shortcut narrowing to one type', () => {
+    const shortcutNeedle = getFormattedResourceType(
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      translateWithEnDictionary,
+    );
+
+    expect(resolveNeedleToTypes(buildMap(), shortcutNeedle)).toEqual([
       ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
     ]);
   });

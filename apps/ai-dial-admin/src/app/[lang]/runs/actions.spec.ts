@@ -6,6 +6,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  cancelRun,
   exportRunPreview,
   getRun,
   getRunResults,
@@ -63,6 +64,25 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(runsApi.removeRun).toHaveBeenCalledWith('run-id', TOKEN_MOCK);
     expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should call cancelRun action and return server action response on success', async () => {
+    (runsApi.cancelRun as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await cancelRun('run-id');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(runsApi.cancelRun).toHaveBeenCalledWith('run-id', TOKEN_MOCK);
+    expect(result).toEqual(RESPONSE_MOCK);
+  });
+
+  test('Should call cancelRun action and propagate an error response', async () => {
+    const errorResponse = { success: false, errorHeader: 'Error', errorMessage: 'Run already completed' };
+    (runsApi.cancelRun as any).mockResolvedValue(errorResponse);
+
+    const result = await cancelRun('run-id');
+
+    expect(result).toEqual(errorResponse);
   });
 
   test('Should call getRunResults action and return extraction results', async () => {
