@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialLoader,
@@ -47,6 +47,7 @@ const AddMetricModal: FC<Props> = ({
   metricDeclarations,
 }) => {
   const t = useI18n();
+  const prevSelectedMetricIdRef = useRef<string>(undefined);
 
   const isEditMode = !!editingMetric;
   const [currentStepId, setCurrentStepId] = useState<string>(
@@ -113,9 +114,13 @@ const AddMetricModal: FC<Props> = ({
     ? t(TestSuitesI18nKey.ConditionSystemFunctionUnavailable)
     : undefined;
 
+  const newMetricSelected =
+    currentStepId === MetricStep.AddMetric && prevSelectedMetricIdRef.current !== selectedMetricId;
+
   const isStep1Valid = !!selectedMetricId;
   const isStep2Valid =
     !conditionError &&
+    !newMetricSelected &&
     (isJsonView
       ? true
       : validateMetricBindings(
@@ -151,6 +156,22 @@ const AddMetricModal: FC<Props> = ({
     }
   }, [condition, configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
+  const onMetricSelect = useCallback(
+    (metricId: string) => {
+      prevSelectedMetricIdRef.current = selectedMetricId;
+      setSelectedMetricId(metricId);
+    },
+    [selectedMetricId],
+  );
+
+  const onStepChange = useCallback(
+    (step: string) => {
+      if (step === MetricStep.Configuration) prevSelectedMetricIdRef.current = selectedMetricId;
+      setCurrentStepId(step);
+    },
+    [selectedMetricId],
+  );
+
   return (
     <DialPopup
       onClose={onClose}
@@ -170,7 +191,7 @@ const AddMetricModal: FC<Props> = ({
           <StepperModalButtons
             steps={steps}
             currentStep={steps.find((s) => s.id === currentStepId)}
-            onChangeStep={setCurrentStepId}
+            onChangeStep={onStepChange}
             onFinishClick={onFinishClick}
             onClose={onClose}
           />
@@ -178,13 +199,7 @@ const AddMetricModal: FC<Props> = ({
       }
     >
       <div className="h-full flex flex-col min-h-0 px-6 py-4">
-        {!isEditMode && (
-          <DialSteps
-            steps={steps}
-            currentStep={currentStepId}
-            onChangeStep={(step) => setCurrentStepId(step as MetricStep)}
-          />
-        )}
+        {!isEditMode && <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onStepChange} />}
 
         <div className={classNames('flex-1 min-h-0 overflow-auto', { 'mt-4': !isEditMode })}>
           {currentStepId === MetricStep.AddMetric && isMetricDeclarationsLoading && <DialLoader size={44} />}
@@ -194,7 +209,7 @@ const AddMetricModal: FC<Props> = ({
               metrics={metricDeclarations || []}
               selectedMetricId={selectedMetricId}
               columnOrder={metricColumnOrder}
-              onSelectMetric={setSelectedMetricId}
+              onSelectMetric={onMetricSelect}
               onChangeColumnOrder={setMetricColumnOrder}
             />
           )}
