@@ -1,16 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
+  buildDraftSchemaDto,
   createDraftSchemaForm,
   getColumnRowErrors,
   getIdentityColumnNames,
+  getSourceColumnNames,
   getTemporalColumnNames,
   getVersionColumnNames,
   hasColumnRowErrors,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { AnalyticsTable, AnalyticsTableType, Cardinality, DraftSchemaDto } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, DraftSchemaDto } from '@/src/models/analytics/table';
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 type Translate = (key: string, args?: Record<string, string | number>) => string;
 
@@ -29,6 +32,11 @@ interface UseDraftSchemaFormReturn {
   scanPairIncomplete: boolean;
   canMaterialize: boolean;
   buildDto: () => DraftSchemaDto;
+  // The DTO the table's stored definition yields — what the live one is compared against, and what the
+  // detail view seeds its JSON document from.
+  baselineDto: DraftSchemaDto;
+  isChanged: boolean;
+  reset: () => void;
 }
 
 export const useDraftSchemaForm = (
@@ -66,14 +74,7 @@ export const useDraftSchemaForm = (
       return next;
     });
 
-  const sourceNames = useMemo(() => {
-    const seen = new Set<string>();
-    form.columns.forEach((c) => {
-      const s = c.source_name.trim();
-      if (s) seen.add(s);
-    });
-    return [...seen];
-  }, [form.columns]);
+  const sourceNames = useMemo(() => getSourceColumnNames(form.columns), [form.columns]);
   const columnOptions = sourceNames.map((s) => ({ value: s, label: s }));
 
   const temporalNames = useMemo(() => getTemporalColumnNames(form.columns), [form.columns]);
@@ -99,26 +100,23 @@ export const useDraftSchemaForm = (
     ? !invalidColumns && validColumns.length > 0 && validOrdering.length > 0 && !scanPairIncomplete
     : !invalidColumns && Boolean(form.grainKey.trim());
 
-  const buildDto = (): DraftSchemaDto =>
-    isSource
-      ? {
-          columns: validColumns,
-          ...(validOrdering.length ? { ordering_key: validOrdering } : {}),
-          ...(form.partitionColumn && form.granularity && temporalNames.includes(form.partitionColumn)
-            ? { partition_by: { column: form.partitionColumn, granularity: form.granularity } }
-            : {}),
-          ...(form.identityColumn && identityNames.includes(form.identityColumn)
-            ? { identity_column: form.identityColumn }
-            : {}),
-          ...(form.versionColumn && versionNames.includes(form.versionColumn)
-            ? { version_column: form.versionColumn }
-            : {}),
-        }
-      : {
-          columns: validColumns,
-          ...(form.grainKey.trim() ? { grain_key: form.grainKey.trim() } : {}),
-          cardinality: Cardinality.ZeroOrOne,
-        };
+  const buildDto = (): DraftSchemaDto => buildDraftSchemaDto(form, table.type);
+
+  // Baseline and reset both track `table`, while the form itself stays seeded once: `table` is state in
+  // the detail view and is refetched after a successful save, and "changed" means "what would be
+  // submitted differs from what is stored *now*" — the same state Discard restores to. Nothing here
+  // rewrites the form on its own, so a refetch can never overwrite what the author has typed; only an
+  // explicit Discard calls `reset`.
+  const baselineDto = useMemo(() => buildDraftSchemaDto(createDraftSchemaForm(table), table.type), [table]);
+
+  // Built DTOs, never the forms: `createDraftSchemaForm` mints a fresh `ColumnRow.id` per call, so a
+  // form-to-form comparison would report a change that never goes away (design.md D9).
+  const isChanged = useMemo(
+    () => !isEqualSkippingUndefined(buildDraftSchemaDto(form, table.type), baselineDto),
+    [form, table.type, baselineDto],
+  );
+
+  const reset = useCallback(() => setForm(createDraftSchemaForm(table)), [table]);
 
   return {
     form,
@@ -133,5 +131,8 @@ export const useDraftSchemaForm = (
     scanPairIncomplete,
     canMaterialize,
     buildDto,
+    baselineDto,
+    isChanged,
+    reset,
   };
 };
