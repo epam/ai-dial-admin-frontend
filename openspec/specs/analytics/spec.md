@@ -1511,6 +1511,74 @@ A saved query SHALL be deletable from the Queries grid's row actions menu, behin
 - **THEN** a success notification is shown
 - **AND** the query is no longer listed
 
+### Requirement: Duplicate a query
+
+A saved query SHALL be duplicable from the Queries grid's row actions menu. Activating Duplicate SHALL
+open a modal that reuses the same field set as the create and edit modals — a **required** name and an
+optional description and tag — so the three cannot diverge. A blank name SHALL block submission. The
+service places no uniqueness constraint on a saved query's name, so a name already in use SHALL NOT
+block submission and SHALL NOT be pre-checked against the existing list.
+
+The modal SHALL be seeded from the source query: its description and tag SHALL be carried over, and the
+name SHALL be pre-filled with the source's name plus a copy suffix, so submitting without editing
+produces a distinguishable copy rather than an identical one.
+
+Submission SHALL create a **new** saved query. The copy SHALL carry the source's body, time intent,
+result view, and chart configuration across unchanged; only name, description, tag, and scope SHALL come
+from the modal. The source query SHALL NOT be modified.
+
+On success the modal SHALL close, a success notification SHALL be shown, and the browser SHALL navigate
+to the new query's page, matching the behaviour of create. On failure an error notification SHALL be
+shown following the machine-error-code rules, and the modal SHALL stay open with the entered values
+intact. Because the service revalidates a body on create, a stored query whose body it no longer accepts
+SHALL fail at this point and SHALL be reported as a body refusal carrying the service's own message.
+
+#### Scenario: Duplicate is offered on a row
+
+- **WHEN** the user opens a row's actions menu in the Queries grid
+- **THEN** Duplicate is offered
+
+#### Scenario: The modal is seeded from the source
+
+- **WHEN** the user activates Duplicate on a saved query
+- **THEN** the modal opens with the source's description and tag
+- **AND** the name field holds the source's name with a copy suffix
+
+#### Scenario: Name is required
+
+- **WHEN** the duplicate modal is open and the name field is blank
+- **THEN** the submit action is disabled
+
+#### Scenario: A name already in use is accepted
+
+- **WHEN** the user submits the duplicate modal with a name another visible query already uses
+- **THEN** the submission proceeds without a uniqueness error
+
+#### Scenario: The copy carries the source's body
+
+- **WHEN** the user submits the duplicate modal
+- **THEN** the create request carries the source's body, time intent, result view, and chart unchanged
+- **AND** the metadata entered in the modal
+- **AND** the source query is left unchanged
+
+#### Scenario: Success navigates to the copy
+
+- **WHEN** a duplicate succeeds
+- **THEN** a success notification is shown
+- **AND** the browser navigates to the new query's page, not the source's
+
+#### Scenario: Failure keeps the modal open
+
+- **WHEN** a duplicate fails
+- **THEN** an error notification is shown
+- **AND** the modal remains open with the entered values
+
+#### Scenario: A body the service no longer accepts fails at duplicate time
+
+- **WHEN** the user duplicates a stored query whose body the service now refuses
+- **THEN** an error notification carries the service's message together with repair guidance
+- **AND** no copy is created
+
 ### Requirement: A query page loads its stored query into the builder
 
 The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Builder seeded from the stored saved query. The page SHALL be an `async` server component gated by the same Analytics access check as the other Analytics pages, and SHALL resolve to a not-found result when the query cannot be read — the service reports a query the caller may not see as absent rather than forbidden, so the two cases SHALL be indistinguishable to the user.
