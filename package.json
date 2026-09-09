@@ -124,7 +124,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.16",
-    "vitest": "^4.1.5",
+    "vitest": "^4.1.11",
     "vitest-fetch-mock": "^0.4.5",
     "yaml": "2.8.3"
   },
