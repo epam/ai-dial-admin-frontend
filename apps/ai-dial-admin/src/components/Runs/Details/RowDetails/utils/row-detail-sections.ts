@@ -106,8 +106,28 @@ const orderExecutionFields = (rows: RowDetailField[], metaFields: RowDetailField
   ];
 };
 
-/** Execution, then metric sections, then remaining sections (stable within each group). */
-const orderRowDetailSections = (sections: RowDetailSection[]): RowDetailSection[] => {
+/** Execution, then metric sections (grid order when provided), then remaining sections. */
+const METRIC_SECTION_PREFIX = 'metric:';
+
+const sortMetricsByGridOrder = (
+  metrics: RowDetailSection[],
+  metricGroupOrder: readonly string[],
+): RowDetailSection[] => {
+  if (metricGroupOrder.length === 0) {
+    return metrics;
+  }
+  const rank = new Map(metricGroupOrder.map((groupKey, index) => [`${METRIC_SECTION_PREFIX}${groupKey}`, index]));
+  return [...metrics].sort((a, b) => {
+    const aRank = rank.get(a.key) ?? Number.MAX_SAFE_INTEGER;
+    const bRank = rank.get(b.key) ?? Number.MAX_SAFE_INTEGER;
+    return aRank - bRank;
+  });
+};
+
+const orderRowDetailSections = (
+  sections: RowDetailSection[],
+  metricGroupOrder: readonly string[] = [],
+): RowDetailSection[] => {
   const execution: RowDetailSection[] = [];
   const metrics: RowDetailSection[] = [];
   const rest: RowDetailSection[] = [];
@@ -115,19 +135,20 @@ const orderRowDetailSections = (sections: RowDetailSection[]): RowDetailSection[
   for (const section of sections) {
     if (section.key === ROW_DETAIL_EXECUTION_SECTION_KEY) {
       execution.push(section);
-    } else if (section.key.startsWith('metric:')) {
+    } else if (section.key.startsWith(METRIC_SECTION_PREFIX)) {
       metrics.push(section);
     } else {
       rest.push(section);
     }
   }
 
-  return [...execution, ...metrics, ...rest];
+  return [...execution, ...sortMetricsByGridOrder(metrics, metricGroupOrder), ...rest];
 };
 
 export const buildRowDetailSections = (
   primary: AnalyticsResult,
   compared: AnalyticsResult | null,
+  metricGroupOrder: readonly string[] = [],
 ): RowDetailSection[] => {
   const hasCompared = compared != null;
   const comparisonSections = buildComparisonSections(primary, compared, {}, [], {});
@@ -164,9 +185,7 @@ export const buildRowDetailSections = (
     };
   });
 
-  const result = orderRowDetailSections(mapped);
-
-  return result;
+  return orderRowDetailSections(mapped, metricGroupOrder);
 };
 
 export const countRowDetailDiffs = (sections: RowDetailSection[]): CompareDiffCounts => {

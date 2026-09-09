@@ -33,6 +33,14 @@ The bottom panel body SHALL render a pivot with a section-header row, a field-la
 - **WHEN** the bottom panel opens for a test case with Execution, metric, and Extracted sections
 - **THEN** the pivot shows Execution then metric sections as column groups, and one value row of truncated cell values
 
+#### Scenario: Metric section order matches the Extraction Result grid
+- **WHEN** the Extraction Result grid shows metric column groups in first-seen order (e.g. correct-capital1 before answer-conciseness)
+- **THEN** the bottom pivot metric sections appear in that same order, not alphabetically by group key
+
+#### Scenario: Metric sections stay grouped when switching rows
+- **WHEN** the bottom panel is open on a row with one metric and the user selects a row that has additional metric groups
+- **THEN** all metric sections appear together immediately after Execution, with no Test Case Data, Extracted, or Request / Response sections between them
+
 ### Requirement: Display overlay controls field visibility and order
 
 The panel header SHALL provide a Display control that opens an overlay `TreeColumnsPanel` for reordering and hiding fields/sections. By default, Execution Status, `# Run number`, HTTP, and Request / Response body fields SHALL be visible; Duration SHALL be hidden. Closing the panel SHALL discard Display session state.

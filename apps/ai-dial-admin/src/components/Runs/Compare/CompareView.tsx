@@ -32,7 +32,7 @@ import {
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { getCompareRowSelectionId, isMatchedCompareRow } from '@/src/components/Runs/View/utils';
+import { isMatchedCompareRow } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -251,23 +251,13 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => {
-      const rowSelectionId = getCompareRowSelectionId(row);
-      const selectedSelectionId = selectedRow ? getCompareRowSelectionId(selectedRow) : null;
-      const isCellClick = options != null;
       const fieldKey = options?.focusFieldKey ?? null;
-      const isSameRow = rowSelectionId != null && rowSelectionId === selectedSelectionId;
-
-      // Row re-click toggles closed; cell click on the same row never toggles.
-      if (isSameRow && !isCellClick) {
-        closeRowDetail();
-        return;
-      }
 
       setSelectedRow(row);
       setFocusFieldKey(fieldKey);
       showDetailPanel(row, detailPosition, fieldKey);
     },
-    [selectedRow, detailPosition, closeRowDetail, showDetailPanel],
+    [showDetailPanel, detailPosition],
   );
 
   useEffect(() => {

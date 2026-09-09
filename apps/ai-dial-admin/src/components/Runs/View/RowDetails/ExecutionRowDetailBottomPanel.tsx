@@ -32,6 +32,7 @@ interface Props {
   onClose: () => void;
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
+  metricGroupOrder?: readonly string[];
   className?: string;
 }
 
@@ -40,6 +41,7 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
   focusFieldKey,
+  metricGroupOrder = [],
   className,
 }) => {
   const t = useI18n();
@@ -83,8 +85,8 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!detail) return [];
-    return buildRowDetailSections(detail, null);
-  }, [detail]);
+    return buildRowDetailSections(detail, null, metricGroupOrder);
+  }, [detail, metricGroupOrder]);
 
   useEffect(() => {
     if (sections.length === 0) {
