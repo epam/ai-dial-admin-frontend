@@ -1,7 +1,7 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
-import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditView, hasChildResourceActivities } from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getEntityAuditFilterId } from '@/src/utils/open-in-new-tab';
 
@@ -15,11 +15,13 @@ const TABLE_SCOPE_RESOURCE_TYPES = [ActivityAuditResourceType.TABLE, ActivityAud
 /**
  * Build the request filters that narrow an entity Audit tab to the entity being viewed.
  *
- * `Config` and `Deployments` ask for one exact `(resourceId, resourceType)` pair. `Analytics`
- * cannot: a column activity's resource identifier is `<table>:<column>`, so an `eq` on the table
- * name would answer with the table definition's history only. It asks for both resource types
- * and a `co` (substring) match on the table name instead — which over-matches a similarly named
- * table, so rows still have to pass `isResourceIdInTableScope` before they are displayed.
+ * Almost every tab asks for one exact `(resourceId, resourceType)` pair. The exception is a tab
+ * whose resource type owns activities of another resource type — `Table`, which owns
+ * `TableColumn`: a column activity's resource identifier is `<table>:<column>`, so an `eq` on the
+ * table name would answer with the table definition's history only. Such a tab asks for both
+ * resource types and a `co` (substring) match on the entity name instead — which over-matches a
+ * similarly named table, so rows still have to pass `isResourceIdInTableScope` before they are
+ * displayed. A pipeline owns no child type, so its analytics tab asks the exact pair like the rest.
  *
  * @param {BaseEntity | DialApplicationScheme} [entity] - the entity whose Audit tab is rendered
  * @param {string} [entityType] - the entity's audit resource type
@@ -35,7 +37,7 @@ export const getEntityAuditFilters = (
     return [];
   }
 
-  if (view === ActivityAuditView.Analytics) {
+  if (view === ActivityAuditView.Analytics && hasChildResourceActivities(entityType)) {
     return [
       {
         column: RESOURCE_TYPE_COLUMN,

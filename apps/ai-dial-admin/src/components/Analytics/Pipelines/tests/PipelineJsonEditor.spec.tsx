@@ -42,6 +42,7 @@ vi.mock('@/src/context/AppContext', () => ({
     isFullAdmin: mocks.isFullAdmin.value,
     isReadOnlyAdmin: !mocks.isFullAdmin.value,
     isEnableAuth: true,
+    featureFlags: {},
   }),
 }));
 

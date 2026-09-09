@@ -83,9 +83,21 @@ deleted table is not listed*. That suppression is keyed on the **parent** activi
 child's own resource type, so a `TableColumn` activity remains a first-class row of this view whenever
 its parent is anything other than a table `Delete`.
 
-The view SHALL use the `Config` view's column set minus its row-expander column and minus the
-`Deployments` view's `Version` column, i.e. `Activity type`, `Resource type`, `Resource identifier`,
-`Time`, `Initiated`, `Activity ID`, `Parent ID`, with `Time` keeping its default descending sort.
+Wherever this view lists more than one resource type — the global page, and an entity Audit tab whose
+resource type owns child activities of another type, as `Table` owns `TableColumn` — it SHALL use the
+`Config` view's column set minus its row-expander column and minus the `Deployments` view's `Version`
+column, i.e. `Activity type`, `Resource type`, `Resource identifier`, `Time`, `Initiated`,
+`Activity ID`, `Parent ID`, with `Time` keeping its default descending sort.
+
+In an entity Audit tab whose resource type owns no child activities, the feed carries exactly one
+resource type and one resource identifier, so those two columns would repeat the same pair on every
+row. There the view SHALL instead use the single-entity column set the `Config` and `Deployments`
+entity Audit tabs already use — `Resource type` and `Resource identifier` absent, the rest as above —
+while still offering no `Rollback` row action, which no other view's single-entity set can say. Which
+of the two sets applies SHALL be decided from the tab's own resource type through one predicate over
+`ActivityAuditResourceType`, not from the view and not from the presence of an entity: the view is the
+same in both cases, and the presence of an entity is what the two cases have in common.
+
 Every row this view lists SHALL be rendered flat, at the top level: the client-side parent/child
 aggregation the `Config` view applies SHALL NOT run, and a child activity's `Parent ID` cell SHALL
 show the parent activity identifier the backend supplied. Flat rendering and the suppression of a
@@ -115,6 +127,16 @@ so resizing a column here does not disturb the `Config` or `Deployments` column 
 
 - **WHEN** the Analytics view renders
 - **THEN** the grid does not render the `Version` column
+
+#### Scenario: The column set follows the entity's resource type in an Audit tab
+
+- **GIVEN** an entity Audit tab rendering this view for a resource type that owns child activities of
+  another type
+- **WHEN** the grid renders
+- **THEN** the `Resource type` and `Resource identifier` columns are rendered
+- **AND** for a tab whose resource type owns no child activities neither of those two columns is
+  rendered
+- **AND** neither tab offers a `Rollback` row action
 
 #### Scenario: Column state is kept apart from the other views
 

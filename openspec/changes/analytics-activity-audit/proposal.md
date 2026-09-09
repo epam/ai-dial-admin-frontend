@@ -85,6 +85,33 @@ only for routes that name a DIAL deployment; those read request telemetry keyed 
 (`Telemetry/Dashboard.tsx`, `UsageLog/UsageLog.tsx`, `src/utils/telemetry.ts`) and mean nothing for a
 catalog table. The analytics Audit tab is Activities-only, exactly as the container Audit tabs are.
 
+## Follow-up: the Pipelines detail view (issue #4475)
+
+This iteration extends the Audit tab to `/pipelines/{name}` (`PipelineDetailView.tsx` +
+`PipelineDetailFrame.tsx`, `openspec/specs/analytics/pipelines/spec.md`'s "The detail page is one
+frame with a transform section chosen by kind"), which today renders one untabbed frame regardless
+of pipeline kind. It becomes a **Properties** tab (that same frame, unchanged) plus an **Audit** tab,
+reusing `EntityAudit` exactly as `TableAudit.tsx` does — `viewMode=ActivityAuditView.Analytics`,
+filtered to `resourceType=Pipeline, resourceId=<name>`.
+
+Two differences from the tables tab, both because a `Pipeline` resource has no child resource type
+the way `Table`/`TableColumn` does — its resource id is just the pipeline's name (`audit-trail`
+spec, "Every changed entity is its own activity"), never a compound one:
+
+- **No client-side narrowing.** The tables tab needs a `co` query plus a client-side exactness
+  predicate because the backend models columns as `Table`'s children and a plain `eq` would miss
+  them (design.md D3). A pipeline has no such child, so an exact `resourceId eq <name>` filter is
+  the whole query.
+- **The tab is gated on `featureFlags.analyticsEnabled` alone, with no status condition.** The
+  tables tab additionally requires `table.status === Active` because a draft table has zero columns
+  and zero audit history (design.md D12). A pipeline has no draft/pending lifecycle to mirror that:
+  the service creates it whole in a single `POST /v1/pipelines` ("The create modal collects a
+  complete pipeline of one kind in one request", `analytics/pipelines/spec.md`), so every registered
+  pipeline already carries at least one `Create` activity.
+
+Rollback is absent for the same reason as Tables: the analytics backend exposes no mutating audit
+endpoint for any resource type it tracks.
+
 ## Capabilities
 
 ### New Capabilities
@@ -103,6 +130,11 @@ spec, per `openspec/config.yaml`.
   affordances hidden in Deployments view" requirements have to account for a third option. SA decides
   whether the delta amends it in place or whether the selector's requirements move to a
   view-neutral home.
+- `analytics/pipelines` (follow-up): the pipelines sub-capability spec
+  (`openspec/specs/analytics/pipelines/spec.md`) gains a pipeline detail view tab set — Properties
+  carrying today's one frame, Audit carrying the Activities list — replacing the "one frame" framing
+  in "The detail page is one frame with a transform section chosen by kind", and states the tab's
+  gating condition (the feature flag only, no pipeline-status condition — see above).
 
 *(The precise requirement/scenario wording is the architect's, not this proposal's.)*
 
@@ -125,7 +157,8 @@ spec, per `openspec/config.yaml`.
   call site, unmodified, provided a `viewMode` fixes the fetcher. Its `entity` prop is typed
   `BaseEntity`; an `AnalyticsTable` (`src/models/analytics/table.ts`) is not one, so the adaptation
   has to happen at the call site — per the house rule, no new prop on a shared component to fit one
-  caller.
+  caller. The Pipelines follow-up gains a second such call site, projecting `Pipeline`
+  (`src/models/analytics/pipeline.ts`) the same way.
 - **Shared util — `getActivityAuditDetailData` (`src/utils/audit/get-activity-audit-detail-data.ts`)**:
   a third backend in the by-id fallback chain adds a request to the detail page's critical path for
   every activity that is not an admin one. Its existing two-step fallback is already sequential.
@@ -133,7 +166,8 @@ spec, per `openspec/config.yaml`.
   actions (Manage access / Delete table / Add columns / Add rows / Connect) and its
   draft-vs-active branch (`DraftSchemaEditor` vs the column `GridView`) both live in the body being
   moved; where those actions sit relative to the tab strip is a design decision, not a requirements
-  one.
+  one. The Pipelines follow-up restructures `PipelineDetailView.tsx` / `PipelineDetailFrame.tsx` the
+  same way, on a smaller body (one frame, no draft/active branch).
 - **New API client and server action**, no new API route: `src/server/analytics/` and
   `src/app/[lang]/activity-audit/actions.ts`. No change to any backend.
 - **No new environment variable.** `DIAL_ANALYTICS_API_URL` and `ANALYTICS_ENABLED` already exist in
@@ -141,32 +175,48 @@ spec, per `openspec/config.yaml`.
 - **i18n**: new keys for the Analytics view-selector option (beside
   `TelemetryI18nKey.ActivityViewConfig` / `ActivityViewDeployments`), the Properties/Audit tab labels
   on the tables view (`TabsI18nKey.Properties` / `TabsI18nKey.Audit` already exist), and labels for
-  the new resource types.
+  the new resource types. The Pipelines follow-up reuses the same Properties/Audit tab labels; no new
+  keys.
 - **Contexts**: none. `AppContext` already carries the flag; `NotificationContext` is untouched.
 - **Authorization**: none added. The analytics backend authorizes its activity feed at exactly the bar reading the
   catalog already requires, so anyone who can open a table's detail view can read its history.
   `useAnalyticsTablePermissions` (`src/hooks/use-analytics-table-permissions.ts`) is not consulted for
-  the Audit tab.
+  the Audit tab. Per the ADAS audit-trail spec's "Resource-specific narrowing of the audit surface",
+  a pipeline's audit surface requires exactly what reading a pipeline already requires (any mapped
+  application role) — no full-admin gate, and no new permission check in the console.
 
 ## Non-goals
 
 - **No rollback, revert or restore for analytics resources.** The analytics backend exposes no mutating audit endpoint
   and no table-rollback route; this cannot be built in the frontend, and pretending otherwise with a
   disabled control would be worse than its absence. If rollback is wanted it is a change to the analytics backend first.
-- **No Audit tab on Analytics → Pipelines or Analytics → Queries.** The analytics backend audits `Pipeline` and
-  `SavedQuery` too, so those tabs are cheap follow-ups once this lands, but the request names the
-  tables feature and each is its own detail-view restructure. Their activities do still appear in the
-  global Analytics view — the feed is not filtered down to tables, because hiding rows the backend
-  returned would make an audit surface quietly incomplete.
+- **No Audit tab on Analytics → Queries.** The analytics backend audits `SavedQuery` the same way it
+  audits `Table` and `Pipeline`, but `src/app/[lang]/queries/[id]/page.tsx` renders `QueryBuilder`
+  (`src/components/Analytics/QueryBuilder/QueryBuilder.tsx`, ~724 lines) directly — a rail-based
+  authoring surface with no tab shell and none of the `View`/`TabsContent`/`List` entity-detail-view
+  shape `TableDetailView` and `PipelineDetailView` have. Adding an Audit tab there is a restructure of
+  the query editor, not the tables-or-pipelines analogue, and is filed as its own follow-up
+  (issue #4476) rather than worked here. Saved-query activities do still appear in the global
+  Analytics view — the feed is not filtered down to tables or pipelines, because hiding rows the
+  backend returned would make an audit surface quietly incomplete.
+- **No audit surface for the enrichment control plane's evaluators.** Verbatim, from the analytics
+  backend's own `audit-trail` capability
+  (`../analytics-data-access-service/openspec/specs/audit-trail/spec.md:34-36`): "Analytics row
+  writes (`POST /v1/tables/{name}/rows`) are data-plane writes to ClickHouse and SHALL NOT be
+  audited. The enrichment control plane's evaluators — both the evaluator registry and its immutable
+  versions — are outside this capability's coverage." There is no backend activity to surface for an
+  evaluator or an evaluator version; this is not a frontend gap and is not a candidate for a further
+  follow-up.
 - **No Dashboard / Traces / Conversations sub-tabs on the analytics Audit tab.** They report DIAL
-  request telemetry keyed by a deployment name and have no meaning for a catalog table.
+  request telemetry keyed by a deployment name and have no meaning for a catalog table or a
+  pipeline.
 - **No analytics-specific diff rendering.** A table snapshot goes through the generic diff engine.
   The bespoke section shaping that `activity-audit-deployments-detail` defines for containers, images
   and the global firewall is not replicated; if a table's `columns` array reads poorly as a generic
   diff, that is a follow-up.
-- **No entity-namespaced audit detail route** (`/tables/{name}/{activityId}`). Rows open the existing
-  global `/activity-audit/{activityId}` page. The deployment feature added namespaced routes in a
-  separate change; the same split applies here.
+- **No entity-namespaced audit detail route** (`/tables/{name}/{activityId}`, `/pipelines/{name}/{activityId}`).
+  Rows open the existing global `/activity-audit/{activityId}` page. The deployment feature added
+  namespaced routes in a separate change; the same split applies here.
 - **No change to the Config or Deployments views' own behavior**, beyond the shared-code changes the
   Impact section names.
 - **No new feature flag.** `ANALYTICS_ENABLED` is the gate; no separate audit toggle.
