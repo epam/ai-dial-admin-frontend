@@ -752,6 +752,7 @@ export default {
     TimePeriod: 'Time Period: ',
     AddFilter: 'Add filter',
     Custom: 'Custom',
+    SinceCreation: 'Since Creation',
     MaxRangeDays: 'Max {days} days',
     SelectEntities: 'Select entities',
     SelectProjects: 'Select projects',

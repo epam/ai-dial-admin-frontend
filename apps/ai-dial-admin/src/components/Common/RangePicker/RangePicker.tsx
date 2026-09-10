@@ -29,7 +29,7 @@ const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
       if (!day) return;
       const next = reduce(state, day, maxDays);
       setState(next);
-      onChange(toCommit(next));
+      onChange(toCommit(next, maxDays));
     },
     [state, maxDays, onChange],
   );
