@@ -118,6 +118,14 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
         : allActionLabels.filter(
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
+    // Deliberately scoped out of this change (design.md D6) — the shared `DuplicatePlatformAsset`
+    // modal already supports a name-only entity (`hasDisplayName` is false for Routes/Roles/Keys), so
+    // nothing technical blocks it, but duplicate was not requested for Translators and can follow as
+    // its own change later, the way `catalog-keys-duplicate-action` did for Keys.
+    case ApplicationRoute.PlatformTranslators:
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
       if (isPlatformDualBucketView(view, currentPath)) {
@@ -197,6 +205,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Interceptor,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformTranslators:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Translator,
           icon: null,
         },
       ];
@@ -373,6 +389,7 @@ export const getDeleteNotificationContent = (
     }
     case ApplicationRoute.PlatformAppRunners:
     case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformTranslators:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
@@ -380,6 +397,7 @@ export const getDeleteNotificationContent = (
       const itemLabel = (() => {
         if (view === ApplicationRoute.PlatformAppRunners) return FileManagerI18nKey.AppRunner;
         if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
+        if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
         if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
         if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;

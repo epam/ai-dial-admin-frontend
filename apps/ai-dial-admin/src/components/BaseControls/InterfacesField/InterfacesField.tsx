@@ -28,7 +28,7 @@ interface Props<V extends InterfaceValue> {
   className?: string;
 }
 
-const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
+export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
   switch (type) {
     case DeploymentInterfaceType.OpenAIChatCompletions:
       return t(InterfacesI18nKey.OpenAIChatCompletions);

@@ -7,6 +7,7 @@ import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/Platform/AppRunners/CreateProperties';
 import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
+import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
@@ -70,6 +71,20 @@ const Properties = <T extends object>({
         names={props.names}
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Translator` is also a plain POJO
+  // with no `displayName`/`description` (see `TranslatorCreateProperties`'s doc comment).
+  if (view === ApplicationRoute.PlatformTranslators) {
+    return (
+      <TranslatorCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+        isModal={props.isModal}
       />
     );
   }

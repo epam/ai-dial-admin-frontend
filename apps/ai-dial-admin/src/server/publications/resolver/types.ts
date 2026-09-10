@@ -33,6 +33,7 @@ export type PublishableResourceType = Exclude<
   | ResourceType.MODEL
   | ResourceType.APP_TYPE_SCHEMA
   | ResourceType.INTERCEPTOR
+  | ResourceType.TRANSLATOR
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY

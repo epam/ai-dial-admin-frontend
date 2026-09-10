@@ -43,6 +43,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Catalog/PlatformRoutes` | `platform-routes` | — |
 | `Catalog/PlatformRoles` | `platform-roles` | — |
 | `Catalog/PlatformKeys` | `platform-keys` | — |
+| `Catalog/PlatformTranslators` | `platform-translators` | `Assets/Platform/Translators` |
 
 ### `Assets`
 | Area | Route slug | Component folder |

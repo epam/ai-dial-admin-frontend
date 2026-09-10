@@ -1,16 +1,21 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
 import { ColDef } from 'ag-grid-community';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
+import CreateEvaluatorPopup from '@/src/components/Analytics/Evaluators/CreateEvaluatorPopup';
 import { evaluatorDetailHref } from '@/src/components/Analytics/Evaluators/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { useAppContext } from '@/src/context/AppContext';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
-import { AnalyticsEvaluatorsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -24,6 +29,8 @@ interface Props {
 const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
   const t = useI18n();
   const router = useRouter();
+  const { isFullAdmin } = useAppContext();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const columns: ColDef[] = useMemo(
     () => [
@@ -54,6 +61,13 @@ const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
     <div className="relative flex w-full flex-1 flex-col min-h-0 rounded bg-layer-2 p-4">
       <div className="mb-8 flex h-[40px] flex-row items-center justify-between gap-4">
         <h1>{t(MenuI18nKey.Evaluators)}</h1>
+        {isFullAdmin && (
+          <DialPrimaryButton
+            label={t(ButtonsI18nKey.Create)}
+            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => setIsCreateOpen(true)}
+          />
+        )}
       </div>
 
       {hasLoadError && (
@@ -82,6 +96,14 @@ const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
           emptyDataProps={{ title: t(AnalyticsEvaluatorsI18nKey.NoEvaluators) }}
         />
       </div>
+
+      {isCreateOpen && (
+        <CreateEvaluatorPopup
+          existingNames={rows.map((row) => row.name)}
+          onClose={() => setIsCreateOpen(false)}
+          onCreated={() => router.refresh()}
+        />
+      )}
     </div>
   );
 };

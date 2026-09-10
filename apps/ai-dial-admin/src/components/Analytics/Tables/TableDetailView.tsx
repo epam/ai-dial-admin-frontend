@@ -15,6 +15,7 @@ import {
   DialNeutralButton,
   DialPrimaryButton,
   DialTabs,
+  ElementSize,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlugConnected } from '@tabler/icons-react';
@@ -30,7 +31,11 @@ import {
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
-import { buildDraftDocument, splitDraftDocument } from '@/src/components/Analytics/Tables/draft-document';
+import {
+  buildDraftDocument,
+  formatDraftDocument,
+  splitDraftDocument,
+} from '@/src/components/Analytics/Tables/draft-document';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
@@ -47,6 +52,7 @@ import {
   parseRowsJson,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
@@ -202,6 +208,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       const res = await defineTableSchema(name, dto);
       if (res.success) {
         showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.TableActive)));
+        // Before the reload, not after: the refreshed table reads ACTIVE, where the same toggle means
+        // the read-only definition view, and an author who just materialized belongs on the live column
+        // surface (design.md D1). Resetting first leaves no commit in which ACTIVE meets an open editor.
+        setIsEditorEnabled(false);
         await reload();
         return true;
       }
@@ -247,9 +257,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
 
   // Seeded on the first entry only. The document is the sole holder of hand-authored JSON — the column
   // form cannot represent `description`, `tag_order` or a pasted pass-through member — so re-seeding on
-  // a later entry would silently discard it.
+  // a later entry would silently discard it. An ACTIVE table's view reads `storedDocument` and never
+  // `draftDocument`, so seeding there would only be dead state for `isDocumentChanged` to compare.
   const onToggleEditor = () => {
-    if (!draftDocument) setDraftDocument(buildDraftDocument(table, draft.buildDto()));
+    if (!isActive && !draftDocument) setDraftDocument(buildDraftDocument(table, draft.buildDto()));
     setIsEditorEnabled((prev) => !prev);
   };
 
@@ -400,9 +411,47 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
     />
   );
 
-  // The two authoring surfaces are mutually exclusive; the editor is reachable only on a draft, so the
-  // active table's tabbed body below never sees it.
+  // The draft's two authoring surfaces are mutually exclusive: the toggle swaps the column-by-column
+  // surface for the editable document and back.
   const draftSurface = isEditorEnabled ? draftEditor : properties;
+
+  // The same object the memo at the top produced, handed over by reference: EntityJsonEditor keeps the
+  // last `entity` it saw and remounts Monaco for any object that is not identical to it, so a
+  // re-derivation, a clone or a spread here would remount on every parent render (design.md D3).
+  // Read-only here is a rule, not a structure: `setDraftDocument` is in scope at this call site, so
+  // nothing but discipline stops a writer prop being added. `readonly` alone is not enough — passing
+  // `setSelectedEntity`, `setIsChanged` or `onChangeText` would make this surface editable (design.md D5).
+  const definitionJson = (
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+      <EntityJsonEditor entity={storedDocument} readonly />
+    </div>
+  );
+
+  // A full JSON.stringify of the definition, re-derived only when the memoized document itself
+  // changes — not on every one of this view's many unrelated re-renders (design.md D6).
+  const copyValue = useMemo(() => formatDraftDocument(storedDocument), [storedDocument]);
+
+  const tabbedBody = (
+    <>
+      <div className="mb-6">
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+      </div>
+      {activeTab === EntityViewTab.Properties && properties}
+      {activeTab === EntityViewTab.Audit && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <TableAudit table={table} />
+        </div>
+      )}
+    </>
+  );
+
+  // With analytics disabled the Properties content is the whole body — no tab strip, and no Audit tab to
+  // issue an analytics activity request from.
+  const activeBody = featureFlags.analyticsEnabled ? tabbedBody : properties;
+  // The read-only document takes over the whole body, tab strip included, so nothing of the page is left
+  // reachable behind it. `activeTab` is untouched, which is what brings the reader back to the tab they
+  // were on when the toggle goes off.
+  const activeSurface = isEditorEnabled ? definitionJson : activeBody;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
@@ -424,7 +473,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           </div>
           {/* shrink-0 keeps the actions at their natural width, so no description length can squeeze a
               button label onto a second line; the title next to them truncates instead. */}
-          {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
+          {/* `isActive` alone, not `isActive && canConnect`: on an active table the JSON-editor toggle
+              is always in the container, so an enrichment with no source table viewed by a caller with
+              no permissions still gets a header. Every other child keeps its own gate. */}
+          {(isActive || canDelete || canWrite || canModify || canManageRoles) && (
             <div className="flex shrink-0 items-center gap-4">
               {isChangeBarShown ? (
                 <ChangedEntityButtons
@@ -466,6 +518,20 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                           iconBefore={<IconPlugConnected size={18} />}
                         />
                       )}
+                      {/* After the primary Connect, not before it: Connect stays the last action, but the
+                          toggle — and, while it is on, the copy control beside it — is now the last
+                          control. Not permission-gated here: on an active table it opens a read-only view
+                          of the stored definition and writes nothing, and a system table, which reports
+                          {write:false, modify:false} to everyone, is the one whose definition is most often
+                          read as a document. */}
+                      {isActive && isEditorEnabled && (
+                        <CopyButton
+                          valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
+                          value={copyValue}
+                          size={ElementSize.Small}
+                        />
+                      )}
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
                     </>
                   ) : (
                     canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
@@ -481,24 +547,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
         {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
       </div>
 
-      {/* One fallback for both conditions: with analytics disabled, or on a table that is not active,
-          the Properties body is the whole view — no tab strip, and no Audit tab to issue an analytics
-          activity request from. */}
-      {featureFlags.analyticsEnabled && isActive ? (
-        <>
-          <div className="mb-6">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
-          </div>
-          {activeTab === EntityViewTab.Properties && properties}
-          {activeTab === EntityViewTab.Audit && (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <TableAudit table={table} />
-            </div>
-          )}
-        </>
-      ) : (
-        draftSurface
-      )}
+      {isActive ? activeSurface : draftSurface}
 
       {confirmOpen && (
         <DialConfirmationPopup

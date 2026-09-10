@@ -137,6 +137,17 @@ describe('getGridActionLabels', () => {
   test('PlatformKeys returns no options for a read-only admin', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
   });
+
+  test('PlatformTranslators offers delete and openInNewTab but no duplicate', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('duplicate');
+  });
+
+  test('PlatformTranslators returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
+  });
 });
 
 describe('filterLatestVersions', () => {
