@@ -8,6 +8,7 @@ import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { toFileSelectPath } from '@/src/utils/files/path';
 import { EntityViewTab, getFileSelectInputTabs } from '@/src/utils/tabs/utils';
 import ApplicationFileManager from './ApplicationFileManager';
 import PublicFileManager from './PublicFileManager';
@@ -33,7 +34,8 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
   const tabs = getFileSelectInputTabs(t);
   const showTabs = !!view && !!id;
 
-  const isPublicFile = !value || value.includes('public/');
+  const filePath = toFileSelectPath(value);
+  const isPublicFile = !filePath || filePath.includes('public/');
   const [activeTab, setActiveTab] = useState(isPublicFile ? EntityViewTab.Public : EntityViewTab.Application);
 
   const onConfirm = useCallback(() => {
@@ -48,7 +50,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
         <DialInputPopup
           disabled={disabled || isReadOnlyAdmin}
           open={isModalOpen}
-          selectedValue={value}
+          selectedValue={filePath}
           onOpen={() => setIsModalOpen(true)}
           emptyValueText={t(BasicI18nKey.None)}
           inputClassName={inputClassName}
@@ -76,7 +78,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
               )}
               {activeTab === EntityViewTab.Public && (
                 <PublicFileManager
-                  value={isPublicFile ? value : ''}
+                  value={isPublicFile ? filePath : ''}
                   isModalOpen={isModalOpen}
                   onChangeSelectedFilePath={setSelectedFilePath}
                 />
@@ -84,7 +86,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
               {activeTab === EntityViewTab.Application && (
                 <ApplicationFileManager
                   id={id}
-                  value={value}
+                  value={filePath}
                   selectedFilePath={selectedFilePath}
                   onChangeSelectedFilePath={setSelectedFilePath}
                 />

@@ -116,18 +116,20 @@ export const getDeploymentActivityAuditColumns = (
  * that writes an audit record, revision or snapshot, so no rollback is offered here.
  *
  * @param {(activity: DialActivity) => void} open - open in new tab action
+ * @param {boolean} [isSingleEntity] - the list carries one resource type and one identifier
  * @returns {ColDef[]} - columns
  */
 export const getAnalyticsActivityAuditColumns = (
   t: (key: string) => string,
   open?: (activity?: DialActivity) => void,
+  isSingleEntity?: boolean,
 ): ColDef[] => {
   const actions = [];
   if (open) {
     actions.push(getOpenInNewTabOperation(open));
   }
 
-  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics), ACTION_COLUMN(actions)];
+  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity), ACTION_COLUMN(actions)];
 };
 
 /**
