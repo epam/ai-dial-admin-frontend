@@ -94,6 +94,44 @@ describe('buildRowDetailDisplayTree', () => {
     expect(merged.map(keyOf)).toEqual(['execution', 'testCaseData']);
   });
 
+  test('keeps metric sections grouped when a later row adds another metric group', () => {
+    const deepevalOnly: RowDetailSection[] = [
+      { key: 'execution', label: 'Execution', rows: [field('status', 'Status')] },
+      {
+        key: 'metric:DeepEval: Answer Relevancy',
+        label: 'DeepEval: Answer Relevancy',
+        rows: [field('score', 'score')],
+      },
+      { key: 'testCaseData', label: 'Test Case Data', rows: [field('prompt', 'Prompt')] },
+      { key: 'extractedColumns', label: 'Extracted Columns', rows: [field('answer', 'answer')] },
+      { key: 'requestResponse', label: 'Request / Response', rows: [field('requestBody', 'requestBody')] },
+    ];
+    const bothMetrics: RowDetailSection[] = [
+      { key: 'execution', label: 'Execution', rows: [field('status', 'Status')] },
+      { key: 'metric:Exact Match', label: 'Exact Match', rows: [field('exact_match', 'exact_match')] },
+      {
+        key: 'metric:DeepEval: Answer Relevancy',
+        label: 'DeepEval: Answer Relevancy',
+        rows: [field('score', 'score')],
+      },
+      { key: 'testCaseData', label: 'Test Case Data', rows: [field('prompt', 'Prompt')] },
+      { key: 'extractedColumns', label: 'Extracted Columns', rows: [field('answer', 'answer')] },
+      { key: 'requestResponse', label: 'Request / Response', rows: [field('requestBody', 'requestBody')] },
+    ];
+
+    const prev = buildRowDetailDisplayTree(deepevalOnly);
+    const merged = buildRowDetailDisplayTree(bothMetrics, prev);
+
+    expect(merged.map(keyOf)).toEqual([
+      'execution',
+      'metric:Exact Match',
+      'metric:DeepEval: Answer Relevancy',
+      'testCaseData',
+      'extractedColumns',
+      'requestResponse',
+    ]);
+  });
+
   test('preserves prev tree when sections are temporarily empty during row reload', () => {
     const prev = buildRowDetailDisplayTree(sections);
     (prev[0] as ColDefGroup).hide = true;

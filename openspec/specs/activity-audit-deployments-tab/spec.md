@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the per-entity Audit tab exposed on container deployment edit pages (Model Servings, MCP / Adapter / Application / Interceptor Containers) and on the Deployment Images edit page. The tab reuses the existing `EntityAudit` component with the Activities sub-tab only, filters the activity list to the entity's `(resourceType, resourceId)` pair via a `CONTAINER_TYPE_TO_AUDIT` mapping, forces the deployment-manager backend (`getDeploymentActivities`) through a new `viewMode` prop on `ActivityAuditList`, navigates row clicks to entity-namespaced detail pages (`/<route>/<entityName>/<activityId>`), and consolidates the global and entity-namespaced audit-detail pages on a single unified resolver at `@/src/utils/audit/get-activity-audit-detail-data`.
-
 ## Requirements
-
 ### Requirement: Audit tab appears on container deployment edit pages
 
 The deployment edit page tab set returned by `getDeploymentsViewTabs` SHALL include an Audit tab, positioned last, for the following routes: `ApplicationRoute.ModelServings`, `ApplicationRoute.McpContainers`, `ApplicationRoute.AdapterContainers`, `ApplicationRoute.ApplicationContainers`, `ApplicationRoute.InterceptorContainers`. The tab SHALL use the existing `auditTab(t)` factory and the label resolved from `TabsI18nKey.Audit`. Read-only admins SHALL be able to open the tab and read its contents (no write actions are exposed on it).
@@ -155,15 +153,27 @@ The destination page SHALL be a thin wrapper that loads the activity and revisio
 
 ### Requirement: A single unified resolver loads activity audit detail for every page
 
-The codebase SHALL contain exactly one audit-detail resolver, located at `apps/ai-dial-admin/src/utils/audit/get-activity-audit-detail-data.ts`, exporting `getActivityAuditDetailData(activityId, token): Promise<ActivityAuditDetailData>`. Every audit detail page SHALL import from this module:
+The codebase SHALL contain exactly one audit-detail resolver, located at
+`apps/ai-dial-admin/src/utils/audit/get-activity-audit-detail-data.ts`, exporting
+`getActivityAuditDetailData(activityId, token): Promise<ActivityAuditDetailData>`. Every audit detail
+page SHALL import from this module:
 
 - the global `/activity-audit/[id]/page.tsx`
-- the 6 deployment entity-namespaced `[subId]/page.tsx` wrappers (Model Servings, MCP / Adapter / Application / Interceptor Containers, Deployment Images)
-- the 10 admin entity-namespaced `[subId]/page.tsx` pages (Models, Adapters, Applications, Interceptors, Roles, Keys, Routes, Toolsets, ApplicationRunners, InterceptorTemplates)
+- the 6 deployment entity-namespaced `[subId]/page.tsx` wrappers (Model Servings, MCP / Adapter /
+  Application / Interceptor Containers, Deployment Images)
+- the 10 admin entity-namespaced `[subId]/page.tsx` pages (Models, Adapters, Applications,
+  Interceptors, Roles, Keys, Routes, Toolsets, ApplicationRunners, InterceptorTemplates)
 
-The resolver SHALL try `activityAuditApi.getActivityById` first and fall back to `deploymentAuditApi.getActivityById`, dispatch via `pickActivityHandlers` to admin / image / firewall / container handlers, and fetch the current revision, previous revision, and the entity-context snapshot in parallel via `Promise.all`. It SHALL return `{ activity, activityRevision, previousRevision, entity }`.
+The resolver SHALL try `activityAuditApi.getActivityById` first, fall back to
+`deploymentAuditApi.getActivityById`, and then — only when the analytics feature is enabled in the
+environment it runs in — fall back to `analyticsAuditApi.getActivityById`. It SHALL dispatch via
+`pickActivityHandlers` to admin / image / firewall / container / analytics handlers, and fetch the
+current revision, previous revision, and the entity-context snapshot in parallel via `Promise.all`.
+It SHALL return `{ activity, activityRevision, previousRevision, entity }`.
 
-The legacy admin-only resolver at `apps/ai-dial-admin/src/utils/audit/get-audit-activity-data.ts` SHALL be deleted, and the prior route-folder resolver `apps/ai-dial-admin/src/app/[lang]/activity-audit/[id]/resolver.ts` SHALL no longer exist.
+The legacy admin-only resolver at `apps/ai-dial-admin/src/utils/audit/get-audit-activity-data.ts`
+SHALL be deleted, and the prior route-folder resolver
+`apps/ai-dial-admin/src/app/[lang]/activity-audit/[id]/resolver.ts` SHALL no longer exist.
 
 #### Scenario: Global detail page uses the unified resolver
 
@@ -192,6 +202,13 @@ The legacy admin-only resolver at `apps/ai-dial-admin/src/utils/audit/get-audit-
 - **WHEN** the resolver runs
 - **THEN** the current revision, previous revision, and activities list are fetched concurrently via `Promise.all` rather than sequentially
 
+#### Scenario: The analytics fallback is the last step and is skipped when the feature is off
+
+- **GIVEN** an activity the admin backend resolves
+- **WHEN** the resolver runs
+- **THEN** neither the deployment-manager nor the analytics lookup is issued
+- **AND** when neither existing backend resolves the activity and the analytics feature is disabled, no analytics lookup is issued either
+
 ### Requirement: Empty state when entity has no audit history
 
 When `getDeploymentActivities` returns zero rows for the filtered `(resourceType, resourceId)` pair, the Activities list SHALL display the existing empty-state used by AG Grid in this component (no errors, no spinners after the initial load). The Audit tab SHALL remain selectable and the user SHALL be able to navigate away normally.
@@ -215,13 +232,18 @@ The Audit tab SHALL render the same time-period filter currently used by `Entity
 
 ### Requirement: `ActivityAuditList` accepts a `viewMode` prop that fixes the fetcher and hides the toggle
 
-The `ActivityAuditList` component SHALL accept an optional `viewMode?: ActivityAuditView` prop. When the prop is provided, the component SHALL:
+The `ActivityAuditList` component SHALL accept an optional `viewMode?: ActivityAuditView` prop. When
+the prop is provided, the component SHALL:
 
-- Use the supplied mode for fetcher selection (`Deployments` → `getDeploymentActivities`, `Config` → `getActivities`) and for column-set selection.
-- Hide the `Config / Deployments` view-type dropdown.
+- Use the supplied mode to select the fetcher and the column set from the single per-view lookup that
+  every view is resolved through (`Deployments` → `getDeploymentActivities`, `Config` →
+  `getActivities`, `Analytics` → `getAnalyticsActivities`).
+- Hide the view-type dropdown.
 - Ignore any internal state transitions of the view-type radio.
 
-When the prop is omitted, the component's behavior SHALL be unchanged from the existing global activity-audit page (local view-type state initialized to `Config`, dropdown rendered when no entity is present).
+When the prop is omitted, the component's behavior SHALL be unchanged from the existing global
+activity-audit page (local view-type state initialized to `Config`, dropdown rendered when no entity
+is present).
 
 #### Scenario: viewMode forces deployment-manager fetcher
 
@@ -230,9 +252,17 @@ When the prop is omitted, the component's behavior SHALL be unchanged from the e
 - **THEN** the datasource invokes `getDeploymentActivities`
 - **AND** the `View` dropdown is not rendered
 
+#### Scenario: viewMode forces the analytics fetcher
+
+- **GIVEN** `ActivityAuditList` is rendered with `viewMode={ActivityAuditView.Analytics}`
+- **WHEN** AG Grid requests a row block
+- **THEN** the datasource invokes `getAnalyticsActivities`
+- **AND** the `View` dropdown is not rendered
+
 #### Scenario: Omitting viewMode preserves global page behavior
 
 - **GIVEN** `ActivityAuditList` is rendered on `/activity-audit` with no `viewMode` prop and no `entity` prop
 - **WHEN** the page loads
-- **THEN** the `View` dropdown is rendered with exactly `Config / Deployments`
+- **THEN** the `View` dropdown is rendered with `Config` and `Deployments`, plus `Analytics` when the analytics feature is enabled
 - **AND** the initial fetcher is `getActivities` (Config view default)
+

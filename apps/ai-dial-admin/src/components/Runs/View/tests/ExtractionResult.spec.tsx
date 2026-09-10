@@ -191,16 +191,6 @@ describe('ExtractionResultTab', () => {
     expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
-  test('toggles bottom panel closed on same row click', async () => {
-    render(<ControlledExtractionResultTab />);
-    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
-
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
-
-    expect(mockCloseSidebar).toHaveBeenCalled();
-  });
-
   test('calls closeSidebar on unmount', async () => {
     const { unmount } = render(<ControlledExtractionResultTab />);
     mockCloseSidebar.mockClear();

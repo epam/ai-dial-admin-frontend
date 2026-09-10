@@ -51,8 +51,8 @@ export type DialEndpointExtraData = string | object;
 export interface DialUpstreamInterface {
   endpoint?: string;
   key?: string;
-  extraData?: DialEndpointExtraData;
-  secretExtraData?: DialEndpointExtraData;
+  extraData?: DialEndpointExtraData | null;
+  secretExtraData?: DialEndpointExtraData | null;
 }
 
 export interface DialModelEndpoint {
@@ -61,8 +61,8 @@ export interface DialModelEndpoint {
   key?: string;
   weight?: number | string;
   tier?: number | string;
-  extraData?: DialEndpointExtraData;
-  secretExtraData?: DialEndpointExtraData;
+  extraData?: DialEndpointExtraData | null;
+  secretExtraData?: DialEndpointExtraData | null;
   responsesEndpoint?: string;
   interfaces?: Record<string, DialUpstreamInterface>;
 }

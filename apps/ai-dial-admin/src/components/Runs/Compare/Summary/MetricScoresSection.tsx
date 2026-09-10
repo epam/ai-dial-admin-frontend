@@ -6,7 +6,7 @@ import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
-import { getCompareBarGroups, intersectStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
+import { getCompareBarGroups, unionStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
 import { METRIC_SCORES_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
@@ -35,7 +35,7 @@ const MetricScoresSection: FC<Props> = ({
   const t = useI18n();
 
   const statistics = useMemo(
-    () => intersectStatistics(primaryData?.statistics ?? [], comparedData?.statistics ?? []),
+    () => unionStatistics(primaryData?.statistics ?? [], comparedData?.statistics ?? []),
     [primaryData?.statistics, comparedData?.statistics],
   );
 

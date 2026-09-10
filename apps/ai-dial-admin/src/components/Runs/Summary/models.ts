@@ -13,8 +13,8 @@ export type TestCaseStatusCounts = PassFailErrorCounts;
 export interface MetricScoreGroup {
   /** Metric group — `metric_name` up to the last `.`, e.g. `aidial_rag_eval.generation`. */
   name: string;
-  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. */
-  bars: Record<string, number>;
+  /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. `null` when the metric was configured but produced no score. */
+  bars: Record<string, number | null>;
   /** The metric's own description, from its declaration; undefined until fetched. */
   description?: string;
   /** Leaf metric name (bar) → its output-field description, from the metric's `outputSchema`. */
