@@ -174,12 +174,12 @@ describe('MENU_CONFIGURATION — Assets group', () => {
   const findAssetsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Assets);
 
-  test('Skills is the last entry, immediately after Files', () => {
+  test('FoldersStorage is the last entry, immediately after Skills', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
 
-    expect(keys[keys.length - 1]).toBe(MenuI18nKey.Skills);
-    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Files);
+    expect(keys[keys.length - 1]).toBe(MenuI18nKey.FoldersStorage);
+    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Skills);
   });
 
   test('Skills links to the /skills route', () => {

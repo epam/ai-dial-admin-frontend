@@ -20,10 +20,7 @@ describe('Server :: api :: getUserInfo', () => {
 
   test('calls the admin backend security-info endpoint when DIAL_ADMIN_API_URL is set', async () => {
     vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
-    fetch.mockResponseOnce(
-      JSON.stringify({ userInfo: { id: '1', email: 'a@b.com', roles: [] } }),
-      JSON_HEADERS,
-    );
+    fetch.mockResponseOnce(JSON.stringify({ userInfo: { id: '1', email: 'a@b.com', roles: [] } }), JSON_HEADERS);
 
     const { getUserInfo } = await import('@/src/app/api/api');
     await getUserInfo(TOKEN_MOCK);
