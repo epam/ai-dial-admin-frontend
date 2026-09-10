@@ -238,6 +238,24 @@ const mergeRecordSchema = (
 ): Record<string, unknown> =>
   results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(getRecord(result) || {}) }), {});
 
+const INPUT_BINDINGS_GROUP_HEADER = 'INPUT BINDINGS';
+
+const NON_METRIC_GROUP_HEADERS = new Set([
+  ' ',
+  EXECUTION_GROUP_HEADER,
+  EXTRACTED_GROUP_HEADER,
+  INPUT_BINDINGS_GROUP_HEADER,
+]);
+
+/** Metric column-group headers in Extraction Result grid order. */
+export const getMetricGroupOrder = (colDefs: ColDef[]): string[] =>
+  colDefs
+    .filter((col) => {
+      const children = 'children' in col && col.children ? (col.children as ColDef[]) : [];
+      return children.length > 0 && col.headerName != null && !NON_METRIC_GROUP_HEADERS.has(col.headerName);
+    })
+    .map((col) => col.headerName as string);
+
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = mergeRecordSchema(results, (result) => result.testCaseData);
@@ -246,7 +264,7 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
     ...staticColumns,
     ...getMetricsColumns(metrics),
     {
-      headerName: 'INPUT BINDINGS',
+      headerName: INPUT_BINDINGS_GROUP_HEADER,
       children: getInputColumns(input, true),
     },
     {
