@@ -21,6 +21,7 @@ import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
+import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
@@ -88,6 +89,8 @@ const EvaluationListView = <T extends object>({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelRunEntity, setCancelRunEntity] = useState<Run | undefined>(undefined);
   const { showNotification } = useNotification();
+
+  useCancellingRunsPoll(gridApi, route === ApplicationRoute.Runs);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -216,7 +219,7 @@ const EvaluationListView = <T extends object>({
     }
     gridApi.forEachNode((node) => {
       if ((node.data as { id?: string } | undefined)?.id === id) {
-        node.setData({ ...node.data, status: RunStatus.CANCELLED });
+        node.setData({ ...node.data, status: RunStatus.CANCELLING });
       }
     });
   }, [cancelRunEntity, gridApi]);

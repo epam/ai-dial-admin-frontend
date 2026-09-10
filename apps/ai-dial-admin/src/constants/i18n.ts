@@ -2136,6 +2136,7 @@ export enum RunsI18nKey {
   Completed = 'Runs.Status.Completed',
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
+  Cancelling = 'Runs.Status.Cancelling',
   Cancelled = 'Runs.Status.Cancelled',
   MetricFailedText = 'Runs.MetricFailedText',
   NumericDiff = 'Runs.NumericDiff',
@@ -2188,6 +2189,8 @@ export enum RunsI18nKey {
   CancelRunModalDescription = 'Runs.CancelRunModalDescription',
   CancelRunSuccess = 'Runs.CancelRunSuccess',
   CancelRunSuccessDescription = 'Runs.CancelRunSuccessDescription',
+  CancelRunFailed = 'Runs.CancelRunFailed',
+  CancelRunFailedDescription = 'Runs.CancelRunFailedDescription',
 }
 
 export enum ExportRunI18nKey {
