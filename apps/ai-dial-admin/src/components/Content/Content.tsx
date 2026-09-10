@@ -1,7 +1,7 @@
 'use client';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getAppProcessStatus, getCoreVersions } from '@/src/app/actions';
+import { getAppProcessStatus, getBeVersion, getCoreVersions } from '@/src/app/actions';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Blackout from '@/src/components/Common/Blackout/Blackout';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
@@ -21,16 +21,15 @@ import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   children: ReactNode;
-  beVersion: string | null;
   isEnableAuth: boolean;
 }
 
 const CHECK_CORE_VERSION_INTERVAL = 60 * 1000;
 const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
-const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
+const Content: FC<Props> = ({ children, isEnableAuth }) => {
   const isTabletScreen = useIsTabletScreen();
-  const { sidebar } = useAppContext();
+  const { sidebar, featureFlags } = useAppContext();
   const isBottomSidebarOpen = sidebar.show && sidebar.position === SidebarPosition.Bottom;
   const showNotificationRef = useRef(useNotification().showNotification);
   const getReqRef = useRef(useProtectedRequest());
@@ -39,6 +38,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const t = useI18n();
 
   const [coreVersions, setCoreVersions] = useState<CoreVersions | undefined>();
+  const [beVersion, setBeVersion] = useState<string | null>(null);
 
   const checkAppStatus = useCallback((): void => {
     getReqRef.current(getAppProcessStatus).then((response) => {
@@ -56,6 +56,18 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   }, []);
 
   useEffect(() => {
+    if (!featureFlags.adminApiEnabled) {
+      return;
+    }
+
+    getBeVersion().then((version) => setBeVersion(version));
+  }, [featureFlags.adminApiEnabled]);
+
+  useEffect(() => {
+    if (!featureFlags.adminApiEnabled) {
+      return;
+    }
+
     checkAppStatus();
     statusIntervalRef.current = setInterval(() => {
       checkAppStatus();
@@ -66,9 +78,13 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         clearInterval(statusIntervalRef.current);
       }
     };
-  }, [checkAppStatus]);
+  }, [checkAppStatus, featureFlags.adminApiEnabled]);
 
   useEffect(() => {
+    if (!featureFlags.adminApiEnabled) {
+      return;
+    }
+
     checkCoreVersion();
     versionIntervalRef.current = setInterval(() => {
       checkCoreVersion();
@@ -79,7 +95,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         clearInterval(versionIntervalRef.current);
       }
     };
-  }, [checkCoreVersion]);
+  }, [checkCoreVersion, featureFlags.adminApiEnabled]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 relative overflow-hidden">
@@ -98,7 +114,9 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         <Sidebar />
       </div>
       <Sidebar slot={SidebarPosition.Bottom} />
-      <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
+      {featureFlags.adminApiEnabled && (
+        <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
+      )}
     </div>
   );
 };

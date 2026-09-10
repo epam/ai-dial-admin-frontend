@@ -28,7 +28,7 @@ Core does not serve every type on this route family to every caller — reading 
 - **THEN** the client refuses without issuing the request, rather than surfacing Core's refusal as a generic error
 
 ### Requirement: The two Core populations of one entity type are read as a union
-DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL therefore compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept.
+DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL therefore compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept. The config-file route is the admin console's own configuration surface: when the admin backend is not configured (`DIAL_ADMIN_API_URL` unset), the system SHALL skip that read and resolve it as an empty population rather than issuing the request or reporting a failure. The API-written read is unaffected by that flag and SHALL always be issued.
 
 #### Scenario: Both populations appear as options
 - **WHEN** options of a given entity type are requested for a picker
@@ -45,6 +45,16 @@ DIAL Core keeps the entities of a given type in two places, and its merged runti
 #### Scenario: Both populations failing is reported
 - **WHEN** both reads fail
 - **THEN** the caller receives a failure rather than an empty option set
+
+#### Scenario: The config-file read is skipped without the admin backend
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and options of any entity type are requested
+- **THEN** the config-file read is never issued
+- **AND** the result still contains the API-written population
+- **AND** no failure is reported for the missing config-file half
+
+#### Scenario: The config-file read runs normally with the admin backend configured
+- **WHEN** `DIAL_ADMIN_API_URL` is set and options of any entity type are requested
+- **THEN** both the API-written and config-file reads are issued, as before this change
 
 ### Requirement: The union normalises to the fields both populations provide
 The two populations do not carry the same data, and neither carries a description. The metadata route returns per-entry author and timestamps; the config-file listing returns a name and nothing else. The system SHALL normalise an option to the fields available from both — its name and its origin — rather than issuing a per-entity read to fill fields a listing omits.

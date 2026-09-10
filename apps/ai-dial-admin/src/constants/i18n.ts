@@ -219,6 +219,7 @@ export enum EntitiesI18nKey {
   OptionListUnavailable = 'Entities.OptionListUnavailable',
   OptionListPartial = 'Entities.OptionListPartial',
   GlobalInterceptorsUnavailable = 'Entities.GlobalInterceptorsUnavailable',
+  SystemPropertiesReadFailed = 'Entities.SystemPropertiesReadFailed',
   ResolvedSchemaFailed = 'Entities.ResolvedSchemaFailed',
   NoModelServings = 'Entities.NoModelServings',
   AddModel = 'Entities.AddModel',

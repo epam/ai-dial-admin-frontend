@@ -14,7 +14,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIconPath } from '@/src/utils/themes/icon-path';
-import { themesApi, utilityApi } from './api/api';
+import { getUserInfo, themesApi } from './api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +43,7 @@ export default async function RootLayout({
   if (isInvalidSession) {
     return redirect(SIGN_IN_LINK);
   }
-  const userInfo = await utilityApi.getUserInfo(token);
+  const userInfo = await getUserInfo(token);
   const themesConfig = await themesApi.getThemesConfiguration();
   const themeImages = await themesApi.getImages();
 

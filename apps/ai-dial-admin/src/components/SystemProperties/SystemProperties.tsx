@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { cloneDeep, isEqual } from 'lodash';
 
 import { updateProperties } from '@/src/app/[lang]/system-properties/actions';
 import GlobalInterceptors from '@/src/components/EntityView/Interceptors/GlobalInterceptors';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -20,13 +22,24 @@ import Header from './Header';
 interface Props {
   interceptors: DialInterceptor[];
   globalSettings: GlobalSettings | null;
-  etag: string;
+  /** Whether the server-side read found an existing settings blob — see settings-api.ts. */
+  doesSettingsExist: boolean;
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
 }
 
-const SystemProperties: FC<Props> = ({ interceptors, globalSettings, etag }) => {
+const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSettingsExist, optionWarnings }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.GlobalInterceptors);
   const [currentSettings, setCurrentSettings] = useState(cloneDeep(globalSettings));
@@ -43,6 +56,10 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, etag }) => 
   }, []);
 
   const onSave = useCallback(() => {
+    // No blob yet -> omit If-Match (create); a blob already exists -> assert existence with '*'.
+    // Core never hands back a real etag to compare against — see settings-api.ts.
+    const etag = doesSettingsExist ? DEFAULT_ETAG : undefined;
+
     updateProperties(currentSettings as GlobalSettings, etag).then((res) => {
       if (res.success) {
         showNotification(
@@ -56,7 +73,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, etag }) => 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [currentSettings, etag, router, showNotification, t]);
+  }, [currentSettings, doesSettingsExist, router, showNotification, t]);
 
   const onDiscard = useCallback(() => {
     setCurrentSettings(globalSettings);

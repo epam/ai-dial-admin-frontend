@@ -67,16 +67,20 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const MenuActionsBar = () => (
     <div className={classNames(actionsClassName, 'justify-start')}>
-      <MenuAction
-        tooltip={t(MenuI18nKey.ImportConfig)}
-        icon={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-        onClick={handleImport}
-      />
-      <MenuAction
-        tooltip={t(MenuI18nKey.ExportConfig)}
-        icon={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
-        onClick={handleExport}
-      />
+      {featureFlags.adminApiEnabled && (
+        <>
+          <MenuAction
+            tooltip={t(MenuI18nKey.ImportConfig)}
+            icon={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
+            onClick={handleImport}
+          />
+          <MenuAction
+            tooltip={t(MenuI18nKey.ExportConfig)}
+            icon={<IconUpload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
+            onClick={handleExport}
+          />
+        </>
+      )}
       <MenuAction
         tooltip={t(MenuI18nKey.SystemProperties)}
         icon={<IconWorldCog {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
@@ -112,7 +116,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
             onExport={handleExport}
             onImport={handleImport}
             onOpenProperties={openProperties}
-            showImportExport={!isReadOnlyAdmin}
+            showImportExport={!isReadOnlyAdmin && featureFlags.adminApiEnabled}
           />
         </div>
       )}

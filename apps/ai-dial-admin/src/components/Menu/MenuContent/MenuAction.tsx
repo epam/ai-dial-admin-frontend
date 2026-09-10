@@ -15,7 +15,7 @@ const MenuAction: FC<Props> = ({ tooltip, icon, onClick }) => {
     <DialTooltip tooltip={tooltip}>
       <button
         type="button"
-        aria-label="button"
+        aria-label={tooltip}
         className="p-1 rounded cursor-pointer hover:text-accent-primary hover:bg-controls-accent-alpha"
         onClick={onClick}
       >

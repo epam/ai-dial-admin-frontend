@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, utilityApi } from '@/src/app/api/api';
+import { assetApi, coreUtilityApi } from '@/src/app/api/api';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -59,11 +59,11 @@ describe('Assets conversations :: server actions', () => {
 
   test('Should call getDeployments action', async () => {
     const DEPLOYMENTS_RESPONSE_MOCK = { response: [{ reference: 'model1' }, { reference: 'model2' }] };
-    (utilityApi.getAllDeployments as any).mockResolvedValue(DEPLOYMENTS_RESPONSE_MOCK);
+    (coreUtilityApi.getAllDeployments as any).mockResolvedValue(DEPLOYMENTS_RESPONSE_MOCK);
 
     const result = await getAllDeployments();
     expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.getAllDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(coreUtilityApi.getAllDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(DEPLOYMENTS_RESPONSE_MOCK);
   });
 
