@@ -10,7 +10,13 @@ import {
   updateTableSchema,
 } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
-import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import {
+  ActionMenuOperationI18nKey,
+  AnalyticsTablesI18nKey,
+  ButtonsI18nKey,
+  EntitiesI18nKey,
+  TabsI18nKey,
+} from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
@@ -32,10 +38,27 @@ vi.mock('@/src/components/Analytics/Tables/TableAudit', () => ({
   },
 }));
 
-// Monaco is heavy and not meaningful in jsdom — assert on the value/onChange contract instead.
+// Monaco is heavy and not meaningful in jsdom — assert on the value/onChange contract instead. The
+// read-only document view and an editable mount (Add-rows, the draft editor) can be on screen in the
+// same tree, so `options.readOnly` — forwarded by EntityJsonEditor — is the only thing that tells them
+// apart; hence the distinct label, with `rows-json` kept on the editable mount so the existing Add-rows
+// assertions keep finding it unchanged.
 vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
-  default: ({ value, onChange }: { value?: string; onChange: (v?: string) => void }) => (
-    <textarea aria-label="rows-json" value={value} onChange={(e) => onChange(e.target.value)} />
+  default: ({
+    value,
+    onChange,
+    options,
+  }: {
+    value?: string;
+    onChange: (v?: string) => void;
+    options?: { readOnly?: boolean };
+  }) => (
+    <textarea
+      aria-label={options?.readOnly ? 'definition-json' : 'rows-json'}
+      readOnly={options?.readOnly}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
   ),
 }));
 
@@ -883,5 +906,224 @@ describe('TableDetailView tabs', () => {
     expect(auditPropsSpy).not.toHaveBeenCalled();
     // The Properties body is the whole view instead.
     expect(screen.getByText(/^columns:/)).toBeInTheDocument();
+  });
+});
+
+// The read-only definition view's own disclosure/copy/read-only behavior used to be covered by a
+// standalone wrapper component's own spec; that wrapper is now inlined into this header/body, and its
+// cases live here instead. The header control is a `DialSwitch` (see JsonToggle), which renders both a
+// `switch`-role wrapper with no accessible name of its own and a real `checkbox`-role input that
+// carries the on/off state and the click target — so every query below goes through the checkbox, not
+// a button. There is no toolbar heading over the document — the labelled toggle is what names the
+// surface — so presence of the read-only editor is asserted through its own mock label
+// (`definition-json`, see the JsonEditorBase mock above) rather than a heading.
+describe('TableDetailView JSON definition view', () => {
+  const jsonToggle = () => screen.getByRole('checkbox');
+  const copyControlName = `copy ${AnalyticsTablesI18nKey.JsonDefinition}`;
+
+  test('is present on an ACTIVE table for a caller with no permissions', () => {
+    setPerms({});
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(jsonToggle()).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.JSONEditor)).toBeInTheDocument();
+  });
+
+  test('is present on an ACTIVE table when analytics is disabled', () => {
+    featureFlags.analyticsEnabled = false;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(jsonToggle()).toBeInTheDocument();
+  });
+
+  // With analytics off, `isActive` still picks the read-only surface, never the editable draft editor —
+  // the latent path a widened body-ternary could otherwise fall through to (design.md D1).
+  test('turning the toggle on with analytics disabled shows the read-only document, not the editable draft editor', async () => {
+    const user = userEvent.setup();
+    featureFlags.analyticsEnabled = false;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+
+    expect(screen.getByLabelText('definition-json')).toBeInTheDocument();
+    expect(screen.queryByText(/^columns:/)).not.toBeInTheDocument();
+  });
+
+  test('turning the toggle on removes the tab strip and the columns grid and mounts the read-only editor', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^columns:/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('definition-json')).toBeInTheDocument();
+  });
+
+  test('turning the toggle off restores the tab strip with the previously selected tab (Audit) still selected', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(screen.getByRole('tab', { name: TabsI18nKey.Audit }));
+    await user.click(jsonToggle());
+    await user.click(jsonToggle());
+
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(TabsI18nKey.Audit);
+    expect(screen.getByText('table-audit')).toBeInTheDocument();
+  });
+
+  // `user.type`/`user.paste` walk through this library's own editable-element check, which reads the
+  // native `readOnly` DOM property our mock now forwards (`options.readOnly` — see the mock above) —
+  // so this exercises the real wiring, not a hand-rolled substitute for it.
+  test('rejects typing and pasting into the read-only document', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+    const editor = screen.getByLabelText('definition-json') as HTMLTextAreaElement;
+    const original = editor.value;
+
+    await user.type(editor, 'broken');
+    expect(editor.value).toBe(original);
+
+    await user.paste('also broken');
+    expect(editor.value).toBe(original);
+  });
+
+  test('the toggle is the last header control, after every action, whether the JSON view is on or off', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    const assertToggleIsLast = () => {
+      [
+        AnalyticsTablesI18nKey.ManageAccess,
+        AnalyticsTablesI18nKey.DeleteTable,
+        AnalyticsTablesI18nKey.AddColumns,
+        AnalyticsTablesI18nKey.AddRows,
+        AnalyticsTablesI18nKey.Connect,
+      ].forEach((name) => {
+        const action = screen.getByRole('button', { name });
+        // The toggle follows every other action in document order — i.e. it renders after, not before —
+        // which is what distinguishes this from a presence-only check that would pass under the old order.
+        expect(action.compareDocumentPosition(jsonToggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      });
+    };
+
+    assertToggleIsLast();
+
+    await user.click(jsonToggle());
+
+    assertToggleIsLast();
+    const connect = screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect });
+    const copy = screen.getByRole('button', { name: copyControlName });
+    // The copy control sits between Connect and the toggle, not merely somewhere in the header.
+    expect(connect.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(copy.compareDocumentPosition(jsonToggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('offers no copy-definition control while the JSON view is off, including after it has been toggled on and off', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByRole('button', { name: copyControlName })).not.toBeInTheDocument();
+
+    await user.click(jsonToggle());
+    await user.click(jsonToggle());
+
+    expect(screen.queryByRole('button', { name: copyControlName })).not.toBeInTheDocument();
+  });
+
+  test('offers no copy-definition control on a PENDING table whose own JSON editor is open', async () => {
+    const user = userEvent.setup();
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    await user.click(jsonToggle());
+
+    expect(screen.queryByRole('button', { name: copyControlName })).not.toBeInTheDocument();
+  });
+
+  // `userEvent.click` does not reach `CopyButton`'s icon-only variant in jsdom — established across five
+  // isolated probes in `qa/review-batch-4-round-1.md` §1: the event reaches the DOM node and a bare
+  // ui-kit `DialIconButton` responds fine, but `CopyButton`'s own click wiring does not survive the
+  // synthetic pointer sequence. `fireEvent.click` is used deliberately here, not as a shortcut around it.
+  test('the copy control writes the whole displayed document to the clipboard', async () => {
+    const user = userEvent.setup();
+    // Spied after `userEvent.setup()`, which installs a clipboard of its own over any earlier stub —
+    // same pattern as `ResultValueCell.spec.tsx`.
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText');
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+    const editor = screen.getByLabelText('definition-json') as HTMLTextAreaElement;
+
+    fireEvent.click(screen.getByRole('button', { name: copyControlName }));
+
+    expect(writeText).toHaveBeenCalledWith(editor.value);
+  });
+
+  test('coexists with Manage access, Delete table, Add columns, Add rows and Connect, on or off', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    const assertActionsPresent = () =>
+      [
+        AnalyticsTablesI18nKey.ManageAccess,
+        AnalyticsTablesI18nKey.DeleteTable,
+        AnalyticsTablesI18nKey.AddColumns,
+        AnalyticsTablesI18nKey.AddRows,
+        AnalyticsTablesI18nKey.Connect,
+      ].forEach((name) => expect(screen.getByRole('button', { name })).toBeInTheDocument());
+
+    assertActionsPresent();
+
+    await user.click(jsonToggle());
+
+    assertActionsPresent();
+  });
+
+  test('offers no Save, Discard or changed-entity header, and issues no table write, while the toggle is on', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).not.toBeInTheDocument();
+    expect(updateTable).not.toHaveBeenCalled();
+    expect(defineTableSchema).not.toHaveBeenCalled();
+    expect(updateTableSchema).not.toHaveBeenCalled();
+  });
+
+  // The draft's own JSON editor (opened via the same toggle, on a non-active table) is the one write path
+  // that legitimately runs through this toggle: a successful save materializes the table, and the design
+  // requires the reader land back on the live column surface with the toggle off, never on the read-only
+  // document view (design.md D1, assumption 2 in aiem-senior-3.1's return).
+  test("a successful save from a draft's JSON editor leaves the now-ACTIVE table on its live column surface with the toggle off", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateTable).mockResolvedValue({ success: true });
+    vi.mocked(defineTableSchema).mockResolvedValue({ success: true });
+    const columns = [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }];
+    const pendingTable = table({ status: TableStatus.Pending, ordering_key: ['event_id'], columns });
+    // Not an enrichment, so the grain-key lookup effect never calls `getTable`; its only caller here is
+    // `reload()`, which this stands in for the backend re-fetch after a successful materialize.
+    vi.mocked(getTable).mockResolvedValue(table({ status: TableStatus.Active, columns }));
+
+    render(<TableDetailView name="dial_usage_log" initialTable={pendingTable} apiBaseUrl="" flightUri="" />);
+
+    await user.click(jsonToggle());
+    const editor = screen.getByLabelText('rows-json') as HTMLTextAreaElement;
+    const document = JSON.parse(editor.value);
+    fireEvent.change(editor, { target: { value: JSON.stringify({ ...document, description: 'materialized' }) } });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(await screen.findByText(/^columns:/)).toBeInTheDocument();
+    expect(jsonToggle()).not.toBeChecked();
   });
 });
