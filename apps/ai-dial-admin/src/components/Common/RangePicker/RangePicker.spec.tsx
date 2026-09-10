@@ -74,7 +74,7 @@ describe('RangePicker', () => {
     expect(lastCall.endDate.getDate()).toBe(5);
   });
 
-  test('clicking beyond reach resets the anchor to a single day', () => {
+  test('clicking beyond reach resets the anchor to a single day, committed clamped to the cap', () => {
     const onChange = vi.fn();
     const { container } = render(
       <RangePicker
@@ -83,13 +83,15 @@ describe('RangePicker', () => {
         maxDays={3}
       />,
     );
-    fireEvent.click(getDayCell(container, 10)); // beyond reach (|10-3|=7 > 2)
+    fireEvent.click(getDayCell(container, 10)); // beyond reach (|10-3|=7 > 2) → single(10)
     const lastCall = onChange.mock.calls.at(-1)?.[0];
+    // single(10) with maxDays=3 clamps to 10 + (maxDays - 1) = 12, since the suite's real
+    // "today" is far past March 2026 — the clamp, not today, drives the end here.
     expect(lastCall.startDate.getDate()).toBe(10);
-    expect(lastCall.endDate.getDate()).toBe(10);
+    expect(lastCall.endDate.getDate()).toBe(12);
   });
 
-  test('clicking an interval endpoint collapses to a single day', () => {
+  test('clicking an interval endpoint collapses to a single day, committed clamped to the cap', () => {
     const onChange = vi.fn();
     const { container } = render(
       <RangePicker
@@ -98,10 +100,11 @@ describe('RangePicker', () => {
         maxDays={3}
       />,
     );
-    fireEvent.click(getDayCell(container, 3));
+    fireEvent.click(getDayCell(container, 3)); // endpoint click → single(3)
     const lastCall = onChange.mock.calls.at(-1)?.[0];
+    // single(3) with maxDays=3 clamps to 3 + (maxDays - 1) = 5.
     expect(lastCall.startDate.getDate()).toBe(3);
-    expect(lastCall.endDate.getDate()).toBe(3);
+    expect(lastCall.endDate.getDate()).toBe(5);
   });
 
   test('clicking a middle day of an interval shifts to preserve the latest click', () => {
@@ -122,7 +125,7 @@ describe('RangePicker', () => {
     expect(lastCall.endDate.getDate()).toBe(5);
   });
 
-  test('clicking outside an interval collapses to a single day', () => {
+  test('clicking outside an interval collapses to a single day, committed clamped to the cap', () => {
     const onChange = vi.fn();
     const { container } = render(
       <RangePicker
@@ -131,10 +134,11 @@ describe('RangePicker', () => {
         maxDays={3}
       />,
     );
-    fireEvent.click(getDayCell(container, 10));
+    fireEvent.click(getDayCell(container, 10)); // outside [3,5] → single(10)
     const lastCall = onChange.mock.calls.at(-1)?.[0];
+    // single(10) with maxDays=3 clamps to 10 + (maxDays - 1) = 12.
     expect(lastCall.startDate.getDate()).toBe(10);
-    expect(lastCall.endDate.getDate()).toBe(10);
+    expect(lastCall.endDate.getDate()).toBe(12);
   });
 
   test('dims days beyond reach when in single-date state', () => {

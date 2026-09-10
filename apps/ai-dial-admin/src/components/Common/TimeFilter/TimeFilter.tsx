@@ -3,7 +3,7 @@ import { IconChevronDown } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
-import { MS_PER_DAY, TimePeriodOption, getTimePeriodOptionsByMaxMs } from '@/src/constants/global-time-filter';
+import { MS_PER_DAY, TimeFilterOption, getTimePeriodOptionsByMaxMs } from '@/src/constants/global-time-filter';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -18,7 +18,7 @@ interface Props {
   onTimePeriodChange: (value: string) => void;
   timeRange: TimeRange;
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
-  timePeriodOptions?: TimePeriodOption[];
+  timePeriodOptions?: TimeFilterOption[];
   maxRangeMs?: number;
 }
 
