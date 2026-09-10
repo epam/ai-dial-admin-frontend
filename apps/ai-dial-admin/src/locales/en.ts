@@ -2973,6 +2973,7 @@ export default {
     WriteProgrammatically: 'Write rows programmatically',
     AddRowsPurpose:
       'Inserts rows by hand — useful for checking that the schema accepts what you expect. Ongoing ingestion goes through the table’s row endpoint.',
+    JsonDefinition: 'JSON definition',
   },
   ConversationsTrace: {
     Title: 'Conversations',
