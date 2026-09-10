@@ -2663,6 +2663,7 @@ export enum AnalyticsTablesI18nKey {
   ConnectEnrichmentColumns = 'AnalyticsTables.ConnectEnrichmentColumns',
   WriteProgrammatically = 'AnalyticsTables.WriteProgrammatically',
   AddRowsPurpose = 'AnalyticsTables.AddRowsPurpose',
+  JsonDefinition = 'AnalyticsTables.JsonDefinition',
 }
 
 export enum AnalyticsPipelinesI18nKey {

@@ -52,3 +52,7 @@ export const splitDraftDocument = (
     schema: { ...unpackGrain(grain), ...rest } as DraftSchemaDto,
   };
 };
+
+// Mirrors the serialization `EntityJsonEditor` uses to render the document (JsonEditor.tsx:90), so
+// the copied text matches the displayed text character for character.
+export const formatDraftDocument = (document: DraftTableDocument): string => JSON.stringify(document, null, 4);
