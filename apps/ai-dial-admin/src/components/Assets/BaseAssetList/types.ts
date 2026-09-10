@@ -8,6 +8,7 @@ export type BaseAssetRoute =
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
   | ApplicationRoute.PlatformInterceptors
+  | ApplicationRoute.PlatformTranslators
   | ApplicationRoute.PlatformRoutes
   | ApplicationRoute.PlatformRoles
   | ApplicationRoute.PlatformKeys
@@ -23,6 +24,7 @@ export type CreateAssetRoute =
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
   | ApplicationRoute.PlatformInterceptors
+  | ApplicationRoute.PlatformTranslators
   | ApplicationRoute.PlatformRoutes
   | ApplicationRoute.PlatformRoles
   | ApplicationRoute.PlatformKeys;

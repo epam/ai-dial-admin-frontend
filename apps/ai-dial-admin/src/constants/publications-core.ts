@@ -33,6 +33,7 @@ export const SKILLS_PREFIX = 'skills/';
 export const MODELS_PREFIX = 'models/platform/';
 export const SCHEMAS_PREFIX = 'schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
+export const TRANSLATORS_PREFIX = 'translators/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
 export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
@@ -47,6 +48,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.MODEL]: MODELS_PREFIX,
   [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,
+  [ResourceType.TRANSLATOR]: TRANSLATORS_PREFIX,
   [ResourceType.ROLE]: ROLES_PREFIX,
   [ResourceType.ROUTE]: ROUTES_PREFIX,
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
