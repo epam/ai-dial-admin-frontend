@@ -8,6 +8,7 @@ import Properties from '../Properties';
 
 const getDeploymentByIdMock = vi.fn();
 const getAllDeploymentsMock = vi.fn();
+const getModelMock = vi.fn();
 const windowOpenMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -18,10 +19,16 @@ vi.mock('@/src/app/[lang]/conversations/actions', () => ({
   getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
+vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+  getModel: (...args: unknown[]) => getModelMock(...args),
+}));
+
 describe('Assets Conversations :: Properties', () => {
   beforeEach(() => {
     getDeploymentByIdMock.mockReset();
     getAllDeploymentsMock.mockReset();
+    getModelMock.mockReset();
+    getModelMock.mockResolvedValue(null);
     windowOpenMock.mockReset();
     vi.stubGlobal('open', windowOpenMock);
   });
@@ -56,6 +63,35 @@ describe('Assets Conversations :: Properties', () => {
 
     expect(windowOpenMock).toHaveBeenCalledWith(
       `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
+      '_blank',
+    );
+  });
+
+  test('opens Catalog model link when platform model exists', async () => {
+    getDeploymentByIdMock.mockResolvedValue({
+      $type: DeploymentType.Model,
+      deploymentId: 'msh-responses',
+      displayName: 'msh-responses',
+    });
+    getModelMock.mockResolvedValue({ response: { name: 'msh-responses' } });
+
+    const user = userEvent.setup();
+
+    render(
+      <Properties
+        selectedConversation={{
+          name: 'Chat',
+          version: '1.0.0',
+          model: { id: 'msh-responses' },
+        }}
+      />,
+    );
+
+    const openButton = await screen.findByRole('button');
+    await user.click(openButton);
+
+    expect(windowOpenMock).toHaveBeenCalledWith(
+      `/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`,
       '_blank',
     );
   });

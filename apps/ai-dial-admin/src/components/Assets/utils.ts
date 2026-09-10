@@ -21,6 +21,7 @@ const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): dep
 export const getAgentLinkForConversation = (
   deployment: CatalogDeploymentRecord | Deployment | null,
   currentLocale: string,
+  modelRoute?: ApplicationRoute,
 ): string => {
   if (!deployment) {
     return '';
@@ -31,6 +32,7 @@ export const getAgentLinkForConversation = (
         { id: deployment.deploymentId, name: deployment.displayName },
         deployment.$type,
         [],
+        { modelRoute },
       )
     : resolveCatalogDeploymentNavigation(deployment);
 
