@@ -16,6 +16,7 @@ import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { TimeFilterValue } from '@/src/models/time-range';
+import { getSharableTimeFilter } from '@/src/utils/time-filter/sharable-time-filter';
 
 interface Props {
   entity: BaseEntity;
@@ -31,6 +32,7 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>(DEFAULT_TIME_PERIOD);
+  const sharableTimeFilter = getSharableTimeFilter(timeFilter);
 
   return (
     <div className="flex flex-row gap-4 size-full">
@@ -47,11 +49,16 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && (
-          <Dashboard defaultTimeFilter={timeFilter} onTimeFilterChange={setTimeFilter} entity={entity} route={view} />
+          <Dashboard
+            defaultTimeFilter={sharableTimeFilter}
+            onTimeFilterChange={setTimeFilter}
+            entity={entity}
+            route={view}
+          />
         )}
         {activeTab === EntityViewTab.Traces && (
           <UsageLog
-            defaultTimeFilter={timeFilter}
+            defaultTimeFilter={sharableTimeFilter}
             onTimeFilterChange={setTimeFilter}
             entity={entity}
             route={view}
@@ -60,7 +67,7 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
         )}
         {activeTab === EntityViewTab.Conversations && (
           <UsageLog
-            defaultTimeFilter={timeFilter}
+            defaultTimeFilter={sharableTimeFilter}
             onTimeFilterChange={setTimeFilter}
             entity={entity}
             route={view}

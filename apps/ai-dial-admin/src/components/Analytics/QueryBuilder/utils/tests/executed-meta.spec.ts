@@ -1,13 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  buildColumnValueClasses,
   buildExecutedMeta,
   classifyResultColumns,
   resolveGroupByColumns,
 } from '@/src/components/Analytics/QueryBuilder/utils/executed-meta';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
-import { QueryRequestKind, QueryRunRequest } from '@/src/models/analytics/query-builder';
+import { QueryRequestKind, QueryRunRequest, ResultValueClass } from '@/src/models/analytics/query-builder';
 
 const query = (partial: Partial<StructuredQuery>): StructuredQuery => ({
   entity: 'dial_usage_log',
@@ -137,6 +138,140 @@ describe('QueryBuilder :: executed-meta :: classifyResultColumns', () => {
   });
 });
 
+describe('QueryBuilder :: executed-meta :: buildColumnValueClasses', () => {
+  const FIELDS: AnalyticsEntityField[] = [
+    { name: 'count', type: AnalyticsFieldType.Integer, source: 'count' },
+    { name: 'total', type: AnalyticsFieldType.Long, source: 'total' },
+    { name: 'rate', type: AnalyticsFieldType.Decimal, source: 'rate' },
+    { name: 'created_at', type: AnalyticsFieldType.Timestamp, source: 'created_at' },
+    { name: 'day', type: AnalyticsFieldType.Date, source: 'day' },
+    { name: 'id', type: AnalyticsFieldType.Uuid, source: 'id' },
+  ];
+
+  test('a declared Integer, Long, Decimal, Timestamp and Date column each resolve from the schema type', () => {
+    const rows = [{ count: 1, total: 2, rate: 1.5, created_at: 123, day: 456, id: 'a' }];
+    const columns = ['count', 'total', 'rate', 'created_at', 'day', 'id'];
+
+    expect(buildColumnValueClasses(columns, FIELDS, [], rows)).toEqual({
+      count: ResultValueClass.Compact,
+      total: ResultValueClass.Compact,
+      rate: ResultValueClass.Significant,
+      created_at: ResultValueClass.DateTime,
+      day: ResultValueClass.DateTime,
+    });
+  });
+
+  test('a Uuid column gets no entry', () => {
+    expect(buildColumnValueClasses(['id'], FIELDS, [], [{ id: 'a' }])).toEqual({});
+  });
+
+  test('a measure column with no schema field is compact when every value is whole', () => {
+    const rows = [{ total_cost: 3 }, { total_cost: 7 }];
+
+    expect(buildColumnValueClasses(['total_cost'], [], ['total_cost'], rows)).toEqual({
+      total_cost: ResultValueClass.Compact,
+    });
+  });
+
+  test('a measure column with no schema field is significant-digit when one value is fractional', () => {
+    const rows = [{ avg_cost: 3 }, { avg_cost: 7.5 }];
+
+    expect(buildColumnValueClasses(['avg_cost'], [], ['avg_cost'], rows)).toEqual({
+      avg_cost: ResultValueClass.Significant,
+    });
+  });
+
+  test('an empty rows array yields no entry for a measure column', () => {
+    expect(buildColumnValueClasses(['total'], [], ['total'], [])).toEqual({});
+  });
+
+  // The declared type wins even when the column is a measure and its values happen to parse as
+  // numbers: a schema field never falls through to value-based classification.
+  test('a declared Enum measure column with numeric-looking values gets no entry', () => {
+    const enumFields: AnalyticsEntityField[] = [{ name: 'status', type: AnalyticsFieldType.Enum, source: 'status' }];
+    const rows = [{ status: '200' }, { status: '429' }];
+
+    expect(buildColumnValueClasses(['status'], enumFields, ['status'], rows)).toEqual({});
+  });
+
+  test('a Long field tagged performance resolves Duration where its type alone would resolve Compact', () => {
+    const durationFields: AnalyticsEntityField[] = [
+      { name: 'duration_ms', type: AnalyticsFieldType.Long, source: 'duration_ms', tag: 'performance' },
+    ];
+
+    expect(buildColumnValueClasses(['duration_ms'], durationFields, [], [{ duration_ms: 698700 }])).toEqual({
+      duration_ms: ResultValueClass.Duration,
+    });
+  });
+
+  test('a Decimal field tagged performance resolves Duration where its type alone would resolve Significant', () => {
+    const durationFields: AnalyticsEntityField[] = [
+      { name: 'avg_duration_ms', type: AnalyticsFieldType.Decimal, source: 'avg_duration_ms', tag: 'performance' },
+    ];
+
+    expect(buildColumnValueClasses(['avg_duration_ms'], durationFields, [], [{ avg_duration_ms: 12.5 }])).toEqual({
+      avg_duration_ms: ResultValueClass.Duration,
+    });
+  });
+
+  // A millisecond-named but untagged field falls through to Compact — a decision, not an accident —
+  // beside a tagged field in the same result that resolves Duration and, per `result-column-format.ts`
+  // (design.md §12), is left unformatted: the untagged column still reads compacted, the tagged one raw.
+  test('a millisecond-named but untagged field falls through to Compact beside a tagged field resolving Duration', () => {
+    const mixedFields: AnalyticsEntityField[] = [
+      { name: 'demo_duration_ms', type: AnalyticsFieldType.Long, source: 'demo_duration_ms' },
+      { name: 'duration_ms', type: AnalyticsFieldType.Long, source: 'duration_ms', tag: 'performance' },
+    ];
+    const rows = [{ demo_duration_ms: 5000, duration_ms: 698700 }];
+
+    expect(buildColumnValueClasses(['demo_duration_ms', 'duration_ms'], mixedFields, [], rows)).toEqual({
+      demo_duration_ms: ResultValueClass.Compact,
+      duration_ms: ResultValueClass.Duration,
+    });
+  });
+
+  // The tag only narrows a class the type map already resolved as numeric; a declared String or
+  // Timestamp field tagged performance keeps exactly what its type resolves.
+  test('a String-typed and a Timestamp-typed field tagged performance keep what their types resolve', () => {
+    const taggedNonNumericFields: AnalyticsEntityField[] = [
+      { name: 'label', type: AnalyticsFieldType.String, source: 'label', tag: 'performance' },
+      { name: 'measured_at', type: AnalyticsFieldType.Timestamp, source: 'measured_at', tag: 'performance' },
+    ];
+    const rows = [{ label: 'x', measured_at: 123 }];
+
+    expect(buildColumnValueClasses(['label', 'measured_at'], taggedNonNumericFields, [], rows)).toEqual({
+      measured_at: ResultValueClass.DateTime,
+    });
+  });
+
+  test('a bucket-tagged ordinal and an untagged status code still resolve Compact', () => {
+    const bucketFields: AnalyticsEntityField[] = [
+      { name: 'duration_bucket', type: AnalyticsFieldType.Integer, source: 'duration_bucket', tag: 'bucket' },
+      { name: 'response_status', type: AnalyticsFieldType.Integer, source: 'response_status' },
+    ];
+    const rows = [{ duration_bucket: 3, response_status: 200 }];
+
+    expect(buildColumnValueClasses(['duration_bucket', 'response_status'], bucketFields, [], rows)).toEqual({
+      duration_bucket: ResultValueClass.Compact,
+      response_status: ResultValueClass.Compact,
+    });
+  });
+
+  // An output column with no schema field carries no tag to read, so it never becomes a Duration —
+  // it keeps the value-shape class §4 step 2 already gives it, and so stays compacted rather than raw.
+  test('an aggregate alias over a tagged field resolves Compact/Significant and never Duration', () => {
+    const wholeRows = [{ total_duration_ms: 100 }, { total_duration_ms: 200 }];
+    expect(buildColumnValueClasses(['total_duration_ms'], [], ['total_duration_ms'], wholeRows)).toEqual({
+      total_duration_ms: ResultValueClass.Compact,
+    });
+
+    const fractionalRows = [{ avg_duration_ms: 100 }, { avg_duration_ms: 150.5 }];
+    expect(buildColumnValueClasses(['avg_duration_ms'], [], ['avg_duration_ms'], fractionalRows)).toEqual({
+      avg_duration_ms: ResultValueClass.Significant,
+    });
+  });
+});
+
 describe('QueryBuilder :: executed-meta :: buildExecutedMeta', () => {
   const FIELDS: AnalyticsEntityField[] = [
     {
@@ -172,6 +307,28 @@ describe('QueryBuilder :: executed-meta :: buildExecutedMeta', () => {
     expect(meta.dimensionColumns).toEqual(['deployment', 'total']);
     expect(meta.aggregateColumns).toEqual(['total']);
     expect(meta.columnLabels).toEqual({});
+  });
+
+  // No group-by semantics behind that aggregateColumns list — it is every returned column, so
+  // trusting it would compact an id or a raw epoch column.
+  test('an untranslated SQL run withholds every value class', () => {
+    const meta = buildExecutedMeta(sqlRequest, result([{ deployment: 'gpt-4o', total: 3 }]), FIELDS, '', null);
+
+    expect(meta.columnValueClasses).toEqual({});
+  });
+
+  test('a translated SQL run over another entity withholds every value class', () => {
+    const translated = query({ entity: 'conversations', group_by: ['deployment'], select: [field('deployment')] });
+
+    const meta = buildExecutedMeta(
+      sqlRequest,
+      result([{ deployment: 'gpt-4o', total: 3 }]),
+      FIELDS,
+      'dial_usage_log',
+      translated,
+    );
+
+    expect(meta.columnValueClasses).toEqual({});
   });
 
   test('schema display names apply when the translated entity is the selected one', () => {
@@ -223,5 +380,45 @@ describe('QueryBuilder :: executed-meta :: buildExecutedMeta', () => {
 
     expect(meta.dimensionColumns).toEqual([]);
     expect(meta.mode).toBe(QueryMode.Row);
+  });
+
+  // In row mode `aggregateColumns` degenerates to every returned column, so a scalar-function alias
+  // with no schema field must stay unformatted even though its every value is whole.
+  test('a row-mode alias with no schema field stays unformatted even though its values are whole', () => {
+    const request: QueryRunRequest = { kind: QueryRequestKind.Structured, query: query({ mode: QueryMode.Row }) };
+
+    const meta = buildExecutedMeta(request, result([{ bucket: 1000 }, { bucket: 2000 }]), FIELDS, 'dial_usage_log');
+
+    expect(meta.columnValueClasses).toEqual({});
+  });
+
+  test('a structured aggregate run classifies a measure alias with no schema field from its values', () => {
+    const request: QueryRunRequest = { kind: QueryRequestKind.Structured, query: query({ group_by: ['deployment'] }) };
+
+    const meta = buildExecutedMeta(request, result([{ deployment: 'gpt-4o', total: 3 }]), FIELDS, 'dial_usage_log');
+
+    expect(meta.columnValueClasses).toEqual({ total: ResultValueClass.Compact });
+  });
+
+  // A measure column that names a schema field of a non-numeric type (Enum) must stay unformatted
+  // even when its values happen to parse as numbers — the declared type decides, not the values.
+  test('a structured aggregate run withholds the class of a declared Enum measure with numeric-looking values', () => {
+    const enumFields: AnalyticsEntityField[] = [
+      ...FIELDS,
+      { name: 'status', type: AnalyticsFieldType.Enum, source: 'status' },
+    ];
+    const request: QueryRunRequest = { kind: QueryRequestKind.Structured, query: query({ group_by: ['deployment'] }) };
+
+    const meta = buildExecutedMeta(
+      request,
+      result([
+        { deployment: 'gpt-4o', status: '200' },
+        { deployment: 'gpt-4o', status: '429' },
+      ]),
+      enumFields,
+      'dial_usage_log',
+    );
+
+    expect(meta.columnValueClasses).toEqual({});
   });
 });

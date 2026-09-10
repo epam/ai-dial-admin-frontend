@@ -1,5 +1,6 @@
 import { getStrictNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import { DURATION_FIELD_TAG, FIELD_TYPE_VALUE_CLASS } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
@@ -7,6 +8,7 @@ import {
   QueryRequestKind,
   QueryRunRequest,
   ResultColumnClassification,
+  ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 
 type ResultRows = Array<Record<string, unknown>>;
@@ -50,6 +52,50 @@ export const buildColumnLabels = (columns: string[], fields: AnalyticsEntityFiel
   return labels;
 };
 
+// The tag narrows a class the type map already resolved as numeric; it never creates one. A
+// Timestamp/Date field keeps DateTime however it is tagged, and a String/Enum/Uuid/Boolean field
+// tagged `performance` stays unformatted — matching the tag before the type would let the tag create
+// formatting the declared type refused.
+const schemaValueClass = (field: AnalyticsEntityField): ResultValueClass | undefined => {
+  const declared = FIELD_TYPE_VALUE_CLASS[field.type];
+  const isUnitBearing = declared === ResultValueClass.Compact || declared === ResultValueClass.Significant;
+
+  return isUnitBearing && field.tag === DURATION_FIELD_TAG ? ResultValueClass.Duration : declared;
+};
+
+// A column's rendering class, resolved in two steps: a column that names a schema field takes that
+// field's declared class or nothing — a declared non-numeric type (Uuid, Enum, Boolean, String) is
+// never overridden by its values. Only a measure column with no schema field at all is classified
+// from its own values, using the same strict numeric parse `getStrictNumericColumns` used to decide
+// it counted as a measure in the first place. Everything else gets no entry.
+export const buildColumnValueClasses = (
+  columns: string[],
+  fields: AnalyticsEntityField[],
+  measureColumns: string[],
+  rows: ResultRows,
+): Record<string, ResultValueClass> => {
+  const classes: Record<string, ResultValueClass> = {};
+  const candidates: string[] = [];
+
+  for (const column of columns) {
+    const field = fields.find((f) => f.name === column);
+    if (field) {
+      const declaredClass = schemaValueClass(field);
+      if (declaredClass) classes[column] = declaredClass;
+    } else if (measureColumns.includes(column)) {
+      candidates.push(column);
+    }
+  }
+
+  const numericCandidates = getStrictNumericColumns(rows, candidates);
+  for (const column of numericCandidates) {
+    const isWhole = rows.every((row) => Number.isInteger(Number(row[column])));
+    classes[column] = isWhole ? ResultValueClass.Compact : ResultValueClass.Significant;
+  }
+
+  return classes;
+};
+
 export const buildExecutedMeta = (
   request: QueryRunRequest,
   response: StructuredQueryResult,
@@ -68,24 +114,34 @@ export const buildExecutedMeta = (
         mode: QueryMode.Row,
         ...classifyResultColumns(resultColumns, response.rows ?? []),
         columnLabels: {},
+        columnValueClasses: {},
       };
     }
     const dimensionColumns = resolveGroupByColumns(translated, resultColumns);
+    const aggregateColumns = resultColumns.filter((c) => !dimensionColumns.includes(c));
+    const isSameEntity = translated.entity === entityName;
+    const measureColumns = translated.mode === QueryMode.Aggregate ? aggregateColumns : [];
     return {
       kind: request.kind,
       mode: translated.mode,
       dimensionColumns,
-      aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
-      columnLabels: translated.entity === entityName ? buildColumnLabels(resultColumns, fields) : {},
+      aggregateColumns,
+      columnLabels: isSameEntity ? buildColumnLabels(resultColumns, fields) : {},
+      columnValueClasses: isSameEntity
+        ? buildColumnValueClasses(resultColumns, fields, measureColumns, response.rows ?? [])
+        : {},
     };
   }
 
   const dimensionColumns = request.query.group_by ?? [];
+  const aggregateColumns = resultColumns.filter((c) => !dimensionColumns.includes(c));
+  const measureColumns = request.query.mode === QueryMode.Aggregate ? aggregateColumns : [];
   return {
     kind: request.kind,
     mode: request.query.mode,
     dimensionColumns,
-    aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
+    aggregateColumns,
     columnLabels: buildColumnLabels(resultColumns, fields),
+    columnValueClasses: buildColumnValueClasses(resultColumns, fields, measureColumns, response.rows ?? []),
   };
 };

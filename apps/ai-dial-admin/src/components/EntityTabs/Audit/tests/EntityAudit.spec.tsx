@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
@@ -6,6 +6,7 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityAudit from '../EntityAudit';
 import { TabsI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_TIME_PERIOD, SINCE_CREATION_PERIOD_ID } from '@/src/constants/global-time-filter';
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => {
@@ -22,9 +23,29 @@ vi.mock('@/src/components/ActivityAudit/List/List', () => ({
   },
 }));
 
+const dashboardPropsSpy = vi.fn();
+vi.mock('@/src/components/Telemetry/Dashboard', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    dashboardPropsSpy(props);
+    return <div role="dashboards" />;
+  },
+}));
+
+const usageLogPropsSpy = vi.fn();
+vi.mock('@/src/components/UsageLog/UsageLog', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    usageLogPropsSpy(props);
+    return <div role="usage-log" />;
+  },
+}));
+
 describe('EntityAudit', () => {
   beforeEach(() => {
     listPropsSpy.mockClear();
+    dashboardPropsSpy.mockClear();
+    usageLogPropsSpy.mockClear();
   });
 
   test('renders audit tab with Activities and Dashboards', () => {
@@ -72,5 +93,31 @@ describe('EntityAudit', () => {
     const props = listPropsSpy.mock.calls[listPropsSpy.mock.calls.length - 1][0];
     expect(props.entityType).toBe(ActivityAuditResourceType.MODEL);
     expect(props.viewMode).toBeUndefined();
+  });
+
+  test('gives Dashboard and both UsageLog tabs the default preset while Activities keeps Since Creation', () => {
+    const entity = { name: 'Test Entity', id: '123' };
+
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
+    const { onTimeFilterChange } = listPropsSpy.mock.calls.at(-1)?.[0] as {
+      onTimeFilterChange: (value: string) => void;
+    };
+    act(() => {
+      onTimeFilterChange(SINCE_CREATION_PERIOD_ID);
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Dashboard }));
+    expect(dashboardPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Traces }));
+    expect(usageLogPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Conversations }));
+    expect(usageLogPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: DEFAULT_TIME_PERIOD });
+
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
+    expect(listPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: SINCE_CREATION_PERIOD_ID });
   });
 });

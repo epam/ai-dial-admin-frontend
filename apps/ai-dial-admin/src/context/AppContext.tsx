@@ -27,9 +27,12 @@ export interface AppContextType {
 
   // user info
   userInfo?: UserInfo;
-  /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN */
+  /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN. Always false without the admin backend. */
   isReadOnlyAdmin: boolean;
-  /** True when the user holds FULL_ADMIN, or when authentication is disabled (nothing is enforced). */
+  /**
+   * True when the user holds FULL_ADMIN, or when authentication is disabled (nothing is enforced).
+   * Always true without the admin backend — there is no role to check.
+   */
   isFullAdmin: boolean;
   /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
   isEnableAuth: boolean;
@@ -114,11 +117,16 @@ export const AppContextProvider = ({
     setSidebarPosition(SidebarPosition.Right);
   };
 
+  // Without the admin backend there's no FULL_ADMIN/READ_ONLY_ADMIN to read — nothing is
+  // enforced, so treat every caller as a full admin.
   const isReadOnlyAdmin =
-    !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) && !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+    featureFlags.adminApiEnabled &&
+    !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) &&
+    !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
 
   // Auth off → nothing is enforced, so treat as full admin; otherwise only a mapped FULL_ADMIN.
-  const isFullAdmin = !isEnableAuth || !!userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+  const isFullAdmin =
+    !featureFlags.adminApiEnabled || !isEnableAuth || !!userInfo?.roles?.includes(UserRole.FULL_ADMIN);
 
   const value = {
     sidebarOpen,

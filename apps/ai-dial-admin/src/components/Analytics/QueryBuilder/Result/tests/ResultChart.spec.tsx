@@ -21,6 +21,7 @@ const META: ExecutedQueryMeta = {
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total', 'tokens'],
   columnLabels: { deployment: 'Deployment' },
+  columnValueClasses: {},
 };
 
 const renderChart = (config: ChartConfig = DEFAULT_CHART_CONFIG, result = RESULT, meta = META) => {

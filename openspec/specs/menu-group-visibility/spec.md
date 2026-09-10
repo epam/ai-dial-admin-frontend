@@ -1,11 +1,11 @@
 ## Purpose
-Define how feature-flag-gated groups in the left-navigation menu are shown or hidden. Each gated group is controlled solely by its own flag and composes independently of every other group, so disabling one group never causes another disabled group to reappear and never hides an enabled group. Today two groups are flag-gated: the Deployments group (`featureFlags.deploymentsEnabled`, sourced from `DEPLOYMENTS_ENABLED`) and the Evaluation group (`featureFlags.evaluationEnabled`, sourced from `DIAL_EVAL_API_URL` being present).
+Define how feature-flag-gated groups in the left-navigation menu are shown or hidden. Each gated group is controlled solely by its own flag and composes independently of every other group, so disabling one group never causes another disabled group to reappear and never hides an enabled group. Flag-gated groups: the Deployments group (`featureFlags.deploymentsEnabled`, sourced from `DEPLOYMENTS_ENABLED`), the Evaluation group (`featureFlags.evaluationEnabled`, sourced from `DIAL_EVAL_API_URL` being present), and the Entities, Builders, Access Management, and Audit groups (`featureFlags.adminApiEnabled`, sourced from `DIAL_ADMIN_API_URL` being present — see `admin-api-availability` for the flag itself and the other surfaces it gates).
 
 ## Requirements
 
 ### Requirement: Feature-flag-gated menu groups compose independently
 
-The left-navigation menu configuration SHALL hide each feature-flag-gated menu group based solely on its own flag, independent of the state of any other group's flag. Disabling one group MUST NOT cause another disabled group to reappear, and MUST NOT hide a group whose flag is enabled. Today two groups are flag-gated: the Deployments group is hidden when `featureFlags.deploymentsEnabled` is `false` (sourced from `DEPLOYMENTS_ENABLED`), and the Evaluation group is hidden when `featureFlags.evaluationEnabled` is `false` (sourced from `DIAL_EVAL_API_URL` being absent).
+The left-navigation menu configuration SHALL hide each feature-flag-gated menu group based solely on its own flag, independent of the state of any other group's flag. Disabling one group MUST NOT cause another disabled group to reappear, and MUST NOT hide a group whose flag is enabled. Flag-gated groups: the Deployments group is hidden when `featureFlags.deploymentsEnabled` is `false` (sourced from `DEPLOYMENTS_ENABLED`); the Evaluation group is hidden when `featureFlags.evaluationEnabled` is `false` (sourced from `DIAL_EVAL_API_URL` being absent); the Entities, Builders, Access Management, and Audit groups are hidden in full when `featureFlags.adminApiEnabled` is `false` (sourced from `DIAL_ADMIN_API_URL` being absent) — Audit is hidden as a whole group (Dashboard, Activity, and Usage Log together), not filtered item-by-item.
 
 #### Scenario: Both group flags enabled
 
@@ -30,9 +30,20 @@ The left-navigation menu configuration SHALL hide each feature-flag-gated menu g
 - **THEN** the Deployments group is absent
 - **AND** the Evaluation group is absent
 
+#### Scenario: Admin API disabled hides Entities, Builders, Access Management, and Audit independently of other flags
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`, regardless of `featureFlags.deploymentsEnabled` or `featureFlags.evaluationEnabled`
+- **THEN** the Entities group, the Builders group, the Access Management group, and the Audit group are all absent
+- **AND** a Deployments or Evaluation group whose own flag is `true` remains present
+
+#### Scenario: Admin API enabled leaves Entities, Builders, Access Management, and Audit unaffected
+
+- **WHEN** `featureFlags.adminApiEnabled` is `true`
+- **THEN** the Entities group, the Builders group, the Access Management group, and the Audit group are all present
+
 ### Requirement: DEPLOYMENTS_ENABLED=false hides the Deployments group and all its sub-items
 
-When `DEPLOYMENTS_ENABLED` resolves falsy (per `isValueTruthy`), the entire Deployments menu group — including every sub-item (Model Servings, MCP Containers, Interceptor Containers, Adapter Containers, Application Containers, Images) — SHALL be absent from the sidebar without requiring any entry in `DISABLE_MENU_ITEMS`. This behavior MUST hold regardless of whether the Evaluation group is also hidden.
+When `DEPLOYMENTS_ENABLED` resolves falsy (per `isValueTruthy`), the entire Deployments menu group — including every sub-item (Model Servings, MCP Containers, Interceptor Containers, Adapter Containers, Application Containers, Images) — SHALL be absent from the sidebar without requiring any entry in `DISABLE_MENU_ITEMS`. This behavior MUST hold regardless of whether the Evaluation group or the admin-API-gated groups are also hidden.
 
 #### Scenario: Deployments hidden via env flag alone
 
