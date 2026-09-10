@@ -2827,6 +2827,15 @@ export default {
     OutputVarsRequired: 'Declare at least one output variable.',
     RuleTargetEnrichment: 'Target enrichment',
     RuleResolvedVersion: 'Resolves to',
+    CreateEvaluatorTitle: 'Create evaluator',
+    CreateEvaluatorFailed: 'Could not create the evaluator.',
+    NameInvalid: "Must start with a lowercase letter, then lowercase letters, digits, '_' or '-', up to 64 characters.",
+    NameTaken: 'An evaluator with this name is already registered. Add a version to it from its own page instead.',
+    EvaluatorCreated: 'Evaluator created',
+    EvaluatorCreatedAsVersion:
+      'An evaluator with this name already existed, so version {version} was registered instead.',
+    EvaluatorCreatedVersionUnknown:
+      'The evaluator was registered. The console could not read which version was created.',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',
