@@ -2314,7 +2314,8 @@ export default {
       Completed: 'Completed',
       Running: 'Running',
       Failed: 'Failed',
-      Cancelled: 'Cancelled',
+      Cancelling: 'Stopping',
+      Cancelled: 'Stopped',
     },
     MetricFailedText: 'Metric evaluation failed',
     NumericDiff: 'Numeric',
@@ -2363,8 +2364,10 @@ export default {
     CancelRunModalTitle: 'Stop run',
     CancelRunModalDescription:
       'Are you sure you want to stop this run? Test cases already completed will be preserved.',
-    CancelRunSuccess: 'Run stopped',
-    CancelRunSuccessDescription: 'The run has been stopped.',
+    CancelRunSuccess: 'Stopping run',
+    CancelRunSuccessDescription: 'The run is being stopped.',
+    CancelRunFailed: 'Run not stopped',
+    CancelRunFailedDescription: 'The run could not be stopped and is running again.',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

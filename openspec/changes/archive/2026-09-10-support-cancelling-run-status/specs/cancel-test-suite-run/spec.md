@@ -1,11 +1,4 @@
-# cancel-test-suite-run Specification
-
-## Purpose
-
-Lets a user stop a pending or running test suite run from the Admin UI instead of only being able to
-wait for it to finish, fail, or be cancelled some other way.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Stop action on the run detail page
 The run detail page SHALL show a "Stop" action in its header when the run's status is `RUNNING`, and
@@ -53,19 +46,6 @@ returns to `RUNNING` offers the action again.
 - **WHEN** a run row moves from `CANCELLING` back to `RUNNING`
 - **THEN** the "Stop" action is available in that row's menu again
 
-### Requirement: Confirmation before cancelling
-The system SHALL require explicit confirmation before sending a cancellation request, from either the
-detail page's "Stop" action or the list's "Stop" action.
-
-#### Scenario: User triggers Stop
-- **WHEN** a user clicks the "Stop" action on the detail page, or the "Stop" action in a list row
-  menu
-- **THEN** a confirmation dialog is shown before any request is sent to the backend
-
-#### Scenario: User dismisses the confirmation
-- **WHEN** a user closes or dismisses the confirmation dialog without confirming
-- **THEN** no cancellation request is sent and the run's status is unchanged
-
 ### Requirement: Cancellation request and status update
 Once a user confirms, the system SHALL send a cancellation request for that run to the backend, and SHALL
 update the acting surface's displayed status to `CANCELLING` once the request succeeds. The system SHALL
@@ -91,6 +71,8 @@ request does not guarantee the run stops.
   a terminal state by the time the request arrives)
 - **THEN** an error notification is shown
 - **THEN** the run's displayed status is not changed to `CANCELLING` or `CANCELLED` on the acting surface
+
+## ADDED Requirements
 
 ### Requirement: Status polling while a run is cancelling
 While any run displayed on the current surface has status `CANCELLING`, the system SHALL re-check that

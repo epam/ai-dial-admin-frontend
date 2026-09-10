@@ -10,6 +10,7 @@ import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
+import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
@@ -53,6 +54,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [selectedCancelRun, setSelectedCancelRun] = useState<Run | undefined>(undefined);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
+  useCancellingRunsPoll(gridApi);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -180,7 +182,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       if (response.success) {
         gridApi?.forEachNode((node) => {
           if (node.data?.id === id) {
-            node.setData({ ...node.data, status: RunStatus.CANCELLED });
+            node.setData({ ...node.data, status: RunStatus.CANCELLING });
           }
         });
       }
