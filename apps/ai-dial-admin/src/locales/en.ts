@@ -229,6 +229,7 @@ export default {
     OptionListUnavailable: 'This list could not be loaded from DIAL Core.',
     OptionListPartial: 'This list is incomplete — one of its two sources could not be read.',
     GlobalInterceptorsUnavailable: 'Global interceptors could not be read, so the order shown may be incomplete.',
+    SystemPropertiesReadFailed: 'System properties could not be loaded.',
     ResolvedSchemaFailed: 'Could not load the application schema',
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',

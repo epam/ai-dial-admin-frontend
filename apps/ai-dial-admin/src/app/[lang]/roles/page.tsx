@@ -1,5 +1,7 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
+import { ApplicationRoute } from '@/src/types/routes';
 
 import { rolesApi } from '@/src/app/api/api';
 import RolesList from '@/src/components/Roles/List/List';
@@ -12,6 +14,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   let data: DialRole[] | null = null;
 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

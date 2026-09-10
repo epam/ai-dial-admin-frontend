@@ -116,6 +116,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Config` | `import-config`, `export-config` | `ImportConfig`, `ExportConfig` |
 | `SystemProperties` | `system-properties` | `SystemProperties` |
 | `Home` | `home` | `WelcomeView` |
+| `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
 
 ---
 
