@@ -4,9 +4,24 @@ export interface TimePeriodOption {
   offset: number;
 }
 
+/**
+ * A period whose start is an absolute anchor instead of a sliding offset from "now", so its span
+ * grows as time passes. Anchors are parsed and validated before the option is built, so
+ * `startDate` is always a valid `Date`.
+ */
+export interface AnchoredTimePeriodOption {
+  value: string;
+  label: string;
+  startDate: Date;
+}
+
+export type TimeFilterOption = TimePeriodOption | AnchoredTimePeriodOption;
+
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const DEFAULT_TIME_PERIOD = '2d';
+
+export const SINCE_CREATION_PERIOD_ID = 'since-creation';
 
 export const timePeriodOptionsConfig: TimePeriodOption[] = [
   { value: '15m', label: 'Last 15m', offset: 15 * 60 * 1000 },
@@ -21,12 +36,17 @@ export const timePeriodOptionsConfig: TimePeriodOption[] = [
   { value: '30d', label: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
 ];
 
+export function isAnchoredTimePeriodOption(option: TimeFilterOption): option is AnchoredTimePeriodOption {
+  return 'startDate' in option;
+}
+
 export function getTimePeriodOptionsByMaxMs(
-  options: TimePeriodOption[] = timePeriodOptionsConfig,
+  options: TimeFilterOption[] = timePeriodOptionsConfig,
   maxRangeMs?: number,
-): TimePeriodOption[] {
+): TimeFilterOption[] {
   if (maxRangeMs == null) return options;
-  return options.filter((opt) => opt.offset <= maxRangeMs);
+  // An anchored option's span grows without bound, so there is nothing to compare against the cap.
+  return options.filter((opt) => !isAnchoredTimePeriodOption(opt) && opt.offset <= maxRangeMs);
 }
 
 export function getDefaultTimePeriod(options: TimePeriodOption[]): string {

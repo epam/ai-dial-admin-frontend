@@ -2,7 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { MS_PER_DAY } from '@/src/constants/global-time-filter';
+import {
+  MS_PER_DAY,
+  SINCE_CREATION_PERIOD_ID,
+  TimeFilterOption,
+  timePeriodOptionsConfig,
+} from '@/src/constants/global-time-filter';
 import TimeFilter from './TimeFilter';
 
 const getDate = (year: number, month: number, day: number, h = 12) => new Date(year, month - 1, day, h, 0, 0, 0);
@@ -117,6 +122,48 @@ describe('TimeFilter', () => {
     await waitFor(() => {
       expect(screen.getByRole('status')).toBeInTheDocument();
     });
+  });
+
+  test('renders an anchored option in the preset list and shows its label in the trigger when selected', async () => {
+    const user = userEvent.setup();
+    const anchoredOption: TimeFilterOption = {
+      value: SINCE_CREATION_PERIOD_ID,
+      label: 'Since Creation',
+      startDate: getDate(2026, 1, 1),
+    };
+    const optionsWithAnchor = [...timePeriodOptionsConfig, anchoredOption];
+
+    const { rerender } = render(
+      <TimeFilter {...baseProps()} maxRangeMs={undefined} timePeriodOptions={optionsWithAnchor} />,
+    );
+
+    await user.click(screen.getByText(/Last 2d/i));
+    expect(screen.getByRole('button', { name: 'Since Creation' })).toBeInTheDocument();
+
+    rerender(
+      <TimeFilter
+        {...baseProps()}
+        maxRangeMs={undefined}
+        timePeriodOptions={optionsWithAnchor}
+        timePeriod={SINCE_CREATION_PERIOD_ID}
+      />,
+    );
+
+    expect(screen.getByText(/Telemetry\.TimePeriod Since Creation/)).toBeInTheDocument();
+  });
+
+  test('omits an anchored option from the preset list when maxRangeMs is set', async () => {
+    const user = userEvent.setup();
+    const anchoredOption: TimeFilterOption = {
+      value: SINCE_CREATION_PERIOD_ID,
+      label: 'Since Creation',
+      startDate: getDate(2026, 1, 1),
+    };
+    render(<TimeFilter {...baseProps()} timePeriodOptions={[...timePeriodOptionsConfig, anchoredOption]} />);
+
+    await user.click(screen.getByText(/Last 2d/i));
+
+    expect(screen.queryByRole('button', { name: 'Since Creation' })).not.toBeInTheDocument();
   });
 
   test('Cancel does not commit', async () => {
