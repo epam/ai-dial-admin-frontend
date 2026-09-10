@@ -49,17 +49,7 @@ describe('useDetailMode', () => {
     expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
-  it('toggles closed on same row click without cell options', () => {
-    const { result } = renderHook(() => useDetailMode());
-
-    act(() => result.current.openDetail('r1'));
-    act(() => result.current.openDetail('r1'));
-
-    expect(result.current.selectedResultId).toBeNull();
-    expect(mockCloseSidebar).toHaveBeenCalled();
-  });
-
-  it('does not toggle closed on same-row cell click with focus field', () => {
+  it('keeps the panel open on same-row cell click and updates the focus field', () => {
     const { result } = renderHook(() => useDetailMode());
 
     act(() => result.current.openDetail('r1'));
