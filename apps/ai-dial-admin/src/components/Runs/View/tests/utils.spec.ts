@@ -12,6 +12,7 @@ import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
   getAnalyticsColumns,
+  getMetricGroupOrder,
   createEmptyComparePrimaryRow,
   getDetailEntries,
   getDetailNestedEntries,
@@ -227,6 +228,19 @@ describe('Runs View :: getAnalyticsColumns', () => {
       'answer-conciseness_score',
       'instruction-following_score',
     ]);
+  });
+
+  test('getMetricGroupOrder returns metric headers in grid column order', () => {
+    const columns = getAnalyticsColumns([
+      {
+        metricValues: {
+          'DeepEval: Answer Relevancy': { score: 0.8 },
+          'Exact Match': { exact_match: 1 },
+        },
+      },
+    ] as any);
+
+    expect(getMetricGroupOrder(columns)).toEqual(['DeepEval: Answer Relevancy', 'Exact Match']);
   });
 
   test('Should handle empty results', () => {

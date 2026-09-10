@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import Grafana from '@/public/images/icons/grafana.svg';
@@ -8,18 +8,21 @@ import IconCompare from '@/public/images/icons/difference.svg';
 import { IconColumns2, IconFileExport, IconPlayerStop } from '@tabler/icons-react';
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
-import { cancelRun } from '@/src/app/[lang]/runs/actions';
+import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
 import { AdaptiveHeaderActionsConfig } from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
+import { useNotification } from '@/src/context/NotificationContext';
 import { BASE_BUTTON_ICON_PROPS, BASE_BUTTON_ICON_SIZE } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
 import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 import { useRunViewTabState } from './use-run-view-tab-state';
@@ -31,6 +34,7 @@ interface Props {
 
 const RunView: FC<Props> = ({ run, onRemove }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [selectedRun, setSelectedRun] = useState<Run>(run);
@@ -54,9 +58,37 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const onRunCancelled = useCallback(async () => {
     setSelectedRun((prev) => ({
       ...prev,
-      status: RunStatus.CANCELLED,
+      status: RunStatus.CANCELLING,
     }));
   }, []);
+
+  // A cancellation can also fail, putting the run back to RUNNING, so the exit condition is leaving
+  // CANCELLING rather than reaching a settled status.
+  useEffect(() => {
+    if (selectedRun.status !== RunStatus.CANCELLING || !selectedRun.id) {
+      return;
+    }
+
+    const runId = selectedRun.id;
+    const interval = setInterval(async () => {
+      const run = await getRun(runId);
+      if (!run?.status || run.status === RunStatus.CANCELLING) {
+        return;
+      }
+
+      if (run.status === RunStatus.RUNNING) {
+        showNotification(
+          getErrorNotification(t(RunsI18nKey.CancelRunFailed), t(RunsI18nKey.CancelRunFailedDescription)),
+        );
+      }
+
+      setSelectedRun((prev) => ({ ...prev, status: run.status }));
+    }, RUN_CANCEL_POLL_INTERVAL);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [selectedRun.id, selectedRun.status, showNotification, t]);
 
   const onOpenCompare = useCallback(() => openCompareRun(selectedRun), [openCompareRun, selectedRun]);
 

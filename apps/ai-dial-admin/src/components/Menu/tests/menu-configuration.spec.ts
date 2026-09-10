@@ -152,6 +152,7 @@ describe('MENU_CONFIGURATION — Assets group', () => {
     expect(keys).not.toContain(MenuI18nKey.PlatformModels);
     expect(keys).not.toContain(MenuI18nKey.PlatformAppRunners);
     expect(keys).not.toContain(MenuI18nKey.PlatformInterceptors);
+    expect(keys).not.toContain(MenuI18nKey.PlatformTranslators);
     expect(keys).not.toContain(MenuI18nKey.PlatformRoutes);
     expect(keys).not.toContain(MenuI18nKey.PlatformRoles);
     expect(keys).not.toContain(MenuI18nKey.PlatformKeys);
@@ -190,16 +191,25 @@ describe('MENU_CONFIGURATION — Catalog group', () => {
     expect(catalogGroup?.isPreview).toBe(true);
   });
 
-  test('Catalog group contains all six platform entity items', () => {
+  test('Catalog group contains all seven platform entity items', () => {
     const catalogGroup = findCatalogGroup(baseFlags);
     const keys = catalogGroup?.items.map((item) => item.key) || [];
 
     expect(keys).toContain(MenuI18nKey.PlatformModels);
     expect(keys).toContain(MenuI18nKey.PlatformAppRunners);
     expect(keys).toContain(MenuI18nKey.PlatformInterceptors);
+    expect(keys).toContain(MenuI18nKey.PlatformTranslators);
     expect(keys).toContain(MenuI18nKey.PlatformRoutes);
     expect(keys).toContain(MenuI18nKey.PlatformRoles);
     expect(keys).toContain(MenuI18nKey.PlatformKeys);
+  });
+
+  test('Translators follows Interceptors and precedes Routes', () => {
+    const catalogGroup = findCatalogGroup(baseFlags);
+    const keys = catalogGroup?.items.map((item) => item.key) || [];
+
+    expect(keys.indexOf(MenuI18nKey.PlatformTranslators)).toBe(keys.indexOf(MenuI18nKey.PlatformInterceptors) + 1);
+    expect(keys.indexOf(MenuI18nKey.PlatformTranslators)).toBe(keys.indexOf(MenuI18nKey.PlatformRoutes) - 1);
   });
 
   test('platform items in Catalog have no individual isPreview flag (preview is on the group)', () => {
@@ -208,6 +218,7 @@ describe('MENU_CONFIGURATION — Catalog group', () => {
       MenuI18nKey.PlatformModels,
       MenuI18nKey.PlatformAppRunners,
       MenuI18nKey.PlatformInterceptors,
+      MenuI18nKey.PlatformTranslators,
       MenuI18nKey.PlatformRoutes,
       MenuI18nKey.PlatformRoles,
       MenuI18nKey.PlatformKeys,

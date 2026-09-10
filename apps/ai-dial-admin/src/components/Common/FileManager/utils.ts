@@ -39,6 +39,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.PlatformModels]: FileManagerI18nKey.Models,
   [ApplicationRoute.PlatformAppRunners]: FileManagerI18nKey.AppRunners,
   [ApplicationRoute.PlatformInterceptors]: FileManagerI18nKey.Interceptors,
+  [ApplicationRoute.PlatformTranslators]: FileManagerI18nKey.Translators,
   [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
   [ApplicationRoute.PlatformRoles]: FileManagerI18nKey.Roles,
   [ApplicationRoute.PlatformKeys]: FileManagerI18nKey.Keys,
@@ -216,6 +217,7 @@ export const getBulkActionsToolbarOptions = (
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformAppRunners ||
     view === ApplicationRoute.PlatformInterceptors ||
+    view === ApplicationRoute.PlatformTranslators ||
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformKeys ||

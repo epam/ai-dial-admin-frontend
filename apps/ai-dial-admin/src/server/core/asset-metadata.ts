@@ -7,6 +7,7 @@ import {
   DialRoleResource,
   DialRouteResource,
   DialToolsetResource,
+  DialTranslatorResource,
 } from '@/src/models/dial/resource';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
@@ -255,6 +256,23 @@ export const mergeInterceptorResource = (
 };
 
 /**
+ * Translators are flat and unversioned like interceptors — merged via `flatMetadataFields` for the
+ * same reason: the metadata `url`'s remainder after stripping `translators/platform/` is a bare name
+ * with no `/` separator to split into folderId + name. `Translator` is a plain POJO on Core (no
+ * `Deployment`/`RoleBasedEntity` base), so — unlike every other flat-platform merger — there is no
+ * additional content field this merger needs to normalize.
+ */
+export const mergeTranslatorResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialTranslatorResource => {
+  return {
+    ...content,
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]),
+  } as DialTranslatorResource;
+};
+
+/**
  * Routes are flat and unversioned like models and interceptors — merged via `flatMetadataFields` for
  * the same reason: the metadata `url`'s remainder after stripping `routes/platform/` is a bare name
  * with no `/` separator to split into folderId + name.
@@ -435,6 +453,7 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.MODEL]: mergeModelResource,
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
+  [ResourceType.TRANSLATOR]: mergeTranslatorResource,
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
   [ResourceType.PROJECT_KEY]: mergeKeyResource,

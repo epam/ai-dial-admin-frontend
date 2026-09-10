@@ -25,11 +25,13 @@ const buildFreshTree = (sections: RowDetailSection[], defaultHiddenFields: Reado
 const mergeOrderAndHide = (fresh: ColDef[], prev: ColDef[]): ColDef[] => {
   const freshByKey = new Map(fresh.map((node) => [getNodeKey(node), node]));
   const prevByKey = new Map(prev.map((node) => [getNodeKey(node), node]));
-
-  const orderedKeys = [
-    ...prev.map(getNodeKey).filter((key) => freshByKey.has(key)),
-    ...fresh.map(getNodeKey).filter((key) => !prevByKey.has(key)),
-  ];
+  const freshKeys = fresh.map(getNodeKey);
+  const prevKeysPresent = prev.map(getNodeKey).filter((key) => freshByKey.has(key));
+  const isSameKeySet =
+    prevKeysPresent.length === freshKeys.length && prevKeysPresent.every((key) => freshByKey.has(key));
+  // Same key set: keep Display reorder. When the set changes (e.g. another row has extra
+  // metric groups), use fresh order so metrics stay grouped after Execution.
+  const orderedKeys = isSameKeySet ? prevKeysPresent : freshKeys;
 
   return orderedKeys.map((key) => {
     const freshNode = freshByKey.get(key) as ColDef;

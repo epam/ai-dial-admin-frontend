@@ -16,6 +16,7 @@ export enum MenuI18nKey {
   Models = 'Menu.Models',
   PlatformModels = 'Menu.PlatformModels',
   PlatformInterceptors = 'Menu.PlatformInterceptors',
+  PlatformTranslators = 'Menu.PlatformTranslators',
   PlatformRoutes = 'Menu.PlatformRoutes',
   PlatformRoles = 'Menu.PlatformRoles',
   PlatformKeys = 'Menu.PlatformKeys',
@@ -304,6 +305,7 @@ export enum DeleteI18nKey {
   Skill = 'DeleteEntity.Entities.Skill',
   Route = 'DeleteEntity.Entities.Route',
   Interceptor = 'DeleteEntity.Entities.Interceptor',
+  Translator = 'DeleteEntity.Entities.Translator',
   Role = 'DeleteEntity.Entities.Role',
   Key = 'DeleteEntity.Entities.Key',
   Prompt = 'DeleteEntity.Entities.Prompt',
@@ -331,6 +333,7 @@ export enum DeleteI18nKey {
   Models = 'DeleteEntity.BulkDelete.Models',
   ApplicationRunners = 'DeleteEntity.BulkDelete.ApplicationRunners',
   Interceptors = 'DeleteEntity.BulkDelete.Interceptors',
+  Translators = 'DeleteEntity.BulkDelete.Translators',
   Routes = 'DeleteEntity.BulkDelete.Routes',
   Roles = 'DeleteEntity.BulkDelete.Roles',
 
@@ -454,6 +457,7 @@ export enum UpdateI18nKey {
   Application = 'UpdateEntity.Entities.Application',
   Toolset = 'UpdateEntity.Entities.Toolset',
   Skill = 'UpdateEntity.Entities.Skill',
+  Translator = 'UpdateEntity.Entities.Translator',
   Route = 'UpdateEntity.Entities.Route',
   Interceptor = 'UpdateEntity.Entities.Interceptor',
   Role = 'UpdateEntity.Entities.Role',
@@ -491,6 +495,7 @@ export enum CreateI18nKey {
   Application = 'CreateEntity.Entities.Application',
   Toolsets = 'CreateEntity.Entities.Toolsets',
   Route = 'CreateEntity.Entities.Route',
+  Translator = 'CreateEntity.Entities.Translator',
   Interceptor = 'CreateEntity.Entities.Interceptor',
   Role = 'CreateEntity.Entities.Role',
   Key = 'CreateEntity.Entities.Key',
@@ -1030,6 +1035,7 @@ export enum ActivityAuditI18nKey {
   ActivityDetails = 'ActivityAudit.ActivityDetails',
   BeforeAfter = 'ActivityAudit.BeforeAfter',
   BeforeCurrent = 'ActivityAudit.BeforeCurrent',
+  SnapshotUnavailableTitle = 'ActivityAudit.SnapshotUnavailableTitle',
 }
 
 export enum RollbackI18nKey {
@@ -1311,6 +1317,9 @@ export enum EntityFieldsI18nKey {
   deploymentIdTooltip = 'EntityFields.deploymentIdTooltip',
   endpoint = 'EntityFields.endpoint',
   endpointLegacyCaption = 'EntityFields.endpointLegacyCaption',
+  translatorIn = 'EntityFields.translatorIn',
+  translatorOut = 'EntityFields.translatorOut',
+  baseUrl = 'EntityFields.baseUrl',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
@@ -2137,6 +2146,7 @@ export enum RunsI18nKey {
   Completed = 'Runs.Status.Completed',
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
+  Cancelling = 'Runs.Status.Cancelling',
   Cancelled = 'Runs.Status.Cancelled',
   MetricFailedText = 'Runs.MetricFailedText',
   NumericDiff = 'Runs.NumericDiff',
@@ -2189,6 +2199,8 @@ export enum RunsI18nKey {
   CancelRunModalDescription = 'Runs.CancelRunModalDescription',
   CancelRunSuccess = 'Runs.CancelRunSuccess',
   CancelRunSuccessDescription = 'Runs.CancelRunSuccessDescription',
+  CancelRunFailed = 'Runs.CancelRunFailed',
+  CancelRunFailedDescription = 'Runs.CancelRunFailedDescription',
 }
 
 export enum ExportRunI18nKey {
@@ -2220,6 +2232,8 @@ export enum FileManagerI18nKey {
   AppRunner = 'FileManager.AppRunner',
   Interceptors = 'FileManager.Interceptors',
   Interceptor = 'FileManager.Interceptor',
+  Translators = 'FileManager.Translators',
+  Translator = 'FileManager.Translator',
   Routes = 'FileManager.Routes',
   Route = 'FileManager.Route',
   Roles = 'FileManager.Roles',
@@ -2259,6 +2273,8 @@ export enum FileManagerI18nKey {
   AppRunnersEmptyStateDescription = 'FileManager.AppRunnersEmptyStateDescription',
   InterceptorsEmptyStateTitle = 'FileManager.InterceptorsEmptyStateTitle',
   InterceptorsEmptyStateDescription = 'FileManager.InterceptorsEmptyStateDescription',
+  TranslatorsEmptyStateTitle = 'FileManager.TranslatorsEmptyStateTitle',
+  TranslatorsEmptyStateDescription = 'FileManager.TranslatorsEmptyStateDescription',
   RoutesEmptyStateTitle = 'FileManager.RoutesEmptyStateTitle',
   RoutesEmptyStateDescription = 'FileManager.RoutesEmptyStateDescription',
   RolesEmptyStateTitle = 'FileManager.RolesEmptyStateTitle',
@@ -2651,6 +2667,7 @@ export enum AnalyticsTablesI18nKey {
   ConnectEnrichmentColumns = 'AnalyticsTables.ConnectEnrichmentColumns',
   WriteProgrammatically = 'AnalyticsTables.WriteProgrammatically',
   AddRowsPurpose = 'AnalyticsTables.AddRowsPurpose',
+  JsonDefinition = 'AnalyticsTables.JsonDefinition',
 }
 
 export enum AnalyticsPipelinesI18nKey {
@@ -2872,6 +2889,13 @@ export enum AnalyticsEvaluatorsI18nKey {
   OutputVarsRequired = 'AnalyticsEvaluators.OutputVarsRequired',
   RuleTargetEnrichment = 'AnalyticsEvaluators.RuleTargetEnrichment',
   RuleResolvedVersion = 'AnalyticsEvaluators.RuleResolvedVersion',
+  CreateEvaluatorTitle = 'AnalyticsEvaluators.CreateEvaluatorTitle',
+  CreateEvaluatorFailed = 'AnalyticsEvaluators.CreateEvaluatorFailed',
+  NameInvalid = 'AnalyticsEvaluators.NameInvalid',
+  NameTaken = 'AnalyticsEvaluators.NameTaken',
+  EvaluatorCreated = 'AnalyticsEvaluators.EvaluatorCreated',
+  EvaluatorCreatedAsVersion = 'AnalyticsEvaluators.EvaluatorCreatedAsVersion',
+  EvaluatorCreatedVersionUnknown = 'AnalyticsEvaluators.EvaluatorCreatedVersionUnknown',
 }
 
 export enum ConversationsTraceI18nKey {

@@ -15,6 +15,7 @@ import {
   createInterceptor,
   getInterceptor,
 } from '@/src/app/[lang]/platform-interceptors/actions';
+import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
@@ -47,6 +48,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
+import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
@@ -221,6 +223,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.AppRunners;
     case ApplicationRoute.PlatformInterceptors:
       return FileManagerI18nKey.Interceptors;
+    case ApplicationRoute.PlatformTranslators:
+      return FileManagerI18nKey.Translators;
     case ApplicationRoute.PlatformRoutes:
       return FileManagerI18nKey.Routes;
     case ApplicationRoute.PlatformRoles:
@@ -273,6 +277,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.InterceptorsEmptyStateTitle),
         description: t(FileManagerI18nKey.InterceptorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformTranslators:
+      return {
+        title: t(FileManagerI18nKey.TranslatorsEmptyStateTitle),
+        description: t(FileManagerI18nKey.TranslatorsEmptyStateDescription),
       };
     case ApplicationRoute.PlatformRoutes:
       return {
@@ -341,6 +350,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
+  [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
   [ApplicationRoute.PlatformKeys]: useKeysFolder,
@@ -355,6 +365,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
+  [ApplicationRoute.PlatformTranslators]: getTranslator,
   [ApplicationRoute.PlatformRoutes]: getRoute,
   [ApplicationRoute.PlatformRoles]: getRole,
   [ApplicationRoute.PlatformKeys]: getKey,
@@ -398,6 +409,9 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformInterceptors]: createInterceptor as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.PlatformTranslators]: createTranslator as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformRoutes]: createRoute as (
@@ -462,6 +476,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
+  [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
   [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,

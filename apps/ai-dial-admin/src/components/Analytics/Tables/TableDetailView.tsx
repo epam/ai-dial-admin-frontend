@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -15,14 +15,27 @@ import {
   DialNeutralButton,
   DialPrimaryButton,
   DialTabs,
+  ElementSize,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlugConnected } from '@tabler/icons-react';
 
-import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
+import {
+  addRows,
+  defineTableSchema,
+  deleteTable,
+  getTable,
+  updateTable,
+  updateTableSchema,
+} from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
+import {
+  buildDraftDocument,
+  formatDraftDocument,
+  splitDraftDocument,
+} from '@/src/components/Analytics/Tables/draft-document';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
@@ -39,12 +52,18 @@ import {
   parseRowsJson,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
+import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -54,6 +73,7 @@ import {
   AnalyticsTableColumn,
   AnalyticsTableType,
   DraftSchemaDto,
+  DraftTableDocument,
   TableStatus,
 } from '@/src/models/analytics/table';
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
@@ -61,6 +81,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -85,6 +106,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   // analytics off. Gating the tab strip here is what keeps the Audit tab — and its activity request —
   // out of that install.
   const { featureFlags } = useAppContext();
+  const { dispatch, jsonErrors } = useSaveValidationContext();
 
   const [table, setTable] = useState<AnalyticsTable>(initialTable);
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
@@ -97,6 +119,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [draftDocument, setDraftDocument] = useState<DraftTableDocument | null>(null);
 
   const isSystem = Boolean(table.system);
   // An enrichment's rows come from the enrichment process, so the write half of Connect never applies
@@ -109,6 +133,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
 
   const draft = useDraftSchemaForm(table, sourceTable, t);
+
+  // The DTO the table's stored definition yields, turned into the same document shape the editor
+  // seeds from — serves both as the document's unchanged baseline and as what Discard restores.
+  const storedDocument = useMemo(() => buildDraftDocument(table, draft.baselineDto), [table, draft.baselineDto]);
+  // Only meaningful once the document has been seeded; before that there is nothing to compare.
+  const isDocumentChanged = Boolean(draftDocument) && !isEqualSkippingUndefined(draftDocument, storedDocument);
+  // EntityJsonEditor forwards only a successful parse, so text the caller broke never reaches
+  // draftDocument — without the markers there is no Discard to back out of it and no Save to be told
+  // what is wrong.
+  const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
+  const isChangeBarShown = !isActive && canModify && (draft.isChanged || isDocumentChanged || hasJsonErrors);
 
   // An enrichment's grain key is a column on its source table (draft: populates grain-key options;
   // active: backfills the pinned grain-key row's type/tag/display metadata, which the enrichment table's
@@ -173,6 +208,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       const res = await defineTableSchema(name, dto);
       if (res.success) {
         showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.TableActive)));
+        // Before the reload, not after: the refreshed table reads ACTIVE, where the same toggle means
+        // the read-only definition view, and an author who just materialized belongs on the live column
+        // surface (design.md D1). Resetting first leaves no commit in which ACTIVE meets an open editor.
+        setIsEditorEnabled(false);
         await reload();
         return true;
       }
@@ -184,6 +223,55 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
 
   const onSubmitDefineSchema = () => {
     if (draft.canMaterialize) void onDefineSchema(draft.buildDto());
+  };
+
+  // The document carries catalog metadata the schema endpoint does not accept, so a save from the
+  // editor is two requests in order: the metadata merge-patch first, and the schema only if it
+  // succeeded — a schema call materializes the table, after which the metadata could still be edited
+  // from the catalog, but a metadata failure hidden behind a materialized table could not.
+  const onSubmitDocument = async (document: DraftTableDocument) => {
+    const { update, schema } = splitDraftDocument(document);
+    const res = await updateTable(name, update);
+    if (!res.success) {
+      notifyFailed(res);
+      return;
+    }
+    await onDefineSchema(schema);
+  };
+
+  // Editor mode's only client-side gate is that the document parses: EntityJsonEditor forwards a
+  // successful parse only, so with markers present the stored document is the last good one and an
+  // ungated save would send stale content.
+  const onTryToSave = () => {
+    if (!isEditorEnabled) {
+      onSubmitDefineSchema();
+      return;
+    }
+    if (jsonErrors?.length) {
+      const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
+      dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
+      return;
+    }
+    if (draftDocument) void onSubmitDocument(draftDocument);
+  };
+
+  // Seeded on the first entry only. The document is the sole holder of hand-authored JSON — the column
+  // form cannot represent `description`, `tag_order` or a pasted pass-through member — so re-seeding on
+  // a later entry would silently discard it. An ACTIVE table's view reads `storedDocument` and never
+  // `draftDocument`, so seeding there would only be dead state for `isDocumentChanged` to compare.
+  const onToggleEditor = () => {
+    if (!isActive && !draftDocument) setDraftDocument(buildDraftDocument(table, draft.buildDto()));
+    setIsEditorEnabled((prev) => !prev);
+  };
+
+  // The dispatch has to precede the two resets — as in EvaluatorDetailView.onDiscard: EntityJsonEditor
+  // keeps its editor id across the remount, so a stale marker would otherwise hold the changed header up
+  // on its own. The active surface does not change: discarding while the editor is open leaves the
+  // author in the editor, looking at the restored document.
+  const onDiscard = () => {
+    dispatch({ type: ValidationActionType.Reset });
+    draft.reset();
+    if (draftDocument) setDraftDocument(storedDocument);
   };
 
   const onDrop = useCallback(
@@ -296,6 +384,22 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   // On an active table it needs no permission the detail view does not already require.
   const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
 
+  // `entity` is handed the document object exactly as EntityJsonEditor last produced it, and stored by
+  // reference: the component keeps that same object in `lastEntityFromEditorRef` and skips its reseeding
+  // effect while `entity` is identical to it. Deriving, cloning or normalizing the object here would make
+  // every accepted keystroke a new reference, remounting Monaco and resetting the cursor — jsdom mocks
+  // Monaco away, so no test in this repo can catch that (design.md D2).
+  const draftEditor = (
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+      {/* The cast is the shared component's own shape: `entity` is nullable but `setSelectedEntity` is
+          not, and the editor only ever calls it with a parsed object, never with an updater. */}
+      <EntityJsonEditor
+        entity={draftDocument}
+        setSelectedEntity={setDraftDocument as Dispatch<SetStateAction<DraftTableDocument>>}
+      />
+    </div>
+  );
+
   const properties = (
     <TableProperties
       table={table}
@@ -306,6 +410,48 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       onRenameCell={onRenameCell}
     />
   );
+
+  // The draft's two authoring surfaces are mutually exclusive: the toggle swaps the column-by-column
+  // surface for the editable document and back.
+  const draftSurface = isEditorEnabled ? draftEditor : properties;
+
+  // The same object the memo at the top produced, handed over by reference: EntityJsonEditor keeps the
+  // last `entity` it saw and remounts Monaco for any object that is not identical to it, so a
+  // re-derivation, a clone or a spread here would remount on every parent render (design.md D3).
+  // Read-only here is a rule, not a structure: `setDraftDocument` is in scope at this call site, so
+  // nothing but discipline stops a writer prop being added. `readonly` alone is not enough — passing
+  // `setSelectedEntity`, `setIsChanged` or `onChangeText` would make this surface editable (design.md D5).
+  const definitionJson = (
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+      <EntityJsonEditor entity={storedDocument} readonly />
+    </div>
+  );
+
+  // A full JSON.stringify of the definition, re-derived only when the memoized document itself
+  // changes — not on every one of this view's many unrelated re-renders (design.md D6).
+  const copyValue = useMemo(() => formatDraftDocument(storedDocument), [storedDocument]);
+
+  const tabbedBody = (
+    <>
+      <div className="mb-6">
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+      </div>
+      {activeTab === EntityViewTab.Properties && properties}
+      {activeTab === EntityViewTab.Audit && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <TableAudit table={table} />
+        </div>
+      )}
+    </>
+  );
+
+  // With analytics disabled the Properties content is the whole body — no tab strip, and no Audit tab to
+  // issue an analytics activity request from.
+  const activeBody = featureFlags.analyticsEnabled ? tabbedBody : properties;
+  // The read-only document takes over the whole body, tab strip included, so nothing of the page is left
+  // reachable behind it. `activeTab` is untouched, which is what brings the reader back to the tab they
+  // were on when the toggle goes off.
+  const activeSurface = isEditorEnabled ? definitionJson : activeBody;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
@@ -327,40 +473,70 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           </div>
           {/* shrink-0 keeps the actions at their natural width, so no description length can squeeze a
               button label onto a second line; the title next to them truncates instead. */}
-          {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
+          {/* `isActive` alone, not `isActive && canConnect`: on an active table the JSON-editor toggle
+              is always in the container, so an enrichment with no source table viewed by a caller with
+              no permissions still gets a header. Every other child keeps its own gate. */}
+          {(isActive || canDelete || canWrite || canModify || canManageRoles) && (
             <div className="flex shrink-0 items-center gap-4">
-              {canManageRoles && (
-                <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
-              )}
-              {canDelete && (
-                <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-              )}
-              {isActive ? (
+              {isChangeBarShown ? (
+                <ChangedEntityButtons
+                  disableSave={!isEditorEnabled && !draft.canMaterialize}
+                  onDiscard={onDiscard}
+                  onSave={onTryToSave}
+                />
+              ) : (
                 <>
-                  {canModify && (
-                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
-                  )}
-                  {canWrite && !isEnrichment && (
-                    <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
-                  )}
-                  {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
-                      which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
-                  {canConnect && (
-                    <DialPrimaryButton
-                      label={t(AnalyticsTablesI18nKey.Connect)}
-                      onClick={() => setConnectOpen(true)}
-                      iconBefore={<IconPlugConnected size={18} />}
+                  {canManageRoles && (
+                    <DialNeutralButton
+                      label={t(AnalyticsTablesI18nKey.ManageAccess)}
+                      onClick={() => setAccessOpen(true)}
                     />
                   )}
+                  {canDelete && (
+                    <DialDangerButton
+                      label={t(AnalyticsTablesI18nKey.DeleteTable)}
+                      onClick={() => setConfirmOpen(true)}
+                    />
+                  )}
+                  {isActive ? (
+                    <>
+                      {canModify && (
+                        <DialNeutralButton
+                          label={t(AnalyticsTablesI18nKey.AddColumns)}
+                          onClick={() => setAddOpen(true)}
+                        />
+                      )}
+                      {canWrite && !isEnrichment && (
+                        <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                      )}
+                      {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
+                          which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
+                      {canConnect && (
+                        <DialPrimaryButton
+                          label={t(AnalyticsTablesI18nKey.Connect)}
+                          onClick={() => setConnectOpen(true)}
+                          iconBefore={<IconPlugConnected size={18} />}
+                        />
+                      )}
+                      {/* After the primary Connect, not before it: Connect stays the last action, but the
+                          toggle — and, while it is on, the copy control beside it — is now the last
+                          control. Not permission-gated here: on an active table it opens a read-only view
+                          of the stored definition and writes nothing, and a system table, which reports
+                          {write:false, modify:false} to everyone, is the one whose definition is most often
+                          read as a document. */}
+                      {isActive && isEditorEnabled && (
+                        <CopyButton
+                          valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
+                          value={copyValue}
+                          size={ElementSize.Small}
+                        />
+                      )}
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
+                    </>
+                  ) : (
+                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
+                  )}
                 </>
-              ) : (
-                canModify && (
-                  <DialPrimaryButton
-                    label={t(ButtonsI18nKey.Save)}
-                    disabled={!draft.canMaterialize}
-                    onClick={onSubmitDefineSchema}
-                  />
-                )
               )}
             </div>
           )}
@@ -371,24 +547,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
         {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
       </div>
 
-      {/* One fallback for both conditions: with analytics disabled, or on a table that is not active,
-          the Properties body is the whole view — no tab strip, and no Audit tab to issue an analytics
-          activity request from. */}
-      {featureFlags.analyticsEnabled && isActive ? (
-        <>
-          <div className="mb-6">
-            <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
-          </div>
-          {activeTab === EntityViewTab.Properties && properties}
-          {activeTab === EntityViewTab.Audit && (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <TableAudit table={table} />
-            </div>
-          )}
-        </>
-      ) : (
-        properties
-      )}
+      {isActive ? activeSurface : draftSurface}
 
       {confirmOpen && (
         <DialConfirmationPopup

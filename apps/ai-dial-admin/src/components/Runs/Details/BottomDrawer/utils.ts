@@ -114,7 +114,7 @@ export function buildComparisonSections(
   if (active.metricValues) Object.keys(active.metricValues).forEach((k) => metricGroupKeys.add(k));
   if (effectivePinned?.metricValues) Object.keys(effectivePinned.metricValues).forEach((k) => metricGroupKeys.add(k));
 
-  for (const groupKey of [...metricGroupKeys].sort()) {
+  for (const groupKey of metricGroupKeys) {
     const activeGroup = active.metricValues?.[groupKey];
     const pinnedGroup = effectivePinned?.metricValues?.[groupKey];
     const activeGroupExists = active.metricValues != null && groupKey in active.metricValues;

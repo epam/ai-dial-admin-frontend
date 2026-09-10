@@ -20,6 +20,7 @@ export enum ApplicationRoute {
   PlatformModels = '/platform-models',
   PlatformAppRunners = '/platform-app-runners',
   PlatformInterceptors = '/platform-interceptors',
+  PlatformTranslators = '/platform-translators',
   PlatformRoutes = '/platform-routes',
   PlatformRoles = '/platform-roles',
   PlatformKeys = '/platform-keys',

@@ -51,6 +51,32 @@ const newerTable: ActivityAuditEntity = {
   ],
 };
 
+// An enrich pipeline's snapshot, shaped as the analytics backend serves one: scalars, a nested
+// `trigger` object, an array of binding objects, and three collections (`inputs`,
+// `input_bindings`, `state.unclamped_reads`) that are empty on both revisions.
+const olderPipeline: ActivityAuditEntity = {
+  name: 'daily_enrich',
+  kind: 'enrich',
+  target: 'conversation_buckets',
+  inputs: [],
+  trigger: { kind: 'on_ingest' },
+  enabled: true,
+  generation: 1,
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+  evaluator_name: 'conversation-buckets',
+  input_bindings: [],
+  output_bindings: [{ column: 'turn_bucket', var: 'turn_bucket' }],
+  state: { unclamped_reads: [] },
+};
+
+// Newer revision: the `enabled` flag toggled, which is all a toggle changes besides the timestamp.
+const newerPipeline: ActivityAuditEntity = {
+  ...olderPipeline,
+  enabled: false,
+  updated_at: '2026-01-02T00:00:00Z',
+};
+
 // AuditView convention: BEFORE pass renders the older revision, AFTER pass the newer one.
 const beforePass = (newer: ActivityAuditEntity | null, older: ActivityAuditEntity | null) =>
   buildAnalyticsDiff(newer, older, true);
@@ -232,6 +258,17 @@ describe('Activity audit :: buildAnalyticsDiff', () => {
     expect(Object.keys(result)).toEqual([EntityParameterKeys.PROPERTIES]);
     expect(rowFor(result.properties, 'schedule')?.diffStatus).toBe(DiffStatus.CHANGED);
     expect(rowFor(result.properties, 'enabled')?.value).toBe('true');
+  });
+
+  test('emits a row for every field an enrich-pipeline snapshot carries, empty collections included', () => {
+    const result = afterPass(olderPipeline, newerPipeline);
+    const emitted = parametersOf(result.properties);
+
+    const missingFields = Object.keys(olderPipeline).filter(
+      (field) => !emitted.some((parameter) => parameter === field || parameter.startsWith(`${field}.`)),
+    );
+
+    expect(missingFields).toEqual([]);
   });
 
   test('returns only an empty properties bucket when the rendered side is absent', () => {
