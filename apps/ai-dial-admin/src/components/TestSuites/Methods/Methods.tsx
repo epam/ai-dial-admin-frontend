@@ -15,7 +15,7 @@ import {
 
 import { DialCollapsibleSidebar, DialConditionalResizableContainer, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getDeployment } from '@/src/app/[lang]/test-suites/actions';
+import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import { buildMethodGroups, flattenMethodGroups } from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -88,8 +88,8 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
 
   useEffect(() => {
     if (!fullApplication && selectedTarget) {
-      const { deploymentId, $type } = selectedTarget;
-      getDeployment(deploymentId, $type)
+      const { deploymentId } = selectedTarget;
+      getDeploymentById(deploymentId)
         .then((data) => {
           setFullApplication(data);
 

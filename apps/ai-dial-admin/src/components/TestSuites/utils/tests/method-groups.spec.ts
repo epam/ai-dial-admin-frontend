@@ -33,21 +33,21 @@ const titles = (params: Parameters<typeof buildMethodGroups>[0]) =>
 describe('buildMethodGroups', () => {
   describe('Responses group gating', () => {
     test('omits the group when interfaces are not reported', () => {
-      expect(titles({ deployment: deployment() })).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({ deployment: deployment() })).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
 
     test('omits the group when the reported interfaces do not include openaiResponses', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIChatCompletions];
 
-      expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
 
     test('includes the group when openaiResponses is reported', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIResponses];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
-        TestSuitesI18nKey.Responses,
+        TestSuitesI18nKey.OpenAIChatCompletions,
+        TestSuitesI18nKey.OpenAIResponses,
       ]);
     });
 
@@ -57,7 +57,7 @@ describe('buildMethodGroups', () => {
         endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses' },
       });
 
-      expect(titleKeys).toContain(TestSuitesI18nKey.Responses);
+      expect(titleKeys).toContain(TestSuitesI18nKey.OpenAIResponses);
     });
 
     test('includes the group for a suite selecting a response-scoped method', () => {
@@ -66,7 +66,7 @@ describe('buildMethodGroups', () => {
         endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses/[^/]+/cancel' },
       });
 
-      expect(titleKeys).toContain(TestSuitesI18nKey.Responses);
+      expect(titleKeys).toContain(TestSuitesI18nKey.OpenAIResponses);
     });
 
     test('omits the group for a suite selecting an unrelated method', () => {
@@ -75,7 +75,7 @@ describe('buildMethodGroups', () => {
         endpointRef: { method: 'POST', relativeUrlPattern: '/chat/completions' },
       });
 
-      expect(titleKeys).not.toContain(TestSuitesI18nKey.Responses);
+      expect(titleKeys).not.toContain(TestSuitesI18nKey.OpenAIResponses);
     });
 
     test("omits the group for a suite selecting a deployment's own unprefixed /responses route", () => {
@@ -84,11 +84,11 @@ describe('buildMethodGroups', () => {
         endpointRef: { method: 'POST', relativeUrlPattern: '/responses' },
       });
 
-      expect(titleKeys).not.toContain(TestSuitesI18nKey.Responses);
+      expect(titleKeys).not.toContain(TestSuitesI18nKey.OpenAIResponses);
     });
 
     test('omits the group when the reported interfaces are empty', () => {
-      expect(titles({ deployment: deployment([]) })).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({ deployment: deployment([]) })).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
 
     test('includes the group for the full declared interface list', () => {
@@ -100,8 +100,8 @@ describe('buildMethodGroups', () => {
       ];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
-        TestSuitesI18nKey.Responses,
+        TestSuitesI18nKey.OpenAIChatCompletions,
+        TestSuitesI18nKey.OpenAIResponses,
         TestSuitesI18nKey.AnthropicMessages,
       ]);
     });
@@ -110,32 +110,32 @@ describe('buildMethodGroups', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.AnthropicMessages];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.OpenAIChatCompletions,
         TestSuitesI18nKey.AnthropicMessages,
       ]);
     });
 
     test('omits the group when there is no deployment at all', () => {
-      expect(titles({})).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({})).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
   });
 
   describe('Anthropic Messages group gating', () => {
     test('omits the group when interfaces are not reported', () => {
-      expect(titles({ deployment: deployment() })).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({ deployment: deployment() })).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
 
     test('omits the group when the reported interfaces do not include anthropicMessages', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.OpenAIChatCompletions];
 
-      expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({ deployment: deployment(interfaces) })).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
 
     test('includes the group when anthropicMessages is reported', () => {
       const interfaces = [DeploymentApiInterface.Chat, DeploymentApiInterface.AnthropicMessages];
 
       expect(titles({ deployment: deployment(interfaces) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.OpenAIChatCompletions,
         TestSuitesI18nKey.AnthropicMessages,
       ]);
     });
@@ -165,22 +165,22 @@ describe('buildMethodGroups', () => {
     });
 
     test('omits the group when there is no deployment at all', () => {
-      expect(titles({})).toEqual([TestSuitesI18nKey.ChatInterface]);
+      expect(titles({})).toEqual([TestSuitesI18nKey.OpenAIChatCompletions]);
     });
   });
 
   describe('group order and contents', () => {
     test('orders chat interface, responses, then routes', () => {
       expect(titles({ deployment: deployment([DeploymentApiInterface.OpenAIResponses], ROUTES) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
-        TestSuitesI18nKey.Responses,
+        TestSuitesI18nKey.OpenAIChatCompletions,
+        TestSuitesI18nKey.OpenAIResponses,
         TestSuitesI18nKey.Other,
       ]);
     });
 
     test('lists the four Responses operations in order', () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
-      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
+      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses);
 
       expect(responses?.options.map(({ ref }) => [ref.method, ref.relativeUrlPattern])).toEqual([
         ['POST', '/openai/v1/responses'],
@@ -192,7 +192,7 @@ describe('buildMethodGroups', () => {
 
     test('shows the readable URL rather than the regex pattern', () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
-      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
+      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses);
 
       expect(responses?.options.map(({ displayUrl }) => displayUrl)).toEqual([
         '/openai/v1/responses',
@@ -225,7 +225,7 @@ describe('buildMethodGroups', () => {
 
     test('offers chat interface and routes for a target declaring no API interfaces', () => {
       expect(titles({ deployment: deployment(undefined, ROUTES) })).toEqual([
-        TestSuitesI18nKey.ChatInterface,
+        TestSuitesI18nKey.OpenAIChatCompletions,
         TestSuitesI18nKey.Other,
       ]);
     });
@@ -244,7 +244,7 @@ describe('buildMethodGroups', () => {
         takenColumnNames,
       });
 
-      return groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses)?.options[0]?.seed;
+      return groups.find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses)?.options[0]?.seed;
     };
 
     test('seeds model from the deployment id and input from the user_message variable', () => {
@@ -278,7 +278,7 @@ describe('buildMethodGroups', () => {
   describe('response-scoped seeds', () => {
     const responseScopedSeeds = () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
-      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.Responses);
+      const responses = groups.find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses);
 
       return responses?.options.slice(1).map(({ seed }) => seed) ?? [];
     };
@@ -303,7 +303,7 @@ describe('buildMethodGroups', () => {
     test('reject a path that omits the DIAL Responses prefix', () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const item = groups
-        .find((group) => group.titleKey === TestSuitesI18nKey.Responses)
+        .find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses)
         ?.options.find(({ ref }) => ref.method === 'GET');
 
       const pattern = new RegExp(item?.ref.relativeUrlPattern ?? '');
@@ -315,7 +315,7 @@ describe('buildMethodGroups', () => {
     test('accept the seeded placeholder path and a concrete response id, and reject an unrelated path', () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const cancel = groups
-        .find((group) => group.titleKey === TestSuitesI18nKey.Responses)
+        .find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses)
         ?.options.find(({ ref }) => ref.relativeUrlPattern?.endsWith('/cancel'));
 
       const pattern = new RegExp(cancel?.ref.relativeUrlPattern ?? '');

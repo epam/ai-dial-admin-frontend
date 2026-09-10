@@ -46,7 +46,7 @@ is present.
 ### Requirement: Anthropic Messages forms its own group, gated on reported support
 
 Method selection SHALL present a distinct, labelled "Anthropic Messages" group listing the create-
-message operation, ordered after the "Responses" group (when present) and before the group of
+message operation, ordered after the "OpenAI Responses" group (when present) and before the group of
 methods derived from the deployment's own routes.
 
 The group SHALL render when either of the following holds, and SHALL be absent otherwise:

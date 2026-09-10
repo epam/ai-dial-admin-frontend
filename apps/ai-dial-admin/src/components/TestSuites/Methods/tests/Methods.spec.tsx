@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Methods from '../Methods';
 
-const mockGetDeployment = vi.fn();
+const mockGetDeploymentById = vi.fn();
 const mockGenerateMethodPathCombinations = vi.fn();
 
 vi.mock('@/src/components/TestSuites/utils/method', () => ({
@@ -11,7 +11,7 @@ vi.mock('@/src/components/TestSuites/utils/method', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getDeployment: (...args: any[]) => mockGetDeployment(...args),
+  getDeploymentById: (...args: any[]) => mockGetDeploymentById(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
@@ -59,9 +59,9 @@ describe('Methods component', () => {
 
   beforeEach(() => {
     onChange.mockClear();
-    mockGetDeployment.mockClear();
+    mockGetDeploymentById.mockClear();
     mockGenerateMethodPathCombinations.mockClear();
-    mockGetDeployment.mockResolvedValue(mockDeployment);
+    mockGetDeploymentById.mockResolvedValue(mockDeployment);
     mockGenerateMethodPathCombinations.mockReturnValue(mockMethods);
   });
 
@@ -83,7 +83,8 @@ describe('Methods component', () => {
     render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     await waitFor(() => {
-      expect(mockGetDeployment).toHaveBeenCalledWith('test-deployment', 'application');
+      expect(mockGetDeploymentById).toHaveBeenCalledOnce();
+      expect(mockGetDeploymentById).toHaveBeenCalledWith('test-deployment');
       expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith(mockDeployment.routes);
     });
   });
@@ -140,12 +141,12 @@ describe('Methods component', () => {
     );
 
     await waitFor(() => {
-      expect(mockGetDeployment).toHaveBeenCalledTimes(1);
+      expect(mockGetDeploymentById).toHaveBeenCalledOnce();
     });
 
     rerender(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
-    expect(mockGetDeployment).toHaveBeenCalledTimes(1);
+    expect(mockGetDeploymentById).toHaveBeenCalledOnce();
   });
 
   test('keeps the default chat-completion column name when it is not taken', async () => {
@@ -205,7 +206,7 @@ describe('Methods component', () => {
     const selectedApplication: any = { deploymentId: 'gpt-4o', $type: 'dial-model' };
 
     const renderWithInterfaces = (interfaces?: string[], testSuite: any = { endpointRef: {} }) => {
-      mockGetDeployment.mockResolvedValue({ ...mockDeployment, deploymentId: 'gpt-4o', interfaces });
+      mockGetDeploymentById.mockResolvedValue({ ...mockDeployment, deploymentId: 'gpt-4o', interfaces });
 
       return render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
     };
@@ -214,20 +215,20 @@ describe('Methods component', () => {
       renderWithInterfaces();
 
       await screen.findByRole('button', { name: 'POST /chat/completions' });
-      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'TestSuites.OpenAIResponses' })).not.toBeInTheDocument();
     });
 
     test('is absent when the reported interfaces omit openaiResponses', async () => {
       renderWithInterfaces(['chat', 'openaiChatCompletions']);
 
       await screen.findByRole('button', { name: 'POST /chat/completions' });
-      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'TestSuites.OpenAIResponses' })).not.toBeInTheDocument();
     });
 
     test('renders the four operations when openaiResponses is reported', async () => {
       renderWithInterfaces(['chat', 'openaiResponses']);
 
-      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+      expect(await screen.findByRole('group', { name: 'TestSuites.OpenAIResponses' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'POST /openai/v1/responses' })).toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: 'POST /openai/v1/responses/{response_id}/cancel' }),
@@ -239,19 +240,23 @@ describe('Methods component', () => {
     test('renders groups in order: chat interface, responses, other', async () => {
       renderWithInterfaces(['openaiResponses']);
 
-      await screen.findByRole('group', { name: 'TestSuites.Responses' });
+      await screen.findByRole('group', { name: 'TestSuites.OpenAIResponses' });
       const groupNames = screen
         .getAllByRole('group')
         .map((group) => group.getAttribute('aria-labelledby'))
         .map((id) => document.getElementById(id ?? '')?.textContent);
 
-      expect(groupNames).toEqual(['TestSuites.ChatInterface', 'TestSuites.Responses', 'TestSuites.Other']);
+      expect(groupNames).toEqual([
+        'TestSuites.OpenAIChatCompletions',
+        'TestSuites.OpenAIResponses',
+        'TestSuites.Other',
+      ]);
     });
 
     test('renders for the full declared interface list', async () => {
       renderWithInterfaces(['chat', 'openaiChatCompletions', 'openaiResponses', 'anthropicMessages']);
 
-      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+      expect(await screen.findByRole('group', { name: 'TestSuites.OpenAIResponses' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'POST /openai/v1/responses' })).toBeInTheDocument();
     });
 
@@ -259,14 +264,14 @@ describe('Methods component', () => {
       renderWithInterfaces(['chat', 'anthropicMessages']);
 
       await screen.findByRole('button', { name: 'POST /chat/completions' });
-      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'TestSuites.OpenAIResponses' })).not.toBeInTheDocument();
     });
 
     test('is absent when the declared interface list is empty', async () => {
       renderWithInterfaces([]);
 
       await screen.findByRole('button', { name: 'POST /chat/completions' });
-      expect(screen.queryByRole('group', { name: 'TestSuites.Responses' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'TestSuites.OpenAIResponses' })).not.toBeInTheDocument();
     });
 
     test.each([
@@ -288,7 +293,7 @@ describe('Methods component', () => {
         endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses' },
       });
 
-      expect(await screen.findByRole('group', { name: 'TestSuites.Responses' })).toBeInTheDocument();
+      expect(await screen.findByRole('group', { name: 'TestSuites.OpenAIResponses' })).toBeInTheDocument();
     });
 
     test('marks the saved Responses method as current', async () => {
@@ -335,7 +340,7 @@ describe('Methods component', () => {
     const selectedApplication: any = { deploymentId: 'claude-3', $type: 'dial-model' };
 
     const renderWithInterfaces = (interfaces?: string[], testSuite: any = { endpointRef: {} }) => {
-      mockGetDeployment.mockResolvedValue({ ...mockDeployment, deploymentId: 'claude-3', interfaces });
+      mockGetDeploymentById.mockResolvedValue({ ...mockDeployment, deploymentId: 'claude-3', interfaces });
 
       return render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
     };
@@ -362,7 +367,7 @@ describe('Methods component', () => {
     });
 
     test('is absent when a features property is truthy, since there is no features-flag equivalent', async () => {
-      mockGetDeployment.mockResolvedValue({
+      mockGetDeploymentById.mockResolvedValue({
         ...mockDeployment,
         deploymentId: 'claude-3',
         interfaces: undefined,

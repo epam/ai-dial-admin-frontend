@@ -52,9 +52,9 @@ methods derived from the deployment's own routes SHALL be unaffected by it.
 
 ### Requirement: Responses API methods form their own group, gated on the declared interfaces
 
-Method selection SHALL present a distinct, labelled "Responses" group listing the Responses API
-operations, ordered after the "Chat interface" group and before the group of methods derived from the
-deployment's own routes.
+Method selection SHALL present a distinct, labelled "OpenAI Responses" group listing the Responses
+API operations, ordered after the "OpenAI Chat Completions" group and before the group of methods
+derived from the deployment's own routes.
 
 The group SHALL render when either of the following holds, and SHALL be absent otherwise:
 
@@ -67,30 +67,31 @@ its selection visible and re-selectable even when the target stops declaring sup
 #### Scenario: Group present when the interface is declared
 
 - **WHEN** the selected target declares `interfaces` containing `openaiResponses`
-- **THEN** a "Responses" group is rendered between the "Chat interface" group and the routes group
+- **THEN** an "OpenAI Responses" group is rendered between the "OpenAI Chat Completions" group and
+  the routes group
 
 #### Scenario: Group absent when a declared list omits the Responses value
 
 - **WHEN** the selected target declares `interfaces` as `["chat", "openaiChatCompletions"]` and the
   suite does not select a Responses API method
-- **THEN** no "Responses" group is rendered
+- **THEN** no "OpenAI Responses" group is rendered
 
 #### Scenario: Group absent when nothing is declared
 
 - **WHEN** the selected target's record has no `interfaces` property, or declares it empty, and the
   suite does not select a Responses API method
-- **THEN** no "Responses" group is rendered
+- **THEN** no "OpenAI Responses" group is rendered
 
 #### Scenario: Saved selection keeps the group visible
 
 - **WHEN** the suite being edited selects a Responses API method, and the selected target declares no
   `interfaces`
-- **THEN** the "Responses" group is rendered and the suite's selected method is shown as active
+- **THEN** the "OpenAI Responses" group is rendered and the suite's selected method is shown as active
 
 ### Requirement: The group lists the four Responses API operations
 
-The "Responses" group SHALL list exactly these operations, each identified by its HTTP method and its
-DIAL-relative URL:
+The "OpenAI Responses" group SHALL list exactly these operations, each identified by its HTTP method
+and its DIAL-relative URL:
 
 | Operation | HTTP method | Relative URL |
 | --------- | ----------- | ------------ |
@@ -113,7 +114,7 @@ stored pattern uses.
 
 #### Scenario: All four operations offered
 
-- **WHEN** the "Responses" group renders
+- **WHEN** the "OpenAI Responses" group renders
 - **THEN** it lists the create, retrieve, delete, and cancel operations, each showing its HTTP method
 
 #### Scenario: DIAL prefix carried on the request path
@@ -125,7 +126,7 @@ stored pattern uses.
 
 - **WHEN** a deployment exposes its own `/responses` route and a suite selects it, and the deployment
   reports no Responses API support
-- **THEN** no "Responses" group is rendered, and that route stays in the group derived from the
+- **THEN** no "OpenAI Responses" group is rendered, and that route stays in the group derived from the
   deployment's own routes
 
 ### Requirement: Selecting the create operation configures a runnable request
@@ -232,7 +233,7 @@ re-seed its request configuration.
 #### Scenario: A saved Responses method is shown active
 
 - **WHEN** a user reopens a suite configured against `POST /responses/{response_id}/cancel`
-- **THEN** that operation is shown as the active method in the "Responses" group
+- **THEN** that operation is shown as the active method in the "OpenAI Responses" group
 
 #### Scenario: Reopening preserves an edited request
 

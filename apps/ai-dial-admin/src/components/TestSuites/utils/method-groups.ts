@@ -45,8 +45,8 @@ const isResponsesEndpoint = (endpointRef?: TestSuiteEndpointRef): boolean =>
 const shouldOfferResponses = (deployment?: Deployment | null, endpointRef?: TestSuiteEndpointRef): boolean =>
   !!deployment?.interfaces?.includes(DeploymentApiInterface.OpenAIResponses) || isResponsesEndpoint(endpointRef);
 
-const buildChatInterfaceGroup = (takenColumnNames: string[]): MethodGroup => ({
-  titleKey: TestSuitesI18nKey.ChatInterface,
+const buildChatCompletionsGroup = (takenColumnNames: string[]): MethodGroup => ({
+  titleKey: TestSuitesI18nKey.OpenAIChatCompletions,
   options: [
     {
       ref: CHAT_COMPLETION_METHOD,
@@ -63,7 +63,7 @@ const buildResponsesGroup = (deploymentId: string, takenColumnNames: string[]): 
   const createSuite = RESPONSES_SUITE(deploymentId);
 
   return {
-    titleKey: TestSuitesI18nKey.Responses,
+    titleKey: TestSuitesI18nKey.OpenAIResponses,
     options: [
       {
         ref: CREATE_RESPONSE_METHOD,
@@ -141,7 +141,7 @@ export const buildMethodGroups = ({
   endpointRef,
   takenColumnNames = [],
 }: BuildMethodGroupsParams): MethodGroup[] => {
-  const groups: MethodGroup[] = [buildChatInterfaceGroup(takenColumnNames)];
+  const groups: MethodGroup[] = [buildChatCompletionsGroup(takenColumnNames)];
 
   if (shouldOfferResponses(deployment, endpointRef)) {
     groups.push(buildResponsesGroup(deployment?.deploymentId ?? '', takenColumnNames));
