@@ -5,11 +5,22 @@ import { describe, expect, test, vi } from 'vitest';
 import EvaluatorsView from '@/src/components/Analytics/Evaluators/EvaluatorsView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
-import { AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
 
 const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+const refresh = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
+
+vi.mock('@/src/components/Analytics/Evaluators/CreateEvaluatorPopup', () => ({
+  default: ({ onCreated, onClose }: { onCreated: () => void; onClose: () => void }) => (
+    <div>
+      <span>create-evaluator-modal</span>
+      <button onClick={onCreated}>create-evaluator-succeed</button>
+      <button onClick={onClose}>create-evaluator-close</button>
+    </div>
+  ),
+}));
 
 interface MockColDef {
   headerName?: string;
@@ -89,10 +100,44 @@ describe('EvaluatorsView', () => {
     expect(screen.getByText(/^actions:/)).toHaveTextContent('actions: absent');
   });
 
-  test('offers no create control', () => {
+  test('a full admin is offered the create control', () => {
     renderView();
 
-    expect(screen.queryByRole('button', { name: /create|new|add|edit|delete|remove/i })).toBeNull();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeTruthy();
+  });
+
+  test('no row and no action column offers a mutation', () => {
+    renderView();
+
+    expect(screen.queryByRole('button', { name: /edit|delete|remove/i })).toBeNull();
+    expect(screen.getByText(/^actions:/)).toHaveTextContent('actions: absent');
+  });
+
+  test('the empty state adds no create control of its own', () => {
+    renderView({ rows: [] });
+
+    expect(screen.getAllByRole('button', { name: ButtonsI18nKey.Create })).toHaveLength(1);
+  });
+
+  test('activating the header control opens the create-evaluator modal', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    expect(screen.queryByText('create-evaluator-modal')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    expect(screen.getByText('create-evaluator-modal')).toBeTruthy();
+  });
+
+  test('a successful create refreshes the listing', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+    await user.click(screen.getByRole('button', { name: 'create-evaluator-succeed' }));
+
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
   test('activating a row opens that evaluator', async () => {
