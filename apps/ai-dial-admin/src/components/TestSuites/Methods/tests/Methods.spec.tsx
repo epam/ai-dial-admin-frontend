@@ -298,7 +298,7 @@ describe('Methods component', () => {
 
     test('marks the saved Responses method as current', async () => {
       renderWithInterfaces(['openaiResponses'], {
-        endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses/[^/]+/cancel' },
+        endpointRef: { method: 'POST', relativeUrlPattern: '^/openai/v1/responses/[^/]+/cancel$' },
       });
 
       const cancel = await screen.findByRole('button', {

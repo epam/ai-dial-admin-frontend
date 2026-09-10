@@ -63,7 +63,7 @@ describe('buildMethodGroups', () => {
     test('includes the group for a suite selecting a response-scoped method', () => {
       const titleKeys = titles({
         deployment: deployment(),
-        endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses/[^/]+/cancel' },
+        endpointRef: { method: 'POST', relativeUrlPattern: '^/openai/v1/responses/[^/]+/cancel$' },
       });
 
       expect(titleKeys).toContain(TestSuitesI18nKey.OpenAIResponses);
@@ -184,9 +184,9 @@ describe('buildMethodGroups', () => {
 
       expect(responses?.options.map(({ ref }) => [ref.method, ref.relativeUrlPattern])).toEqual([
         ['POST', '/openai/v1/responses'],
-        ['GET', '/openai/v1/responses/[^/]+'],
-        ['DELETE', '/openai/v1/responses/[^/]+'],
-        ['POST', '/openai/v1/responses/[^/]+/cancel'],
+        ['GET', '^/openai/v1/responses/[^/]+$'],
+        ['DELETE', '^/openai/v1/responses/[^/]+$'],
+        ['POST', '^/openai/v1/responses/[^/]+/cancel$'],
       ]);
     });
 
@@ -310,19 +310,23 @@ describe('buildMethodGroups', () => {
 
       expect(pattern.test('/openai/v1/responses/resp_abc123')).toBe(true);
       expect(pattern.test('/responses/resp_abc123')).toBe(false);
+      expect(pattern.test('/prefix/openai/v1/responses/resp_abc123')).toBe(false);
+      expect(pattern.test('/openai/v1/responses/resp_abc123/trailing')).toBe(false);
     });
 
     test('accept the seeded placeholder path and a concrete response id, and reject an unrelated path', () => {
       const groups = buildMethodGroups({ deployment: deployment([DeploymentApiInterface.OpenAIResponses]) });
       const cancel = groups
         .find((group) => group.titleKey === TestSuitesI18nKey.OpenAIResponses)
-        ?.options.find(({ ref }) => ref.relativeUrlPattern?.endsWith('/cancel'));
+        ?.options.find(({ displayUrl }) => displayUrl.endsWith('/cancel'));
 
       const pattern = new RegExp(cancel?.ref.relativeUrlPattern ?? '');
 
       expect(pattern.test('/openai/v1/responses/${{response_id}}/cancel')).toBe(true);
       expect(pattern.test('/openai/v1/responses/resp_abc123/cancel')).toBe(true);
       expect(pattern.test('/openai/v1/responses/resp_abc123')).toBe(false);
+      expect(pattern.test('/prefix/openai/v1/responses/resp_abc123/cancel')).toBe(false);
+      expect(pattern.test('/openai/v1/responses/resp_abc123/cancel/trailing')).toBe(false);
     });
   });
 });

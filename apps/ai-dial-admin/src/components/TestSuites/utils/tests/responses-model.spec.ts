@@ -56,7 +56,7 @@ describe('reseedResponsesModel', () => {
 
   test('leaves a response-scoped suite untouched, since it carries no model', () => {
     const suite = {
-      endpointRef: { method: 'GET', relativeUrlPattern: '/openai/v1/responses/[^/]+' },
+      endpointRef: { method: 'GET', relativeUrlPattern: '^/openai/v1/responses/[^/]+$' },
       requestTemplate: { urlTemplate: '/openai/v1/responses/${{response_id}}', body: { content: {} } },
     } as TestSuite;
 
