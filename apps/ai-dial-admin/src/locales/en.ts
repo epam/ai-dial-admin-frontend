@@ -2302,7 +2302,7 @@ export default {
       Running: 'Running',
       Failed: 'Failed',
       Cancelling: 'Stopping',
-      Cancelled: 'Cancelled',
+      Cancelled: 'Stopped',
     },
     MetricFailedText: 'Metric evaluation failed',
     NumericDiff: 'Numeric',
