@@ -1,4 +1,4 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
@@ -24,6 +24,7 @@ import {
   EXECUTION_GROUP_HEADER,
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
@@ -247,14 +248,20 @@ const NON_METRIC_GROUP_HEADERS = new Set([
   INPUT_BINDINGS_GROUP_HEADER,
 ]);
 
-/** Metric column-group headers in Extraction Result grid order. */
-export const getMetricGroupOrder = (colDefs: ColDef[]): string[] =>
+/** Metric column-group headers in Extraction Result / Compare grid order. */
+export const getMetricGroupOrder = (colDefs: (ColDef | ColGroupDef)[]): string[] =>
   colDefs
     .filter((col) => {
       const children = 'children' in col && col.children ? (col.children as ColDef[]) : [];
-      return children.length > 0 && col.headerName != null && !NON_METRIC_GROUP_HEADERS.has(col.headerName);
+      return children.length > 0 && !!col.headerName && !NON_METRIC_GROUP_HEADERS.has(col.headerName);
     })
     .map((col) => col.headerName as string);
+
+export const getRowDetailFieldSchema = (results: AnalyticsResult[]): RowDetailFieldSchema => ({
+  metricValues: mergeMetricValuesSchema(results),
+  testCaseData: mergeRecordSchema(results, (result) => result.testCaseData),
+  extractedColumns: mergeRecordSchema(results, (result) => result.extractedColumns),
+});
 
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);

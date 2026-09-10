@@ -21,6 +21,7 @@ import {
   getRowDetailTitle,
 } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-sections';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import ExecutionRowDetailDisplayPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailDisplayPanel';
 import ExecutionRowDetailPivotTable from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailPivotTable';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -33,6 +34,7 @@ interface Props {
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
   metricGroupOrder?: readonly string[];
+  fieldSchema?: RowDetailFieldSchema;
   className?: string;
 }
 
@@ -42,6 +44,7 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   onSwitchToSidebar,
   focusFieldKey,
   metricGroupOrder = [],
+  fieldSchema,
   className,
 }) => {
   const t = useI18n();
@@ -85,8 +88,8 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!detail) return [];
-    return buildRowDetailSections(detail, null, metricGroupOrder);
-  }, [detail, metricGroupOrder]);
+    return buildRowDetailSections(detail, null, metricGroupOrder, fieldSchema);
+  }, [detail, metricGroupOrder, fieldSchema]);
 
   useEffect(() => {
     if (sections.length === 0) {

@@ -9,7 +9,11 @@ import {
   ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
   ROW_DETAIL_RUN_NUMBER_LABEL,
 } from '@/src/components/Runs/Details/RowDetails/constants';
-import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import {
+  RowDetailField,
+  RowDetailFieldSchema,
+  RowDetailSection,
+} from '@/src/components/Runs/Details/RowDetails/models';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -149,9 +153,10 @@ export const buildRowDetailSections = (
   primary: AnalyticsResult,
   compared: AnalyticsResult | null,
   metricGroupOrder: readonly string[] = [],
+  fieldSchema?: RowDetailFieldSchema,
 ): RowDetailSection[] => {
   const hasCompared = compared != null;
-  const comparisonSections = buildComparisonSections(primary, compared, {}, [], {});
+  const comparisonSections = buildComparisonSections(primary, compared, {}, [], {}, undefined, undefined, fieldSchema);
 
   const mapped = comparisonSections.map((section) => {
     const isMetric = section.key.startsWith('metric:');
