@@ -1,5 +1,6 @@
 import { FC, useState } from 'react';
 
+import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -12,11 +13,22 @@ import {
   ExecutedQueryMeta,
   QueryRequestKind,
   QueryResultView,
+  ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 
+// Captures the columnDefs GridView receives on each render, so a test can call a column's own
+// valueFormatter directly and prove the fragment from getValueClassColumn reached the grid.
+const { capturedColumnDefs } = vi.hoisted(() => ({ capturedColumnDefs: { current: [] as ColDef[] } }));
+
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData }: { rowData?: unknown[] }) => <div>grid rows: {rowData?.length ?? 0}</div>,
+  default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: ColDef[] }) => {
+    capturedColumnDefs.current = columnDefs ?? [];
+    return <div>grid rows: {rowData?.length ?? 0}</div>;
+  },
 }));
+
+const formatWith = (col: ColDef | undefined, value: unknown): string =>
+  (col?.valueFormatter as (p: ValueFormatterParams) => string)({ value } as ValueFormatterParams);
 
 const AGG_RESULT: StructuredQueryResult = {
   columns: ['deployment', 'total'],
@@ -33,6 +45,7 @@ const AGG_META: ExecutedQueryMeta = {
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total'],
   columnLabels: {},
+  columnValueClasses: { total: ResultValueClass.Compact },
 };
 
 const ROW_META: ExecutedQueryMeta = {
@@ -41,6 +54,7 @@ const ROW_META: ExecutedQueryMeta = {
   dimensionColumns: [],
   aggregateColumns: [],
   columnLabels: {},
+  columnValueClasses: {},
 };
 
 const SQL_TRANSLATED_META: ExecutedQueryMeta = {
@@ -49,6 +63,7 @@ const SQL_TRANSLATED_META: ExecutedQueryMeta = {
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total'],
   columnLabels: {},
+  columnValueClasses: {},
 };
 
 const SQL_FALLBACK_META: ExecutedQueryMeta = {
@@ -57,6 +72,7 @@ const SQL_FALLBACK_META: ExecutedQueryMeta = {
   dimensionColumns: ['event_id', 'project_id'],
   aggregateColumns: [],
   columnLabels: {},
+  columnValueClasses: {},
 };
 
 type AreaProps = Parameters<typeof ResultArea>[0];
@@ -177,5 +193,35 @@ describe('QueryBuilder :: ResultArea', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartNoRows')).toBeInTheDocument();
+  });
+
+  test('formats a classified column while an unclassified column in the same result renders as today', () => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META });
+
+    const totalColumn = capturedColumnDefs.current.find((col) => col.field === 'total');
+    const deploymentColumn = capturedColumnDefs.current.find((col) => col.field === 'deployment');
+
+    expect(formatWith(totalColumn, 4897666958)).toBe('4.9 B');
+    expect(formatWith(deploymentColumn, 'gpt-4o')).toBe('gpt-4o');
+  });
+
+  test('reformats a column once a re-render classifies it, proving columnValueClasses re-triggers the memo', () => {
+    const { rerender } = render(
+      <ControlledArea result={AGG_RESULT} meta={{ ...AGG_META, columnValueClasses: {} }} isRunning={false} />,
+    );
+
+    const initialTotalColumn = capturedColumnDefs.current.find((col) => col.field === 'total');
+    expect(formatWith(initialTotalColumn, 4897666958)).toBe('4897666958');
+
+    rerender(
+      <ControlledArea
+        result={AGG_RESULT}
+        meta={{ ...AGG_META, columnValueClasses: { total: ResultValueClass.Compact } }}
+        isRunning={false}
+      />,
+    );
+
+    const updatedTotalColumn = capturedColumnDefs.current.find((col) => col.field === 'total');
+    expect(formatWith(updatedTotalColumn, 4897666958)).toBe('4.9 B');
   });
 });
