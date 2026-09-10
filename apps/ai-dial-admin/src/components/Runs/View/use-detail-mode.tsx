@@ -11,7 +11,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { MetricBindings } from '@/src/models/evaluation/metric';
 
 export interface OpenDetailOptions {
-  /** Present when the open was triggered by a grid cell click (never toggles closed). */
+  /** Present when the open was triggered by a grid cell click. */
   focusFieldKey?: string | null;
 }
 
@@ -26,7 +26,10 @@ interface UseDetailModeReturn {
   clearSelected: () => void;
 }
 
-export function useDetailMode(metricBindings: Record<string, MetricBindings> = {}): UseDetailModeReturn {
+export function useDetailMode(
+  metricBindings: Record<string, MetricBindings> = {},
+  metricGroupOrder: readonly string[] = [],
+): UseDetailModeReturn {
   const { sidebar } = useAppContext();
   const [detailMode, setDetailMode] = useState<DetailMode>(DetailMode.Drawer);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
@@ -72,6 +75,7 @@ export function useDetailMode(metricBindings: Record<string, MetricBindings> = {
           <ExecutionRowDetailBottomPanel
             resultId={resultId}
             focusFieldKey={fieldKey}
+            metricGroupOrder={metricGroupOrder}
             onClose={closeDetail}
             onSwitchToSidebar={switchToSidebar}
           />,
@@ -92,29 +96,19 @@ export function useDetailMode(metricBindings: Record<string, MetricBindings> = {
         SidebarPosition.Right,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, metricBindings],
+    [closeDetail, switchToSidebar, switchToDrawer, metricBindings, metricGroupOrder],
   );
 
   showDetailPanelRef.current = showDetailPanel;
 
   const openDetail = useCallback(
     (resultId: string, options?: OpenDetailOptions) => {
-      const isCellClick = options != null;
       const fieldKey = options?.focusFieldKey ?? null;
-      const isSameRow = selectedResultIdRef.current === resultId;
-      const isOpen = selectedResultIdRef.current != null;
-
-      // Row re-click toggles closed; cell click on the same row never toggles.
-      if (isSameRow && isOpen && !isCellClick) {
-        closeDetail();
-        return;
-      }
-
       setSelectedResultId(resultId);
       setFocusFieldKey(fieldKey);
       showDetailPanel(resultId, detailModeRef.current, fieldKey);
     },
-    [closeDetail, showDetailPanel],
+    [showDetailPanel],
   );
 
   const clearSelected = useCallback(() => {

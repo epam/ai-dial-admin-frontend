@@ -87,6 +87,43 @@ describe('buildRowDetailSections', () => {
     expect(sections.map((section) => section.key)).toEqual(['execution', 'metric:Accuracy', 'testCaseData']);
   });
 
+  test('orders metric sections by metricValues insertion order, not alphabetically', () => {
+    const sections = buildRowDetailSections(
+      {
+        ...primaryResult,
+        metricValues: {
+          'correct-capital1': { score: 1 },
+          'answer-conciseness': { score: 0.5 },
+        },
+      },
+      null,
+    );
+
+    expect(sections.filter((section) => section.key.startsWith('metric:')).map((section) => section.key)).toEqual([
+      'metric:correct-capital1',
+      'metric:answer-conciseness',
+    ]);
+  });
+
+  test('orders metric sections to match the Extraction Result grid group order', () => {
+    const sections = buildRowDetailSections(
+      {
+        ...primaryResult,
+        metricValues: {
+          'Exact Match': { exact_match: 1 },
+          'DeepEval: Answer Relevancy': { score: 0.8 },
+        },
+      },
+      null,
+      ['DeepEval: Answer Relevancy', 'Exact Match'],
+    );
+
+    expect(sections.filter((section) => section.key.startsWith('metric:')).map((section) => section.key)).toEqual([
+      'metric:DeepEval: Answer Relevancy',
+      'metric:Exact Match',
+    ]);
+  });
+
   test('marks metric rows as metric and execution rows as non-metric', () => {
     const sections = buildRowDetailSections(primaryResult, comparedResult);
     const execDurationRow = sections

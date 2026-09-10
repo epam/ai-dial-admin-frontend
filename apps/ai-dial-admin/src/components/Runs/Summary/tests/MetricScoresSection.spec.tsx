@@ -162,4 +162,23 @@ describe('Runs Summary :: MetricScoresSection', () => {
 
     expect(screen.getByText('Runs.NoMetricScores')).toBeInTheDocument();
   });
+
+  test('renders configured metrics with null bars instead of the empty message', () => {
+    render(
+      <MetricScoresSection
+        data={{
+          overallScore: 0,
+          statistics: ['AVG'],
+          byStatistic: { AVG: [{ name: 'Exact Match', bars: { exact_match: null } }] },
+        }}
+        selectedStatistic="AVG"
+        onSelectStatistic={vi.fn()}
+        onSelectMetric={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Runs.NoMetricScores')).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Exact Match' })).toBeInTheDocument();
+    expect(screen.getByText('exact_match:null')).toBeInTheDocument();
+  });
 });

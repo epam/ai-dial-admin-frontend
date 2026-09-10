@@ -82,9 +82,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       isPreview: true,
       items: [
         { key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels },
-        { key: MenuI18nKey.PlatformAppRunners, href: ApplicationRoute.PlatformAppRunners },
         { key: MenuI18nKey.PlatformInterceptors, href: ApplicationRoute.PlatformInterceptors },
+        { key: MenuI18nKey.PlatformTranslators, href: ApplicationRoute.PlatformTranslators },
         { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
+        { key: MenuI18nKey.PlatformAppRunners, href: ApplicationRoute.PlatformAppRunners },
         { key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles },
         { key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys },
       ],

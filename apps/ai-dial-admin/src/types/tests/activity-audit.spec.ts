@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ActivityAuditResourceType,
+  hasChildResourceActivities,
   isAnalyticsResource,
   isContainerDeploymentResource,
   isDeploymentManagerResource,
@@ -170,5 +171,35 @@ describe('activity-audit predicates :: isAnalyticsResource', () => {
     expect(isContainerDeploymentResource(type)).toBe(false);
     expect(isImageDefinitionResource(type)).toBe(false);
     expect(isGlobalFirewallResource(type)).toBe(false);
+  });
+});
+
+describe('activity-audit predicates :: hasChildResourceActivities', () => {
+  test('returns true for Table', () => {
+    expect(hasChildResourceActivities(ActivityAuditResourceType.TABLE)).toBe(true);
+  });
+
+  test.each([
+    ActivityAuditResourceType.TABLE_COLUMN,
+    ActivityAuditResourceType.PIPELINE,
+    ActivityAuditResourceType.SAVED_QUERY,
+    ActivityAuditResourceType.MODEL,
+    ActivityAuditResourceType.MCP_DEPLOYMENT,
+  ])('returns false for %s', (type) => {
+    expect(hasChildResourceActivities(type)).toBe(false);
+  });
+
+  test('returns false for undefined', () => {
+    expect(hasChildResourceActivities(undefined)).toBe(false);
+  });
+
+  test('holds no deployment-manager or admin-backend type, so a later addition fails here first', () => {
+    const nonParentTypes = Object.values(ActivityAuditResourceType).filter(
+      (type) => type !== ActivityAuditResourceType.TABLE,
+    );
+
+    nonParentTypes.forEach((type) => {
+      expect(hasChildResourceActivities(type)).toBe(false);
+    });
   });
 });

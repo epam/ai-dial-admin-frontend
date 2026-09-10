@@ -85,6 +85,23 @@ describe('buildComparisonSections', () => {
     expect(extraRow!.values[1].raw).toBeNull(); // pinned doesn't have 'extra'
   });
 
+  it('preserves metric group insertion order instead of sorting alphabetically', () => {
+    const result = makeResult({
+      metricValues: {
+        'correct-capital1': { score: 1 },
+        'answer-conciseness': { score: 0.5 },
+        'instruction-following': { score: 0.8 },
+      },
+    });
+    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
+
+    expect(sections.filter((s) => s.key.startsWith('metric:')).map((s) => s.key)).toEqual([
+      'metric:correct-capital1',
+      'metric:answer-conciseness',
+      'metric:instruction-following',
+    ]);
+  });
+
   it('unions metric groups across results', () => {
     const active = makeResult({ id: 'a', metricValues: { groupA: { f1: 0.5 } } });
     const pinned = makeResult({ id: 'b', metricValues: { groupB: { precision: 0.9 } } });

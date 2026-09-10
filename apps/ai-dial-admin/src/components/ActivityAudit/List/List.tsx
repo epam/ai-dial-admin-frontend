@@ -73,6 +73,7 @@ import {
   ActivityAuditResourceType,
   ActivityAuditType,
   ActivityAuditView,
+  hasChildResourceActivities,
   isDeploymentManagerResource,
 } from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -181,10 +182,13 @@ const ActivityAuditList: FC<Props> = ({
       .finally(() => setIsCheckingState(false));
   }, []);
 
-  // The analytics entity feed is requested with a `co` (substring) match on the table name, so it
-  // also answers with a similarly named table's rows — they are dropped before the row buffer.
+  // Only a tab whose resource type owns child activities is requested with a `co` (substring)
+  // match on the entity name, so it also answers with a similarly named table's rows — they are
+  // dropped before the row buffer. Every other tab asks an exact pair and has nothing to narrow.
   const analyticsTableScope =
-    effectiveViewType === ActivityAuditView.Analytics && entity ? getEntityAuditFilterId(entity) : void 0;
+    effectiveViewType === ActivityAuditView.Analytics && entity && hasChildResourceActivities(entityType)
+      ? getEntityAuditFilterId(entity)
+      : void 0;
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -423,9 +427,20 @@ const ActivityAuditList: FC<Props> = ({
       t,
       open: entity ? openInNewTabForEntity : openInNewTab,
       onRollback: canRollback ? onOpenConfirmationModal : void 0,
-      isSingleEntity: !!entity,
+      // A single-entity list is one about one resource type and one identifier. A table Audit tab
+      // is not that: it lists the table *and its columns*, so it keeps the multi-type column set.
+      isSingleEntity: !!entity && !hasChildResourceActivities(entityType),
     });
-  }, [entity, viewConfig, t, openInNewTab, openInNewTabForEntity, isReadOnlyAdmin, onOpenConfirmationModal]);
+  }, [
+    entity,
+    entityType,
+    viewConfig,
+    t,
+    openInNewTab,
+    openInNewTabForEntity,
+    isReadOnlyAdmin,
+    onOpenConfirmationModal,
+  ]);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
