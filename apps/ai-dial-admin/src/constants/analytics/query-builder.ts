@@ -1,5 +1,6 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   QueryLogicalOperator,
   QueryOperator,
@@ -15,6 +16,7 @@ import {
   ChartType,
   CompactSelectOptionDescriptor,
   QueryBuilderWarning,
+  ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
@@ -173,3 +175,20 @@ export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
 // Which section header surfaces which aggregate-validation warning.
 export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate, QueryBuilderWarning.MissingGroupByField];
 export const AGGREGATE_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
+
+// The schema's own statement about a column's value class. A type absent from this map is a type the
+// result grid does not format — Uuid, Enum, Boolean, String, Object, Array.
+export const FIELD_TYPE_VALUE_CLASS: Partial<Record<AnalyticsFieldType, ResultValueClass>> = {
+  [AnalyticsFieldType.Integer]: ResultValueClass.Compact,
+  [AnalyticsFieldType.Long]: ResultValueClass.Compact,
+  [AnalyticsFieldType.Decimal]: ResultValueClass.Significant,
+  [AnalyticsFieldType.Timestamp]: ResultValueClass.DateTime,
+  [AnalyticsFieldType.Date]: ResultValueClass.DateTime,
+};
+
+// The catalog's own classification of what a column measures, and the only machine-readable unit signal a
+// field carries that is not its name: there is no unit attribute, `description` states the unit in prose
+// and `display_name` states it in parentheses on some rows only. The frontend already depends on this same
+// tag vocabulary — CONVERSATION_TAG_LABEL_KEY in constants/analytics/conversations-trace.ts maps nine tag
+// values, `performance` among them, to the conversations column picker's group labels.
+export const DURATION_FIELD_TAG = 'performance';

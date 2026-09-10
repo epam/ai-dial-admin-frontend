@@ -3,13 +3,13 @@
 ## Purpose
 
 What a run produces: execution of the current query, the result grid, the stat tiles, and the table and chart views over the returned rows. How the query was authored is `analytics/query-builder`.
-
 ## Requirements
-
 ### Requirement: Run query and result
 
 The toolbar Run action SHALL execute the current query and render the result in the main results area. In the Builder view the query is the serialized `StructuredQuery` from the builder state; in the JSON view it is the query as written in the editor — both executed via a server action delegating to `analyticsDataApi.executeAction` (`/v1/queries/execute`). The result SHALL be shown as a grid whose columns are derived from the returned result (the result's declared columns when present, otherwise the union of keys across the returned rows), with object/array cell values stringified. A cell SHALL make its value readable whatever its size: up to a
-bounded length the value SHALL be reachable as a tooltip carrying that rendered text — including for an
+bounded length the value SHALL be reachable as a tooltip — carrying that rendered text, or, where that
+rendered text is a rounded or compacted rendering of a numeric value, the value as returned in full (see
+"Numeric and temporal result-cell formatting") — including for an
 object, which the grid's shared tooltip otherwise drops for not being a string — and beyond that length the
 cell SHALL instead show a bounded preview and a named control that opens the value in a dialog. The dialog
 SHALL present the value in a read-only editor that scrolls, folds and searches, SHALL indent a value that is
@@ -192,3 +192,175 @@ Each reason the Chart view has nothing to render SHALL have its own hint text na
 
 - **WHEN** a result row includes a column whose name contains a literal `.` (e.g. an enrichment projection) and the backend response carries a value for it
 - **THEN** the Table view shows that value in the corresponding cell rather than leaving it blank
+
+### Requirement: Numeric and temporal result-cell formatting
+
+The result grid SHALL render a numeric or temporal result cell through the formatter its column's resolved **value class** selects, and SHALL leave every other column rendering exactly as it does today. There are four resolved classes — compact, significant-digit, duration and date-time — and "no class", which means no change. Three of the four select a formatter. The **duration** class deliberately selects none: it is a recognition whose whole consequence is to withhold the compact formatter, so a duration column renders exactly as an unclassified one does.
+
+The value class SHALL be resolved when the executed-query metadata is built, and carried on that metadata beside the column labels, so that what the grid renders follows the query that produced the shown result rather than the live builder state. Two sources resolve it, in this order:
+
+1. **The declared schema type.** A returned column that names a field of the executed entity's schema takes its class from that field's `AnalyticsFieldType`: `Integer` and `Long` are compact, `Decimal` is significant-digit, `Timestamp` and `Date` are date-time, and every other type — `Uuid`, `Enum`, `Boolean`, `String`, `Object`, `Array` — resolves to no class and so to no formatting. This is the only source that can ever yield the date-time class: a temporal column SHALL NOT be inferred from a value that merely looks like epoch millis.
+
+   A field this source resolves to a **numeric** class — compact or significant-digit — **which the catalog tags `performance`** SHALL take the **duration** class instead of that numeric class, and a duration column SHALL be left unformatted: its cells render the value exactly as returned, in the unit the column is measured in. The field's `tag` is the catalog's own classification of what a column measures, and it is the only machine-readable signal of a unit the schema carries that does not read the column's name: a field carries no unit attribute, its `description` states the unit only in prose ("in milliseconds", "in bytes"), and its `display_name` states it only sometimes and only as display text. The column's **name SHALL NOT be consulted**: a name is a naming convention rather than a declaration, and the same catalog that supplies the tag supplies the name, so keying on the name buys no stability while committing the grid to a spelling. The tag SHALL only ever narrow a class this source already resolved as numeric — a declared temporal, string, enum or boolean field keeps what its declared type resolves however it is tagged, so the tag can never create formatting where the declared type asked for none. A numeric column the catalog tags anything else — a `*_bucket` ordinal, a status code, a counter, a byte size — is therefore never a duration, whatever it is named.
+
+   **Why a recognised duration is left unformatted rather than rendered as a duration.** The column's header is the catalog's `display_name`, and on a duration field that display name states the unit — "Duration (ms)". The grid heads a schema column by that display name (see "Result grid heads schema columns by display name"), and the frontend SHALL NOT rewrite a catalog-supplied display name to strip a unit from it. A cell reading "698.7s" under a header reading "Duration (ms)" contradicts its own header, which is a worse defect than the one it fixes. So the duration class SHALL leave the value in the unit the header declares: it withholds the compact formatter — the thing that stated the nonsense figure, "698.7 K" for a count of milliseconds — and adds nothing. A duration column SHALL adopt no formatter, no tooltip override and no numeric column configuration, and SHALL therefore render, align, sort, filter and tooltip exactly as a column of no class does.
+
+   **The coverage this buys, and what it misses, are both known.** Measured against the provisioned catalog, the `performance` tag falls on exactly the millisecond measurements — the per-hop mean and the summed hop durations of a conversation, a turn's wall-clock and summed hop durations, and a usage-log operation's duration — and on nothing else, so the rule withholds compaction from exactly the millisecond measurements the builder can project and from nothing else. A numeric millisecond field the catalog leaves **untagged** SHALL keep the class its declared type resolves — a compact count — rather than being recovered from its name. The catalog has one such field, on a seeded demo table, and the trade is deliberate: a name-derived rule would state a unit the catalog never declared.
+
+   **This leaves one inconsistency, which SHALL be stated rather than hidden:** a millisecond column the catalog tags reads as a raw millisecond count, while a millisecond column it leaves untagged reads as a compacted one ("698.7 K"), so two columns measuring the same quantity can read differently in the same result. The inconsistency is accepted on the same terms as the fall-through itself — the untagged column keeps the rendering it has today, and the tagged one is the only one the catalog lets the client recognise. It is closed by the catalog declaring a unit per column, not by a second heuristic in the client.
+2. **The returned values of an aggregate output column.** A column the executed query marks as a measure — returned but not grouped by — and that names no schema field SHALL take its class from its own values across the whole result: compact when every value is a number and whole, significant-digit when every value is a number and at least one is fractional, and no class when any value is not a number. This source SHALL apply only to an **aggregate-mode** run. In row mode every returned column is a projection rather than a measure, so an alias with no schema field — a scalar-function projection such as a time bucket — SHALL stay unformatted rather than be guessed at from its digits.
+
+   This source SHALL NOT yield the duration class. An output column names no schema field, so there is no tag to read: what it carries is an alias, derived from a field's display name and its function or typed by the user. Recovering the unit would mean resolving the alias back to the argument field **and** knowing whether the function preserves the unit, which takes the function catalog's own semantics — excluded by this change's Non-goals. An aggregate over a millisecond field therefore keeps a compact or significant-digit rendering, under an alias that names the field it aggregated. This is the second face of the inconsistency above: `AVG(duration_ms)` compacts while `duration_ms` itself is left raw, under headers that both imply milliseconds.
+
+The value class SHALL be withheld for every column of a run, leaving the grid rendering as it does today, in exactly the two cases where the column labels are withheld: a SQL run the backend could not translate, whose measure list comes from a blind scan of every returned column rather than from group-by semantics and so cannot be trusted to exclude an id or a raw epoch column; and a translated SQL run whose entity is not the entity selected in the builder, whose schema cannot describe the returned columns.
+
+A **compact** cell SHALL render through the app's shared compact formatter, the same one the platform models grid's Parameters column uses, so a multi-billion count reads as a unit-suffixed figure. A **significant-digit** cell SHALL render at two significant digits below one and compact at one and above, so a sub-unit value survives instead of rounding to zero while a value of a few units is not rounded to its leading digit. That formatter SHALL be currency-agnostic and SHALL live beside the app's other number formatters; the conversations log's cost formatter SHALL NOT be reused for it, re-parameterised, or stripped of its currency symbol at a call site — its rounding stays local to that page, as `analytics/conversations-listing` requires. A **duration** cell SHALL NOT be formatted: it SHALL render the value as returned, which is the rendering an unclassified cell gets, so the figure stays in the unit its header declares. In particular a returned zero SHALL render as `0` rather than as an empty cell — in a result grid a zero is a value the query returned — and no duration formatter SHALL be introduced at this call site while the header states the unit. A **date-time** cell SHALL render through the app's shared date-time column configuration rather than by calling the date formatter by hand, so the column carries the same formatted value, tooltip and typed filter every other date-time column in the app carries.
+
+A value a resolved numeric class cannot read as a number SHALL fall back to today's rendering rather than to an empty cell, so no value a run returned is ever hidden by a formatter.
+
+On a cell whose text is a rounded or compacted rendering the tooltip SHALL carry the value as returned: every digit the app's shared number formatting can represent, which is double precision, thousand-delimited where the value is whole and unmodified where it is fractional. It SHALL NOT repeat the shortened text: a shortened value with no way to reach the full one is unreadable, per `.claude/rules/a11y.md`. A date-time cell keeps the shared date-time configuration's own tooltip. A duration cell shortens nothing, so it needs no such tooltip and SHALL keep the result grid's own.
+
+A formatted numeric column SHALL right-align its cells and its header and SHALL sort by numeric value rather than as text, by adopting the app's shared numeric column configuration. The result grid's default comparator compares raw values with `>`, which orders a decimal that arrives as a JSON string lexicographically and sorts a zero to the end of the result, so a column this change has just declared numeric has to sort as a number. Formatting SHALL NOT change which rows a filter matches: the filter SHALL keep reading the column's numeric value, never its formatted text.
+
+#### Scenario: A large integer column is compacted
+
+- **WHEN** a run returns a column whose schema type is `Long` and a row whose value is 4897666958
+- **THEN** the cell shows a unit-suffixed compact figure ("4.9 B") rather than every digit
+
+#### Scenario: A sub-unit decimal survives instead of rounding to zero
+
+- **WHEN** a run returns a column whose schema type is `Decimal` and a row whose value is 0.0004792
+- **THEN** the cell shows it at two significant digits ("0.00048")
+- **AND** it is not shown as "0" or as "0.00"
+
+#### Scenario: A decimal of a few units keeps its leading digits
+
+- **WHEN** a `Decimal` column returns 19.74
+- **THEN** the cell shows "19.7" rather than "20"
+
+#### Scenario: The compact threshold is exact
+
+- **WHEN** an `Integer` column returns 999 in one row and 1000 in another
+- **THEN** the 999 cell shows "999" and the 1000 cell shows "1 K"
+
+#### Scenario: A timestamp column shows a local date-time
+
+- **WHEN** a row-mode run projects a column whose schema type is `Timestamp` and whose value is epoch millis
+- **THEN** the cell shows the local date-time rendering rather than the raw number
+
+#### Scenario: A temporal column is never inferred from its values
+
+- **WHEN** an aggregate run returns a measure alias that names no schema field and whose every value is epoch millis
+- **THEN** that column is not rendered as a date-time
+
+#### Scenario: An aggregate alias over whole values is compacted
+
+- **WHEN** an aggregate run sums a column under an alias and every returned value is whole
+- **THEN** the alias column is compacted
+
+#### Scenario: An aggregate alias over fractional values gets significant digits
+
+- **WHEN** an aggregate run averages a column under an alias and at least one returned value is fractional
+- **THEN** the alias column shows significant digits
+
+#### Scenario: A row-mode alias with no schema field stays unformatted
+
+- **WHEN** a row-mode run projects a scalar-function expression under an alias and every returned value is a whole number
+- **THEN** that column renders as it does today
+
+#### Scenario: A non-numeric schema column is untouched
+
+- **WHEN** a run returns a `Uuid`, `Enum` or `Boolean` column
+- **THEN** its cells render as they do today
+
+#### Scenario: An untranslated SQL run stays unformatted
+
+- **WHEN** the user runs SQL the backend cannot translate and the result carries an all-numeric id column
+- **THEN** no result column is formatted
+
+#### Scenario: A translated SQL run over another entity stays unformatted
+
+- **WHEN** a translated SQL run's entity is not the entity selected in the builder
+- **THEN** no result column is formatted, on the same terms its headers keep their returned names
+
+#### Scenario: The exact value stays reachable on a compacted cell
+
+- **WHEN** the user hovers a compacted integer cell
+- **THEN** the tooltip shows the value in full, thousand-delimited
+- **AND** it does not repeat the compacted text
+
+#### Scenario: A fractional value's tooltip is unrounded
+
+- **WHEN** the user hovers a significant-digit decimal cell
+- **THEN** the tooltip shows every digit the run returned
+
+#### Scenario: A formatted numeric column sorts numerically
+
+- **WHEN** the user sorts a formatted numeric column whose values arrive as numeric strings
+- **THEN** the rows order by numeric value, putting 9 before 10 ascending rather than after it
+
+#### Scenario: A filter still matches on the numeric value
+
+- **WHEN** a filter is applied to a formatted numeric column
+- **THEN** it matches on the column's numeric value rather than on the formatted text
+
+#### Scenario: An unreadable value in a numeric column is still shown
+
+- **WHEN** a column resolved as numeric returns a value in one row that cannot be read as a number
+- **THEN** that cell shows the value as it does today rather than an empty cell
+
+#### Scenario: A duration column is recognised by its catalog tag
+
+- **WHEN** a run returns a column whose declared type is numeric and which the catalog tags `performance`, and a row whose value is 698700
+- **THEN** the cell shows the value as returned, unformatted ("698700")
+- **AND** it is not shown as a unit-suffixed count of milliseconds ("698.7 K")
+- **AND** it is not shown as a duration in another unit ("698.7s")
+- **AND** the column's name plays no part in the recognition
+
+#### Scenario: A duration column's cells stay in the unit its header declares
+
+- **WHEN** a run returns a column the catalog tags `performance` whose display name states its unit, such as "Duration (ms)"
+- **THEN** the grid heads the column by that display name, unchanged
+- **AND** the cells under it are in the unit that header names, because no formatter converts them
+
+#### Scenario: A zero duration is still a value
+
+- **WHEN** a duration column returns 0
+- **THEN** the cell shows "0" rather than an empty cell
+
+#### Scenario: An untagged millisecond column keeps its compact rendering
+
+- **WHEN** a run returns two numeric millisecond columns, one the catalog tags `performance` and one it leaves untagged
+- **THEN** the untagged column is compacted ("698.7 K") while the tagged one is left raw
+- **AND** the untagged one is not recovered as a duration from its name
+- **AND** the two therefore read differently in the same result, which is the accepted inconsistency the requirement states
+
+#### Scenario: The performance tag on a non-numeric column changes nothing
+
+- **WHEN** a run returns a column the catalog tags `performance` whose declared type is not numeric
+- **THEN** it renders as its declared type resolves, which for a string or an enum is no formatting at all
+
+#### Scenario: A bucket ordinal and a status code are not mistaken for durations
+
+- **WHEN** a run returns a `*_bucket` ordinal column and a response-status column, both declared numeric and neither tagged `performance`
+- **THEN** neither is recognised as a time measurement
+- **AND** both keep the compact rendering their declared type resolves
+
+#### Scenario: The exact millisecond value stays reachable on a duration cell
+
+- **WHEN** the user reads a duration cell
+- **THEN** the millisecond count is shown in the cell in full, so no tooltip is needed to reach it
+- **AND** the cell text is not a shortened rendering of the value
+
+#### Scenario: A duration column keeps the grid's default sort and filter
+
+- **WHEN** a duration column is sorted, or a filter is applied to it
+- **THEN** it behaves exactly as an unclassified column does, because it adopts no numeric column configuration
+- **AND** the change adds neither numeric sorting nor a numeric filter to it
+
+#### Scenario: An aggregate over a duration field is not rendered as a duration
+
+- **WHEN** an aggregate run returns an output-column alias over a millisecond field
+- **THEN** that column keeps the class its returned values resolve — compact when they are all whole, significant-digit otherwise
+- **AND** it is not recognised as a duration, so it is compacted where the underlying column would have been left raw
+

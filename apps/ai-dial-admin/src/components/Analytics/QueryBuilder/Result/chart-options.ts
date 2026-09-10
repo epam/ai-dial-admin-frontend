@@ -42,7 +42,7 @@ export const getNumericColumns = (rows: ResultRows, columns: string[]): string[]
 
 // Stricter than `toNumber`, which coerces anything `Number()` accepts: `true` becomes 1 and an empty
 // array becomes 0, so a boolean or an array-valued column (request_tags) would read as a measure.
-const strictNumber = (value: unknown): number | null => {
+export const strictNumber = (value: unknown): number | null => {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value !== 'string' || value === '') return null;
   const n = Number(value);
