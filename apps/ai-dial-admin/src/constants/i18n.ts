@@ -2884,6 +2884,13 @@ export enum AnalyticsEvaluatorsI18nKey {
   OutputVarsRequired = 'AnalyticsEvaluators.OutputVarsRequired',
   RuleTargetEnrichment = 'AnalyticsEvaluators.RuleTargetEnrichment',
   RuleResolvedVersion = 'AnalyticsEvaluators.RuleResolvedVersion',
+  CreateEvaluatorTitle = 'AnalyticsEvaluators.CreateEvaluatorTitle',
+  CreateEvaluatorFailed = 'AnalyticsEvaluators.CreateEvaluatorFailed',
+  NameInvalid = 'AnalyticsEvaluators.NameInvalid',
+  NameTaken = 'AnalyticsEvaluators.NameTaken',
+  EvaluatorCreated = 'AnalyticsEvaluators.EvaluatorCreated',
+  EvaluatorCreatedAsVersion = 'AnalyticsEvaluators.EvaluatorCreatedAsVersion',
+  EvaluatorCreatedVersionUnknown = 'AnalyticsEvaluators.EvaluatorCreatedVersionUnknown',
 }
 
 export enum ConversationsTraceI18nKey {
