@@ -383,6 +383,7 @@ export default {
       Toolset: 'Toolset',
       Interceptor: 'Interceptor',
       Route: 'Route',
+      Translator: 'Translator',
       Role: 'Role',
       Key: 'Key',
       Prompt: 'Prompt',

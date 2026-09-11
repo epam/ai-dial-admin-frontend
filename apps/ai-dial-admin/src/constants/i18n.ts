@@ -362,6 +362,7 @@ export enum DuplicateI18nKey {
   Toolset = 'DuplicateEntity.Entities.Toolset',
   Route = 'DuplicateEntity.Entities.Route',
   Interceptor = 'DuplicateEntity.Entities.Interceptor',
+  Translator = 'DuplicateEntity.Entities.Translator',
   Role = 'DuplicateEntity.Entities.Role',
   Key = 'DuplicateEntity.Entities.Key',
   Prompt = 'DuplicateEntity.Entities.Prompt',
