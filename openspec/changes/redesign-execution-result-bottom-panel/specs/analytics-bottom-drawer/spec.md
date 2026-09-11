@@ -33,19 +33,23 @@ The bottom panel body SHALL render a pivot with a section-header row, a field-la
 
 ### Requirement: Display overlay controls field visibility and order
 
-The panel header SHALL provide a Display control that opens an overlay `TreeColumnsPanel` for reordering and hiding fields/sections. By default, Execution Status, `# Run number`, HTTP, and Request / Response body fields SHALL be visible; Duration SHALL be hidden. Closing the panel SHALL discard Display session state.
+The panel header SHALL provide a Display control that opens an overlay `TreeColumnsPanel` for reordering and hiding fields/sections. By default, Execution Status, `# Run number`, HTTP, and Request / Response body fields SHALL be visible; Duration SHALL be hidden. Closing and reopening the panel within the same run session SHALL preserve Display field visibility and order. Navigating away from the run SHALL reset Display to those defaults.
 
 #### Scenario: Display opens field tree
 - **WHEN** the user clicks Display
 - **THEN** an overlay tree of sections and fields is shown for visibility and order changes
 
 #### Scenario: Default field visibility
-- **WHEN** the bottom panel opens
+- **WHEN** the bottom panel opens for the first time in a run session
 - **THEN** Duration is hidden until shown via Display, and Request / Response body fields are visible
 
 #### Scenario: Hide a field
 - **WHEN** the user hides a field in Display
-- **THEN** that field’s column is removed from the pivot until shown again or the panel is reopened
+- **THEN** that field’s column is removed from the pivot until shown again
+
+#### Scenario: Display settings survive close and reopen
+- **WHEN** the user changes Display visibility, closes the bottom panel, and opens it again on the same run
+- **THEN** the previously chosen field visibility and order are still applied
 
 ### Requirement: Grid cell click scrolls to the related pivot column
 
