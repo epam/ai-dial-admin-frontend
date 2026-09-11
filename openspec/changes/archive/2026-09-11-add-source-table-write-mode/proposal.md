@@ -14,9 +14,10 @@ mutating endpoint, and the only remedy for a wrong choice is to delete the table
 
 ## What Changes
 
-- The **create source table** popup collects a write discipline: a required dropdown, two options,
-  defaulting to `append`. The control carries a hint naming the consequence of each option, in the
-  style of the existing schema-key hints (`KeyFieldLabel`).
+- The **create source table** popup collects a write discipline: a required two-option control,
+  defaulting to `append`, with each option naming the consequence of choosing it and the field
+  carrying the hint that the choice is fixed for the table's lifetime, in the style of the existing
+  schema-key hints. (Built as a dropdown first; see design.md D1 for why it ended up a radio group.)
 - The create payload for a source table carries `write`.
 - The **create enrichment** popup is unchanged and its payload never carries `write`: an enrichment is
   always keyed and collapsed on its grain key, and the service rejects the member with 422.
