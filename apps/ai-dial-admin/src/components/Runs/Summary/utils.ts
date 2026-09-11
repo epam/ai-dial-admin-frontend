@@ -30,6 +30,7 @@ import {
   EVAL_SUMMARY_ID_FIELD,
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
+  PASSED_FIELD,
   LATEST_COMPUTATION,
   METRIC_EVAL_DURATION_MS_FIELD,
   METRIC_FIELD_PREFIX,
@@ -52,8 +53,8 @@ import {
 } from './models';
 
 /**
- * Query: count of test-case eval summaries grouped by execution status within a run.
- * Rows shape: `{ execution_status: string, count: number }`.
+ * Query: count of test-case eval summaries grouped by threshold `passed` and execution status.
+ * Rows shape: `{ passed: boolean | null, execution_status: string, count: number }`.
  * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])`
  * so counts describe the matched-only population used in run comparison.
  */
@@ -67,8 +68,8 @@ export const buildTestCasesStatusQuery = (runId: string, excludeEvalSummaryIds: 
   return aggregateQuery({
     entity: EVAL_SUMMARIES_ENTITY,
     filter,
-    groupBy: [EXECUTION_STATUS_FIELD],
-    select: [col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
+    groupBy: [PASSED_FIELD, EXECUTION_STATUS_FIELD],
+    select: [col(field(PASSED_FIELD)), col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
   });
 };
 
@@ -413,23 +414,36 @@ const toCount = (value: unknown): number => {
   return Number.isFinite(num) ? num : 0;
 };
 
+/** True when a snapshotted (or live) overall score threshold is set, including `0`. */
+export const hasOverallScoreThreshold = (threshold: number | null | undefined): boolean => threshold != null;
+
+const isPassedTrue = (value: unknown): boolean => value === true || value === 'true';
+
+const isPassedFalse = (value: unknown): boolean => value === false || value === 'false';
+
 /**
- * Folds status-grouped rows into pass/fail/error buckets. SUCCESS → passed, ERROR → error,
- * everything else (FAILED, TIMEOUT) → failed, so the buckets always sum to the total.
+ * Folds grouped rows into pass/fail/error buckets.
+ * Non-SUCCESS execution (FAILED, TIMEOUT, ERROR) → error.
+ * SUCCESS + `passed === true` → passed; SUCCESS + `passed === false` → failed.
+ * SUCCESS with null `passed` (unscored) only increases total.
  */
 export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null): TestCaseStatusCounts => {
   const counts: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, total: 0 };
 
   for (const row of result?.rows ?? []) {
     const status = row[EXECUTION_STATUS_FIELD];
+    const passed = row[PASSED_FIELD];
     const count = toCount(row[COUNT_ALIAS]);
     counts.total += count;
 
-    if (status === ExtractionResultStatus.SUCCESS) {
-      counts.passed += count;
-    } else if (status === ExtractionResultStatus.ERROR) {
+    if (status !== ExtractionResultStatus.SUCCESS) {
       counts.error += count;
-    } else {
+      continue;
+    }
+
+    if (isPassedTrue(passed)) {
+      counts.passed += count;
+    } else if (isPassedFalse(passed)) {
       counts.failed += count;
     }
   }
