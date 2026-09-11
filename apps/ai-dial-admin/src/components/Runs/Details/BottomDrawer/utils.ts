@@ -1,8 +1,14 @@
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricBinding, MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { serializeValue } from '@/src/utils/serialize';
 
 import { ComparisonRow, ComparisonSection } from './models';
+
+const addRecordKeys = (keys: Set<string>, record?: Record<string, unknown>) => {
+  if (!record) return;
+  Object.keys(record).forEach((key) => keys.add(key));
+};
 
 function formatBindingValue(binding: MetricBinding): string {
   const val =
@@ -15,15 +21,19 @@ function buildRecordRows(
   activeRecord: Record<string, unknown> | undefined,
   isNumeric: boolean,
   hasTwoResults: boolean,
+  schemaRecord?: Record<string, unknown>,
 ): ComparisonRow[] {
   const keys = new Set<string>();
-  if (pinnedRecord) Object.keys(pinnedRecord).forEach((k) => keys.add(k));
-  if (activeRecord) Object.keys(activeRecord).forEach((k) => keys.add(k));
+  addRecordKeys(keys, schemaRecord);
+  addRecordKeys(keys, pinnedRecord);
+  addRecordKeys(keys, activeRecord);
 
-  return [...keys].sort().map((key) => {
+  return [...keys].map((key) => {
+    const activeRaw = serializeValue(activeRecord?.[key]);
+    const pinnedRaw = serializeValue(pinnedRecord?.[key]);
     const values: ComparisonRow['values'] = hasTwoResults
-      ? [{ raw: serializeValue(activeRecord?.[key]) }, { raw: serializeValue(pinnedRecord?.[key]) }]
-      : [{ raw: serializeValue(activeRecord?.[key]) }];
+      ? [{ raw: activeRaw }, { raw: pinnedRaw }]
+      : [{ raw: activeRaw }];
 
     return { fieldKey: key, label: key, isNumeric, values };
   });
@@ -37,6 +47,7 @@ export function buildComparisonSections(
   sectionHidden: Record<string, boolean>,
   activeMetricBindings?: Record<string, MetricBindings>,
   pinnedMetricBindings?: Record<string, MetricBindings>,
+  fieldSchema?: RowDetailFieldSchema,
 ): ComparisonSection[] {
   const isDuplicate = pinned != null && pinned.id === active.id;
   const effectivePinned = isDuplicate ? null : pinned;
@@ -69,13 +80,25 @@ export function buildComparisonSections(
   sectionsMap.set('execution', { key: 'execution', label: 'Execution', rows: execRows });
 
   // Test Case Data section
-  const tcRows = buildRecordRows(effectivePinned?.testCaseData, active.testCaseData, false, hasTwoResults);
+  const tcRows = buildRecordRows(
+    effectivePinned?.testCaseData,
+    active.testCaseData,
+    false,
+    hasTwoResults,
+    fieldSchema?.testCaseData,
+  );
   if (tcRows.length > 0) {
     sectionsMap.set('testCaseData', { key: 'testCaseData', label: 'Test Case Data', rows: tcRows });
   }
 
   // Extracted Columns section
-  const ecRows = buildRecordRows(effectivePinned?.extractedColumns, active.extractedColumns, false, hasTwoResults);
+  const ecRows = buildRecordRows(
+    effectivePinned?.extractedColumns,
+    active.extractedColumns,
+    false,
+    hasTwoResults,
+    fieldSchema?.extractedColumns,
+  );
   if (ecRows.length > 0) {
     sectionsMap.set('extractedColumns', { key: 'extractedColumns', label: 'Extracted Columns', rows: ecRows });
   }
@@ -111,20 +134,23 @@ export function buildComparisonSections(
 
   // Metric sections
   const metricGroupKeys = new Set<string>();
-  if (active.metricValues) Object.keys(active.metricValues).forEach((k) => metricGroupKeys.add(k));
-  if (effectivePinned?.metricValues) Object.keys(effectivePinned.metricValues).forEach((k) => metricGroupKeys.add(k));
+  addRecordKeys(metricGroupKeys, fieldSchema?.metricValues);
+  addRecordKeys(metricGroupKeys, active.metricValues);
+  addRecordKeys(metricGroupKeys, effectivePinned?.metricValues);
 
   for (const groupKey of metricGroupKeys) {
     const activeGroup = active.metricValues?.[groupKey];
     const pinnedGroup = effectivePinned?.metricValues?.[groupKey];
+    const schemaGroup = fieldSchema?.metricValues?.[groupKey];
     const activeGroupExists = active.metricValues != null && groupKey in active.metricValues;
     const pinnedGroupExists = effectivePinned?.metricValues != null && groupKey in effectivePinned.metricValues;
 
     const fieldKeys = new Set<string>();
-    if (activeGroup) Object.keys(activeGroup).forEach((k) => fieldKeys.add(k));
-    if (pinnedGroup) Object.keys(pinnedGroup).forEach((k) => fieldKeys.add(k));
+    addRecordKeys(fieldKeys, schemaGroup);
+    addRecordKeys(fieldKeys, activeGroup);
+    addRecordKeys(fieldKeys, pinnedGroup);
 
-    const rows: ComparisonRow[] = [...fieldKeys].sort().map((fieldKey) => {
+    const rows: ComparisonRow[] = [...fieldKeys].map((fieldKey) => {
       const activeRaw = serializeValue(activeGroup?.[fieldKey]);
       const pinnedRaw = serializeValue(pinnedGroup?.[fieldKey]);
       const values: ComparisonRow['values'] = hasTwoResults
@@ -137,7 +163,10 @@ export function buildComparisonSections(
       return {
         fieldKey,
         label: fieldKey,
-        isNumeric: typeof activeGroup?.[fieldKey] === 'number' || typeof pinnedGroup?.[fieldKey] === 'number',
+        isNumeric:
+          typeof activeGroup?.[fieldKey] === 'number' ||
+          typeof pinnedGroup?.[fieldKey] === 'number' ||
+          typeof schemaGroup?.[fieldKey] === 'number',
         values,
       };
     });
