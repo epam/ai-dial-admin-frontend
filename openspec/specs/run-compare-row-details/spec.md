@@ -77,6 +77,32 @@ The compare row-detail panel SHALL display a side-by-side comparison between the
 - **THEN** the panel opens and shows the primary result
 - **AND** a placeholder indicates no match on the compared side
 
+### Requirement: Pivot metric and extracted order matches the Execution Results grid
+
+The compare row-detail pivot SHALL order metric groups and extracted fields to match the Execution Results grid: metric groups follow the grid column-group order, and extracted fields follow the run-wide first-seen schema rather than alphabetical order.
+
+#### Scenario: Metric groups follow the compare grid
+- **WHEN** the Execution Results grid shows DeepEval: Answer Relevancy before Exact Match
+- **THEN** the bottom pivot shows those metric sections in the same order
+
+#### Scenario: Extracted fields follow the grid schema
+- **WHEN** the Execution Results extracted columns are answer, history, last_question, verification
+- **THEN** the pivot Extracted columns appear in that same order
+
+### Requirement: Pivot includes run-wide fields with a dash for missing values
+
+The compare row-detail pivot SHALL include every Extracted and metric field that the Execution Results grid shows, even when the selected row has no value for that field. A missing, null, or absent value SHALL render as an em dash, matching the grid.
+
+#### Scenario: Metric present on other rows
+- **WHEN** the compare grid shows a metric column as an em dash for the selected row
+- **THEN** the bottom pivot still includes that metric column
+- **AND** the cell shows an em dash
+
+#### Scenario: Extracted column present on other rows
+- **WHEN** an extracted column exists on either compared run but the selected row has no value for it
+- **THEN** the pivot includes that column
+- **AND** the cell shows an em dash
+
 ### Requirement: Clicked row is highlighted in the grid
 
 The grid row corresponding to the open detail SHALL be highlighted with the `ag-active-detail-row` class.

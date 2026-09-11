@@ -19,6 +19,13 @@ export interface RowDetailSection {
   rows: RowDetailField[];
 }
 
+/** Run-wide field union used so the pivot matches the grid schema on every row. */
+export interface RowDetailFieldSchema {
+  metricValues?: Record<string, Record<string, unknown>>;
+  testCaseData?: Record<string, unknown>;
+  extractedColumns?: Record<string, unknown>;
+}
+
 export enum PivotColumnWidthTier {
   Status = 'status',
   RunNumber = 'runNumber',

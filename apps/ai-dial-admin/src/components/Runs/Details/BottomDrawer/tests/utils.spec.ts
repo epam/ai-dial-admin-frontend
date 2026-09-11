@@ -72,6 +72,64 @@ describe('buildComparisonSections', () => {
     expect(execution!.rows[0].values).toHaveLength(1);
   });
 
+  it('preserves schema key order instead of sorting alphabetically', () => {
+    const result = makeResult({ extractedColumns: { zebra: 'z' } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      { extractedColumns: { zebra: 'z', apple: 'a' } },
+    );
+
+    const ec = sections.find((s) => s.key === 'extractedColumns');
+    expect(ec!.rows.map((r) => r.fieldKey)).toEqual(['zebra', 'apple']);
+  });
+
+  it('includes schema keys missing from this row as null', () => {
+    const result = makeResult({ extractedColumns: { answer: 'world' } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      {
+        extractedColumns: { answer: 'world', verification: 'Yes' },
+      },
+    );
+
+    const ec = sections.find((s) => s.key === 'extractedColumns');
+    expect(ec!.rows.find((r) => r.fieldKey === 'verification')!.values[0].raw).toBeNull();
+    expect(ec!.rows.find((r) => r.fieldKey === 'answer')!.values[0].raw).toBe('world');
+  });
+
+  it('includes schema metric groups missing from this row as null', () => {
+    const result = makeResult({ metricValues: { Accuracy: { precision: 0.5 } } });
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      undefined,
+      undefined,
+      {
+        metricValues: { 'Exact Match': { exact_match: 1 }, Accuracy: { precision: 0.5 } },
+      },
+    );
+
+    const exactMatch = sections.find((s) => s.key === 'metric:Exact Match');
+    expect(exactMatch!.rows[0].fieldKey).toBe('exact_match');
+    expect(exactMatch!.rows[0].values[0].raw).toBeNull();
+    expect(exactMatch!.rows[0].isNumeric).toBe(true);
+  });
+
   it('handles null/missing values with union of keys', () => {
     const active = makeResult({ id: 'a', extractedColumns: { answer: 'x', extra: 'y' } });
     const pinned = makeResult({ id: 'b', extractedColumns: { answer: 'z' } });
