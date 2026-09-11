@@ -6,13 +6,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import TestSuiteProperties from '../Properties';
 
 const getDeploymentByIdMock = vi.fn();
 const getDeploymentsMock = vi.fn();
 const getAllDeploymentsMock = vi.fn();
+const getModelMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 const onChangeMock = vi.fn();
 
@@ -21,13 +22,21 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getDeployments: (...args: unknown[]) => getDeploymentsMock(...args),
 }));
 
+vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+  getModel: (...args: unknown[]) => getModelMock(...args),
+}));
+
 vi.mock('@/src/app/[lang]/conversations/actions', () => ({
   getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
-vi.mock('@/src/utils/open-in-new-tab', () => ({
-  onOpenInNewTab: (...args: unknown[]) => onOpenInNewTabMock(...args),
-}));
+vi.mock('@/src/utils/open-in-new-tab', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/src/utils/open-in-new-tab')>();
+  return {
+    ...actual,
+    onOpenInNewTab: (...args: unknown[]) => onOpenInNewTabMock(...args),
+  };
+});
 
 vi.mock('@/src/components/BaseControls/DisplayName', () => ({
   default: () => <div>DisplayName</div>,
@@ -68,6 +77,8 @@ describe('TestSuiteProperties', () => {
     getDeploymentByIdMock.mockReset();
     getDeploymentsMock.mockReset();
     getAllDeploymentsMock.mockReset();
+    getModelMock.mockReset();
+    getModelMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
     onChangeMock.mockReset();
   });
@@ -102,6 +113,7 @@ describe('TestSuiteProperties', () => {
       $type: DeploymentType.Model,
       deploymentId: 'gpt-4',
     });
+    getModelMock.mockResolvedValue(null);
 
     const user = userEvent.setup();
 
@@ -125,6 +137,26 @@ describe('TestSuiteProperties', () => {
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'gpt-4' });
     expect(getDeploymentsMock).not.toHaveBeenCalled();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
+  });
+
+  test('Open for Catalog model uses PlatformModels when platform resource exists', async () => {
+    getModelMock.mockResolvedValue({ response: { name: 'msh-responses' } });
+    const user = userEvent.setup();
+
+    render(
+      <TestSuiteProperties
+        testSuite={{
+          deploymentRef: { id: 'msh-responses', name: 'msh-responses', type: DeploymentType.Model },
+        }}
+        onChange={onChangeMock}
+      />,
+    );
+
+    const openButton = await screen.findByRole('button', { name: ButtonsI18nKey.Open });
+    await user.click(openButton);
+
+    expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.PlatformModels, { name: 'msh-responses' });
+    expect(getModelMock).toHaveBeenCalled();
   });
 
   test('hides Open when type cannot be resolved', async () => {
@@ -178,5 +210,34 @@ describe('TestSuiteProperties', () => {
     await user.click(screen.getByRole('button', { name: 'Finish update' }));
 
     expect(onChangeMock).toHaveBeenCalledWith(suite);
+  });
+
+  test('Open for MCP asset toolset uses mcpDeploymentRef without by-id lookup', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestSuiteProperties
+        testSuite={{
+          suiteType: SuiteType.McpTool,
+          mcpDeploymentRef: {
+            id: 'toolsets/public/developers/sf_test/calculator__1.0.0',
+            type: 'dial-toolset',
+            name: 'calculator',
+          },
+        }}
+        onChange={onChangeMock}
+      />,
+    );
+
+    const openButton = await screen.findByRole('button', { name: ButtonsI18nKey.Open });
+    await user.click(openButton);
+
+    expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.AssetsToolsets, {
+      name: 'calculator',
+      path: 'public/developers/sf_test/calculator__1.0.0',
+    });
+    expect(getDeploymentByIdMock).not.toHaveBeenCalled();
+    expect(getDeploymentsMock).not.toHaveBeenCalled();
+    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 });

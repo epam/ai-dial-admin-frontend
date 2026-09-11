@@ -1,5 +1,5 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { PartitionGranularity } from '@/src/models/analytics/table';
+import { PartitionGranularity, TableWriteMode } from '@/src/models/analytics/table';
 
 export interface ColumnRow {
   id: string;
@@ -48,6 +48,9 @@ export interface CreateTableForm {
   name: string;
   description: string;
   sourceTable: string;
+  // Seeded for both kinds and read only on the source branch — an enrichment's discipline is implied by
+  // its kind (see TableWriteMode).
+  write: TableWriteMode;
 }
 
 export interface DraftSchemaForm {

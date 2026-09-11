@@ -24,6 +24,7 @@ import {
   buildRowDetailDisplayTree,
 } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -39,6 +40,8 @@ interface Props {
   onSwitchDisplayMode: () => void;
   className?: string;
   focusFieldKey?: string | null;
+  fieldSchema?: RowDetailFieldSchema;
+  metricGroupOrder?: readonly string[];
 }
 
 const CompareRowDetailPanel: FC<Props> = ({
@@ -50,6 +53,8 @@ const CompareRowDetailPanel: FC<Props> = ({
   onSwitchDisplayMode,
   className,
   focusFieldKey,
+  fieldSchema,
+  metricGroupOrder = [],
 }) => {
   const t = useI18n();
   const [primaryDetail, setPrimaryDetail] = useState<AnalyticsResult | null>(null);
@@ -123,8 +128,8 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!primaryDetail) return [];
-    return buildRowDetailSections(primaryDetail, comparedDetail);
-  }, [primaryDetail, comparedDetail]);
+    return buildRowDetailSections(primaryDetail, comparedDetail, metricGroupOrder, fieldSchema);
+  }, [primaryDetail, comparedDetail, metricGroupOrder, fieldSchema]);
 
   const counts = useMemo(() => countRowDetailDiffs(sections), [sections]);
 

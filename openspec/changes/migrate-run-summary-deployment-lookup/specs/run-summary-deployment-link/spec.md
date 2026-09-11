@@ -59,13 +59,24 @@ available), the control SHALL render nothing.
 
 ### Requirement: MCP tool suites link without a by-id lookup
 
-For `MCP_TOOL` suites with an `mcpDeploymentRef`, the system SHALL open the MCP Containers route
-using the MCP deployment id/name and SHALL NOT call `GET /api/v1/deployments/all/{id}` for that
-link.
+For `MCP_TOOL` suites with an `mcpDeploymentRef`, the system SHALL resolve the external-link target
+from the MCP deployment id (no `GET /api/v1/deployments/all/{id}`): a `toolsets/` prefix SHALL open
+Assets Toolsets with `?path=` (prefix stripped); an `applications/` prefix SHALL open Assets
+Applications the same way; otherwise the system SHALL open the MCP Containers route with the flat
+id/name.
 
-#### Scenario: MCP external link
+#### Scenario: Asset toolset MCP external link
 
-- **WHEN** the Run Summary page renders an MCP_TOOL suite with `mcpDeploymentRef.name` set
+- **WHEN** the Run Summary page renders an MCP_TOOL suite whose `mcpDeploymentRef.id` starts with
+  `toolsets/`
+- **THEN** the Application external-link control SHALL target Assets Toolsets with the toolset name
+  and `?path=` set to the id with the `toolsets/` prefix removed
+- **AND** SHALL NOT issue a deployment by-id request for the link
+
+#### Scenario: MCP container external link
+
+- **WHEN** the Run Summary page renders an MCP_TOOL suite with a flat `mcpDeploymentRef.id` (no
+  `toolsets/` or `applications/` prefix)
 - **THEN** the Application external-link control SHALL target the MCP Containers route for that
   deployment
 - **AND** SHALL NOT issue a deployment by-id request for the link

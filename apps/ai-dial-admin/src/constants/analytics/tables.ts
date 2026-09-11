@@ -1,7 +1,8 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { PartitionGranularity } from '@/src/models/analytics/table';
+import { PartitionGranularity, TableWriteMode } from '@/src/models/analytics/table';
 
 export const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -43,4 +44,25 @@ export const PARTITION_NONE = '';
 export const PARTITION_GRANULARITY_OPTIONS: SelectOption[] = [
   { value: PARTITION_NONE, label: 'None' },
   ...Object.values(PartitionGranularity).map((value) => ({ value, label: capitalize(value) })),
+];
+
+// A source table's write discipline. The label names the mode and the description says what it does to
+// a write against a key the table already holds — the two are split so the dropdown panel stays inside a
+// small popup, which one label carrying both would not. The immutability caveat rides the field label
+// instead (see CreateTablePopup).
+export const WRITE_MODE_OPTIONS: {
+  value: TableWriteMode;
+  labelKey: AnalyticsTablesI18nKey;
+  descriptionKey: AnalyticsTablesI18nKey;
+}[] = [
+  {
+    value: TableWriteMode.Append,
+    labelKey: AnalyticsTablesI18nKey.WriteModeAppend,
+    descriptionKey: AnalyticsTablesI18nKey.WriteModeAppendDescription,
+  },
+  {
+    value: TableWriteMode.UpsertByKey,
+    labelKey: AnalyticsTablesI18nKey.WriteModeUpsertByKey,
+    descriptionKey: AnalyticsTablesI18nKey.WriteModeUpsertByKeyDescription,
+  },
 ];

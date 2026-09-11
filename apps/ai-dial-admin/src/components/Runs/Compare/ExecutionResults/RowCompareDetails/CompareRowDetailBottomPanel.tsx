@@ -4,6 +4,7 @@ import { FC } from 'react';
 
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   onClose: () => void;
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
+  fieldSchema?: RowDetailFieldSchema;
+  metricGroupOrder?: readonly string[];
 }
 
 const CompareRowDetailBottomPanel: FC<Props> = ({
@@ -22,6 +25,8 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
   focusFieldKey,
+  fieldSchema,
+  metricGroupOrder,
 }) => {
   return (
     <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
@@ -33,6 +38,8 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={onSwitchToSidebar}
         focusFieldKey={focusFieldKey}
+        fieldSchema={fieldSchema}
+        metricGroupOrder={metricGroupOrder}
       />
     </div>
   );

@@ -8,7 +8,10 @@ import { IconExternalLink } from '@tabler/icons-react';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import DeploymentExternalLink from '@/src/components/Runs/Summary/DeploymentExternalLink';
-import { getSuiteApplicationName } from '@/src/components/Runs/Summary/resolve-run-deployment';
+import {
+  getSuiteApplicationName,
+  resolveSuiteContextForDeploymentLink,
+} from '@/src/components/Runs/Summary/resolve-run-deployment';
 import { EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
@@ -28,6 +31,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const startedAt = useLocalDateTimeString(run?.startedAt);
   const completedAt = useLocalDateTimeString(run?.completedAt);
   const suiteContext = run.suiteSnapshot ?? testSuite;
+  const deploymentLinkContext = resolveSuiteContextForDeploymentLink(run.suiteSnapshot, testSuite);
   const applicationName = getSuiteApplicationName(suiteContext);
   const additionalRequestsCount = suiteContext?.additionalRequests?.length ?? 0;
 
@@ -53,7 +57,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
         <DialLabelledText
           label={t(RunsI18nKey.Application)}
           text={applicationName}
-          postfix={<DeploymentExternalLink suiteContext={suiteContext ?? null} />}
+          postfix={<DeploymentExternalLink suiteContext={deploymentLinkContext ?? null} />}
         />
       )}
 

@@ -124,6 +124,38 @@ describe('buildRowDetailSections', () => {
     ]);
   });
 
+  test('preserves extracted schema field order in row detail sections', () => {
+    const sections = buildRowDetailSections({ ...primaryResult, extractedColumns: { answer: 'Berlin' } }, null, [], {
+      extractedColumns: { answer: 'Berlin', verification: 'Yes', history: [] },
+    });
+
+    const extracted = sections.find((section) => section.key === 'extractedColumns');
+    expect(extracted?.rows.map((row) => row.fieldKey)).toEqual(['answer', 'verification', 'history']);
+  });
+
+  test('includes schema metric groups and extracted fields missing from the selected row as null', () => {
+    const sections = buildRowDetailSections(
+      {
+        ...primaryResult,
+        metricValues: { Accuracy: { precision: 0.5 } },
+        extractedColumns: { answer: 'Berlin' },
+      },
+      null,
+      ['Exact Match', 'Accuracy'],
+      {
+        metricValues: { 'Exact Match': { exact_match: 1 }, Accuracy: { precision: 0.5 } },
+        extractedColumns: { answer: 'Berlin', verification: 'Yes' },
+      },
+    );
+
+    const exactMatch = sections.find((section) => section.key === 'metric:Exact Match');
+    expect(exactMatch?.rows.find((row) => row.fieldKey === 'exact_match')?.primaryRaw).toBeNull();
+
+    const extracted = sections.find((section) => section.key === 'extractedColumns');
+    expect(extracted?.rows.find((row) => row.fieldKey === 'verification')?.primaryRaw).toBeNull();
+    expect(extracted?.rows.find((row) => row.fieldKey === 'answer')?.primaryRaw).toBe('Berlin');
+  });
+
   test('marks metric rows as metric and execution rows as non-metric', () => {
     const sections = buildRowDetailSections(primaryResult, comparedResult);
     const execDurationRow = sections

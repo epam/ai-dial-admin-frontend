@@ -41,6 +41,20 @@ The bottom panel body SHALL render a pivot with a section-header row, a field-la
 - **WHEN** the bottom panel is open on a row with one metric and the user selects a row that has additional metric groups
 - **THEN** all metric sections appear together immediately after Execution, with no Test Case Data, Extracted, or Request / Response sections between them
 
+### Requirement: Pivot includes run-wide fields with a dash for missing values
+
+The bottom pivot SHALL include every Test Case Data, Extracted, and metric field that the Extraction Result grid shows for the run, even when the selected row has no value for that field. A missing, null, or absent value SHALL render as an em dash, matching the grid.
+
+#### Scenario: Metric present on other rows
+- **WHEN** the Extraction Result grid shows a metric column as an em dash for the selected row
+- **THEN** the bottom pivot still includes that metric column
+- **AND** the cell shows an em dash
+
+#### Scenario: Extracted column present on other rows
+- **WHEN** an extracted column exists on the run but the selected row has no value for it
+- **THEN** the pivot includes that column
+- **AND** the cell shows an em dash
+
 ### Requirement: Display overlay controls field visibility and order
 
 The panel header SHALL provide a Display control that opens an overlay `TreeColumnsPanel` for reordering and hiding fields/sections. By default, Execution Status, `# Run number`, HTTP, and Request / Response body fields SHALL be visible; Duration SHALL be hidden. Closing the panel SHALL discard Display session state.
