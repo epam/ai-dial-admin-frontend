@@ -9,7 +9,7 @@ import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/Pass
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
-import { formatAvgRunTimeSeconds, formatRunCost } from '@/src/components/Runs/Summary/utils';
+import { formatAvgRunTimeSeconds, formatRunCost, hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
@@ -43,6 +43,7 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
   const testCaseCostDisplay = formatRunCost(costs?.avgTestCaseCost);
   const metricEvalCostDisplay = formatRunCost(costs?.avgMetricEvalCost);
   const costDescription = costsUnavailable ? t(RunsI18nKey.CostDataUnavailable) : t(RunsI18nKey.AvgPerTestCase);
+  const showTestCasesPassed = hasOverallScoreThreshold(run.suiteSnapshot?.overallScoreThreshold);
 
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
@@ -54,13 +55,15 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
           description={t(RunsI18nKey.OverallScoreDescription)}
         />
       )}
-      <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
-        title={t(RunsI18nKey.TestCasesPassed)}
-        value={<PassFailFraction counts={statusCounts} />}
-        description={<PassFailStatusBreakdown counts={statusCounts} />}
-        error={statusCounts.total === 0}
-      />
+      {showTestCasesPassed && (
+        <DialAnalyticsCard
+          className={ANALYTICS_KPI_CARD_CLASS}
+          title={t(RunsI18nKey.TestCasesPassed)}
+          value={<PassFailFraction counts={statusCounts} />}
+          description={<PassFailStatusBreakdown counts={statusCounts} />}
+          error={statusCounts.total === 0}
+        />
+      )}
       <DialAnalyticsCard
         className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.AvgTestCaseRunTime)}

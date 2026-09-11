@@ -7,11 +7,13 @@ import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { RunAnalyticsSlice, TestCaseStatusCounts } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+
+const THRESHOLD_UNAVAILABLE_VALUE = '—';
 
 interface Props {
   primaryRunId: string;
@@ -23,7 +25,22 @@ interface Props {
   comparedMatchedAnalytics: RunAnalyticsSlice | null;
   primaryOverallScore?: number | null;
   comparedOverallScore?: number | null;
+  hasPrimaryThreshold: boolean;
+  hasComparedThreshold: boolean;
 }
+
+const thresholdSideValue = (hasThreshold: boolean, runName: string, counts: TestCaseStatusCounts) => {
+  if (!hasThreshold) {
+    return THRESHOLD_UNAVAILABLE_VALUE;
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <PassFailFraction counts={counts} />
+      <PassFailStatusBreakdown counts={counts} compact tooltipTitle={runName} />
+    </div>
+  );
+};
 
 const Analytics: FC<Props> = ({
   primaryRunId,
@@ -35,6 +52,8 @@ const Analytics: FC<Props> = ({
   comparedMatchedAnalytics,
   primaryOverallScore,
   comparedOverallScore,
+  hasPrimaryThreshold,
+  hasComparedThreshold,
 }) => {
   const t = useI18n();
   const { data: primaryFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : primaryRunId);
@@ -53,7 +72,13 @@ const Analytics: FC<Props> = ({
 
   const showOverall = primaryOverallScore != null || comparedOverallScore != null;
   const overallDelta = getMetricDelta(primaryOverallScore, comparedOverallScore);
-  const passedDelta = getMetricDelta(primary.statusCounts.passed, compared.statusCounts.passed);
+  const showTestCasesPassed = hasPrimaryThreshold || hasComparedThreshold;
+  const passedDelta =
+    hasPrimaryThreshold && hasComparedThreshold
+      ? getMetricDelta(primary.statusCounts.passed, compared.statusCounts.passed)
+      : null;
+  const isPrimaryPassedEmpty = !hasPrimaryThreshold || primary.statusCounts.total === 0;
+  const isComparedPassedEmpty = !hasComparedThreshold || compared.statusCounts.total === 0;
   const primarySeconds = primary.avgRunTimeMs != null ? formatAvgRunTimeSeconds(primary.avgRunTimeMs) : null;
   const comparedSeconds = compared.avgRunTimeMs != null ? formatAvgRunTimeSeconds(compared.avgRunTimeMs) : null;
   const runtimeDelta = getMetricDelta(primarySeconds, comparedSeconds);
@@ -83,32 +108,24 @@ const Analytics: FC<Props> = ({
           ]}
         />
       )}
-      <DialAnalyticsCard
-        className="min-w-0 flex-1"
-        title={t(RunsI18nKey.TestCasesPassed)}
-        delta={passedDelta.kind === MetricDeltaKind.Changed ? passedDelta.value : undefined}
-        compareValues={[
-          {
-            title: primaryRunName,
-            value: (
-              <div className="flex flex-col gap-0.5">
-                <PassFailFraction counts={primary.statusCounts} />
-                <PassFailStatusBreakdown counts={primary.statusCounts} compact tooltipTitle={primaryRunName} />
-              </div>
-            ),
-          },
-          {
-            title: comparedRunName,
-            value: (
-              <div className="flex flex-col gap-0.5">
-                <PassFailFraction counts={compared.statusCounts} />
-                <PassFailStatusBreakdown counts={compared.statusCounts} compact tooltipTitle={comparedRunName} />
-              </div>
-            ),
-          },
-        ]}
-        error={primary.statusCounts.total === 0 && compared.statusCounts.total === 0}
-      />
+      {showTestCasesPassed && (
+        <DialAnalyticsCard
+          className="min-w-0 flex-1"
+          title={t(RunsI18nKey.TestCasesPassed)}
+          delta={passedDelta?.kind === MetricDeltaKind.Changed ? passedDelta.value : undefined}
+          compareValues={[
+            {
+              title: primaryRunName,
+              value: thresholdSideValue(hasPrimaryThreshold, primaryRunName, primary.statusCounts),
+            },
+            {
+              title: comparedRunName,
+              value: thresholdSideValue(hasComparedThreshold, comparedRunName, compared.statusCounts),
+            },
+          ]}
+          error={isPrimaryPassedEmpty && isComparedPassedEmpty}
+        />
+      )}
       <DialAnalyticsCard
         className="min-w-0 flex-1"
         title={t(RunsI18nKey.AvgTestCaseRunTime)}

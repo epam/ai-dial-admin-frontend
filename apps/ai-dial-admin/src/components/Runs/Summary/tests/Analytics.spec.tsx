@@ -30,14 +30,17 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 const STATUS_ROWS = {
   rows: [
-    { execution_status: 'SUCCESS', count: 37 },
-    { execution_status: 'FAILED', count: 3 },
-    { execution_status: 'TIMEOUT', count: 1 },
-    { execution_status: 'ERROR', count: 2 },
+    { execution_status: 'SUCCESS', passed: true, count: 37 },
+    { execution_status: 'SUCCESS', passed: false, count: 3 },
+    { execution_status: 'TIMEOUT', passed: null, count: 1 },
+    { execution_status: 'ERROR', passed: null, count: 2 },
   ],
 };
 const AVG_ROWS = { rows: [{ avg_duration_ms: 199.6 }] };
 const AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 291123.6 }] };
+
+const RUN_WITH_THRESHOLD = { id: 'run-1', suiteSnapshot: { overallScoreThreshold: 0.5 } };
+const RUN_WITHOUT_THRESHOLD = { id: 'run-1' };
 
 const mockQueries = () => {
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
@@ -68,7 +71,7 @@ describe('Runs Summary :: Analytics', () => {
   test('shows a loader until data resolves', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.01, avgMetricEvalCost: 0.02 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument());
@@ -77,7 +80,7 @@ describe('Runs Summary :: Analytics', () => {
   test('renders read-only overall score card when overall data is present', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} overallScore={0.812} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} overallScore={0.812} />);
 
     expect(await screen.findByText('Runs.OverallScore')).toBeInTheDocument();
     expect(screen.getByText('0.812')).toBeInTheDocument();
@@ -87,7 +90,7 @@ describe('Runs Summary :: Analytics', () => {
   test('hides overall score card when overall data is absent', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} overallScore={null} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} overallScore={null} />);
 
     await screen.findByText('Runs.TestCasesPassed');
     expect(screen.queryByText('Runs.OverallScore')).not.toBeInTheDocument();
@@ -96,7 +99,7 @@ describe('Runs Summary :: Analytics', () => {
   test('hides overall score card while overall score is still loading', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     await screen.findByText('Runs.TestCasesPassed');
     expect(screen.queryByText('Runs.OverallScore')).not.toBeInTheDocument();
@@ -105,19 +108,19 @@ describe('Runs Summary :: Analytics', () => {
   test('renders passed test cases card with N/M value and status breakdown', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     await screen.findByText('37');
     await screen.findByText('/ 43');
     expect(screen.getByText('37 Runs.Pass')).toBeInTheDocument();
-    expect(screen.getByText('4 Runs.Fail')).toBeInTheDocument();
-    expect(screen.getByText('2 Runs.ExecError')).toBeInTheDocument();
+    expect(screen.getByText('3 Runs.Fail')).toBeInTheDocument();
+    expect(screen.getByText('3 Runs.ExecError')).toBeInTheDocument();
   });
 
   test('renders average run time card in seconds', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
   });
@@ -125,7 +128,7 @@ describe('Runs Summary :: Analytics', () => {
   test('renders average metric-eval latency card in seconds', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
     expect(screen.getByText('291.1 Runs.Seconds')).toBeInTheDocument();
@@ -134,7 +137,7 @@ describe('Runs Summary :: Analytics', () => {
   test('marks cards as error when the run has no data', async () => {
     executeStructuredQueryMock.mockResolvedValue({ rows: [] });
     mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} overallScore={null} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} overallScore={null} />);
 
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });
@@ -142,7 +145,7 @@ describe('Runs Summary :: Analytics', () => {
   test('renders cost cards with dollar values', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.TestCaseLlmCost')).toBeInTheDocument();
     expect(screen.getByText('Runs.MetricEvalCost')).toBeInTheDocument();
@@ -154,7 +157,7 @@ describe('Runs Summary :: Analytics', () => {
   test('renders em dash when a cost field is null', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0 });
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.TestCaseLlmCost')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
@@ -164,7 +167,7 @@ describe('Runs Summary :: Analytics', () => {
   test('shows Cost data unavailable without dropping other KPI cards', async () => {
     mockQueries();
     mockCosts(null);
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     expect(screen.getByText('0.2 Runs.Seconds')).toBeInTheDocument();
@@ -189,7 +192,7 @@ describe('Runs Summary :: Analytics', () => {
       }),
     );
 
-    render(<Analytics run={{ id: 'run-1' } as any} />);
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     expect(screen.getAllByText('cost-loading')).toHaveLength(2);
@@ -198,5 +201,22 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('$0.5')).toBeInTheDocument();
     expect(screen.getByText('$0.25')).toBeInTheDocument();
     expect(screen.queryByText('cost-loading')).not.toBeInTheDocument();
+  });
+
+  test('hides the test cases passed card when the run snapshot has no threshold', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
+    render(<Analytics run={RUN_WITHOUT_THRESHOLD as any} />);
+
+    expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
+  test('shows the test cases passed card when the snapshotted threshold is 0', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0, avgMetricEvalCost: 0 });
+    render(<Analytics run={{ id: 'run-1', suiteSnapshot: { overallScoreThreshold: 0 } } as any} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
   });
 });

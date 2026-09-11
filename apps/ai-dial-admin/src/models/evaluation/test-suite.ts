@@ -86,6 +86,8 @@ export interface SuiteSnapshot {
   mcpDeploymentRef?: McpDeploymentRef;
   requestName?: string;
   additionalRequests?: TestSuiteAdditionalRequest[];
+  /** Score threshold captured at run start; used for per-row `passed` on eval summaries. */
+  overallScoreThreshold?: number;
 }
 
 export interface McpDeploymentRef {

@@ -36,14 +36,14 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 const STATUS_ROWS = {
   rows: [
-    { execution_status: 'SUCCESS', count: 48 },
-    { execution_status: 'FAILED', count: 2 },
+    { execution_status: 'SUCCESS', passed: true, count: 48 },
+    { execution_status: 'FAILED', passed: null, count: 2 },
   ],
 };
 const COMPARED_STATUS_ROWS = {
   rows: [
-    { execution_status: 'SUCCESS', count: 45 },
-    { execution_status: 'FAILED', count: 0 },
+    { execution_status: 'SUCCESS', passed: true, count: 45 },
+    { execution_status: 'FAILED', passed: null, count: 0 },
   ],
 };
 const AVG_ROWS = { rows: [{ avg_duration_ms: 241000 }] };
@@ -94,6 +94,8 @@ const renderAnalytics = (overrides: Partial<ComponentProps<typeof Analytics>> = 
       onlyMatchingTestCases={false}
       primaryMatchedAnalytics={null}
       comparedMatchedAnalytics={null}
+      hasPrimaryThreshold
+      hasComparedThreshold
       {...overrides}
     />,
   );
@@ -155,5 +157,24 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.getByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
     expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
     expect(executeStructuredQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('hides the test cases passed card when neither run has a snapshotted threshold', async () => {
+    mockQueries();
+    renderAnalytics({ hasPrimaryThreshold: false, hasComparedThreshold: false });
+
+    expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
+  test('shows a dash for the side without a snapshotted threshold', async () => {
+    mockQueries();
+    renderAnalytics({ hasPrimaryThreshold: true, hasComparedThreshold: false });
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    const passedCard = screen.getByRole('region', { name: 'Runs.TestCasesPassed' });
+    expect(passedCard).toHaveTextContent('48');
+    expect(passedCard).toHaveTextContent('—');
+    expect(passedCard).not.toHaveTextContent('delta:-3');
   });
 });

@@ -12,6 +12,8 @@ export const LATEST_COMPUTATION = 'latest';
 export const RUN_ID_FIELD = 'test_suite_run_id';
 export const COMPUTATION_ID_FIELD = 'computation_id';
 export const EXECUTION_STATUS_FIELD = 'execution_status';
+/** Per-row threshold outcome on `eval_summaries` (`score >= snapshotted overallScoreThreshold`). */
+export const PASSED_FIELD = 'passed';
 export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
 export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 
