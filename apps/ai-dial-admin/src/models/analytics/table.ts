@@ -7,6 +7,15 @@ export enum AnalyticsTableType {
   Enrichment = 'enrichment',
 }
 
+// A source table's write discipline, declared once at create and immutable afterwards: it selects the
+// storage engine, which is frozen when the table is materialized, so no later request changes it.
+// Source-only — an enrichment always collapses on its grain key, and the service rejects the member for
+// one (422).
+export enum TableWriteMode {
+  Append = 'append',
+  UpsertByKey = 'upsert_by_key',
+}
+
 export enum TableStatus {
   Pending = 'pending',
   Active = 'active',
@@ -96,6 +105,7 @@ export interface CreateSourceTableDto {
   name: string;
   type: AnalyticsTableType.Source;
   description?: string;
+  write: TableWriteMode;
 }
 
 export interface CreateEnrichmentTableDto {

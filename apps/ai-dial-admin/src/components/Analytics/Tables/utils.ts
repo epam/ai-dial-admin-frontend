@@ -15,6 +15,7 @@ import {
   AnalyticsTableType,
   Cardinality,
   DraftSchemaDto,
+  TableWriteMode,
 } from '@/src/models/analytics/table';
 import {
   ColumnEditValues,
@@ -94,6 +95,7 @@ export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
     name: '',
     description: '',
     sourceTable: firstSource?.name ?? '',
+    write: TableWriteMode.Append,
   };
 };
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, TableWriteMode } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -18,6 +18,7 @@ const nameField = () => screen.getByLabelText(AnalyticsTablesI18nKey.Name, { exa
 // DialInput remounts on re-render, so per-keystroke typing detaches; set the value in one change event.
 const typeName = (value: string) => fireEvent.change(nameField(), { target: { value } });
 const submitButton = (key: AnalyticsTablesI18nKey) => screen.getByRole('button', { name: key });
+const writeModeRadio = (key: AnalyticsTablesI18nKey) => screen.getByRole('radio', { name: key });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -60,7 +61,48 @@ describe('CreateTablePopup source', () => {
 
     fireEvent.click(button);
 
-    expect(createTable).toHaveBeenCalledWith({ name: 'orders', type: AnalyticsTableType.Source });
+    expect(createTable).toHaveBeenCalledWith({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      write: TableWriteMode.Append,
+    });
+  });
+
+  test('offers exactly the two write disciplines, seeded to append', () => {
+    setup();
+
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(writeModeRadio(AnalyticsTablesI18nKey.WriteModeAppend)).toBeChecked();
+    expect(writeModeRadio(AnalyticsTablesI18nKey.WriteModeUpsertByKey)).not.toBeChecked();
+  });
+
+  test('states what each discipline does to a write against a key the table already holds', () => {
+    setup();
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.WriteModeAppendDescription)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.WriteModeUpsertByKeyDescription)).toBeInTheDocument();
+  });
+
+  test('states that the write discipline is fixed once the table is created', () => {
+    setup();
+    // DialRadioGroup renders `labelDescription` as the label's info button, the same affordance the
+    // schema-definition surface gives its physical keys.
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.WriteModeHint })).toBeInTheDocument();
+  });
+
+  test('selecting the collapsing discipline sends it in the payload', () => {
+    (createTable as any).mockResolvedValue({ success: true });
+    setup();
+    typeName('orders');
+    fireEvent.click(writeModeRadio(AnalyticsTablesI18nKey.WriteModeUpsertByKey));
+
+    fireEvent.click(submitButton(AnalyticsTablesI18nKey.CreateSource));
+
+    expect(createTable).toHaveBeenCalledWith({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      write: TableWriteMode.UpsertByKey,
+    });
   });
 });
 
@@ -71,6 +113,12 @@ describe('CreateTablePopup enrichment', () => {
     expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.Columns)).not.toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.GrainKey)).not.toBeInTheDocument();
+  });
+
+  test('offers no write discipline — an enrichment always collapses on its grain key', () => {
+    setup(AnalyticsTableType.Enrichment);
+    expect(screen.queryByText(AnalyticsTablesI18nKey.WriteMode)).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
   });
 
   test('a valid name and defaulted source table send an identity-only enrichment payload', () => {

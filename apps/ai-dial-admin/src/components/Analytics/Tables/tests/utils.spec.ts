@@ -23,6 +23,7 @@ import {
   AnalyticsTableColumn,
   AnalyticsTableType,
   PartitionGranularity,
+  TableWriteMode,
 } from '@/src/models/analytics/table';
 import { ColumnEditValues, ColumnRow } from '@/src/models/analytics/tables-ui';
 
@@ -32,11 +33,21 @@ describe('createTableForm', () => {
       { name: 'events', type: AnalyticsTableType.Enrichment, source_table: 'orders' },
       { name: 'orders', type: AnalyticsTableType.Source },
     ];
-    expect(createTableForm(tables)).toEqual({ name: '', description: '', sourceTable: 'orders' });
+    expect(createTableForm(tables)).toEqual({
+      name: '',
+      description: '',
+      sourceTable: 'orders',
+      write: TableWriteMode.Append,
+    });
   });
 
   test('has no default source table when the catalog has none', () => {
-    expect(createTableForm([])).toEqual({ name: '', description: '', sourceTable: '' });
+    expect(createTableForm([])).toEqual({
+      name: '',
+      description: '',
+      sourceTable: '',
+      write: TableWriteMode.Append,
+    });
   });
 });
 
