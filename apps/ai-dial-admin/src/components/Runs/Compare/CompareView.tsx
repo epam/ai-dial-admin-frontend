@@ -32,12 +32,17 @@ import {
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { isMatchedCompareRow } from '@/src/components/Runs/View/utils';
+import {
+  getMetricGroupOrder,
+  getRowDetailFieldSchema,
+  isMatchedCompareRow,
+  mergeByTestCaseId,
+} from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
+import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
 
 interface Props {
   runId: string;
@@ -85,6 +90,20 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   focusFieldKeyRef.current = focusFieldKey;
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
+  const fieldSchema = useMemo(() => {
+    const primary = tabState.executionResults.results ?? [];
+    const compared = tabState.executionResults.comparedResults ?? [];
+    const merged = mergeByTestCaseId(primary, compared);
+    const allResults: AnalyticsResult[] = [
+      ...merged,
+      ...merged.flatMap((row) => (row._compared ? [row._compared] : [])),
+    ];
+    return getRowDetailFieldSchema(allResults);
+  }, [tabState.executionResults.results, tabState.executionResults.comparedResults]);
+  const metricGroupOrder = useMemo(
+    () => getMetricGroupOrder(tabState.executionResults.gridColDefs),
+    [tabState.executionResults.gridColDefs],
+  );
 
   const selectRunModalConfig = useMemo(() => {
     if (!selectRunSlot) return null;
@@ -229,6 +248,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onClose={closeRowDetail}
           onSwitchToSidebar={switchToSidebar}
           focusFieldKey={fieldKey}
+          fieldSchema={fieldSchema}
+          metricGroupOrder={metricGroupOrder}
         />
       ) : (
         <CompareRowDetailPanel
@@ -239,12 +260,14 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           position={SidebarPosition.Right}
           onSwitchDisplayMode={switchToBottom}
           focusFieldKey={fieldKey}
+          fieldSchema={fieldSchema}
+          metricGroupOrder={metricGroupOrder}
         />
       );
       const className = isBottom ? ROW_DETAIL_BOTTOM_CLASS : ROW_DETAIL_SIDEBAR_CLASS;
       sidebarRef.current.showSidebar(content, className, position);
     },
-    [primaryRunName, comparedRunName, closeRowDetail, switchToBottom, switchToSidebar],
+    [primaryRunName, comparedRunName, closeRowDetail, switchToBottom, switchToSidebar, fieldSchema, metricGroupOrder],
   );
 
   showDetailPanelRef.current = showDetailPanel;

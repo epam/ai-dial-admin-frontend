@@ -1,6 +1,8 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG, IF_MATCH } from '@/src/constants/api-headers';
 import { requestRegistry } from '@/src/utils/api/request-registry';
+import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import * as sendRequestModule from '@/src/utils/api/send-request';
 
 describe('BaseApi request cancellation', () => {
@@ -14,6 +16,10 @@ describe('BaseApi request cancellation', () => {
 
     public async testSendActionRequest(url: string, type: string) {
       return this.sendActionRequest(url, type);
+    }
+
+    public async testPutActionWithEtag(url: string, dto: object, etag: string | undefined) {
+      return this.putActionWithEtag(url, dto, TOKEN_MOCK, etag);
     }
   }
 
@@ -129,5 +135,54 @@ describe('BaseApi request cancellation', () => {
       errorMessage: 'Request cancelled',
     });
     expect(unregisterSpy).toHaveBeenCalledOnce();
+  });
+});
+
+describe('BaseApi putActionWithEtag', () => {
+  class TestApi extends BaseApi {
+    public async testPutActionWithEtag(url: string, dto: object, etag: string | undefined) {
+      return this.putActionWithEtag(url, dto, TOKEN_MOCK, etag);
+    }
+  }
+
+  let api: TestApi;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    api = new TestApi({ host: 'http://test.com' });
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+  });
+
+  test('sends If-Match with the given etag when one is defined', async () => {
+    await api.testPutActionWithEtag('/test', {}, 'real-etag');
+
+    expect(sendRequestModule.sendRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      'PUT',
+      expect.objectContaining({ [IF_MATCH]: 'real-etag' }),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test('sends If-Match: * when DEFAULT_ETAG is passed explicitly', async () => {
+    await api.testPutActionWithEtag('/test', {}, DEFAULT_ETAG);
+
+    expect(sendRequestModule.sendRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      'PUT',
+      expect.objectContaining({ [IF_MATCH]: DEFAULT_ETAG }),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  test('omits If-Match entirely when etag is undefined', async () => {
+    await api.testPutActionWithEtag('/test', {}, undefined);
+
+    const headers = (sendRequestModule.sendRequest as ReturnType<typeof vi.fn>).mock.calls[0][2];
+    expect(headers).not.toHaveProperty(IF_MATCH);
   });
 });

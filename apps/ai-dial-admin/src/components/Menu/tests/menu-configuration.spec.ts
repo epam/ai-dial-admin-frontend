@@ -10,6 +10,7 @@ import { MENU_CONFIGURATION } from '../menu-configuration';
 const ICON_SIZE = 16;
 
 const baseFlags: FeatureFlags = {
+  adminApiEnabled: true,
   dashboardEnabled: true,
   deploymentsEnabled: true,
   evaluationEnabled: true,
@@ -101,6 +102,49 @@ describe('MENU_CONFIGURATION — group visibility flags compose independently', 
   });
 });
 
+describe('MENU_CONFIGURATION — admin API gating', () => {
+  const findAuditGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Audit);
+
+  test('hides Entities, Builders, Access Management, and Audit when adminApiEnabled is false', () => {
+    const keys = groupKeys({ ...baseFlags, adminApiEnabled: false });
+
+    expect(keys).not.toContain(MenuI18nKey.Entities);
+    expect(keys).not.toContain(MenuI18nKey.Builders);
+    expect(keys).not.toContain(MenuI18nKey.AccessManagement);
+    expect(keys).not.toContain(MenuI18nKey.Audit);
+  });
+
+  test('hides the whole Audit group (not just Activity) when adminApiEnabled is false', () => {
+    const group = findAuditGroup({ ...baseFlags, adminApiEnabled: false });
+
+    expect(group).toBeUndefined();
+  });
+
+  test('shows Entities, Builders, Access Management, and the Activity item when adminApiEnabled is true', () => {
+    const keys = groupKeys(baseFlags);
+    const auditKeys = findAuditGroup(baseFlags)?.items.map((item) => item.key);
+
+    expect(keys).toContain(MenuI18nKey.Entities);
+    expect(keys).toContain(MenuI18nKey.Builders);
+    expect(keys).toContain(MenuI18nKey.AccessManagement);
+    expect(auditKeys).toContain(MenuI18nKey.ActivityAudit);
+  });
+
+  test('gating composes independently of Deployments and Evaluation', () => {
+    const keys = groupKeys({
+      ...baseFlags,
+      adminApiEnabled: false,
+      deploymentsEnabled: true,
+      evaluationEnabled: true,
+    });
+
+    expect(keys).not.toContain(MenuI18nKey.Entities);
+    expect(keys).toContain(MenuI18nKey.Deployments);
+    expect(keys).toContain(MenuI18nKey.Evaluation);
+  });
+});
+
 describe('MENU_CONFIGURATION — Approvals group', () => {
   const findApprovalsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Approvals);
@@ -130,12 +174,12 @@ describe('MENU_CONFIGURATION — Assets group', () => {
   const findAssetsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Assets);
 
-  test('Skills is the last entry, immediately after Files', () => {
+  test('FoldersStorage is the last entry, immediately after Skills', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
 
-    expect(keys[keys.length - 1]).toBe(MenuI18nKey.Skills);
-    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Files);
+    expect(keys[keys.length - 1]).toBe(MenuI18nKey.FoldersStorage);
+    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Skills);
   });
 
   test('Skills links to the /skills route', () => {

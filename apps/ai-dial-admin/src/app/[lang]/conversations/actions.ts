@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, utilityApi } from '@/src/app/api/api';
+import { assetApi, coreUtilityApi } from '@/src/app/api/api';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { ResourceType } from '@/src/types/resource-type';
@@ -31,5 +31,5 @@ export async function deleteConversations(paths: { path: string }[]) {
 
 export async function getAllDeployments() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return utilityApi.getAllDeployments(token);
+  return coreUtilityApi.getAllDeployments(token);
 }

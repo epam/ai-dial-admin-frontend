@@ -1,4 +1,5 @@
 export interface FeatureFlags {
+  adminApiEnabled: boolean;
   dashboardEnabled: boolean;
   deploymentsEnabled: boolean;
   evaluationEnabled: boolean;

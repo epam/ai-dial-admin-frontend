@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { ConfigEntityOrigin, ConfigFileEntityType, ConfigFileFailureReason } from '@/src/types/config-file-entity';
@@ -27,6 +27,11 @@ const metadataPage = (names: string[], nextToken?: string) => ({
 describe('getConfigEntityOptions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test('unions both populations with their origins', async () => {
@@ -109,6 +114,19 @@ describe('getConfigEntityOptions', () => {
 
     // No throw, and the malformed page contributes no names.
     expect(result.success && result.data.options).toEqual([]);
+  });
+
+  // Config-file entities are declared in the admin console's own configuration surface — without it
+  // there is nothing to read there, so the config-file half is skipped rather than reported as failed.
+  test('skips the config-file read without the admin backend, keeping the API-written population', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    getMetadata.mockResolvedValue(metadataPage(['from-api']));
+
+    const result = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+
+    expect(listNames).not.toHaveBeenCalled();
+    expect(result.success && result.data.options).toEqual([{ name: 'from-api', origin: ConfigEntityOrigin.Api }]);
+    expect(result.success && result.data.failures).toEqual([]);
   });
 });
 

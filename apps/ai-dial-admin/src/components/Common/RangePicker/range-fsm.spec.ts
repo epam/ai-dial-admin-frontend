@@ -43,10 +43,11 @@ describe('reduce', () => {
     expect(next).toEqual({ kind: 'single', date: day(2026, 3, 6) });
   });
 
-  test('single(A) + click same day → no-op', () => {
+  test('single(A) + click same day → interval(anchor: A, latest: A)', () => {
     const state: RangeFsmState = { kind: 'single', date: day(2026, 3, 3) };
-    const next = reduce(state, day(2026, 3, 3, 23), maxDays);
-    expect(next).toEqual(state);
+    const click = day(2026, 3, 3, 23);
+    const next = reduce(state, click, maxDays);
+    expect(next).toEqual({ kind: 'interval', anchor: state.date, latest: click });
   });
 
   test('interval + click on anchor → single(clicked)', () => {
@@ -141,15 +142,65 @@ describe('toCommit', () => {
     expect(toCommit({ kind: 'empty' })).toBeNull();
   });
 
-  test('single → { start: D 00:00:00, end: D 23:59:59.999 }', () => {
-    const committed = toCommit({ kind: 'single', date: day(2026, 3, 3, 15) });
-    expect(committed).not.toBeNull();
-    expect(committed!.startDate.getHours()).toBe(0);
-    expect(committed!.startDate.getMinutes()).toBe(0);
-    expect(committed!.endDate.getHours()).toBe(23);
-    expect(committed!.endDate.getMilliseconds()).toBe(999);
-    // same calendar day on both ends
-    expect(committed!.startDate.getDate()).toBe(committed!.endDate.getDate());
+  test('single(A), no maxDays → commits A 00:00:00.000 through the injected today 23:59:59.999', () => {
+    const anchor = day(2026, 3, 3, 15);
+    const today = day(2026, 3, 10);
+    const committed = toCommit({ kind: 'single', date: anchor }, undefined, today);
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 10, 23, 59, 59, 999),
+    });
+  });
+
+  test('single(A) clamps to A + (maxDays − 1) when today is further away than the cap', () => {
+    const anchor = day(2026, 3, 3);
+    const today = day(2026, 3, 20);
+    const committed = toCommit({ kind: 'single', date: anchor }, 3, today);
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 5, 23, 59, 59, 999),
+    });
+  });
+
+  test('single(A) does not clamp when today is exactly maxDays − 1 days after A', () => {
+    const anchor = day(2026, 3, 3);
+    const today = day(2026, 3, 5);
+    const committed = toCommit({ kind: 'single', date: anchor }, 3, today);
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 5, 23, 59, 59, 999),
+    });
+  });
+
+  test('single(today) commits today only, never a future day', () => {
+    const today = day(2026, 3, 3);
+    const committed = toCommit({ kind: 'single', date: today }, undefined, today);
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 3, 23, 59, 59, 999),
+    });
+  });
+
+  test('interval(A, A) — the one-day interval from a repeated click — commits A 00:00:00.000 → A 23:59:59.999', () => {
+    const a = day(2026, 3, 3);
+    const committed = toCommit({ kind: 'interval', anchor: a, latest: a });
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 3, 23, 59, 59, 999),
+    });
+  });
+
+  test('interval(A, B) commits exactly [min(A,B), max(A,B)] with no widening toward today', () => {
+    const today = day(2026, 6, 1);
+    const committed = toCommit(
+      { kind: 'interval', anchor: day(2026, 3, 5), latest: day(2026, 3, 3) },
+      undefined,
+      today,
+    );
+    expect(committed).toEqual({
+      startDate: new Date(2026, 2, 3, 0, 0, 0, 0),
+      endDate: new Date(2026, 2, 5, 23, 59, 59, 999),
+    });
   });
 
   test('interval commits normalized [min, max] with time boundaries', () => {

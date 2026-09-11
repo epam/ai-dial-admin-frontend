@@ -13,6 +13,7 @@ import {
   getTestCaseStatusClass,
   getAnalyticsColumns,
   getMetricGroupOrder,
+  getRowDetailFieldSchema,
   createEmptyComparePrimaryRow,
   getDetailEntries,
   getDetailNestedEntries,
@@ -24,6 +25,12 @@ import {
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
+
+const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
+  responseStatusCode: 200,
+  runIndex: 0,
+  ...overrides,
+});
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -150,6 +157,24 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(extractedChildren[0].valueGetter({ data: { extractedColumns: { score: null } } })).toBe('—');
   });
 
+  test('getRowDetailFieldSchema unions metric, test-case, and extracted keys across rows', () => {
+    const schema = getRowDetailFieldSchema([
+      makeResult({
+        metricValues: { 'Exact Match': { exact_match: 1 } },
+        testCaseData: { prompt: 'hello' },
+        extractedColumns: { answer: 'Hi' },
+      }),
+      makeResult({
+        testCaseData: { prompt: 'hello', language: 'fr' },
+        extractedColumns: { verification: 'Yes' },
+      }),
+    ]);
+
+    expect(schema.metricValues).toEqual({ 'Exact Match': { exact_match: 1 } });
+    expect(schema.testCaseData).toEqual({ prompt: 'hello', language: 'fr' });
+    expect(schema.extractedColumns).toEqual({ answer: 'Hi', verification: 'Yes' });
+  });
+
   test('Should merge extracted column keys from all rows, so a request chain shows every column', () => {
     const results = [
       { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },
@@ -228,6 +253,17 @@ describe('Runs View :: getAnalyticsColumns', () => {
       'answer-conciseness_score',
       'instruction-following_score',
     ]);
+  });
+
+  test('getMetricGroupOrder skips unnamed groups and non-metric headers', () => {
+    expect(
+      getMetricGroupOrder([
+        { headerName: '', children: [{ field: 'status' }] },
+        { headerName: 'Execution', children: [{ field: 'http' }] },
+        { headerName: 'Exact Match', children: [{ field: 'exact_match' }] },
+        { headerName: 'Extracted', children: [{ field: 'answer' }] },
+      ]),
+    ).toEqual(['Exact Match']);
   });
 
   test('getMetricGroupOrder returns metric headers in grid column order', () => {
@@ -831,12 +867,6 @@ describe('Runs View :: executionColumns Total turns valueGetter', () => {
     expect(col.valueGetter({ data: null })).toBeNull();
     expect(col.valueGetter({ data: undefined })).toBeNull();
   });
-});
-
-const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
-  responseStatusCode: 200,
-  runIndex: 0,
-  ...overrides,
 });
 
 describe('Runs View :: createEmptyComparePrimaryRow', () => {

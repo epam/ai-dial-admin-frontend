@@ -38,22 +38,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconSettings2 width={iconSize} height={iconSize} />,
       items: [
         { key: MenuI18nKey.Models, href: ApplicationRoute.Models },
-        {
-          key: MenuI18nKey.Applications,
-          href: ApplicationRoute.Applications,
-        },
-        {
-          key: MenuI18nKey.Toolsets,
-          href: ApplicationRoute.Toolsets,
-        },
-        {
-          key: MenuI18nKey.Interceptors,
-          href: ApplicationRoute.Interceptors,
-        },
-        {
-          key: MenuI18nKey.Routes,
-          href: ApplicationRoute.Routes,
-        },
+        { key: MenuI18nKey.Applications, href: ApplicationRoute.Applications },
+        { key: MenuI18nKey.Toolsets, href: ApplicationRoute.Toolsets },
+        { key: MenuI18nKey.Interceptors, href: ApplicationRoute.Interceptors },
+        { key: MenuI18nKey.Routes, href: ApplicationRoute.Routes },
       ],
     },
     {
@@ -61,18 +49,9 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.BuildersDescription,
       icon: <IconHammer width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.ApplicationRunners,
-          href: ApplicationRoute.ApplicationRunners,
-        },
-        {
-          key: MenuI18nKey.InterceptorTemplates,
-          href: ApplicationRoute.InterceptorTemplates,
-        },
-        {
-          key: MenuI18nKey.Adapters,
-          href: ApplicationRoute.Adapters,
-        },
+        { key: MenuI18nKey.ApplicationRunners, href: ApplicationRoute.ApplicationRunners },
+        { key: MenuI18nKey.InterceptorTemplates, href: ApplicationRoute.InterceptorTemplates },
+        { key: MenuI18nKey.Adapters, href: ApplicationRoute.Adapters },
       ],
     },
     {
@@ -95,30 +74,13 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.AssetsDescription,
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.Applications,
-          href: ApplicationRoute.AssetsApplications,
-        },
-        {
-          key: MenuI18nKey.Toolsets,
-          href: ApplicationRoute.AssetsToolsets,
-        },
-        {
-          key: MenuI18nKey.Prompts,
-          href: ApplicationRoute.Prompts,
-        },
-        {
-          key: MenuI18nKey.Conversations,
-          href: ApplicationRoute.Conversations,
-        },
-        {
-          key: MenuI18nKey.Files,
-          href: ApplicationRoute.Files,
-        },
-        {
-          key: MenuI18nKey.Skills,
-          href: ApplicationRoute.Skills,
-        },
+        { key: MenuI18nKey.Applications, href: ApplicationRoute.AssetsApplications },
+        { key: MenuI18nKey.Toolsets, href: ApplicationRoute.AssetsToolsets },
+        { key: MenuI18nKey.Prompts, href: ApplicationRoute.Prompts },
+        { key: MenuI18nKey.Conversations, href: ApplicationRoute.Conversations },
+        { key: MenuI18nKey.Files, href: ApplicationRoute.Files },
+        { key: MenuI18nKey.Skills, href: ApplicationRoute.Skills },
+        { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
       ],
     },
     {
@@ -134,26 +96,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
               },
             ]
           : []),
-        {
-          key: MenuI18nKey.McpContainers,
-          href: ApplicationRoute.McpContainers,
-        },
-        {
-          key: MenuI18nKey.InterceptorContainers,
-          href: ApplicationRoute.InterceptorContainers,
-        },
-        {
-          key: MenuI18nKey.AdapterContainers,
-          href: ApplicationRoute.AdapterContainers,
-        },
-        {
-          key: MenuI18nKey.ApplicationContainers,
-          href: ApplicationRoute.ApplicationContainers,
-        },
-        {
-          key: MenuI18nKey.Images,
-          href: ApplicationRoute.Images,
-        },
+        { key: MenuI18nKey.McpContainers, href: ApplicationRoute.McpContainers },
+        { key: MenuI18nKey.InterceptorContainers, href: ApplicationRoute.InterceptorContainers },
+        { key: MenuI18nKey.AdapterContainers, href: ApplicationRoute.AdapterContainers },
+        { key: MenuI18nKey.ApplicationContainers, href: ApplicationRoute.ApplicationContainers },
+        { key: MenuI18nKey.Images, href: ApplicationRoute.Images },
       ],
     },
     {
@@ -163,7 +110,6 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       items: [
         { key: MenuI18nKey.Roles, href: ApplicationRoute.Roles },
         { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
-        { key: MenuI18nKey.FoldersStorage, href: ApplicationRoute.FoldersStorage },
       ],
     },
     {
@@ -171,30 +117,12 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.ApprovalsDescription,
       icon: <Approvals width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.ApplicationPublications,
-          href: ApplicationRoute.ApplicationPublications,
-        },
-        {
-          key: MenuI18nKey.ToolsetPublications,
-          href: ApplicationRoute.ToolsetPublications,
-        },
-        {
-          key: MenuI18nKey.PromptPublications,
-          href: ApplicationRoute.PromptPublications,
-        },
-        {
-          key: MenuI18nKey.ConversationPublications,
-          href: ApplicationRoute.ConversationPublications,
-        },
-        {
-          key: MenuI18nKey.FilePublications,
-          href: ApplicationRoute.FilePublications,
-        },
-        {
-          key: MenuI18nKey.SkillPublications,
-          href: ApplicationRoute.SkillPublications,
-        },
+        { key: MenuI18nKey.ApplicationPublications, href: ApplicationRoute.ApplicationPublications },
+        { key: MenuI18nKey.ToolsetPublications, href: ApplicationRoute.ToolsetPublications },
+        { key: MenuI18nKey.PromptPublications, href: ApplicationRoute.PromptPublications },
+        { key: MenuI18nKey.ConversationPublications, href: ApplicationRoute.ConversationPublications },
+        { key: MenuI18nKey.FilePublications, href: ApplicationRoute.FilePublications },
+        { key: MenuI18nKey.SkillPublications, href: ApplicationRoute.SkillPublications },
       ],
     },
     {
@@ -212,18 +140,9 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.AuditDescription,
       icon: <IconDashboard width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.Dashboard,
-          href: ApplicationRoute.Dashboard,
-        },
-        {
-          key: MenuI18nKey.ActivityAudit,
-          href: ApplicationRoute.ActivityAudit,
-        },
-        {
-          key: MenuI18nKey.UsageLog,
-          href: ApplicationRoute.UsageLog,
-        },
+        { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
+        { key: MenuI18nKey.ActivityAudit, href: ApplicationRoute.ActivityAudit },
+        { key: MenuI18nKey.UsageLog, href: ApplicationRoute.UsageLog },
       ],
     },
     {
@@ -232,26 +151,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconChartBar width={iconSize} height={iconSize} />,
       isPreview: true,
       items: [
-        {
-          key: MenuI18nKey.Tables,
-          href: ApplicationRoute.AnalyticsTables,
-        },
-        {
-          key: MenuI18nKey.Pipelines,
-          href: ApplicationRoute.AnalyticsPipelines,
-        },
-        {
-          key: MenuI18nKey.Evaluators,
-          href: ApplicationRoute.AnalyticsEvaluators,
-        },
-        {
-          key: MenuI18nKey.Queries,
-          href: ApplicationRoute.AnalyticsQueries,
-        },
-        {
-          key: MenuI18nKey.AnalyticsConversations,
-          href: ApplicationRoute.ConversationsTrace,
-        },
+        { key: MenuI18nKey.Tables, href: ApplicationRoute.AnalyticsTables },
+        { key: MenuI18nKey.Pipelines, href: ApplicationRoute.AnalyticsPipelines },
+        { key: MenuI18nKey.Evaluators, href: ApplicationRoute.AnalyticsEvaluators },
+        { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
+        { key: MenuI18nKey.AnalyticsConversations, href: ApplicationRoute.ConversationsTrace },
       ],
     },
   ];
@@ -274,6 +178,16 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       group.key === MenuI18nKey.Analytics
         ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsConversations) }
         : group,
+    );
+  }
+
+  if (!featureFlags.adminApiEnabled) {
+    result = result.filter(
+      (item) =>
+        item.key !== MenuI18nKey.Entities &&
+        item.key !== MenuI18nKey.Builders &&
+        item.key !== MenuI18nKey.AccessManagement &&
+        item.key !== MenuI18nKey.Audit,
     );
   }
 

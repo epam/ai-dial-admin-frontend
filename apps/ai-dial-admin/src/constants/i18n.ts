@@ -219,6 +219,7 @@ export enum EntitiesI18nKey {
   OptionListUnavailable = 'Entities.OptionListUnavailable',
   OptionListPartial = 'Entities.OptionListPartial',
   GlobalInterceptorsUnavailable = 'Entities.GlobalInterceptorsUnavailable',
+  SystemPropertiesReadFailed = 'Entities.SystemPropertiesReadFailed',
   ResolvedSchemaFailed = 'Entities.ResolvedSchemaFailed',
   NoModelServings = 'Entities.NoModelServings',
   AddModel = 'Entities.AddModel',
@@ -745,6 +746,7 @@ export enum TelemetryI18nKey {
   AddFilter = 'Telemetry.AddFilter',
   TimePeriod = 'Telemetry.TimePeriod',
   Custom = 'Telemetry.Custom',
+  SinceCreation = 'Telemetry.SinceCreation',
   MaxRangeDays = 'Telemetry.MaxRangeDays',
   UniqueUsers = 'Telemetry.UniqueUsers',
   Requests = 'Telemetry.Requests',
@@ -2145,6 +2147,7 @@ export enum RunsI18nKey {
   Completed = 'Runs.Status.Completed',
   Failed = 'Runs.Status.Failed',
   Running = 'Runs.Status.Running',
+  Cancelling = 'Runs.Status.Cancelling',
   Cancelled = 'Runs.Status.Cancelled',
   MetricFailedText = 'Runs.MetricFailedText',
   NumericDiff = 'Runs.NumericDiff',
@@ -2197,6 +2200,8 @@ export enum RunsI18nKey {
   CancelRunModalDescription = 'Runs.CancelRunModalDescription',
   CancelRunSuccess = 'Runs.CancelRunSuccess',
   CancelRunSuccessDescription = 'Runs.CancelRunSuccessDescription',
+  CancelRunFailed = 'Runs.CancelRunFailed',
+  CancelRunFailedDescription = 'Runs.CancelRunFailedDescription',
 }
 
 export enum ExportRunI18nKey {
@@ -2885,6 +2890,13 @@ export enum AnalyticsEvaluatorsI18nKey {
   OutputVarsRequired = 'AnalyticsEvaluators.OutputVarsRequired',
   RuleTargetEnrichment = 'AnalyticsEvaluators.RuleTargetEnrichment',
   RuleResolvedVersion = 'AnalyticsEvaluators.RuleResolvedVersion',
+  CreateEvaluatorTitle = 'AnalyticsEvaluators.CreateEvaluatorTitle',
+  CreateEvaluatorFailed = 'AnalyticsEvaluators.CreateEvaluatorFailed',
+  NameInvalid = 'AnalyticsEvaluators.NameInvalid',
+  NameTaken = 'AnalyticsEvaluators.NameTaken',
+  EvaluatorCreated = 'AnalyticsEvaluators.EvaluatorCreated',
+  EvaluatorCreatedAsVersion = 'AnalyticsEvaluators.EvaluatorCreatedAsVersion',
+  EvaluatorCreatedVersionUnknown = 'AnalyticsEvaluators.EvaluatorCreatedVersionUnknown',
 }
 
 export enum ConversationsTraceI18nKey {

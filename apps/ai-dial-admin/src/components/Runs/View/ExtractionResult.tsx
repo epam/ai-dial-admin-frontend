@@ -15,7 +15,14 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { useDetailMode } from './use-detail-mode';
-import { getAnalyticsColumns, getMetricGroupOrder, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
+import {
+  getAnalyticsColumns,
+  getMetricGroupOrder,
+  getRowDetailFieldSchema,
+  RESULT_FILTERS,
+  RUN_FILTER,
+  snapshotsToBindingsMap,
+} from './utils';
 
 interface Props {
   run: Run;
@@ -28,7 +35,8 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
   const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const metricGroupOrder = useMemo(() => getMetricGroupOrder(colDefs ?? []), [colDefs]);
-  const detailMode = useDetailMode(metricBindings, metricGroupOrder);
+  const fieldSchema = useMemo(() => getRowDetailFieldSchema(results ?? []), [results]);
+  const detailMode = useDetailMode(metricBindings, metricGroupOrder, fieldSchema);
   const { openDetail } = detailMode;
 
   const gridApiRef = useRef<GridApi | null>(null);

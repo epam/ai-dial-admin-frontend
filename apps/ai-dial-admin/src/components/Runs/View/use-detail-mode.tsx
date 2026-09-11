@@ -8,6 +8,7 @@ import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailP
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import ExecutionRowDetailBottomPanel from '@/src/components/Runs/View/RowDetails/ExecutionRowDetailBottomPanel';
 import { useAppContext } from '@/src/context/AppContext';
+import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricBindings } from '@/src/models/evaluation/metric';
 
 export interface OpenDetailOptions {
@@ -29,6 +30,7 @@ interface UseDetailModeReturn {
 export function useDetailMode(
   metricBindings: Record<string, MetricBindings> = {},
   metricGroupOrder: readonly string[] = [],
+  fieldSchema?: RowDetailFieldSchema,
 ): UseDetailModeReturn {
   const { sidebar } = useAppContext();
   const [detailMode, setDetailMode] = useState<DetailMode>(DetailMode.Drawer);
@@ -76,6 +78,7 @@ export function useDetailMode(
             resultId={resultId}
             focusFieldKey={fieldKey}
             metricGroupOrder={metricGroupOrder}
+            fieldSchema={fieldSchema}
             onClose={closeDetail}
             onSwitchToSidebar={switchToSidebar}
           />,
@@ -96,7 +99,7 @@ export function useDetailMode(
         SidebarPosition.Right,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, metricBindings, metricGroupOrder],
+    [closeDetail, switchToSidebar, switchToDrawer, metricBindings, metricGroupOrder, fieldSchema],
   );
 
   showDetailPanelRef.current = showDetailPanel;
