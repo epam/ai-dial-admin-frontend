@@ -148,8 +148,7 @@ export const evaluateTryOutColumnSections = async ({
   const turnCounts = getRequestTurnCounts(testSuite, schema, multiTurnLength);
   const shape = getTryOutSectionShape(turnCounts);
 
-  const useGroupedHistory =
-    !!history?.length && (shape === 'requests' || shape === 'combined') && turnCounts.length > 1;
+  const useGroupedHistory = !!history?.length && (shape === 'requests' || shape === 'combined' || shape === 'turns');
 
   if (!useGroupedHistory) {
     if (!hasContent(fallbackResponse) && !hasContent(fallbackRequest)) {

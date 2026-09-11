@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -534,9 +534,14 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
 
-    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+    await waitFor(() => {
+      expect(capturedTurnActionHandlers).not.toBeNull();
+      expect(capturedRowData).toEqual([expect.objectContaining({ id: 'case-2', rowType: GridRowType.SINGLE })]);
+    });
 
-    capturedTurnActionHandlers!.onAddTurn('case-2');
+    act(() => {
+      capturedTurnActionHandlers!.onAddTurn('case-2');
+    });
 
     await waitFor(() => expect(capturedRowData!.length).toBe(3));
     expect(capturedRowData!.map((row) => row.rowType)).toEqual([GridRowType.GROUP, GridRowType.TURN, GridRowType.TURN]);
