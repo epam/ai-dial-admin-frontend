@@ -58,6 +58,9 @@ export interface DialUpstreamInterface {
 export interface DialModelEndpoint {
   id?: string;
   endpoint?: string;
+  // Independent of `endpoint` (Upstream.baseUrl): the root url an `interfaces` entry with no `endpoint`
+  // of its own falls back to. The ingress path plays no part in it, unlike a deployment's own base_url.
+  baseUrl?: string;
   key?: string;
   weight?: number | string;
   tier?: number | string;

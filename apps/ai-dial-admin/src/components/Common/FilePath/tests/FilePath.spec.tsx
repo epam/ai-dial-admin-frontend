@@ -11,15 +11,34 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialDestinationFolderPopup: ({ open, rootItem, items }: { open: boolean; rootItem?: Asset; items: Asset[] }) =>
-      open ? (
+    // Mirrors the real component's own `excludedPaths` filtering, so the test exercises the actual
+    // contract FilePath relies on rather than assuming FilePath pre-filters `rootItem`/`items` itself.
+    DialDestinationFolderPopup: ({
+      open,
+      rootItem,
+      items,
+      excludedPaths = [],
+    }: {
+      open: boolean;
+      rootItem?: Asset;
+      items: Asset[];
+      excludedPaths?: string[];
+    }) => {
+      if (!open) return null;
+
+      const isExcluded = (path?: string) => !!path && excludedPaths.some((excluded) => `/${path}`.startsWith(excluded));
+
+      return (
         <div>
-          <span>root:{rootItem?.name}</span>
-          {items.map((item) => (
-            <span key={item.path}>item:{item.name}</span>
-          ))}
+          {!isExcluded(rootItem?.path) && <span>root:{rootItem?.name}</span>}
+          {items
+            .filter((item) => !isExcluded(item.path))
+            .map((item) => (
+              <span key={item.path}>item:{item.name}</span>
+            ))}
         </div>
-      ) : null,
+      );
+    },
   };
 });
 
@@ -49,7 +68,7 @@ describe('FilePath', () => {
 
     await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
 
-    expect(screen.getByText('root:public')).toBeInTheDocument();
+    expect(screen.getByText('item:public')).toBeInTheDocument();
     expect(screen.queryByText('root:platform')).not.toBeInTheDocument();
     expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
   });

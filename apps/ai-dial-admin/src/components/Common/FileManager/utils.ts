@@ -74,6 +74,7 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
   processDestinationFolderPath: (path: string) => addTrailingSlash(path),
+  excludedPaths: ['platform/'],
 });
 
 export const createEmptyFile = () => {

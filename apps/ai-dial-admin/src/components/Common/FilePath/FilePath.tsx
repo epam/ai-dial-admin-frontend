@@ -48,8 +48,7 @@ const FilePath: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { files: rawFiles, fetchFiles } = context?.() || {};
-  const files = excludePlatformRoot(rawFiles, view);
+  const { files, fetchFiles } = context?.() || {};
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 
@@ -142,6 +141,7 @@ const FilePath: FC<Props> = ({
             searchable: false,
           }}
           showCreateFolderButton={shouldAbleToCreateNewFolder}
+          excludedPaths={['/platform']}
         />
       </div>
     </div>
