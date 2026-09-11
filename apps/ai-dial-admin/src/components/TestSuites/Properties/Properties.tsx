@@ -9,10 +9,7 @@ import classNames from 'classnames';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
-import { CREATE_MESSAGE_METHOD } from '@/src/components/TestSuites/constants/anthropic-messages-method';
-import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/responses-method';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
-import { reseedRequestModels } from '@/src/components/TestSuites/utils/model-reseeding';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -51,8 +48,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const onUpdate = useCallback(
     (suite: TestSuite) => {
       setIsAppModalOpen(false);
-      const deploymentId = suite.deploymentRef?.id ?? '';
-      onChange(reseedRequestModels(suite, deploymentId, [CREATE_MESSAGE_METHOD, CREATE_RESPONSE_METHOD]));
+      onChange(suite);
     },
     [onChange],
   );

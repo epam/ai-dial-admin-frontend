@@ -13,7 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from './types';
-import { buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from './utils';
+import { applyTargetSelection, getInitialTab } from './utils';
 
 interface Props {
   selectedTargetId?: string;
@@ -45,10 +45,7 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
   const onSelect = useCallback(
     (data: Deployment) => {
       onChangeTarget(data);
-      onChange((prev: TestSuite) => ({
-        ...prev,
-        ...(activeTab === TargetTab.Mcp ? buildMcpDeploymentUpdate(data) : buildDeploymentUpdate(data)),
-      }));
+      onChange((prev: TestSuite) => applyTargetSelection(prev, data, activeTab));
     },
     [onChangeTarget, onChange, activeTab],
   );
