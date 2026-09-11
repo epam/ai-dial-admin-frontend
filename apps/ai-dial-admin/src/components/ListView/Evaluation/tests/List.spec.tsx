@@ -1,17 +1,26 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { cancelRun } from '@/src/app/[lang]/runs/actions';
-import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
+import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
+import { ActionMenuOperationI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
+import { NotificationType } from '@/src/models/notification';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
 import EvaluationListView from '../List';
 
 const routerRefresh = vi.fn();
+const showNotification = vi.fn();
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
+
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: routerRefresh }) }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   cancelRun: vi.fn(),
+  getRun: vi.fn(),
 }));
 
 vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
@@ -39,6 +48,7 @@ const nodeSetData = vi.fn();
 const MOCK_ROWS = [
   { id: 'run-running', status: RunStatus.RUNNING },
   { id: 'run-completed', status: RunStatus.COMPLETED },
+  { id: 'run-cancelling', status: RunStatus.CANCELLING },
 ];
 
 const mockGridApi = {
@@ -103,7 +113,7 @@ describe('EvaluationListView', () => {
     expect(cancelRun).not.toHaveBeenCalled();
   });
 
-  test('patches only the cancelled row to CANCELLED after a successful confirmed cancel, without refreshing the page', () => {
+  test('patches only the cancelled row to CANCELLING after a successful confirmed cancel, without refreshing the page', () => {
     routerRefresh.mockClear();
     nodeSetData.mockClear();
 
@@ -115,8 +125,74 @@ describe('EvaluationListView', () => {
     expect(cancelRun).toHaveBeenCalledWith('run-running');
     expect(nodeSetData).toHaveBeenCalledOnce();
     expect(nodeSetData).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'run-running', status: RunStatus.CANCELLED }),
+      expect.objectContaining({ id: 'run-running', status: RunStatus.CANCELLING }),
     );
     expect(routerRefresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('EvaluationListView — polling cancelling rows', () => {
+  const tick = async () => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(RUN_CANCEL_POLL_INTERVAL);
+    });
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    nodeSetData.mockClear();
+    vi.mocked(getRun).mockReset();
+    showNotification.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('polls the cancelling row and writes back its settled status for the Runs route', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-cancelling', status: RunStatus.CANCELLED } as any);
+
+    render(<EvaluationListView route={ApplicationRoute.Runs} baseColumns={[]} getData={noopGetData} />);
+    await tick();
+
+    expect(getRun).toHaveBeenCalledOnce();
+    expect(getRun).toHaveBeenCalledWith('run-cancelling');
+    expect(nodeSetData).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'run-cancelling', status: RunStatus.CANCELLED }),
+    );
+  });
+
+  test.each([ApplicationRoute.TestSuites, ApplicationRoute.Datasets, ApplicationRoute.Metrics])(
+    'does not poll for the %s route',
+    async (route) => {
+      render(<EvaluationListView route={route} baseColumns={[]} getData={noopGetData} />);
+      await tick();
+
+      expect(getRun).not.toHaveBeenCalled();
+    },
+  );
+
+  test('reports a failed cancellation once when a polled row comes back running', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-cancelling', status: RunStatus.RUNNING } as any);
+
+    render(<EvaluationListView route={ApplicationRoute.Runs} baseColumns={[]} getData={noopGetData} />);
+    await tick();
+
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ type: NotificationType.error, title: RunsI18nKey.CancelRunFailed }),
+    );
+    expect(nodeSetData).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'run-cancelling', status: RunStatus.RUNNING }),
+    );
+  });
+
+  test('reports nothing when a polled row settles as cancelled', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-cancelling', status: RunStatus.CANCELLED } as any);
+
+    render(<EvaluationListView route={ApplicationRoute.Runs} baseColumns={[]} getData={noopGetData} />);
+    await tick();
+
+    expect(showNotification).not.toHaveBeenCalled();
   });
 });

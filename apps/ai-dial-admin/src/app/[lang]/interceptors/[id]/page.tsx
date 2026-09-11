@@ -1,9 +1,11 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
+import { ApplicationRoute } from '@/src/types/routes';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getModelsList } from '@/src/app/[lang]/models/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, settingsApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -20,6 +22,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -39,7 +44,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
-    globalInterceptors = (await utilityApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
+    globalInterceptors =
+      (await settingsApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
 
     interceptor = {
       ...interceptor,

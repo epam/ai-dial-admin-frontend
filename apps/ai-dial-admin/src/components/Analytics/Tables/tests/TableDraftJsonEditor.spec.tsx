@@ -150,11 +150,19 @@ describe('TableDetailView — entering the JSON editor on a draft', () => {
     expect(screen.getByRole('switch')).toBeInTheDocument();
   });
 
-  test('offers no toggle on an ACTIVE table', () => {
+  test('offers the JSON toggle on an ACTIVE table, but never the authoring editor', async () => {
+    const user = userEvent.setup();
     renderView(sourceDraft({ status: TableStatus.Active }));
 
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.getByRole('switch')).toBeInTheDocument();
     expect(queryArea()).not.toBeInTheDocument();
+
+    await openEditor(user);
+
+    // The toggle swaps in the read-only stored definition, not the draft's editable document: no Save
+    // ever appears for an ACTIVE table, toggled or not.
+    expect(area()).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).not.toBeInTheDocument();
   });
 
   test('activating the editor replaces the column-by-column surface', async () => {

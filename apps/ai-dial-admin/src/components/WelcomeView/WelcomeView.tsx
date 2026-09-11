@@ -60,7 +60,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
       <div className="mb-6 flex flex-col">
         <h2 className="mb-3">{t(WelcomeViewI18nKey.QuickActions)}</h2>
         <div className="flex flex-row gap-x-3">
-          {!isReadOnlyAdmin && (
+          {!isReadOnlyAdmin && featureFlags.adminApiEnabled && (
             <>
               <DialNeutralButton
                 iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}

@@ -48,33 +48,11 @@ describe('Server :: UtilityApi', () => {
     expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
   });
 
-  test('should check deployment by name', async () => {
-    fetch.mockResponseOnce('', { status: 200 });
-
-    await instance.checkDeploymentByName('my-app', TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/deployments/my-app'), expect.anything());
-  });
-
   test('should get app process status', async () => {
     fetch.mockResponseOnce(JSON.stringify({ running: true }));
 
     const result = await instance.getAppProcessStatus(TOKEN_MOCK);
     expect(result.response).toEqual(JSON.stringify({ running: true }));
-  });
-
-  test('should get system properties', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
-
-    const result = await instance.getSystemProperties(TOKEN_MOCK, 'etag');
-    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
-  });
-
-  test('should update system properties', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
-
-    const result = await instance.updateSystemProperties({ globalInterceptors: ['global'] }, TOKEN_MOCK, 'etag');
-    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
   });
 
   test('should get core versions', async () => {

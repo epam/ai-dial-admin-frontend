@@ -1,8 +1,10 @@
+import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
+import { CoreUtilityApi } from '@/src/server/core/core-utility-api';
 import { DeploymentConfigurationApi } from '@/src/server/core/deployment-configuration-api';
 import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
@@ -237,6 +239,17 @@ export const externalServiceConsentApi = new ExternalServiceConsentApi({
 export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
+
+// Deployment listing/lookup, the global-settings singleton, and user identity — endpoints the
+// admin backend only ever proxied to Core unchanged.
+export const coreUtilityApi = new CoreUtilityApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// User identity: the admin backend's own security-info endpoint when it's configured (it computes
+// the FULL_ADMIN/READ_ONLY_ADMIN roles AppContext relies on), otherwise Core directly.
+export const getUserInfo = (token: Token) =>
+  process.env.DIAL_ADMIN_API_URL ? utilityApi.getUserInfo(token) : coreUtilityApi.getUserInfo(token);
 
 /**
  * Application/toolset-resource content DTOs reject `folderId`/`path`/`version`/`id`

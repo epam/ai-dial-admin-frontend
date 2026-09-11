@@ -116,4 +116,14 @@ describe('BaseAssetList', () => {
       },
     );
   });
+
+  describe('getGridColumns — PlatformTranslators', () => {
+    test('uses the flat platform-entity column set, matching its Catalog siblings', () => {
+      const onChange = vi.fn();
+      const colIds = getGridColumns(ApplicationRoute.PlatformTranslators, onChange, {}, false).map((c) => c.colId);
+
+      expect(colIds).not.toContain(FileManagerColumnKey.Version);
+      expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
+    });
+  });
 });

@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { buildDraftDocument, splitDraftDocument } from '@/src/components/Analytics/Tables/draft-document';
+import {
+  buildDraftDocument,
+  formatDraftDocument,
+  splitDraftDocument,
+} from '@/src/components/Analytics/Tables/draft-document';
+import { buildDraftSchemaDto, createDraftSchemaForm } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsTable,
@@ -9,6 +14,7 @@ import {
   DraftSchemaDto,
   DraftTableDocument,
   PartitionGranularity,
+  TableStatus,
 } from '@/src/models/analytics/table';
 
 const columns = [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp }];
@@ -60,6 +66,136 @@ describe('buildDraftDocument', () => {
     expect(document).not.toHaveProperty('partition_by');
     expect(document).not.toHaveProperty('identity_column');
     expect(document).not.toHaveProperty('version_column');
+  });
+});
+
+describe('buildDraftDocument — composed the way an ACTIVE table document is built (design.md D7)', () => {
+  test("a source table's document is the write shape, not the GET response", () => {
+    const table: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      status: TableStatus.Active,
+      system: false,
+      permissions: { write: true, modify: true },
+      column_count: 2,
+      description: 'Orders table',
+      tag_order: ['pii'],
+      columns: [
+        { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+        { source_name: 'id', name: 'id', type: AnalyticsFieldType.String },
+      ],
+      ordering_key: ['ts'],
+      partition_by: { column: 'ts', granularity: PartitionGranularity.Day },
+      identity_column: 'id',
+      version_column: 'ts',
+    };
+
+    const document = buildDraftDocument(table, buildDraftSchemaDto(createDraftSchemaForm(table), table.type));
+
+    expect(document).toEqual({
+      columns: [
+        { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp, nullable: false },
+        { source_name: 'id', name: 'id', type: AnalyticsFieldType.String, nullable: false },
+      ],
+      ordering_key: ['ts'],
+      partition_by: { column: 'ts', granularity: PartitionGranularity.Day },
+      identity_column: 'id',
+      version_column: 'ts',
+      description: 'Orders table',
+      tag_order: ['pii'],
+    });
+    ['status', 'system', 'permissions', 'column_count', 'name', 'type', 'source_table', 'grain'].forEach((key) =>
+      expect(document).not.toHaveProperty(key),
+    );
+  });
+
+  test('a source table with no scan-metadata pair omits both identity_column and version_column', () => {
+    const table: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['ts'],
+    };
+
+    const document = buildDraftDocument(table, buildDraftSchemaDto(createDraftSchemaForm(table), table.type));
+
+    expect(document).not.toHaveProperty('identity_column');
+    expect(document).not.toHaveProperty('version_column');
+  });
+
+  test("an enrichment table's document carries its enrichment members and no source-only member", () => {
+    const table: AnalyticsTable = {
+      name: 'order_flags',
+      type: AnalyticsTableType.Enrichment,
+      status: TableStatus.Active,
+      source_table: 'orders',
+      description: 'Order flags',
+      tag_order: ['finance'],
+      columns: [{ source_name: 'flag', name: 'flag', type: AnalyticsFieldType.Boolean }],
+      grain: { grain_key: 'order_id', cardinality: Cardinality.ZeroOrOne },
+    };
+
+    const document = buildDraftDocument(table, buildDraftSchemaDto(createDraftSchemaForm(table), table.type));
+
+    expect(document).toEqual({
+      columns: [{ source_name: 'flag', name: 'flag', type: AnalyticsFieldType.Boolean, nullable: false }],
+      grain_key: 'order_id',
+      cardinality: Cardinality.ZeroOrOne,
+      description: 'Order flags',
+      tag_order: ['finance'],
+    });
+    ['ordering_key', 'partition_by', 'identity_column', 'version_column', 'source_table', 'grain'].forEach((key) =>
+      expect(document).not.toHaveProperty(key),
+    );
+  });
+
+  test('a column renamed after materialization keeps both source_name and name and carries its stored metadata', () => {
+    const table: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [
+        {
+          source_name: 'cust_id',
+          name: 'customer_id',
+          type: AnalyticsFieldType.String,
+          tag: 'pii',
+          display_name: 'Customer ID',
+          description: 'Renamed after materialization',
+          sensitive: true,
+        },
+      ],
+    };
+
+    const document = buildDraftDocument(table, buildDraftSchemaDto(createDraftSchemaForm(table), table.type));
+
+    expect(document.columns).toEqual([
+      {
+        source_name: 'cust_id',
+        name: 'customer_id',
+        type: AnalyticsFieldType.String,
+        nullable: false,
+        tag: 'pii',
+        display_name: 'Customer ID',
+        description: 'Renamed after materialization',
+        sensitive: true,
+      },
+    ]);
+    expect(document.columns[0]).not.toHaveProperty('element_type');
+    expect(document.columns[0]).not.toHaveProperty('enum_values');
+  });
+
+  test('formatDraftDocument renders the same 4-space JSON the JSON view displays', () => {
+    const table: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      description: 'Orders table',
+      tag_order: ['pii'],
+      columns: [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp }],
+    };
+
+    const document = buildDraftDocument(table, buildDraftSchemaDto(createDraftSchemaForm(table), table.type));
+
+    expect(formatDraftDocument(document)).toBe(JSON.stringify(document, null, 4));
   });
 });
 

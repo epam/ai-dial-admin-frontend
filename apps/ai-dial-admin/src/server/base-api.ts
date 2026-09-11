@@ -1,4 +1,4 @@
-import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
+import { IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { streamRequest } from '@/src/utils/api/create-stream-request';
@@ -34,13 +34,19 @@ export class BaseApi {
     return this.sendActionRequest(url, 'DELETE', token);
   }
 
+  /**
+   * `etag` undefined omits `If-Match` entirely — a create against a resource known not to exist yet,
+   * where sending `If-Match` at all (even `*`) would assert the opposite. A defined value (including
+   * `DEFAULT_ETAG`) is sent as-is; callers that know the resource exists but have no specific value to
+   * compare pass `DEFAULT_ETAG` explicitly.
+   */
   protected async putActionWithEtag<T extends object>(
     url: string,
     dto: T,
     token: Token,
-    etag: string,
+    etag: string | undefined,
   ): Promise<ServerActionResponse> {
-    return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
+    return this.putAction<T>(url, dto, token, etag ? { [IF_MATCH]: etag } : undefined);
   }
 
   protected async putAction<T extends object>(

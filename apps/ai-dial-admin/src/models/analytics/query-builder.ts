@@ -266,6 +266,15 @@ export interface PieSlice {
   value: number;
 }
 
+// How a result cell renders its value. Resolved from the executed query, not from the live builder
+// state, so what the grid shows follows the run that produced the shown result.
+export enum ResultValueClass {
+  Compact = 'compact',
+  Significant = 'significant',
+  DateTime = 'date-time',
+  Duration = 'duration',
+}
+
 // Snapshot of the query a result came from. Chart availability and the X/Y option lists must follow
 // what was actually executed — the live builder state can diverge from the shown result between runs.
 // columnLabels maps result columns to their schema display names (group-by columns of the executed
@@ -276,6 +285,7 @@ export interface ExecutedQueryMeta {
   dimensionColumns: string[];
   aggregateColumns: string[];
   columnLabels: Record<string, string>;
+  columnValueClasses: Record<string, ResultValueClass>;
 }
 
 export interface ResultColumnClassification {

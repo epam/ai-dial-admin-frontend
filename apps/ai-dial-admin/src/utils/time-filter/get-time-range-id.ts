@@ -1,10 +1,22 @@
 import { TimeRange } from '@/src/models/time-range';
-import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import {
+  TimeFilterOption,
+  isAnchoredTimePeriodOption,
+  timePeriodOptionsConfig,
+} from '@/src/constants/global-time-filter';
 
-export const getTimeRangeById = (periodId: string): TimeRange => {
-  const config = timePeriodOptionsConfig.find((item) => item.value === periodId);
+export const getTimeRangeById = (
+  periodId: string,
+  options: TimeFilterOption[] = timePeriodOptionsConfig,
+): TimeRange => {
   const now = new Date();
-  const startDate = new Date(now.getTime() - (config?.offset ?? 0));
+  const option = options.find((item) => item.value === periodId);
 
-  return { startDate: startDate, endDate: now };
+  if (option && isAnchoredTimePeriodOption(option)) {
+    return { startDate: new Date(option.startDate), endDate: now };
+  }
+
+  const startDate = new Date(now.getTime() - (option?.offset ?? 0));
+
+  return { startDate, endDate: now };
 };

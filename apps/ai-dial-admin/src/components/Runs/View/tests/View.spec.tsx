@@ -1,7 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
+import { NotificationType } from '@/src/models/notification';
 import { RunStatus } from '@/src/models/evaluation/run';
 import RunView from '../View';
 
@@ -11,6 +14,11 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 }));
 
 const openCompareRunMock = vi.fn();
+const showNotification = vi.fn();
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
 
 vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
   useCompareRunLauncher: () => ({
@@ -23,6 +31,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab }: any) => (
     <div role="region" aria-label="simple-header">
       <div>entity-id:{entity?.id}</div>
+      <div>entity-status:{entity?.status}</div>
       <button type="button" onClick={() => onRemove(entity?.id)}>
         Remove Run
       </button>
@@ -77,6 +86,10 @@ vi.mock('@/src/components/Runs/Cancel/RunCancelModal', () => ({
 }));
 
 describe('Runs View :: View', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('renders header and summary tab by default', () => {
     const onRemove = vi.fn().mockResolvedValue({ success: true });
 
@@ -159,7 +172,7 @@ describe('Runs View :: View', () => {
     expect(screen.getByRole('button', { name: 'Buttons.Stop' })).toBeInTheDocument();
   });
 
-  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])(
+  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED, RunStatus.CANCELLING])(
     'hides the Stop action for a %s run',
     (status) => {
       const onRemove = vi.fn().mockResolvedValue({ success: true });
@@ -182,7 +195,7 @@ describe('Runs View :: View', () => {
     expect(screen.getByRole('dialog', { name: 'cancel-run-modal' })).toBeInTheDocument();
   });
 
-  test('reflects the cancelled status locally after a successful cancel, without refetching the run', async () => {
+  test('reflects the cancelling status locally after a successful cancel, without refetching the run', async () => {
     const onRemove = vi.fn().mockResolvedValue({ success: true });
 
     render(<RunView run={{ id: 'run-11', status: RunStatus.RUNNING } as any} onRemove={onRemove} />);
@@ -190,7 +203,104 @@ describe('Runs View :: View', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Buttons.Stop' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Buttons.Stop' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(`entity-status:${RunStatus.CANCELLING}`)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Buttons.Stop' })).not.toBeInTheDocument();
     expect(getRun).not.toHaveBeenCalled();
+  });
+});
+
+describe('Runs View :: View — polling a cancelling run', () => {
+  const tick = async () => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(RUN_CANCEL_POLL_INTERVAL);
+    });
+  };
+
+  const renderCancellingRun = (status = RunStatus.CANCELLING) =>
+    render(<RunView run={{ id: 'run-12', status } as any} onRemove={vi.fn()} />);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.mocked(getRun).mockReset();
+    showNotification.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('polls a run that is already cancelling on mount, without any user action', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status: RunStatus.CANCELLED } as any);
+
+    renderCancellingRun();
+    await tick();
+
+    expect(getRun).toHaveBeenCalledWith('run-12');
+    expect(screen.getByText(`entity-status:${RunStatus.CANCELLED}`)).toBeInTheDocument();
+  });
+
+  test.each([RunStatus.CANCELLED, RunStatus.COMPLETED, RunStatus.FAILED])(
+    'stops polling once the run settles as %s',
+    async (status) => {
+      vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status } as any);
+
+      renderCancellingRun();
+      await tick();
+      await tick();
+
+      expect(getRun).toHaveBeenCalledOnce();
+      expect(screen.getByText(`entity-status:${status}`)).toBeInTheDocument();
+    },
+  );
+
+  test('keeps polling while the run is still cancelling', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status: RunStatus.CANCELLING } as any);
+
+    renderCancellingRun();
+    await tick();
+    await tick();
+
+    expect(getRun).toHaveBeenCalledTimes(2);
+  });
+
+  test('issues no request for a run that is not cancelling', async () => {
+    renderCancellingRun(RunStatus.RUNNING);
+    await tick();
+
+    expect(getRun).not.toHaveBeenCalled();
+  });
+
+  test('stops polling on unmount', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status: RunStatus.CANCELLING } as any);
+
+    const { unmount } = renderCancellingRun();
+    await tick();
+    unmount();
+    await tick();
+
+    expect(getRun).toHaveBeenCalledOnce();
+  });
+
+  test('reports a failed cancellation and offers Stop again when the run comes back running', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status: RunStatus.RUNNING } as any);
+
+    renderCancellingRun();
+    await tick();
+
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ type: NotificationType.error, title: RunsI18nKey.CancelRunFailed }),
+    );
+    expect(screen.getByText(`entity-status:${RunStatus.RUNNING}`)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Stop' })).toBeInTheDocument();
+  });
+
+  test('reports nothing when the run settles as cancelled', async () => {
+    vi.mocked(getRun).mockResolvedValue({ id: 'run-12', status: RunStatus.CANCELLED } as any);
+
+    renderCancellingRun();
+    await tick();
+
+    expect(showNotification).not.toHaveBeenCalled();
   });
 });

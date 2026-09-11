@@ -1,5 +1,7 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
+import { ApplicationRoute } from '@/src/types/routes';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { interceptorsApi } from '@/src/app/api/api';
@@ -16,6 +18,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;

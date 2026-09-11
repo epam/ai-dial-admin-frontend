@@ -68,6 +68,11 @@ vi.mock('@/src/context/assets/InterceptorsFolderContext', () => ({
   InterceptorsFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/TranslatorsFolderContext', () => ({
+  useTranslatorsFolder: () => ({ fetchFiles: vi.fn() }),
+  TranslatorsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/RoutesFolderContext', () => ({
   useRoutesFolder: () => ({ fetchFiles: vi.fn() }),
   RoutesFolderProvider: ({ children }: any) => <div>{children}</div>,
@@ -103,7 +108,7 @@ vi.mock('@/src/context/AppContext', () => ({
       closeSidebar: vi.fn(),
       position: SidebarPosition.Right,
     },
-    featureFlags: { deploymentsEnabled: true },
+    featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
     isReadOnlyAdmin: false,
     isFullAdmin: true,
     isEnableAuth: false,

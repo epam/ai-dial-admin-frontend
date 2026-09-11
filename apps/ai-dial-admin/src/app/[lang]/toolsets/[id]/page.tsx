@@ -1,5 +1,7 @@
 import { cookies, headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
+import { ApplicationRoute } from '@/src/types/routes';
 
 import { rolesApi, toolSetsApi } from '@/src/app/api/api';
 import ToolsetView from '@/src/components/Toolsets/View/View';
@@ -18,6 +20,9 @@ export default async function Page(params: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ code?: string }>;
 }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
+    redirect(ApplicationRoute.Home);
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
