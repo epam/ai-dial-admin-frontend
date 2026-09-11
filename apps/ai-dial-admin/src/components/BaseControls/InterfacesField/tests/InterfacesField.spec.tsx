@@ -5,14 +5,38 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import { ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
+import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { DeploymentInterfaceType, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
 
-type InterfaceValue = { baseUrl?: string; base_url?: string };
+type InterfaceValue = {
+  baseUrl?: string;
+  base_url?: string;
+  mode?: InterfaceMode;
+  translator?: TranslatorReference;
+};
 
 const ControlledInterfacesField = ({ initialInterfaces }: { initialInterfaces: Record<string, InterfaceValue> }) => {
   const [interfaces, setInterfaces] = useState(initialInterfaces);
   return <InterfacesField interfaces={interfaces} onChangeInterfaces={setInterfaces} allowedTypes={SINGLE_TYPE} />;
+};
+
+const ControlledAssetInterfacesField = ({
+  initialInterfaces,
+  translators = [],
+}: {
+  initialInterfaces: Record<string, InterfaceValue>;
+  translators?: { name: string }[];
+}) => {
+  const [interfaces, setInterfaces] = useState(initialInterfaces);
+  return (
+    <InterfacesField
+      interfaces={interfaces}
+      onChangeInterfaces={setInterfaces}
+      allowedTypes={SINGLE_TYPE}
+      translators={translators as any}
+      isAsset
+    />
+  );
 };
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
@@ -237,5 +261,241 @@ describe('InterfacesField', () => {
     );
 
     expect(screen.getByText(InterfacesI18nKey.OpenAIChatCompletions)).toBeInTheDocument();
+  });
+
+  test('does not render a mode selector when isAsset is not set', () => {
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+});
+
+describe('InterfacesField — asset surfaces: mode & translator', () => {
+  const modeSelect = () =>
+    screen.getByRole('combobox', { name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-mode` });
+  const translatorSelect = () => screen.getByRole('combobox', { name: InterfacesI18nKey.SelectTranslator });
+  const outSelect = () =>
+    screen.getByRole('combobox', {
+      name: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator-out`,
+    });
+
+  test('defaults to passthrough and shows the base_url input', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+      />,
+    );
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: InterfacesI18nKey.SelectTranslator })).not.toBeInTheDocument();
+  });
+
+  test('an existing interface with a saved mode of translator still renders identically to passthrough when mode is absent', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } }}
+      />,
+    );
+
+    expect(getBaseUrlInput()).toHaveValue('https://x');
+  });
+
+  test('switching mode to translator hides base_url and shows the translator picker', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(
+      screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) }),
+    ).not.toBeInTheDocument();
+    expect(translatorSelect()).toBeInTheDocument();
+  });
+
+  test('switching mode to translator clears the previously saved base_url — the two are mutually exclusive', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://old-value' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: undefined,
+        mode: InterfaceMode.Translator,
+      },
+    });
+  });
+
+  test('switching mode back to passthrough clears the previously saved translator', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: {
+            mode: InterfaceMode.Translator,
+            translator: 'my-translator',
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        mode: InterfaceMode.Passthrough,
+        translator: undefined,
+      },
+    });
+  });
+
+  test('re-entering a base_url after switching back to passthrough starts blank, not with the pre-translator value', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://old-value' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(getBaseUrlInput()).toHaveValue('');
+  });
+
+  test('selecting a named translator stores it as a plain name reference', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        translators={[{ name: 'my-translator' } as any]}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), 'my-translator');
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: '',
+        mode: InterfaceMode.Translator,
+        translator: 'my-translator',
+      },
+    });
+  });
+
+  test('selecting Custom reveals an inline base_url input and an out selector, with no in control', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toBeInTheDocument();
+    expect(outSelect()).toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.translatorIn)).not.toBeInTheDocument();
+  });
+
+  test('the out selector excludes the interface type this row is configured for', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    const outOptionValues = Array.from(outSelect().querySelectorAll('option'))
+      .map((o) => o.getAttribute('value'))
+      .filter(Boolean);
+
+    expect(outOptionValues).not.toContain(DeploymentInterfaceType.OpenAIChatCompletions);
+  });
+
+  test('defaults the Custom out value to a type other than the row it is attached to', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+
+    const [[updatedInterfaces]] = onChangeInterfaces.mock.calls.slice(-1);
+    expect(
+      (updatedInterfaces[DeploymentInterfaceType.OpenAIChatCompletions] as { out: DeploymentInterfaceType }).out,
+    ).not.toBe(DeploymentInterfaceType.OpenAIChatCompletions);
+  });
+
+  test('filling in the Custom translator stores an inline base_url/out object, not a name', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '', mode: InterfaceMode.Translator },
+        }}
+      />,
+    );
+
+    await user.selectOptions(translatorSelect(), InterfacesI18nKey.Custom);
+    await user.type(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) }), 'x');
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toHaveValue('x');
+  });
+
+  test('renders a default headers editor and Defaults/Features buttons for an asset interface', () => {
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+      />,
+    );
+
+    expect(screen.getByText(EntityFieldsI18nKey.defaultHeaders)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Defaults' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Features' })).toBeInTheDocument();
   });
 });

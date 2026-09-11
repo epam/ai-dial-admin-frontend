@@ -142,6 +142,7 @@ export enum BasicI18nKey {
   NoParameters = 'Basic.NoParameters',
   NoVariables = 'Basic.NoVariables',
   NoHeaders = 'Basic.NoHeaders',
+  Key = 'Basic.Key',
   Value = 'Basic.Value',
   From = 'Basic.From',
   To = 'Basic.To',
@@ -395,6 +396,8 @@ export enum ButtonsI18nKey {
   Add = 'Buttons.Add',
   AddDefault = 'Buttons.AddDefault',
   AddInterface = 'Buttons.AddInterface',
+  Defaults = 'Buttons.Defaults',
+  Features = 'Buttons.Features',
   Columns = 'Buttons.Columns',
   Reset = 'Buttons.Reset',
   ResetToDefault = 'Buttons.ResetToDefault',
@@ -1321,6 +1324,7 @@ export enum EntityFieldsI18nKey {
   translatorIn = 'EntityFields.translatorIn',
   translatorOut = 'EntityFields.translatorOut',
   baseUrl = 'EntityFields.baseUrl',
+  defaultHeaders = 'EntityFields.defaultHeaders',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
@@ -1610,6 +1614,12 @@ export enum InterfacesI18nKey {
   BaseUrlPlaceholder = 'Interfaces.BaseUrlPlaceholder',
   InfoBaseUrl = 'Interfaces.InfoBaseUrl',
   InfoEndpoint = 'Interfaces.InfoEndpoint',
+  Mode = 'Interfaces.Mode',
+  ModePassthrough = 'Interfaces.ModePassthrough',
+  ModeTranslator = 'Interfaces.ModeTranslator',
+  Translator = 'Interfaces.Translator',
+  SelectTranslator = 'Interfaces.SelectTranslator',
+  Custom = 'Interfaces.Custom',
 }
 
 export enum ImagesI18nKey {
