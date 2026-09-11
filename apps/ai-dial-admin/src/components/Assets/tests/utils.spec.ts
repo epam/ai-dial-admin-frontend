@@ -1011,8 +1011,26 @@ describe('getAgentLinkForConversation', () => {
     const result = getAgentLinkForConversation(
       { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
       'en',
+      ApplicationRoute.Models,
     );
     expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('returns empty model link until modelRoute is resolved', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'en',
+    );
+    expect(result).toBe('');
+  });
+
+  test('returns platform model link when modelRoute is Catalog', () => {
+    const result = getAgentLinkForConversation(
+      { $type: 'dial-model', deploymentId: 'msh-responses', displayName: 'msh-responses' },
+      'en',
+      ApplicationRoute.PlatformModels,
+    );
+    expect(result).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
   });
 
   test('returns application link from eval deployment $type', () => {

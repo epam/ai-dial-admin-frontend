@@ -7,10 +7,15 @@ import DeploymentExternalLink from '../DeploymentExternalLink';
 
 const getDeploymentByIdMock = vi.fn();
 const getAllDeploymentsMock = vi.fn();
+const getModelMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getDeploymentById: (...args: unknown[]) => getDeploymentByIdMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+  getModel: (...args: unknown[]) => getModelMock(...args),
 }));
 
 vi.mock('@/src/app/[lang]/conversations/actions', () => ({
@@ -36,6 +41,8 @@ describe('DeploymentExternalLink', () => {
   beforeEach(() => {
     getDeploymentByIdMock.mockReset();
     getAllDeploymentsMock.mockReset();
+    getModelMock.mockReset();
+    getModelMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
   });
 

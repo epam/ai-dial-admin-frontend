@@ -7,6 +7,7 @@ import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
 import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
@@ -24,8 +25,12 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   const [deployment, setDeployment] = useState<Deployment | null>(null);
 
   const model = selectedConversation.model?.id as string;
+  const { modelRoute, isLoading: isModelRouteLoading } = useModelDeploymentRoute(model, deployment?.$type);
 
-  const agentLink = useMemo(() => getAgentLinkForConversation(deployment, currentLocale), [deployment, currentLocale]);
+  const agentLink = useMemo(
+    () => getAgentLinkForConversation(deployment, currentLocale, modelRoute),
+    [currentLocale, deployment, modelRoute],
+  );
 
   const openResourceInNewTab = () => {
     if (!agentLink) {
@@ -61,6 +66,8 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
     };
   }, [model]);
 
+  const isResolvingAgent = isModelLoading || isModelRouteLoading;
+
   return (
     <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>
       <LabelledText label={t(EntityFieldsI18nKey.name)}>
@@ -69,7 +76,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
       <LabelledText label={t(EntityFieldsI18nKey.version)} text={selectedConversation.version} />
       <LabelledText label={t(EntityFieldsI18nKey.agent)}>
         <div className="flex flex-row gap-1 items-center">
-          {isModelLoading ? (
+          {isResolvingAgent ? (
             <div className="flex-none">
               <DialLoader />
             </div>

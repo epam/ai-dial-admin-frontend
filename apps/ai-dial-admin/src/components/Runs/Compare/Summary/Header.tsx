@@ -7,7 +7,10 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import DualRunField from '@/src/components/Runs/Compare/Summary/DualRunField';
 import DeploymentExternalLink from '@/src/components/Runs/Summary/DeploymentExternalLink';
-import { getSuiteApplicationName } from '@/src/components/Runs/Summary/resolve-run-deployment';
+import {
+  getSuiteApplicationName,
+  resolveSuiteContextForDeploymentLink,
+} from '@/src/components/Runs/Summary/resolve-run-deployment';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
@@ -34,6 +37,8 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, primaryRunName, comparedRu
 
   const primarySuiteContext = primaryRun.suiteSnapshot ?? testSuite;
   const comparedSuiteContext = comparedRun.suiteSnapshot ?? testSuite;
+  const primaryDeploymentLinkContext = resolveSuiteContextForDeploymentLink(primaryRun.suiteSnapshot, testSuite);
+  const comparedDeploymentLinkContext = resolveSuiteContextForDeploymentLink(comparedRun.suiteSnapshot, testSuite);
   const primaryApplicationName = getSuiteApplicationName(primarySuiteContext);
   const comparedApplicationName = getSuiteApplicationName(comparedSuiteContext);
   const suiteId = primaryRun.testSuiteId ?? comparedRun.testSuiteId;
@@ -63,10 +68,14 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, primaryRunName, comparedRu
           primaryValue={primaryApplicationName || '—'}
           comparedValue={comparedApplicationName || '—'}
           primaryPostfix={
-            primaryApplicationName ? <DeploymentExternalLink suiteContext={primarySuiteContext ?? null} /> : undefined
+            primaryApplicationName ? (
+              <DeploymentExternalLink suiteContext={primaryDeploymentLinkContext ?? null} />
+            ) : undefined
           }
           comparedPostfix={
-            comparedApplicationName ? <DeploymentExternalLink suiteContext={comparedSuiteContext ?? null} /> : undefined
+            comparedApplicationName ? (
+              <DeploymentExternalLink suiteContext={comparedDeploymentLinkContext ?? null} />
+            ) : undefined
           }
         />
       )}

@@ -3,6 +3,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import {
   resolveCatalogDeploymentNavigation,
   resolveDeploymentNavigationTarget,
+  resolveMcpDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { describe, expect, test } from 'vitest';
 
@@ -122,9 +123,40 @@ describe('resolveDeploymentNavigationTarget', () => {
 
     expect(
       resolveDeploymentNavigationTarget({ id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' }, DeploymentType.Model, []),
+    ).toBeNull();
+
+    expect(
+      resolveDeploymentNavigationTarget(
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+        DeploymentType.Model,
+        [],
+        { modelRoute: ApplicationRoute.Models },
+      ),
     ).toEqual({
       route: ApplicationRoute.Models,
       entity: { name: 'gemini-2.5-flash' },
+    });
+
+    expect(
+      resolveDeploymentNavigationTarget({ id: 'msh-responses', name: 'msh-responses' }, DeploymentType.Model, [], {
+        modelRoute: ApplicationRoute.PlatformModels,
+      }),
+    ).toEqual({
+      route: ApplicationRoute.PlatformModels,
+      entity: { name: 'msh-responses' },
+    });
+  });
+
+  test('routes models/platform/ ids to PlatformModels', () => {
+    expect(
+      resolveDeploymentNavigationTarget(
+        { id: 'models/platform/msh-responses', name: 'msh-responses' },
+        DeploymentType.Model,
+        [],
+      ),
+    ).toEqual({
+      route: ApplicationRoute.PlatformModels,
+      entity: { name: 'msh-responses' },
     });
   });
 
@@ -138,6 +170,56 @@ describe('resolveDeploymentNavigationTarget', () => {
     expect(result).toEqual({
       route: ApplicationRoute.AssetsApplications,
       entity: { name: 'My Asset App', path: 'folder/my-app__1.0.0' },
+    });
+  });
+});
+
+describe('resolveMcpDeploymentNavigationTarget', () => {
+  test('returns null when mcpDeploymentRef is missing', () => {
+    expect(resolveMcpDeploymentNavigationTarget(null)).toBeNull();
+    expect(resolveMcpDeploymentNavigationTarget(undefined)).toBeNull();
+    expect(resolveMcpDeploymentNavigationTarget({ id: '', type: 'dial-toolset', name: '' })).toBeNull();
+  });
+
+  test('routes toolsets/ ids to AssetsToolsets with stripped path', () => {
+    expect(
+      resolveMcpDeploymentNavigationTarget({
+        id: 'toolsets/public/developers/sf_test/calculator__1.0.0',
+        type: 'dial-toolset',
+        name: 'calculator',
+      }),
+    ).toEqual({
+      route: ApplicationRoute.AssetsToolsets,
+      entity: {
+        name: 'calculator',
+        path: 'public/developers/sf_test/calculator__1.0.0',
+      },
+    });
+  });
+
+  test('routes applications/ ids to AssetsApplications with stripped path', () => {
+    expect(
+      resolveMcpDeploymentNavigationTarget({
+        id: 'applications/folder/my-app__1.0.0',
+        type: 'dial-application',
+        name: 'My App',
+      }),
+    ).toEqual({
+      route: ApplicationRoute.AssetsApplications,
+      entity: { name: 'My App', path: 'folder/my-app__1.0.0' },
+    });
+  });
+
+  test('routes flat ids to McpContainers', () => {
+    expect(
+      resolveMcpDeploymentNavigationTarget({
+        id: 'mcp-container-1',
+        type: 'dial-toolset',
+        name: 'MCP Server',
+      }),
+    ).toEqual({
+      route: ApplicationRoute.McpContainers,
+      entity: { name: 'mcp-container-1' },
     });
   });
 });
