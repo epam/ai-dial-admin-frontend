@@ -91,4 +91,29 @@ describe('useDetailMode', () => {
 
     expect(mockCloseSidebar).toHaveBeenCalled();
   });
+
+  it('reopens the bottom panel with the persisted Display tree', () => {
+    const { result } = renderHook(() => useDetailMode());
+    const persistedTree = [
+      {
+        headerName: 'Execution',
+        hide: false,
+        children: [{ headerName: 'Duration', hide: false, context: { panelName: 'execDurationMs' } }],
+      },
+    ];
+
+    act(() => result.current.openDetail('r1'));
+
+    const firstPanel = mockShowSidebar.mock.calls[0][0] as { props: { onDisplayTreeChange?: (tree: unknown) => void } };
+    act(() => {
+      firstPanel.props.onDisplayTreeChange?.(persistedTree);
+    });
+
+    act(() => result.current.closeDetail());
+    mockShowSidebar.mockClear();
+    act(() => result.current.openDetail('r1'));
+
+    const reopenedPanel = mockShowSidebar.mock.calls[0][0] as { props: { initialDisplayTree?: unknown } };
+    expect(reopenedPanel.props.initialDisplayTree).toBe(persistedTree);
+  });
 });

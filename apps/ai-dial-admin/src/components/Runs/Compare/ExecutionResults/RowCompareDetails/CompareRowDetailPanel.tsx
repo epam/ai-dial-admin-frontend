@@ -42,6 +42,12 @@ interface Props {
   focusFieldKey?: string | null;
   fieldSchema?: RowDetailFieldSchema;
   metricGroupOrder?: readonly string[];
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
+  initialViewDifferencesOnly?: boolean;
+  onViewDifferencesOnlyChange?: (value: boolean) => void;
+  initialHideHighlights?: boolean;
+  onHideHighlightsChange?: (value: boolean) => void;
 }
 
 const CompareRowDetailPanel: FC<Props> = ({
@@ -55,6 +61,12 @@ const CompareRowDetailPanel: FC<Props> = ({
   focusFieldKey,
   fieldSchema,
   metricGroupOrder = [],
+  initialDisplayTree,
+  onDisplayTreeChange,
+  initialViewDifferencesOnly,
+  onViewDifferencesOnlyChange,
+  initialHideHighlights,
+  onHideHighlightsChange,
 }) => {
   const t = useI18n();
   const [primaryDetail, setPrimaryDetail] = useState<AnalyticsResult | null>(null);
@@ -63,9 +75,9 @@ const CompareRowDetailPanel: FC<Props> = ({
   const [hasError, setHasError] = useState(false);
 
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
-  const [viewDifferencesOnly, setViewDifferencesOnly] = useState(false);
-  const [hideHighlights, setHideHighlights] = useState(false);
-  const [displayTree, setDisplayTree] = useState<ColDef[]>([]);
+  const [viewDifferencesOnly, setViewDifferencesOnly] = useState(initialViewDifferencesOnly ?? false);
+  const [hideHighlights, setHideHighlights] = useState(initialHideHighlights ?? false);
+  const [displayTree, setDisplayTree] = useState<ColDef[]>(() => initialDisplayTree ?? []);
 
   const isPivotView = position === SidebarPosition.Bottom;
   const comparedId = row._compared?.id ?? null;
@@ -140,10 +152,31 @@ const CompareRowDetailPanel: FC<Props> = ({
     setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev, DEFAULT_HIDDEN_ROW_DETAIL_FIELDS));
   }, [sections]);
 
+  useEffect(() => {
+    if (displayTree.length === 0) {
+      return;
+    }
+    onDisplayTreeChange?.(displayTree);
+  }, [displayTree, onDisplayTreeChange]);
+
   const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
 
   const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
   const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);
+  const onViewDifferencesOnlyUpdate = useCallback(
+    (value: boolean) => {
+      setViewDifferencesOnly(value);
+      onViewDifferencesOnlyChange?.(value);
+    },
+    [onViewDifferencesOnlyChange],
+  );
+  const onHideHighlightsUpdate = useCallback(
+    (value: boolean) => {
+      setHideHighlights(value);
+      onHideHighlightsChange?.(value);
+    },
+    [onHideHighlightsChange],
+  );
 
   return (
     <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
@@ -200,9 +233,9 @@ const CompareRowDetailPanel: FC<Props> = ({
             onClose={onCloseDisplayPanel}
             panelClassName={ROW_DETAIL_DISPLAY_PANEL_CLASS}
             viewDifferencesOnly={viewDifferencesOnly}
-            onViewDifferencesOnlyChange={setViewDifferencesOnly}
+            onViewDifferencesOnlyChange={onViewDifferencesOnlyUpdate}
             hideHighlights={hideHighlights}
-            onHideHighlightsChange={setHideHighlights}
+            onHideHighlightsChange={onHideHighlightsUpdate}
           />
         </div>
       )}
