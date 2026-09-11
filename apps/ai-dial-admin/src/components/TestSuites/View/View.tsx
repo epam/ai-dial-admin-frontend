@@ -183,7 +183,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
   const onRun = useCallback(
     (num?: string | number) => {
-      runTestSuite(selectedTestSuite.id, num).then((res) => {
+      return runTestSuite(selectedTestSuite.id, num).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
