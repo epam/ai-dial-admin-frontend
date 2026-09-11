@@ -19,7 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getRootFolders } from '@/src/utils/files/root-folder';
-import { excludePlatformRoot, getFilePathGridOptions, processAssetsData } from './utils';
+import { getFilePathGridOptions, processAssetsData } from './utils';
 
 interface Props {
   label: string;
