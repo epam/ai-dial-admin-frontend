@@ -9,6 +9,7 @@ import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHe
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
@@ -18,6 +19,7 @@ import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
@@ -30,17 +32,19 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   asset: DialApplicationResource;
   runners?: DialApplicationScheme[];
+  translators?: ResourceInfo[];
   onChange: (asset: DialApplicationResource) => void;
   isPublication?: boolean;
 }
 
-const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPublication }) => {
+const ApplicationAssetProperties: FC<Props> = ({ asset, runners, translators, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { codeAppEditorUrl } = useAppContext();
@@ -119,13 +123,21 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           isEntityImmutable={true}
           codeAppEditorUrl={codeAppEditorUrl}
         />
+        <OverrideNameControl entity={asset as any} onChangeEntity={onChange} isAsset />
+        <EndpointControl
+          id="base_url"
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          endpoint={asset.base_url}
+          onChange={(base_url) => onChange({ ...asset, base_url })}
+        />
         <InterfacesField
           interfaces={asset.interfaces}
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
+          translators={translators}
           isAsset
         />
-        <OverrideNameControl entity={asset as any} onChangeEntity={onChange} isAsset />
         <ResourceMultiAuth asset={asset} onChange={onChange} />
         <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />
         <Defaults
@@ -143,6 +155,11 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
             validationKey="responsesDefaultKeys"
           />
         )}
+        <KeyValueGrid
+          label={t(EntityFieldsI18nKey.defaultHeaders)}
+          value={asset.default_headers}
+          onChange={(default_headers) => onChange({ ...asset, default_headers })}
+        />
         <MaxRetryAttempts entity={asset} onChangeEntity={onChange} isAsset />
       </div>
     </div>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import PlatformApplicationView from '@/src/components/Assets/Platform/Applications/View';
@@ -46,6 +47,7 @@ export default async function Page(params: {
   let roles: DialRole[] = [];
   let interceptors: DialInterceptor[] = [];
   let globalInterceptors: string[] = [];
+  let translators: ResourceInfo[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
 
   // A `path` query param means this is a public-bucket (versioned, folder-nested) application; its
@@ -76,17 +78,12 @@ export default async function Page(params: {
     }
 
     models = await getModelsList();
+    assetRunners = await getAllRunners();
+    translators = (await getTranslators('')) || [];
     applications = await applicationsApi.getApplicationsList(token);
-
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
-  }
-
-  try {
-    assetRunners = await getAllRunners();
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch asset app runners');
   }
 
   // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
@@ -118,6 +115,7 @@ export default async function Page(params: {
           roles={roles}
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
+          translators={translators}
           optionWarnings={optionWarnings}
         />
       ) : (
@@ -130,6 +128,7 @@ export default async function Page(params: {
           schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
+          translators={translators}
           optionWarnings={optionWarnings}
         />
       )}

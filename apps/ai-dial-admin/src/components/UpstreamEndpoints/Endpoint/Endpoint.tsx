@@ -69,6 +69,13 @@ const Endpoint: FC<Props> = ({
     [endpoint, updateEndpoint, t],
   );
 
+  const onChangeBaseUrl = useCallback(
+    (baseUrl?: string) => {
+      updateEndpoint({ ...endpoint, baseUrl });
+    },
+    [endpoint, updateEndpoint],
+  );
+
   const onChangeResponses = useCallback(
     (url?: string) => {
       updateEndpoint({ ...endpoint, responsesEndpoint: url });
@@ -211,15 +218,26 @@ const Endpoint: FC<Props> = ({
           )}
 
           {isTablet && (
-            <DialPasswordInput
-              disabled={disabled}
-              id={`key-${index}`}
-              value={endpoint.key}
-              placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-              labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-              required={!isKeyOptional}
-              onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
-            />
+            <>
+              <EndpointControl
+                disabled={disabled}
+                id={`upstream-base-url-${index}`}
+                endpoint={endpoint.baseUrl}
+                isFullWidth
+                placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+                label={t(EntityFieldsI18nKey.baseUrl)}
+                onChange={onChangeBaseUrl}
+              />
+              <DialPasswordInput
+                disabled={disabled}
+                id={`key-${index}`}
+                value={endpoint.key}
+                placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+                required={!isKeyOptional}
+                onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+              />
+            </>
           )}
 
           <DialNumberInput
@@ -273,16 +291,30 @@ const Endpoint: FC<Props> = ({
         {/* Desktop expanded rows: row 2 (key full-width), row 3 (extraData + secretExtraData 50/50) */}
         {!isTablet && isExpanded && (
           <>
-            <div className="mt-2 w-full">
-              <DialPasswordInput
-                disabled={disabled}
-                id={`key-${index}`}
-                value={endpoint.key}
-                placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-                required={!isKeyOptional}
-                onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
-              />
+            <div className="flex flex-row gap-x-2 mt-2 w-full">
+              <div className="flex-1 min-w-0">
+                <EndpointControl
+                  disabled={disabled}
+                  id={`upstream-base-url-${index}`}
+                  endpoint={endpoint.baseUrl}
+                  isFullWidth
+                  placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+                  label={t(EntityFieldsI18nKey.baseUrl)}
+                  onChange={onChangeBaseUrl}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialPasswordInput
+                  disabled={disabled}
+                  id={`key-${index}`}
+                  value={endpoint.key}
+                  placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                  labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+                  required={!isKeyOptional}
+                  containerClassName="w-full"
+                  onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+                />
+              </div>
             </div>
             <div className="flex flex-row gap-x-2 mt-2 w-full">
               <ExtraDataField
