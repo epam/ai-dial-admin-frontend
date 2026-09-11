@@ -12,7 +12,6 @@ import PivotValueCell from '@/src/components/Runs/View/RowDetails/PivotValueCell
 import {
   getPivotGridMinWidth,
   getPivotGridTemplateColumns,
-  resolvePivotFieldColumnWidth,
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
@@ -80,92 +79,6 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   useEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
   }, [focusFieldKey, columns]);
-
-  // #region agent log
-  useEffect(() => {
-    const assigned = columns.map((column) => ({
-      fieldKey: column.field.fieldKey,
-      sectionKey: column.sectionKey,
-      assignedWidth: resolvePivotFieldColumnWidth(column.field),
-      isScoreIndicator: column.field.isScoreIndicator,
-      isNumeric: column.field.isNumeric,
-      primaryLen: column.field.primaryRaw?.length ?? 0,
-    }));
-
-    fetch('http://127.0.0.1:7619/ingest/99711621-a096-4746-8066-7a6eca374e71', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d0f3c' },
-      body: JSON.stringify({
-        sessionId: '1d0f3c',
-        runId: 'post-fix',
-        hypothesisId: 'H2-H3-H4',
-        location: 'CompareRowDetailPivotTable.tsx:assigned',
-        message: 'pivot assigned column widths',
-        data: {
-          columnCount: columns.length,
-          gridMinWidth,
-          gridTemplateColumns,
-          assigned,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-
-    const frame = requestAnimationFrame(() => {
-      const container = scrollContainerRef.current;
-      const grid = container?.firstElementChild as HTMLElement | null;
-      if (!container || !grid) {
-        return;
-      }
-
-      const cells = Array.from(grid.querySelectorAll<HTMLElement>('[data-field-key]'));
-      const seen = new Set<string>();
-      const measured = cells
-        .filter((cell) => {
-          const key = cell.getAttribute('data-field-key') ?? '';
-          if (seen.has(key)) {
-            return false;
-          }
-          seen.add(key);
-          return true;
-        })
-        .map((cell) => ({
-          fieldKey: cell.getAttribute('data-field-key'),
-          offsetWidth: cell.offsetWidth,
-          clientWidth: cell.clientWidth,
-          scrollWidth: cell.scrollWidth,
-          offsetHeight: cell.offsetHeight,
-          isOverflowingX: cell.scrollWidth > cell.clientWidth + 1,
-        }));
-
-      fetch('http://127.0.0.1:7619/ingest/99711621-a096-4746-8066-7a6eca374e71', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d0f3c' },
-        body: JSON.stringify({
-          sessionId: '1d0f3c',
-          runId: 'post-fix',
-          hypothesisId: 'H1-H4-H5',
-          location: 'CompareRowDetailPivotTable.tsx:measure',
-          message: 'pivot rendered column sizes',
-          data: {
-            containerClientWidth: container.clientWidth,
-            containerScrollWidth: container.scrollWidth,
-            gridClientWidth: grid.clientWidth,
-            gridOffsetWidth: grid.offsetWidth,
-            gridMinWidth,
-            extraSpace: grid.clientWidth - gridMinWidth,
-            computedTemplate: getComputedStyle(grid).gridTemplateColumns,
-            valueCellHeight: measured[0]?.offsetHeight ?? null,
-            measured,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [columns, gridMinWidth, gridTemplateColumns]);
-  // #endregion
 
   const renderValueCell = (
     key: string,
