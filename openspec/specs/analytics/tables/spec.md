@@ -39,16 +39,21 @@ The Tables page SHALL render the tables the page fetched as a grid with columns 
 
 ### Requirement: Create table (source or enrichment)
 
-Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). Create SHALL be **identity-only**: a **source** table SHALL collect a name and optional description; an **enrichment** table SHALL collect a name, optional description, and a source table. The popup SHALL NOT collect columns, ordering key, partition, or grain key — the physical schema is defined afterwards on the table detail view. Submit SHALL build the type-discriminated identity-only create payload, and on success SHALL show a success notification and route to the created table's detail view; the created table is in `PENDING` (not yet materialized) status.
+Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). Create SHALL be **identity-only**: a **source** table SHALL collect a name, optional description, and a **write discipline**; an **enrichment** table SHALL collect a name, optional description, and a source table. The popup SHALL NOT collect columns, ordering key, partition, or grain key — the physical schema is defined afterwards on the table detail view. Submit SHALL build the type-discriminated identity-only create payload, and on success SHALL show a success notification and route to the created table's detail view; the created table is in `PENDING` (not yet materialized) status.
+
+The **write discipline** is the source table's `write` member: `append`, which keeps every written row, or `upsert_by_key`, which collapses the table to the latest row per ordering key and so makes the ordering key its unique key. It SHALL be offered as a two-option selection seeded to `append`, and SHALL always be sent — the create payload SHALL carry the selected value rather than relying on the service's own default, so the choice the user saw is the choice recorded. Each option SHALL be presented with the consequence of choosing it, and the control SHALL state that the value is fixed for the table's lifetime, in the manner the schema-definition surface already explains its physical keys (see "Table schema keys are explained where they are chosen and where they are read"). No later request changes it: the value selects the storage engine, which is frozen when the table is materialized, and the service rejects `write` on the schema-definition endpoint and on every mutating endpoint.
+
+The write discipline is a **source-only** field. The create-enrichment popup SHALL NOT offer it and the enrichment create payload SHALL NOT carry it — an enrichment is always keyed and collapsed on its grain key, and the service answers 422 to a body that carries the member for one.
 
 #### Scenario: Popup state is discarded on close
 
 - **WHEN** the user opens the create popup, edits fields, and closes it
 - **THEN** re-opening the popup shows a fresh, empty form
+- **AND** the write-discipline selection is back to `append`
 
 #### Scenario: Create sends identity only
 
-- **WHEN** the user creates a source (name + optional description) or an enrichment (name + source table + optional description) and submits
+- **WHEN** the user creates a source (name + optional description + write discipline) or an enrichment (name + source table + optional description) and submits
 - **THEN** the create payload carries only identity/metadata fields and no `columns` or physical key
 - **AND** on success the user is routed to the new table's detail view, which shows the table as a draft (`PENDING`)
 
@@ -56,6 +61,29 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 - **WHEN** the user opens the create-enrichment popup
 - **THEN** it offers a source-table selection whose value is required to submit
+
+#### Scenario: Source create offers the two write disciplines
+
+- **WHEN** the user opens the create-source popup
+- **THEN** it offers a write-discipline selection with exactly the two options `append` and `upsert_by_key`, seeded to `append`
+- **AND** each option states what it does to a write against a key the table already holds
+- **AND** the control states that the choice is fixed once the table is created
+
+#### Scenario: A source table is created upsert-keyed
+
+- **WHEN** the user selects the collapsing discipline and submits the create-source form
+- **THEN** the create payload carries `write: "upsert_by_key"`
+
+#### Scenario: A source table created with the default still sends it
+
+- **WHEN** the user submits the create-source form without touching the write-discipline selection
+- **THEN** the create payload carries `write: "append"`
+
+#### Scenario: Enrichment create never carries a write discipline
+
+- **WHEN** the user opens the create-enrichment popup and submits it
+- **THEN** no write-discipline control is offered
+- **AND** the create payload carries no `write` member
 
 ### Requirement: Table detail column schema management
 

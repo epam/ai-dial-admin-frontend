@@ -2854,6 +2854,13 @@ export default {
     TablesLoadFailed: 'Could not load tables.',
     CreateSourceTitle: 'Create source table',
     CreateEnrichmentTitle: 'Create enrichment table',
+    WriteMode: 'Write mode',
+    WriteModeHint:
+      'Selects how the table stores rows, so it cannot be changed after the table is created. The key is the ordering key, defined with the rest of the schema.',
+    WriteModeAppend: 'Append',
+    WriteModeAppendDescription: 'Keeps every row written',
+    WriteModeUpsertByKey: 'Upsert by key',
+    WriteModeUpsertByKeyDescription: 'Keeps only the latest row per ordering key',
     Columns: 'Columns',
     AddColumn: '+ Column',
     Keys: 'Keys',
