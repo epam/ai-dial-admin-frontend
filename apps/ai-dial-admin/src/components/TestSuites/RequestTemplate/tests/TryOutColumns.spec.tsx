@@ -336,6 +336,54 @@ describe('TryOutColumns', () => {
     });
   });
 
+  test('shows Turn labels for single-request multi-turn suites', async () => {
+    vi.mocked(evaluateTryOutColumnSections).mockResolvedValueOnce({
+      shape: 'turns',
+      groups: [
+        {
+          requestIndex: 0,
+          showTurnLabels: true,
+          turns: [
+            {
+              turnIndex: 0,
+              columns: [makeEvaluatedColumn({ name: 'answer', result: 'a' })],
+              responseBody: { out: 'a' },
+            },
+            {
+              turnIndex: 1,
+              columns: [makeEvaluatedColumn({ name: 'answer', result: 'b' })],
+              responseBody: { out: 'b' },
+            },
+          ],
+        },
+      ],
+    } satisfies TryOutColumnResults);
+
+    render(
+      <TryOutColumns
+        testSuite={{
+          suiteType: SuiteType.Deployment,
+          inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }],
+        }}
+        history={[entry({ r: 0, t: 0 }, { out: 'a' }), entry({ r: 0, t: 1 }, { out: 'b' })]}
+        schema={[]}
+        multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }]}
+        response={{}}
+        responseBody={<div>FlatResponseBody</div>}
+        selectedRequestIndex={0}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
+    });
+
+    expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
+    expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.Results)).not.toBeInTheDocument();
+    expect(screen.queryByText('FlatResponseBody')).not.toBeInTheDocument();
+  });
+
   test('renders no column rows when evaluation returns empty flat results', async () => {
     vi.mocked(evaluateTryOutColumnSections).mockResolvedValueOnce({
       shape: 'single',

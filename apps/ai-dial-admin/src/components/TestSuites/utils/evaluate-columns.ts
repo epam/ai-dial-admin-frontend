@@ -96,8 +96,7 @@ export const evaluateTryOutColumnSections = async ({
   const shape = getTryOutSectionShape(turnCounts);
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
 
-  const useGroupedHistory =
-    !!history?.length && (shape === 'requests' || shape === 'combined') && turnCounts.length > 1;
+  const useGroupedHistory = !!history?.length && (shape === 'requests' || shape === 'combined' || shape === 'turns');
 
   if (!useGroupedHistory) {
     if (isMcp) {

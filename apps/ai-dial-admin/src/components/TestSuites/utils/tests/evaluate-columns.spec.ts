@@ -4,9 +4,11 @@ import {
   ResponseColumn,
   StreamingStatus,
   SuiteType,
+  TestCaseSchema,
   TestSuite,
   TryOutHistoryEntry,
 } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 import { normalizeResponseBodyForColumns } from '../column-eval-context';
 import { evaluateColumns, evaluateTryOutColumnSections } from '../evaluate-columns';
 import { ColumnExtractionStatus, EvaluatedColumn, NotExtractedReason } from '../models';
@@ -496,5 +498,44 @@ describe('evaluateTryOutColumnSections', () => {
         reason: NotExtractedReason.RequestFailed,
       });
     });
+  });
+
+  test('returns grouped per-turn results for a single-request multi-turn history', async () => {
+    const suite: TestSuite = {
+      suiteType: SuiteType.Deployment,
+      inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }],
+      responseColumns: [makeColumn({ name: 'answer', expression: 'choices[0].message.content' })],
+    };
+    const schema: TestCaseSchema[] = [
+      { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
+    ];
+    const history: TryOutHistoryEntry[] = [
+      {
+        turnIndex: 0,
+        resolvedRequest: { body: { contentType: 'application/json', content: { q: 1 } } },
+        response: { statusCode: 200, body: { choices: [{ message: { content: 'Paris' } }] } },
+        extractedColumns: { answer: 'Paris' },
+      },
+      {
+        turnIndex: 1,
+        resolvedRequest: { body: { contentType: 'application/json', content: { q: 2 } } },
+        response: { statusCode: 200, body: { choices: [{ message: { content: 'London' } }] } },
+        extractedColumns: { answer: 'London' },
+      },
+    ];
+
+    const results = await evaluateTryOutColumnSections({
+      testSuite: suite,
+      history,
+      schema,
+      multiTurnLength: 2,
+    });
+
+    expect(results.shape).toBe('turns');
+    expect(results.groups).toHaveLength(1);
+    expect(results.groups?.[0].showTurnLabels).toBe(true);
+    expect(results.groups?.[0].turns).toHaveLength(2);
+    expect(results.groups?.[0].turns[0].columns[0].result).toBe('Paris');
+    expect(results.groups?.[0].turns[1].columns[0].result).toBe('London');
   });
 });
