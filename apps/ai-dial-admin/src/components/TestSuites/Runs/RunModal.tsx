@@ -7,7 +7,7 @@ import {
   NotificationVariant,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getDataset, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -23,7 +23,7 @@ interface Props {
   isModalOpen: boolean;
   selectedTestSuite: TestSuite;
   onClose: () => void;
-  onRun: (value?: number | string) => void;
+  onRun: (value?: number | string) => void | Promise<unknown>;
 }
 
 const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose }) => {
@@ -34,6 +34,8 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const [allRuns, setAllRuns] = useState<number | undefined>();
   const [validRows, setValidRows] = useState<DatasetTestCase[]>([]);
   const [schema, setSchema] = useState<TestCaseSchema[] | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (allRuns === undefined) {
@@ -57,6 +59,18 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, expandedRows, schema);
   const validRuns = includedIds ? includedIds.size : validRows.length;
 
+  const onSubmit = useCallback(() => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+    void Promise.resolve(onRun(value)).finally(() => {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    });
+  }, [onRun, value]);
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -65,8 +79,8 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       open={isModalOpen}
       size={PopupSize.Sm}
       submitLabel={t(ButtonsI18nKey.Run)}
-      onSubmit={() => onRun(value)}
-      disableSubmitButton={isLoading || !value || +value <= 0 || validRuns === 0}
+      onSubmit={onSubmit}
+      disableSubmitButton={isLoading || isSubmitting || !value || +value <= 0 || validRuns === 0}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >

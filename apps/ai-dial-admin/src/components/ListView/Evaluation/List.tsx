@@ -226,7 +226,7 @@ const EvaluationListView = <T extends object>({
 
   const onRun = useCallback(
     (num?: string | number) => {
-      runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+      return runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
