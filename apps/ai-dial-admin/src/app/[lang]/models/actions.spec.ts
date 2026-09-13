@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { adaptersApi, modelsApi } from '@/src/app/api/api';
+import { adaptersApi, configFileApi, modelsApi } from '@/src/app/api/api';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createModel,
+  getConfigFileModel,
   getCoreModel,
   getModelsListAction,
   getModelsAdapters,
@@ -212,6 +214,16 @@ describe('Models :: server actions', () => {
     const result = await updateCoreModel({ name: 'test' }, 'test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(modelsApi.updateCoreModel).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileModel action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileModel('my-model');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models, 'my-model');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

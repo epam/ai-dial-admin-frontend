@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import ListView from '@/src/components/ListView/ListView';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -33,7 +34,14 @@ interface Props<T> {
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
   getAssetContext?: () => AssetsFolderContext;
+  /** Rendered alongside the header buttons — the `config-file-entity-views` toggle. */
+  headerExtra?: ReactNode;
+  /** True when `data` came from Core's config-file population rather than the admin backend. */
+  isConfigFileSource?: boolean;
 }
+
+/** `config-file-entity-views`: routes a config-file-sourced row to the same detail page, read-only. */
+const CONFIG_FILE_URL_SUFFIX = '?configFile=true';
 
 const BaseEntityList = <T extends object>({
   data,
@@ -47,12 +55,24 @@ const BaseEntityList = <T extends object>({
   onRemoveEntity,
   showColumnsButton,
   getAssetContext,
+  headerExtra,
+  isConfigFileSource,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint — mirrors the `configFile=true` detail page's own
+  // read-only wiring so this list's existing isReadOnlyAdmin-gated create/remove/duplicate/move
+  // affordances disappear for free, with no separate read-only prop to check at each call site.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
   const gridOptions: GridOptions = {
-    onCellClicked: (e) => onCellClicked(e, route, router.push),
+    onCellClicked: (e) => onCellClicked(e, route, router.push, isConfigFileSource ? CONFIG_FILE_URL_SUFFIX : undefined),
   };
   // entity for which the modals (delete and duplicate) is open
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(void 0);
@@ -139,7 +159,8 @@ const BaseEntityList = <T extends object>({
         toggleColumnsPanel={toggleColumnsPanel}
         view={route}
         onGridReady={onGridReady}
-        getHref={(data) => getUrnForEntity(route, data)}
+        getHref={(data) => `${getUrnForEntity(route, data)}${isConfigFileSource ? CONFIG_FILE_URL_SUFFIX : ''}`}
+        headerExtra={headerExtra}
       >
         <EntityListHeaderButtons
           names={names}

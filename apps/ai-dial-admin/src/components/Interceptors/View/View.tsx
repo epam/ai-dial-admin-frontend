@@ -14,6 +14,7 @@ import {
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -38,16 +39,24 @@ interface Props {
   applications: DialApplication[];
   interceptorTemplate?: InterceptorTemplate | null;
   appRunners: DialApplicationScheme[];
+  /** True when `originalInterceptor` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props }) => {
+const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, isConfigFileSource, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { featureFlags, setEntityReadOnly } = useAppContext();
 
-  const tabs: TabModel[] = getInterceptorTabs(t);
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
+  const tabs: TabModel[] = getInterceptorTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(structuredClone(originalInterceptor));
@@ -72,13 +81,16 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   );
 
   useEffect(() => {
+    if (isConfigFileSource) {
+      return;
+    }
     const name = encodeURIComponent(originalInterceptor?.name || '');
     if (!coreInterceptor && name) {
       getReqRef.current(getCoreInterceptor, name).then((data) => {
         setCoreInterceptor(data.response);
       });
     }
-  }, [coreInterceptor, originalInterceptor]);
+  }, [coreInterceptor, originalInterceptor, isConfigFileSource]);
 
   useEffect(() => {
     setSelectedInterceptor(

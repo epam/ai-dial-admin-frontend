@@ -28,7 +28,7 @@ Core does not serve every type on this route family to every caller — reading 
 - **THEN** the client refuses without issuing the request, rather than surfacing Core's refusal as a generic error
 
 ### Requirement: The two Core populations of one entity type are read as a union
-DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL therefore compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept. The config-file route is the admin console's own configuration surface: when the admin backend is not configured (`DIAL_ADMIN_API_URL` unset), the system SHALL skip that read and resolve it as an empty population rather than issuing the request or reporting a failure. The API-written read is unaffected by that flag and SHALL always be issued.
+DIAL Core keeps the entities of a given type in two places, and its merged runtime configuration is the union of both: entities written through its API, listed by the metadata route, and entities defined in configuration files, listed by the config-file route. Core validates a reference against that merged set. The system SHALL therefore compose both reads when offering an entity as a selectable option, so the offered set matches the set Core will accept. The config-file route is the admin console's own configuration surface: when the admin backend is not configured (`DIAL_ADMIN_API_URL` unset), the system SHALL skip that read and resolve it as an empty population rather than issuing the request or reporting a failure. The API-written read is unaffected by that flag and SHALL always be issued. An optional `showOnlyConfigFiles` parameter (default `false`) inverts this behaviour: when `true`, the API-written (metadata) read is skipped entirely and the config-file read is always issued regardless of `DIAL_ADMIN_API_URL`.
 
 #### Scenario: Both populations appear as options
 - **WHEN** options of a given entity type are requested for a picker
@@ -55,6 +55,69 @@ DIAL Core keeps the entities of a given type in two places, and its merged runti
 #### Scenario: The config-file read runs normally with the admin backend configured
 - **WHEN** `DIAL_ADMIN_API_URL` is set and options of any entity type are requested
 - **THEN** both the API-written and config-file reads are issued, as before this change
+
+#### Scenario: `showOnlyConfigFiles=true` skips the API-written read
+- **WHEN** options of a given entity type are requested with `showOnlyConfigFiles: true`
+- **THEN** the API-written (metadata) read is not issued, and the result contains only entries from
+  the config-file population
+
+#### Scenario: `showOnlyConfigFiles=true` always issues the config-file read, even without the admin backend
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and options are requested with `showOnlyConfigFiles: true`
+- **THEN** the config-file read is issued regardless of the missing admin-backend URL
+- **AND** the API-written read is still skipped
+
+### Requirement: A full-entity population can be read for a config-file type
+The system SHALL provide a `ConfigFileApi.list<T>` method that returns the full entity population for a
+given readable type — calling `listNames` to enumerate all names and then `getEntity<T>` for every
+returned name in parallel — and SHALL return a `ConfigFileListResult<T>` carrying all successfully read
+entities plus a reported failure for each name whose read fails, without silently dropping failures.
+
+#### Scenario: Full population is returned
+- **WHEN** `ConfigFileApi.list` is called for a readable type
+- **THEN** every entity of that type in Core's config-file surface is returned
+
+#### Scenario: A non-readable type is refused before any request
+- **WHEN** `ConfigFileApi.list` is called for a type not in the allow-list
+- **THEN** the client refuses without issuing any request, the same way `listNames` and `getEntity` do
+
+#### Scenario: One failing name still returns the rest with a failure reported
+- **WHEN** `ConfigFileApi.list` is called and one name's individual read fails
+- **THEN** all other successfully read entities are returned alongside a reported failure for the
+  failing name, rather than the whole call being aborted
+
+### Requirement: Config-file reads are available for Models, Routes, Applications, and Toolsets
+The system SHALL include `ConfigFileEntityType.Models`, `ConfigFileEntityType.Routes`,
+`ConfigFileEntityType.Applications`, and `ConfigFileEntityType.Toolsets` in `READABLE_CONFIG_FILE_TYPES`,
+making them accepted by `listNames`, `getEntity`, and `list`. `ConfigFileEntityType.Keys` SHALL remain
+excluded from the allow-list.
+
+#### Scenario: Models, Routes, Applications, and Toolsets are accepted
+- **WHEN** `listNames`, `getEntity`, or `list` is called for Models, Routes, Applications, or Toolsets
+- **THEN** the request proceeds normally
+
+#### Scenario: Keys is still refused
+- **WHEN** `listNames`, `getEntity`, or `list` is called for the Keys type
+- **THEN** the client refuses without issuing any request
+
+### Requirement: A picker read can be scoped to config-file entities only
+The `getConfigEntityOptions` and `readConfigEntities` functions SHALL accept an optional
+`showOnlyConfigFiles: boolean` parameter (default `false`). When `true`, the function SHALL skip the
+API-written (asset-metadata) read and SHALL always issue the config-file read regardless of whether
+`DIAL_ADMIN_API_URL` is set. When `false` (or absent), existing behaviour is preserved exactly.
+
+#### Scenario: `showOnlyConfigFiles: true` skips the asset-metadata read
+- **WHEN** `getConfigEntityOptions` or `readConfigEntities` is called with `showOnlyConfigFiles: true`
+- **THEN** no asset-metadata (API-written) request is issued for that entity type
+
+#### Scenario: `showOnlyConfigFiles: true` issues the config-file read even without `DIAL_ADMIN_API_URL`
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and `getConfigEntityOptions` is called with
+  `showOnlyConfigFiles: true`
+- **THEN** the config-file read is still issued, rather than being skipped as it normally would be
+  without the admin backend
+
+#### Scenario: Omitting the parameter reproduces today's behaviour exactly
+- **WHEN** `getConfigEntityOptions` or `readConfigEntities` is called without the parameter
+- **THEN** the result is identical to calling it with `showOnlyConfigFiles: false`
 
 ### Requirement: The union normalises to the fields both populations provide
 The two populations do not carry the same data, and neither carries a description. The metadata route returns per-entry author and timestamps; the config-file listing returns a name and nothing else. The system SHALL normalise an option to the fields available from both — its name and its origin — rather than issuing a per-entity read to fill fields a listing omits.

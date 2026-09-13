@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { applicationsApi } from '@/src/app/api/api';
+import { applicationsApi, configFileApi } from '@/src/app/api/api';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createApplication,
+  getConfigFileApplication,
   getCoreApplication,
   removeApplication,
   updateApplication,
@@ -153,6 +155,16 @@ describe('Applications :: server actions', () => {
     const result = await tryOutTool('testSet', { name: 'test' });
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationsApi.tryOutTool).toHaveBeenCalledWith('testSet', { name: 'test' }, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileApplication action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileApplication('my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications, 'my-app');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

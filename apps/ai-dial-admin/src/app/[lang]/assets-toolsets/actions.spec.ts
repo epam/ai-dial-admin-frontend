@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/toolsets/exim';
 import * as mcpClientModule from '@/src/server/toolsets/mcp-client';
 import * as zipEximModule from '@/src/server/toolsets/zip-exim';
@@ -23,6 +23,7 @@ import {
   tryOutAssetTool,
   bulkDeletePlatformToolsets,
   createPlatformToolset,
+  getConfigFileToolsets,
   getPlatformToolset,
   getPlatformToolsets,
   removePlatformToolset,
@@ -30,6 +31,7 @@ import {
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPlatformToolsetResource } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ImportFileType } from '@/src/types/import';
@@ -521,5 +523,15 @@ describe('Platform toolset server actions', () => {
     paths.forEach(({ path }) => {
       expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, path);
     });
+  });
+
+  test('Should call getConfigFileToolsets action', async () => {
+    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileToolsets();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

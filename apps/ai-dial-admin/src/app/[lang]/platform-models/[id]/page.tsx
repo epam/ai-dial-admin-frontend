@@ -46,8 +46,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   // declared in Core's configuration file, and which is a different population from `Assets > Roles`/
   // `Assets > Interceptors`' own API-written one.
   const [roles, interceptors, globalInterceptors] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
   ]);
 

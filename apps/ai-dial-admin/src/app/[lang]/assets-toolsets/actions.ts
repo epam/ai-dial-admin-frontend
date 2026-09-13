@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import {
@@ -10,6 +10,8 @@ import {
   DialToolsetResource,
   ToolsetAuthCredentialLevel,
 } from '@/src/models/dial/resource';
+import { Toolset } from '@/src/models/dial/toolset';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -186,6 +188,12 @@ export async function exportToolsets(paths: string[], type?: ImportFileType) {
     buildZip: buildToolsetsZip,
     zipFileName: 'toolsets-export.zip',
   });
+}
+
+/** `config-file-entity-views`: the full toolset population Core's config file declares. */
+export async function getConfigFileToolsets() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.list<Toolset>(token, ConfigFileEntityType.Toolsets);
 }
 
 export async function tryOutAssetTool(body: Record<string, unknown>, resourceType = ResourceType.TOOLSET) {

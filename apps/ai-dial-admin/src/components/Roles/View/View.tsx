@@ -7,6 +7,7 @@ import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -34,16 +35,24 @@ interface Props {
   routes?: DialRoute[];
   keys: DialKey[];
   etag: string;
+  /** True when `originalRole` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
+const RolesView: FC<Props> = ({ originalRole, etag, keys, isConfigFileSource, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
 
-  const tabs = getRoleTabs(t);
+  const tabs = getRoleTabs(t, featureFlags);
+
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(structuredClone(originalRole));
@@ -69,13 +78,16 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
     [isEditorEnabled, selectedFormat],
   );
   useEffect(() => {
+    if (isConfigFileSource) {
+      return;
+    }
     const name = encodeURIComponent((originalRole as { name: string })?.name);
     if (!coreRole && name) {
       getReqRef.current(getCoreRole, name).then((data) => {
         setCoreRole(data.response);
       });
     }
-  }, [coreRole, originalRole]);
+  }, [coreRole, originalRole, isConfigFileSource]);
 
   useEffect(() => {
     setSelectedRole(

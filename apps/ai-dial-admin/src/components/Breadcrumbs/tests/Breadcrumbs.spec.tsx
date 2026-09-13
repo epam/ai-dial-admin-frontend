@@ -3,8 +3,10 @@ import Breadcrumbs from '../Breadcrumbs';
 import { describe, expect, test, vi } from 'vitest';
 import { MenuI18nKey } from '@/src/constants/i18n';
 
+const mockSearchParams = { value: new URLSearchParams() };
 vi.mock('next/navigation', () => ({
   usePathname: () => '/models/1',
+  useSearchParams: () => mockSearchParams.value,
 }));
 
 describe('Components - Breadcrumbs', () => {
@@ -22,5 +24,16 @@ describe('Components - Breadcrumbs', () => {
     render(<Breadcrumbs mobile={true} />);
     expect(screen.getByText(MenuI18nKey.Models)).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
+  });
+
+  test('Should point the list breadcrumb at the platform route when configFile=true', () => {
+    mockSearchParams.value = new URLSearchParams('configFile=true');
+
+    render(<Breadcrumbs mobile={false} />);
+
+    const link = screen.getByText(MenuI18nKey.Models).closest('a');
+    expect(link).toHaveAttribute('href', '/platform-models');
+
+    mockSearchParams.value = new URLSearchParams();
   });
 });

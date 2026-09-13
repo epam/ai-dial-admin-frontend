@@ -29,7 +29,11 @@ vi.mock('next-auth/react', () => ({
 
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+  usePathname: vi.fn(),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
 
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
@@ -112,6 +116,9 @@ vi.mock('@/src/context/AppContext', () => ({
     isReadOnlyAdmin: false,
     isFullAdmin: true,
     isEnableAuth: false,
+    showConfigFiles: false,
+    toggleShowConfigFiles: vi.fn(),
+    setEntityReadOnly: vi.fn(),
   }),
 }));
 

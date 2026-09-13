@@ -38,7 +38,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   // not prevent the route from loading. Core-direct — matching Assets > Models/App Runners — rather
   // than the admin-BE list, which cannot see roles declared in Core's configuration file, and which
   // is a different population from `Assets > Roles`' own API-written one.
-  const roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings);
+  const roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false);
 
   if (route == null) {
     notFound();

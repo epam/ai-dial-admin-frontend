@@ -69,7 +69,7 @@ export default async function Page(params: {
   // interceptors read on the sibling assets-applications page — an option-list problem must not
   // prevent the toolset from loading. Core-direct (`readConfigEntities`), not the admin-BE role list,
   // which cannot see a role declared only in Core's configuration file.
-  roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings);
+  roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false);
 
   if (toolset == null) {
     notFound();

@@ -88,7 +88,7 @@
 
 ## 6. Quality gate
 
-- [ ] 6.1 Run `npm run lint`, `npm run format`, and the full `npm run test` suite from
+- [x] 6.1 Run `npm run lint`, `npm run format`, and the full `npm run test` suite from
   `apps/ai-dial-admin/`; fix any failures introduced by this change.
 
 Note: this change has browser-observable scenarios (menu order, tab set, create-modal fields), but a

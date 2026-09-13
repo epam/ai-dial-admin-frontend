@@ -2,7 +2,13 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import {
+  assetApi,
+  configFileApi,
+  externalServiceConsentApi,
+  externalServiceOpsApi,
+  toolsetOpsApi,
+} from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import {
   DialApplicationResource,
@@ -19,6 +25,7 @@ import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/
 import { moveAssets } from '@/src/server/assets/move';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
 import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -262,4 +269,10 @@ export async function signOutExternalService(appPath: string, serviceId: string,
     credentialsLevel: level,
     authenticationType: authType,
   });
+}
+
+/** `config-file-entity-views`: the full application population Core's config file declares. */
+export async function getConfigFileApplications() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.list<DialApplication>(token, ConfigFileEntityType.Applications);
 }

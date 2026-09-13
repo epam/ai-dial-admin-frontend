@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import {
+  assetApi,
+  configFileApi,
+  externalServiceConsentApi,
+  externalServiceOpsApi,
+  toolsetOpsApi,
+} from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -17,6 +24,7 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  getConfigFileApplications,
   signInExternalService,
   signOutExternalService,
   grantExternalServiceConsent,
@@ -401,6 +409,16 @@ describe('Assets application :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(externalServiceConsentApi.withdraw).toHaveBeenCalledWith(TOKEN_MOCK, 'public/als code apps/my app', 'dial');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileApplications action', async () => {
+    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileApplications();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

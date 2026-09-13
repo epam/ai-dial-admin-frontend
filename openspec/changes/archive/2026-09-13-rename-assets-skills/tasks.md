@@ -48,7 +48,7 @@
 
 ## 6. Browser verification
 
-- [ ] 6.1 Run the `spec-browser-verify` skill for this change to verify the menu entry and navigation scenarios against the running app
+- [x] 6.1 Run the `spec-browser-verify` skill for this change to verify the menu entry and navigation scenarios against the running app
 
 ## 7. Quality checks
 

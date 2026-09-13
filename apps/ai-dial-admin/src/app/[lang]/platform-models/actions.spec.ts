@@ -1,12 +1,21 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { DialModelResourceStatus } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteModels, createModel, getModel, getModels, removeModel, updateModel } from './actions';
+import {
+  bulkDeleteModels,
+  createModel,
+  getConfigFileModels,
+  getModel,
+  getModels,
+  removeModel,
+  updateModel,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -231,5 +240,15 @@ describe('Assets model :: upstream secrets are never written as empty strings', 
 
     expect(payload).not.toHaveProperty('status');
     expect(payload).not.toHaveProperty('validationWarnings');
+  });
+
+  test('Should call getConfigFileModels action', async () => {
+    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileModels();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

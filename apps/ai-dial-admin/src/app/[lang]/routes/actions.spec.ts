@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { routesApi } from '@/src/app/api/api';
+import { configFileApi, routesApi } from '@/src/app/api/api';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { createRoute, getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from './actions';
+import { createRoute, getConfigFileRoute, getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -58,6 +59,16 @@ describe('Routes :: server actions', () => {
     const result = await updateCoreRoute({ name: 'test' }, 'test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(routesApi.updateCoreRoute).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileRoute action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoute('my-route');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes, 'my-route');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

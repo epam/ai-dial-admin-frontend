@@ -2,10 +2,12 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
+import { DialModel } from '@/src/models/dial/model';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -53,4 +55,10 @@ export async function removeModel(path: string, etag?: string) {
 export async function bulkDeleteModels(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.MODEL, paths);
+}
+
+/** `config-file-entity-views`: the full model population Core's config file declares, for the toggled-on list. */
+export async function getConfigFileModels() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.list<DialModel>(token, ConfigFileEntityType.Models);
 }

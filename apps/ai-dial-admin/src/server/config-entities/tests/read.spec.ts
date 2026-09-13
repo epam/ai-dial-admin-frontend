@@ -128,6 +128,39 @@ describe('getConfigEntityOptions', () => {
     expect(result.success && result.data.options).toEqual([{ name: 'from-api', origin: ConfigEntityOrigin.Api }]);
     expect(result.success && result.data.failures).toEqual([]);
   });
+
+  test('showOnlyConfigFiles skips the asset-metadata read and returns config-file-origin options only', async () => {
+    listNames.mockResolvedValue({ success: true, data: ['from-file'] });
+
+    const result = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors, true);
+
+    expect(getMetadata).not.toHaveBeenCalled();
+    expect(result.success && result.data.options).toEqual([
+      { name: 'from-file', origin: ConfigEntityOrigin.ConfigFile },
+    ]);
+  });
+
+  test('showOnlyConfigFiles issues the config-file read even without the admin backend', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    listNames.mockResolvedValue({ success: true, data: ['from-file'] });
+
+    const result = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors, true);
+
+    expect(listNames).toHaveBeenCalledOnce();
+    expect(result.success && result.data.options).toEqual([
+      { name: 'from-file', origin: ConfigEntityOrigin.ConfigFile },
+    ]);
+  });
+
+  test('omitting showOnlyConfigFiles reproduces the pre-existing behavior', async () => {
+    getMetadata.mockResolvedValue(metadataPage(['from-api']));
+    listNames.mockResolvedValue({ success: true, data: ['from-file'] });
+
+    const withDefault = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+    const withExplicitFalse = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors, false);
+
+    expect(withDefault).toEqual(withExplicitFalse);
+  });
 });
 
 describe('getGlobalInterceptors', () => {

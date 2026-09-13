@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { createRole, removeRole } from '@/src/app/[lang]/roles/actions';
 import { BASE_COLUMNS_WITH_TOPICS } from '@/src/constants/grid-columns/grid-columns';
@@ -11,9 +11,12 @@ import { filterNames } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialRole[];
+  /** True when `data` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
+  headerExtra?: ReactNode;
 }
 
-const RolesList: FC<Props> = ({ data }) => {
+const RolesList: FC<Props> = ({ data, isConfigFileSource, headerExtra }) => {
   const names = filterNames(data);
 
   return (
@@ -24,6 +27,8 @@ const RolesList: FC<Props> = ({ data }) => {
       route={ApplicationRoute.Roles}
       onCreateEntity={createRole}
       onRemoveEntity={removeRole}
+      isConfigFileSource={isConfigFileSource}
+      headerExtra={headerExtra}
     />
   );
 };

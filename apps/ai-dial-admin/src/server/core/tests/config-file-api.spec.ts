@@ -119,4 +119,76 @@ describe('Server :: Core :: ConfigFileApi', () => {
     const [calledUrl] = fetch.mock.calls[0];
     expect(calledUrl).toContain('/v1/admin/config/file/interceptors/a%2Fb');
   });
+
+  test('list returns every entity in full, not reduced to a name', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ items: [{ name: 'first' }, { name: 'second' }] }), {
+      headers: { 'content-type': 'application/json' },
+    });
+    fetch.mockResponseOnce(JSON.stringify({ name: 'first', endpoint: 'http://a' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+    fetch.mockResponseOnce(JSON.stringify({ name: 'second', endpoint: 'http://b' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.list(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+
+    expect(result.success && result.data.entities).toEqual([
+      { name: 'first', endpoint: 'http://a' },
+      { name: 'second', endpoint: 'http://b' },
+    ]);
+    expect(result.success && result.data.failures).toEqual([]);
+  });
+
+  test('list reports one entity failing to read without failing the whole population', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ items: [{ name: 'first' }, { name: 'second' }] }), {
+      headers: { 'content-type': 'application/json' },
+    });
+    fetch.mockResponseOnce(JSON.stringify({ name: 'first' }), { headers: { 'content-type': 'application/json' } });
+    fetch.mockResponseOnce('Not found', { status: 404 });
+
+    const result = await instance.list(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+
+    expect(result.success && result.data.entities).toEqual([{ name: 'first' }]);
+    expect(result.success && result.data.failures).toHaveLength(1);
+    expect(result.success && result.data.failures[0].status).toBe(404);
+  });
+
+  test('list refuses a non-readable type without issuing any request', async () => {
+    const result = await instance.list(TOKEN_MOCK, ConfigFileEntityType.Keys);
+
+    expect(fetch.mock.calls).toHaveLength(0);
+    expect(result.success).toBe(false);
+    expect(!result.success && result.failure.reason).toBe(ConfigFileFailureReason.TypeNotReadable);
+  });
+
+  test('list propagates a total failure to list names', async () => {
+    fetch.mockResponseOnce('Forbidden', { status: 403 });
+
+    const result = await instance.list(TOKEN_MOCK, ConfigFileEntityType.Roles);
+
+    expect(result.success).toBe(false);
+    expect(!result.success && result.failure.status).toBe(403);
+  });
+
+  test.each([
+    ConfigFileEntityType.Models,
+    ConfigFileEntityType.Routes,
+    ConfigFileEntityType.Applications,
+    ConfigFileEntityType.Toolsets,
+  ])('listNames accepts the newly-widened type %s', async (type) => {
+    fetch.mockResponseOnce(JSON.stringify({ items: [] }), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.listNames(TOKEN_MOCK, type);
+
+    expect(fetch.mock.calls).toHaveLength(1);
+    expect(result.success).toBe(true);
+  });
+
+  test('listNames still refuses Keys', async () => {
+    const result = await instance.listNames(TOKEN_MOCK, ConfigFileEntityType.Keys);
+
+    expect(fetch.mock.calls).toHaveLength(0);
+    expect(!result.success && result.failure.reason).toBe(ConfigFileFailureReason.TypeNotReadable);
+  });
 });

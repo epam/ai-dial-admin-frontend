@@ -92,5 +92,5 @@ export async function bulkDeleteKeys(paths: { path: string }[]) {
  */
 export async function getKeyRolesOptions() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, []);
+  return readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, [], false);
 }

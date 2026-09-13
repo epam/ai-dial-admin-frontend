@@ -77,11 +77,16 @@ export default async function Page(params: {
       ) || []) as AssetApp[];
     }
 
-    models = await getModelsList();
     assetRunners = await getAllRunners();
     translators = (await getTranslators('')) || [];
-    applications = await applicationsApi.getApplicationsList(token);
-    applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+
+    // Admin-backend enrichment only: without DIAL_ADMIN_API_URL there is no host to call, so
+    // `applications`/`applicationSchemes` stay empty and the page renders on Core-direct data alone.
+    if (process.env.DIAL_ADMIN_API_URL) {
+      models = await getModelsList();
+      applications = await applicationsApi.getApplicationsList(token);
+      applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
   }
@@ -94,8 +99,8 @@ export default async function Page(params: {
   // buckets (not just the platform-bucket Roles tab that uses `roles`) to match the existing
   // interceptors read here, which is likewise unconditional.
   [roles, interceptors, globalInterceptors] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
   ]);
 

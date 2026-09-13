@@ -67,6 +67,29 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
   });
 
+  test('Should override the list breadcrumb to the platform route in config-file mode', () => {
+    const config = getBreadcrumbs('/en/models/modelId', 'en', true);
+    expect(config.length).toEqual(2);
+    expect(config[0].href).toEqual('/en/platform-models');
+    expect(config[0].key).toEqual(MenuI18nKey.Models);
+    expect(config[1].name).toEqual('modelId');
+  });
+
+  test('Should override the list breadcrumb to the asset route in config-file mode', () => {
+    const config = getBreadcrumbs('/en/applications/appId', 'en', true);
+    expect(config[0].href).toEqual('/en/assets-applications');
+  });
+
+  test('Should leave the list breadcrumb unchanged outside config-file mode', () => {
+    const config = getBreadcrumbs('/en/models/modelId', 'en', false);
+    expect(config[0].href).toEqual('/en/models');
+  });
+
+  test('Should leave breadcrumbs for a route with no config-file counterpart unchanged', () => {
+    const config = getBreadcrumbs('/en/adapters/adapterId', 'en', true);
+    expect(config[0].href).toEqual('/en/adapters');
+  });
+
   test('Should translate runs compare segment via breadcrumb config', () => {
     const config = getBreadcrumbs('/en/runs/compare', 'en');
     expect(config.length).toEqual(2);

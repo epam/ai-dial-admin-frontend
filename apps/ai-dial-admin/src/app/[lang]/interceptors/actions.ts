@@ -1,14 +1,21 @@
 'use server';
 import { cookies, headers } from 'next/headers';
 
-import { interceptorsApi } from '@/src/app/api/api';
+import { configFileApi, interceptorsApi } from '@/src/app/api/api';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export async function getInterceptorsList() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return interceptorsApi.getInterceptorsListAction(token);
+}
+
+/** `config-file-entity-views`: reads an interceptor by name from Core's config-file population directly. */
+export async function getConfigFileInterceptor(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialInterceptor>(token, ConfigFileEntityType.Interceptors, name);
 }
 
 export async function removeInterceptor(name?: string) {

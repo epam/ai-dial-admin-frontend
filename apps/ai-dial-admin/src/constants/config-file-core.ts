@@ -11,13 +11,18 @@ export const CORE_CONFIG_FILE_URL = 'v1/admin/config/file';
  * for every caller — the file map's keys are themselves the secrets. Deriving the supported set from
  * the route pattern instead would make the client appear to support it and fail only at runtime.
  *
- * The remaining types are limited to the ones a picker on an asset surface actually needs; widening
- * this set is a deliberate act, not a side effect of adding an enum member.
+ * `Models`, `Routes`, `Applications`, and `Toolsets` were added for `config-file-entity-views` — the
+ * config-file-backed admin-grid list/detail surface for those types. Widening this set is a
+ * deliberate act, not a side effect of adding an enum member.
  */
 export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new Set([
   ConfigFileEntityType.Interceptors,
   ConfigFileEntityType.Roles,
   ConfigFileEntityType.Settings,
+  ConfigFileEntityType.Models,
+  ConfigFileEntityType.Routes,
+  ConfigFileEntityType.Applications,
+  ConfigFileEntityType.Toolsets,
 ]);
 
 /** The single settings entry Core exposes — `settings` is a singleton, not a listable collection. */

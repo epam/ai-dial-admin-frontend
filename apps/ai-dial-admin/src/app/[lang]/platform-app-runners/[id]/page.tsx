@@ -38,8 +38,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
   // not prevent the runner from loading, and one list failing must not skip the others.
   const [roles, interceptors, globalInterceptors] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
   ]);
 

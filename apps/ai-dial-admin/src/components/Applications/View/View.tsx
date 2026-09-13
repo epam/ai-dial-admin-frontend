@@ -45,16 +45,24 @@ interface Props {
   interceptors: DialInterceptor[];
   models: DialModel[];
   applicationSchemes: DialApplicationScheme[];
+  /** True when `originalApplication` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => {
+const ApplicationView: FC<Props> = ({ etag, originalApplication, isConfigFileSource, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { visualizerConnector, featureFlags, setEntityReadOnly } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t));
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
+  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t, featureFlags));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 
@@ -64,8 +72,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreApplication, setCoreApplication] = useState<DialApplication | null>(null);
   const [discardKey, setDiscardKey] = useState(0);
-
-  const { visualizerConnector } = useAppContext();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -85,21 +91,24 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     const appRunner = getAppRunner(originalApplication, props.applicationSchemes);
 
     if (originalApplication.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
-      setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
+      setTabs(getApplicationTabs(t, featureFlags).toSpliced(1, 0, toolsTab(t)));
     } else {
-      setTabs(getApplicationTabs(t));
+      setTabs(getApplicationTabs(t, featureFlags));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalApplication.mcp?.endpoint]);
 
   useEffect(() => {
+    if (isConfigFileSource) {
+      return;
+    }
     const name = encodeURIComponent(originalApplication?.name || '');
     if (!coreApplication && name) {
       getReqRef.current(getCoreApplication, name).then((data) => {
         setCoreApplication(data.response);
       });
     }
-  }, [coreApplication, originalApplication]);
+  }, [coreApplication, originalApplication, isConfigFileSource]);
 
   useEffect(() => {
     setSelectedApplication(

@@ -72,12 +72,11 @@ The `Content` component SHALL NOT render the `Footer`, and SHALL NOT start the `
 
 ### Requirement: Direct navigation to admin-API-only routes redirects home
 
-The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-backend request, when `process.env.DIAL_ADMIN_API_URL` is unset and a user navigates directly to any route owned exclusively by the Entities group (`/models`, `/applications`, `/interceptors`, `/toolsets`, `/routes`), the Builders group (`/adapters`, `/application-runners`, `/interceptor-templates`), the Access Management group (`/roles`, `/keys`), the Audit group (`/activity-audit`, `/dashboard`, `/usage-log`), or the Import/Export actions (`/import-config`, `/export-config`) — including every `[id]` and `[id]/[subId]` sub-route under them.
+The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-backend request, when `process.env.DIAL_ADMIN_API_URL` is unset and a user navigates directly to any route owned exclusively by the Entities group (`/models`, `/applications`, `/interceptors`, `/toolsets`, `/routes`), the Builders group (`/adapters`, `/application-runners`, `/interceptor-templates`), the Access Management group (`/roles`, `/keys`), the Audit group (`/activity-audit`, `/dashboard`, `/usage-log`), or the Import/Export actions (`/import-config`, `/export-config`) — including every `[id]` and `[id]/[subId]` sub-route under them — **except** the `[id]` detail route of `/models`, `/applications`, `/interceptors`, `/routes`, `/roles`, and `/toolsets`, which SHALL render instead of redirecting when the request carries a `configFile=true` query parameter, per `config-file-entity-views`.
 
 #### Scenario: Bookmarked entity URL redirects when the admin API is disabled
 
-- **WHEN** a user navigates directly to `/<lang>/models`, `/<lang>/models/<id>`, `/<lang>/roles`,
-  `/<lang>/import-config`, or any other route listed above
+- **WHEN** a user navigates directly to `/<lang>/models`, `/<lang>/models/<id>`, `/<lang>/roles`, `/<lang>/import-config`, or any other route listed above
 - **AND** `DIAL_ADMIN_API_URL` is unset
 - **THEN** the server issues a redirect to `ApplicationRoute.Home`
 - **AND** no admin-backend call is made for that page
@@ -87,3 +86,76 @@ The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-b
 - **WHEN** a user navigates to any of those routes
 - **AND** `DIAL_ADMIN_API_URL` is set
 - **THEN** the page renders as it does today
+
+#### Scenario: A covered detail route with `configFile=true` renders instead of redirecting
+
+- **WHEN** `DIAL_ADMIN_API_URL` is unset
+- **AND** a user navigates to `/<lang>/models/<id>?configFile=true` (or the equivalent `/applications/<id>`, `/interceptors/<id>`, `/routes/<id>`, `/roles/<id>`, or `/toolsets/<id>` route)
+- **THEN** the server does not redirect, and the page renders the config-file-sourced entity read-only
+
+#### Scenario: The same detail route without the query flag still redirects
+
+- **WHEN** `DIAL_ADMIN_API_URL` is unset
+- **AND** a user navigates to `/<lang>/models/<id>` with no `configFile` query parameter
+- **THEN** the server issues a redirect to `ApplicationRoute.Home`, unchanged from before this change
+
+#### Scenario: Keys and App Runners are unaffected
+
+- **WHEN** `DIAL_ADMIN_API_URL` is unset and a user navigates to `/<lang>/keys/<id>` or `/<lang>/application-runners/<id>` with any query parameters
+- **THEN** the server redirects to `ApplicationRoute.Home`, since neither route is part of the `configFile=true` exception
+
+### Requirement: The per-entity Audit tab is hidden without the admin API
+
+The system SHALL omit the per-entity Audit tab whenever `featureFlags.adminApiEnabled` is `false`, wherever that tab is added (`auditTab()` in `getRouteTabs`, `getApplicationTabs`, `getModelsTabs`, `getAdapterTabs`, `getAppRunnerTabs`, `getRoleTabs`, `getInterceptorTabs`, `getToolsetTabs`, `getInterceptorTemplateTabs`, `getKeyTabs`, `getDeploymentsViewTabs`, and the `AssetsToolsets`/`PlatformModels` branches of `getTabsForAsset`), regardless of the state of any other feature flag that governs the surface it appears on (`dashboardEnabled`, `deploymentsEnabled`, or an evaluation/analytics flag) and independent of whether the surface's own route is already redirect-guarded by the existing admin-API route guard.
+
+#### Scenario: Admin API disabled hides the Audit tab on a redirect-guarded entity
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`
+- **AND** a Models, Applications, Routes, Roles, Keys, Interceptors, InterceptorTemplates, Adapters,
+  ApplicationRunners, or Toolsets entity view renders its tab list
+- **THEN** the Audit tab is absent from that tab list
+
+#### Scenario: Admin API disabled hides the Audit tab on Deployments Containers and Images
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`
+- **AND** `featureFlags.deploymentsEnabled` is `true`
+- **AND** a Deployments Containers or Images entity view renders its tab list
+- **THEN** the Audit tab is absent from that tab list
+
+#### Scenario: Admin API disabled hides the Audit tab on Assets Platform Models and Toolsets
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`
+- **AND** `featureFlags.dashboardEnabled` is `true`
+- **AND** an Assets ▸ Platform Models or Assets ▸ Toolsets entity view renders its tab list
+- **THEN** the Audit tab is absent from that tab list
+
+#### Scenario: Admin API enabled leaves the Audit tab unaffected
+
+- **WHEN** `featureFlags.adminApiEnabled` is `true`
+- **THEN** each entity view's Audit tab renders exactly as it does today, governed only by that
+  view's own other feature-flag checks (if any)
+
+### Requirement: Assets ▸ Applications list and detail pages skip admin-backend calls without the admin API
+
+The Assets ▸ Applications list page (`assets-applications/page.tsx`) and detail page (`assets-applications/[id]/page.tsx`) SHALL NOT call `applicationRunnersApi.getApplicationSchemesList` or `applicationsApi.getApplicationsList` when `process.env.DIAL_ADMIN_API_URL` is unset, and SHALL still render using their Core-direct data (`assetRunners`, `getModelsList`, `getApps`/`getPlatformApplication`, `readConfigEntities`), with `applicationSchemes`/`applications` resolving to an empty list.
+
+#### Scenario: Admin API disabled skips admin-backend calls on the Assets Applications list page
+
+- **WHEN** `process.env.DIAL_ADMIN_API_URL` is unset
+- **AND** a user navigates to the Assets ▸ Applications list page
+- **THEN** `applicationRunnersApi.getApplicationSchemesList` is never called
+- **AND** the page renders using only Core-direct runner options
+
+#### Scenario: Admin API disabled skips admin-backend calls on the Assets Applications detail page
+
+- **WHEN** `process.env.DIAL_ADMIN_API_URL` is unset
+- **AND** a user navigates to an Assets ▸ Applications detail page
+- **THEN** neither `applicationRunnersApi.getApplicationSchemesList` nor
+  `applicationsApi.getApplicationsList` is called
+- **AND** the page renders with `applicationSchemes` and `applications` as empty lists
+
+#### Scenario: Admin API enabled preserves existing Assets Applications behavior
+
+- **WHEN** `process.env.DIAL_ADMIN_API_URL` is set
+- **THEN** the Assets ▸ Applications list and detail pages call the admin-backend APIs and render as
+  they do today

@@ -18,7 +18,9 @@ import {
   getImportNotificationContent,
   getVersionsPerName,
 } from '@/src/components/Assets/utils';
+import ConfigFilesToggle from '@/src/components/Common/ConfigFilesToggle/ConfigFilesToggle';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
+import { CONFIG_FILE_ENTITY_VIEWS } from '@/src/constants/config-file-entity-views';
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -636,6 +638,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     <>
       <FileManager
         label={t(getFileManagerLabel(view))}
+        headerExtra={CONFIG_FILE_ENTITY_VIEWS.has(view) ? <ConfigFilesToggle /> : undefined}
         columnDefs={columnDefs}
         getContext={getContext}
         view={view}

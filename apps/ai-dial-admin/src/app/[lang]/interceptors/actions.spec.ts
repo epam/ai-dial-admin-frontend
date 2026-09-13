@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { interceptorsApi } from '@/src/app/api/api';
+import { configFileApi, interceptorsApi } from '@/src/app/api/api';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createInterceptor,
+  getConfigFileInterceptor,
   getConfigurationSchema,
   getCoreInterceptor,
   getInterceptorsList,
@@ -115,6 +117,20 @@ describe('Interceptors :: server actions', () => {
     const result = await getConfigurationSchema('name');
     expect(getUserToken).toHaveBeenCalled();
     expect(interceptorsApi.getConfigurationSchema).toHaveBeenCalledWith('name', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileInterceptor action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileInterceptor('my-interceptor');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ConfigFileEntityType.Interceptors,
+      'my-interceptor',
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

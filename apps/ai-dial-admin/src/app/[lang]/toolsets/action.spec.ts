@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { toolSetsApi } from '@/src/app/api/api';
+import { configFileApi, toolSetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createToolset,
+  getConfigFileToolset,
   getCoreToolset,
   getTools,
   removeToolset,
@@ -130,6 +132,16 @@ describe('Toolsets :: server actions', () => {
       ToolsetAuthCredentialLevel.GLOBAL,
       TOKEN_MOCK,
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileToolset action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileToolset('my-toolset');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets, 'my-toolset');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

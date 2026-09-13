@@ -2,9 +2,10 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { modelsApi, adaptersApi } from '@/src/app/api/api';
+import { adaptersApi, configFileApi, modelsApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -83,4 +84,10 @@ export async function getCoreModel(name: string) {
 export async function updateCoreModel(model: DialModel, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return modelsApi.updateCoreModel(model, name, eTag, token);
+}
+
+/** `config-file-entity-views`: reads a model by name from Core's config-file population directly. */
+export async function getConfigFileModel(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialModel>(token, ConfigFileEntityType.Models, name);
 }

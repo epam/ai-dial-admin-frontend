@@ -17,6 +17,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -39,16 +40,24 @@ interface Props {
   roles?: DialRole[] | null;
   originalToolset: Toolset;
   oAuthCode?: string | null;
+  /** True when `originalToolset` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset }) => {
+const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset, isConfigFileSource }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { featureFlags, setEntityReadOnly } = useAppContext();
 
-  const tabs = getToolsetTabs(t);
+  const tabs = getToolsetTabs(t, featureFlags);
+
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,13 +86,16 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   );
 
   useEffect(() => {
+    if (isConfigFileSource) {
+      return;
+    }
     const name = encodeURIComponent(originalToolset?.name || '');
     if (!coreToolset && name) {
       getReqRef.current(getCoreToolset, name).then((data) => {
         setCoreToolset(data.response);
       });
     }
-  }, [coreToolset, originalToolset]);
+  }, [coreToolset, originalToolset, isConfigFileSource]);
 
   useEffect(() => {
     setSelectedToolset(
