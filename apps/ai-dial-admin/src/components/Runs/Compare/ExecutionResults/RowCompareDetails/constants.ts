@@ -14,6 +14,9 @@ export const ROW_DETAIL_ACTION_COL_WIDTH = 40;
 export const ROW_DETAIL_MINIMAP_COL_WIDTH = 16;
 export const ROW_DETAIL_HEADER_HEIGHT = 40;
 export const ROW_DETAIL_FILTER_ROW_HEIGHT = 28;
+export const ROW_DETAIL_TABLE_SCROLL_PADDING_TOP = ROW_DETAIL_HEADER_HEIGHT + ROW_DETAIL_FILTER_ROW_HEIGHT;
+/** Keeps the section toggle row in view when pinning a field below sticky chrome. */
+export const ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP = 48;
 
 export const ROW_DETAIL_GRID_TEMPLATE_COLUMNS = `${ROW_DETAIL_FIELD_COL_MIN}px minmax(0, 1fr) minmax(0, 1fr) ${ROW_DETAIL_DELTA_COL_WIDTH}px ${ROW_DETAIL_ACTION_COL_WIDTH}px`;
 

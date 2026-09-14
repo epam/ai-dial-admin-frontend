@@ -15,6 +15,7 @@ interface Props {
   onClose: () => void;
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
+  focusRequestId?: number;
   fieldSchema?: RowDetailFieldSchema;
   metricGroupOrder?: readonly string[];
   initialDisplayTree?: ColDef[];
@@ -32,6 +33,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
   focusFieldKey,
+  focusRequestId,
   fieldSchema,
   metricGroupOrder,
   initialDisplayTree,
@@ -51,6 +53,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={onSwitchToSidebar}
         focusFieldKey={focusFieldKey}
+        focusRequestId={focusRequestId}
         fieldSchema={fieldSchema}
         metricGroupOrder={metricGroupOrder}
         initialDisplayTree={initialDisplayTree}

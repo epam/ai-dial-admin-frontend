@@ -77,11 +77,15 @@ The panel header SHALL provide a Display control that opens an overlay `TreeColu
 
 ### Requirement: Grid cell click scrolls to the related pivot column
 
-When the user clicks a cell in the main Execution Result grid whose column maps to a pivot field, the system SHALL open the bottom panel for that row (if needed) and horizontally scroll so the related pivot column is visible.
+When the user clicks a cell in the main Execution Result grid whose column maps to a pivot field, the system SHALL open the bottom panel for that row (if needed) and horizontally scroll so the related pivot column is visible. Mapping SHALL preserve underscored metric leaf keys (for example `exact_match` from `Exact Match_exact_match`).
 
 #### Scenario: Cell click scrolls to field
 - **WHEN** the user clicks the HTTP column cell for a row while in drawer mode
 - **THEN** the bottom panel shows that row and scrolls to the HTTP pivot column
+
+#### Scenario: Underscored metric leaf scrolls to field
+- **WHEN** the user clicks an `exact_match` metric cell while in drawer mode
+- **THEN** the bottom panel shows that row and scrolls to the `exact_match` pivot column
 
 #### Scenario: Unmapped column still opens panel
 - **WHEN** the user clicks a column that has no pivot mapping (e.g. test case name)
