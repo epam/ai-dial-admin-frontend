@@ -17,6 +17,7 @@ vi.mock('next-auth/react', () => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/en/models'),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
 describe('Header', () => {

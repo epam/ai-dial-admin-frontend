@@ -30,6 +30,11 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config.length).toEqual(0);
   });
 
+  test('An App Runner detail route keeps its own list segment', () => {
+    const config = getBreadcrumbs('/application-runners/runner-1', 'en');
+    expect(config[0].href).toEqual('/application-runners');
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);
@@ -65,6 +70,11 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
   test('Should not enrich platform models breadcrumbs with folder context', () => {
     expect(getFolderContext('/en/platform-models/modelId', 'en')).toBeNull();
     expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
+  });
+
+  test("Should keep the list breadcrumb pointed at the entity type's own route", () => {
+    const config = getBreadcrumbs('/en/models/modelId', 'en');
+    expect(config[0].href).toEqual('/en/models');
   });
 
   test('Should translate runs compare segment via breadcrumb config', () => {

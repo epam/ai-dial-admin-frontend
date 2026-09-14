@@ -2,9 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, deploymentConfigurationApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, deploymentConfigurationApi } from '@/src/app/api/api';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -58,4 +60,16 @@ export async function bulkDeleteInterceptors(paths: { path: string }[]) {
 export async function getInterceptorConfigurationSchema(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentConfigurationApi.getConfigurationSchema(token, name);
+}
+
+/** `config-file-entity-views`: the interceptor names Core's config file declares. */
+export async function getConfigFileInterceptors() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Interceptors);
+}
+
+/** `config-file-entity-views`: reads an interceptor by name from Core's config-file population directly. */
+export async function getConfigFileInterceptor(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialInterceptor>(token, ConfigFileEntityType.Interceptors, name);
 }

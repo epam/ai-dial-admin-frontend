@@ -142,6 +142,7 @@ export enum BasicI18nKey {
   NoParameters = 'Basic.NoParameters',
   NoVariables = 'Basic.NoVariables',
   NoHeaders = 'Basic.NoHeaders',
+  ShowConfigFiles = 'Basic.ShowConfigFiles',
   Key = 'Basic.Key',
   Value = 'Basic.Value',
   From = 'Basic.From',

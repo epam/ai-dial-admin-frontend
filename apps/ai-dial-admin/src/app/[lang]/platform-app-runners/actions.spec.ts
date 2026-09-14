@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { appRunnerSchemaApi, assetApi } from '@/src/app/api/api';
+import { appRunnerSchemaApi, assetApi, configFileApi } from '@/src/app/api/api';
 import { DialAppRunnerResource, DialModelResourceStatus } from '@/src/models/dial/resource';
 import { RoutePermission } from '@/src/models/dial/route';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +11,8 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteRunners,
   createRunner,
+  getConfigFileAppRunner,
+  getConfigFileAppRunners,
   getResolvedRunnerSchema,
   getRunner,
   getRunners,
@@ -231,5 +234,24 @@ describe('Assets app runner :: server actions', () => {
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toEqual('Schema not found');
+  });
+
+  test('Should call getConfigFileAppRunners action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileAppRunners();
+
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Schemas);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileAppRunner action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileAppRunner('my-runner');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Schemas, 'my-runner');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

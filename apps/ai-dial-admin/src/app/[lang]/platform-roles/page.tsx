@@ -1,4 +1,4 @@
-import RolesList from '@/src/components/Assets/Platform/Roles/List';
+import PlatformRolesPageList from '@/src/components/Assets/Platform/Roles/PageList';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export default async function Page() {
   return (
     <SaveValidationContextProvider>
-      <RolesList />
+      <PlatformRolesPageList />
     </SaveValidationContextProvider>
   );
 }

@@ -128,7 +128,7 @@ describe('Tables server actions', () => {
 
     const catalog = await getRoles();
 
-    expect(readConfigEntities).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Roles, []);
+    expect(readConfigEntities).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Roles, [], false);
     expect(rolesApi.getRolesList).not.toHaveBeenCalled();
     expect(catalog.roles).toEqual([
       { name: 'analytics-writer', displayName: 'analytics-writer', origin: ConfigEntityOrigin.Api },

@@ -32,7 +32,7 @@ vi.mock('@/src/context/assets/ModelsFolderContext', () => ({
 }));
 
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: {} }),
+  useAppContext: () => ({ featureFlags: {}, setEntityReadOnly: vi.fn() }),
 }));
 
 // Bypasses the session-validity retry logic — irrelevant to the etag behavior under test.

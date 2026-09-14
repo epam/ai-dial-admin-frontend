@@ -19,6 +19,11 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) =
   updatePlatformApplication: vi.fn(),
 }));
 
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly, featureFlags: {} }),
+}));
+
 /**
  * Matches `Assets/Apps/tests/View.spec.tsx`'s scope: a render smoke test, not deep interaction
  * coverage — the component's real dependency surface (`TabsContent`, `SimpleEntityHeader`, tab
@@ -122,5 +127,42 @@ describe('PlatformApplicationView', () => {
 
     const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
     expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+  });
+
+  test('Should mark the entity read-only when config-file-sourced, and clear it on unmount', () => {
+    const { unmount } = render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={mockOriginalApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+        isConfigFileSource
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed application', () => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={mockOriginalApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });
 });
