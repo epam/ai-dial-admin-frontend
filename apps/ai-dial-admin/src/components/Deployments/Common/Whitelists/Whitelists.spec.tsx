@@ -15,7 +15,7 @@ vi.mock('@/src/app/actions/deployments.ts', () => ({
   ),
 }));
 
-describe.skip('Common Whitelists component', () => {
+describe('Common Whitelists component', () => {
   const setImage = vi.fn();
   const image = { ...IMAGE_TEMPLATE, allowedDomains: ['test.com'] };
 
