@@ -35,3 +35,16 @@ The `Application` column in the test suites list SHALL display `mcpDeploymentRef
 #### Scenario: DEPLOYMENT suite Application column is unchanged
 - **WHEN** a test suite has `suiteType: 'DEPLOYMENT'`
 - **THEN** the Application column SHALL display `deploymentRef.name` as before
+
+### Requirement: Default sort by creation time descending
+
+The test suites list grid SHALL default-sort rows by Creation time descending, declared on the `createdAt` column definition. Users SHALL still be able to change the sort by clicking a sortable column header.
+
+#### Scenario: list opens sorted by creation time descending
+- **WHEN** user opens the Test Suites list with no persisted column sort
+- **THEN** rows SHALL be sorted by `createdAt` descending
+- **AND** the Creation time column header SHALL show a descending sort indicator
+
+#### Scenario: user can change the sort order
+- **WHEN** user clicks a sortable column header on the Test Suites list
+- **THEN** the grid SHALL apply the chosen sort instead of the default

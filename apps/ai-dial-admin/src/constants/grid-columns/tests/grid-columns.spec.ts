@@ -22,6 +22,7 @@ import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  TEST_SUITES_COLUMN,
 } from '../grid-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
@@ -383,6 +384,12 @@ describe('Constants :: grid columns', () => {
 
   test('USAGE_LOG_TOOLSET_TRACES_COLUMNS default-sorts on completion_time', () => {
     assertUsageLogColumnSet(USAGE_LOG_TOOLSET_TRACES_COLUMNS);
+  });
+
+  test('TEST_SUITES_COLUMN default-sorts on createdAt descending', () => {
+    const createdAt = TEST_SUITES_COLUMN.find((c) => c.field === 'createdAt');
+    expect(createdAt?.sort).toBe('desc');
+    expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
