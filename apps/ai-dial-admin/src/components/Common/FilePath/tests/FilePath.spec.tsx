@@ -26,7 +26,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     }) => {
       if (!open) return null;
 
-      const isExcluded = (path?: string) => !!path && excludedPaths.some((excluded) => `/${path}`.startsWith(excluded));
+      const isExcluded = (path?: string) => !!path && excludedPaths.some((excluded) => path.startsWith(excluded));
 
       return (
         <div>
@@ -69,7 +69,7 @@ describe('FilePath', () => {
     await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
 
     expect(screen.getByText('item:public')).toBeInTheDocument();
-    expect(screen.queryByText('root:platform')).not.toBeInTheDocument();
+    expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
     expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
   });
 
