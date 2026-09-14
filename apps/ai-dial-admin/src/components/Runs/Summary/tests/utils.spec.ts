@@ -8,20 +8,29 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, AVG_METRIC_EVAL_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import {
+  AVG_DURATION_ALIAS,
+  AVG_METRIC_EVAL_DURATION_ALIAS,
+  COUNT_ALIAS,
+  EXECUTION_STATUS_FIELD,
+  PASSED_FIELD,
+} from '../constants';
 import { MetricScoresData } from '../models';
 import {
-  buildAvgMetricEvalDurationQuery,
   attachMetricInfo,
+  buildAvgMetricEvalDurationQuery,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
   fillUnscoredMetricBars,
+  formatAvgRunTimeSeconds,
+  formatRunCost,
   getMetricFieldPath,
   getMetricOutputDescriptions,
   getMetricOutputFields,
   getMetricStatCards,
+  hasOverallScoreThreshold,
   parseAvgRunTimeMs,
   parseComparisonMetricScores,
   parseHistogramValues,
@@ -30,18 +39,17 @@ import {
   splitMetricName,
   toMetricInfoByName,
   toMetricOptions,
-  formatAvgRunTimeSeconds,
-  formatRunCost,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
-  test('buildTestCasesStatusQuery groups by execution_status and counts within the run', () => {
+  test('buildTestCasesStatusQuery groups by passed and execution_status and counts within the run', () => {
     const query = buildTestCasesStatusQuery('run-1');
 
     expect(query.entity).toBe('eval_summaries');
     expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([EXECUTION_STATUS_FIELD]);
+    expect(query.group_by).toEqual([PASSED_FIELD, EXECUTION_STATUS_FIELD]);
     expect(query.select).toEqual([
+      { expr: { type: ExprType.Field, name: PASSED_FIELD } },
       { expr: { type: ExprType.Field, name: EXECUTION_STATUS_FIELD } },
       { expr: { type: ExprType.Fn, name: 'count', args: [] }, as: COUNT_ALIAS },
     ]);
@@ -572,22 +580,52 @@ describe('Runs Summary :: distribution', () => {
 });
 
 describe('Runs Summary :: result parsers', () => {
-  test('parseTestCaseStatusCounts buckets SUCCESS/ERROR/other and totals', () => {
+  test('parseTestCaseStatusCounts buckets threshold pass/fail and execution errors', () => {
     const counts = parseTestCaseStatusCounts({
       rows: [
-        { [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 37 },
-        { [EXECUTION_STATUS_FIELD]: 'FAILED', [COUNT_ALIAS]: 3 },
-        { [EXECUTION_STATUS_FIELD]: 'TIMEOUT', [COUNT_ALIAS]: 1 },
-        { [EXECUTION_STATUS_FIELD]: 'ERROR', [COUNT_ALIAS]: 2 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 37 },
+        { [PASSED_FIELD]: false, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 3 },
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'TIMEOUT', [COUNT_ALIAS]: 1 },
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'ERROR', [COUNT_ALIAS]: 2 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'FAILED', [COUNT_ALIAS]: 1 },
       ],
     });
 
-    expect(counts).toEqual({ passed: 37, failed: 4, error: 2, total: 43 });
+    expect(counts).toEqual({ passed: 37, failed: 3, error: 4, total: 44 });
+  });
+
+  test('parseTestCaseStatusCounts treats SUCCESS with null passed as total-only', () => {
+    const counts = parseTestCaseStatusCounts({
+      rows: [
+        { [PASSED_FIELD]: null, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 5 },
+        { [PASSED_FIELD]: true, [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 2 },
+      ],
+    });
+
+    expect(counts).toEqual({ passed: 2, failed: 0, error: 0, total: 7 });
+  });
+
+  test('parseTestCaseStatusCounts accepts string boolean passed values', () => {
+    const counts = parseTestCaseStatusCounts({
+      rows: [
+        { [PASSED_FIELD]: 'true', [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 4 },
+        { [PASSED_FIELD]: 'false', [EXECUTION_STATUS_FIELD]: 'SUCCESS', [COUNT_ALIAS]: 1 },
+      ],
+    });
+
+    expect(counts).toEqual({ passed: 4, failed: 1, error: 0, total: 5 });
   });
 
   test('parseTestCaseStatusCounts returns zeros for empty/null results', () => {
     expect(parseTestCaseStatusCounts(null)).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
     expect(parseTestCaseStatusCounts({ rows: [] })).toEqual({ passed: 0, failed: 0, error: 0, total: 0 });
+  });
+
+  test('hasOverallScoreThreshold is true for 0 and false for null/undefined', () => {
+    expect(hasOverallScoreThreshold(0)).toBe(true);
+    expect(hasOverallScoreThreshold(0.5)).toBe(true);
+    expect(hasOverallScoreThreshold(null)).toBe(false);
+    expect(hasOverallScoreThreshold(undefined)).toBe(false);
   });
 
   test('parseAvgRunTimeMs rounds the average and handles missing data', () => {
