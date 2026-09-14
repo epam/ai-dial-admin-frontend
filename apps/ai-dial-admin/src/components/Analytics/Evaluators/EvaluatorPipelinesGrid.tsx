@@ -45,11 +45,10 @@ const EvaluatorPipelinesGrid: FC<Props> = ({ pipelines }) => {
         flex: 1,
         valueGetter: (params) => {
           const pipeline = params.data as PipelineListItem | undefined;
-          if (!pipeline?.evaluator) return '';
-          const version = pipeline.evaluator.version;
-          return isPinnedToLatest(pipeline.evaluator_version)
-            ? `${version} · ${t(AnalyticsPipelinesI18nKey.Latest)}`
-            : String(version);
+          // A listing states the pinned version, never the one `@latest` resolves to, so a rule following
+          // the latest is reported as following it rather than as a number the response never carried.
+          if (isPinnedToLatest(pipeline?.evaluator_version)) return t(AnalyticsPipelinesI18nKey.Latest);
+          return String(pipeline?.evaluator_version);
         },
       },
       {

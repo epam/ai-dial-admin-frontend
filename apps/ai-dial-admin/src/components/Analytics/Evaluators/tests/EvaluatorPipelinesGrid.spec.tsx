@@ -4,7 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 
 import EvaluatorPipelinesGrid from '@/src/components/Analytics/Evaluators/EvaluatorPipelinesGrid';
 import { AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 
 const push = vi.fn();
@@ -49,9 +48,7 @@ const rule = (over: Partial<PipelineListItem> = {}): PipelineListItem => ({
   kind: PipelineKind.Enrich,
   evaluator_name: 'conversation-insights',
   evaluator_version: 2,
-  evaluator: { name: 'conversation-insights', version: 2, type: EvaluatorType.Llm },
   target: 'conversation_insights',
-  grain_key: 'conversation_id',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 3,
@@ -78,19 +75,10 @@ describe('EvaluatorPipelinesGrid', () => {
     expect(screen.getByText(/resolvedVersion=2 /)).toBeTruthy();
   });
 
-  test('marks a rule that declares no version as tracking the latest', () => {
-    render(
-      <EvaluatorPipelinesGrid
-        pipelines={[
-          rule({
-            evaluator_version: undefined,
-            evaluator: { name: 'conversation-insights', version: 4, type: EvaluatorType.Llm },
-          }),
-        ]}
-      />,
-    );
+  test('reports a rule that declares no version as following the latest, which a listing never resolves', () => {
+    render(<EvaluatorPipelinesGrid pipelines={[rule({ evaluator_version: undefined })]} />);
 
-    expect(screen.getByText(/resolvedVersion=4 · /)).toBeTruthy();
+    expect(screen.getByText(/resolvedVersion=AnalyticsPipelines.Latest /)).toBeTruthy();
   });
 
   test('activating a row opens that pipeline', async () => {

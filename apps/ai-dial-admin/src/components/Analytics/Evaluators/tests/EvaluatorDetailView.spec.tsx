@@ -25,9 +25,7 @@ const llm: Evaluator = {
   model: 'gemini-2.5-flash-lite',
   params: { max_tokens: 700 },
   request_template: '{"messages":[]}',
-  response_schema: { type: 'object' },
-  input_vars: [{ name: 'members', type: 'string', jsonata: '$join(members)' }],
-  output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic' }],
+  outputs: [{ name: 'topic', prose: 'One to three lowercase words.' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -35,8 +33,7 @@ const sql: Evaluator = {
   name: 'usage-client-identity',
   version: 2,
   type: EvaluatorType.Sql,
-  input_vars: [],
-  output_vars: [{ name: 'session_id', type: 'string', sql: 'json_extract_string(request_tags, $1)' }],
+  outputs: [{ name: 'session_id', sql: 'json_extract_string(request_tags, $1)' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -113,10 +110,10 @@ describe('EvaluatorDetailView — Properties fields', () => {
 
     expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.Model)).toBeNull();
     expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.SectionRequestTemplate)).toBeNull();
-    expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.SectionInputVars)).toBeNull();
+    expect(screen.queryByLabelText('AnalyticsEvaluators.Preset')).toBeNull();
   });
 
-  test('always presents the output variables', () => {
+  test('always presents the outputs', () => {
     renderView({ evaluator: sql, summary: { name: sql.name, latest_version: 2 } });
 
     expect(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.SectionOutputVars)).toBeTruthy();

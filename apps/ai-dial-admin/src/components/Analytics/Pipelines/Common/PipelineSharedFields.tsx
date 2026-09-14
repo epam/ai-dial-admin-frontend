@@ -33,7 +33,7 @@ const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
   const onChangeInput = (input?: string) => onChange({ inputs: input ? [input] : undefined });
 
   return (
-    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionReadScope)} isModal={isModal} isExpanded>
+    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionReadScope)} isModal={isModal}>
       <DialSelectField
         id="pipeline-target"
         required

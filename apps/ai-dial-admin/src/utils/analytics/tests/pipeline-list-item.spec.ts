@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { FreshnessMode, Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { toPipelineListItem } from '@/src/utils/analytics/pipeline-list-item';
 
 const evaluator: Evaluator = {
@@ -41,7 +41,6 @@ const aggregatePipeline: Pipeline = {
   trigger: { kind: TriggerKind.Schedule, cron: '0 3/15 * * * *' },
   group_by: [{ column: 'client_session_id' }],
   measures: [{ name: 'turn_count', fn: 'count', column: 'trace_id', distinct: true }],
-  freshness: { mode: FreshnessMode.Periodic },
   enabled: true,
   generation: 2,
   created_at: '2026-08-27T15:02:41Z',
@@ -55,11 +54,8 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
       kind: PipelineKind.Enrich,
       evaluator_name: 'conversation-insights',
       evaluator_version: 4,
-      evaluator: { name: 'conversation-insights', version: 4, type: EvaluatorType.Llm },
       target: 'conversation_insights',
       inputs: ['dial_usage_log'],
-      grain_key: 'chat_id',
-      version_column: '_ingested_at',
       trigger: { kind: TriggerKind.Group, group_by: 'chat_id', ready_when: { idle: '30m' } },
       enabled: true,
       generation: 10,
@@ -67,13 +63,10 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     });
   });
 
-  test('drops the evaluator definition beyond name, version and type', () => {
-    const item = toPipelineListItem(enrichPipeline);
+  test('drops the evaluator definition, which only a detail read carries', () => {
+    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
 
-    expect(item.evaluator).not.toHaveProperty('request_template');
-    expect(item.evaluator).not.toHaveProperty('response_schema');
-    expect(item.evaluator).not.toHaveProperty('input_vars');
-    expect(item.evaluator).not.toHaveProperty('output_vars');
+    expect(item).not.toHaveProperty('evaluator');
   });
 
   test('drops the members the listing does not show', () => {
@@ -88,13 +81,14 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     const item = toPipelineListItem(aggregatePipeline);
 
     expect(item.kind).toBe(PipelineKind.Aggregate);
-    expect(item.evaluator).toBeUndefined();
     expect(item.evaluator_name).toBeUndefined();
-    expect(item.grain_key).toBeUndefined();
-    expect(item.version_column).toBeUndefined();
+    expect(item.evaluator_version).toBeUndefined();
   });
 
-  test('carries an absent version column through as undefined', () => {
-    expect(toPipelineListItem({ ...enrichPipeline, version_column: undefined }).version_column).toBeUndefined();
+  test('carries no resolved-only member, which no column reads', () => {
+    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+
+    expect(item.grain_key).toBeUndefined();
+    expect(item.version_column).toBeUndefined();
   });
 });

@@ -21,7 +21,7 @@ const evaluator: Evaluator = {
   type: EvaluatorType.Llm,
   preset: EvaluatorPreset.ChatCompletion,
   model: 'gemini-2.5-flash-lite',
-  output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic' }],
+  outputs: [{ name: 'topic', prose: 'One to three lowercase words.' }],
 };
 
 const renderView = () =>
@@ -58,15 +58,12 @@ describe('EvaluatorDetailView — a caller without full-admin rights', () => {
     expect(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.Model)).toBeDisabled();
   });
 
-  test('cannot add a variable', () => {
+  test('cannot add an output', () => {
     isFullAdmin.value = false;
     renderView();
 
-    // Disabled rather than hidden: the spec keeps the whole surface visible and inert. Both the input and
-    // the output editors carry one, and neither may be usable.
-    const addButtons = screen.getAllByRole('button', { name: AnalyticsEvaluatorsI18nKey.AddVariable });
-    expect(addButtons).toHaveLength(2);
-    addButtons.forEach((button) => expect(button).toBeDisabled());
+    // Disabled rather than hidden: the spec keeps the whole surface visible and inert.
+    expect(screen.getByRole('button', { name: AnalyticsEvaluatorsI18nKey.AddOutput })).toBeDisabled();
   });
 
   test('is offered no save', () => {

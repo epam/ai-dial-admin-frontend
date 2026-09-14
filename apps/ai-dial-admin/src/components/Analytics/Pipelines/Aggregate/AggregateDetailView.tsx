@@ -3,6 +3,7 @@ import { FC } from 'react';
 import AggregateSection from '@/src/components/Analytics/Pipelines/Aggregate/AggregateSection';
 import { useAggregateForm } from '@/src/components/Analytics/Pipelines/Aggregate/use-aggregate-form';
 import PipelineDetailFrame from '@/src/components/Analytics/Pipelines/Common/PipelineDetailFrame';
+import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
 import { Pipeline } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 interface Props {
@@ -15,6 +16,7 @@ const AggregateDetailView: FC<Props> = ({ pipeline, takenTargets, functions = []
   return (
     <PipelineDetailFrame pipeline={pipeline} form={form}>
       <AggregateSection form={form} functions={functions} />
+      <PipelineStateSection state={pipeline.state} />
     </PipelineDetailFrame>
   );
 };

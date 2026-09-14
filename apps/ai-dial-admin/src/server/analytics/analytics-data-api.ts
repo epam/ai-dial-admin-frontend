@@ -14,12 +14,14 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { Evaluator, EvaluatorRequest, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import {
   CreatePipelineDto,
   Pipeline,
+  PipelineEnabledDto,
   PipelineEnabledFilter,
   PipelineReadResult,
+  PipelineView,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
 import {
@@ -61,6 +63,10 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
+// The service's default projection omits everything it resolved — the inlined evaluator, the grain key,
+// the version column, the output mapping and the read source — and this console renders all of them.
+export const PIPELINE_READ_URL = (name: string): string => `${PIPELINE_URL(name)}?view=${PipelineView.Compiled}`;
+
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   const params = new URLSearchParams();
 
@@ -68,9 +74,9 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.enabled === PipelineEnabledFilter.Enabled) params.set('enabled', 'true');
   if (filters?.enabled === PipelineEnabledFilter.Disabled) params.set('enabled', 'false');
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
+  params.set('view', PipelineView.Compiled);
 
-  const query = params.toString();
-  return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
+  return `${PIPELINES_URL}?${params.toString()}`;
 };
 
 const readResult = <T>(res: unknown, unwrap: (value: unknown) => T | null): PipelineReadResult<T> =>
@@ -205,7 +211,7 @@ export class AnalyticsDataApi extends BaseApi {
   }
 
   async getPipeline(name: string, token: Token): Promise<PipelineReadResult<Pipeline>> {
-    const res = (await this.get<Pipeline>(PIPELINE_URL(name), token)) as Pipeline | null | undefined;
+    const res = (await this.get<Pipeline>(PIPELINE_READ_URL(name), token)) as Pipeline | null | undefined;
     return readResult(res, (value) => (value as Pipeline) ?? null);
   }
 
@@ -213,8 +219,14 @@ export class AnalyticsDataApi extends BaseApi {
     return this.postAction<CreatePipelineDto>(PIPELINES_URL, dto, token);
   }
 
-  updatePipeline(name: string, dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
-    return this.patchAction<CreatePipelineDto>(PIPELINE_URL(name), dto, token);
+  // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
+  // answers 409 for; `PipelineEnabledDto` is how the toggle stays a state change.
+  updatePipeline(
+    name: string,
+    dto: CreatePipelineDto | PipelineEnabledDto,
+    token: Token,
+  ): Promise<ServerActionResponse> {
+    return this.patchAction<CreatePipelineDto | PipelineEnabledDto>(PIPELINE_URL(name), dto, token);
   }
 
   deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
@@ -235,7 +247,7 @@ export class AnalyticsDataApi extends BaseApi {
   }
 
   // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
-  createEvaluator(dto: CreateEvaluatorDto, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    return this.postAction<CreateEvaluatorDto>(EVALUATORS_URL, dto, token);
+  createEvaluator(dto: EvaluatorRequest, token: Token): Promise<ServerActionResponse<Evaluator>> {
+    return this.postAction<EvaluatorRequest>(EVALUATORS_URL, dto, token);
   }
 }

@@ -1,9 +1,7 @@
 'use client';
 
-import {
-  getBindingRowError,
-  hasBlockingBindingError,
-} from '@/src/components/Analytics/Pipelines/Enrich/output-bindings';
+import { useEffect } from 'react';
+
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { Pipeline } from '@/src/models/analytics/pipeline';
@@ -17,20 +15,27 @@ interface Params {
 
 export const useEnrichForm = (params: Params = {}) => {
   const base = usePipelineForm(params);
-  const { draft, evaluator, target, targetColumns, outputVars } = base;
+  const { draft, evaluator, target, replaceDraft } = base;
 
-  const boundOutputs = (Array.isArray(draft.output_bindings) ? draft.output_bindings : []).filter(
-    (binding) => Boolean(binding) && typeof binding === 'object',
-  );
+  // A sql evaluator renders no request, so the service refuses a pipeline that declares vars at all. Which
+  // type was picked is known only once the evaluator resolves, so the declaration goes then rather than
+  // when the name is chosen — otherwise what the hidden editor left behind would reach the service as a 422.
+  useEffect(() => {
+    if (evaluator?.type !== EvaluatorType.Sql) return;
 
-  const isSamplingValid = draft.sampling == null || (draft.sampling >= 0 && draft.sampling <= 1);
+    replaceDraft((prev) => {
+      if (!prev.vars) return prev;
+      const next = { ...prev };
+      delete next.vars;
+      return next;
+    });
+  }, [evaluator?.type, replaceDraft]);
 
-  const hasStrandedBinding = boundOutputs.some((binding) =>
-    hasBlockingBindingError(getBindingRowError({ id: binding.column, ...binding }, targetColumns, outputVars)),
-  );
-
-  const isSqlWithoutBindings = evaluator?.type === EvaluatorType.Sql && boundOutputs.length === 0;
-  const isLlmWithoutBindings = evaluator?.type === EvaluatorType.Llm && boundOutputs.length === 0;
+  // The one knob the console validates: the service refuses zero outright, naming `enabled: false` as how
+  // a pipeline that evaluates nothing is declared, and refuses a value above 1 rather than reading it as a
+  // percentage.
+  const sampleFraction = draft.advanced?.sample_fraction;
+  const isSampleFractionValid = sampleFraction == null || (sampleFraction > 0 && sampleFraction <= 1);
 
   const isEvaluatorResolved =
     Boolean(evaluator) && !base.isEvaluatorPending && !base.hasEvaluatorError && Boolean(target);
@@ -40,18 +45,13 @@ export const useEnrichForm = (params: Params = {}) => {
     Boolean(draft.evaluator_name) &&
     draft.enabled != null &&
     isEvaluatorResolved &&
-    !isSqlWithoutBindings &&
-    !hasStrandedBinding &&
-    isSamplingValid;
+    isSampleFractionValid;
 
   return {
     ...base,
     isValid,
-    isSamplingValid,
-    isSqlWithoutBindings,
-    isLlmWithoutBindings,
-    hasStrandedBinding,
-    isBindingsReady: Boolean(evaluator && target),
+    isSampleFractionValid,
+    isVariablesReady: Boolean(evaluator && base.readSource),
   };
 };
 
