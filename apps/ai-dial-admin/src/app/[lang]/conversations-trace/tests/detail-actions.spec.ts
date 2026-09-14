@@ -319,7 +319,7 @@ describe('getConversationSpans', () => {
 describe('getHopBodyGrants', () => {
   test('answers from the entity schema without issuing any query', async () => {
     getEntitySchema().mockResolvedValue({
-      fields: [{ name: 'request_body' }, { name: 'response_body' }],
+      fields: [{ name: 'dial_usage_log_payload.request_body' }, { name: 'dial_usage_log_payload.response_body' }],
     });
 
     const result = await getHopBodyGrants();

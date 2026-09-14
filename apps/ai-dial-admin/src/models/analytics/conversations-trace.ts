@@ -419,6 +419,10 @@ export enum UsageLogField {
   RequestBodyBytes = 'request_body_bytes',
   ResponseBodyBytes = 'response_body_bytes',
   ReasoningTokens = 'reasoning_tokens',
+  // The column's own name, never the address it is published at. The service moved these three into the
+  // `dial_usage_log_payload` enrichment and now publishes them qualified by it, but an older instance
+  // publishes them bare — so the grant resolves each against the fetched schema by column name rather than
+  // by exact spelling, and the read selects whichever name that instance answered with.
   RequestBody = 'request_body',
   ResponseBody = 'response_body',
   // A later addition to the hop log: an instance predating it does not persist the column, so it is named
@@ -796,6 +800,16 @@ export interface HopToolCall {
   id: string | null;
 }
 
+// What the messages dialect's response carries, read from whichever of its two recorded forms the hop stored.
+// The two forms differ only in how the same three facts are spelled, so they reduce to one shape here rather
+// than at each call site.
+export interface HopMessagesResponse {
+  text: string | null;
+  toolCalls: HopToolCall[];
+  // This dialect's spelling of the finish reason.
+  stopReason: string | null;
+}
+
 // One call a message answers, with the tool it belongs to. Kept as a pair rather than as two parallel lists:
 // an id whose call is not in this request resolves to no name, and two lists would then be a different length
 // and silently pair the wrong result with the wrong tool.
@@ -883,14 +897,10 @@ export interface HopResponseEnvelope {
   state: HopReadState;
   text: string | null;
   textClamp: HopClamp;
-  // Stated separately from the answer, never merged into it: 54% of Responses hops record a reasoning
-  // summary, and reading it as the reply would misattribute the model's own scratch work.
   reasoningText: string | null;
   finishReason: string | null;
-  // The calls this response asked for, with their arguments and the ids the next request's results quote
-  // back. The arguments are carried rather than the names alone, because they are the one fact that says
-  // what the model actually asked the tool to do.
   toolCalls: HopToolCall[];
+  errorText: string | null;
   facts: HopResponseFacts;
   recordedBytes: number | null;
 }
@@ -956,7 +966,11 @@ export interface HopBodyGrants {
 }
 
 export interface HopBodyFields extends HopBodyGrants {
-  responseFields: UsageLogField[];
+  // The names this instance publishes the columns under, resolved from its own schema — qualified by the
+  // enrichment that holds them where it reports them that way, bare where it does not. Held rather than
+  // recomputed so the read selects exactly what the grant matched.
+  requestField: string | null;
+  responseFields: string[];
 }
 
 export interface ConversationEntryBodyRow {

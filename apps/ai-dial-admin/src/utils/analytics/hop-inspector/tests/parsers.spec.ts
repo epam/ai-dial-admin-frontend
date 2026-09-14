@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest';
 
 import { MessageRole } from '@/src/models/analytics/conversations-trace';
 import { chatCompletionsMessagesOf } from '@/src/utils/analytics/hop-inspector/chat-completions';
-import { messagesDialectMessagesOf } from '@/src/utils/analytics/hop-inspector/messages';
+import {
+  NO_MESSAGES_RESPONSE,
+  messagesDialectMessagesOf,
+  messagesMergedResponseOf,
+  messagesStreamedResponseOf,
+} from '@/src/utils/analytics/hop-inspector/messages';
 
 describe('chatCompletionsMessagesOf', () => {
   const body = {
@@ -192,5 +197,99 @@ describe('messagesDialectMessagesOf', () => {
     };
 
     expect(messagesDialectMessagesOf(quoted).map(({ role }) => role)).toEqual([MessageRole.User]);
+  });
+});
+
+describe('messagesMergedResponseOf', () => {
+  const merged = {
+    type: 'message',
+    role: 'assistant',
+    content: [
+      { type: 'text', text: 'Security review complete.' },
+      { type: 'tool_use', id: 'tu1', name: 'grep', input: { pattern: 'role' } },
+    ],
+    stop_reason: 'end_turn',
+  };
+
+  test('reads the answer from the content blocks', () => {
+    expect(messagesMergedResponseOf(merged).text).toBe('Security review complete.');
+  });
+
+  test('states a tool-use block as a call, with its arguments and id', () => {
+    expect(messagesMergedResponseOf(merged).toolCalls).toEqual([
+      { name: 'grep', args: JSON.stringify({ pattern: 'role' }, null, 2), id: 'tu1' },
+    ]);
+  });
+
+  test('reads the finish reason under this dialect spelling', () => {
+    expect(messagesMergedResponseOf(merged).stopReason).toBe('end_turn');
+  });
+
+  // The output was the call; a response read as empty here would report the hop as having recorded nothing.
+  test('states a response whose only output was a call', () => {
+    const response = messagesMergedResponseOf({ content: [{ type: 'tool_use', id: 't', name: 'ls', input: {} }] });
+
+    expect(response.text).toBeNull();
+    expect(response.toolCalls).toHaveLength(1);
+  });
+
+  // Thinking is not the answer, and this change does not state it separately — so it yields no text rather
+  // than being merged into the reply.
+  test('yields no text for a response of thinking blocks alone', () => {
+    expect(messagesMergedResponseOf({ content: [{ type: 'thinking', thinking: 'weighing it' }] }).text).toBeNull();
+  });
+
+  test('yields nothing for a value that is not a message', () => {
+    expect(messagesMergedResponseOf('not a message')).toEqual(NO_MESSAGES_RESPONSE);
+  });
+});
+
+describe('messagesStreamedResponseOf', () => {
+  const frames = [
+    { type: 'message_start', message: { role: 'assistant', content: [] } },
+    { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+    { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'We' } },
+    { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: "'re exploring" } },
+    { type: 'content_block_stop', index: 0 },
+    { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 47 } },
+    { type: 'message_stop' },
+  ];
+
+  test('concatenates the text fragments in arrival order', () => {
+    expect(messagesStreamedResponseOf(frames).text).toBe("We're exploring");
+  });
+
+  test('reads the finish reason from the message-delta frame', () => {
+    expect(messagesStreamedResponseOf(frames).stopReason).toBe('end_turn');
+  });
+
+  // Two calls streaming interleaved: keyed by block index, their argument fragments cannot splice together.
+  test('accumulates each call arguments under its own block index', () => {
+    const calls = messagesStreamedResponseOf([
+      { type: 'content_block_start', index: 0, content_block: { type: 'tool_use', id: 'a', name: 'read' } },
+      { type: 'content_block_start', index: 1, content_block: { type: 'tool_use', id: 'b', name: 'write' } },
+      { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: '{"path":' } },
+      { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"path":"b"}' } },
+      { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: '"a"}' } },
+    ]).toolCalls;
+
+    expect(calls).toEqual([
+      { name: 'read', args: JSON.stringify({ path: 'a' }, null, 2), id: 'a' },
+      { name: 'write', args: JSON.stringify({ path: 'b' }, null, 2), id: 'b' },
+    ]);
+  });
+
+  // A body cut mid-call: the fragment is what the model was asking for, so it is stated as recorded.
+  test('states a truncated argument fragment as recorded', () => {
+    const [call] = messagesStreamedResponseOf([
+      { type: 'content_block_start', index: 0, content_block: { type: 'tool_use', id: 'a', name: 'read' } },
+      { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: '{"path":' } },
+    ]).toolCalls;
+
+    expect(call.args).toBe('{"path":');
+  });
+
+  test('yields nothing for frames carrying no content', () => {
+    expect(messagesStreamedResponseOf([{ type: 'ping' }, 'not a frame'])).toEqual(NO_MESSAGES_RESPONSE);
   });
 });

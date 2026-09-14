@@ -6,9 +6,16 @@ import {
   HopReadState,
   HopResponseEnvelope,
   HopResponseFacts,
+  HopMessagesResponse,
   HopToolCall,
 } from '@/src/models/analytics/conversations-trace';
 import { assistantTextOf, sseFrames, toolCallRequestsOf } from '@/src/utils/analytics/conversation-bodies';
+import { errorMessageIn } from '@/src/utils/analytics/hop-inspector/failure';
+import {
+  NO_MESSAGES_RESPONSE,
+  messagesMergedResponseOf,
+  messagesStreamedResponseOf,
+} from '@/src/utils/analytics/hop-inspector/messages';
 import {
   clampToBudget,
   isRecord,
@@ -42,25 +49,58 @@ interface ResponseSource {
   // reaching for it.
   raw: string;
   framesOf: () => unknown[];
+  // The recorded body parsed as one object, for the readers that want it whole rather than frame by frame.
+  // Memoised with the frames and for the same reason: four call sites want it, and the doc above is only
+  // true if none of them re-parses 52.8 KB on its own.
+  parsedRawOf: () => unknown;
+  // The assembled column holds a frame transcript on roughly one response in twelve, concentrated in the
+  // `mcp` and messages-dialect traffic. Reading that column as merged JSON alone reports those hops as empty
+  // while the whole answer sits in it.
+  assembledFramesOf: () => unknown[];
 }
+
+const framesReaderOf = (raw: string): (() => unknown[]) => {
+  let frames: unknown[] | null = null;
+
+  return () => (frames ??= raw ? sseFrames(raw).map(parseJson) : []);
+};
 
 const sourceOf = (row: ConversationEntryBodyRow): ResponseSource => {
   const raw = row.response_body?.trim() ?? '';
-  let frames: unknown[] | null = null;
+  const assembledRaw = row.assembled_response?.trim() ?? '';
+
+  let parsedRaw: unknown;
+  let hasParsedRaw = false;
 
   return {
-    assembled: parseJson(row.assembled_response ?? null),
+    assembled: parseJson(assembledRaw || null),
     raw,
-    framesOf: () => (frames ??= raw ? sseFrames(raw).map(parseJson) : []),
+    framesOf: framesReaderOf(raw),
+    parsedRawOf: () => {
+      if (!hasParsedRaw) {
+        parsedRaw = parseJson(raw || null);
+        hasParsedRaw = true;
+      }
+
+      return parsedRaw;
+    },
+    assembledFramesOf: framesReaderOf(assembledRaw),
   };
 };
 
+// Read under both spellings for the same reason the token counts are: a fact read under one dialect's key
+// alone is silently absent for every hop of the other, which is indistinguishable from a call that reported
+// none.
 const finishReasonIn = (parsed: unknown): string | null => {
-  if (!isRecord(parsed) || !Array.isArray(parsed.choices)) {
+  if (!isRecord(parsed)) {
     return null;
   }
 
-  const [choice] = parsed.choices;
+  if (typeof parsed.stop_reason === 'string') {
+    return parsed.stop_reason;
+  }
+
+  const [choice] = Array.isArray(parsed.choices) ? parsed.choices : [];
 
   return isRecord(choice) && typeof choice.finish_reason === 'string' ? choice.finish_reason : null;
 };
@@ -68,7 +108,7 @@ const finishReasonIn = (parsed: unknown): string | null => {
 // Falls back to the recorded body for the same reason the text does: the assembled column is a later addition
 // to the hop log, and an instance predating it carries the finish reason only in the raw response.
 const finishReasonOf = (source: ResponseSource): string | null =>
-  finishReasonIn(source.assembled) ?? finishReasonIn(parseJson(source.raw || null));
+  finishReasonIn(source.assembled) ?? finishReasonIn(source.parsedRawOf());
 
 interface DecodedResponse {
   text: string | null;
@@ -103,7 +143,56 @@ const responsesShapeOf = (source: ResponseSource): DecodedResponse => {
     return fromAssembled;
   }
 
-  return decodeResponsesShape(responsesCompletedFrameOf(source.framesOf()) ?? parseJson(source.raw));
+  return decodeResponsesShape(responsesCompletedFrameOf(source.framesOf()) ?? source.parsedRawOf());
+};
+
+// Neither form of this dialect restates the other: the merged message carries the answer in typed blocks, and
+// the stream carries it only as the fragments that concatenate into it. Both columns can hold either form, so
+// all four combinations are tried before the hop is called empty — a call with no text still counts as
+// content, exactly as a Responses hop that called a tool and said nothing does.
+const hasMessagesContent = ({ text, toolCalls }: HopMessagesResponse): boolean => text !== null || toolCalls.length > 0;
+
+const messagesResponseOf = (source: ResponseSource): HopMessagesResponse => {
+  const candidates = [
+    () => messagesMergedResponseOf(source.assembled),
+    () => messagesStreamedResponseOf(source.assembledFramesOf()),
+    () => (source.raw ? messagesStreamedResponseOf(source.framesOf()) : null),
+    () => (source.raw ? messagesMergedResponseOf(source.parsedRawOf()) : null),
+  ];
+
+  // The finish reason is kept across candidates rather than taken from the one that answered: a stream whose
+  // blocks were all thinking carries `stop_reason` in its `message_delta` frame and no content at all, so the
+  // candidate that found it is discarded for having nothing to show — and the fact would go with it.
+  let stopReason: string | null = null;
+
+  for (const read of candidates) {
+    const decoded = read();
+
+    if (decoded === null) {
+      continue;
+    }
+
+    stopReason ??= decoded.stopReason;
+
+    if (hasMessagesContent(decoded)) {
+      return { ...decoded, stopReason: decoded.stopReason ?? stopReason };
+    }
+  }
+
+  return { ...NO_MESSAGES_RESPONSE, stopReason };
+};
+
+const messagesShapeOf = (source: ResponseSource): DecodedResponse => {
+  const decoded = messagesResponseOf(source);
+
+  return {
+    text: decoded.text,
+    // Thinking blocks are this dialect's reasoning, and stating them separately is its own change: merged
+    // into the answer they would misattribute the model's scratch work as its reply.
+    reasoningText: null,
+    status: decoded.stopReason ?? finishReasonOf(source),
+    toolCalls: decoded.toolCalls,
+  };
 };
 
 const chatShapeOf = (row: ConversationEntryBodyRow, source: ResponseSource): DecodedResponse => ({
@@ -142,7 +231,8 @@ const numberIn = (source: Record<string, unknown> | null, ...keys: string[]): nu
 const cachedTokensIn = (usage: Record<string, unknown> | null): number | null => {
   const details = [usage?.prompt_tokens_details, usage?.input_tokens_details].find(isRecord) ?? null;
 
-  return numberIn(details, 'cached_tokens');
+  // The messages dialect states the cache read directly in `usage`, with no details member to look under.
+  return numberIn(usage, 'cache_read_input_tokens') ?? numberIn(details, 'cached_tokens');
 };
 
 const factsIn = (parsed: unknown): HopResponseFacts => {
@@ -161,6 +251,24 @@ const factsIn = (parsed: unknown): HopResponseFacts => {
   };
 };
 
+// A stream states its facts across two frames rather than in one: the opening frame names the model and the
+// response, and a later frame reports the usage. Reading only the frame that carries usage would leave every
+// streamed hop of the messages dialect without a model on its facts line.
+const frameFactsOf = (frames: unknown[], source: ResponseSource): HopResponseFacts => {
+  const records = frames.filter(isRecord);
+  const opening = factsIn(records.find((frame) => isRecord(frame.message))?.message ?? null);
+  const withUsage = records.findLast((frame) => isRecord(frame.usage));
+  const closing = factsIn(withUsage ?? responsesCompletedFrameOf(frames) ?? source.parsedRawOf());
+
+  return {
+    model: closing.model ?? opening.model,
+    completionId: closing.completionId ?? opening.completionId,
+    promptTokens: closing.promptTokens ?? opening.promptTokens,
+    completionTokens: closing.completionTokens ?? opening.completionTokens,
+    cachedTokens: closing.cachedTokens ?? opening.cachedTokens,
+  };
+};
+
 // The facts are read from whichever source the text came from, and a stream carries its usage in a late
 // frame rather than in the first: the frame that reports one is the frame that has them. A body that never
 // reported usage yields no facts rather than zeros, because a zero here would read as a call that used no
@@ -176,10 +284,7 @@ const factsOf = (source: ResponseSource): HopResponseFacts => {
     return fromAssembled;
   }
 
-  const frames = source.framesOf();
-  const withUsage = frames.filter(isRecord).findLast((frame) => isRecord(frame.usage));
-
-  return factsIn(withUsage ?? responsesCompletedFrameOf(frames) ?? parseJson(source.raw));
+  return frameFactsOf(source.framesOf(), source);
 };
 
 // Assembled is what the client received, and it is read from the assembled column wherever the caller's
@@ -191,9 +296,20 @@ const factsOf = (source: ResponseSource): HopResponseFacts => {
 const emptyStateOf = (recordedBytes: number | null): HopReadState =>
   (recordedBytes ?? 0) > 0 ? HopReadState.Unstructured : HopReadState.NoBody;
 
+// One mapping from dialect to decoder, for the same reason the request side has one: a dialect parsed on one
+// half of a hop and fallen through on the other opens the hop, renders its history, and reports its answer as
+// absent while the answer sits in the recorded body one tab away.
+const shapeOf = (dialect: HopDialect, row: ConversationEntryBodyRow, source: ResponseSource): DecodedResponse => {
+  if (dialect === HopDialect.Responses) {
+    return responsesShapeOf(source);
+  }
+
+  return dialect === HopDialect.Messages ? messagesShapeOf(source) : chatShapeOf(row, source);
+};
+
 export const responseEnvelopeOf = (row: ConversationEntryBodyRow, dialect: HopDialect): HopResponseEnvelope => {
   const source = sourceOf(row);
-  const decoded = dialect === HopDialect.Responses ? responsesShapeOf(source) : chatShapeOf(row, source);
+  const decoded = shapeOf(dialect, row, source);
   const { status, toolCalls } = decoded;
   const text = withoutBlankEdges(decoded.text);
   const reasoningText = withoutBlankEdges(decoded.reasoningText);
@@ -211,6 +327,7 @@ export const responseEnvelopeOf = (row: ConversationEntryBodyRow, dialect: HopDi
     reasoningText,
     finishReason: status,
     toolCalls,
+    errorText: errorMessageIn(source.assembled) ?? errorMessageIn(source.parsedRawOf()),
     facts: factsOf(source),
     recordedBytes,
   };

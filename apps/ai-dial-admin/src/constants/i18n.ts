@@ -3137,6 +3137,7 @@ export enum ConversationsTraceI18nKey {
   InspectorChatLabel = 'ConversationsTrace.InspectorChatLabel',
   InspectorChatNoMessages = 'ConversationsTrace.InspectorChatNoMessages',
   InspectorChatAnswerWithheld = 'ConversationsTrace.InspectorChatAnswerWithheld',
+  InspectorChatHopFailed = 'ConversationsTrace.InspectorChatHopFailed',
   BodiesSplitLabel = 'ConversationsTrace.BodiesSplitLabel',
   SpanLlm = 'ConversationsTrace.SpanLlm',
   SpanEmbeddings = 'ConversationsTrace.SpanEmbeddings',
