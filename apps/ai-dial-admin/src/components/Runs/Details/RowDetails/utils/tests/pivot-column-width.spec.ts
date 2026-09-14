@@ -8,6 +8,7 @@ import {
   ROW_DETAIL_PIVOT_RUN_NUMBER_COL_WIDTH,
   ROW_DETAIL_PIVOT_SCORE_COL_WIDTH,
   ROW_DETAIL_PIVOT_STATUS_COL_WIDTH,
+  ROW_DETAIL_PIVOT_TEXT_COL_WIDTH,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField, PivotColumnWidthTier } from '@/src/components/Runs/Details/RowDetails/models';
 import { PivotColumn } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
@@ -51,8 +52,12 @@ describe('resolvePivotFieldWidthTier', () => {
     expect(resolvePivotFieldWidthTier(field('equality', { isScoreIndicator: true }))).toBe(PivotColumnWidthTier.Score);
   });
 
-  test('falls back to default tier for text fields', () => {
-    expect(resolvePivotFieldWidthTier(field('answer'))).toBe(PivotColumnWidthTier.Default);
+  test('maps non-numeric fields to the text tier', () => {
+    expect(resolvePivotFieldWidthTier(field('answer'))).toBe(PivotColumnWidthTier.Text);
+  });
+
+  test('falls back to default tier for numeric non-score fields', () => {
+    expect(resolvePivotFieldWidthTier(field('exact_match', { isNumeric: true }))).toBe(PivotColumnWidthTier.Default);
   });
 });
 
@@ -65,7 +70,10 @@ describe('resolvePivotFieldColumnWidth', () => {
     expect(resolvePivotFieldColumnWidth(field('equality', { isScoreIndicator: true }))).toBe(
       ROW_DETAIL_PIVOT_SCORE_COL_WIDTH,
     );
-    expect(resolvePivotFieldColumnWidth(field('answer'))).toBe(ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH);
+    expect(resolvePivotFieldColumnWidth(field('answer'))).toBe(ROW_DETAIL_PIVOT_TEXT_COL_WIDTH);
+    expect(resolvePivotFieldColumnWidth(field('exact_match', { isNumeric: true }))).toBe(
+      ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH,
+    );
   });
 });
 

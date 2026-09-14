@@ -88,7 +88,7 @@ const llm: Evaluator = {
   preset: EvaluatorPreset.ChatCompletion,
   model: 'gemini-2.5-flash-lite',
   params: { max_tokens: 700 },
-  output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic' }],
+  outputs: [{ name: 'topic', prose: 'One to three lowercase words.' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -156,14 +156,14 @@ describe('EvaluatorDetailView — entering the JSON editor', () => {
     expect(mocks.editorProps.current.entity).toMatchObject({ name: llm.name, model: llm.model });
   });
 
-  test('the JSON leaves out the fields the service assigns itself', async () => {
+  test('the JSON is the version as served, the fields the service assigns included', async () => {
     const user = userEvent.setup();
     renderView();
 
     await enableEditor(user);
 
-    expect(mocks.editorProps.current.entity).not.toHaveProperty('version');
-    expect(mocks.editorProps.current.entity).not.toHaveProperty('created_at');
+    expect(mocks.editorProps.current.entity).toHaveProperty('version');
+    expect(mocks.editorProps.current.entity).toHaveProperty('created_at');
   });
 
   test('the name is protected from edits in the editor', async () => {

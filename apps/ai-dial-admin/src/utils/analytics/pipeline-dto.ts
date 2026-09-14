@@ -15,30 +15,22 @@ interface Context {
   sourceTable?: string;
 }
 
+// Everything the compiled projection resolves. Sending any of it back would re-declare a derived value
+// as an authored one — `outputs` most of all, which the service owns outright.
 const READ_ONLY_MEMBERS: (keyof Pipeline)[] = [
   'evaluator',
   'grain_key',
   'version_column',
+  'outputs',
   'generation',
   'created_at',
   'updated_at',
   'state',
 ];
 
-const ENRICH_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = [
-  'evaluator_name',
-  'evaluator_version',
-  'input_bindings',
-  'output_bindings',
-  'sampling',
-  'cadence',
-  'batch_scan_limit',
-  'batch_chunk',
-  'rate_rpm',
-  'priority',
-];
+const ENRICH_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['evaluator_name', 'evaluator_version', 'vars', 'advanced'];
 
-const AGGREGATE_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures', 'freshness'];
+const AGGREGATE_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures'];
 
 export const getReadOnlyMembers = (): string[] => [...READ_ONLY_MEMBERS];
 
@@ -120,11 +112,17 @@ const compactMemberSelect = (memberSelect?: MemberSelect): MemberSelect | undefi
   };
 };
 
+const isEmptyObject = (value: unknown): boolean =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0;
+
 // A cleared knob must vanish rather than arrive as `0` or `''` — zero is a meaningful value for several.
+// An emptied `advanced` or `vars` goes the same way: the service reads an absent block as "the runner's
+// own defaults", which an empty object does not say.
 const dropEmptyMembers = (dto: Record<string, unknown>): void => {
   Object.keys(dto).forEach((key) => {
     const value = dto[key];
-    const isEmpty = value == null || value === '' || (Array.isArray(value) && value.length === 0);
+    const isEmpty =
+      value == null || value === '' || (Array.isArray(value) && value.length === 0) || isEmptyObject(value);
     if (isEmpty) delete dto[key];
   });
 };

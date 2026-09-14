@@ -488,7 +488,14 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       const url = fetch.mock.calls[0][0] as string;
       expect(url).not.toContain('enabled');
-      expect(url).not.toContain('?');
+    });
+
+    test('getPipelines asks for the compiled projection', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('view=compiled');
     });
 
     test('getPipelines sends enabled=true for the enabled-only filter', async () => {
@@ -553,7 +560,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       expect(res).toEqual({ data: pipeline, isForbidden: false });
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/pipelines/turn%20feedback'),
+        expect.stringContaining('/v1/pipelines/turn%20feedback?view=compiled'),
         expect.objectContaining({ method: 'GET' }),
       );
     });

@@ -33,4 +33,5 @@ export enum PivotColumnWidthTier {
   Duration = 'duration',
   Score = 'score',
   Default = 'default',
+  Text = 'text',
 }

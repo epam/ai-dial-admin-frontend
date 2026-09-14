@@ -11,10 +11,10 @@ export const useAggregateForm = (params: Params = {}) => {
   const base = usePipelineForm(params);
   const { draft } = base;
   const hasInput = Boolean(draft.inputs?.length);
-  const hasGroupKeys = Boolean(draft.group_by?.length);
   const hasMeasures = Boolean(draft.measures?.length);
   const hasDistinctWithoutColumn = Boolean(draft.measures?.some((measure) => measure.distinct && !measure.column));
-  const isValid = base.isSharedValid && hasInput && hasGroupKeys && hasMeasures && !hasDistinctWithoutColumn;
-  return { ...base, isValid, hasInput, hasGroupKeys, hasMeasures, hasDistinctWithoutColumn };
+  // Group keys are optional: absent, the service derives them from the target's ordering key.
+  const isValid = base.isSharedValid && hasInput && hasMeasures && !hasDistinctWithoutColumn;
+  return { ...base, isValid, hasInput, hasMeasures, hasDistinctWithoutColumn };
 };
 export type AggregateFormState = ReturnType<typeof useAggregateForm>;

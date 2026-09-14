@@ -36,6 +36,8 @@ interface Props {
   metricGroupOrder?: readonly string[];
   fieldSchema?: RowDetailFieldSchema;
   className?: string;
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
 }
 
 const ExecutionRowDetailBottomPanel: FC<Props> = ({
@@ -46,13 +48,15 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   metricGroupOrder = [],
   fieldSchema,
   className,
+  initialDisplayTree,
+  onDisplayTreeChange,
 }) => {
   const t = useI18n();
   const [detail, setDetail] = useState<AnalyticsResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
-  const [displayTree, setDisplayTree] = useState<ColDef[]>([]);
+  const [displayTree, setDisplayTree] = useState<ColDef[]>(() => initialDisplayTree ?? []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -97,6 +101,13 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
     }
     setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev, EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS));
   }, [sections]);
+
+  useEffect(() => {
+    if (displayTree.length === 0) {
+      return;
+    }
+    onDisplayTreeChange?.(displayTree);
+  }, [displayTree, onDisplayTreeChange]);
 
   const displaySections = useMemo(() => applyRowDetailDisplayTree(sections, displayTree), [sections, displayTree]);
 

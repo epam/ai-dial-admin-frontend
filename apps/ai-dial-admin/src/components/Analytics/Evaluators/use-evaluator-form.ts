@@ -2,9 +2,14 @@
 
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { CreateEvaluatorDto, Evaluator, EvaluatorRequest, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { buildEvaluatorDto, isEvaluatorShapeValid, toEvaluatorDraft } from '@/src/utils/analytics/evaluator-dto';
+import {
+  applyTypeChange,
+  buildEvaluatorDto,
+  isEvaluatorShapeValid,
+  toEvaluatorDraft,
+} from '@/src/utils/analytics/evaluator-dto';
 
 interface Params {
   evaluator: Evaluator;
@@ -18,14 +23,17 @@ export interface EvaluatorFormState {
   reset: () => void;
   isChanged: boolean;
   isValid: boolean;
-  buildDto: () => CreateEvaluatorDto;
+  buildDto: () => EvaluatorRequest;
   nextVersion: number | null;
 }
 
 export const useEvaluatorForm = ({ evaluator, summary }: Params): EvaluatorFormState => {
   const [draft, setDraft] = useState<CreateEvaluatorDto>(() => toEvaluatorDraft(evaluator));
 
-  const onChange = useCallback((patch: Partial<CreateEvaluatorDto>) => setDraft((prev) => ({ ...prev, ...patch })), []);
+  const onChange = useCallback(
+    (patch: Partial<CreateEvaluatorDto>) => setDraft((prev) => ({ ...prev, ...applyTypeChange(prev, patch) })),
+    [],
+  );
 
   const reset = useCallback(() => setDraft(toEvaluatorDraft(evaluator)), [evaluator]);
 

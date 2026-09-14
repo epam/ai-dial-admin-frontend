@@ -7,7 +7,8 @@ import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-e
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelinePriority, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
@@ -76,9 +77,6 @@ const fillRequired = async (result: Form) => {
   await waitFor(() => expect(result.current.targetColumns).toHaveLength(1));
 };
 
-const bindOutput = (result: Form, column: string, varName: string) =>
-  act(() => result.current.onChange({ output_bindings: [{ column, var: varName }] }));
-
 const mockAll = () => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue(allTables);
@@ -120,8 +118,30 @@ describe('useEnrichForm — resolution', () => {
 
     act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
 
-    await waitFor(() => expect(result.current.outputVars).toHaveLength(1));
+    await waitFor(() => expect(result.current.evaluator?.name).toBe('feedback-rollup'));
     expect(getEvaluator).toHaveBeenCalledWith('feedback-rollup');
+  });
+
+  test('drops the variables once the selected evaluator resolves to sql, which declares none', async () => {
+    const { result } = renderForm({
+      initialDraft: { kind: PipelineKind.Enrich, vars: { rate: { column: 'rate' } } },
+    });
+
+    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
+
+    await waitFor(() => expect(result.current.draft.vars).toBeUndefined());
+  });
+
+  test('keeps the variables for an evaluator that resolves to llm', async () => {
+    vi.mocked(getEvaluator).mockResolvedValue(llmEvaluator);
+    const { result } = renderForm({
+      initialDraft: { kind: PipelineKind.Enrich, vars: { title: { column: 'title' } } },
+    });
+
+    act(() => result.current.onChange({ evaluator_name: 'conversation-insights' }));
+
+    await waitFor(() => expect(result.current.evaluator?.type).toBe(EvaluatorType.Llm));
+    expect(result.current.draft.vars).toEqual({ title: { column: 'title' } });
   });
 
   test('reads the pinned version when the version is no longer latest', async () => {
@@ -186,7 +206,7 @@ describe('useEnrichForm — resolution', () => {
     act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
 
     await waitFor(() => expect(result.current.hasEvaluatorError).toBe(true));
-    expect(result.current.outputVars).toEqual([]);
+    expect(result.current.evaluator).toBeNull();
     expect(result.current.isEvaluatorPending).toBe(false);
   });
 
@@ -285,7 +305,6 @@ describe('useEnrichForm — isValid', () => {
     expect(result.current.isValid).toBe(false);
 
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
 
     await waitFor(() => expect(result.current.isValid).toBe(true));
   });
@@ -293,7 +312,6 @@ describe('useEnrichForm — isValid', () => {
   test('blocks while enabled is unchosen', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     await waitFor(() => expect(result.current.isValid).toBe(true));
 
     act(() => result.current.onChange({ enabled: undefined }));
@@ -301,27 +319,16 @@ describe('useEnrichForm — isValid', () => {
     expect(result.current.isValid).toBe(false);
   });
 
-  test('blocks a sql evaluator with no output binding', async () => {
+  test('accepts a pipeline declaring no variables, whose output mapping the service derives', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    expect(result.current.isSqlWithoutBindings).toBe(true);
-    expect(result.current.isValid).toBe(false);
-  });
-
-  test('allows an llm evaluator with no output binding but warns', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(llmEvaluator);
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-
-    await waitFor(() => expect(result.current.isLlmWithoutBindings).toBe(true));
     expect(result.current.isValid).toBe(true);
   });
 
   test('blocks a schedule rule without a valid cron expression', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
 
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Schedule }));
     expect(result.current.isValid).toBe(false);
@@ -336,7 +343,6 @@ describe('useEnrichForm — isValid', () => {
   test('blocks a group rule with no readiness condition', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
 
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
     expect(result.current.isValid).toBe(false);
@@ -348,7 +354,6 @@ describe('useEnrichForm — isValid', () => {
   test('accepts a readiness signal on its own', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
 
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
     act(() => result.current.onTriggerChange({ ready_when: { signal: 'turns >= 2' } }));
@@ -359,7 +364,6 @@ describe('useEnrichForm — isValid', () => {
   test('blocks a group rule whose cost ceiling is not a positive integer', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
 
     act(() => result.current.onTriggerChange({ ready_when: { idle: '30m', cost_ceiling: 0 } }));
@@ -388,33 +392,26 @@ describe('useEnrichForm — isValid', () => {
     expect(result.current.isValid).toBe(false);
   });
 
-  test('blocks while a binding names a value the evaluator or table no longer has', async () => {
+  test('blocks a sample fraction outside the open interval the service accepts', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-
-    bindOutput(result, 'removed_column', 'rate_event_count');
-
-    expect(result.current.hasStrandedBinding).toBe(true);
-    expect(result.current.isValid).toBe(false);
-  });
-
-  test('blocks a sampling fraction outside 0 to 1', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     await waitFor(() => expect(result.current.isValid).toBe(true));
 
-    act(() => result.current.onChange({ sampling: 1.5 }));
+    act(() => result.current.onChange({ advanced: { sample_fraction: 1.5 } }));
     expect(result.current.isValid).toBe(false);
 
-    act(() => result.current.onChange({ sampling: 0.25 }));
+    // Zero is refused too: the service names `enabled: false` as how a pipeline that evaluates nothing
+    // is declared.
+    act(() => result.current.onChange({ advanced: { sample_fraction: 0 } }));
+    expect(result.current.isValid).toBe(false);
+
+    act(() => result.current.onChange({ advanced: { sample_fraction: 0.25 } }));
     expect(result.current.isValid).toBe(true);
   });
 
   test('blocks a group rule whose member selection has no limit', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
     await waitFor(() => expect(result.current.isValid).toBe(true));
 
@@ -426,7 +423,6 @@ describe('useEnrichForm — isValid', () => {
   test('ignores a stale member selection once the trigger is no longer group', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
     act(() => result.current.onTriggerChange({ member_select: { limit: 0, prefer_sql: 'x > 1' } }));
     expect(result.current.isValid).toBe(false);
@@ -440,7 +436,6 @@ describe('useEnrichForm — isValid', () => {
   test('blocks a member limit above the service ceiling', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
 
     act(() => result.current.onTriggerChange({ member_select: { limit: GROUP_FETCH_MAX_ROWS + 1 } }));
@@ -464,7 +459,6 @@ const baseRule: Pipeline = {
   generation: 7,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
-  output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
 };
 
 describe('useEnrichForm — editing an existing rule', () => {
@@ -481,7 +475,7 @@ describe('useEnrichForm — editing an existing rule', () => {
   });
 
   test('carries a member no control presents through to the saved rule', async () => {
-    const rule = { ...baseRule, filter: 'score > 0.5', cadence: 'PT1H' };
+    const rule = { ...baseRule, filter: 'score > 0.5', advanced: { scan_every: 'PT1H' } };
     const { result } = renderForm({ pipeline: rule });
     await waitFor(() => expect(result.current.targetColumns).toHaveLength(1));
 
@@ -490,14 +484,14 @@ describe('useEnrichForm — editing an existing rule', () => {
 
     expect(dto.name).toBe('renamed');
     expect(dto.filter).toBe('score > 0.5');
-    expect(dto.cadence).toBe('PT1H');
+    expect(dto.advanced?.scan_every).toBe('PT1H');
   });
 
   test('never sends a read-only member', async () => {
     const { result } = renderForm({ pipeline: baseRule });
     await waitFor(() => expect(result.current.targetColumns).toHaveLength(1));
 
-    const dto = result.current.buildDto() as Record<string, unknown>;
+    const dto = result.current.buildDto() as unknown as Record<string, unknown>;
 
     ['id', 'evaluator', 'grain_key', 'version_column', 'generation', 'created_at', 'updated_at'].forEach((key) =>
       expect(dto).not.toHaveProperty(key),
@@ -523,7 +517,6 @@ describe('useEnrichForm — buildDto', () => {
   test('sends the required five and no trigger qualifier for an on-ingest rule', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
-    bindOutput(result, 'rate_event_count', 'rate_event_count');
 
     const dto = result.current.buildDto();
 
@@ -534,7 +527,6 @@ describe('useEnrichForm — buildDto', () => {
       target: 'turn_feedback',
       trigger: { kind: TriggerKind.OnIngest },
       enabled: true,
-      output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
     });
   });
 
@@ -604,13 +596,20 @@ describe('useEnrichForm — buildDto', () => {
     expect(result.current.buildDto().trigger).not.toHaveProperty('member_select');
   });
 
-  test('omits output_bindings entirely when there are none', async () => {
+  test('sends the evaluator inputs as a map keyed by variable name', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ output_bindings: [] }));
+    act(() => result.current.onChange({ vars: { request: { column: 'request_body' } } }));
 
-    expect(result.current.buildDto()).not.toHaveProperty('output_bindings');
+    expect(result.current.buildDto().vars).toEqual({ request: { column: 'request_body' } });
+  });
+
+  test('sends no output mapping, which the service derives rather than accepts', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+    await fillRequired(result);
+
+    expect(result.current.buildDto()).not.toHaveProperty('outputs');
   });
 
   test('trims the rule name', async () => {
@@ -622,49 +621,33 @@ describe('useEnrichForm — buildDto', () => {
     expect(result.current.buildDto().name).toBe('spaced');
   });
 
-  test('omits a cleared numeric knob rather than sending zero', async () => {
+  test('sends the execution knobs nested under advanced', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ rate_rpm: 60, batch_chunk: 500 }));
-    expect(result.current.buildDto().rate_rpm).toBe(60);
+    act(() => result.current.onChange({ advanced: { scan_every: 'PT1H', rate_rpm: 60 } }));
 
-    act(() => result.current.onChange({ rate_rpm: undefined }));
-
-    const dto = result.current.buildDto();
-    expect(dto).not.toHaveProperty('rate_rpm');
-    expect(dto.batch_chunk).toBe(500);
+    expect(result.current.buildDto().advanced).toEqual({ scan_every: 'PT1H', rate_rpm: 60 });
   });
 
   test('keeps a knob deliberately set to zero', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ batch_scan_limit: 0 }));
+    act(() => result.current.onChange({ advanced: { rows_per_scan: 0 } }));
 
-    expect(result.current.buildDto().batch_scan_limit).toBe(0);
+    expect(result.current.buildDto().advanced?.rows_per_scan).toBe(0);
   });
 
-  test('round-trips priority', async () => {
+  test('drops an emptied advanced block, which means the runner defaults', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ priority: PipelinePriority.Backfill }));
-    expect(result.current.buildDto().priority).toBe(PipelinePriority.Backfill);
+    act(() => result.current.onChange({ advanced: { scan_every: 'PT1H' } }));
+    expect(result.current.buildDto().advanced?.scan_every).toBe('PT1H');
 
-    act(() => result.current.onChange({ priority: undefined }));
-    expect(result.current.buildDto()).not.toHaveProperty('priority');
-  });
-
-  test('drops a cadence cleared to an empty string', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-
-    act(() => result.current.onChange({ cadence: 'PT1H' }));
-    expect(result.current.buildDto().cadence).toBe('PT1H');
-
-    act(() => result.current.onChange({ cadence: '' }));
-    expect(result.current.buildDto()).not.toHaveProperty('cadence');
+    act(() => result.current.onChange({ advanced: {} }));
+    expect(result.current.buildDto()).not.toHaveProperty('advanced');
   });
 
   test('omits a source equal to the target enrichment default', async () => {
@@ -672,7 +655,7 @@ describe('useEnrichForm — buildDto', () => {
     await fillRequired(result);
     await waitFor(() => expect(result.current.target?.source_table).toBe('dial_usage_log'));
 
-    act(() => result.current.onChange({ inputs: 'dial_usage_log' }));
+    act(() => result.current.onChange({ inputs: ['dial_usage_log'] }));
 
     expect(result.current.buildDto()).not.toHaveProperty('source');
   });
@@ -696,13 +679,13 @@ describe('useEnrichForm — a draft that came from the JSON editor', () => {
     ['output_bindings holding a string', { output_bindings: ['abc'] }],
     ['name as a number', { name: 5 }],
     ['trigger_cron as a number on a scheduled rule', { trigger: { kind: TriggerKind.Schedule }, trigger_cron: 5 }],
-    ['input_bindings as a string', { input_bindings: 'x' }],
-    ['sampling as a string', { sampling: 'x' }],
+    ['a withdrawn member the JSON editor introduced', { output_bindings: 'x' }],
+    ['advanced as a string', { advanced: 'x' }],
   ])('reading %s neither throws nor blanks the form', (_label, patch) => {
     const { result } = renderForm({ pipeline: baseRule });
 
     expect(() => {
-      act(() => result.current.replaceDraft({ ...result.current.draft, ...patch }));
+      act(() => result.current.replaceDraft({ ...result.current.draft, ...patch } as PipelineDraft));
       void result.current.isValid;
       void result.current.buildDto();
     }).not.toThrow();

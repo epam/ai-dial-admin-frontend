@@ -6,6 +6,7 @@ import { analyticsDataApi } from '@/src/app/api/api';
 import {
   CreatePipelineDto,
   Pipeline,
+  PipelineEnabledDto,
   PipelineListItem,
   PipelineReadResult,
   PipelinesListFilters,
@@ -35,7 +36,10 @@ export async function createPipeline(dto: CreatePipelineDto): Promise<ServerActi
   return analyticsDataApi.createPipeline(dto, await token());
 }
 
-export async function updatePipeline(name: string, dto: CreatePipelineDto): Promise<ServerActionResponse> {
+export async function updatePipeline(
+  name: string,
+  dto: CreatePipelineDto | PipelineEnabledDto,
+): Promise<ServerActionResponse> {
   return analyticsDataApi.updatePipeline(name, dto, await token());
 }
 

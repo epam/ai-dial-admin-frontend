@@ -141,7 +141,7 @@ const FilePath: FC<Props> = ({
             searchable: false,
           }}
           showCreateFolderButton={shouldAbleToCreateNewFolder}
-          excludedPaths={['/platform']}
+          excludedPaths={['platform/']}
         />
       </div>
     </div>
