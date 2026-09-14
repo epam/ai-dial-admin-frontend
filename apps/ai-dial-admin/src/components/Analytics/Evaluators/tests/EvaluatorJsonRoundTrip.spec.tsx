@@ -37,7 +37,7 @@ const llm: Evaluator = {
   preset: EvaluatorPreset.ChatCompletion,
   model: 'gemini-2.5-flash-lite',
   params: { max_tokens: 700 },
-  output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic' }],
+  outputs: [{ name: 'topic', prose: 'One to three lowercase words.' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -47,7 +47,7 @@ const stored = {
   preset: llm.preset,
   model: llm.model,
   params: llm.params,
-  output_vars: llm.output_vars,
+  outputs: llm.outputs,
 };
 
 const renderView = () =>
@@ -56,6 +56,16 @@ const renderView = () =>
   );
 
 const version3: Evaluator = { ...llm, version: 3, model: 'gemini-1.5-pro' };
+
+// A version registered before `outputs`, served as written.
+const legacy: Evaluator = {
+  name: llm.name,
+  version: 2,
+  type: EvaluatorType.Llm,
+  model: 'gemini-1.5-pro',
+  output_vars: [{ name: 'topic', type: 'string' }],
+  response_schema: { type: 'object', properties: { topic: { description: 'One to three words.' } } },
+};
 
 const openEditor = async (user: ReturnType<typeof userEvent.setup>) => {
   renderView();
@@ -84,11 +94,11 @@ beforeEach(() => {
 });
 
 describe('EvaluatorDetailView — the typed JSON reaches the request', () => {
-  test('the document is seeded with the version and without the derived members', async () => {
+  test('the document is the version as served, nothing removed from it', async () => {
     const user = userEvent.setup();
     const area = (await openEditor(user)) as HTMLTextAreaElement;
 
-    expect(JSON.parse(area.value)).toEqual(stored);
+    expect(JSON.parse(area.value)).toEqual(llm);
   });
 
   test('changing an existing member surfaces Discard and Save', async () => {
@@ -189,6 +199,30 @@ describe('EvaluatorDetailView — the typed JSON reaches the request', () => {
     expect(JSON.parse(reseeded.value).model).toBe('gemini-1.5-pro');
     expect(saveButton()).not.toBeInTheDocument();
     expect(discardButton()).not.toBeInTheDocument();
+  });
+
+  test('a version stored before outputs assembles a request in the current shape', async () => {
+    const user = userEvent.setup();
+    render(
+      <EvaluatorDetailView
+        evaluator={legacy}
+        summary={{ name: legacy.name, latest_version: 4 }}
+        referencingPipelines={[]}
+      />,
+    );
+    await user.click(within(screen.getByRole('switch')).getByRole('checkbox'));
+    const area = screen.getByLabelText('json document');
+
+    expect(JSON.parse((area as HTMLTextAreaElement).value)).toEqual(legacy);
+
+    await write(user, area, { ...legacy, model: 'gpt-4o' });
+    await submit(user);
+
+    const request = vi.mocked(createEvaluator).mock.calls[0][0] as Record<string, unknown>;
+    expect(request.outputs).toEqual({ topic: { prose: 'One to three words.' } });
+    expect(request).not.toHaveProperty('output_vars');
+    expect(request).not.toHaveProperty('response_schema');
+    expect(request).not.toHaveProperty('version');
   });
 
   test('JSON that does not parse leaves the draft on its last good value', async () => {

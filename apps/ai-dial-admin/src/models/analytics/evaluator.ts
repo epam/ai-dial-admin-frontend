@@ -8,29 +8,50 @@ export enum EvaluatorPreset {
 }
 
 /**
- * The codes an evaluator variable's `type` resolves against (the service's `QueryFieldType`). Deliberately
- * separate from `AnalyticsFieldType`: that one is the table catalog's column type — it drives the
- * column-type select and an exhaustive sample map — and it does not admit `map`.
+ * A version stored before the service replaced the three declaration members with `outputs`. Read-only:
+ * these are normalized into `EvaluatorOutput` on read and never written back.
  */
-export enum EvaluatorVarType {
-  Uuid = 'uuid',
-  String = 'string',
-  Integer = 'integer',
-  Long = 'long',
-  Decimal = 'decimal',
-  Boolean = 'boolean',
-  Date = 'date',
-  Timestamp = 'timestamp',
-  Object = 'object',
-  Array = 'array',
-  Map = 'map',
-}
-
 export interface EvaluatorVar {
   name: string;
   type: string;
   sql?: string;
   jsonata?: string;
+}
+
+/**
+ * What an evaluator produces for one target column. The column owns the type and the enum domain, so an
+ * output carries only what the column cannot: the prose for an `llm` evaluator, the expression for a
+ * `sql` one, and at most one of `values` / `jsonata` to refine an llm field.
+ */
+export interface EvaluatorOutput {
+  name: string;
+  prose?: string;
+  values?: string[];
+  jsonata?: string;
+  sql?: string;
+}
+
+/** The object form of an llm output on the wire; a bare string is the same thing with only `prose`. */
+export interface EvaluatorOutputBody {
+  prose: string;
+  values?: string[];
+  jsonata?: string;
+}
+
+export type EvaluatorOutputSpec = string | EvaluatorOutputBody;
+
+/**
+ * What `POST /v1/evaluators` receives. Distinct from the draft because `outputs` is keyed by name on the
+ * wire and ordered in the editor, and because a `sql` output is a bare expression rather than an object.
+ */
+export interface EvaluatorRequest {
+  name: string;
+  type: EvaluatorType;
+  preset?: EvaluatorPreset;
+  model?: string;
+  params?: Record<string, unknown>;
+  request_template?: string;
+  outputs: Record<string, EvaluatorOutputSpec>;
 }
 
 export interface EvaluatorSummary {
@@ -51,10 +72,6 @@ export interface EvaluatorListRow {
   usedBy: number | null;
 }
 
-/**
- * Carries no version by design: POST creates version 1 for an unknown `name` and appends
- * `latest_version + 1` for a known one, so posting against an existing name is how a version is made.
- */
 /** A params entry while it is being edited: two rows may share a key, or be blank, which an object cannot hold. */
 export interface EvaluatorParamRow {
   id: string;
@@ -62,6 +79,13 @@ export interface EvaluatorParamRow {
   value: string;
 }
 
+/**
+ * Carries no version by design: POST creates version 1 for an unknown `name` and appends
+ * `latest_version + 1` for a known one, so posting against an existing name is how a version is made.
+ *
+ * `outputs` is a list here and an object keyed by name on the wire — the order is the order the model
+ * fills the fields in, and a list is what carries it through an editor that can reorder rows.
+ */
 export interface CreateEvaluatorDto {
   name: string;
   type: EvaluatorType;
@@ -69,9 +93,7 @@ export interface CreateEvaluatorDto {
   model?: string;
   params?: Record<string, unknown>;
   request_template?: string;
-  input_vars?: EvaluatorVar[];
-  response_schema?: Record<string, unknown>;
-  output_vars?: EvaluatorVar[];
+  outputs?: EvaluatorOutput[];
 }
 
 export interface Evaluator {
@@ -82,6 +104,8 @@ export interface Evaluator {
   model?: string;
   params?: Record<string, unknown>;
   request_template?: string;
+  outputs?: EvaluatorOutput[];
+  // Present only on a version stored before `outputs`; the service serves such a version as written.
   response_schema?: Record<string, unknown>;
   input_vars?: EvaluatorVar[];
   output_vars?: EvaluatorVar[];

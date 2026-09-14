@@ -71,10 +71,10 @@ describe('useAggregateForm — validity', () => {
     await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
     expect(result.current.isValid).toBe(false);
   });
-  test('blocks without a group key', async () => {
+  test('accepts a declaration with no group key, which the service derives from the target', async () => {
     const { result } = renderForm({ initialDraft: { ...complete, group_by: [] } });
     await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.isValid).toBe(true);
   });
   test('blocks without a measure', async () => {
     const { result } = renderForm({ initialDraft: { ...complete, measures: [] } });

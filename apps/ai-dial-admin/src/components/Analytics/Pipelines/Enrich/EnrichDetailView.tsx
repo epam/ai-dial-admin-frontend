@@ -3,6 +3,7 @@
 import { FC } from 'react';
 
 import PipelineDetailFrame from '@/src/components/Analytics/Pipelines/Common/PipelineDetailFrame';
+import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
 import EnrichSection from '@/src/components/Analytics/Pipelines/Enrich/EnrichSection';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
@@ -20,7 +21,12 @@ const EnrichDetailView: FC<Props> = ({ pipeline, evaluators, hasEvaluatorsError,
 
   return (
     <PipelineDetailFrame pipeline={pipeline} form={form}>
-      <EnrichSection form={form} evaluators={evaluators} hasEvaluatorsError={hasEvaluatorsError} />
+      <EnrichSection
+        form={form}
+        evaluators={evaluators}
+        hasEvaluatorsError={hasEvaluatorsError}
+        stateSection={<PipelineStateSection state={pipeline.state} />}
+      />
     </PipelineDetailFrame>
   );
 };

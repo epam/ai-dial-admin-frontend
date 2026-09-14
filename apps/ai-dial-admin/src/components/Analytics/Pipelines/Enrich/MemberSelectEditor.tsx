@@ -1,8 +1,8 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import OrderByEditor from '@/src/components/Analytics/Pipelines/Enrich/OrderByEditor';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
@@ -11,64 +11,115 @@ import { GROUP_FETCH_MAX_ROWS, NUMBER_INPUT_WIDTH } from '@/src/constants/analyt
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MemberSelect } from '@/src/models/analytics/pipeline';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { MemberScope } from '@/src/models/analytics/pipeline-ui';
+import { AnalyticsTable, AnalyticsTableColumn } from '@/src/models/analytics/table';
 
 interface Props {
   memberSelect?: MemberSelect;
   columns: AnalyticsTableColumn[];
   sourceName?: string;
+  readSource?: AnalyticsTable | null;
   isLimitValid: boolean;
   onChange: (memberSelect?: MemberSelect) => void;
 }
 
 /**
- * `limit` is required whenever `member_select` is present, so clearing every member drops the object rather
- * than sending one the service would reject.
+ * Two states rather than an optional block: taking every member is a declaration in itself — it leaves the
+ * assembly's own default policy in place — and an empty block reads as an unfinished one. Switching back to
+ * every member keeps what was entered, so the choice is not destructive.
  */
-const MemberSelectEditor: FC<Props> = ({ memberSelect, columns, sourceName, isLimitValid, onChange }) => {
+const MemberSelectEditor: FC<Props> = ({ memberSelect, columns, sourceName, readSource, isLimitValid, onChange }) => {
   const t = useI18n();
 
-  const update = (patch: Partial<MemberSelect>) => {
-    const next = { ...memberSelect, ...patch } as MemberSelect;
-    const isEmpty = !next.limit && !next.prefer_sql?.trim() && !next.order_by?.length;
-    onChange(isEmpty ? undefined : next);
+  const [scope, setScope] = useState<MemberScope>(() => (memberSelect ? MemberScope.Selected : MemberScope.All));
+  const [kept, setKept] = useState<MemberSelect | undefined>(memberSelect);
+
+  // A discard restores the stored policy without remounting this editor, so both the scope and the kept
+  // values are re-seeded whenever the prop says something they do not.
+  useEffect(() => {
+    const declared = scope === MemberScope.Selected ? kept : undefined;
+    if (JSON.stringify(declared ?? null) === JSON.stringify(memberSelect ?? null)) return;
+
+    setKept(memberSelect);
+    setScope(memberSelect ? MemberScope.Selected : MemberScope.All);
+    // `kept` and `scope` are read to compare, not to react to.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberSelect]);
+
+  const scopeRadios: RadioButtonWithContent[] = [
+    { id: MemberScope.All, name: t(AnalyticsPipelinesI18nKey.MemberScopeAll) },
+    { id: MemberScope.Selected, name: t(AnalyticsPipelinesI18nKey.MemberScopeSelected) },
+  ];
+
+  const onScopeChange = (next: MemberScope) => {
+    setScope(next);
+    onChange(next === MemberScope.Selected ? kept : undefined);
   };
+
+  const update = (patch: Partial<MemberSelect>) => {
+    const next = { ...kept, ...patch } as MemberSelect;
+    setKept(next);
+    onChange(next);
+  };
+
+  // Named only when the read source has resolved: guessing the columns that carry its order would state a
+  // fact the console does not have.
+  const orderColumns = [readSource?.version_column, readSource?.identity_column].filter(Boolean).join(', ');
 
   return (
     <div className="flex flex-col gap-4">
-      <SqlPredicateField
-        className={STANDARD_CONTROL_WIDTH}
-        id="rule-prefer-sql"
-        label={t(AnalyticsPipelinesI18nKey.PreferSql)}
-        description={t(AnalyticsPipelinesI18nKey.PreferSqlCaption)}
-        value={memberSelect?.prefer_sql}
-        sourceName={sourceName}
-        onChange={(prefer_sql) => update({ prefer_sql })}
+      <DialRadioGroup
+        elementId="pipeline-member-scope"
+        fieldTitle={t(AnalyticsPipelinesI18nKey.MemberScopeTitle)}
+        orientation={RadioGroupOrientation.Column}
+        radioButtons={scopeRadios}
+        activeRadioButton={scope}
+        onChange={(id) => onScopeChange(id as MemberScope)}
       />
+      <span className="text-secondary dial-tiny-text">
+        {scope === MemberScope.All
+          ? t(AnalyticsPipelinesI18nKey.MemberScopeAllCaption)
+          : t(AnalyticsPipelinesI18nKey.MemberScopeSelectedCaption)}
+      </span>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.OrderBy)}</span>
-        <OrderByEditor
-          orderBy={memberSelect?.order_by}
-          columns={columns}
-          onChange={(order_by) => update({ order_by })}
-        />
-      </div>
+      {scope === MemberScope.Selected && (
+        <>
+          <DialInput
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            wrapperClassName={NUMBER_INPUT_WIDTH}
+            id="pipeline-member-limit"
+            type="number"
+            min={1}
+            max={GROUP_FETCH_MAX_ROWS}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.MemberLimit), required: true }}
+            value={kept?.limit == null ? '' : String(kept.limit)}
+            caption={t(AnalyticsPipelinesI18nKey.MemberLimitCaption)}
+            error={isLimitValid ? undefined : t(AnalyticsPipelinesI18nKey.MemberLimitRequired)}
+            invalid={!isLimitValid}
+            onChange={(v) => update({ limit: v ? Number(v) : undefined })}
+          />
 
-      <DialInput
-        containerClassName={STANDARD_CONTROL_WIDTH}
-        wrapperClassName={NUMBER_INPUT_WIDTH}
-        id="rule-member-limit"
-        type="number"
-        min={1}
-        max={GROUP_FETCH_MAX_ROWS}
-        labelProps={{ label: t(AnalyticsPipelinesI18nKey.MemberLimit), required: Boolean(memberSelect) }}
-        value={memberSelect?.limit == null ? '' : String(memberSelect.limit)}
-        caption={t(AnalyticsPipelinesI18nKey.MemberLimitCaption)}
-        error={isLimitValid ? undefined : t(AnalyticsPipelinesI18nKey.MemberLimitRequired)}
-        invalid={!isLimitValid}
-        onChange={(v) => update({ limit: v ? Number(v) : undefined })}
-      />
+          <div className="flex flex-col gap-2">
+            <span className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.OrderBy)}</span>
+            <OrderByEditor orderBy={kept?.order_by} columns={columns} onChange={(order_by) => update({ order_by })} />
+            <span className="text-secondary dial-tiny-text">
+              {orderColumns
+                ? `${orderColumns} · ${t(AnalyticsPipelinesI18nKey.MemberTiebreak)}`
+                : t(AnalyticsPipelinesI18nKey.MemberTiebreakUnresolved)}
+            </span>
+          </div>
+
+          <SqlPredicateField
+            className={STANDARD_CONTROL_WIDTH}
+            id="pipeline-prefer-sql"
+            label={t(AnalyticsPipelinesI18nKey.PreferSql)}
+            description={t(AnalyticsPipelinesI18nKey.PreferSqlCaption)}
+            value={kept?.prefer_sql}
+            sourceName={sourceName}
+            onChange={(prefer_sql) => update({ prefer_sql })}
+          />
+        </>
+      )}
     </div>
   );
 };
