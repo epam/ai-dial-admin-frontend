@@ -72,7 +72,7 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
   });
 
-  test('Should keep the list breadcrumb pointed at the entity type\'s own route', () => {
+  test("Should keep the list breadcrumb pointed at the entity type's own route", () => {
     const config = getBreadcrumbs('/en/models/modelId', 'en');
     expect(config[0].href).toEqual('/en/models');
   });

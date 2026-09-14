@@ -81,9 +81,7 @@ describe('RouteAssetView', () => {
   });
 
   test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
-    const { unmount } = render(
-      <RouteAssetView etag="etag" originalRoute={route()} roles={[]} isConfigFileSource />,
-    );
+    const { unmount } = render(<RouteAssetView etag="etag" originalRoute={route()} roles={[]} isConfigFileSource />);
 
     expect(setEntityReadOnly).toHaveBeenCalledWith(true);
     expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);

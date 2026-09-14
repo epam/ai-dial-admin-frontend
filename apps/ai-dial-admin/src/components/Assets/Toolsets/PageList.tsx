@@ -18,11 +18,7 @@ const AssetsToolsetsPageList: FC = () => (
     assetList={<AssetToolsetsList />}
     fetchConfigFileList={getConfigFileToolsets}
     renderConfigFileList={(names) => (
-      <ConfigFileEntityList
-        names={names}
-        route={ApplicationRoute.AssetsToolsets}
-        headerExtra={<ConfigFilesToggle />}
-      />
+      <ConfigFileEntityList names={names} route={ApplicationRoute.AssetsToolsets} headerExtra={<ConfigFilesToggle />} />
     )}
   />
 );

@@ -13,12 +13,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 }));
 
 vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
-  ENTITIES_COLUMNS: (
-    columns: unknown[],
-    _remove: unknown,
-    _duplicate: unknown,
-    open?: (entity?: unknown) => void,
-  ) => {
+  ENTITIES_COLUMNS: (columns: unknown[], _remove: unknown, _duplicate: unknown, open?: (entity?: unknown) => void) => {
     capturedOpen = open;
     return columns;
   },

@@ -86,7 +86,12 @@ describe('PlatformToolsetView', () => {
 
   test('Should mark the entity read-only when config-file-sourced, and clear it on unmount', () => {
     const { unmount } = render(
-      <PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} isConfigFileSource />,
+      <PlatformToolsetView
+        etag={mockEtag}
+        originalToolset={mockOriginalToolset}
+        roles={mockRoles}
+        isConfigFileSource
+      />,
     );
 
     expect(setEntityReadOnly).toHaveBeenCalledWith(true);

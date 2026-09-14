@@ -40,11 +40,7 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <InterceptorAssetView
-        etag={etag}
-        originalInterceptor={interceptor}
-        isConfigFileSource={isConfigFileMode}
-      />
+      <InterceptorAssetView etag={etag} originalInterceptor={interceptor} isConfigFileSource={isConfigFileMode} />
     </SaveValidationContextProvider>
   );
 }
