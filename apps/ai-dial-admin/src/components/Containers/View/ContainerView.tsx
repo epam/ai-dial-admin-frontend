@@ -61,12 +61,12 @@ const ContainerView: FC<Props> = ({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { disableDeploymentsJSONEditor } = useAppContext();
+  const { disableDeploymentsJSONEditor, featureFlags } = useAppContext();
 
   const imageNotInstalled = isImageNotInstalled(image);
 
   const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
+    getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled, featureFlags),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
@@ -79,8 +79,10 @@ const ContainerView: FC<Props> = ({
   const [pods, setPods] = useState<Pod[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled));
-  }, [container.allowedDomains, container.status, imageNotInstalled, route, t]);
+    setTabs(
+      getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled, featureFlags),
+    );
+  }, [container.allowedDomains, container.status, imageNotInstalled, route, t, featureFlags]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({

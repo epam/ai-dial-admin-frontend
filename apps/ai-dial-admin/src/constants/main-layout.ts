@@ -3,6 +3,7 @@ export const CENTRAL_WINDOW_MIN_WIDTH = 800;
 // local storage keys
 export const LOCAL_STORAGE_CENTRAL_WINDOW_KEY = 'central-window-width';
 export const LOCAL_STORAGE_SIDEBAR_OPEN_KEY = 'sidebar-open';
+export const LOCAL_STORAGE_SHOW_CONFIG_FILES_KEY = 'show-config-files';
 
 // icons
 export const BASE_BUTTON_ICON_SIZE = 20;

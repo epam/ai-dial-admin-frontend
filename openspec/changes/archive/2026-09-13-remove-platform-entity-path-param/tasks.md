@@ -17,7 +17,7 @@
 
 ## 4. Browser verification
 
-- [ ] 4.1 Run `/spec-browser-verify` for this change to confirm the URL-shape scenarios pass against the running local app.
+- [x] 4.1 Run `/spec-browser-verify` for this change to confirm the URL-shape scenarios pass against the running local app.
 
 ## 5. Quality checks
 

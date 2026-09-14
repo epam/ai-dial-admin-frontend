@@ -1,5 +1,5 @@
 'use client';
-import { FC, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { createApplication, removeApplication } from '@/src/app/[lang]/applications/actions';
 import { APPLICATIONS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -13,9 +13,12 @@ import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-name
 interface Props {
   data: DialApplication[];
   runners: DialApplicationScheme[];
+  /** True when `data` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
+  headerExtra?: ReactNode;
 }
 
-const ApplicationsList: FC<Props> = ({ data, runners }) => {
+const ApplicationsList: FC<Props> = ({ data, runners, isConfigFileSource, headerExtra }) => {
   const names = filterDisplayNamesWithVersions(data);
   const t = useI18n();
   const { codeAppEditorUrl } = useAppContext();
@@ -32,6 +35,8 @@ const ApplicationsList: FC<Props> = ({ data, runners }) => {
       onCreateEntity={createApplication}
       onRemoveEntity={removeApplication}
       showColumnsButton={true}
+      isConfigFileSource={isConfigFileSource}
+      headerExtra={headerExtra}
     />
   );
 };

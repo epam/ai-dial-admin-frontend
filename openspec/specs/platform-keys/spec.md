@@ -42,13 +42,13 @@ Core never returns it on subsequent reads.
 - **THEN** the key secret is NOT displayed (Core does not return it on GET)
 
 ### Requirement: Key detail view
-The system SHALL display a detail view at `/assets-keys/[id]` fetched via
+The system SHALL display a detail view at `/platform-keys/<encodedName>` fetched via
 `assetApi.getMergedWithEtag(token, ResourceType.PROJECT_KEY, path, etag)`. The view SHALL include
 a Properties tab and a Roles tab.
 
 #### Scenario: User opens a key detail
 - **WHEN** the user clicks a key row in the listing
-- **THEN** the system navigates to `/assets-keys/[id]?path=<encodedPath>` and renders the key
+- **THEN** the system navigates to `/platform-keys/<encodedName>` and renders the key
   detail with Properties and Roles tabs
 
 ### Requirement: Key properties editing

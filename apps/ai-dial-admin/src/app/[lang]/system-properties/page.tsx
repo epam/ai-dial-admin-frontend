@@ -48,6 +48,7 @@ export default async function Page() {
     token,
     ConfigFileEntityType.Interceptors,
     optionWarnings,
+    false,
   );
 
   return (

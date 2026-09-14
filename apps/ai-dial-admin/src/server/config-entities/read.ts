@@ -15,17 +15,27 @@ const HTTP_NOT_FOUND = 404;
  * the surviving population plus a reported failure, which is why the metadata half is read through
  * `getMetadata` rather than `assetApi.list`: `list` returns `[]` for a failed read, making a refusal
  * indistinguishable from an empty population.
+ *
+ * `showOnlyConfigFiles` scopes the read to the config-file population alone: the asset-metadata
+ * (`apiWritten`) read is skipped, and the config-file read is always attempted regardless of
+ * `DIAL_ADMIN_API_URL` — the caller already knows it wants config-file entities specifically (the
+ * `config-file-entity-views` list/detail surface), not the union a picker wants. Defaults to `false`,
+ * which reproduces this function's behavior before the parameter existed.
  */
 export const getConfigEntityOptions = async (
   token: Token,
   type: ConfigFileEntityType,
+  showOnlyConfigFiles = false,
 ): Promise<ConfigFileReadResult<ConfigEntityOptions>> => {
   const [apiWritten, configFile] = await Promise.all([
-    toFailureOnThrow(listApiWrittenNames(token, type)),
+    showOnlyConfigFiles
+      ? Promise.resolve<ConfigFileReadResult<string[]>>({ success: true, data: [] })
+      : toFailureOnThrow(listApiWrittenNames(token, type)),
     // Config-file entities are the admin console's own configuration surface — without the admin
     // backend there is nothing declaring them, so skip the read rather than reporting an empty
-    // population as a partial failure.
-    process.env.DIAL_ADMIN_API_URL
+    // population as a partial failure. `showOnlyConfigFiles` overrides that: the caller wants the
+    // config-file population specifically, so the read always runs.
+    process.env.DIAL_ADMIN_API_URL || showOnlyConfigFiles
       ? toFailureOnThrow(configFileApi.listNames(token, type))
       : Promise.resolve<ConfigFileReadResult<string[]>>({ success: true, data: [] }),
   ]);

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -50,6 +50,8 @@ import {
 interface Props {
   view: ApplicationRoute;
   label: string;
+  /** Rendered alongside `label` in the manager's header — the `config-file-entity-views` toggle. */
+  headerExtra?: ReactNode;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContext;
   onCreateFolder?: (
@@ -86,6 +88,7 @@ interface Props {
 
 const FileManager: FC<Props> = ({
   label,
+  headerExtra,
   columnDefs,
   view,
   getContext,
@@ -145,8 +148,13 @@ const FileManager: FC<Props> = ({
   }, [files]);
 
   const managerLabel = useMemo(
-    () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
-    [label],
+    () => (
+      <div className="flex flex-row items-center gap-3">
+        <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>
+        {headerExtra}
+      </div>
+    ),
+    [label, headerExtra],
   );
 
   // Applications is the one view with two top-level buckets (`platform`/`public` — see

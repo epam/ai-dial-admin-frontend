@@ -1,5 +1,6 @@
 import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
-
+import { DotReporter } from 'vitest/node';
+import type { TestCase } from 'vitest/node';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // `@vitejs/plugin-react` ships only an `exports` map — no `types`, no `main` — so the inherited
@@ -8,6 +9,20 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // would break `next-auth/providers` and the ui-kit deep imports that source files rely on.
 // @ts-expect-error -- unresolvable under node resolution only
 import react from '@vitejs/plugin-react';
+
+class InlineReporter extends DotReporter {
+  override onTestCaseResult(testCase: TestCase) {
+    const result = testCase.result();
+
+    if (result.state === 'failed') {
+      const error = result.errors[0];
+      const message = error?.message?.split('\n')[0]?.trim();
+      process.stdout.write(`\n❌ ${testCase.fullName}${message ? ` — ${message}` : ''}\n`);
+    }
+
+    super.onTestCaseResult(testCase);
+  }
+}
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -33,9 +48,7 @@ export default defineConfig(() => ({
     threads: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
-    // 'dot' prints one character per file and every failure in full; the default reporter prints a
-    // line per spec file (971 of them here), which is output nobody reads and agents pay for.
-    reporters: ['dot'],
+    reporters: [new InlineReporter()],
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
       // 'text-summary' is six lines; 'text' is one row per source file (2 950 of them here).

@@ -2,10 +2,12 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { appRunnerSchemaApi, assetApi } from '@/src/app/api/api';
+import { appRunnerSchemaApi, assetApi, configFileApi } from '@/src/app/api/api';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { toCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
@@ -116,4 +118,16 @@ export async function bulkDeleteRunners(paths: { path: string }[]) {
 export async function getResolvedRunnerSchema(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return appRunnerSchemaApi.resolvedSchema(token, name);
+}
+
+/** `config-file-entity-views`: the App Runner names Core's config file declares (`schemas` type). */
+export async function getConfigFileAppRunners() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Schemas);
+}
+
+/** `config-file-entity-views`: reads an App Runner by id from Core's config-file `schemas` population directly. */
+export async function getConfigFileAppRunner(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, id);
 }

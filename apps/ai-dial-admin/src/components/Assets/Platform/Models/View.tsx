@@ -34,6 +34,8 @@ interface Props {
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   translators?: ResourceInfo[];
+  /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 const ModelView: FC<Props> = ({
@@ -44,13 +46,21 @@ const ModelView: FC<Props> = ({
   globalInterceptors,
   optionWarnings,
   translators,
+  isConfigFileSource,
 }) => {
   const t = useI18n();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
   const router = useRouter();
   const { fetchFiles } = useModelsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -63,8 +73,11 @@ const ModelView: FC<Props> = ({
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   const tabs = useMemo(

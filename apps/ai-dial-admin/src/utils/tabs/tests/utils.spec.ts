@@ -91,6 +91,7 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 const t = vi.fn((id) => id);
 
 const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
+  adminApiEnabled: false,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: false,
@@ -105,12 +106,17 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
 
 describe('Entities :: tabs', () => {
   test('Should return tabs for models', () => {
-    const res = getModelsTabs(t);
+    const res = getModelsTabs(t, flags({ adminApiEnabled: true }));
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
   });
 
+  test('omits the Audit tab for models when adminApiEnabled is false', () => {
+    const res = getModelsTabs(t, flags());
+    expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)]);
+  });
+
   test('Should return tabs for application', () => {
-    const res = getApplicationTabs(t);
+    const res = getApplicationTabs(t, flags({ adminApiEnabled: true }));
     expect(res).toEqual([
       propertiesTab(t),
       featuresTab(t),
@@ -123,9 +129,27 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('omits the Audit tab for application when adminApiEnabled is false', () => {
+    const res = getApplicationTabs(t, flags());
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+    ]);
+  });
+
   test('Should return tabs for routes', () => {
-    const res = getRouteTabs(t);
+    const res = getRouteTabs(t, flags({ adminApiEnabled: true }));
     expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+  });
+
+  test('omits the Audit tab for routes when adminApiEnabled is false', () => {
+    const res = getRouteTabs(t, flags());
+    expect(res).toEqual([propertiesTab(t), rolesTab(t)]);
   });
 
   test('returns dashboard and activities tabs if dashboardEnabled and view is Models', () => {
@@ -190,12 +214,17 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
   });
 
-  test('returns correct tabs for AssetsToolsets with dashboardEnabled', () => {
+  test('returns correct tabs for AssetsToolsets with dashboardEnabled but without adminApiEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true }))).toEqual([
       propertiesTab(t),
       toolsTab(t),
-      auditTab(t),
     ]);
+  });
+
+  test('returns correct tabs for AssetsToolsets with dashboardEnabled and adminApiEnabled', () => {
+    expect(
+      getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true, adminApiEnabled: true })),
+    ).toEqual([propertiesTab(t), toolsTab(t), auditTab(t)]);
   });
 
   test('returns only Dashboard and Traces tabs for PlatformModels when dashboardEnabled is true', () => {
@@ -217,8 +246,17 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
-  test('appends Audit as the fifth and last tab for PlatformModels with dashboardEnabled', () => {
+  test('omits Audit for PlatformModels with dashboardEnabled but without adminApiEnabled', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ dashboardEnabled: true }));
+    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)]);
+  });
+
+  test('appends Audit as the fifth and last tab for PlatformModels with dashboardEnabled and adminApiEnabled', () => {
+    const tabs = getTabsForAsset(
+      t,
+      ApplicationRoute.PlatformModels,
+      flags({ dashboardEnabled: true, adminApiEnabled: true }),
+    );
     expect(tabs).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
   });
 
@@ -259,7 +297,11 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for key', () => {
-    expect(getKeyTabs(t)).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+    expect(getKeyTabs(t, flags({ adminApiEnabled: true }))).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+  });
+
+  test('omits the Audit tab for key when adminApiEnabled is false', () => {
+    expect(getKeyTabs(t, flags())).toEqual([propertiesTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for publication', () => {
@@ -271,7 +313,16 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for roles', () => {
-    expect(getRoleTabs(t)).toEqual([propertiesTab(t), entitiesTab(t), keysTab(t), auditTab(t)]);
+    expect(getRoleTabs(t, flags({ adminApiEnabled: true }))).toEqual([
+      propertiesTab(t),
+      entitiesTab(t),
+      keysTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('omits the Audit tab for roles when adminApiEnabled is false', () => {
+    expect(getRoleTabs(t, flags())).toEqual([propertiesTab(t), entitiesTab(t), keysTab(t)]);
   });
 
   test('returns correct tabs for usage log', () => {
@@ -279,19 +330,40 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for interceptor template', () => {
-    expect(getInterceptorTemplateTabs(t)).toEqual([propertiesTab(t), interceptorsTab(t), auditTab(t)]);
+    expect(getInterceptorTemplateTabs(t, flags({ adminApiEnabled: true }))).toEqual([
+      propertiesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('omits the Audit tab for interceptor template when adminApiEnabled is false', () => {
+    expect(getInterceptorTemplateTabs(t, flags())).toEqual([propertiesTab(t), interceptorsTab(t)]);
   });
 
   test('returns correct tabs for toolsets', () => {
-    expect(getToolsetTabs(t)).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)]);
+    expect(getToolsetTabs(t, flags({ adminApiEnabled: true }))).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      rolesTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('omits the Audit tab for toolsets when adminApiEnabled is false', () => {
+    expect(getToolsetTabs(t, flags())).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for adapter', () => {
-    expect(getAdapterTabs(t)).toEqual([propertiesTab(t), modelsTab(t), auditTab(t)]);
+    expect(getAdapterTabs(t, flags({ adminApiEnabled: true }))).toEqual([propertiesTab(t), modelsTab(t), auditTab(t)]);
+  });
+
+  test('omits the Audit tab for adapter when adminApiEnabled is false', () => {
+    expect(getAdapterTabs(t, flags())).toEqual([propertiesTab(t), modelsTab(t)]);
   });
 
   test('returns correct tabs for app runner', () => {
-    expect(getAppRunnerTabs(t)).toEqual([
+    expect(getAppRunnerTabs(t, flags({ adminApiEnabled: true }))).toEqual([
       propertiesTab(t),
       featuresTab(t),
       parametersTab(t),
@@ -302,12 +374,23 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('omits the Audit tab for app runner when adminApiEnabled is false', () => {
+    expect(getAppRunnerTabs(t, flags())).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      interceptorsTab(t),
+      applicationsTab(t),
+      appRouteTab(t),
+    ]);
+  });
+
   test('returns correct tabs for system properties', () => {
     expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t)]);
   });
 
   test('returns correct tabs for interceptor', () => {
-    expect(getInterceptorTabs(t)).toEqual([
+    expect(getInterceptorTabs(t, flags({ adminApiEnabled: true }))).toEqual([
       propertiesTab(t),
       parameterSchemaTab(t),
       entitiesTab(t),
@@ -316,10 +399,21 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('omits the Audit tab for interceptor when adminApiEnabled is false', () => {
+    expect(getInterceptorTabs(t, flags())).toEqual([
+      propertiesTab(t),
+      parameterSchemaTab(t),
+      entitiesTab(t),
+      applicationRunnersTab(t),
+    ]);
+  });
+
   test('returns correct tabs for deployment images', () => {
     const status = IMAGE_STATUS.BUILT;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status, [])).toEqual([
+    expect(
+      getDeploymentsViewTabs(ApplicationRoute.Images, t, status, [], undefined, flags({ adminApiEnabled: true })),
+    ).toEqual([
       propertiesTab(t),
       firewallTab(t, false),
       relatedContainersTab(t, status),
@@ -327,7 +421,44 @@ describe('Entities :: tabs', () => {
       auditTab(t),
     ]);
   });
+
+  test('omits the Audit tab for deployment images when adminApiEnabled is false', () => {
+    const status = IMAGE_STATUS.BUILT;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.Images, t, status, [])).toEqual([
+      propertiesTab(t),
+      firewallTab(t, false),
+      relatedContainersTab(t, status),
+      installationLogTab(t, status),
+    ]);
+  });
+
   test('returns correct tabs for deployment mcp containers', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(
+      getDeploymentsViewTabs(
+        ApplicationRoute.McpContainers,
+        t,
+        status,
+        ['*'],
+        undefined,
+        flags({ adminApiEnabled: true }),
+      ),
+    ).toEqual([
+      propertiesTab(t),
+      firewallTab(t, true),
+      deploymentsToolsTab(t, status),
+      resourcesTab(t, status),
+      promptsTab(t, status),
+      metricsTab(t, status),
+      executionLogTab(t),
+      eventsTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('omits the Audit tab for deployment mcp containers when adminApiEnabled is false', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
     expect(getDeploymentsViewTabs(ApplicationRoute.McpContainers, t, status, ['*'])).toEqual([
@@ -339,7 +470,6 @@ describe('Entities :: tabs', () => {
       metricsTab(t, status),
       executionLogTab(t),
       eventsTab(t),
-      auditTab(t),
     ]);
   });
 
@@ -412,13 +542,34 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for model containers', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
-    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status, [])).toEqual([
+    expect(
+      getDeploymentsViewTabs(
+        ApplicationRoute.ModelServings,
+        t,
+        status,
+        [],
+        undefined,
+        flags({ adminApiEnabled: true }),
+      ),
+    ).toEqual([
       propertiesTab(t),
       firewallTab(t, false),
       metricsTab(t, status),
       executionLogTab(t),
       eventsTab(t),
       auditTab(t),
+    ]);
+  });
+
+  test('omits the Audit tab for model containers when adminApiEnabled is false', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status, [])).toEqual([
+      propertiesTab(t),
+      firewallTab(t, false),
+      metricsTab(t, status),
+      executionLogTab(t),
+      eventsTab(t),
     ]);
   });
 
@@ -431,9 +582,23 @@ describe('Entities :: tabs', () => {
     ];
 
     for (const route of routes) {
-      const tabs = getDeploymentsViewTabs(route, t, status, []);
+      const tabs = getDeploymentsViewTabs(route, t, status, [], undefined, flags({ adminApiEnabled: true }));
       expect(tabs[tabs.length - 1]).toEqual(auditTab(t));
       expect(tabs).toContainEqual(metricsTab(t, status));
+    }
+  });
+
+  test('omits the Audit tab for adapter / application / interceptor container routes when adminApiEnabled is false', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+    const routes = [
+      ApplicationRoute.AdapterContainers,
+      ApplicationRoute.ApplicationContainers,
+      ApplicationRoute.InterceptorContainers,
+    ];
+
+    for (const route of routes) {
+      const tabs = getDeploymentsViewTabs(route, t, status, []);
+      expect(tabs).not.toContainEqual(auditTab(t));
     }
   });
 

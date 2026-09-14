@@ -314,6 +314,18 @@ describe('onOpenInNewTab', () => {
     onOpenInNewTab(ApplicationRoute.RunsCompare, { id: 'run-123', compareWithId: 'run-456' });
     expect(windowOpenSpy).toHaveBeenCalledWith('/runs/compare?runs=run-123,run-456', '_blank');
   });
+
+  test('appends the config-file url suffix when one is given', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    onOpenInNewTab(ApplicationRoute.Models, { name: 'entity' }, '?configFile=true');
+    expect(windowOpenSpy).toHaveBeenCalledWith('/models/entity?configFile=true', '_blank');
+  });
+
+  test('omits the suffix when none is given', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    onOpenInNewTab(ApplicationRoute.Models, { name: 'entity' });
+    expect(windowOpenSpy).toHaveBeenCalledWith('/models/entity', '_blank');
+  });
 });
 
 describe('getEntityAuditFilterId', () => {
