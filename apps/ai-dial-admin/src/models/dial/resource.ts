@@ -40,6 +40,9 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
   features?: DialApplicationResourceFeatures;
   external_services?: Record<string, DialExternalService>;
   interfaces?: Record<string, DialResourceInterface>;
+  // Root url every `interfaces` entry with no `base_url` of its own falls back to (Deployment.baseUrl).
+  base_url?: string;
+  default_headers?: Record<string, string>;
   /**
    * `Application` is `@JsonNaming(SnakeCaseStrategy)` on Core — unlike `Model`/`Route`, whose
    * `RoleBasedEntity.userRoles` serializes as plain camelCase, Core always writes this back as
@@ -114,6 +117,8 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   endpoint?: string;
   responsesEndpoint?: string;
   interfaces?: Record<string, DialResourceInterface>;
+  baseUrl?: string;
+  defaultHeaders?: Record<string, string>;
   forwardAuthToken?: boolean;
   maxRetryAttempts?: number;
   interceptors?: string[];

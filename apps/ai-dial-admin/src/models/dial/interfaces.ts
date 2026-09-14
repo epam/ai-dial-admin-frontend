@@ -12,10 +12,34 @@ export enum InterfaceFieldVariant {
   Endpoint = 'endpoint',
 }
 
+// Mirrors Core's InterfaceMode: PASSTHROUGH (default when a saved interface has no `mode`) routes the
+// request straight to `baseUrl`; TRANSLATOR routes it through a Translator first (see TranslatorReference).
+export enum InterfaceMode {
+  Passthrough = 'passthrough',
+  Translator = 'translator',
+}
+
+// Mirrors Core's TranslatorRef: a bare string is a name resolved against the platform Translator
+// registry; an object is an inline Translator definition. No `in` field — it's implicit from the
+// interface type this reference is attached to.
+export type TranslatorReference = string | { baseUrl: string; out: DeploymentInterfaceType };
+
 export interface DialDeploymentInterface {
   baseUrl: string;
+  // Added for type symmetry with DialResourceInterface (see DeploymentInterface.java) — no UI on the
+  // admin-backend-owned surfaces (entity Models/Applications, Interceptors) reads or writes these yet.
+  mode?: InterfaceMode;
+  translator?: TranslatorReference;
+  defaultHeaders?: Record<string, string>;
+  defaults?: Record<string, unknown>;
+  features?: Record<string, unknown>;
 }
 
 export interface DialResourceInterface {
   base_url: string;
+  mode?: InterfaceMode;
+  translator?: TranslatorReference;
+  default_headers?: Record<string, string>;
+  defaults?: Record<string, unknown>;
+  features?: Record<string, unknown>;
 }

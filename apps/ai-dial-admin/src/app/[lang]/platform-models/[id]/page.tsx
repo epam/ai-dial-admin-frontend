@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import ModelView from '@/src/components/Assets/Platform/Models/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -9,6 +10,7 @@ import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
+import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -22,6 +24,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let etag = DEFAULT_ETAG;
   let model: AssetModel | null = null;
+  let translators: ResourceInfo[] = [];
+
   const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
@@ -31,6 +35,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as AssetModel | null;
     });
+    translators = (await getTranslators('')) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch model view data');
   }
@@ -59,6 +64,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         interceptors={interceptors}
         globalInterceptors={globalInterceptors}
         optionWarnings={optionWarnings}
+        translators={translators}
       />
     </SaveValidationContextProvider>
   );
