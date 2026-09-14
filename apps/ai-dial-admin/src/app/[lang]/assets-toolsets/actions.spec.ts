@@ -23,6 +23,7 @@ import {
   tryOutAssetTool,
   bulkDeletePlatformToolsets,
   createPlatformToolset,
+  getConfigFileToolset,
   getConfigFileToolsets,
   getPlatformToolset,
   getPlatformToolsets,
@@ -526,12 +527,22 @@ describe('Platform toolset server actions', () => {
   });
 
   test('Should call getConfigFileToolsets action', async () => {
-    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigFileToolsets();
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets);
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileToolset action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileToolset('my-toolset');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Toolsets, 'my-toolset');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

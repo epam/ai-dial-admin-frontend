@@ -14,6 +14,7 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -42,6 +43,8 @@ interface Props {
   globalInterceptors: string[];
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalRunner` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 const AppRunnerAssetView: FC<Props> = ({
@@ -51,6 +54,7 @@ const AppRunnerAssetView: FC<Props> = ({
   interceptors,
   globalInterceptors,
   optionWarnings,
+  isConfigFileSource,
 }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformAppRunners);
@@ -59,6 +63,14 @@ const AppRunnerAssetView: FC<Props> = ({
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(structuredClone(originalRunner));
@@ -81,8 +93,11 @@ const AppRunnerAssetView: FC<Props> = ({
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   useEffect(() => {

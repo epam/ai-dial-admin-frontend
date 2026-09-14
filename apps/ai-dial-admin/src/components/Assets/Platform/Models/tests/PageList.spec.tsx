@@ -5,10 +5,10 @@ import { getConfigFileModels } from '@/src/app/[lang]/platform-models/actions';
 import PlatformModelsPageList from '../PageList';
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({ getConfigFileModels: vi.fn() }));
-vi.mock('@/src/components/Models/List/List', () => ({
-  default: ({ data, isConfigFileSource }: { data: unknown[]; isConfigFileSource?: boolean }) => (
+vi.mock('@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList', () => ({
+  default: ({ names, route }: { names: string[]; route: string }) => (
     <div>
-      admin-grid-models:{data.length}:{String(isConfigFileSource)}
+      config-file-models:{names.length}:{route}
     </div>
   ),
 }));
@@ -29,15 +29,15 @@ describe('PlatformModelsPageList', () => {
     expect(getConfigFileModels).not.toHaveBeenCalled();
   });
 
-  test('renders the admin-grid list, marked as config-file-sourced, when the toggle is on', async () => {
+  test('renders the shared config-file list, for the Models route, when the toggle is on', async () => {
     mockContext.showConfigFiles = true;
     vi.mocked(getConfigFileModels).mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 'm1' } as any], failures: [] },
+      data: ['m1'],
     });
 
     render(<PlatformModelsPageList />);
 
-    expect(await screen.findByText('admin-grid-models:1:true')).toBeTruthy();
+    expect(await screen.findByText('config-file-models:1:/platform-models')).toBeTruthy();
   });
 });

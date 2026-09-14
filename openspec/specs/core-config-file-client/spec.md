@@ -66,37 +66,18 @@ DIAL Core keeps the entities of a given type in two places, and its merged runti
 - **THEN** the config-file read is issued regardless of the missing admin-backend URL
 - **AND** the API-written read is still skipped
 
-### Requirement: A full-entity population can be read for a config-file type
-The system SHALL provide a `ConfigFileApi.list<T>` method that returns the full entity population for a
-given readable type — calling `listNames` to enumerate all names and then `getEntity<T>` for every
-returned name in parallel — and SHALL return a `ConfigFileListResult<T>` carrying all successfully read
-entities plus a reported failure for each name whose read fails, without silently dropping failures.
-
-#### Scenario: Full population is returned
-- **WHEN** `ConfigFileApi.list` is called for a readable type
-- **THEN** every entity of that type in Core's config-file surface is returned
-
-#### Scenario: A non-readable type is refused before any request
-- **WHEN** `ConfigFileApi.list` is called for a type not in the allow-list
-- **THEN** the client refuses without issuing any request, the same way `listNames` and `getEntity` do
-
-#### Scenario: One failing name still returns the rest with a failure reported
-- **WHEN** `ConfigFileApi.list` is called and one name's individual read fails
-- **THEN** all other successfully read entities are returned alongside a reported failure for the
-  failing name, rather than the whole call being aborted
-
 ### Requirement: Config-file reads are available for Models, Routes, Applications, and Toolsets
 The system SHALL include `ConfigFileEntityType.Models`, `ConfigFileEntityType.Routes`,
-`ConfigFileEntityType.Applications`, and `ConfigFileEntityType.Toolsets` in `READABLE_CONFIG_FILE_TYPES`,
-making them accepted by `listNames`, `getEntity`, and `list`. `ConfigFileEntityType.Keys` SHALL remain
-excluded from the allow-list.
+`ConfigFileEntityType.Applications`, `ConfigFileEntityType.Toolsets`, and `ConfigFileEntityType.Schemas`
+in `READABLE_CONFIG_FILE_TYPES`, making them accepted by `listNames` and `getEntity`.
+`ConfigFileEntityType.Keys` SHALL remain excluded from the allow-list.
 
-#### Scenario: Models, Routes, Applications, and Toolsets are accepted
-- **WHEN** `listNames`, `getEntity`, or `list` is called for Models, Routes, Applications, or Toolsets
+#### Scenario: Models, Routes, Applications, Toolsets, and Schemas are accepted
+- **WHEN** `listNames` or `getEntity` is called for Models, Routes, Applications, Toolsets, or Schemas
 - **THEN** the request proceeds normally
 
 #### Scenario: Keys is still refused
-- **WHEN** `listNames`, `getEntity`, or `list` is called for the Keys type
+- **WHEN** `listNames` or `getEntity` is called for the Keys type
 - **THEN** the client refuses without issuing any request
 
 ### Requirement: A picker read can be scoped to config-file entities only

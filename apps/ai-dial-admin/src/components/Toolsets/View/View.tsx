@@ -40,24 +40,17 @@ interface Props {
   roles?: DialRole[] | null;
   originalToolset: Toolset;
   oAuthCode?: string | null;
-  /** True when `originalToolset` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset, isConfigFileSource }) => {
+const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
-  const { featureFlags, setEntityReadOnly } = useAppContext();
+  const { featureFlags } = useAppContext();
 
   const tabs = getToolsetTabs(t, featureFlags);
-
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,16 +79,13 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   );
 
   useEffect(() => {
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent(originalToolset?.name || '');
     if (!coreToolset && name) {
       getReqRef.current(getCoreToolset, name).then((data) => {
         setCoreToolset(data.response);
       });
     }
-  }, [coreToolset, originalToolset, isConfigFileSource]);
+  }, [coreToolset, originalToolset]);
 
   useEffect(() => {
     setSelectedToolset(

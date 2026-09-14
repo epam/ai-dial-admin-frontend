@@ -10,6 +10,7 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteRoutes,
   createRoute,
+  getConfigFileRoute,
   getConfigFileRoutes,
   getRoute,
   getRoutes,
@@ -166,12 +167,22 @@ describe('Assets route :: server actions', () => {
   });
 
   test('Should call getConfigFileRoutes action', async () => {
-    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigFileRoutes();
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes);
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileRoute action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoute('my-route');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes, 'my-route');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

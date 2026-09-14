@@ -2,7 +2,7 @@
 
 import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
 import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
@@ -21,8 +21,6 @@ interface Props {
 
 const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const isConfigFileMode = searchParams.get('configFile') === 'true';
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const folderContext = pathname ? getFolderContext?.(pathname, currentLocale)?.() : undefined;
@@ -31,8 +29,8 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
     if (!pathname) {
       return [];
     }
-    return getBreadcrumbs(pathname, currentLocale, isConfigFileMode);
-  }, [pathname, currentLocale, isConfigFileMode]);
+    return getBreadcrumbs(pathname, currentLocale);
+  }, [pathname, currentLocale]);
 
   const [enrichedBreadcrumbs, setEnrichedBreadcrumbs] = useState<Breadcrumb[] | null>(null);
 

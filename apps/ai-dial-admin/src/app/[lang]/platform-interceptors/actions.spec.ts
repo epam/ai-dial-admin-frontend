@@ -10,6 +10,7 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteInterceptors,
   createInterceptor,
+  getConfigFileInterceptor,
   getConfigFileInterceptors,
   getInterceptor,
   getInterceptorConfigurationSchema,
@@ -126,12 +127,26 @@ describe('Assets interceptor :: server actions', () => {
   });
 
   test('Should call getConfigFileInterceptors action', async () => {
-    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigFileInterceptors();
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileInterceptor action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileInterceptor('my-interceptor');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ConfigFileEntityType.Interceptors,
+      'my-interceptor',
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

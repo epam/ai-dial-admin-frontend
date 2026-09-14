@@ -45,22 +45,15 @@ interface Props {
   interceptors: DialInterceptor[];
   models: DialModel[];
   applicationSchemes: DialApplicationScheme[];
-  /** True when `originalApplication` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const ApplicationView: FC<Props> = ({ etag, originalApplication, isConfigFileSource, ...props }) => {
+const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector, featureFlags, setEntityReadOnly } = useAppContext();
-
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  const { visualizerConnector, featureFlags } = useAppContext();
 
   const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t, featureFlags));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -99,16 +92,13 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, isConfigFileSou
   }, [originalApplication.mcp?.endpoint]);
 
   useEffect(() => {
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent(originalApplication?.name || '');
     if (!coreApplication && name) {
       getReqRef.current(getCoreApplication, name).then((data) => {
         setCoreApplication(data.response);
       });
     }
-  }, [coreApplication, originalApplication, isConfigFileSource]);
+  }, [coreApplication, originalApplication]);
 
   useEffect(() => {
     setSelectedApplication(

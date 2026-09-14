@@ -14,7 +14,7 @@ interface SimpleHeaderMockProps {
 }
 
 const { useAppContextMock, simpleHeaderSpy } = vi.hoisted(() => ({
-  useAppContextMock: vi.fn<() => Pick<AppContextType, 'featureFlags'>>(),
+  useAppContextMock: vi.fn<() => Pick<AppContextType, 'featureFlags' | 'setEntityReadOnly'>>(),
   simpleHeaderSpy: vi.fn<(props: SimpleHeaderMockProps) => void>(),
 }));
 
@@ -53,6 +53,7 @@ describe('ModelView — Audit tab wiring', () => {
         dashboardEnabled: isDashboardEnabled,
         adminApiEnabled: isAdminApiEnabled,
       } as FeatureFlags,
+      setEntityReadOnly: vi.fn(),
     });
     render(<ModelView etag="etag" originalModel={model} roles={[]} interceptors={[]} />);
 

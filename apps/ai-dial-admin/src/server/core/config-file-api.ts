@@ -1,11 +1,6 @@
 import { CORE_CONFIG_FILE_URL, READABLE_CONFIG_FILE_TYPES } from '@/src/constants/config-file-core';
 import { Token } from '@/src/models/auth';
-import {
-  ConfigFileListResponse,
-  ConfigFileListResult,
-  ConfigFileReadFailure,
-  ConfigFileReadResult,
-} from '@/src/models/dial/config-file';
+import { ConfigFileListResponse, ConfigFileReadFailure, ConfigFileReadResult } from '@/src/models/dial/config-file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConfigFileEntityType, ConfigFileFailureReason } from '@/src/types/config-file-entity';
 import { CoreApi } from './core-api';
@@ -68,45 +63,6 @@ export class ConfigFileApi extends CoreApi {
     }
 
     return { success: true, data: res.response as T };
-  }
-
-  /**
-   * Reads the full population of one type — every entity in full, not just its name. Core's list
-   * route (`listNames`) never returns more than a name per entry — verified against
-   * `FileConfigController.handleList`, which builds each item as `{name: key}` and nothing else, with
-   * no parameter to ask for full bodies — so this composes it with a per-name `getEntity`: there is no
-   * bulk-read-with-bodies route to call instead. The N+1 request cost this implies is real but
-   * deliberately accepted: `useConfigFileEntityList` only calls `list` once a user opts into
-   * `showConfigFiles` for that entity type, so it is never paid by a deployment that doesn't use this
-   * surface. Mirrors `getConfigEntityOptions`'s partial-success shape: a name whose `getEntity` fails
-   * is reported in `failures` rather than silently dropped, while every entity that did read
-   * successfully is still returned. The outer `ConfigFileReadResult` only fails when the type is
-   * unreadable or the name listing itself fails — at that point there is no population to return even
-   * partially.
-   */
-  async list<T>(token: Token, type: ConfigFileEntityType): Promise<ConfigFileReadResult<ConfigFileListResult<T>>> {
-    const refusal = unreadableTypeFailure(type);
-    if (refusal) {
-      return { success: false, failure: refusal };
-    }
-
-    const names = await this.listNames(token, type);
-    if (!names.success) {
-      return names;
-    }
-
-    const reads = await Promise.all(names.data.map((name) => this.getEntity<T>(token, type, name)));
-    const entities: T[] = [];
-    const failures: ConfigFileReadFailure[] = [];
-    reads.forEach((read) => {
-      if (read.success) {
-        entities.push(read.data);
-      } else {
-        failures.push(read.failure);
-      }
-    });
-
-    return { success: true, data: { entities, failures } };
   }
 }
 

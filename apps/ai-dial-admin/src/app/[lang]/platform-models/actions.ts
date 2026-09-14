@@ -57,8 +57,14 @@ export async function bulkDeleteModels(paths: { path: string }[]) {
   return bulkDeleteAssets(assetApi, token, ResourceType.MODEL, paths);
 }
 
-/** `config-file-entity-views`: the full model population Core's config file declares, for the toggled-on list. */
+/** `config-file-entity-views`: the model names Core's config file declares, for the toggled-on list. */
 export async function getConfigFileModels() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<DialModel>(token, ConfigFileEntityType.Models);
+  return configFileApi.listNames(token, ConfigFileEntityType.Models);
+}
+
+/** `config-file-entity-views`: reads a model by name from Core's config-file population directly. */
+export async function getConfigFileModel(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialModel>(token, ConfigFileEntityType.Models, name);
 }

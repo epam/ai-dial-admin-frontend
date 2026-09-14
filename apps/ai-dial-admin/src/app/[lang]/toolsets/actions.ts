@@ -2,9 +2,8 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { configFileApi, toolSetsApi } from '@/src/app/api/api';
+import { toolSetsApi } from '@/src/app/api/api';
 import { Toolset, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -12,12 +11,6 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 export async function getCoreToolset(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return toolSetsApi.getCoreToolset(name, token);
-}
-
-/** `config-file-entity-views`: reads a toolset by name from Core's config-file population directly. */
-export async function getConfigFileToolset(name: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.getEntity<Toolset>(token, ConfigFileEntityType.Toolsets, name);
 }
 
 export async function updateCoreToolset(toolset: Toolset, name: string, eTag: string) {

@@ -5,12 +5,12 @@ import { cookies, headers } from 'next/headers';
 import { assetApi, configFileApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Toolset } from '@/src/models/dial/toolset';
 import {
   DialPlatformToolsetResource,
   DialToolsetResource,
   ToolsetAuthCredentialLevel,
 } from '@/src/models/dial/resource';
-import { Toolset } from '@/src/models/dial/toolset';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -190,10 +190,16 @@ export async function exportToolsets(paths: string[], type?: ImportFileType) {
   });
 }
 
-/** `config-file-entity-views`: the full toolset population Core's config file declares. */
+/** `config-file-entity-views`: the toolset names Core's config file declares. */
 export async function getConfigFileToolsets() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<Toolset>(token, ConfigFileEntityType.Toolsets);
+  return configFileApi.listNames(token, ConfigFileEntityType.Toolsets);
+}
+
+/** `config-file-entity-views`: reads a toolset by name from Core's config-file population directly. */
+export async function getConfigFileToolset(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<Toolset>(token, ConfigFileEntityType.Toolsets, name);
 }
 
 export async function tryOutAssetTool(body: Record<string, unknown>, resourceType = ResourceType.TOOLSET) {

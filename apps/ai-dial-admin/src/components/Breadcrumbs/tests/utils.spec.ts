@@ -30,6 +30,11 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config.length).toEqual(0);
   });
 
+  test('An App Runner detail route keeps its own list segment', () => {
+    const config = getBreadcrumbs('/application-runners/runner-1', 'en');
+    expect(config[0].href).toEqual('/application-runners');
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);
@@ -67,27 +72,9 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
   });
 
-  test('Should override the list breadcrumb to the platform route in config-file mode', () => {
-    const config = getBreadcrumbs('/en/models/modelId', 'en', true);
-    expect(config.length).toEqual(2);
-    expect(config[0].href).toEqual('/en/platform-models');
-    expect(config[0].key).toEqual(MenuI18nKey.Models);
-    expect(config[1].name).toEqual('modelId');
-  });
-
-  test('Should override the list breadcrumb to the asset route in config-file mode', () => {
-    const config = getBreadcrumbs('/en/applications/appId', 'en', true);
-    expect(config[0].href).toEqual('/en/assets-applications');
-  });
-
-  test('Should leave the list breadcrumb unchanged outside config-file mode', () => {
-    const config = getBreadcrumbs('/en/models/modelId', 'en', false);
+  test('Should keep the list breadcrumb pointed at the entity type\'s own route', () => {
+    const config = getBreadcrumbs('/en/models/modelId', 'en');
     expect(config[0].href).toEqual('/en/models');
-  });
-
-  test('Should leave breadcrumbs for a route with no config-file counterpart unchanged', () => {
-    const config = getBreadcrumbs('/en/adapters/adapterId', 'en', true);
-    expect(config[0].href).toEqual('/en/adapters');
   });
 
   test('Should translate runs compare segment via breadcrumb config', () => {

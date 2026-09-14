@@ -24,6 +24,7 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  getConfigFileApplication,
   getConfigFileApplications,
   signInExternalService,
   signOutExternalService,
@@ -413,12 +414,22 @@ describe('Assets application :: server actions', () => {
   });
 
   test('Should call getConfigFileApplications action', async () => {
-    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigFileApplications();
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications);
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileApplication action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileApplication('my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications, 'my-app');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

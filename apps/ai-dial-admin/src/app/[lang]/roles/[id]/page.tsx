@@ -8,29 +8,21 @@ import RolesView from '@/src/components/Roles/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getModelsList } from '@/src/app/[lang]/models/actions';
-import { getConfigFileRole } from '@/src/app/[lang]/roles/actions';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { Toolset } from '@/src/models/dial/toolset';
-import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ configFile?: string }>;
-}) {
-  const isConfigFileMode = (await params.searchParams).configFile === 'true';
-
-  if (!process.env.DIAL_ADMIN_API_URL && !isConfigFileMode) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
     redirect(ApplicationRoute.Home);
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -46,30 +38,16 @@ export default async function Page(params: {
   let keys: DialKey[] | null = [];
 
   try {
-    const id = (await params.params).id;
-
-    if (isConfigFileMode) {
-      const result = await getConfigFileRole(id);
-      role = result.success ? (result.data as DialRole) : null;
-      roles = role ? [role] : [];
-      models = await readConfigEntities<DialModel>(token, ConfigFileEntityType.Models, [], true);
-      applications = await readConfigEntities<DialApplication>(token, ConfigFileEntityType.Applications, [], true);
-      toolsets = await readConfigEntities<Toolset>(token, ConfigFileEntityType.Toolsets, [], true);
-      routes = await readConfigEntities<DialRoute>(token, ConfigFileEntityType.Routes, [], true);
-      // Keys have no config-file population — Core refuses that route unconditionally.
-      keys = [];
-    } else {
-      roles = await rolesApi.getRolesList(token);
-      models = await getModelsList();
-      keys = await keysApi.getKeysList(token);
-      applications = await applicationsApi.getApplicationsList(token);
-      toolsets = await toolSetsApi.getToolsetList(token);
-      routes = await routesApi.getRoutesList(token);
-      role = await rolesApi.getRole(id, token, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as DialApplication | null;
-      });
-    }
+    roles = await rolesApi.getRolesList(token);
+    models = await getModelsList();
+    keys = await keysApi.getKeysList(token);
+    applications = await applicationsApi.getApplicationsList(token);
+    toolsets = await toolSetsApi.getToolsetList(token);
+    routes = await routesApi.getRoutesList(token);
+    role = await rolesApi.getRole((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialApplication | null;
+    });
   } catch (e) {
     errorObjLog(e, 'Failed to fetch role view data');
   }
@@ -91,7 +69,6 @@ export default async function Page(params: {
         routes={routes || []}
         keys={keys || []}
         etag={etag}
-        isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>
   );

@@ -2,19 +2,12 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { applicationsApi, configFileApi } from '@/src/app/api/api';
+import { applicationsApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialApplication } from '@/src/models/dial/application';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getAppRoutes } from '@/src/utils/entities/app-routes';
-
-/** `config-file-entity-views`: reads an application by name from Core's config-file population directly. */
-export async function getConfigFileApplication(name: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.getEntity<DialApplication>(token, ConfigFileEntityType.Applications, name);
-}
 
 export async function getApplications() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

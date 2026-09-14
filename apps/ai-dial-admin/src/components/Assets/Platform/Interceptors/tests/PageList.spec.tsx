@@ -5,10 +5,10 @@ import { getConfigFileInterceptors } from '@/src/app/[lang]/platform-interceptor
 import PlatformInterceptorsPageList from '../PageList';
 
 vi.mock('@/src/app/[lang]/platform-interceptors/actions', () => ({ getConfigFileInterceptors: vi.fn() }));
-vi.mock('@/src/components/Interceptors/List/List', () => ({
-  default: ({ data, isConfigFileSource }: { data: unknown[]; isConfigFileSource?: boolean }) => (
+vi.mock('@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList', () => ({
+  default: ({ names, route }: { names: string[]; route: string }) => (
     <div>
-      admin-grid-interceptors:{data.length}:{String(isConfigFileSource)}
+      config-file-interceptors:{names.length}:{route}
     </div>
   ),
 }));
@@ -29,15 +29,15 @@ describe('PlatformInterceptorsPageList', () => {
     expect(getConfigFileInterceptors).not.toHaveBeenCalled();
   });
 
-  test('renders the admin-grid list, marked as config-file-sourced, when the toggle is on', async () => {
+  test('renders the shared config-file list, for the Interceptors route, when the toggle is on', async () => {
     mockContext.showConfigFiles = true;
     vi.mocked(getConfigFileInterceptors).mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 'i1' } as any], failures: [] },
+      data: ['i1'],
     });
 
     render(<PlatformInterceptorsPageList />);
 
-    expect(await screen.findByText('admin-grid-interceptors:1:true')).toBeTruthy();
+    expect(await screen.findByText('config-file-interceptors:1:/platform-interceptors')).toBeTruthy();
   });
 });

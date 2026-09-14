@@ -15,11 +15,15 @@ import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getModel } from '../actions';
+import { getConfigFileModel, getModel } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ configFile?: string }>;
+}) {
+  const isConfigFileMode = (await params.searchParams).configFile === 'true';
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -31,11 +35,16 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const path = (await params.params).id;
 
-    model = await getModel(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as AssetModel | null;
-    });
-    translators = (await getTranslators('')) || [];
+    if (isConfigFileMode) {
+      const result = await getConfigFileModel(path);
+      model = result.success ? (result.data as unknown as AssetModel) : null;
+    } else {
+      model = await getModel(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as AssetModel | null;
+      });
+      translators = (await getTranslators('')) || [];
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch model view data');
   }
@@ -65,6 +74,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         globalInterceptors={globalInterceptors}
         optionWarnings={optionWarnings}
         translators={translators}
+        isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>
   );

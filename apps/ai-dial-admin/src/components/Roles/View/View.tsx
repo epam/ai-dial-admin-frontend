@@ -35,24 +35,17 @@ interface Props {
   routes?: DialRoute[];
   keys: DialKey[];
   etag: string;
-  /** True when `originalRole` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const RolesView: FC<Props> = ({ originalRole, etag, keys, isConfigFileSource, ...props }) => {
+const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
-  const { featureFlags, setEntityReadOnly } = useAppContext();
+  const { featureFlags } = useAppContext();
 
   const tabs = getRoleTabs(t, featureFlags);
-
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(structuredClone(originalRole));
@@ -78,16 +71,13 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, isConfigFileSource, ..
     [isEditorEnabled, selectedFormat],
   );
   useEffect(() => {
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent((originalRole as { name: string })?.name);
     if (!coreRole && name) {
       getReqRef.current(getCoreRole, name).then((data) => {
         setCoreRole(data.response);
       });
     }
-  }, [coreRole, originalRole, isConfigFileSource]);
+  }, [coreRole, originalRole]);
 
   useEffect(() => {
     setSelectedRole(

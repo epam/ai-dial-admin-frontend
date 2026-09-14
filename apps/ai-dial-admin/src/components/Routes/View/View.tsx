@@ -29,23 +29,16 @@ interface Props {
   names: string[];
   etag: string;
   roles: DialRole[];
-  /** True when `originalRoute` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const RouteView: FC<Props> = ({ originalRoute, etag, names, roles, isConfigFileSource }) => {
+const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const t = useI18n();
   const router = useRouter();
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { featureFlags, setEntityReadOnly } = useAppContext();
+  const { featureFlags } = useAppContext();
   const tabs = getRouteTabs(t, featureFlags);
-
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRoute, setSelectedRoute] = useState(cloneDeep(originalRoute));
@@ -70,16 +63,13 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles, isConfigFileS
   );
 
   useEffect(() => {
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent(originalRoute?.name || '');
     if (!coreRoute && name) {
       getReqRef.current(getCoreRoute, name).then((data) => {
         setCoreRoute(data.response);
       });
     }
-  }, [coreRoute, originalRoute, isConfigFileSource]);
+  }, [coreRoute, originalRoute]);
 
   useEffect(() => {
     setSelectedRoute(

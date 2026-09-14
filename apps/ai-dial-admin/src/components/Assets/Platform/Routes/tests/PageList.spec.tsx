@@ -5,10 +5,10 @@ import { getConfigFileRoutes } from '@/src/app/[lang]/platform-routes/actions';
 import PlatformRoutesPageList from '../PageList';
 
 vi.mock('@/src/app/[lang]/platform-routes/actions', () => ({ getConfigFileRoutes: vi.fn() }));
-vi.mock('@/src/components/Routes/List/RoutesList', () => ({
-  default: ({ data, isConfigFileSource }: { data: unknown[]; isConfigFileSource?: boolean }) => (
+vi.mock('@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList', () => ({
+  default: ({ names, route }: { names: string[]; route: string }) => (
     <div>
-      admin-grid-routes:{data.length}:{String(isConfigFileSource)}
+      config-file-routes:{names.length}:{route}
     </div>
   ),
 }));
@@ -29,15 +29,15 @@ describe('PlatformRoutesPageList', () => {
     expect(getConfigFileRoutes).not.toHaveBeenCalled();
   });
 
-  test('renders the admin-grid list, marked as config-file-sourced, when the toggle is on', async () => {
+  test('renders the shared config-file list, for the Routes route, when the toggle is on', async () => {
     mockContext.showConfigFiles = true;
     vi.mocked(getConfigFileRoutes).mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 'r1' } as any], failures: [] },
+      data: ['r1'],
     });
 
     render(<PlatformRoutesPageList />);
 
-    expect(await screen.findByText('admin-grid-routes:1:true')).toBeTruthy();
+    expect(await screen.findByText('config-file-routes:1:/platform-routes')).toBeTruthy();
   });
 });

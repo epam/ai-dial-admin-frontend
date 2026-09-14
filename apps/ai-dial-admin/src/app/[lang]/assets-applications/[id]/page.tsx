@@ -24,13 +24,13 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { getApp, getApps, getPlatformApplication } from '../actions';
+import { getApp, getApps, getConfigFileApplication, getPlatformApplication } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path?: string }>;
+  searchParams: Promise<{ path?: string; configFile?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -52,18 +52,25 @@ export default async function Page(params: {
 
   // A `path` query param means this is a public-bucket (versioned, folder-nested) application; its
   // absence means a platform-bucket one — flat, identified by name alone (design.md D3/D5).
-  const rawPath = (await params.searchParams).path;
+  const searchParams = await params.searchParams;
+  const rawPath = searchParams.path;
+  const isConfigFileMode = searchParams.configFile === 'true';
   const isPlatformBucket = !rawPath;
   const name = decodeURIComponent((await params.params).id);
 
   try {
     if (isPlatformBucket) {
-      const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
+      if (isConfigFileMode) {
+        const result = await getConfigFileApplication(name);
+        app = result.success ? (result.data as unknown as AssetApp) : null;
+      } else {
+        const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-      app = await getPlatformApplication(path, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return (res?.response as unknown as AssetApp) || null;
-      });
+        app = await getPlatformApplication(path, etag).then((res) => {
+          etag = res?.etag || DEFAULT_ETAG;
+          return (res?.response as unknown as AssetApp) || null;
+        });
+      }
     } else {
       const path = decodeURIComponent(rawPath as string);
 
@@ -122,6 +129,7 @@ export default async function Page(params: {
           globalInterceptors={globalInterceptors}
           translators={translators}
           optionWarnings={optionWarnings}
+          isConfigFileSource={isConfigFileMode}
         />
       ) : (
         <AppView

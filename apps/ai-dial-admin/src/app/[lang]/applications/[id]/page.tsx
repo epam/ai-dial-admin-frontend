@@ -3,7 +3,6 @@ import { notFound, redirect } from 'next/navigation';
 
 import { ApplicationRoute } from '@/src/types/routes';
 
-import { getConfigFileApplication } from '@/src/app/[lang]/applications/actions';
 import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, rolesApi } from '@/src/app/api/api';
 import ApplicationView from '@/src/components/Applications/View/View';
@@ -13,22 +12,15 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ configFile?: string }>;
-}) {
-  const isConfigFileMode = (await params.searchParams).configFile === 'true';
-
-  if (!process.env.DIAL_ADMIN_API_URL && !isConfigFileMode) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
     redirect(ApplicationRoute.Home);
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -43,28 +35,15 @@ export default async function Page(params: {
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    const id = (await params.params).id;
-
-    if (isConfigFileMode) {
-      const result = await getConfigFileApplication(id);
-      application = result.success ? (result.data as DialApplication) : null;
-      applications = application ? [application] : [];
-      models = await readConfigEntities<DialModel>(token, ConfigFileEntityType.Models, [], true);
-      roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, [], true);
-      interceptors = await readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, [], true);
-      // App Runners have no config-file population — see `config-file-entity-views`.
-      applicationSchemes = [];
-    } else {
-      models = (await getModelsList()) || [];
-      applications = (await applicationsApi.getApplicationsList(token)) || [];
-      application = await applicationsApi.getApplication(id, token, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as DialApplication | null;
-      });
-      applicationSchemes = (await applicationRunnersApi.getApplicationSchemesList(token)) || [];
-      roles = (await rolesApi.getRolesList(token)) || [];
-      interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
-    }
+    models = (await getModelsList()) || [];
+    applications = (await applicationsApi.getApplicationsList(token)) || [];
+    application = await applicationsApi.getApplication((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialApplication | null;
+    });
+    applicationSchemes = (await applicationRunnersApi.getApplicationSchemesList(token)) || [];
+    roles = (await rolesApi.getRolesList(token)) || [];
+    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch application view data');
   }
@@ -86,7 +65,6 @@ export default async function Page(params: {
         models={models}
         applicationSchemes={applicationSchemes}
         originalApplication={application}
-        isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>
   );

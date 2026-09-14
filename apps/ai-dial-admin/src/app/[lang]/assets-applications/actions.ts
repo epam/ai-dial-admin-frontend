@@ -271,8 +271,14 @@ export async function signOutExternalService(appPath: string, serviceId: string,
   });
 }
 
-/** `config-file-entity-views`: the full application population Core's config file declares. */
+/** `config-file-entity-views`: the application names Core's config file declares. */
 export async function getConfigFileApplications() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<DialApplication>(token, ConfigFileEntityType.Applications);
+  return configFileApi.listNames(token, ConfigFileEntityType.Applications);
+}
+
+/** `config-file-entity-views`: reads an application by name from Core's config-file population directly. */
+export async function getConfigFileApplication(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialApplication>(token, ConfigFileEntityType.Applications, name);
 }

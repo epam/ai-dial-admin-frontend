@@ -34,21 +34,12 @@ interface Props {
   etag: string;
   roles?: DialRole[] | null;
   interceptors?: DialInterceptor[] | null;
-  /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const View: FC<Props> = ({ originalModel, etag, isConfigFileSource, ...props }) => {
+const View: FC<Props> = ({ originalModel, etag, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const { featureFlags, setEntityReadOnly } = useAppContext();
-
-  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
-  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  const { featureFlags } = useAppContext();
 
   const tabs = getModelsTabs(t, featureFlags);
   const router = useRouter();
@@ -82,19 +73,13 @@ const View: FC<Props> = ({ originalModel, etag, isConfigFileSource, ...props }) 
   );
 
   useEffect(() => {
-    // The "compare with Core" format has nothing to compare against for a config-file-sourced model —
-    // it already is Core's own view, and there's no admin-backend `getCoreModel` route to call without
-    // the admin backend anyway.
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent((originalModel as { name: string })?.name);
     if (!coreModel && name) {
       getCoreModel(name).then((data) => {
         setCoreModel(data.response as DialModel);
       });
     }
-  }, [coreModel, originalModel, isConfigFileSource]);
+  }, [coreModel, originalModel]);
 
   useEffect(() => {
     setSelectedModel(

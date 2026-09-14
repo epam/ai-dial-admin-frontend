@@ -62,8 +62,14 @@ export async function getInterceptorConfigurationSchema(name: string) {
   return deploymentConfigurationApi.getConfigurationSchema(token, name);
 }
 
-/** `config-file-entity-views`: the full interceptor population Core's config file declares. */
+/** `config-file-entity-views`: the interceptor names Core's config file declares. */
 export async function getConfigFileInterceptors() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<DialInterceptor>(token, ConfigFileEntityType.Interceptors);
+  return configFileApi.listNames(token, ConfigFileEntityType.Interceptors);
+}
+
+/** `config-file-entity-views`: reads an interceptor by name from Core's config-file population directly. */
+export async function getConfigFileInterceptor(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialInterceptor>(token, ConfigFileEntityType.Interceptors, name);
 }

@@ -119,9 +119,9 @@ const BaseEntityList = <T extends object>({
 
   const openInNewTab = useCallback(
     (entity?: T) => {
-      onOpenInNewTab(route, entity);
+      onOpenInNewTab(route, entity, isConfigFileSource ? CONFIG_FILE_URL_SUFFIX : undefined);
     },
-    [route],
+    [route, isConfigFileSource],
   );
 
   const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);

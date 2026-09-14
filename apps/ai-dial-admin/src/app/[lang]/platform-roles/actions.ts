@@ -84,8 +84,14 @@ export async function bulkDeleteRoles(paths: { path: string }[]) {
   return bulkDeleteAssets(assetApi, token, ResourceType.ROLE, paths);
 }
 
-/** `config-file-entity-views`: the full role population Core's config file declares. */
+/** `config-file-entity-views`: the role names Core's config file declares. */
 export async function getConfigFileRoles() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<DialRole>(token, ConfigFileEntityType.Roles);
+  return configFileApi.listNames(token, ConfigFileEntityType.Roles);
+}
+
+/** `config-file-entity-views`: reads a role by name from Core's config-file population directly. */
+export async function getConfigFileRole(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialRole>(token, ConfigFileEntityType.Roles, name);
 }

@@ -3,22 +3,26 @@
 import { FC } from 'react';
 
 import { getConfigFileInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
+import ConfigFileEntityList from '@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList';
 import ConfigFileListSwap from '@/src/components/Common/ConfigFileListSwap/ConfigFileListSwap';
 import ConfigFilesToggle from '@/src/components/Common/ConfigFilesToggle/ConfigFilesToggle';
-import AdminInterceptorsList from '@/src/components/Interceptors/List/List';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { ApplicationRoute } from '@/src/types/routes';
 import AssetInterceptorsList from './List';
 
 /**
  * What `platform-interceptors/page.tsx` renders: the existing asset browser by default, swapped for
- * the config-file-backed admin grid when `showConfigFiles` is on — see `config-file-entity-views`.
+ * the config-file-backed, names-only list when `showConfigFiles` is on — see `config-file-entity-views`.
  */
 const PlatformInterceptorsPageList: FC = () => (
-  <ConfigFileListSwap<DialInterceptor>
+  <ConfigFileListSwap
     assetList={<AssetInterceptorsList />}
     fetchConfigFileList={getConfigFileInterceptors}
-    renderConfigFileList={(data) => (
-      <AdminInterceptorsList data={data} isConfigFileSource headerExtra={<ConfigFilesToggle />} />
+    renderConfigFileList={(names) => (
+      <ConfigFileEntityList
+        names={names}
+        route={ApplicationRoute.PlatformInterceptors}
+        headerExtra={<ConfigFilesToggle />}
+      />
     )}
   />
 );

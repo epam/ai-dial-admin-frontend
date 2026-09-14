@@ -14,7 +14,7 @@ describe('useConfigFileEntityList', () => {
   });
 
   test('fetches once when showConfigFiles becomes true, and populates data', async () => {
-    const fetchList = vi.fn().mockResolvedValue({ success: true, data: { entities: [{ name: 'a' }], failures: [] } });
+    const fetchList = vi.fn().mockResolvedValue({ success: true, data: ['a'] });
 
     const { result, rerender } = renderHook(({ show }) => useConfigFileEntityList(show, fetchList), {
       initialProps: { show: false },
@@ -22,12 +22,12 @@ describe('useConfigFileEntityList', () => {
 
     rerender({ show: true });
 
-    await waitFor(() => expect(result.current.data).toEqual([{ name: 'a' }]));
+    await waitFor(() => expect(result.current.data).toEqual(['a']));
     expect(fetchList).toHaveBeenCalledOnce();
   });
 
   test('does not re-fetch on a later toggle-off/toggle-on', async () => {
-    const fetchList = vi.fn().mockResolvedValue({ success: true, data: { entities: [], failures: [] } });
+    const fetchList = vi.fn().mockResolvedValue({ success: true, data: [] });
 
     const { rerender } = renderHook(({ show }) => useConfigFileEntityList(show, fetchList), {
       initialProps: { show: false },

@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { configFileApi, rolesApi } from '@/src/app/api/api';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
+import { rolesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { createRole, getConfigFileRole, removeRole, updateRole, getCoreRole, updateCoreRole } from './actions';
+import { createRole, removeRole, updateRole, getCoreRole, updateCoreRole } from './actions';
 
 const fetch = createFetchMock(vi);
 vi.mock('@/src/utils/auth/auth-request');
@@ -62,16 +61,6 @@ describe('Roles :: server actions', () => {
     const result = await updateCoreRole({ name: 'test' }, 'test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(rolesApi.updateCoreRole).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call getConfigFileRole action', async () => {
-    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getConfigFileRole('my-role');
-
-    expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Roles, 'my-role');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

@@ -5,10 +5,10 @@ import { getConfigFileRoles } from '@/src/app/[lang]/platform-roles/actions';
 import PlatformRolesPageList from '../PageList';
 
 vi.mock('@/src/app/[lang]/platform-roles/actions', () => ({ getConfigFileRoles: vi.fn() }));
-vi.mock('@/src/components/Roles/List/List', () => ({
-  default: ({ data, isConfigFileSource }: { data: unknown[]; isConfigFileSource?: boolean }) => (
+vi.mock('@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList', () => ({
+  default: ({ names, route }: { names: string[]; route: string }) => (
     <div>
-      admin-grid-roles:{data.length}:{String(isConfigFileSource)}
+      config-file-roles:{names.length}:{route}
     </div>
   ),
 }));
@@ -29,15 +29,15 @@ describe('PlatformRolesPageList', () => {
     expect(getConfigFileRoles).not.toHaveBeenCalled();
   });
 
-  test('renders the admin-grid list, marked as config-file-sourced, when the toggle is on', async () => {
+  test('renders the shared config-file list, for the Roles route, when the toggle is on', async () => {
     mockContext.showConfigFiles = true;
     vi.mocked(getConfigFileRoles).mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 'r1' } as any], failures: [] },
+      data: ['r1'],
     });
 
     render(<PlatformRolesPageList />);
 
-    expect(await screen.findByText('admin-grid-roles:1:true')).toBeTruthy();
+    expect(await screen.findByText('config-file-roles:1:/platform-roles')).toBeTruthy();
   });
 });

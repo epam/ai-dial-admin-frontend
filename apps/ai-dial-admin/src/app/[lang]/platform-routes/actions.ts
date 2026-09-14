@@ -73,8 +73,14 @@ export async function bulkDeleteRoutes(paths: { path: string }[]) {
   return bulkDeleteAssets(assetApi, token, ResourceType.ROUTE, paths);
 }
 
-/** `config-file-entity-views`: the full route population Core's config file declares. */
+/** `config-file-entity-views`: the route names Core's config file declares. */
 export async function getConfigFileRoutes() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.list<DialRoute>(token, ConfigFileEntityType.Routes);
+  return configFileApi.listNames(token, ConfigFileEntityType.Routes);
+}
+
+/** `config-file-entity-views`: reads a route by name from Core's config-file population directly. */
+export async function getConfigFileRoute(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialRoute>(token, ConfigFileEntityType.Routes, name);
 }

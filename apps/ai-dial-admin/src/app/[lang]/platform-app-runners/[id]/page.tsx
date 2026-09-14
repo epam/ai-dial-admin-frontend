@@ -13,11 +13,15 @@ import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getRunner } from '../actions';
+import { getConfigFileAppRunner, getRunner } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ configFile?: string }>;
+}) {
+  const isConfigFileMode = (await params.searchParams).configFile === 'true';
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -27,10 +31,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const path = (await params.params).id;
 
-    runner = await getRunner(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as DialAppRunnerResource | null;
-    });
+    if (isConfigFileMode) {
+      const result = await getConfigFileAppRunner(path);
+      runner = result.success ? (result.data as unknown as DialAppRunnerResource) : null;
+    } else {
+      runner = await getRunner(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as DialAppRunnerResource | null;
+      });
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app runner asset data');
   }
@@ -56,6 +65,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         interceptors={interceptors}
         globalInterceptors={globalInterceptors}
         optionWarnings={optionWarnings}
+        isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>
   );

@@ -30,7 +30,7 @@ describe('ConfigFileListSwap', () => {
     mockContext.showConfigFiles = true;
     const fetchConfigFileList = vi.fn().mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 'a' }, { name: 'b' }], failures: [] },
+      data: ['a', 'b'],
     });
 
     render(

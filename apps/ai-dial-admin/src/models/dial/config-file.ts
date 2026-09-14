@@ -53,14 +53,3 @@ export interface ConfigEntityOptions {
   options: ConfigEntityOption[];
   failures: ConfigFileReadFailure[];
 }
-
-/**
- * The full-entity population read (`ConfigFileApi.list`). Mirrors `ConfigEntityOptions`'s
- * partial-success shape: `entities` is whatever the composite read to full, `failures` names every
- * name whose individual `getEntity` failed, so one bad entity degrades the population rather than
- * failing the whole read.
- */
-export interface ConfigFileListResult<T> {
-  entities: T[];
-  failures: ConfigFileReadFailure[];
-}

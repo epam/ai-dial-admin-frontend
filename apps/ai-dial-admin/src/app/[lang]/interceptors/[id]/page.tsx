@@ -4,7 +4,6 @@ import { notFound, redirect } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getConfigFileInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, settingsApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
@@ -15,22 +14,15 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
-import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ configFile?: string }>;
-}) {
-  const isConfigFileMode = (await params.searchParams).configFile === 'true';
-
-  if (!process.env.DIAL_ADMIN_API_URL && !isConfigFileMode) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
+  if (!process.env.DIAL_ADMIN_API_URL) {
     redirect(ApplicationRoute.Home);
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -45,39 +37,24 @@ export default async function Page(params: {
   let appRunners: DialApplicationScheme[] | null = [];
 
   try {
-    const id = (await params.params).id;
-
-    if (isConfigFileMode) {
-      const result = await getConfigFileInterceptor(id);
-      interceptor = result.success ? (result.data as DialInterceptor) : null;
-      models = await readConfigEntities<DialModel>(token, ConfigFileEntityType.Models, [], true);
-      applications = await readConfigEntities<DialApplication>(token, ConfigFileEntityType.Applications, [], true);
-      // App Runners have no config-file population — see `config-file-entity-views`.
-      appRunners = [];
-    } else {
-      models = await getModelsList();
-      applications = await applicationsApi.getApplicationsList(token);
-      appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
-      interceptor = await interceptorsApi.getInterceptor(id, token, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as DialModel | null;
-      });
-    }
-
-    // Global-interceptor status is Core-direct-safe in either mode — reused as-is.
+    models = await getModelsList();
+    applications = await applicationsApi.getApplicationsList(token);
+    appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
+    interceptor = await interceptorsApi.getInterceptor((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialModel | null;
+    });
     globalInterceptors =
       (await settingsApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
 
-    if (interceptor) {
-      interceptor = {
-        ...interceptor,
-        status: globalInterceptors?.includes(interceptor?.name as string)
-          ? InterceptorStatus.GLOBAL
-          : InterceptorStatus.LOCAL,
-      };
-    }
+    interceptor = {
+      ...interceptor,
+      status: globalInterceptors?.includes(interceptor?.name as string)
+        ? InterceptorStatus.GLOBAL
+        : InterceptorStatus.LOCAL,
+    };
 
-    if (!isConfigFileMode && interceptor?.source?.$type === SOURCE_TYPE.RUNNER) {
+    if (interceptor?.source?.$type === SOURCE_TYPE.RUNNER) {
       interceptorTemplate = await getInterceptorTemplate(interceptor.source?.runnerName as string, DEFAULT_ETAG).then(
         (res) => {
           return res?.response as InterceptorTemplate | null;
@@ -102,7 +79,6 @@ export default async function Page(params: {
         applications={applications || []}
         interceptorTemplate={interceptorTemplate}
         appRunners={appRunners || []}
-        isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>
   );

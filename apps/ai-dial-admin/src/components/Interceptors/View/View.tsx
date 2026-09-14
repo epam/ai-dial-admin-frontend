@@ -39,22 +39,15 @@ interface Props {
   applications: DialApplication[];
   interceptorTemplate?: InterceptorTemplate | null;
   appRunners: DialApplicationScheme[];
-  /** True when `originalInterceptor` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
-  isConfigFileSource?: boolean;
 }
 
-const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, isConfigFileSource, ...props }) => {
+const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
-  const { featureFlags, setEntityReadOnly } = useAppContext();
-
-  useEffect(() => {
-    setEntityReadOnly(!!isConfigFileSource);
-    return () => setEntityReadOnly(false);
-  }, [isConfigFileSource, setEntityReadOnly]);
+  const { featureFlags } = useAppContext();
 
   const tabs: TabModel[] = getInterceptorTabs(t, featureFlags);
 
@@ -81,16 +74,13 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, isConfig
   );
 
   useEffect(() => {
-    if (isConfigFileSource) {
-      return;
-    }
     const name = encodeURIComponent(originalInterceptor?.name || '');
     if (!coreInterceptor && name) {
       getReqRef.current(getCoreInterceptor, name).then((data) => {
         setCoreInterceptor(data.response);
       });
     }
-  }, [coreInterceptor, originalInterceptor, isConfigFileSource]);
+  }, [coreInterceptor, originalInterceptor]);
 
   useEffect(() => {
     setSelectedInterceptor(

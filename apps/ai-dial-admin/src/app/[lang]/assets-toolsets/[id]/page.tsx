@@ -15,13 +15,13 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { getPlatformToolset, getToolset, getToolsets } from '../actions';
+import { getConfigFileToolset, getPlatformToolset, getToolset, getToolsets } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path?: string; code?: string }>;
+  searchParams: Promise<{ path?: string; code?: string; configFile?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -38,17 +38,23 @@ export default async function Page(params: {
   const searchParams = await params.searchParams;
   oAuthCode = searchParams.code;
   const rawPath = searchParams.path;
+  const isConfigFileMode = searchParams.configFile === 'true';
   const isPlatformBucket = !rawPath;
   const name = decodeURIComponent((await params.params).id);
 
   try {
     if (isPlatformBucket) {
-      const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
+      if (isConfigFileMode) {
+        const result = await getConfigFileToolset(name);
+        toolset = result.success ? (result.data as unknown as AssetToolset) : null;
+      } else {
+        const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-      toolset = await getPlatformToolset(path, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return (res?.response as unknown as AssetToolset) || null;
-      });
+        toolset = await getPlatformToolset(path, etag).then((res) => {
+          etag = res?.etag || DEFAULT_ETAG;
+          return (res?.response as unknown as AssetToolset) || null;
+        });
+      }
     } else {
       const path = decodeURIComponent(rawPath as string);
 
@@ -84,6 +90,7 @@ export default async function Page(params: {
           originalToolset={toolset}
           roles={roles}
           optionWarnings={optionWarnings}
+          isConfigFileSource={isConfigFileMode}
         />
       ) : (
         <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />

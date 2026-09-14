@@ -10,6 +10,7 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteModels,
   createModel,
+  getConfigFileModel,
   getConfigFileModels,
   getModel,
   getModels,
@@ -243,12 +244,22 @@ describe('Assets model :: upstream secrets are never written as empty strings', 
   });
 
   test('Should call getConfigFileModels action', async () => {
-    (configFileApi.list as any).mockResolvedValue(RESPONSE_MOCK);
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigFileModels();
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(configFileApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models);
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileModel action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileModel('my-model');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models, 'my-model');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

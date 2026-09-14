@@ -5,10 +5,10 @@ import { getConfigFileToolsets } from '@/src/app/[lang]/assets-toolsets/actions'
 import AssetsToolsetsPageList from '../PageList';
 
 vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({ getConfigFileToolsets: vi.fn() }));
-vi.mock('@/src/components/Toolsets/List', () => ({
-  default: ({ data, isConfigFileSource }: { data: unknown[]; isConfigFileSource?: boolean }) => (
+vi.mock('@/src/components/Common/ConfigFileEntityList/ConfigFileEntityList', () => ({
+  default: ({ names, route }: { names: string[]; route: string }) => (
     <div>
-      admin-grid-toolsets:{data.length}:{String(isConfigFileSource)}
+      config-file-toolsets:{names.length}:{route}
     </div>
   ),
 }));
@@ -29,15 +29,15 @@ describe('AssetsToolsetsPageList', () => {
     expect(getConfigFileToolsets).not.toHaveBeenCalled();
   });
 
-  test('renders the admin-grid list, marked as config-file-sourced, when the toggle is on', async () => {
+  test('renders the shared config-file list, for the Toolsets route, when the toggle is on', async () => {
     mockContext.showConfigFiles = true;
     vi.mocked(getConfigFileToolsets).mockResolvedValue({
       success: true,
-      data: { entities: [{ name: 't1' } as any], failures: [] },
+      data: ['t1'],
     });
 
     render(<AssetsToolsetsPageList />);
 
-    expect(await screen.findByText('admin-grid-toolsets:1:true')).toBeTruthy();
+    expect(await screen.findByText('config-file-toolsets:1:/assets-toolsets')).toBeTruthy();
   });
 });

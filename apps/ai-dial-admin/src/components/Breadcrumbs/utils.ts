@@ -1,6 +1,5 @@
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import { RollbackI18nKey, MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { CONFIG_FILE_DETAIL_TO_LIST_ROUTE } from '@/src/constants/config-file-entity-views';
 import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './constants';
 import { Breadcrumb } from './models';
@@ -27,7 +26,7 @@ const decodePathSegment = (segment: string): string => {
   }
 };
 
-export function getBreadcrumbs(pathname: string, currentLocale: string, isConfigFileMode?: boolean): Breadcrumb[] {
+export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);
   const isLocale = currentLocale?.includes(segments[0]);
   const locale = isLocale ? segments[0] : null;
@@ -39,13 +38,6 @@ export function getBreadcrumbs(pathname: string, currentLocale: string, isConfig
     return [];
   }
 
-  // A `configFile=true` detail page was reached from its platform/asset list, not from this hidden
-  // route's own list — that list redirects home without the admin backend, so the "back to list"
-  // breadcrumb must point at the platform/asset route instead (`config-file-entity-views`).
-  const listRouteOverride = isConfigFileMode
-    ? CONFIG_FILE_DETAIL_TO_LIST_ROUTE[rootSegment as ApplicationRoute]
-    : undefined;
-
   return pathSegments.map((pathSegment, index) => {
     const configSegment = config.segments[index];
     const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
@@ -55,7 +47,7 @@ export function getBreadcrumbs(pathname: string, currentLocale: string, isConfig
     return {
       key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
       name: decodePathSegment(pathSegment),
-      href: index === 0 && listRouteOverride ? `${locale ? `/${locale}` : ''}${listRouteOverride}` : defaultHref,
+      href: defaultHref,
     };
   });
 }

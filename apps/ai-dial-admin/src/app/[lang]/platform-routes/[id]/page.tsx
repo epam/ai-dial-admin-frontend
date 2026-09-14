@@ -12,11 +12,15 @@ import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getRoute } from '../actions';
+import { getConfigFileRoute, getRoute } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ configFile?: string }>;
+}) {
+  const isConfigFileMode = (await params.searchParams).configFile === 'true';
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -26,10 +30,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const path = (await params.params).id;
 
-    route = await getRoute(path, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as DialRouteResource | null;
-    });
+    if (isConfigFileMode) {
+      const result = await getConfigFileRoute(path);
+      route = result.success ? (result.data as unknown as DialRouteResource) : null;
+    } else {
+      route = await getRoute(path, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as DialRouteResource | null;
+      });
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch route asset data');
   }
@@ -46,7 +55,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <RouteAssetView etag={etag} originalRoute={route} roles={roles} optionWarnings={optionWarnings} />
+      <RouteAssetView
+        etag={etag}
+        originalRoute={route}
+        roles={roles}
+        optionWarnings={optionWarnings}
+        isConfigFileSource={isConfigFileMode}
+      />
     </SaveValidationContextProvider>
   );
 }
