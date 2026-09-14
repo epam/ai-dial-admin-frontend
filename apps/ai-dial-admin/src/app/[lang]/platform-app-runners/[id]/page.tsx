@@ -32,7 +32,7 @@ export default async function Page(params: {
     const path = (await params.params).id;
 
     if (isConfigFileMode) {
-      const result = await getConfigFileAppRunner(path);
+      const result = await getConfigFileAppRunner(decodeURIComponent(path));
       runner = result.success ? (result.data as unknown as DialAppRunnerResource) : null;
     } else {
       runner = await getRunner(path, etag).then((res) => {
