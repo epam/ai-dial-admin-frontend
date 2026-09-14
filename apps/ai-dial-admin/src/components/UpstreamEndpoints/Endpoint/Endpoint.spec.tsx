@@ -104,6 +104,38 @@ describe('Endpoint', () => {
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, tier: 3 });
   });
 
+  test('renders base url field after expanding, alongside key', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByText(EntityFieldsI18nKey.baseUrl)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).toBeInTheDocument();
+  });
+
+  test('calls updateEndpoint on base url change after expanding, independently of endpoint', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    fireEvent.change(screen.getByLabelText(EntityFieldsI18nKey.baseUrl), {
+      target: { value: 'http://base' },
+    });
+    expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, baseUrl: 'http://base' });
+  });
+
   test('calls updateEndpoint on key change after expanding', () => {
     render(
       <Endpoint

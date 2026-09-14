@@ -55,6 +55,19 @@ describe('Model asset Properties :: routing-critical fields', () => {
 
     expect(screen.queryByText(EntityFieldsI18nKey.$type)).not.toBeInTheDocument();
   });
+
+  test('Should render an entity-level base_url field', () => {
+    renderProperties({ baseUrl: 'http://model-base' });
+
+    expect(screen.getByText(EntityFieldsI18nKey.baseUrl)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('http://model-base')).toBeInTheDocument();
+  });
+
+  test('Should render a default headers editor', () => {
+    renderProperties({ defaultHeaders: { 'x-dial-custom-header': 'foo-bar' } });
+
+    expect(screen.getByText(EntityFieldsI18nKey.defaultHeaders)).toBeInTheDocument();
+  });
 });
 
 describe('Model asset Properties :: identity fields', () => {

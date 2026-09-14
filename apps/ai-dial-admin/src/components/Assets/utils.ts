@@ -115,19 +115,12 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformTranslators:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
-    // Deliberately scoped out of this change (design.md D6) — the shared `DuplicatePlatformAsset`
-    // modal already supports a name-only entity (`hasDisplayName` is false for Routes/Roles/Keys), so
-    // nothing technical blocks it, but duplicate was not requested for Translators and can follow as
-    // its own change later, the way `catalog-keys-duplicate-action` did for Keys.
-    case ApplicationRoute.PlatformTranslators:
-      return isReadOnlyAdmin
-        ? []
-        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
       if (isPlatformDualBucketView(view, currentPath)) {

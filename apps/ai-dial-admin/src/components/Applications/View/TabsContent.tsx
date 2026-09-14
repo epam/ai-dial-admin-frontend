@@ -21,6 +21,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import Dependencies from './Dependencies/Dependencies';
@@ -39,6 +40,7 @@ interface Props {
    * where `EntityInterceptors` fetches it from the admin backend itself.
    */
   globalInterceptors?: string[];
+  translators?: ResourceInfo[];
   applicationSchemes: DialApplicationScheme[];
   selectedApplication: DialApplication;
   originalApplication?: DialApplication;
@@ -64,6 +66,7 @@ const TabsContent: FC<Props> = ({
   names,
   interceptors,
   globalInterceptors,
+  translators,
   roles,
   models,
   isSkipRefresh,
@@ -113,6 +116,7 @@ const TabsContent: FC<Props> = ({
             <ApplicationAssetProperties
               asset={selectedApplication as DialApplicationResource}
               runners={applicationSchemes || []}
+              translators={translators}
               onChange={onChangeAsset}
             />
           ) : (

@@ -9,6 +9,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ModelResourceFeatures from './Features';
@@ -23,6 +24,7 @@ interface Props {
   roles: DialRole[];
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
+  translators?: ResourceInfo[];
   onChange: (model: AssetModel) => void;
 }
 
@@ -33,6 +35,7 @@ const TabsContent: FC<Props> = ({
   roles,
   interceptors,
   globalInterceptors,
+  translators,
   onChange,
 }) => {
   const resource = selectedModel as unknown as DialModelResource;
@@ -53,7 +56,7 @@ const TabsContent: FC<Props> = ({
             originalUpstreams={originalModel.upstreams}
             editedUpstreams={selectedModel.upstreams}
           />
-          <ModelAssetProperties asset={resource} onChange={onChangeResource} />
+          <ModelAssetProperties asset={resource} translators={translators} onChange={onChangeResource} />
         </>
       )}
 
