@@ -65,26 +65,16 @@
 - [x] 4.1 In `apps/ai-dial-admin/src/components/Common/FilePath/utils.ts`, add a pure helper that,
       given the shared `AssetsFolderContext` `files` array and the current `view`, drops the `platform`
       root node when `view` is in `DUAL_BUCKET_VIEWS` and returns the array unchanged otherwise.
-      Added `excludePlatformRoot`: for `DUAL_BUCKET_VIEWS`, filters out any root whose `path` satisfies
-      `isPlatformBucketPath` (confirmed via `AssetsFolderContext`'s `fetchRoots` that dual-bucket root
-      nodes carry a trailing-slash path, e.g. `'platform/'`/`'public/'` — `FileManager.tsx` appends the
-      slash before calling `fetchFiles`); returns `files` unchanged for every other view.
+      
 - [x] 4.2 In `apps/ai-dial-admin/src/components/Common/FilePath/FilePath.tsx`, apply that helper to
       `files` before computing `items={processAssetsData(...)}` and `rootItem`, so `rootItem` resolves
       to the `public` root for dual-bucket views instead of `files?.[0]`.
-      Wired in: context's raw `files` is renamed `rawFiles` and passed through `excludePlatformRoot`
-      before use, so both `rootItem={files?.[0]}` and `items={processAssetsData(files, view)}` already
-      exclude `platform` with no further change to those two lines.
+     
 - [x] 4.3 Add/update unit tests for the new filtering helper (drops `platform` for a dual-bucket view's
       `files`, passes non-dual-bucket `files` through unchanged) and a `FilePath`/`DialDestinationFolderPopup`
       component test confirming `platform` is not offered as a Move-to destination for a public-bucket
       application/toolset.
-      Extended `Common/FilePath/tests/utils.spec.ts` with an `excludePlatformRoot` describe block (5
-      cases: dual-bucket Applications/Toolsets drop `platform`, non-dual-bucket view and undefined view
-      pass through unchanged, no-files input). Added `Common/FilePath/tests/FilePath.spec.tsx` (no prior
-      test file existed), mocking `DialDestinationFolderPopup` to render `rootItem`/`items` and asserting
-      `platform` is absent from both for a dual-bucket view, present for a non-dual-bucket view. 23/23
-      passing across both files.
+     
 
 ## 5. Final quality checks
 

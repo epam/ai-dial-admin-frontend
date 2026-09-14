@@ -10,15 +10,16 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
 
+import { getParentPathByFullPath } from '@/src/components/Assets/utils';
+import { ROOT_FOLDER } from '@/src/constants/file';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { getParentPathByFullPath } from '@/src/components/Assets/utils';
-import { excludePlatformRoot, getFilePathGridOptions, processAssetsData } from './utils';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getRootFolders } from '@/src/utils/files/root-folder';
+import { getFilePathGridOptions, processAssetsData } from './utils';
 
 interface Props {
   label: string;
@@ -47,18 +48,17 @@ const FilePath: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { files: rawFiles, fetchFiles } = context?.() || {};
-  const files = excludePlatformRoot(rawFiles, view);
+  const { files, fetchFiles } = context?.() || {};
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 
   useEffect(() => {
-    const rootPath = `${ROOT_FOLDER}/`;
-    if (!loadedPaths.has(rootPath)) {
-      fetchFiles?.(rootPath);
-      setLoadedPaths((prev) => new Set(prev).add(rootPath));
+    const rootPaths = getRootFolders(view as ApplicationRoute).map((root) => `${root}/`);
+    if (rootPaths.some((path) => !loadedPaths.has(path)) && fetchFiles) {
+      fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
+      setLoadedPaths(new Set(rootPaths));
     }
-  }, [fetchFiles, loadedPaths]);
+  }, [fetchFiles, loadedPaths, view]);
 
   useEffect(() => {}, [files]);
 
@@ -141,6 +141,7 @@ const FilePath: FC<Props> = ({
             searchable: false,
           }}
           showCreateFolderButton={shouldAbleToCreateNewFolder}
+          excludedPaths={['platform/']}
         />
       </div>
     </div>

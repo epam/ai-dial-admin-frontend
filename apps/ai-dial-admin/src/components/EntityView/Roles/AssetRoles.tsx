@@ -50,6 +50,14 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
   const isSpecificRoles = Array.isArray(asset.userRoles);
 
   /**
+   * When `userRoles` is `undefined` the asset is unrestricted — all roles have access. In that
+   * state the grid shows every role as "selected" (read-only) so the admin can see who has access
+   * without being able to mutate the list via this surface. No switch, no add/remove actions are
+   * shown, and the header count reflects the full role list rather than an empty selection.
+   */
+  const isAllRoles = !isSpecificRoles;
+
+  /**
    * Built from `userRoles` rather than by intersecting it with the fetched list, so a role the list
    * does not contain is still shown. Two ways that happens: the role list read failed (the detail
    * route degrades to `[]` rather than failing the page), or the role is declared in DIAL Core's
@@ -95,17 +103,23 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
     [asset, onChange],
   );
 
+  const isReadOnly = isAllRoles || isReadOnlyAdmin;
+
   const columnDefs = useMemo(
-    () => (isReadOnlyAdmin ? BASE_COLUMNS : [...BASE_COLUMNS, ACTION_COLUMN([getRemoveOperation(onRemoveRole)])]),
-    [isReadOnlyAdmin, onRemoveRole],
+    () => (isReadOnly ? BASE_COLUMNS : [...BASE_COLUMNS, ACTION_COLUMN([getRemoveOperation(onRemoveRole)])]),
+    [isReadOnly, onRemoveRole],
   );
+
+  // When unrestricted (userRoles undefined), display all roles in the grid read-only.
+  const displayedRoles = isAllRoles ? roles : selectedRoles;
+  const displayedCount = isAllRoles ? roles.length : selectedRoles.length;
 
   return (
     <div className="flex flex-col gap-4 h-full">
       <div className="flex flex-row items-center justify-between h-[42px]">
         <div className="flex flex-row items-center">
           <h1 className="mr-3">
-            {t(TabsI18nKey.Roles)}: {selectedRoles.length}
+            {t(TabsI18nKey.Roles)}: {displayedCount}
           </h1>
           {!isReadOnlyAdmin && (
             <DialSwitch
@@ -128,10 +142,10 @@ const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, on
 
       <div className="flex-1 min-h-0">
         <GridView
-          rowData={selectedRoles}
+          rowData={displayedRoles}
           columnDefs={columnDefs}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoRoles) }}
-          getIsEmptyData={() => !selectedRoles.length}
+          getIsEmptyData={() => !displayedRoles.length}
         />
       </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { ColDef } from 'ag-grid-community';
 import { FC } from 'react';
 
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
@@ -16,6 +17,12 @@ interface Props {
   focusFieldKey?: string | null;
   fieldSchema?: RowDetailFieldSchema;
   metricGroupOrder?: readonly string[];
+  initialDisplayTree?: ColDef[];
+  onDisplayTreeChange?: (tree: ColDef[]) => void;
+  initialViewDifferencesOnly?: boolean;
+  onViewDifferencesOnlyChange?: (value: boolean) => void;
+  initialHideHighlights?: boolean;
+  onHideHighlightsChange?: (value: boolean) => void;
 }
 
 const CompareRowDetailBottomPanel: FC<Props> = ({
@@ -27,6 +34,12 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   focusFieldKey,
   fieldSchema,
   metricGroupOrder,
+  initialDisplayTree,
+  onDisplayTreeChange,
+  initialViewDifferencesOnly,
+  onViewDifferencesOnlyChange,
+  initialHideHighlights,
+  onHideHighlightsChange,
 }) => {
   return (
     <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
@@ -40,6 +53,12 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
         focusFieldKey={focusFieldKey}
         fieldSchema={fieldSchema}
         metricGroupOrder={metricGroupOrder}
+        initialDisplayTree={initialDisplayTree}
+        onDisplayTreeChange={onDisplayTreeChange}
+        initialViewDifferencesOnly={initialViewDifferencesOnly}
+        onViewDifferencesOnlyChange={onViewDifferencesOnlyChange}
+        initialHideHighlights={initialHideHighlights}
+        onHideHighlightsChange={onHideHighlightsChange}
       />
     </div>
   );

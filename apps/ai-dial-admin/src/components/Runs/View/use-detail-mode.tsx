@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ColDef } from 'ag-grid-community';
+
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { ROW_DETAIL_BOTTOM_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
@@ -47,6 +49,11 @@ export function useDetailMode(
   detailModeRef.current = detailMode;
 
   const showDetailPanelRef = useRef<(resultId: string, mode: DetailMode, fieldKey: string | null) => void>(() => {});
+  const displayTreeRef = useRef<ColDef[]>([]);
+
+  const persistDisplayTree = useCallback((tree: ColDef[]) => {
+    displayTreeRef.current = tree;
+  }, []);
 
   const closeDetail = useCallback(() => {
     setSelectedResultId(null);
@@ -79,6 +86,8 @@ export function useDetailMode(
             focusFieldKey={fieldKey}
             metricGroupOrder={metricGroupOrder}
             fieldSchema={fieldSchema}
+            initialDisplayTree={displayTreeRef.current}
+            onDisplayTreeChange={persistDisplayTree}
             onClose={closeDetail}
             onSwitchToSidebar={switchToSidebar}
           />,
@@ -99,7 +108,7 @@ export function useDetailMode(
         SidebarPosition.Right,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, metricBindings, metricGroupOrder, fieldSchema],
+    [closeDetail, switchToSidebar, switchToDrawer, persistDisplayTree, metricBindings, metricGroupOrder, fieldSchema],
   );
 
   showDetailPanelRef.current = showDetailPanel;

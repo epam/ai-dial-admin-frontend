@@ -138,11 +138,10 @@ describe('getGridActionLabels', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
   });
 
-  test('PlatformTranslators offers delete and openInNewTab but no duplicate', () => {
+  test('PlatformTranslators exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
     const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
 
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
-    expect(keys).not.toContain('duplicate');
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
   });
 
   test('PlatformTranslators returns no options for a read-only admin', () => {

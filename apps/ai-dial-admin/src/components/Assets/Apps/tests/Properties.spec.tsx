@@ -19,6 +19,9 @@ vi.mock('@/src/components/BaseControls/InterfacesField/InterfacesField', () => (
 vi.mock('@/src/components/BaseControls/MaxRetryAttempts', () => ({ default: () => <div>max-retry-attempts</div> }));
 vi.mock('@/src/components/BaseControls/Topics', () => ({ default: () => <div>topics-control</div> }));
 vi.mock('@/src/components/Common/FilePath/FilePath', () => ({ default: () => <div>file-path</div> }));
+vi.mock('@/src/components/Common/KeyValueGrid/KeyValueGrid', () => ({
+  default: ({ label }: { label?: string }) => <div>key-value-grid: {label}</div>,
+}));
 vi.mock('@/src/components/Defaults/Defaults', () => ({ default: () => <div>defaults</div> }));
 vi.mock('@/src/components/Assets/Resources/Auth/ResourceMultiAuth', () => ({
   default: () => <div>resource-multi-auth</div>,
@@ -50,5 +53,18 @@ describe('ApplicationAssetProperties', () => {
     render(<ApplicationAssetProperties asset={{ ...baseAsset, folderId: 'platform/' }} onChange={vi.fn()} />);
 
     expect(screen.queryByText('file-path')).not.toBeInTheDocument();
+  });
+
+  test('renders an entity-level base_url field, positioned before Interfaces', () => {
+    render(<ApplicationAssetProperties asset={{ ...baseAsset, base_url: 'http://app-base' }} onChange={vi.fn()} />);
+
+    expect(screen.getByText(EntityFieldsI18nKey.baseUrl)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('http://app-base')).toBeInTheDocument();
+  });
+
+  test('renders a default headers editor', () => {
+    render(<ApplicationAssetProperties asset={baseAsset} onChange={vi.fn()} />);
+
+    expect(screen.getByText(`key-value-grid: ${EntityFieldsI18nKey.defaultHeaders}`)).toBeInTheDocument();
   });
 });
