@@ -1,7 +1,7 @@
 import { ThemeConfiguration } from '@/src/models/theme';
 import { DEFAULT_THEME } from '@/src/constants/theme';
 
-export const getLogoPath = (themesConfiguration: ThemeConfiguration, themeId: string): string => {
+export const getLogoPath = (themesConfiguration: ThemeConfiguration, themeId?: string): string => {
   const theme = themesConfiguration?.themes.find((t) => t.id === themeId);
   const fallbackLogo = theme?.['app-logo'] || '';
 
