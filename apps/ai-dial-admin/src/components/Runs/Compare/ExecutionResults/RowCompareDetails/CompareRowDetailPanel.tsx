@@ -40,6 +40,7 @@ interface Props {
   onSwitchDisplayMode: () => void;
   className?: string;
   focusFieldKey?: string | null;
+  focusRequestId?: number;
   fieldSchema?: RowDetailFieldSchema;
   metricGroupOrder?: readonly string[];
   initialDisplayTree?: ColDef[];
@@ -59,6 +60,7 @@ const CompareRowDetailPanel: FC<Props> = ({
   onSwitchDisplayMode,
   className,
   focusFieldKey,
+  focusRequestId = 0,
   fieldSchema,
   metricGroupOrder = [],
   initialDisplayTree,
@@ -208,6 +210,7 @@ const CompareRowDetailPanel: FC<Props> = ({
                 showDiffsOnly={viewDifferencesOnly}
                 hideHighlights={hideHighlights}
                 focusFieldKey={focusFieldKey}
+                focusRequestId={focusRequestId}
               />
             ) : (
               <CompareRowDetailTable
@@ -218,6 +221,8 @@ const CompareRowDetailPanel: FC<Props> = ({
                 hasComparedMatch={hasComparedMatch}
                 showDiffsOnly={viewDifferencesOnly}
                 hideHighlights={hideHighlights}
+                focusFieldKey={focusFieldKey}
+                focusRequestId={focusRequestId}
               />
             )}
             <DiffLegend counts={counts} className="shrink-0" />

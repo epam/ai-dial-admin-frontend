@@ -21,7 +21,9 @@ vi.mock('@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/Compar
 }));
 
 vi.mock('@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailTable', () => ({
-  default: () => <div>table</div>,
+  default: ({ focusFieldKey }: { focusFieldKey?: string | null }) => (
+    <div>table{focusFieldKey ? `:${focusFieldKey}` : ''}</div>
+  ),
 }));
 
 vi.mock('@/src/components/Runs/Compare/ExecutionResults/DiffLegend', () => ({
@@ -83,5 +85,23 @@ describe('CompareRowDetailPanel', () => {
 
     expect(screen.getByText('highlights-hidden')).toBeInTheDocument();
     expect(screen.getByText('diffs-only')).toBeInTheDocument();
+  });
+
+  test('passes focusFieldKey to the sidebar table', async () => {
+    render(
+      <CompareRowDetailPanel
+        row={row}
+        primaryRunName="Run A"
+        comparedRunName="Run B"
+        onClose={vi.fn()}
+        position={SidebarPosition.Right}
+        onSwitchDisplayMode={vi.fn()}
+        focusFieldKey="answer"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('table:answer')).toBeInTheDocument();
+    });
   });
 });

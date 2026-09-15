@@ -33,6 +33,7 @@ interface Props {
   onClose: () => void;
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
+  focusRequestId?: number;
   metricGroupOrder?: readonly string[];
   fieldSchema?: RowDetailFieldSchema;
   className?: string;
@@ -45,6 +46,7 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
   focusFieldKey,
+  focusRequestId = 0,
   metricGroupOrder = [],
   fieldSchema,
   className,
@@ -135,7 +137,12 @@ const ExecutionRowDetailBottomPanel: FC<Props> = ({
         ) : hasError ? (
           <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>
         ) : (
-          <ExecutionRowDetailPivotTable key={resultId} sections={displaySections} focusFieldKey={focusFieldKey} />
+          <ExecutionRowDetailPivotTable
+            key={resultId}
+            sections={displaySections}
+            focusFieldKey={focusFieldKey}
+            focusRequestId={focusRequestId}
+          />
         )}
       </div>
 
