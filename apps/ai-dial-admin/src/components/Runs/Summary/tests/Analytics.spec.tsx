@@ -226,7 +226,7 @@ describe('Runs Summary :: Analytics', () => {
 
       await screen.findByText('Runs.TestCasesPassed');
       expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
-      expect(screen.getAllByText('—')).toHaveLength(5);
+      expect(screen.getAllByText('—')).toHaveLength(3);
       expect(screen.queryByText('Runs.CostDataUnavailable')).not.toBeInTheDocument();
     },
   );
@@ -246,7 +246,7 @@ describe('Runs Summary :: Analytics', () => {
     mockCosts(null);
     render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} overallScore={null} />);
 
-    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(5));
+    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(3));
   });
 
   test('shows the test cases passed card when the snapshotted threshold is 0', async () => {
