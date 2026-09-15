@@ -15,17 +15,26 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
 
 // Always-enabled save so validation is the only thing that can stop the request — the real header
 // also disables on `isChanged`, which would otherwise mask whether validation ran at all.
+let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ onSave }: any) => (
-    <button type="button" onClick={onSave}>
-      save
-    </button>
-  ),
+  default: ({ onSave, jsonConfiguration }: any) => {
+    capturedJsonConfiguration = jsonConfiguration;
+    return (
+      <button type="button" onClick={onSave}>
+        save
+      </button>
+    );
+  },
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly }),
+}));
 
 const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerResource =>
   ({
@@ -97,5 +106,39 @@ describe('AppRunnerAssetView :: save validation', () => {
     await clickSave(runner({ 'dial:applicationTypeRoutes': [route, { ...route }] as never }));
 
     expect(updateRunner).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppRunnerAssetView :: config-file source', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
+    const { unmount } = render(
+      <AppRunnerAssetView
+        etag="etag"
+        originalRunner={runner()}
+        roles={[]}
+        interceptors={[]}
+        globalInterceptors={[]}
+        isConfigFileSource
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed runner', () => {
+    render(
+      <AppRunnerAssetView etag="etag" originalRunner={runner()} roles={[]} interceptors={[]} globalInterceptors={[]} />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });
 });

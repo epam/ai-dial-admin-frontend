@@ -31,7 +31,7 @@ describe('readConfigEntities', () => {
 
     const result = await readConfigEntities(TOKEN_MOCK, ConfigFileEntityType.Interceptors, warnings);
 
-    expect(getConfigEntityOptions).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+    expect(getConfigEntityOptions).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Interceptors, false);
     expect(result).toEqual([{ name: 'interceptor-1', displayName: 'interceptor-1', origin: ConfigEntityOrigin.Api }]);
     expect(warnings).toEqual([]);
   });
@@ -63,6 +63,30 @@ describe('readConfigEntities', () => {
 
     expect(result).toEqual([{ name: 'role-1', displayName: 'role-1', origin: ConfigEntityOrigin.ConfigFile }]);
     expect(warnings).toEqual([EntitiesI18nKey.OptionListPartial]);
+  });
+
+  test('threads showOnlyConfigFiles through to getConfigEntityOptions', async () => {
+    getConfigEntityOptions.mockResolvedValue({
+      success: true,
+      data: { options: [], failures: [] },
+    });
+    const warnings: EntitiesI18nKey[] = [];
+
+    await readConfigEntities(TOKEN_MOCK, ConfigFileEntityType.Models, warnings, true);
+
+    expect(getConfigEntityOptions).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models, true);
+  });
+
+  test('defaults showOnlyConfigFiles to false when omitted', async () => {
+    getConfigEntityOptions.mockResolvedValue({
+      success: true,
+      data: { options: [], failures: [] },
+    });
+    const warnings: EntitiesI18nKey[] = [];
+
+    await readConfigEntities(TOKEN_MOCK, ConfigFileEntityType.Models, warnings);
+
+    expect(getConfigEntityOptions).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Models, false);
   });
 });
 

@@ -54,4 +54,9 @@ describe('onCellClicked', () => {
     expect(push).not.toHaveBeenCalled();
     expect(window.open).not.toHaveBeenCalled();
   });
+
+  test('appends the url suffix when provided', () => {
+    onCellClicked(makeEvent(), route, push, '?configFile=true');
+    expect(push).toHaveBeenCalledWith('/adapters/entity-1?configFile=true');
+  });
 });

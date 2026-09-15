@@ -12,6 +12,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -38,8 +39,9 @@ interface Props {
 const View: FC<Props> = ({ originalModel, etag, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
 
-  const tabs = getModelsTabs(t);
+  const tabs = getModelsTabs(t, featureFlags);
   const router = useRouter();
   const { showNotification } = useNotification();
 

@@ -26,7 +26,7 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { columnHeaderName, enrichmentOf } from '@/src/utils/analytics/conversation-enrichment';
+import { columnHeaderName, enrichmentOf, unqualified } from '@/src/utils/analytics/conversation-enrichment';
 
 const UNFILTERABLE: Partial<ColDef> = { filter: false, floatingFilter: false };
 
@@ -273,12 +273,23 @@ export const filterableColumnFields = (columns: ColDef[]): string[] =>
 
 // The hop-log body columns are `sensitive` in the ADAS catalog, so they are absent from the fetched schema
 // below FULL_ADMIN — and the service rejects the whole query for one unknown field.
+//
+// Matched by the column's own name rather than by the exact string the schema reports. The same three
+// columns are published bare by one instance and qualified by the enrichment that holds them by another,
+// and a grant that turned on which spelling arrived reported "not readable for this account" on every
+// account of the instance it was not written against — withdrawing the Request, Response and Chat tabs
+// wholesale. The resolved names travel with the grant, so the read selects what the match actually found.
 export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields => {
-  const available = new Set(schemaFieldNames);
-  const responseFields = HOP_RESPONSE_BODY_FIELDS.filter((name) => available.has(name));
+  const byColumn = new Map(schemaFieldNames.map((name) => [unqualified(name), name]));
+  const responseFields = HOP_RESPONSE_BODY_FIELDS.map((name) => byColumn.get(name)).filter(
+    (name): name is string => name !== undefined,
+  );
+  const requestField = byColumn.get(HOP_REQUEST_BODY_FIELD) ?? null;
 
-  const isRequestReadable = available.has(HOP_REQUEST_BODY_FIELD);
-  const isResponseReadable = responseFields.length > 0;
-
-  return { isRequestReadable, isResponseReadable, responseFields };
+  return {
+    isRequestReadable: requestField !== null,
+    isResponseReadable: responseFields.length > 0,
+    requestField,
+    responseFields,
+  };
 };

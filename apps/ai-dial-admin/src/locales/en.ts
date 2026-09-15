@@ -66,6 +66,7 @@ export default {
     NoParameters: 'No Parameters',
     NoVariables: 'No Variables',
     NoHeaders: 'No Headers',
+    ShowConfigFiles: 'Show config files',
     Key: 'Key',
     Value: 'Value',
     From: 'From',
@@ -3247,6 +3248,8 @@ export default {
     InspectorChatLabel: 'Conversation as this span received it',
     InspectorChatNoMessages: 'This span received no conversation.',
     InspectorChatAnswerWithheld: 'The answer is withheld from this account.',
+    InspectorChatHopFailed:
+      'This hop failed, and what it recorded is not a readable error. Show the recorded bytes to see it.',
     BodiesSplitLabel: 'Resize the span tree and the span bodies',
     SpanLlm: 'LLM',
     SpanEmbeddings: 'Embeddings',

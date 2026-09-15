@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { DialModelResourceStatus } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteRoutes, createRoute, getRoute, getRoutes, removeRoute, updateRoute } from './actions';
+import {
+  bulkDeleteRoutes,
+  createRoute,
+  getConfigFileRoute,
+  getConfigFileRoutes,
+  getRoute,
+  getRoutes,
+  removeRoute,
+  updateRoute,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -154,5 +164,25 @@ describe('Assets route :: server actions', () => {
 
     expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'platform/my-route');
     expect(result).toEqual({ success: true });
+  });
+
+  test('Should call getConfigFileRoutes action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoutes();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileRoute action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoute('my-route');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes, 'my-route');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });
