@@ -1234,7 +1234,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
-  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...CREATED_AT_COLUMN, ...dateFilter, sort: 'desc' },
   { ...UPDATED_AT_COLUMN, ...dateFilter },
   {
     field: 'createdBy',

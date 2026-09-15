@@ -104,9 +104,10 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
 
   const evaluatorKey = evaluatorName ? `${evaluatorName}@${evaluatorVersion ?? LATEST_VERSION}` : undefined;
 
-  const resolveEvaluator = useCallback((key: string): Promise<Evaluator | null> => {
+  const resolveEvaluator = useCallback(async (key: string): Promise<Evaluator | null> => {
     const [name, version] = key.split('@');
-    return version === LATEST_VERSION ? getEvaluator(name) : getEvaluatorVersion(name, Number(version));
+    const read = await (version === LATEST_VERSION ? getEvaluator(name) : getEvaluatorVersion(name, Number(version)));
+    return read.response ?? null;
   }, []);
 
   const resolveTable = useCallback((name: string): Promise<AnalyticsTable | null> => getTable(name), []);

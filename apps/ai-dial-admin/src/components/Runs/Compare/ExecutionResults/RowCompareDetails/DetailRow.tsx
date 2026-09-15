@@ -10,6 +10,7 @@ import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import {
   ROW_DETAIL_CELL_BASE,
   ROW_DETAIL_FIELD_INDENT,
+  ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
@@ -54,12 +55,14 @@ const DetailRow: FC<Props> = ({
   return (
     <div className="contents group">
       <div
+        data-field-key={row.fieldKey}
         className={mergeClasses(
           ROW_DETAIL_CELL_BASE,
           ROW_DETAIL_FIELD_INDENT,
           'pr-3 flex items-center',
           fieldProps.className,
         )}
+        style={{ scrollMarginTop: ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP }}
         {...diffCellDataAttr(fieldProps)}
       >
         <DialEllipsisTooltip text={row.label} className="dial-small-text text-primary min-w-0" />

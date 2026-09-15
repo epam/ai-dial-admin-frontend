@@ -37,7 +37,7 @@ const renderPanel = (onClose = vi.fn()) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getTableAccess).mockResolvedValue({ write: ['analytics-writer'], modify: [] });
+  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: ['analytics-writer'], modify: [] } });
 });
 
 describe('ConnectPanel :: tabs', () => {
@@ -119,7 +119,7 @@ describe('ConnectPanel :: roles', () => {
   });
 
   test('names the consequence when no role grants write access', async () => {
-    vi.mocked(getTableAccess).mockResolvedValue({ write: [], modify: [] });
+    vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: [], modify: [] } });
     renderPanel();
 
     expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectNoWriteRoles)).toBeInTheDocument();

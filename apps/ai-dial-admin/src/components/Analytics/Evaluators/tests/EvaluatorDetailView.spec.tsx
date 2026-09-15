@@ -3,6 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createEvaluator } from '@/src/app/[lang]/evaluators/actions';
+
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
+
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
 import { AnalyticsEvaluatorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { Evaluator, EvaluatorPreset, EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
@@ -63,6 +69,75 @@ const renderView = (props?: Partial<Parameters<typeof EvaluatorDetailView>[0]>) 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(createEvaluator).mockResolvedValue({ success: true, response: { ...llm, version: 5 } });
+});
+
+describe('EvaluatorDetailView — a failed version list', () => {
+  beforeEach(() => {
+    showNotification.mockClear();
+  });
+
+  test('reports the failure by notification rather than in the page header', async () => {
+    renderView({
+      summary: null,
+      summaryFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out', requestId: 'trace-1' },
+    });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'registry timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.VersionListFailed)).toBeNull();
+  });
+
+  test('falls back to its own title when the service supplied no header', async () => {
+    renderView({ summary: null, summaryFailure: {} });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsEvaluatorsI18nKey.VersionListFailed }),
+      ),
+    );
+  });
+
+  test('raises nothing when the version list was read', () => {
+    renderView();
+
+    expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  test('reports a failed referencing-pipelines read, quoting the service', async () => {
+    renderView({
+      referencingPipelines: null,
+      referencingFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out' },
+    });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Upstream unavailable', description: 'registry timed out' }),
+      ),
+    );
+  });
+
+  test('falls back to its own title for a referencing read the service gave no header for', async () => {
+    renderView({ referencingPipelines: null, referencingFailure: {} });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsEvaluatorsI18nKey.UsedByLoadFailed }),
+      ),
+    );
+  });
+
+  test('states the registration timestamp as unavailable', () => {
+    renderView({ summary: null, summaryFailure: {} });
+
+    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.Unavailable)).toBeTruthy();
+  });
 });
 
 describe('EvaluatorDetailView — tabs', () => {
@@ -139,7 +214,7 @@ describe('EvaluatorDetailView — saving as a new version', () => {
 
   test('says so in the confirmation when the latest version could not be read', async () => {
     const user = userEvent.setup();
-    renderView({ summary: null, hasSummaryError: true });
+    renderView({ summary: null, summaryFailure: {} });
 
     await user.type(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.Model), 'x');
     await user.click(screen.getByRole('button', { name: AnalyticsEvaluatorsI18nKey.SaveAsNewVersion }));

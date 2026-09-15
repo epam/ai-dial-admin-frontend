@@ -7,3 +7,10 @@ export interface ServerActionResponse<T extends object = any> {
   status?: number;
   etag?: string;
 }
+
+// `requestId` is the response's `traceparent`, which not every deployment emits.
+export interface ReadFailure {
+  errorHeader?: string;
+  errorMessage?: string;
+  requestId?: string;
+}

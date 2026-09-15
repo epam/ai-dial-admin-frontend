@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 // Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
 // every conversation, an enrichment column is absent until an evaluation reaches it, and a feedback column is
@@ -197,7 +198,7 @@ export interface ConversationValueFilterModel {
 // search term, feedback candidates and other columns' filters, all of which are the conversations hook's
 // state — so the hook supplies the reader and the control stays unaware of any of it.
 export interface ConversationGridContext {
-  requestFieldValues: (field: string) => Promise<ConversationFieldValue[] | null>;
+  requestFieldValues: (field: string) => Promise<ServerActionResponse<ConversationFieldValue[]>>;
 }
 
 export interface ConversationFieldValuesRequest extends ConversationFilters {

@@ -48,8 +48,11 @@ export function useDetailMode(
   const detailModeRef = useRef(detailMode);
   detailModeRef.current = detailMode;
 
-  const showDetailPanelRef = useRef<(resultId: string, mode: DetailMode, fieldKey: string | null) => void>(() => {});
+  const showDetailPanelRef = useRef<
+    (resultId: string, mode: DetailMode, fieldKey: string | null, focusRequestId?: number) => void
+  >(() => {});
   const displayTreeRef = useRef<ColDef[]>([]);
+  const focusRequestIdRef = useRef(0);
 
   const persistDisplayTree = useCallback((tree: ColDef[]) => {
     displayTreeRef.current = tree;
@@ -65,7 +68,7 @@ export function useDetailMode(
     setDetailMode(DetailMode.Drawer);
     const currentId = selectedResultIdRef.current;
     if (currentId) {
-      showDetailPanelRef.current(currentId, DetailMode.Drawer, null);
+      showDetailPanelRef.current(currentId, DetailMode.Drawer, null, focusRequestIdRef.current);
     }
   }, []);
 
@@ -78,12 +81,13 @@ export function useDetailMode(
   }, []);
 
   const showDetailPanel = useCallback(
-    (resultId: string, mode: DetailMode, fieldKey: string | null) => {
+    (resultId: string, mode: DetailMode, fieldKey: string | null, focusRequestId = 0) => {
       if (mode === DetailMode.Drawer) {
         sidebarRef.current.showSidebar(
           <ExecutionRowDetailBottomPanel
             resultId={resultId}
             focusFieldKey={fieldKey}
+            focusRequestId={focusRequestId}
             metricGroupOrder={metricGroupOrder}
             fieldSchema={fieldSchema}
             initialDisplayTree={displayTreeRef.current}
@@ -116,9 +120,10 @@ export function useDetailMode(
   const openDetail = useCallback(
     (resultId: string, options?: OpenDetailOptions) => {
       const fieldKey = options?.focusFieldKey ?? null;
+      focusRequestIdRef.current += 1;
       setSelectedResultId(resultId);
       setFocusFieldKey(fieldKey);
-      showDetailPanel(resultId, detailModeRef.current, fieldKey);
+      showDetailPanel(resultId, detailModeRef.current, fieldKey, focusRequestIdRef.current);
     },
     [showDetailPanel],
   );

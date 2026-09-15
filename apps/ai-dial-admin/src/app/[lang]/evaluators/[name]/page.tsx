@@ -6,9 +6,11 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { PipelineKind, PipelineListItem } from '@/src/models/analytics/pipeline';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
 import { getReferencingPipelines } from '@/src/utils/analytics/evaluator-usage';
+import { toReadFailure } from '@/src/utils/notification';
 import { getEvaluator, getEvaluators, getEvaluatorVersion } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -32,40 +34,42 @@ export default async function Page({ params, searchParams }: PageProps) {
   const name = (await params).name;
   const version = toVersion((await searchParams).version);
 
-  let evaluator: Evaluator | null = null;
-  let evaluators: EvaluatorSummary[] | null = null;
+  let read: ServerActionResponse<Evaluator> = { success: false };
+  let summaryRead: ServerActionResponse<EvaluatorSummary[]> = { success: false };
+  let pipelinesRead: ServerActionResponse<PipelineListItem[]> = { success: false };
   let referencingPipelines: PipelineListItem[] | null = null;
 
   try {
-    evaluator = version ? await getEvaluatorVersion(name, version) : await getEvaluator(name);
+    read = version ? await getEvaluatorVersion(name, version) : await getEvaluator(name);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch the evaluator version');
   }
 
   try {
-    evaluators = await getEvaluators();
+    summaryRead = await getEvaluators();
   } catch (e) {
     errorObjLog(e, 'Failed to fetch the evaluator version list');
   }
 
   try {
-    const pipelines = (await getPipelines({ kind: PipelineKind.Enrich })).data;
-    referencingPipelines = pipelines ? getReferencingPipelines(pipelines, name) : null;
+    pipelinesRead = await getPipelines({ kind: PipelineKind.Enrich });
+    referencingPipelines = pipelinesRead.response ? getReferencingPipelines(pipelinesRead.response, name) : null;
   } catch (e) {
     errorObjLog(e, 'Failed to fetch the pipelines referencing the evaluator');
   }
 
-  if (evaluator == null) {
+  if (read.response == null) {
     notFound();
   }
 
   return (
     <SaveValidationContextProvider>
       <EvaluatorDetailView
-        evaluator={evaluator}
-        summary={evaluators?.find((item) => item.name === name) ?? null}
-        hasSummaryError={evaluators == null}
+        evaluator={read.response}
+        summary={summaryRead.response?.find((item) => item.name === name) ?? null}
+        summaryFailure={summaryRead.success ? null : toReadFailure(summaryRead)}
         referencingPipelines={referencingPipelines}
+        referencingFailure={pipelinesRead.success ? null : toReadFailure(pipelinesRead)}
       />
     </SaveValidationContextProvider>
   );

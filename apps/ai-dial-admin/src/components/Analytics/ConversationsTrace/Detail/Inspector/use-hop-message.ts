@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { getConversationHopMessage } from '@/src/app/[lang]/conversations-trace/actions';
+import { useHopReadReport } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { HopMessageValue, HopReadState, SessionScope } from '@/src/models/analytics/conversations-trace';
 
@@ -20,6 +21,7 @@ export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Param
   const [messages, setMessages] = useState<Record<number, HopMessageValue>>({});
   const [loadingIndexes, setLoadingIndexes] = useState<number[]>([]);
   const getReqRef = useRef(useProtectedRequest());
+  const onReadFailed = useHopReadReport();
 
   const onOpen = useCallback(
     async (messageIndex: number) => {
@@ -36,6 +38,10 @@ export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Param
         );
         const value = result?.response as HopMessageValue | undefined;
 
+        if (result && !result.success) {
+          onReadFailed(result);
+        }
+
         setMessages((current) => ({
           ...current,
           [messageIndex]: value ?? { state: HopReadState.LoadFailed, text: null, toolCalls: [] },
@@ -44,7 +50,7 @@ export const useHopMessage = ({ scope, traceId, coreSpanId, requestTime }: Param
         setLoadingIndexes((current) => current.filter((held) => held !== messageIndex));
       }
     },
-    [scope, traceId, coreSpanId, requestTime],
+    [scope, traceId, coreSpanId, requestTime, onReadFailed],
   );
 
   const onClose = useCallback(

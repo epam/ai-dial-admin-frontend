@@ -154,8 +154,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       return;
     }
     let cancelled = false;
-    void getTable(table.source_table).then((tbl) => {
-      if (!cancelled) setSourceTable(tbl);
+    void getTable(table.source_table).then((read) => {
+      if (!cancelled) setSourceTable(read?.response ?? null);
     });
     return () => {
       cancelled = true;
@@ -171,8 +171,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   );
 
   const reload = useCallback(async () => {
-    const tbl = await getTable(name);
-    if (tbl) setTable(tbl);
+    const read = await getTable(name);
+    if (read?.response) setTable(read.response);
   }, [name]);
 
   const goToCatalog = () => router.push(ApplicationRoute.AnalyticsTables);

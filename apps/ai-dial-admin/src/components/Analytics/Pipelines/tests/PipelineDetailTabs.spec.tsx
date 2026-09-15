@@ -110,7 +110,7 @@ beforeEach(() => {
   vi.mocked(getTable).mockImplementation(
     async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
   );
-  vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
   vi.mocked(updatePipeline).mockResolvedValue({ success: true });
 });
 

@@ -2761,8 +2761,6 @@ export default {
     VarTransform: 'Transform (JSONata)',
     VarBinding: 'Bound to',
     VarValue: 'Value',
-    OutputsDerivedNote:
-      "The disabled rows are where the evaluator's answer lands: derived from its outputs and the target's columns, so they are read here and never sent.",
     AddVariable: '+ Variable',
     VariablesEmpty: 'No variables declared.',
     PlaceholdersTitle: 'Template placeholders',
@@ -2854,6 +2852,7 @@ export default {
     VarExpression: 'Produced by',
     UsedByNone: 'No enrichment rule references this evaluator.',
     UsedByLoadFailed: 'Could not load the rules that reference this evaluator.',
+    UsedByUnavailable: 'Referencing pipelines are unavailable.',
     AddParam: '+ Parameter',
     ParamKey: 'Parameter',
     ParamValue: 'Value',
@@ -3096,8 +3095,7 @@ export default {
     SummaryPendingHint: 'Not resolved yet.',
     SummaryPeriodHint:
       'Covers every conversation and coding-agent session in the selected period. The search, column filters and feedback filter narrow the list below, not this figure.',
-    SchemaUnavailableNotice:
-      'The sessions schema could not be read, so the columns that depend on it were dropped: conversations show no title and no topics, and none of the entity’s other fields are offered as columns.',
+    SchemaLoadFailed: 'Could not load the sessions schema, so the columns that depend on it were dropped.',
     FeedbackCappedNotice:
       'Showing only the most recently rated conversations. More may carry this feedback than are listed.',
     SummaryUnavailableHint: 'Could not be loaded.',
@@ -3280,7 +3278,8 @@ export default {
     ValueFilterGroup: 'Filter by {column}',
     ValueFilterLoading: 'Loading values…',
     ValueFilterEmpty: 'No values to filter by',
-    ValueFilterLoadFailed: 'Could not load the values for this column.',
+    ValueFilterLoadFailed: 'Values are unavailable.',
+    ValuesLoadFailed: 'Could not load the values for this column.',
     ValueFilterSearch: 'Search values',
     ValueFilterSelectAll: 'Select all',
   },

@@ -572,7 +572,8 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(getEntitySchema).mockResolvedValue({
-      fields: [{ name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' }],
+      success: true,
+      response: { fields: [{ name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' }] },
     });
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
@@ -675,7 +676,7 @@ describe('QueryBuilder AI view', () => {
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
     vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
-    vi.mocked(getEntitySchema).mockResolvedValue({ fields: FIELDS });
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
 
     renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');

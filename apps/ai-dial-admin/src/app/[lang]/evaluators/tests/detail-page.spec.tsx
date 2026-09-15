@@ -57,12 +57,13 @@ const renderView = async (name?: string, version?: string): Promise<RenderedElem
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(isAnalyticsForbidden).mockResolvedValue(false);
-  vi.mocked(getEvaluator).mockResolvedValue(latest);
-  vi.mocked(getEvaluatorVersion).mockResolvedValue(pinnedVersion);
-  vi.mocked(getEvaluators).mockResolvedValue([
-    { name: 'conversation-insights', latest_version: 4, created_at: '2026-08-17T10:00:00Z' },
-  ]);
-  vi.mocked(getPipelines).mockResolvedValue({ data: [rule], isForbidden: false });
+  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: latest });
+  vi.mocked(getEvaluatorVersion).mockResolvedValue({ success: true, response: pinnedVersion });
+  vi.mocked(getEvaluators).mockResolvedValue({
+    success: true,
+    response: [{ name: 'conversation-insights', latest_version: 4, created_at: '2026-08-17T10:00:00Z' }],
+  });
+  vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule] });
 });
 
 describe('evaluator detail page — version addressing', () => {
@@ -103,14 +104,14 @@ describe('evaluator detail page — version addressing', () => {
   });
 
   test('is not found when the version read resolves to nothing', async () => {
-    vi.mocked(getEvaluatorVersion).mockResolvedValue(null);
+    vi.mocked(getEvaluatorVersion).mockResolvedValue({ success: false, status: 500 });
 
     await expect(renderPage('conversation-insights', '9')).rejects.toThrow('NEXT_NOT_FOUND');
     expect(notFound).toHaveBeenCalled();
   });
 
   test('is not found when the name is unknown', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
 
     await expect(renderPage('nope')).rejects.toThrow('NEXT_NOT_FOUND');
   });
@@ -133,7 +134,10 @@ describe('evaluator detail page — degraded reads', () => {
   });
 
   test('reports no summary when the listing does not carry the name', async () => {
-    vi.mocked(getEvaluators).mockResolvedValue([{ name: 'something-else', latest_version: 1 }]);
+    vi.mocked(getEvaluators).mockResolvedValue({
+      success: true,
+      response: [{ name: 'something-else', latest_version: 1 }],
+    });
 
     const view = await renderView();
 
@@ -148,7 +152,7 @@ describe('evaluator detail page — degraded reads', () => {
   });
 
   test('leaves the referencing pipelines null when the listing fails', async () => {
-    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
+    vi.mocked(getPipelines).mockResolvedValue({ success: false, status: 500, errorMessage: 'registry timed out' });
 
     const view = await renderView();
 

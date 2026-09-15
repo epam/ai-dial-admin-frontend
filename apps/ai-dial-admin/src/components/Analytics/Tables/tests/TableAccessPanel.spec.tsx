@@ -61,7 +61,7 @@ const save = (user: ReturnType<typeof userEvent.setup>) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: [] });
+  (getTableAccess as any).mockResolvedValue({ success: true, response: { write: ['analytics-writer'], modify: [] } });
   (replaceTableAccess as any).mockResolvedValue({ success: true });
   (getRoles as any).mockResolvedValue({ roles: catalog, warnings: [] });
 });
@@ -75,7 +75,10 @@ describe('TableAccessPanel', () => {
   });
 
   test('checks the roles already granted in the list that granted them', async () => {
-    (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: ['analytics-editor'] });
+    (getTableAccess as any).mockResolvedValue({
+      success: true,
+      response: { write: ['analytics-writer'], modify: ['analytics-editor'] },
+    });
     renderPanel();
     await waitForLoaded();
 
@@ -124,7 +127,10 @@ describe('TableAccessPanel', () => {
   });
 
   test('offers a granted role the catalog does not contain, and sends it back unchanged', async () => {
-    (getTableAccess as any).mockResolvedValue({ write: ['config-file-only-role'], modify: [] });
+    (getTableAccess as any).mockResolvedValue({
+      success: true,
+      response: { write: ['config-file-only-role'], modify: [] },
+    });
     const user = userEvent.setup();
     renderPanel();
     await waitForLoaded();
@@ -144,7 +150,7 @@ describe('TableAccessPanel', () => {
   });
 
   test('keeps Save disabled and does not replace when the access load fails', async () => {
-    (getTableAccess as any).mockResolvedValue(null);
+    (getTableAccess as any).mockResolvedValue({ success: false, status: 500 });
     renderPanel();
 
     await waitFor(() => expect(getTableAccess).toHaveBeenCalledWith('events'));
@@ -174,7 +180,10 @@ describe('TableAccessPanel', () => {
   });
 
   test('round-trips both lists on save when nothing is edited', async () => {
-    (getTableAccess as any).mockResolvedValue({ write: ['analytics-writer'], modify: ['analytics-editor'] });
+    (getTableAccess as any).mockResolvedValue({
+      success: true,
+      response: { write: ['analytics-writer'], modify: ['analytics-editor'] },
+    });
     const user = userEvent.setup();
     renderPanel();
     await waitForLoaded();

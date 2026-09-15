@@ -92,6 +92,7 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
     !extractPlaceholders(form.evaluator?.request_template).includes(MEMBERS_PLACEHOLDER);
 
   const evaluatorError = (() => {
+    if (hasEvaluatorsError) return t(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed);
     if (form.hasEvaluatorError) return t(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed);
     if (isMembersMissing) return t(AnalyticsPipelinesI18nKey.MembersPlaceholderMissing);
     return undefined;
@@ -127,9 +128,6 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
         invalid={Boolean(evaluatorError)}
         onChange={(v) => onChange({ evaluator_name: v as string })}
       />
-      {hasEvaluatorsError && (
-        <span className="text-error dial-small">{t(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)}</span>
-      )}
       {!hasEvaluatorsError && evaluators.length === 0 && (
         <span className="text-secondary dial-small">{t(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)}</span>
       )}
@@ -196,7 +194,6 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
             <div className="flex flex-col gap-3">
               <VariablesEditor
                 vars={draft.vars}
-                outputs={form.outputs}
                 columns={form.sourceColumns}
                 isReady={form.isVariablesReady}
                 onChange={(vars) => onChange({ vars })}

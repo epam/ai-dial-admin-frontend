@@ -188,8 +188,3 @@ export interface PipelineListItem {
   evaluator_name?: string;
   evaluator_version?: number;
 }
-
-export interface PipelineReadResult<T> {
-  data: T | null;
-  isForbidden: boolean;
-}

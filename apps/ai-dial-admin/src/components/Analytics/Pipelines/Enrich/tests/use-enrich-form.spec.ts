@@ -81,8 +81,8 @@ const mockAll = () => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue(allTables);
   vi.mocked(getTable).mockImplementation(async (name) => allTables.find((table) => table.name === name) ?? null);
-  vi.mocked(getEvaluator).mockResolvedValue(sqlEvaluator);
-  vi.mocked(getEvaluatorVersion).mockResolvedValue({ ...sqlEvaluator, version: 1 });
+  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: sqlEvaluator });
+  vi.mocked(getEvaluatorVersion).mockResolvedValue({ success: true, response: { ...sqlEvaluator, version: 1 } });
 };
 
 describe('useEnrichForm — resolution', () => {
@@ -133,7 +133,7 @@ describe('useEnrichForm — resolution', () => {
   });
 
   test('keeps the variables for an evaluator that resolves to llm', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(llmEvaluator);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: llmEvaluator });
     const { result } = renderForm({
       initialDraft: { kind: PipelineKind.Enrich, vars: { title: { column: 'title' } } },
     });
@@ -200,7 +200,7 @@ describe('useEnrichForm — resolution', () => {
   });
 
   test('reports a failed evaluator resolution', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
 
     act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
@@ -374,7 +374,7 @@ describe('useEnrichForm — isValid', () => {
   });
 
   test('blocks while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
 
     act(() =>

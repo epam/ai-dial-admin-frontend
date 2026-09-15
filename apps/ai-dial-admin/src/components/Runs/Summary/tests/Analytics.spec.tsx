@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import Analytics from '../Analytics';
 
@@ -142,7 +143,8 @@ describe('Runs Summary :: Analytics', () => {
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });
 
-  test('renders cost cards with dollar values', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders cost cards with dollar values', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -154,7 +156,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getAllByText('Runs.AvgPerTestCase').length).toBeGreaterThanOrEqual(2);
   });
 
-  test('renders em dash when a cost field is null', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders em dash when a cost field is null', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -164,7 +167,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getByText('$0')).toBeInTheDocument();
   });
 
-  test('shows Cost data unavailable without dropping other KPI cards', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows Cost data unavailable without dropping other KPI cards', async () => {
     mockQueries();
     mockCosts(null);
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -183,7 +187,8 @@ describe('Runs Summary :: Analytics', () => {
     }
   });
 
-  test('shows loading on cost cards while costs resolve after analytics', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows loading on cost cards while costs resolve after analytics', async () => {
     mockQueries();
     let resolveCosts: (value: { avgTestCaseCost: number; avgMetricEvalCost: number }) => void = () => undefined;
     getRunCostsMock.mockReturnValue(
@@ -210,6 +215,38 @@ describe('Runs Summary :: Analytics', () => {
 
     expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
     expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
+  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])(
+    'renders dashes instead of error tags for a %s run with no data',
+    async (status) => {
+      executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+      mockCosts(null);
+      render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
+
+      await screen.findByText('Runs.TestCasesPassed');
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+      expect(screen.getAllByText('—')).toHaveLength(3);
+      expect(screen.queryByText('Runs.CostDataUnavailable')).not.toBeInTheDocument();
+    },
+  );
+
+  test('still marks cards as error for a stopped run once data is present', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.CANCELLED } as any} />);
+
+    expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
+    expect(screen.getByText('37')).toBeInTheDocument();
+    expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+  });
+
+  test('marks cards as error for a completed run with no data', async () => {
+    executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+    mockCosts(null);
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} overallScore={null} />);
+
+    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(3));
   });
 
   test('shows the test cases passed card when the snapshotted threshold is 0', async () => {

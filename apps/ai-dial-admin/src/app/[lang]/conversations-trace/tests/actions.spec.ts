@@ -816,7 +816,8 @@ describe('getConversationsSchema', () => {
 
   test('reads the conversations entity schema with the caller token', async () => {
     getEntitySchema().mockResolvedValue({
-      fields: [{ name: 'success_count', type: 'integer', source: 'success_count' }],
+      success: true,
+      response: { fields: [{ name: 'success_count', type: 'integer', source: 'success_count' }] },
     });
 
     const result = await getConversationsSchema();
@@ -827,7 +828,7 @@ describe('getConversationsSchema', () => {
   });
 
   test('reports a failure so the view can say the additional columns are unavailable', async () => {
-    getEntitySchema().mockResolvedValue(null);
+    getEntitySchema().mockResolvedValue({ success: false, status: 500 });
 
     const result = await getConversationsSchema();
 
@@ -836,7 +837,7 @@ describe('getConversationsSchema', () => {
   });
 
   test('serves a repeated load from the cache rather than querying again', async () => {
-    getEntitySchema().mockResolvedValue({ fields: [] });
+    getEntitySchema().mockResolvedValue({ success: true, response: { fields: [] } });
 
     await getConversationsSchema();
     const result = await getConversationsSchema();
@@ -852,7 +853,10 @@ describe('the hop inspector reads', () => {
   const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
 
   const schemaOf = (names: string[]) =>
-    getEntitySchema().mockResolvedValue({ fields: names.map((name) => ({ name, type: 'string', source: name })) });
+    getEntitySchema().mockResolvedValue({
+      success: true,
+      response: { fields: names.map((name) => ({ name, type: 'string', source: name })) },
+    });
 
   const bodyRow = (overrides: Record<string, unknown> = {}) => ({
     trace_id: 'tr1',
@@ -961,7 +965,7 @@ describe('the hop inspector reads', () => {
 
   // A schema that could not be read is an outage, not a column that was withheld.
   test('reports a failure when the schema could not be read', async () => {
-    getEntitySchema().mockResolvedValue(null);
+    getEntitySchema().mockResolvedValue({ success: false, status: 500 });
 
     const result = await readRequest();
 

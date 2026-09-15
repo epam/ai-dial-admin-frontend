@@ -59,8 +59,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   sidebarRef.current = sidebar;
 
   const showDetailPanelRef = useRef<
-    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey?: string | null) => void
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey?: string | null, focusRequestId?: number) => void
   >(() => {});
+  const focusRequestIdRef = useRef(0);
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
@@ -239,7 +240,12 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Bottom);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Bottom, focusFieldKeyRef.current);
+      showDetailPanelRef.current(
+        currentRow,
+        SidebarPosition.Bottom,
+        focusFieldKeyRef.current,
+        focusRequestIdRef.current,
+      );
     }
   }, []);
 
@@ -247,12 +253,17 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Right);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Right, focusFieldKeyRef.current);
+      showDetailPanelRef.current(
+        currentRow,
+        SidebarPosition.Right,
+        focusFieldKeyRef.current,
+        focusRequestIdRef.current,
+      );
     }
   }, []);
 
   const showDetailPanel = useCallback(
-    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey: string | null = null) => {
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey: string | null = null, focusRequestId = 0) => {
       const isBottom = position === SidebarPosition.Bottom;
       const content = isBottom ? (
         <CompareRowDetailBottomPanel
@@ -262,6 +273,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onClose={closeRowDetail}
           onSwitchToSidebar={switchToSidebar}
           focusFieldKey={fieldKey}
+          focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
           metricGroupOrder={metricGroupOrder}
           initialDisplayTree={displayTreeRef.current}
@@ -280,6 +292,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           position={SidebarPosition.Right}
           onSwitchDisplayMode={switchToBottom}
           focusFieldKey={fieldKey}
+          focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
           metricGroupOrder={metricGroupOrder}
           initialDisplayTree={displayTreeRef.current}
@@ -312,10 +325,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => {
       const fieldKey = options?.focusFieldKey ?? null;
+      focusRequestIdRef.current += 1;
 
       setSelectedRow(row);
       setFocusFieldKey(fieldKey);
-      showDetailPanel(row, detailPosition, fieldKey);
+      showDetailPanel(row, detailPosition, fieldKey, focusRequestIdRef.current);
     },
     [showDetailPanel, detailPosition],
   );

@@ -94,37 +94,6 @@ describe('VariablesEditor', () => {
     expect(onChange).toHaveBeenCalledWith({});
   });
 
-  test('reads the derived outputs as further rows of the same list, numbered after them and disabled', () => {
-    render(
-      <VariablesEditor
-        vars={{ request: { column: 'request_body' } }}
-        outputs={[{ name: 'topic', column: 'topic', jsonata: '$.topic' }]}
-        columns={columns}
-        isReady
-        onChange={vi.fn()}
-      />,
-    );
-
-    expect(nameField(2)).toHaveValue('topic');
-    expect(nameField(2)).toBeDisabled();
-    expect(screen.getByLabelText(`${AnalyticsPipelinesI18nKey.VarValue} 2`, { exact: false })).toHaveValue('topic');
-    expect(bindingSelect(2)).toHaveValue(VarBindingKind.Column);
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.OutputsDerivedNote)).toBeTruthy();
-  });
-
-  test('leaves an output transform off the list, which has no cell for it', () => {
-    render(
-      <VariablesEditor
-        outputs={[{ name: 'topic', column: 'topic', jsonata: '$.topic' }]}
-        columns={columns}
-        isReady
-        onChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByDisplayValue('$.topic')).toBeNull();
-  });
-
   test('removes the row it is asked to', () => {
     render(<Host seed={{ request: { column: 'request_body' } }} />);
 

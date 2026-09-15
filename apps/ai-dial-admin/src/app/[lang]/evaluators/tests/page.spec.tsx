@@ -34,8 +34,8 @@ const renderPage = async () => (await Page()) as { type: unknown; props: Record<
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(isAnalyticsForbidden).mockResolvedValue(false);
-  vi.mocked(getEvaluators).mockResolvedValue(evaluators);
-  vi.mocked(getPipelines).mockResolvedValue({ data: [rule], isForbidden: false });
+  vi.mocked(getEvaluators).mockResolvedValue({ success: true, response: evaluators });
+  vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule] });
 });
 
 describe('evaluators page', () => {
@@ -43,7 +43,7 @@ describe('evaluators page', () => {
     const page = await renderPage();
 
     expect(getEvaluators).toHaveBeenCalledOnce();
-    expect(page.props).toMatchObject({ hasLoadError: false, hasUsageError: false });
+    expect(page.props).toMatchObject({ loadFailure: null, usageFailure: null });
     expect(page.props.rows).toEqual([
       { name: 'feedback-rollup', latest_version: 2, created_at: '2026-08-17T10:00:00Z', usedBy: 1 },
     ]);
@@ -55,29 +55,44 @@ describe('evaluators page', () => {
     expect(getPipelines).toHaveBeenCalledOnce();
   });
 
-  test('renders the console with a stated failure when the evaluators listing fails', async () => {
-    vi.mocked(getEvaluators).mockResolvedValue(null);
+  test('hands the view the failure itself when the evaluators listing fails', async () => {
+    vi.mocked(getEvaluators).mockResolvedValue({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'registry timed out',
+      requestId: 'trace-1',
+    });
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ rows: [], hasLoadError: true });
+    expect(page.props).toMatchObject({
+      rows: [],
+      loadFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out', requestId: 'trace-1' },
+    });
     expect(page.type).not.toBe(Page403);
   });
 
-  test('reports a thrown evaluators fetch the same way', async () => {
+  test('hands the view a wordless failure when the evaluators fetch throws', async () => {
     vi.mocked(getEvaluators).mockRejectedValue(new Error('boom'));
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ rows: [], hasLoadError: true });
+    expect(page.props).toMatchObject({
+      rows: [],
+      loadFailure: { errorHeader: void 0, errorMessage: void 0, requestId: void 0 },
+    });
   });
 
   test('reports the usage as unknown, not zero, when the rules listing fails', async () => {
-    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
+    vi.mocked(getPipelines).mockResolvedValue({ success: false, status: 500, errorMessage: 'registry timed out' });
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ hasUsageError: true, hasLoadError: false });
+    expect(page.props).toMatchObject({
+      usageFailure: { errorMessage: 'registry timed out' },
+      loadFailure: null,
+    });
     expect((page.props.rows as { usedBy: number | null }[])[0].usedBy).toBeNull();
   });
 
@@ -86,12 +101,15 @@ describe('evaluators page', () => {
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ hasUsageError: true });
+    expect(page.props).toMatchObject({ usageFailure: { errorMessage: void 0 } });
     expect((page.props.rows as { usedBy: number | null }[])[0].usedBy).toBeNull();
   });
 
   test('reports zero for an evaluator no rule names', async () => {
-    vi.mocked(getEvaluators).mockResolvedValue([{ name: 'conversation-insights', latest_version: 4 }]);
+    vi.mocked(getEvaluators).mockResolvedValue({
+      success: true,
+      response: [{ name: 'conversation-insights', latest_version: 4 }],
+    });
 
     const page = await renderPage();
 

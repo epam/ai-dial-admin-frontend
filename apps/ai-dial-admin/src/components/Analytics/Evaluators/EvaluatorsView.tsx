@@ -13,24 +13,29 @@ import { evaluatorDetailHref } from '@/src/components/Analytics/Evaluators/utils
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { useAppContext } from '@/src/context/AppContext';
+import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
+import { ReadFailure } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
   rows: EvaluatorListRow[];
-  hasUsageError?: boolean;
-  hasLoadError?: boolean;
+  usageFailure?: ReadFailure | null;
+  loadFailure?: ReadFailure | null;
 }
 
-const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
+const EvaluatorsView: FC<Props> = ({ rows, usageFailure, loadFailure }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useReadFailureNotification(loadFailure, AnalyticsEvaluatorsI18nKey.EvaluatorsLoadFailed);
+  useReadFailureNotification(usageFailure, AnalyticsEvaluatorsI18nKey.UsageLoadFailed);
 
   const columns: ColDef[] = useMemo(
     () => [
@@ -69,18 +74,6 @@ const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
           />
         )}
       </div>
-
-      {hasLoadError && (
-        <div role="status" className="mb-4 text-error dial-small">
-          {t(AnalyticsEvaluatorsI18nKey.EvaluatorsLoadFailed)}
-        </div>
-      )}
-
-      {hasUsageError && (
-        <div role="status" className="mb-4 text-secondary dial-small">
-          {t(AnalyticsEvaluatorsI18nKey.UsageLoadFailed)}
-        </div>
-      )}
 
       <div className="flex min-h-0 flex-1 flex-col">
         <GridView

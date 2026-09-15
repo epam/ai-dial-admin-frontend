@@ -20,6 +20,10 @@ describe('mapGridColToPivotField', () => {
   test('strips metric group prefix when group looks like a label or package', () => {
     expect(mapGridColToPivotField('Overall Accuracy_Precision')).toBe('Precision');
     expect(mapGridColToPivotField('aidial_rag_eval.retrieval_f1')).toBe('f1');
+    expect(mapGridColToPivotField('Exact Match_exact_match')).toBe('exact_match');
+    expect(mapGridColToPivotField('cmp_Exact Match_exact_match')).toBe('exact_match');
+    expect(mapGridColToPivotField('delta_Exact Match_exact_match')).toBe('exact_match');
+    expect(mapGridColToPivotField('DeepEval: Answer Relevancy_score')).toBe('score');
   });
 
   test('maps compare secondary and delta column prefixes to the same pivot field', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -16,6 +16,7 @@ import {
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
+import { ROW_DETAIL_PIVOT_LEFT_COL_WIDTH } from '@/src/components/Runs/Details/RowDetails/constants';
 import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 import {
   CompareDiffPivotPosition,
@@ -39,6 +40,7 @@ interface Props {
   showDiffsOnly: boolean;
   hideHighlights: boolean;
   focusFieldKey?: string | null;
+  focusRequestId?: number;
 }
 
 const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
@@ -54,6 +56,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   showDiffsOnly,
   hideHighlights,
   focusFieldKey,
+  focusRequestId = 0,
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -76,9 +79,9 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns), [columns]);
   const gridTemplateRows = hasComparedMatch ? 'auto auto 1fr 1fr auto' : 'auto auto 1fr 1fr';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
-  }, [focusFieldKey, columns]);
+  }, [focusFieldKey, focusRequestId, columns]);
 
   const renderValueCell = (
     key: string,
@@ -109,6 +112,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
       <div
         ref={scrollContainerRef}
         className="flex-1 min-h-0 overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ scrollPaddingLeft: ROW_DETAIL_PIVOT_LEFT_COL_WIDTH }}
       >
         <div
           className="dial-tiny-text grid w-full h-full"
