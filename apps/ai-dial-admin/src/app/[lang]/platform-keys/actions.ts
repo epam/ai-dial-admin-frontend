@@ -24,11 +24,14 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
  * `{ name, description }` regardless of view, and that field survives onto the runtime object
  * despite the type.
  *
- * The `key` field is NEVER included in regular updates — Core's `SecretFieldProcessor
- * .mergePreservingOmittedSecrets` preserves the existing secret when it is absent. Pass `key`
- * explicitly only on create and rotation.
+ * `key` is included whenever the client holds a non-null value: create/rotation always do (the
+ * secret is generated client-side), and a value typed into the JSON editor does. On a
+ * properties-only save the field is absent — Core never returns the secret on reads, and its
+ * `SecretFieldProcessor.mergePreservingOmittedSecrets` preserves the stored secret when it is
+ * absent. A `null` from the JSON editor is deliberately normalized away the same way rather than
+ * sent: Core's handling of an explicit null secret is unknown.
  */
-function toKeyPayload(key: DialKeyResource, options?: { includeKey?: boolean }) {
+function toKeyPayload(key: DialKeyResource) {
   const {
     status: __status,
     validationWarnings: __validationWarnings,
@@ -45,7 +48,7 @@ function toKeyPayload(key: DialKeyResource, options?: { includeKey?: boolean }) 
 
   return {
     ...payload,
-    ...(options?.includeKey && keyValue !== undefined && { key: keyValue }),
+    ...(keyValue != null && { key: keyValue }),
   };
 }
 
@@ -56,7 +59,7 @@ export async function getKeys(path: string) {
 
 export async function createKey(key: DialKeyResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(token, ResourceType.PROJECT_KEY, key.name, toKeyPayload(key, { includeKey: true }));
+  return assetApi.put(token, ResourceType.PROJECT_KEY, key.name, toKeyPayload(key));
 }
 
 export async function getKey(path: string, etag: string) {
@@ -71,7 +74,7 @@ export async function updateKey(key: DialKeyResource, etag: string) {
 
 export async function rotateKey(key: DialKeyResource, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(token, ResourceType.PROJECT_KEY, key.name, toKeyPayload(key, { includeKey: true }), { etag });
+  return assetApi.put(token, ResourceType.PROJECT_KEY, key.name, toKeyPayload(key), { etag });
 }
 
 export async function removeKey(path: string, etag?: string) {
