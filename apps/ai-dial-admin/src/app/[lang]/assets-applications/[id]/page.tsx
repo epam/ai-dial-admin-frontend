@@ -17,6 +17,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { CatalogSchemaOptions, readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
@@ -105,10 +106,12 @@ export default async function Page(params: {
   // `Assets > Interceptors`'/`Assets > Roles`' own API-written one. Read unconditionally for both
   // buckets (not just the platform-bucket Roles tab that uses `roles`) to match the existing
   // interceptors read here, which is likewise unconditional.
-  [roles, interceptors, globalInterceptors] = await Promise.all([
+  let catalogSchemas: CatalogSchemaOptions;
+  [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
     readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
     readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
+    readCatalogSchemaOptions(token),
   ]);
 
   if (app == null) {
@@ -128,6 +131,7 @@ export default async function Page(params: {
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
           translators={translators}
+          catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
           isConfigFileSource={isConfigFileMode}
         />
@@ -142,6 +146,7 @@ export default async function Page(params: {
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
           translators={translators}
+          catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
         />
       )}

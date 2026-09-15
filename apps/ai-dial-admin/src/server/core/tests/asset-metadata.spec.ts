@@ -293,6 +293,38 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result.$id).toEqual('plain');
   });
 
+  test('mergeCatalogSchemaResource keeps the $id a schema stored under another name declares', () => {
+    const result = mergeCatalogSchemaResource(
+      { $id: 'https://host/agent' },
+      metadata({ url: 'catalog_schemas/platform/legacy-name' }),
+    );
+
+    expect(result.$id).toEqual('https://host/agent');
+    expect(result.name).toEqual('legacy-name');
+  });
+
+  test.each([
+    ['a blank $id', '   '],
+    ['an empty $id', ''],
+    ['a non-string $id', 7],
+  ])('mergeCatalogSchemaResource falls back to the decoded name for %s', (_label, declared) => {
+    const result = mergeCatalogSchemaResource(
+      { $id: declared },
+      metadata({ url: 'catalog_schemas/platform/https%253A%252F%252Fhost%252Fagent' }),
+    );
+
+    expect(result.$id).toEqual('https://host/agent');
+  });
+
+  test('mergeAppRunnerResource still overwrites the body $id with the decoded name', () => {
+    const result = mergeAppRunnerResource(
+      { $id: 'https://host/other' },
+      metadata({ url: 'schemas/platform/https%253A%252F%252Fhost%252Frunner' }),
+    );
+
+    expect(result.$id).toEqual('https://host/runner');
+  });
+
   test('toResourceInfoList decodes a catalog schema row name to its $id while leaving path encoded', () => {
     const node = metadata({
       nodeType: 'FOLDER',

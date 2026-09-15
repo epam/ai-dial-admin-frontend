@@ -17,6 +17,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -34,6 +35,7 @@ interface Props {
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
   isConfigFileSource?: boolean;
 }
@@ -46,6 +48,7 @@ const ModelView: FC<Props> = ({
   globalInterceptors,
   optionWarnings,
   translators,
+  catalogSchemas,
   isConfigFileSource,
 }) => {
   const t = useI18n();
@@ -172,6 +175,7 @@ const ModelView: FC<Props> = ({
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
             translators={translators}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedModel}
           />
         )}

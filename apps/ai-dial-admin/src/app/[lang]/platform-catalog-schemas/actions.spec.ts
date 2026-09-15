@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, catalogSchemasApi } from '@/src/app/api/api';
 import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { DialCatalogSchemaResource, DialModelResourceStatus } from '@/src/models/dial/resource';
 import { ResourceType } from '@/src/types/resource-type';
@@ -12,6 +12,7 @@ import {
   createCatalogSchema,
   getAllCatalogSchemas,
   getCatalogSchema,
+  getCatalogSchemaById,
   getCatalogSchemas,
   removeCatalogSchema,
   updateCatalogSchema,
@@ -172,5 +173,14 @@ describe('Catalog schemas :: server actions', () => {
     await bulkDeleteCatalogSchemas(paths);
 
     expect(assetApi.delete).toHaveBeenCalledTimes(2);
+  });
+
+  test('Should resolve one schema body by its own $id rather than a resource path', async () => {
+    (catalogSchemasApi.schema as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await getCatalogSchemaById(ID);
+
+    expect(catalogSchemasApi.schema).toHaveBeenCalledWith(TOKEN_MOCK, ID);
+    expect(assetApi.getMergedWithEtag).not.toHaveBeenCalled();
   });
 });

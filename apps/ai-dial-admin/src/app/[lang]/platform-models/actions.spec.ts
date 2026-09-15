@@ -193,6 +193,40 @@ describe('Assets model :: server actions', () => {
  * with an empty one on a save that reports success. These assert the exact absence of the property in
  * the outgoing payload rather than comparing against the strip helper's own output.
  */
+describe('Assets model :: catalog metadata', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+  });
+
+  test.each([
+    ['create', (model: any) => createModel(model)],
+    ['update', (model: any) => updateModel(model, 'etag')],
+  ])('carries catalogSchemaId and catalogProperties through a %s', async (_label, action) => {
+    await action({
+      name: 'model-name',
+      catalogSchemaId: 'https://host/model-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalogSchemaId: 'https://host/model-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves a model carrying no catalog metadata untouched', async () => {
+    await updateModel({ name: 'model-name' } as any, 'etag');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalogSchemaId');
+    expect(body).not.toHaveProperty('catalogProperties');
+  });
+});
+
 describe('Assets model :: upstream secrets are never written as empty strings', () => {
   const payloadOf = (call: unknown[]) => call[3] as { upstreams?: Record<string, unknown>[] };
 

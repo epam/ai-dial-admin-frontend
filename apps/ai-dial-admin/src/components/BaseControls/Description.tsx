@@ -6,8 +6,10 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { LocalizedText } from '@/src/models/dial/localized';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
+import { isLocalizedMap, resolveLocalizedText } from '@/src/utils/entities/localized-value';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props<T> {
@@ -18,7 +20,8 @@ interface Props<T> {
   onChangeEntity?: (entity: T) => void;
 }
 
-const DescriptionControl = <T extends { description?: string }>({
+/** See `DisplayNameControl` for why a locale map is read-only here. */
+const DescriptionControl = <T extends { description?: LocalizedText }>({
   entity,
   onChangeEntity,
   isFullWidth = true,
@@ -32,6 +35,7 @@ const DescriptionControl = <T extends { description?: string }>({
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
+  const isMap = isLocalizedMap(entity.description);
 
   const onChangeDescription = useCallback(
     (description: string) => {
@@ -48,12 +52,12 @@ const DescriptionControl = <T extends { description?: string }>({
       id="description"
       labelProps={{ label: t(EntityFieldsI18nKey.description), required }}
       placeholder={t(EntityPlaceholdersI18nKey.Description)}
-      value={entity.description}
+      value={resolveLocalizedText(entity.description)}
       error={descriptionError?.text}
       invalid={descriptionError ? true : undefined}
       onChange={onChangeDescription}
       containerClassName={containerClassName}
-      disabled={disabled || isReadOnlyAdmin}
+      disabled={disabled || isReadOnlyAdmin || isMap}
       {...props}
     />
   );

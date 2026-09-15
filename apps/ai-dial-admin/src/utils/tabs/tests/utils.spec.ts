@@ -11,6 +11,7 @@ import {
   attachmentsTab,
   auditTab,
   bodyTab,
+  catalogTab,
   columnsTab,
   conversationsTab,
   dependenciesTab,
@@ -204,6 +205,7 @@ describe('Entities :: tabs', () => {
       propertiesTab(t),
       featuresTab(t),
       parametersTab(t),
+      catalogTab(t),
       interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
@@ -211,20 +213,21 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for AssetsToolsets without dashboardEnabled', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t), catalogTab(t)]);
   });
 
   test('returns correct tabs for AssetsToolsets with dashboardEnabled but without adminApiEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true }))).toEqual([
       propertiesTab(t),
       toolsTab(t),
+      catalogTab(t),
     ]);
   });
 
   test('returns correct tabs for AssetsToolsets with dashboardEnabled and adminApiEnabled', () => {
     expect(
       getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true, adminApiEnabled: true })),
-    ).toEqual([propertiesTab(t), toolsTab(t), auditTab(t)]);
+    ).toEqual([propertiesTab(t), toolsTab(t), catalogTab(t), auditTab(t)]);
   });
 
   test('returns only Dashboard and Traces tabs for PlatformModels when dashboardEnabled is true', () => {
@@ -237,10 +240,11 @@ describe('Entities :: tabs', () => {
     expect(tabs).not.toContainEqual(conversationsTab(t));
   });
 
-  test('returns four tabs without Audit for PlatformModels without dashboardEnabled', () => {
+  test('returns five tabs without Audit for PlatformModels without dashboardEnabled', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformModels)).toEqual([
       propertiesTab(t),
       featuresTab(t),
+      catalogTab(t),
       rolesTab(t),
       interceptorsTab(t),
     ]);
@@ -248,16 +252,23 @@ describe('Entities :: tabs', () => {
 
   test('omits Audit for PlatformModels with dashboardEnabled but without adminApiEnabled', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ dashboardEnabled: true }));
-    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)]);
+    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t), interceptorsTab(t)]);
   });
 
-  test('appends Audit as the fifth and last tab for PlatformModels with dashboardEnabled and adminApiEnabled', () => {
+  test('appends Audit as the last tab for PlatformModels with dashboardEnabled and adminApiEnabled', () => {
     const tabs = getTabsForAsset(
       t,
       ApplicationRoute.PlatformModels,
       flags({ dashboardEnabled: true, adminApiEnabled: true }),
     );
-    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
+    expect(tabs).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+    ]);
   });
 
   test('returns correct tabs for toolset', () => {
@@ -273,6 +284,7 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformInterceptors)).toEqual([
       propertiesTab(t),
       parameterSchemaTab(t),
+      catalogTab(t),
     ]);
   });
 
@@ -291,9 +303,29 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, undefined, true)).toEqual([
       propertiesTab(t),
       featuresTab(t),
+      catalogTab(t),
       rolesTab(t, true),
       interceptorsTab(t),
     ]);
+  });
+
+  test.each([
+    ['PlatformModels', ApplicationRoute.PlatformModels],
+    ['PlatformInterceptors', ApplicationRoute.PlatformInterceptors],
+    ['AssetsApplications', ApplicationRoute.AssetsApplications],
+    ['AssetsToolsets', ApplicationRoute.AssetsToolsets],
+  ])('offers the Catalog tab on %s, the four deployment types Core carries catalog fields on', (_label, view) => {
+    expect(getTabsForAsset(t, view)).toContainEqual(catalogTab(t));
+  });
+
+  test.each([
+    ['PlatformAppRunners', ApplicationRoute.PlatformAppRunners],
+    ['PlatformCatalogSchemas', ApplicationRoute.PlatformCatalogSchemas],
+    ['PlatformRoutes', ApplicationRoute.PlatformRoutes],
+    ['PlatformKeys', ApplicationRoute.PlatformKeys],
+    ['Skills', ApplicationRoute.Skills],
+  ])('offers no Catalog tab on %s, which is not a catalog-bearing deployment', (_label, view) => {
+    expect(getTabsForAsset(t, view)).not.toContainEqual(catalogTab(t));
   });
 
   test('returns correct tabs for key', () => {

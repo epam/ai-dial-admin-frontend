@@ -40,7 +40,36 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Adapters`
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
 
-### 3. **Assets**
+### 3. **Catalog** [Preview]
+
+- **Description**: A section for the platform-bucket entities DIAL Core resolves itself, read and written directly against Core rather than through the admin backend.
+- **Items**:
+  - **Models**
+    - **Key**: `PlatformModels`
+    - **Description**: Navigate to the Catalog models page to manage the models DIAL Core serves, including their catalog metadata.
+  - **Interceptors**
+    - **Key**: `PlatformInterceptors`
+    - **Description**: Navigate to the Catalog interceptors page to manage interceptors and their catalog metadata.
+  - **Translators**
+    - **Key**: `PlatformTranslators`
+    - **Description**: Navigate to the translators page to manage the interface translators DIAL Core applies between LLM API dialects.
+  - **Routes**
+    - **Key**: `PlatformRoutes`
+    - **Description**: Navigate to the Catalog routes page to manage Core's own routing rules.
+  - **App Runners**
+    - **Key**: `PlatformAppRunners`
+    - **Description**: Navigate to the app runners page to manage the application type schemas applications are built on.
+  - **Catalog Schemas**
+    - **Key**: `PlatformCatalogSchemas`
+    - **Description**: Navigate to the catalog schemas page to define the display metadata a model, agent, toolset, or interceptor can carry.
+  - **Roles**
+    - **Key**: `PlatformRoles`
+    - **Description**: Navigate to the Catalog roles page to manage roles and their limits.
+  - **Keys**
+    - **Key**: `PlatformKeys`
+    - **Description**: Navigate to the keys page to manage the project keys Core issues.
+
+### 4. **Assets**
 
 - **Description**: A section for managing assets like applications, toolsets, prompts, and files.
 - **Items**:
@@ -57,7 +86,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Files`
     - **Description**: Navigate to the files page for uploading and managing system files.
 
-### 4. **Deployments**
+### 5. **Deployments**
 
 - **Description**: A section for managing deployments and containers (MCP, interceptors, adapters).
 - **Items**:
@@ -77,7 +106,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Images`
     - **Description**: Navigate to the images page to manage container images.
 
-### 5. **Access Management**
+### 6. **Access Management**
 
 - **Description**: A section for managing roles, keys, and folder storage.
 - **Items**:
@@ -91,7 +120,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FoldersStorage`
     - **Description**: Manage folder storage and organization for different assets and files.
 
-### 6. **Approvals**
+### 7. **Approvals**
 
 - **Description**: A section for managing application, toolset, prompt, and file approvals.
 - **Items**:
@@ -108,7 +137,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FilePublications`
     - **Description**: Navigate to the file publications page to review and approve files before they are shared.
 
-### 7. **Evaluation** [Preview]
+### 8. **Evaluation** [Preview]
 
 - **Description**: A section for managing datasets, test suites, and evaluation runs.
 - **Items**:
@@ -122,7 +151,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Runs`
     - **Description**: Navigate to the runs page to view and manage evaluation run history and results.
 
-### 8. **Audit**
+### 9. **Audit**
 
 - **Description**: A section for accessing telemetry data, logs, and audit information.
 - **Items**:
@@ -135,3 +164,8 @@ This documentation describes the structure and contents of the menu items array 
   - **Usage Log**
     - **Key**: `UsageLog`
     - **Description**: Navigate to the usage log page to view detailed usage logs and analytics.
+
+---
+
+**Analytics** is the one menu section this document does not yet describe. Its structure is
+documented per capability under `openspec/specs/analytics/`.

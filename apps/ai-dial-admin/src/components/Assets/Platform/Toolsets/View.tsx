@@ -26,6 +26,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -37,6 +38,7 @@ interface Props {
   oAuthCode?: string | null;
   originalToolset: AssetToolset;
   roles: DialRole[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side role-population read, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   /** True when `originalToolset` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
@@ -59,6 +61,7 @@ const PlatformToolsetView: FC<Props> = ({
   oAuthCode,
   originalToolset,
   roles,
+  catalogSchemas,
   optionWarnings,
   isConfigFileSource,
 }) => {
@@ -190,6 +193,7 @@ const PlatformToolsetView: FC<Props> = ({
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}
             roles={roles}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedToolset}
           />
         )}
