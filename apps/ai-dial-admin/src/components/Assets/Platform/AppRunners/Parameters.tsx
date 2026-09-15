@@ -6,6 +6,7 @@ import { DialLoader, DialNoDataContent, JsonSchema } from '@epam/ai-dial-ui-kit'
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
+import { APP_RUNNER_META_COLUMNS } from '@/src/components/Common/SchemaGrid/constants';
 import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -96,7 +97,7 @@ const AppRunnerAssetParameters: FC<Props> = ({ runner, onChange, isSkipRefresh }
           onChange={onChangeSchema}
           isSkipRefresh={isSkipRefresh}
           isReadonly={isReadonly}
-          isDialSchema
+          metaColumns={APP_RUNNER_META_COLUMNS}
         />
       )}
     </div>

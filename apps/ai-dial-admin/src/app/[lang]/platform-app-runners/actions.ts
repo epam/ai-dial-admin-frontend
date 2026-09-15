@@ -11,8 +11,8 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { toCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
-import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
-import { hasUnencodableRunnerIdChars, toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
+import { hasUnencodableSchemaIdChars, toCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const MISSING_ID_ERROR: ServerActionResponse = {
@@ -33,7 +33,7 @@ const checkRunnerId = (id?: string): ServerActionResponse | null => {
   if (!id) {
     return MISSING_ID_ERROR;
   }
-  return hasUnencodableRunnerIdChars(id) ? INVALID_ID_ERROR : null;
+  return hasUnencodableSchemaIdChars(id) ? INVALID_ID_ERROR : null;
 };
 
 /**
@@ -80,7 +80,7 @@ export async function createRunner(runner: DialAppRunnerResource): Promise<Serve
   return assetApi.put(
     token,
     ResourceType.APP_TYPE_SCHEMA,
-    toCoreRunnerName(runner.$id as string),
+    toCoreSchemaResourceName(runner.$id as string),
     toRunnerPayload(runner),
   );
 }
@@ -99,7 +99,7 @@ export async function updateRunner(runner: DialAppRunnerResource, etag: string):
   return assetApi.put(
     token,
     ResourceType.APP_TYPE_SCHEMA,
-    toCoreRunnerName(runner.$id as string),
+    toCoreSchemaResourceName(runner.$id as string),
     toRunnerPayload(runner),
     { etag },
   );

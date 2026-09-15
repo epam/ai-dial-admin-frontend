@@ -147,6 +147,17 @@ describe('getGridActionLabels', () => {
   test('PlatformTranslators returns no options for a read-only admin', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
   });
+
+  test('PlatformCatalogSchemas exposes delete and openInNewTab but never duplicate, since a copy would reuse the $id', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('duplicate');
+  });
+
+  test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, true)).toEqual([]);
+  });
 });
 
 describe('filterLatestVersions', () => {

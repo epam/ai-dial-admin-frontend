@@ -3,7 +3,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 import {
   getErrorForAppRouteName,
   getErrorForDisplayName,

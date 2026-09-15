@@ -67,6 +67,11 @@ vi.mock('@/src/context/assets/AppRunnersFolderContext', () => ({
   AppRunnersFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/CatalogSchemasFolderContext', () => ({
+  useCatalogSchemasFolder: () => ({ fetchFiles: vi.fn() }),
+  CatalogSchemasFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/InterceptorsFolderContext', () => ({
   useInterceptorsFolder: () => ({ fetchFiles: vi.fn() }),
   InterceptorsFolderProvider: ({ children }: any) => <div>{children}</div>,
