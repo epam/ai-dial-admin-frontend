@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import Analytics from '../Analytics';
 
@@ -210,6 +211,38 @@ describe('Runs Summary :: Analytics', () => {
 
     expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
     expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
+  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])(
+    'renders dashes instead of error tags for a %s run with no data',
+    async (status) => {
+      executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+      mockCosts(null);
+      render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
+
+      await screen.findByText('Runs.TestCasesPassed');
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+      expect(screen.getAllByText('—')).toHaveLength(5);
+      expect(screen.queryByText('Runs.CostDataUnavailable')).not.toBeInTheDocument();
+    },
+  );
+
+  test('still marks cards as error for a stopped run once data is present', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.CANCELLED } as any} />);
+
+    expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
+    expect(screen.getByText('37')).toBeInTheDocument();
+    expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+  });
+
+  test('marks cards as error for a completed run with no data', async () => {
+    executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+    mockCosts(null);
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} overallScore={null} />);
+
+    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(5));
   });
 
   test('shows the test cases passed card when the snapshotted threshold is 0', async () => {

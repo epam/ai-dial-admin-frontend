@@ -8,3 +8,9 @@ export const RUN_CANCEL_POLL_INTERVAL = 5000;
  * settled. Mirrors LOADING_STATUSES for containers and images.
  */
 export const TRANSITIONAL_RUN_STATUSES = [RunStatus.RUNNING, RunStatus.CANCELLING];
+
+/**
+ * Statuses where a run has not produced a full set of results — still running, or stopped before it
+ * finished — so an absent analytics value is expected rather than a data failure.
+ */
+export const INCOMPLETE_RUN_STATUSES = [...TRANSITIONAL_RUN_STATUSES, RunStatus.CANCELLED];
