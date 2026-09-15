@@ -12,6 +12,17 @@ export const enrichmentOf = (fieldName: string): string => {
   return separator > 0 ? fieldName.slice(0, separator) : '';
 };
 
+// The column's own name, with the enrichment that supplies it dropped. The pair to `enrichmentOf`, and it
+// answers the boundary the same way: a leading dot names no enrichment, so such a field is its own column
+// name rather than a nameless one. A read
+// selects an enrichment column under its qualified name and states it under this one, so a row keyed by the
+// column is not re-keyed by where the column happens to live.
+export const unqualified = (fieldName: string): string => {
+  const separator = fieldName.indexOf(ENRICHMENT_SEPARATOR);
+
+  return separator > 0 ? fieldName.slice(separator + 1) : fieldName;
+};
+
 // The service omits `display_name` where it is null — on some fields, and on some instances on all of them —
 // so the fallback is an ordinary path, not an edge case, and it may not present a raw catalog identifier as a
 // label. The namespace is dropped because whatever renders the field already names its source.
@@ -23,5 +34,5 @@ export const columnHeaderName = (field: AnalyticsEntityField): string => {
     return field.display_name;
   }
 
-  return readableWords(field.name.slice(field.name.indexOf(ENRICHMENT_SEPARATOR) + 1));
+  return readableWords(unqualified(field.name));
 };

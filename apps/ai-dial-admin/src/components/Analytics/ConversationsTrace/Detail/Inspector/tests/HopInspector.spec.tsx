@@ -113,6 +113,7 @@ const response = (overrides: Partial<HopResponseEnvelope> = {}): HopResponseEnve
   reasoningText: null,
   finishReason: 'stop',
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: 50,
   ...overrides,

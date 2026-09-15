@@ -239,6 +239,7 @@ const HopInspector: FC<Props> = ({ scope, traceId, span, kind, bodyGrants, mcpTo
             response={response.value}
             isResponseLoading={response.isLoading}
             isResponseGranted={bodyGrants.isResponseReadable}
+            hasFailed={transport.hasFailed}
           />
         )}
       </div>

@@ -178,6 +178,102 @@ describe('responseEnvelopeOf', () => {
   });
 });
 
+describe('responseEnvelopeOf, messages dialect', () => {
+  const envelopeOf = (source: ConversationEntryBodyRow) => responseEnvelopeOf(source, HopDialect.Messages);
+
+  const merged = JSON.stringify({
+    model: 'claude-opus-5',
+    id: 'msg_1',
+    type: 'message',
+    role: 'assistant',
+    content: [{ type: 'text', text: 'no findings' }],
+    stop_reason: 'end_turn',
+    usage: { input_tokens: 158, output_tokens: 7, cache_read_input_tokens: 55366 },
+  });
+
+  const transcript = [
+    'event: message_start',
+    `data: ${JSON.stringify({
+      type: 'message_start',
+      message: { model: 'claude-sonnet-4-6', id: 'msg_2', role: 'assistant', usage: { input_tokens: 1 } },
+    })}`,
+    '',
+    'event: content_block_delta',
+    `data: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'no ' } })}`,
+    '',
+    'event: content_block_delta',
+    `data: ${JSON.stringify({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'findings' } })}`,
+    '',
+    'event: message_delta',
+    `data: ${JSON.stringify({
+      type: 'message_delta',
+      delta: { stop_reason: 'end_turn' },
+      usage: { input_tokens: 1, output_tokens: 47, cache_read_input_tokens: 103472 },
+    })}`,
+    '',
+  ].join('\n');
+
+  test('reads a merged response from its content blocks', () => {
+    const envelope = envelopeOf(row({ assembled_response: merged }));
+
+    expect(envelope.state).toBe(HopReadState.Available);
+    expect(envelope.text).toBe('no findings');
+  });
+
+  test('states the finish reason this dialect spells', () => {
+    expect(envelopeOf(row({ assembled_response: merged })).finishReason).toBe('end_turn');
+  });
+
+  test('states the cached prompt tokens this dialect spells', () => {
+    expect(envelopeOf(row({ assembled_response: merged })).facts.cachedTokens).toBe(55366);
+  });
+
+  // The assembled column holds a frame transcript on roughly one response in twelve, so it is decoded rather
+  // than rejected — this hop has no recorded body to fall back to.
+  test('decodes a frame transcript held in the assembled column', () => {
+    const envelope = envelopeOf(row({ assembled_response: transcript }));
+
+    expect(envelope.text).toBe('no findings');
+    expect(envelope.finishReason).toBe('end_turn');
+  });
+
+  test('decodes a frame transcript from the recorded body', () => {
+    expect(envelopeOf(row({ response_body: transcript })).text).toBe('no findings');
+  });
+
+  // A stream names the model in its opening frame and reports usage in a later one, so neither frame alone
+  // carries the facts line.
+  test('states the model from the opening frame and the usage from the closing one', () => {
+    const { facts } = envelopeOf(row({ response_body: transcript }));
+
+    expect(facts.model).toBe('claude-sonnet-4-6');
+    expect(facts.completionTokens).toBe(47);
+    expect(facts.cachedTokens).toBe(103472);
+  });
+
+  test('states a response whose only output was a call', () => {
+    const envelope = envelopeOf(
+      row({
+        assembled_response: JSON.stringify({
+          content: [{ type: 'tool_use', id: 'tu1', name: 'grep', input: { pattern: 'x' } }],
+          stop_reason: 'tool_use',
+        }),
+      }),
+    );
+
+    expect(envelope.state).toBe(HopReadState.Available);
+    expect(envelope.toolCalls).toEqual([{ name: 'grep', args: JSON.stringify({ pattern: 'x' }, null, 2), id: 'tu1' }]);
+  });
+
+  test('a hop that recorded nothing is stated as empty', () => {
+    expect(envelopeOf(row()).state).toBe(HopReadState.NoBody);
+  });
+
+  test('a body no form of this dialect can read is unstructured, not absent', () => {
+    expect(envelopeOf(row({ response_body: 'not a response' })).state).toBe(HopReadState.Unstructured);
+  });
+});
+
 describe('rawBodyOf', () => {
   test('states the recorded and delivered sizes when it clamps', () => {
     const body = rawBodyOf('x'.repeat(RAW_BODY_BYTE_BUDGET + 100));

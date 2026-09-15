@@ -450,6 +450,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields(ALL)).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
+      requestField: UsageLogField.RequestBody,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
@@ -460,6 +461,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields([UsageLogField.RequestBody, UsageLogField.ResponseBody])).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
+      requestField: UsageLogField.RequestBody,
       responseFields: [UsageLogField.ResponseBody],
     });
   });
@@ -468,6 +470,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields([UsageLogField.RequestBody, UsageLogField.AssembledResponse])).toEqual({
       isRequestReadable: true,
       isResponseReadable: true,
+      requestField: UsageLogField.RequestBody,
       responseFields: [UsageLogField.AssembledResponse],
     });
   });
@@ -478,6 +481,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields([UsageLogField.ChatId, UsageLogField.TraceId])).toEqual({
       isRequestReadable: false,
       isResponseReadable: false,
+      requestField: null,
       responseFields: [],
     });
   });
@@ -494,6 +498,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields([UsageLogField.ResponseBody, UsageLogField.AssembledResponse])).toEqual({
       isRequestReadable: false,
       isResponseReadable: true,
+      requestField: null,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
@@ -502,6 +507,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields([UsageLogField.RequestBody])).toEqual({
       isRequestReadable: true,
       isResponseReadable: false,
+      requestField: UsageLogField.RequestBody,
       responseFields: [],
     });
   });
@@ -510,6 +516,7 @@ describe('hopBodyFields', () => {
     expect(hopBodyFields()).toEqual({
       isRequestReadable: false,
       isResponseReadable: false,
+      requestField: null,
       responseFields: [],
     });
   });
@@ -614,5 +621,22 @@ describe('composedSourceEntities', () => {
     const entities = composedSourceEntities('conversations', [field('response_ratings.rate_pos_count')], [RATINGS]);
 
     expect(entities).toEqual([{ name: 'conversations', provenance: ColumnProvenance.Conversations }, RATINGS]);
+  });
+  // The same three columns are published bare by one instance and qualified by the enrichment that holds
+  // them by another. The grant matches on the column's own name so neither spelling withdraws the tabs, and
+  // it carries back the name that instance answered with, because the read has to select that one.
+  test('resolves the columns whichever address the instance publishes them at', () => {
+    expect(
+      hopBodyFields([
+        'dial_usage_log_payload.request_body',
+        'dial_usage_log_payload.response_body',
+        'dial_usage_log_payload.assembled_response',
+      ]),
+    ).toEqual({
+      isRequestReadable: true,
+      isResponseReadable: true,
+      requestField: 'dial_usage_log_payload.request_body',
+      responseFields: ['dial_usage_log_payload.assembled_response', 'dial_usage_log_payload.response_body'],
+    });
   });
 });

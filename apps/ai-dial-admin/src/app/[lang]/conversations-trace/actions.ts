@@ -40,7 +40,6 @@ import {
   HopRequestEnvelope,
   HopResponseEnvelope,
   HopBodyFields,
-  UsageLogField,
   ConversationTracePage,
   ConversationTracePageRow,
   HopBodyGrants,
@@ -96,6 +95,7 @@ import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
 import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/conversation-trace-groups';
 import { hopBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
+import { unqualified } from '@/src/utils/analytics/conversation-enrichment';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import {
@@ -665,9 +665,20 @@ interface HopBodyRead {
   fields: HopBodyFields;
 }
 
-const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): UsageLogField[] => {
+// The body columns live in an enrichment, so the service reports them qualified by it — `<enrichment>.<column>`
+// — while this row is keyed by the column itself. Stripping the namespace once, here, is what keeps the move
+// out of every reader below: a projection alias is not honoured on a row read, so the qualified key arrives
+// whatever the query asked for, and a row keyed by it reads as a hop that recorded nothing.
+const bodyRowOf = (raw: Record<string, unknown>): ConversationEntryBodyRow =>
+  Object.fromEntries(
+    Object.entries(raw).map(([key, cell]) => [unqualified(key), cell]),
+  ) as unknown as ConversationEntryBodyRow;
+
+// The names the grant resolved against this instance's schema, not the constants: the read has to select a
+// column under the name the service answered with.
+const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): string[] => {
   if (side === HopInspectorSide.Request) {
-    return [UsageLogField.RequestBody];
+    return fields.requestField === null ? [] : [fields.requestField];
   }
 
   return fields.responseFields;
@@ -712,9 +723,11 @@ async function readHopBody(
     return { state: HopReadState.LoadFailed, fields };
   }
 
-  const row = (result.response?.rows ?? [])[0] as unknown as ConversationEntryBodyRow | undefined;
+  const [raw] = result.response?.rows ?? [];
 
-  return row ? { row, state: HopReadState.Available, fields } : { state: HopReadState.NoBody, fields };
+  return raw
+    ? { row: bodyRowOf(raw as Record<string, unknown>), state: HopReadState.Available, fields }
+    : { state: HopReadState.NoBody, fields };
 }
 
 const EMPTY_PARAMS: HopParams = { stated: [], rest: [] };
@@ -775,6 +788,7 @@ const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: null,
 });
