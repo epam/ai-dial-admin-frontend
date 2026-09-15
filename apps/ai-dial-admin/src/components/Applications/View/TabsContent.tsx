@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useMemo } from 'react';
+import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
@@ -105,7 +105,7 @@ const TabsContent: FC<Props> = ({
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <>
+        <Fragment key={discardKey}>
           {originalApplication?.source?.$type === SOURCE_TYPE.CONTAINER && originalApplication?.source?.containerId && (
             <ContainerStatusBanner
               view={ApplicationRoute.Applications}
@@ -128,11 +128,12 @@ const TabsContent: FC<Props> = ({
               onChange={onChangeApplication}
             />
           )}
-        </>
+        </Fragment>
       )}
 
       {activeTab === EntityViewTab.Tools && (
         <Tools
+          key={discardKey}
           disabled={isReadOnlyAdmin}
           isAsset={view === ApplicationRoute.AssetsApplications}
           originalEntity={originalApplication}
@@ -146,12 +147,14 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Features &&
         (view === ApplicationRoute.AssetsApplications ? (
           <ResourceFeatures
+            key={discardKey}
             entity={selectedApplication as DialApplicationResource}
             appRunner={appRunner}
             onChangeEntity={onChangeAsset}
           />
         ) : (
           <EntityFeatures
+            key={discardKey}
             appRunner={appRunner}
             entity={selectedApplication}
             onChangeEntity={onChangeApplication}
@@ -159,6 +162,12 @@ const TabsContent: FC<Props> = ({
           />
         ))}
 
+      {/*
+        Not keyed by discardKey — Parameters keeps its own "Table vs Generated form" view-selector
+        state alive across Discard, and only remounts the specific field-editing surface internally
+        (see ParametersTab's own discardKey usage). Keying it here would blow away that view choice
+        even though nothing about it is unsaved data (Issue #4477).
+      */}
       {activeTab === EntityViewTab.Parameters && (
         <ParametersTab
           onSave={onSave}
@@ -175,6 +184,7 @@ const TabsContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Dependencies && (
         <Dependencies
+          key={discardKey}
           application={selectedApplication}
           applications={applications || []}
           models={models || []}
@@ -183,6 +193,7 @@ const TabsContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.AppRoutes && (
         <ApplicationAppRoutes
+          key={discardKey}
           view={view}
           roles={roles}
           applicationRunners={applicationSchemes || []}
@@ -193,6 +204,7 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Roles &&
         (view === ApplicationRoute.AssetsApplications ? (
           <AssetRoles
+            key={discardKey}
             view={view}
             asset={{
               ...(selectedApplication as DialApplicationResource),
@@ -203,6 +215,7 @@ const TabsContent: FC<Props> = ({
           />
         ) : (
           <EntityRoles
+            key={discardKey}
             entity={selectedApplication}
             view={view}
             roles={roles || []}
@@ -212,6 +225,7 @@ const TabsContent: FC<Props> = ({
         ))}
       {activeTab === EntityViewTab.Interceptors && (
         <EntityInterceptors
+          key={discardKey}
           appRunner={appRunner}
           entity={selectedApplication}
           interceptors={interceptors || []}
@@ -221,7 +235,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
 
-      {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedApplication} view={view} />}
+      {activeTab === EntityViewTab.Audit && <EntityAudit key={discardKey} entity={selectedApplication} view={view} />}
     </>
   );
 };
