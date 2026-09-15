@@ -5,9 +5,10 @@ The `Catalog ▸ Catalog Schemas` surface: menu entry, flat list with create/del
 two-tab detail view (Properties, Parameters) over DIAL Core's own `catalog_schemas` config resources
 — the registered JSON-Schema documents that declare what display metadata a catalog entity type
 exposes and how a catalog renders it. Covers the `$id`-as-resource-name identity, the client-side
-meta-schema validation that substitutes for Core's absent write-time checks, and the boundary this
-first half deliberately stops at: the config-file population and the consumer side
-(`catalog_schema_id` / `catalog_properties` on deployments) belong to a follow-up capability.
+meta-schema validation that substitutes for Core's absent write-time checks, and both halves of the
+population — the API-written resources this surface owns and the file-declared ones behind the
+`showConfigFiles` toggle. The consumer side (`catalog_schema_id` / `catalog_properties` on
+deployments) belongs to `catalog-properties-editing`.
 
 ## Requirements
 
@@ -129,6 +130,12 @@ not on the detail view. DIAL Core rejects a write that changes an existing resou
 rejects a create whose `$id` is already registered, so the field is presented as fixed rather than
 offered and then refused.
 
+The `$id` the detail view shows SHALL be the one the stored schema declares. A schema created outside
+this console can live under a Core resource name that differs from its own `$id` — Core keys its
+merged configuration by `$id` and accepts any legal blob name — and for such a schema the console
+SHALL NOT replace the declared `$id` with the name decoded from the resource path, which would
+otherwise turn the next save into a rejected `$id` change.
+
 #### Scenario: Id is editable on create
 
 - **WHEN** the create modal is open
@@ -143,6 +150,12 @@ offered and then refused.
 
 - **WHEN** a user creates a schema whose `$id` is already registered in Core
 - **THEN** an error notification carrying Core's conflict message is shown and the modal stays open
+
+#### Scenario: A schema stored under a different name keeps its declared id
+
+- **WHEN** a schema whose resource name differs from its own `$id` is opened
+- **THEN** the detail view shows the `$id` the schema body declares
+- **AND** saving it unchanged does not fail as an attempted `$id` change
 
 ### Requirement: Detail view renders exactly two tabs
 
@@ -313,19 +326,24 @@ surface remains usable when that service is unavailable.
   configured
 - **THEN** no admin-backend request is required for any of those operations
 
-### Requirement: The config-file population is out of scope for this capability
+### Requirement: The config-file population is read on the same terms as every other covered view
 
-DIAL Core exposes a config-file-sourced half of the catalog-schema population, and this capability
-deliberately does not read it. The system SHALL NOT render the `showConfigFiles` toggle on this
-surface and SHALL NOT offer a config-file-sourced detail view for a catalog schema, so the surface
-does not imply a population it cannot show.
+The config-file-sourced half of the catalog-schema population is read here, on the same terms as on
+the other views `config-file-entity-views` covers. The system SHALL render the `showConfigFiles`
+toggle on this surface, and SHALL swap the list for the read-only, config-file-sourced one while it
+is on.
 
-#### Scenario: No config-file toggle on this surface
+#### Scenario: The config-file toggle is offered on this surface
 
-- **WHEN** a user opens `/platform-catalog-schemas`, with or without the admin backend configured
-- **THEN** no `showConfigFiles` toggle is rendered
+- **WHEN** a user opens `/platform-catalog-schemas`
+- **THEN** the `showConfigFiles` toggle is rendered next to the page title
 
-#### Scenario: The seven covered views are unaffected
+#### Scenario: The views covered before this capability are unaffected
 
-- **WHEN** a user opens any view the config-file entity surface already covers
+- **WHEN** a user opens any view the config-file entity surface covered before catalog schemas joined
 - **THEN** its toggle behaves exactly as before
+
+#### Scenario: A config-file-sourced schema opens read-only
+
+- **WHEN** a user toggles the config-file list on and opens one of its entries
+- **THEN** the schema's detail view renders with no save, delete, or create action

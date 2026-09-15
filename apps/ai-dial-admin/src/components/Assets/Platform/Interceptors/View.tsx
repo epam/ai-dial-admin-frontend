@@ -13,6 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -23,11 +24,12 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalInterceptor: DialInterceptorResource;
+  catalogSchemas?: CatalogSchemaOptions;
   /** True when `originalInterceptor` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
   isConfigFileSource?: boolean;
 }
 
-const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, isConfigFileSource }) => {
+const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, catalogSchemas, isConfigFileSource }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformInterceptors);
   const router = useRouter();
@@ -121,6 +123,7 @@ const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, isConfigFi
           <TabsContent
             activeTab={activeTab}
             selectedInterceptor={selectedInterceptor}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedInterceptor}
           />
         )}

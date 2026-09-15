@@ -3,6 +3,7 @@ import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
+import { CatalogSchemasApi } from '@/src/server/core/catalog-schemas-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
 import { CoreUtilityApi } from '@/src/server/core/core-utility-api';
 import { DeploymentConfigurationApi } from '@/src/server/core/deployment-configuration-api';
@@ -207,6 +208,12 @@ export const toolsetOpsApi = new ToolsetOpsApi({
 
 // App-runner resolved-schema read — Core performs the external-schema download and merge.
 export const appRunnerSchemaApi = new AppRunnerSchemaApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Catalog-schema reads against Core's merged configuration — the picker's option list and the
+// single-schema resolve the values editor renders from.
+export const catalogSchemasApi = new CatalogSchemasApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

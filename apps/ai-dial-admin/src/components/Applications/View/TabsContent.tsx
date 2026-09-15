@@ -6,6 +6,8 @@ import ParametersTab from '@/src/components/Applications/ParametersTab/Parameter
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
 import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
+import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
+import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
@@ -21,6 +23,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -41,6 +44,8 @@ interface Props {
    */
   globalInterceptors?: string[];
   translators?: ResourceInfo[];
+  /** Core-direct asset surface only: the admin-BE Applications view has no catalog section. */
+  catalogSchemas?: CatalogSchemaOptions;
   applicationSchemes: DialApplicationScheme[];
   selectedApplication: DialApplication;
   originalApplication?: DialApplication;
@@ -67,6 +72,7 @@ const TabsContent: FC<Props> = ({
   interceptors,
   globalInterceptors,
   translators,
+  catalogSchemas,
   roles,
   models,
   isSkipRefresh,
@@ -83,6 +89,11 @@ const TabsContent: FC<Props> = ({
       return getAppRunner(selectedApplication, applicationSchemes, view);
     }
   }, [applicationSchemes, selectedApplication, view]);
+
+  const catalogProperties = useCatalogProperties(
+    (selectedApplication as DialApplicationResource).catalog_schema_id,
+    (selectedApplication as DialApplicationResource).catalog_properties,
+  );
 
   const onChangeAsset = (application: DialApplicationResource) => {
     onChangeApplication(application as DialApplication);
@@ -117,6 +128,7 @@ const TabsContent: FC<Props> = ({
               asset={selectedApplication as DialApplicationResource}
               runners={applicationSchemes || []}
               translators={translators}
+              catalogSchemas={catalogSchemas}
               onChange={onChangeAsset}
             />
           ) : (
@@ -180,6 +192,16 @@ const TabsContent: FC<Props> = ({
           onChange={onChangeApplication}
           setIsChanged={setIsChanged}
           setSelectedApplication={setSelectedApplication}
+        />
+      )}
+      {activeTab === EntityViewTab.Catalog && view === ApplicationRoute.AssetsApplications && (
+        <CatalogPropertiesEditor
+          {...catalogProperties}
+          schemaId={(selectedApplication as DialApplicationResource).catalog_schema_id}
+          values={(selectedApplication as DialApplicationResource).catalog_properties}
+          onChange={(catalog_properties) =>
+            onChangeAsset({ ...(selectedApplication as DialApplicationResource), catalog_properties })
+          }
         />
       )}
       {activeTab === EntityViewTab.Dependencies && (

@@ -150,3 +150,39 @@ describe('Assets interceptor :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
+
+describe('Assets interceptor :: catalog metadata', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+  });
+
+  test.each([
+    ['create', (interceptor: any) => createInterceptor(interceptor)],
+    ['update', (interceptor: any) => updateInterceptor(interceptor, 'etag')],
+  ])('carries catalogSchemaId and catalogProperties through a %s', async (_label, action) => {
+    await action({
+      name: 'redactor',
+      path: 'platform/redactor',
+      folderId: 'platform/',
+      catalogSchemaId: 'https://host/interceptor-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalogSchemaId: 'https://host/interceptor-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves an interceptor carrying no catalog metadata untouched', async () => {
+    await updateInterceptor({ name: 'redactor', path: 'platform/redactor', folderId: 'platform/' }, 'etag');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalogSchemaId');
+    expect(body).not.toHaveProperty('catalogProperties');
+  });
+});

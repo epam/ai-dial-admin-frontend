@@ -26,6 +26,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
@@ -47,6 +48,7 @@ interface Props {
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
   translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
 }
@@ -61,6 +63,7 @@ const AppView: FC<Props> = ({
   interceptors,
   globalInterceptors,
   translators,
+  catalogSchemas,
   optionWarnings,
 }) => {
   const t = useI18n();
@@ -252,6 +255,7 @@ const AppView: FC<Props> = ({
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
             translators={translators}
+            catalogSchemas={catalogSchemas}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
             originalApplication={originalApp}
