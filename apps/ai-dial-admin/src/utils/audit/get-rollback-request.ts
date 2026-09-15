@@ -6,20 +6,21 @@ import {
   updateApplicationScheme,
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication, removeApplication, updateApplication } from '@/src/app/[lang]/applications/actions';
-import { createInterceptor, removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import {
   createInterceptorTemplate,
   deleteInterceptorTemplate,
   updateInterceptorTemplate,
 } from '@/src/app/[lang]/interceptor-templates/actions';
+import { createInterceptor, removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import { createKey, removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import { createModel, removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { createRole, removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import { createRoute, removeRoute, updateRoute } from '@/src/app/[lang]/routes/actions';
+import { createToolset, removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity, ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { getRevisionRouteForEntityType } from './get-revision-route';
-import { createToolset, removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 
 export const rollbackEntityPerRevision = async (
   activity: DialActivity,
@@ -52,7 +53,7 @@ export const rollbackEntityPerType = async (activity: DialActivity) => {
 
   const revision = await getRevisionDetails(`${route}${activity.revision - 1}`);
 
-  return getUpdateAction(activity.resourceType)?.(revision as unknown as any);
+  return getUpdateAction(activity.resourceType)?.(revision as unknown as any, DEFAULT_ETAG);
 };
 
 export const getUpdateAction = (type?: ActivityAuditResourceType): any => {
