@@ -67,6 +67,12 @@ const MULTI_TYPES = [
 const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
+// DialLabel renders the required marker as a `*` span inside the label, so it lands in the input's
+// accessible name.
+const getBaseUrlInputWithRequiredMarker = () =>
+  screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+const queryBaseUrlInputWithRequiredMarker = () =>
+  screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
 
 describe('InterfacesField', () => {
   test('single allowed type: clicking Add creates the inputs directly, no dropdown', async () => {
@@ -78,7 +84,7 @@ describe('InterfacesField', () => {
 
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(onChangeInterfaces).toHaveBeenCalledWith({
-      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' },
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: undefined },
     });
   });
 
@@ -123,7 +129,7 @@ describe('InterfacesField', () => {
     await user.selectOptions(screen.getByRole('combobox'), DeploymentInterfaceType.AnthropicMessages);
 
     expect(onChangeInterfaces).toHaveBeenCalledWith({
-      [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '' },
+      [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: undefined },
     });
   });
 
@@ -497,5 +503,121 @@ describe('InterfacesField — asset surfaces: mode & translator', () => {
     expect(screen.getByText(EntityFieldsI18nKey.defaultHeaders)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Buttons.Defaults' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Buttons.Features' })).toBeInTheDocument();
+  });
+});
+
+describe('InterfacesField — entity base URL fallback', () => {
+  const toggleEntityBaseUrlButton = () => screen.getByRole('button', { name: 'toggle-entity-base-url' });
+
+  // Holds both the interfaces and the entity-level base URL so a test can flip the fallback the way
+  // the Properties views do (clearing/refilling the entity base_url re-renders InterfacesField).
+  const ControlledFallbackField = ({
+    initialEntityBaseUrl,
+    isAsset,
+  }: {
+    initialEntityBaseUrl?: string;
+    isAsset?: boolean;
+  }) => {
+    const [interfaces, setInterfaces] = useState<Record<string, InterfaceValue>>({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: isAsset ? { base_url: undefined } : { baseUrl: undefined },
+    });
+    const [entityBaseUrl, setEntityBaseUrl] = useState(initialEntityBaseUrl);
+    return (
+      <div>
+        <button onClick={() => setEntityBaseUrl((prev) => (prev ? undefined : 'https://entity'))}>
+          toggle-entity-base-url
+        </button>
+        <InterfacesField
+          interfaces={interfaces}
+          onChangeInterfaces={setInterfaces}
+          allowedTypes={SINGLE_TYPE}
+          isAsset={isAsset}
+          entityBaseUrl={entityBaseUrl}
+        />
+      </div>
+    );
+  };
+
+  test('an empty base URL carries no required marker while the entity-level base URL is set', () => {
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+
+  test('an empty base URL carries the required marker while the entity-level base URL is empty', () => {
+    render(<ControlledFallbackField />);
+
+    expect(getBaseUrlInputWithRequiredMarker()).toBeInTheDocument();
+  });
+
+  test('clearing a filled base URL stores undefined, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    await user.clear(getBaseUrlInput());
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: undefined },
+    });
+  });
+
+  test('clearing a filled base URL shows no required error while the entity-level base URL is set', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
+  });
+
+  test('clearing a filled base URL shows the required error with no entity-level base URL', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+  });
+
+  test('clearing the entity-level base URL re-flags an empty row as required', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" />);
+
+    await user.click(toggleEntityBaseUrlButton());
+
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+    expect(getBaseUrlInputWithRequiredMarker()).toBeInTheDocument();
+  });
+
+  test('refilling the entity-level base URL clears an existing required error', async () => {
+    const user = userEvent.setup();
+    render(<ControlledFallbackField />);
+
+    await user.type(getBaseUrlInput(), 'https://x');
+    await user.clear(getBaseUrlInput());
+    expect(screen.getByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
+
+    await user.click(toggleEntityBaseUrlButton());
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+
+  test('asset surface: an empty snake_case base_url is optional while the entity-level base URL is set', () => {
+    render(<ControlledFallbackField initialEntityBaseUrl="https://entity" isAsset />);
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
   });
 });

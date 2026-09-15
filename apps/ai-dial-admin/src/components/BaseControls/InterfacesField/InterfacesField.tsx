@@ -30,6 +30,9 @@ interface Props<V extends InterfaceValue> {
   // Available platform Translator assets for the translator-mode picker — isAsset surfaces only.
   // Metadata-only (list, not content) — the picker only needs each translator's name.
   translators?: ResourceInfo[];
+  // The entity-level base URL an interface's empty base_url falls back to; passed through to each
+  // row, which makes its own value optional. Absent on surfaces with no such field.
+  entityBaseUrl?: string;
 }
 
 export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
@@ -54,6 +57,7 @@ const InterfacesField = <V extends InterfaceValue>({
   disabled,
   className,
   translators,
+  entityBaseUrl,
 }: Props<V>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -68,8 +72,10 @@ const InterfacesField = <V extends InterfaceValue>({
   const usedTypes = Object.keys(interfaces) as DeploymentInterfaceType[];
   const availableTypes = allowedTypes.filter((type) => !usedTypes.includes(type));
 
+  // undefined, not '': an untouched row must persist as an entry with no base_url field (Core reads
+  // an empty string as a present, broken URL).
   const createEmptyValue = useCallback(
-    (): V => (isEndpointVariant ? { endpoint: '' } : { [baseUrlKey]: '' }) as V,
+    (): V => (isEndpointVariant ? { endpoint: '' } : { [baseUrlKey]: undefined }) as V,
     [isEndpointVariant, baseUrlKey],
   );
 
@@ -153,6 +159,7 @@ const InterfacesField = <V extends InterfaceValue>({
               onDelete={() => onDeleteType(type)}
               isAsset={isAsset}
               translators={translators}
+              entityBaseUrl={entityBaseUrl}
             />
           ),
         )}

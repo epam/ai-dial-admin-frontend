@@ -90,7 +90,7 @@ describe('Assets key :: server actions', () => {
     expect(result).toBe(rejection);
   });
 
-  test('Should call updateKey action without key field', async () => {
+  test('Should call updateKey action without key field when the client holds no secret', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateKey(key({ project: 'my-project' }), 'etag');
@@ -128,10 +128,20 @@ describe('Assets key :: server actions', () => {
     );
   });
 
-  test('Should call updateKey action, omitting key field so Core preserves the existing secret', async () => {
+  test('Should call updateKey action with key field included when the client holds a value', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    await updateKey(key({ key: 'some-secret', project: 'proj' }), 'etag');
+    await updateKey(key({ key: 'typed-in-json-editor', project: 'proj' }), 'etag');
+
+    const [, , , payload] = (assetApi.put as any).mock.calls[0];
+    expect(payload).toHaveProperty('key', 'typed-in-json-editor');
+    expect(payload).toHaveProperty('project', 'proj');
+  });
+
+  test('Should call updateKey action, treating a null key as absent so Core preserves the secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateKey(key({ key: null as any, project: 'proj' }), 'etag');
 
     const [, , , payload] = (assetApi.put as any).mock.calls[0];
     expect(payload).not.toHaveProperty('key');
