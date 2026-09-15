@@ -196,7 +196,6 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
             <div className="flex flex-col gap-3">
               <VariablesEditor
                 vars={draft.vars}
-                outputs={form.outputs}
                 columns={form.sourceColumns}
                 isReady={form.isVariablesReady}
                 onChange={(vars) => onChange({ vars })}

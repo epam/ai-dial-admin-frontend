@@ -9,7 +9,7 @@ import { createVarRow, getTakenVarNames, toVarRows, toVars } from '@/src/compone
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { PipelineOutput, PipelineVar } from '@/src/models/analytics/pipeline';
+import { PipelineVar } from '@/src/models/analytics/pipeline';
 import { VarBindingKind, VarRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
@@ -18,18 +18,16 @@ const isSameDeclaration = (a: Record<string, PipelineVar>, b?: Record<string, Pi
 
 interface Props {
   vars?: Record<string, PipelineVar>;
-  /** Derived by the service and never sent back, so these read as the same list, disabled. */
-  outputs?: PipelineOutput[];
   columns: AnalyticsTableColumn[];
   isReady: boolean;
   onChange: (vars: Record<string, PipelineVar>) => void;
 }
 
-// One grid for the header and every row, so what the evaluator receives and what it writes back line up
-// as a single list rather than as two tables that happen to sit above one another.
+// One grid for the header and every row, so the rows line up as a single list rather than as a grid per
+// row, which sizes its own columns and leaves neighbouring rows out of line.
 const GRID = 'grid grid-cols-[minmax(160px,1fr)_minmax(160px,1fr)_minmax(180px,2fr)_2rem] items-center gap-x-3 gap-y-2';
 
-const VariablesEditor: FC<Props> = ({ vars, outputs, columns, isReady, onChange }) => {
+const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
   const t = useI18n();
 
   const [rows, setRows] = useState<VarRow[]>(() => toVarRows(vars));
@@ -124,49 +122,7 @@ const VariablesEditor: FC<Props> = ({ vars, outputs, columns, isReady, onChange 
             </Fragment>
           );
         })}
-
-        {/* Read as further rows of the same list, so they take the same three cells: an output always
-            lands in a column, and the transform some of them carry — how the value is read out of the
-            response — has no cell here and stays visible in the JSON editor. */}
-        {outputs?.map((output, index) => {
-          const position = rows.length + index + 1;
-
-          return (
-            <Fragment key={output.name}>
-              <DialInput
-                id={`pipeline-output-name-${index}`}
-                aria-label={`${t(AnalyticsPipelinesI18nKey.VarName)} ${position}`}
-                value={output.name}
-                className="font-mono"
-                disabled
-              />
-
-              <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.VarBinding)} ${position}`}>
-                <DialSelectField
-                  id={`pipeline-output-binding-${index}`}
-                  options={bindingOptions}
-                  value={VarBindingKind.Column}
-                  disabled
-                  onChange={() => undefined}
-                />
-              </div>
-
-              <DialInput
-                id={`pipeline-output-column-${index}`}
-                aria-label={`${t(AnalyticsPipelinesI18nKey.VarValue)} ${position}`}
-                value={output.column}
-                className="font-mono"
-                disabled
-              />
-              <span />
-            </Fragment>
-          );
-        })}
       </div>
-
-      {Boolean(outputs?.length) && (
-        <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.OutputsDerivedNote)}</span>
-      )}
 
       <DialGhostButton
         className="self-start"
