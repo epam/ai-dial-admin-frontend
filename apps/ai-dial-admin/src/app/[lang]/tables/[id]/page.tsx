@@ -14,7 +14,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   let table: AnalyticsTable | null = null;
   try {
-    table = await getTable(name);
+    table = (await getTable(name)).response ?? null;
   } catch (e) {
     errorObjLog(e, 'Failed to fetch table view data');
   }

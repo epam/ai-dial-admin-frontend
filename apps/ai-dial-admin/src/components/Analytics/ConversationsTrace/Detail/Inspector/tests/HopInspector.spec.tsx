@@ -19,6 +19,11 @@ import {
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
+
 const getConversationHopRequest = vi.fn();
 const getConversationHopResponse = vi.fn();
 const getConversationHopMessage = vi.fn();
@@ -682,6 +687,47 @@ describe('HopInspector — absence and entitlement', () => {
     renderInspector();
 
     await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument());
+  });
+
+  test('a failed read is reported by notification as well, quoting the service', async () => {
+    getConversationHopRequest.mockResolvedValue({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'hop body read timed out',
+      requestId: 'trace-1',
+      response: undefined,
+    });
+    renderInspector();
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'hop body read timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(screen.getByText(ConversationsTraceI18nKey.InspectorLoadFailed)).toBeInTheDocument();
+  });
+
+  test('a failed read falls back to its own title when the service supplied no header', async () => {
+    getConversationHopRequest.mockResolvedValue({ success: false, status: 500, response: undefined });
+    renderInspector();
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: ConversationsTraceI18nKey.InspectorLoadFailed }),
+      ),
+    );
+  });
+
+  test('a read that succeeds raises no notification', async () => {
+    renderInspector();
+
+    await waitFor(() => expect(getConversationHopRequest).toHaveBeenCalled());
+    expect(showNotification).not.toHaveBeenCalled();
   });
 
   // The facts line renders above the response panel's own state check, deliberately, so it is handed the

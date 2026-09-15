@@ -19,8 +19,12 @@ path segment, so the two are independent.
 
 For a permitted caller the page SHALL prefetch the **entity schema** server-side and pass it to the client
 view as an initial-data prop, so the column catalog is known before the grid mounts. A schema prefetch
-failure SHALL be reported through the initial state handed to the client view, since a server component
-cannot raise a toast.
+failure SHALL be handed to the client view as the failure itself — the service's header, message and request
+id — and the client view SHALL report it by error notification, under *An Analytics read failure is reported
+by notification, in the service's own words*. It SHALL NOT be stated as a notice in the toolbar. That a
+server component cannot raise a notification is a reason to carry the failure across to the client, not a
+reason to report it differently from every other failed read: the grid still renders on its curated columns,
+so this is a degraded page rather than a replaced one.
 
 The page MUST NOT prefetch the first page of rows: the grid fetches its own pages, so a prefetched page would
 be discarded or duplicated. The page MUST NOT prefetch the **result summary** either. The summary is required
@@ -64,6 +68,13 @@ the client's own fetch, which is the first request the page makes against the en
 - **WHEN** the `conversations` entity is not registered in the environment and the page is requested
 - **THEN** the view reports a load failure
 - **AND** it does not report that the period held no conversations
+
+#### Scenario: A failed schema prefetch notifies rather than posting a toolbar notice
+
+- **WHEN** the server-side entity schema prefetch fails and the page renders
+- **THEN** an error notification reports the failure, carrying the service's message and request id
+- **AND** the toolbar carries no schema-unavailable notice
+- **AND** the grid renders its curated columns and offers no derived column
 
 ### Requirement: Feedback filter resolved through a second query
 
@@ -1827,6 +1838,20 @@ The control's **loading**, **empty** and **failed** states SHALL each be announc
 SHALL be visually distinguishable, with the failed state carrying the error text treatment. The live region
 SHALL remain separate from any control's own label.
 
+**A failed value read SHALL be reported by notification as well**, under *An Analytics read failure is
+reported by notification, in the service's own words*. The popup opens away from the grid and closes on the
+next click, so a failure stated only inside it is a failure the operator can lose by dismissing the control;
+the notification is what persists.
+
+**The failed state SHALL state the service's own message where there is one**, falling back to a fixed
+string only where the response supplied none. The failed state SHALL NOT be collapsed into the empty one:
+"no values" asserts that the column has none, which is the one thing a failed read did not establish.
+
+Where the response supplied no words, the two reports fall back to **different** strings, because they
+answer different questions: in the popup the fallback states that the values are unavailable, and in the
+notification it names the read that failed. The notification additionally carries the error header and the
+request id, which the popup has no room to state.
+
 An enum column SHALL keep its place in the grid's **floating-filter row**, so its affordance sits level with
 every neighbouring column's filter rather than a row above it. It MUST NOT take the row's default floating
 filter, which is a free-text entry and would write a text model over the column's value model. The affordance
@@ -1886,3 +1911,20 @@ programmatically rather than by styling alone.
 - **WHEN** the value query is in flight, returns nothing, or fails
 - **THEN** the corresponding message is announced through a live region
 - **AND** the failed state is rendered in the error text treatment
+
+#### Scenario: A failed value read notifies and states the service's message in place
+
+- **WHEN** the value query fails and the response carries an error message
+- **THEN** an error notification reports the failure, carrying that message, the error header and the request id
+- **AND** the popup's live region states that same message
+- **AND** it does not state that the column has no values
+
+#### Scenario: A failed value read with no message from the service
+
+- **WHEN** the value query fails and the response carries no error message
+- **THEN** both the notification and the popup state this app's fixed string for that failure
+
+#### Scenario: Dismissing the popup leaves the failure reported
+
+- **WHEN** the value query has failed and the operator closes the filter popup
+- **THEN** the notification is still shown

@@ -44,13 +44,19 @@ const TableAccessPanel: FC<Props> = ({ name, onClose }) => {
       catalog.warnings.forEach((warning) =>
         showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RolesLoadFailed), t(warning))),
       );
-      if (access) {
-        setWrite(access.write ?? []);
-        setModify(access.modify ?? []);
-        setGrantedOnLoad([...(access.write ?? []), ...(access.modify ?? [])]);
+      if (access.response) {
+        setWrite(access.response.write ?? []);
+        setModify(access.response.modify ?? []);
+        setGrantedOnLoad([...(access.response.write ?? []), ...(access.response.modify ?? [])]);
         setLoaded(true);
       } else {
-        showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.AccessLoadFailed)));
+        showNotification(
+          getErrorNotification(
+            access.errorHeader ?? t(AnalyticsTablesI18nKey.AccessLoadFailed),
+            access.errorMessage,
+            access.requestId,
+          ),
+        );
       }
     });
     return () => {

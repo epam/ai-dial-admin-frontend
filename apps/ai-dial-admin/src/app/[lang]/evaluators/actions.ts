@@ -10,15 +10,15 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-export async function getEvaluators(): Promise<EvaluatorSummary[] | null> {
+export async function getEvaluators(): Promise<ServerActionResponse<EvaluatorSummary[]>> {
   return analyticsDataApi.getEvaluators(await token());
 }
 
-export async function getEvaluator(name: string): Promise<Evaluator | null> {
+export async function getEvaluator(name: string): Promise<ServerActionResponse<Evaluator>> {
   return analyticsDataApi.getEvaluator(name, await token());
 }
 
-export async function getEvaluatorVersion(name: string, version: number): Promise<Evaluator | null> {
+export async function getEvaluatorVersion(name: string, version: number): Promise<ServerActionResponse<Evaluator>> {
   return analyticsDataApi.getEvaluatorVersion(name, version, await token());
 }
 

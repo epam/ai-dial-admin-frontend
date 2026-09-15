@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { NotificationType, Notification } from '@/src/models/notification';
+import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 
 export const getErrorNotification = (
   title?: string,
@@ -47,3 +48,9 @@ export const getNotification = (
     customTitle,
   };
 };
+
+export const toReadFailure = (response?: ServerActionResponse): ReadFailure => ({
+  errorHeader: response?.errorHeader,
+  errorMessage: response?.errorMessage,
+  requestId: response?.requestId,
+});

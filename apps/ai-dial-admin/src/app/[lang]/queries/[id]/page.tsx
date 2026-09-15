@@ -33,13 +33,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       getFunctions(),
     ]);
     savedQuery = query;
-    entities = entitiesRes ?? [];
+    entities = entitiesRes.response ?? [];
     functions = functionsRes ?? [];
 
     const primarySource = savedQuery ? savedQueryPrimarySource(savedQuery) : '';
     if (primarySource) {
-      const schema = await getEntitySchema(primarySource);
-      fields = schema?.fields ?? [];
+      const schemaRead = await getEntitySchema(primarySource);
+      fields = schemaRead.response?.fields ?? [];
     }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch query view data');

@@ -111,7 +111,7 @@ describe('CreatePipelinePopup', () => {
     vi.clearAllMocks();
     vi.mocked(getTables).mockResolvedValue([enrichment]);
     vi.mocked(getTable).mockResolvedValue(enrichment);
-    vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(createPipeline).mockResolvedValue({ success: true });
   });
 
@@ -184,11 +184,12 @@ describe('CreatePipelinePopup', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
   });
 
-  test('reports a failed evaluator listing rather than claiming none are registered', () => {
+  test('marks the evaluator field rather than claiming none are registered', () => {
     renderEnrichPopup([], { evaluators: [], hasEvaluatorsError: true });
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeNull();
+    expect(screen.queryAllByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toHaveLength(1);
   });
 
   test('blocks submission until the form is complete', () => {
@@ -311,7 +312,7 @@ describe('CreatePipelinePopup', () => {
   });
 
   test('does not submit while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const user = userEvent.setup();
     renderEnrichPopup();
 
@@ -325,7 +326,7 @@ describe('CreatePipelinePopup', () => {
   });
 
   test('reports a failed evaluator resolution in the form', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const user = userEvent.setup();
     renderEnrichPopup();
 

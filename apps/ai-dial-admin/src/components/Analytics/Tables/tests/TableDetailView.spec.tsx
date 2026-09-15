@@ -200,10 +200,10 @@ beforeEach(() => {
   });
   // An enrichment table looks up its source table (see TableDetailView's grain-key-metadata effect);
   // default to none found so tests that don't care about it aren't broken by an unhandled promise.
-  vi.mocked(getTable).mockResolvedValue(null);
+  vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
   // The Connect panel reads the table's access lists on open; default to none so tests that only
   // exercise the header aren't tripped by an unhandled promise.
-  vi.mocked(getTableAccess).mockResolvedValue({ write: [], modify: [] });
+  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: [], modify: [] } });
 });
 
 describe('TableDetailView action gating', () => {
@@ -404,12 +404,13 @@ describe('TableDetailView schema metadata', () => {
   });
 
   test("backfills the pinned grain-key row's type and tag from the matching column on the source table", async () => {
-    vi.mocked(getTable).mockResolvedValue(
-      table({
+    vi.mocked(getTable).mockResolvedValue({
+      success: true,
+      response: table({
         name: 'orders',
         columns: [{ source_name: 'order_id', name: 'order_id', type: AnalyticsFieldType.Uuid, tag: 'identity' }],
       }),
-    );
+    });
 
     render(
       <TableDetailView
@@ -429,7 +430,7 @@ describe('TableDetailView schema metadata', () => {
   });
 
   test('falls back to a bare name when the grain key no longer matches any source column', async () => {
-    vi.mocked(getTable).mockResolvedValue(table({ name: 'orders', columns: [] }));
+    vi.mocked(getTable).mockResolvedValue({ success: true, response: table({ name: 'orders', columns: [] }) });
 
     render(
       <TableDetailView
@@ -1113,7 +1114,7 @@ describe('TableDetailView JSON definition view', () => {
     const pendingTable = table({ status: TableStatus.Pending, ordering_key: ['event_id'], columns });
     // Not an enrichment, so the grain-key lookup effect never calls `getTable`; its only caller here is
     // `reload()`, which this stands in for the backend re-fetch after a successful materialize.
-    vi.mocked(getTable).mockResolvedValue(table({ status: TableStatus.Active, columns }));
+    vi.mocked(getTable).mockResolvedValue({ success: true, response: table({ status: TableStatus.Active, columns }) });
 
     render(<TableDetailView name="dial_usage_log" initialTable={pendingTable} apiBaseUrl="" flightUri="" />);
 

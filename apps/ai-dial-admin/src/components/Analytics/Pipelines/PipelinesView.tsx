@@ -24,6 +24,7 @@ import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { useAppContext } from '@/src/context/AppContext';
+import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
@@ -35,27 +36,29 @@ import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operati
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { PipelineListItem } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   initialPipelines: PipelineListItem[];
   functions?: QueryFunction[];
-  hasLoadError?: boolean;
+  loadFailure?: ReadFailure | null;
 }
 
-const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], hasLoadError }) => {
+const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailure }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isFullAdmin } = useAppContext();
 
   const [pipelines, setPipelines] = useState<PipelineListItem[]>(initialPipelines);
-  const [hasPipelinesError, setHasPipelinesError] = useState(Boolean(hasLoadError));
   const [deleteTarget, setDeleteTarget] = useState<PipelineListItem | null>(null);
   const [evaluators, setEvaluators] = useState<EvaluatorSummary[]>([]);
   const [hasEvaluatorsError, setHasEvaluatorsError] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useReadFailureNotification(loadFailure, AnalyticsPipelinesI18nKey.PipelinesLoadFailed);
 
   // Responses can land out of order — a slow filter answering after a faster later one would put rows
   // on screen that contradict the toolbar. Only the newest request is allowed to write.
@@ -64,22 +67,29 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], hasLoadErr
   const reload = useCallback(async () => {
     const requestId = ++requestIdRef.current;
 
+    const reportFailure = (failure?: ServerActionResponse) => {
+      showNotification(
+        getErrorNotification(
+          failure?.errorHeader ?? t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed),
+          failure?.errorMessage,
+          failure?.requestId,
+        ),
+      );
+    };
+
     try {
       const result = await getPipelines();
 
       if (requestId !== requestIdRef.current) return;
 
-      if (result.data) {
-        setPipelines(result.data);
-        setHasPipelinesError(false);
+      if (result.success) {
+        setPipelines(result.response ?? []);
         return;
       }
-      setHasPipelinesError(true);
-      showNotification(getErrorNotification(t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)));
+      reportFailure(result);
     } catch {
       if (requestId === requestIdRef.current) {
-        setHasPipelinesError(true);
-        showNotification(getErrorNotification(t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)));
+        reportFailure();
       }
     }
   }, [showNotification, t]);
@@ -87,18 +97,29 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], hasLoadErr
   useEffect(() => {
     let isCancelled = false;
 
+    const reportFailure = (failure?: ServerActionResponse) => {
+      setHasEvaluatorsError(true);
+      showNotification(
+        getErrorNotification(
+          failure?.errorHeader ?? t(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed),
+          failure?.errorMessage,
+          failure?.requestId,
+        ),
+      );
+    };
+
     const load = async () => {
       try {
-        const list = await getEvaluators();
+        const read = await getEvaluators();
         if (isCancelled) return;
 
-        if (Array.isArray(list)) {
-          setEvaluators(list);
+        if (read.success) {
+          setEvaluators(read.response ?? []);
         } else {
-          setHasEvaluatorsError(true);
+          reportFailure(read);
         }
       } catch {
-        if (!isCancelled) setHasEvaluatorsError(true);
+        if (!isCancelled) reportFailure();
       }
     };
 
@@ -107,7 +128,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], hasLoadErr
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [showNotification, t]);
 
   const notifyFailed = useCallback(
     (errorHeader?: string, errorMessage?: string, requestId?: string) =>
@@ -208,12 +229,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], hasLoadErr
           />
         )}
       </div>
-
-      {hasPipelinesError && (
-        <div role="status" className="mb-4 text-error dial-small">
-          {t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)}
-        </div>
-      )}
 
       <div className="flex min-h-0 flex-1 flex-col">
         <GridView

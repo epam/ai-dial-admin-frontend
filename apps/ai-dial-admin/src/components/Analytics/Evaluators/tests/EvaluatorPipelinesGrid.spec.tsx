@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EvaluatorPipelinesGrid from '@/src/components/Analytics/Evaluators/EvaluatorPipelinesGrid';
 import { AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
@@ -8,6 +8,11 @@ import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analyt
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
 
 interface MockColDef {
   headerName?: string;
@@ -57,6 +62,10 @@ const rule = (over: Partial<PipelineListItem> = {}): PipelineListItem => ({
 });
 
 describe('EvaluatorPipelinesGrid', () => {
+  beforeEach(() => {
+    showNotification.mockClear();
+  });
+
   test('renders the rule columns', () => {
     render(<EvaluatorPipelinesGrid pipelines={[rule()]} />);
 
@@ -96,10 +105,17 @@ describe('EvaluatorPipelinesGrid', () => {
     expect(screen.getByText(AnalyticsEvaluatorsI18nKey.UsedByNone)).toBeTruthy();
   });
 
-  test('reports a failed listing rather than claiming none reference it', () => {
+  test('states the list as unavailable rather than claiming none reference it', () => {
     render(<EvaluatorPipelinesGrid pipelines={null} />);
 
-    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.UsedByLoadFailed)).toBeTruthy();
+    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.UsedByUnavailable)).toBeTruthy();
     expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.UsedByNone)).toBeNull();
+    expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.UsedByLoadFailed)).toBeNull();
+  });
+
+  test('raises no notification of its own', () => {
+    render(<EvaluatorPipelinesGrid pipelines={null} />);
+
+    expect(showNotification).not.toHaveBeenCalled();
   });
 });

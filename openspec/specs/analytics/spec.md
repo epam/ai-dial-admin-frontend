@@ -107,6 +107,13 @@ The "Analytics" menu group header SHALL display the existing `PreviewTag` compon
 
 The server-side API layer SHALL provide a single typed client, `AnalyticsDataApi`, for the Analytics data-access service, hosted at `process.env.DIAL_ANALYTICS_API_URL`. The client instance SHALL be created and exported once from `app/api/api.ts` as `analyticsDataApi` (following the existing per-service instantiation pattern); the class SHALL extend `BaseApi` and live at `src/server/analytics/analytics-data-api.ts`. Request/response DTOs SHALL be placed in dedicated model files under `src/models/analytics/`. All requests SHALL send the standard auth/API headers via the existing helpers, and `{name}` path segments MUST be URL-encoded.
 
+**Every call SHALL return an error envelope, reads included.** A read SHALL resolve to
+`ServerActionResponse<T>` — carrying `response` on success and `errorHeader`, `errorMessage`, `requestId` and
+`status` on failure — rather than to `T | null`. A bare `T | null` discards what the service said about the
+failure before any caller can report it, which leaves a surface with nothing to state but a sentence this app
+wrote. Where a read has no failure to report the envelope costs the caller one member; where it does, that
+member is the only route the service's own words have to the operator.
+
 Queries endpoints (base path `/v1/queries`):
 - `GET /v1/queries/entities` — list queryable entities
 - `GET /v1/queries/entities/schema/{name}` — fetch the field schema for a named entity
@@ -145,7 +152,11 @@ A pipeline is addressed by its `name`, which is its identity and is never reassi
 
 Resolution is **kind-scoped**. A listing narrowed to one `kind` carries each pipeline's resolved members — for an enrichment pipeline its pinned evaluator version inlined as `evaluator`, the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A listing across both kinds omits all three, so a cross-kind grid SHALL render only the flat members every pipeline carries. A disabled pipeline is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
 
-Both pipeline reads SHALL keep a refusal distinct from a failure. `BaseApi` answers HTTP 403 with no value and any other failure with a null; the client SHALL carry that distinction to the caller as `PipelineReadResult<T>` — `{ data, isForbidden }` — rather than collapsing the two into one empty result.
+Both pipeline reads SHALL keep a refusal distinct from a failure, and SHALL carry that distinction through the
+read envelope's `status` rather than through a dedicated result type. A caller SHALL read a refusal as
+`status: 403` on an unsuccessful envelope; every other failure SHALL carry the service's own status and
+message. A separate `{ data, isForbidden }` shape is not kept alongside the envelope: it answers one question
+the envelope already answers and discards the message the envelope carries.
 
 Evaluator endpoints (base path `/v1/evaluators`). Reads are open to any authenticated caller; the single write is `FULL_ADMIN`-only:
 - `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the pipelines listing the response may be a bare array or a wrapper and the client SHALL accept both. Version definitions are **not** included
@@ -204,12 +215,30 @@ The accepted body shape depends on `type` and is enforced imperatively by the se
 #### Scenario: A refused read is not reported as a failed one
 
 - **WHEN** the service answers a pipelines listing or a single pipeline read with HTTP 403
-- **THEN** the client returns `isForbidden: true` with no data
-- **AND** any other failed read returns `isForbidden: false` with no data
+- **THEN** the client returns an unsuccessful envelope carrying `status: 403` and no value
+- **AND** any other failed read returns an unsuccessful envelope carrying that response's own status
+
+#### Scenario: A failed read carries the service's own words
+
+- **WHEN** any Analytics read fails and the service's response carries an error header, a message, or both
+- **THEN** the envelope the caller receives carries them as `errorHeader` and `errorMessage`
+- **AND** it carries the `requestId` of the failed request
+
+#### Scenario: A successful read carries its value and no error members
+
+- **WHEN** any Analytics read succeeds
+- **THEN** the envelope reports success and carries the value as `response`
+- **AND** it carries no `errorHeader` and no `errorMessage`
 
 ### Requirement: Analytics pages fetch initial data server-side
 
 The Analytics pages SHALL be `async` server components (`export const dynamic = 'force-dynamic'`) that fetch their initial data on the server via server actions delegating to `analyticsDataApi`, and pass that data to a client view as props; the client view SHALL own all subsequent interactive state and re-fetching. Fetch failures SHALL be logged (`errorObjLog`); a page whose required single entity is missing SHALL call `notFound()`. Pages SHALL NOT fetch their initial data from a client-side effect.
+
+**A page that renders despite a failed read SHALL hand the client view the failure itself, not a flag.** The
+prop SHALL carry the service's `errorHeader`, `errorMessage` and `requestId` where the response supplied them,
+so the client view can report what the service said. A boolean prop is not sufficient: it tells the view that
+something failed and nothing about what, which leaves the view with only a fixed sentence to show for a
+failure the service described.
 
 #### Scenario: Tables catalog data is fetched on the server
 
@@ -227,7 +256,7 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 
 - **WHEN** the user navigates to `/pipelines`
 - **THEN** the page awaits the unfiltered pipelines list on the server and renders the listing view seeded with it
-- **AND** if the list request fails the page renders the console with the failure stated rather than a not-found result
+- **AND** if the list request fails the page renders the console rather than a not-found result, handing the view the failure's own header, message and request id
 
 #### Scenario: The queries list is fetched on the server
 
@@ -239,6 +268,75 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 - **WHEN** the user navigates to `/queries/{id}`
 - **THEN** the page awaits that saved query, the queryable entities, the function catalog, and the schema of the query's primary source on the server
 - **AND** if the saved query cannot be read the page resolves to a not-found result
+
+### Requirement: An Analytics read failure is reported by notification, in the service's own words
+
+Where an Analytics surface renders despite a failed read, that failure SHALL be reported by an error
+notification rather than by text inserted into the page. A sentence placed in the page's own column flow
+reports the same class of event in a different place from the rest of the console — where a failed save, a
+failed table read and a failed conversations page all raise a notification — and it shifts the content it sits
+above as it arrives and leaves.
+
+**The notification SHALL carry what the service said.** Its title SHALL be the service's `errorHeader` and its
+body the service's `errorMessage`, and it SHALL carry the failed request's `requestId`. A fixed string this app
+wrote SHALL be used only as the title where the response supplied no header — never in place of a message the
+service did supply. An operator who cannot quote a request id cannot ask the team running the service about the
+failure.
+
+**The report SHALL persist until dismissed.** An error notification SHALL NOT auto-dismiss, because a failure
+an operator did not happen to be looking at is a failure they never saw.
+
+**A failure SHALL be reported once.** A surface SHALL raise the notification when the failure first reaches it
+and again only when the failure changes — not on every re-render, and not once per row, cell or offered value.
+
+**A statement of absence MAY remain in place, and states only the absence.** Where the notification appears
+away from what the operator is looking at — inside a popup, a panel, or a cell — the surface MAY keep a short
+statement that there is nothing to show. That statement SHALL NOT be the report of the failure: the cause,
+the service's message and the request id belong to the notification.
+
+This requirement does NOT apply where:
+
+- **the failure text is the whole content.** A surface whose entire content is replaced by the failure — an
+  empty-state panel standing in for a grid, a page that could not read the one entity it exists to show, a
+  grid already rendering its own error state — SHALL keep that statement. Moving it to a notification would
+  leave a blank surface with nothing to explain it once the notification is dismissed.
+- **the message is form validation.** A rejected field value is not a failed request.
+- **the message is a value the service returned.** A recorded error on a pipeline's runtime state, or an
+  error message recorded in the usage log for a failed hop, is data this console displays. It is not a
+  failure the console suffered, and it stays where it is rendered.
+
+#### Scenario: A degraded surface reports the failure as a notification
+
+- **WHEN** a surface renders its content while one of its reads has failed
+- **THEN** an error notification reports the failure
+- **AND** no sentence reporting that failure is inserted into the page's content flow
+
+#### Scenario: The notification states the service's header, message and request id
+
+- **WHEN** a read fails and the response carries an error header, an error message and a request id
+- **THEN** the notification's title is that header, its body that message, and it carries that request id
+
+#### Scenario: A response with no header falls back to a fixed title only
+
+- **WHEN** a read fails and the response carries a message but no error header
+- **THEN** the notification's title is this app's own string for that failure
+- **AND** its body is still the service's message
+
+#### Scenario: The report does not disappear on its own
+
+- **WHEN** an Analytics read failure raises its notification
+- **THEN** the notification remains until the operator dismisses it
+
+#### Scenario: Re-rendering does not re-raise the report
+
+- **WHEN** a surface holding a failed read re-renders without the failure changing
+- **THEN** no further notification is raised
+
+#### Scenario: A replaced surface keeps its statement
+
+- **WHEN** a read fails and the surface has no content to render without it
+- **THEN** the surface states that in place, as it did before
+- **AND** dismissing any notification leaves that statement on screen
 
 ### Requirement: Analytics structured-query builder primitives
 

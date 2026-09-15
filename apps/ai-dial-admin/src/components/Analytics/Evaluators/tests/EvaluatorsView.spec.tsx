@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EvaluatorsView from '@/src/components/Analytics/Evaluators/EvaluatorsView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -11,6 +11,11 @@ import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
 const push = vi.fn();
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
+
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
 
 vi.mock('@/src/components/Analytics/Evaluators/CreateEvaluatorPopup', () => ({
   default: ({ onCreated, onClose }: { onCreated: () => void; onClose: () => void }) => (
@@ -82,6 +87,10 @@ const renderView = (props?: Partial<Parameters<typeof EvaluatorsView>[0]>) =>
   render(<EvaluatorsView rows={[row()]} {...props} />);
 
 describe('EvaluatorsView', () => {
+  beforeEach(() => {
+    showNotification.mockClear();
+  });
+
   test('renders the four columns', () => {
     renderView();
 
@@ -176,22 +185,38 @@ describe('EvaluatorsView', () => {
   });
 
   test('reports the count as unknown rather than zero when the rules listing failed', () => {
-    renderView({ rows: [row({ usedBy: null })], hasUsageError: true });
+    renderView({ rows: [row({ usedBy: null })], usageFailure: {} });
 
     expect(screen.queryByText(/usedBy=0/)).toBeNull();
     expect(screen.getByText(new RegExp(`usedBy=${AnalyticsEvaluatorsI18nKey.UsedByUnknown}`))).toBeTruthy();
   });
 
-  test('states why the counts are unavailable', () => {
-    renderView({ hasUsageError: true });
+  test('reports a failed usage read by notification, quoting the service', async () => {
+    renderView({ usageFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'rules timed out' } });
 
-    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.UsageLoadFailed)).toBeTruthy();
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Upstream unavailable', description: 'rules timed out' }),
+      ),
+    );
+    expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.UsageLoadFailed)).toBeNull();
+  });
+
+  test('falls back to its own usage title when the service supplied no header', async () => {
+    renderView({ usageFailure: {} });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsEvaluatorsI18nKey.UsageLoadFailed }),
+      ),
+    );
   });
 
   test('says nothing about usage when the rules listing succeeded', () => {
     renderView();
 
     expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.UsageLoadFailed)).toBeNull();
+    expect(showNotification).not.toHaveBeenCalled();
   });
 
   test('renders an em dash for an evaluator reporting no registration timestamp', () => {
@@ -200,10 +225,19 @@ describe('EvaluatorsView', () => {
     expect(screen.getByText(new RegExp(`registeredAt=${UNAVAILABLE_VALUE}`))).toBeTruthy();
   });
 
-  test('states a failed evaluators listing', () => {
-    renderView({ hasLoadError: true });
+  test('reports a failed evaluators listing by notification rather than above the grid', async () => {
+    renderView({ loadFailure: { errorMessage: 'registry timed out', requestId: 'trace-1' } });
 
-    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.EvaluatorsLoadFailed)).toBeTruthy();
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: AnalyticsEvaluatorsI18nKey.EvaluatorsLoadFailed,
+          description: 'registry timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.EvaluatorsLoadFailed)).toBeNull();
   });
 
   test('renders an empty registry as an empty grid with no failure', () => {

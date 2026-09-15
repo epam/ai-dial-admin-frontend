@@ -28,7 +28,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(isAnalyticsForbidden).mockResolvedValue(false);
   vi.mocked(getFunctions).mockResolvedValue([]);
-  vi.mocked(getPipelines).mockResolvedValue({ data: [pipeline], isForbidden: false });
+  vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [pipeline] });
 });
 
 describe('pipelines page', () => {
@@ -36,7 +36,7 @@ describe('pipelines page', () => {
     const page = await renderPage();
 
     expect(getPipelines).toHaveBeenCalledWith();
-    expect(page.props).toMatchObject({ initialPipelines: [pipeline], hasLoadError: false });
+    expect(page.props).toMatchObject({ initialPipelines: [pipeline], loadFailure: null });
   });
 
   test('renders the forbidden page without reading anything when the section is closed', async () => {
@@ -51,28 +51,39 @@ describe('pipelines page', () => {
   // The section guard admits a caller the registry itself may still refuse, and reporting that refusal as
   // "could not be loaded" names a cause that is not the cause.
   test('renders the forbidden page when the registry refuses the read', async () => {
-    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: true });
+    vi.mocked(getPipelines).mockResolvedValue({ success: false, status: 403 });
 
     const page = await renderPage();
 
     expect(page.type).toBe(Page403);
   });
 
-  test('states a load failure rather than a refusal when the read merely fails', async () => {
-    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
+  test('hands the view the failure itself rather than a flag when the read merely fails', async () => {
+    vi.mocked(getPipelines).mockResolvedValue({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'registry timed out',
+      requestId: 'trace-1',
+    });
 
     const page = await renderPage();
 
     expect(page.type).not.toBe(Page403);
-    expect(page.props).toMatchObject({ initialPipelines: [], hasLoadError: true });
+    expect(page.props).toMatchObject({
+      initialPipelines: [],
+      loadFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out', requestId: 'trace-1' },
+    });
   });
 
-  test('states a load failure when the read throws', async () => {
+  test('hands the view a wordless failure when the read throws', async () => {
     vi.mocked(getPipelines).mockRejectedValue(new Error('boom'));
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ hasLoadError: true });
+    expect(page.props).toMatchObject({
+      loadFailure: { errorHeader: void 0, errorMessage: void 0, requestId: void 0 },
+    });
   });
 
   // The measure editor reads its offered functions from the served catalog, and a failed catalog read

@@ -18,10 +18,13 @@ the question the page exists to answer ("is this table's pipeline missing, or re
 is unanswerable from a view that hides disabled pipelines by default.
 
 A registry holding no pipelines is an ordinary state and SHALL render as the console with an empty grid. A
-**failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
-NOT resolve to a not-found result. A not-found page conflates three conditions an operator needs to tell
-apart — nothing registered, the service unreachable, and the route absent — which is the confusion this page
-exists to remove. The stated failure SHALL clear once a subsequent fetch succeeds.
+**failed** listing fetch SHALL also render the console and SHALL NOT resolve to a not-found result. A
+not-found page conflates three conditions an operator needs to tell apart — nothing registered, the service
+unreachable, and the route absent — which is the confusion this page exists to remove. That failure SHALL be
+reported by an error notification carrying the service's own header, message and request id, under *An
+Analytics read failure is reported by notification, in the service's own words*, and SHALL NOT be stated as
+text above the grid. Exactly one report SHALL be raised per failure: the console already notified on a failed
+client-side re-read, and a page that both notified and wrote the sentence reported the same failure twice.
 
 `/enrichment-rules` SHALL NOT be redirected. The route is removed, and a request for it SHALL resolve to the
 not-found page.
@@ -40,8 +43,15 @@ not-found page.
 #### Scenario: A failed listing states the failure instead of a not-found page
 
 - **WHEN** the server-side pipelines listing fetch fails
-- **THEN** the console still renders, reporting that the pipelines could not be loaded
+- **THEN** the console still renders
+- **AND** an error notification reports the failure, carrying the service's message and request id
+- **AND** no failure text is rendered above the grid
 - **AND** the page does not resolve to a not-found result
+
+#### Scenario: One failure raises one report
+
+- **WHEN** the server-side pipelines listing fetch fails and the console renders
+- **THEN** exactly one error notification is raised for it
 
 #### Scenario: Forbidden caller sees Page403 and no pipelines are fetched
 
@@ -61,11 +71,12 @@ not-found page.
 answer whether they may read a pipeline. The service currently admits only a full admin to the pipeline
 registry, so a caller who passes the section guard can still be refused by the read itself.
 
-The console distinguishes a refusal from a failure — a refused read resolves to no value where a failed one
-resolves to a null — and the pipelines pages SHALL preserve that distinction rather than collapsing both
-into a load failure. A refused listing or a refused pipeline read SHALL render `Page403`. Reporting a refusal
-as "the pipelines could not be loaded" states the wrong cause and sends the operator to check a service that
-is working.
+The console distinguishes a refusal from a failure — a refused read carries HTTP 403 on its read envelope
+where a failed one carries the service's own status — and the pipelines pages SHALL preserve that
+distinction rather than collapsing both into a load failure. A refused listing or a refused pipeline read
+SHALL render `Page403`, and SHALL raise no error notification: the forbidden page is the whole report, and a
+notification beside it would report a refusal as a failure. Reporting a refusal as "the pipelines could not
+be loaded" states the wrong cause and sends the operator to check a service that is working.
 
 This is stated as a fallback rather than as the intended end state: the service is expected to restore
 read access to a read-only caller, at which point such a caller reads the pipeline through the same
@@ -76,6 +87,7 @@ read-only presentation the pages already apply, and this requirement stops being
 - **WHEN** the pipelines listing is refused by the service
 - **THEN** `Page403` is rendered
 - **AND** no load-failure message is presented
+- **AND** no error notification is raised
 
 #### Scenario: A refused pipeline read renders the forbidden page
 
@@ -85,7 +97,7 @@ read-only presentation the pages already apply, and this requirement stops being
 #### Scenario: A failed read is still reported as a failure
 
 - **WHEN** the pipelines listing fails for a reason other than refusal
-- **THEN** the console renders with the load failure stated
+- **THEN** the console renders and an error notification reports the failure
 - **AND** `Page403` is not rendered
 
 ### Requirement: Pipelines listing grid presents both kinds
@@ -208,8 +220,11 @@ registered: the modal is where the shortage is visible and where submission is b
 that opens it would hide the explanation behind a control the operator cannot reach. With no evaluator
 registered the modal SHALL state that one must be registered through the API first, and SHALL block
 submission **of an enrichment pipeline only** — an aggregate pipeline declares no evaluator and SHALL remain
-creatable. A failed evaluator listing SHALL be reported as a load failure rather than as "none are
-registered", which would send the operator to register one they may already have.
+creatable. A failed evaluator listing SHALL NOT be reported as "none are registered", which would send the
+operator to register one they may already have: it SHALL be reported by an error notification carrying the
+service's own header, message and request id, and the evaluator field SHALL carry its own error so the
+control the operator is about to use states its state. No further sentence SHALL be rendered beside the
+field for it — the field's error and the notification already say it twice over.
 
 #### Scenario: Non-admin sees no create action
 
@@ -236,7 +251,9 @@ registered", which would send the operator to register one they may already have
 #### Scenario: A failed evaluator listing is not reported as an empty one
 
 - **WHEN** the evaluator listing fails
-- **THEN** the modal reports the load failure
+- **THEN** an error notification reports the failure, carrying the service's message and request id
+- **AND** the evaluator field carries its own error
+- **AND** no further failure sentence is rendered beside the field
 - **AND** it does not state that no evaluator is registered
 
 ### Requirement: The selected kind determines which members are sent
