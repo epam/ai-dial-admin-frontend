@@ -15,6 +15,7 @@ import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider } from '@/src/context/AppContext';
 import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
+import { CatalogSchemasFolderProvider } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
@@ -92,40 +93,44 @@ export default async function Layout({ children, params }: { children: ReactNode
               <AppsFolderProvider>
                 <ModelsFolderProvider>
                   <AppRunnersFolderProvider>
-                    <InterceptorsFolderProvider>
-                      <TranslatorsFolderProvider>
-                        <RoutesFolderProvider>
-                          <RolesFolderProvider>
-                            <KeysFolderProvider>
-                              <PromptFolderProvider>
-                                <ToolsetFolderProvider>
-                                  <FileFolderProvider>
-                                    <ConversationFolderProvider>
-                                      <SkillFolderProvider>
-                                        <NotificationProvider>
-                                          <div className="flex flex-col size-full">
-                                            <Header
-                                              isEnableAuth={isEnableAuth}
-                                              docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                                            />
-                                            <div className="flex-1 min-h-0">
-                                              <div className="flex flex-row h-full relative">
-                                                <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                                                <Content isEnableAuth={isEnableAuth}>{children}</Content>
+                    <CatalogSchemasFolderProvider>
+                      <InterceptorsFolderProvider>
+                        <TranslatorsFolderProvider>
+                          <RoutesFolderProvider>
+                            <RolesFolderProvider>
+                              <KeysFolderProvider>
+                                <PromptFolderProvider>
+                                  <ToolsetFolderProvider>
+                                    <FileFolderProvider>
+                                      <ConversationFolderProvider>
+                                        <SkillFolderProvider>
+                                          <NotificationProvider>
+                                            <div className="flex flex-col size-full">
+                                              <Header
+                                                isEnableAuth={isEnableAuth}
+                                                docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                                              />
+                                              <div className="flex-1 min-h-0">
+                                                <div className="flex flex-row h-full relative">
+                                                  <Menu
+                                                    disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)}
+                                                  />
+                                                  <Content isEnableAuth={isEnableAuth}>{children}</Content>
+                                                </div>
                                               </div>
                                             </div>
-                                          </div>
-                                        </NotificationProvider>
-                                      </SkillFolderProvider>
-                                    </ConversationFolderProvider>
-                                  </FileFolderProvider>
-                                </ToolsetFolderProvider>
-                              </PromptFolderProvider>
-                            </KeysFolderProvider>
-                          </RolesFolderProvider>
-                        </RoutesFolderProvider>
-                      </TranslatorsFolderProvider>
-                    </InterceptorsFolderProvider>
+                                          </NotificationProvider>
+                                        </SkillFolderProvider>
+                                      </ConversationFolderProvider>
+                                    </FileFolderProvider>
+                                  </ToolsetFolderProvider>
+                                </PromptFolderProvider>
+                              </KeysFolderProvider>
+                            </RolesFolderProvider>
+                          </RoutesFolderProvider>
+                        </TranslatorsFolderProvider>
+                      </InterceptorsFolderProvider>
+                    </CatalogSchemasFolderProvider>
                   </AppRunnersFolderProvider>
                 </ModelsFolderProvider>
               </AppsFolderProvider>

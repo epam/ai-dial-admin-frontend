@@ -11,6 +11,11 @@ import {
 } from '@/src/app/[lang]/assets-applications/actions';
 import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import {
+  bulkDeleteCatalogSchemas,
+  createCatalogSchema,
+  getCatalogSchema,
+} from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import {
   bulkDeleteInterceptors,
   createInterceptor,
   getInterceptor,
@@ -47,6 +52,7 @@ import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
+import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
@@ -67,6 +73,7 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
+import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -158,14 +165,14 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
-  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: an
-  // app runner's row name is its `$id`, a model's is its plain name. Skills shares the same
+  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: a
+  // schema resource's row name is its `$id`, a model's is its plain name. Skills shares the same
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
   // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
   // read a display name from.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      NAME_COLUMN(view === ApplicationRoute.PlatformAppRunners ? 'ID' : 'Name') as ColDef,
+      NAME_COLUMN(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
@@ -221,6 +228,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Models;
     case ApplicationRoute.PlatformAppRunners:
       return FileManagerI18nKey.AppRunners;
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return FileManagerI18nKey.CatalogSchemas;
     case ApplicationRoute.PlatformInterceptors:
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.PlatformTranslators:
@@ -272,6 +281,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return {
+        title: t(FileManagerI18nKey.CatalogSchemasEmptyStateTitle),
+        description: t(FileManagerI18nKey.CatalogSchemasEmptyStateDescription),
       };
     case ApplicationRoute.PlatformInterceptors:
       return {
@@ -349,6 +363,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
@@ -364,6 +379,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
+  [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
   [ApplicationRoute.PlatformTranslators]: getTranslator,
   [ApplicationRoute.PlatformRoutes]: getRoute,
@@ -406,6 +422,9 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformAppRunners]: createRunner as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.PlatformCatalogSchemas]: createCatalogSchema as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformInterceptors]: createInterceptor as (
@@ -475,6 +494,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,

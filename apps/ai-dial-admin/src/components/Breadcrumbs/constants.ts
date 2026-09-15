@@ -79,6 +79,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.PlatformCatalogSchemas]: {
+    segments: [
+      { name: 'PlatformCatalogSchemas', i18nKey: MenuI18nKey.PlatformCatalogSchemas },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformInterceptors]: {
     segments: [
       { name: 'PlatformInterceptors', i18nKey: MenuI18nKey.PlatformInterceptors },

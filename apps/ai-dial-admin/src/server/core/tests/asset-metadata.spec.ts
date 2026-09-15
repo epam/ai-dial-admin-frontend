@@ -7,6 +7,7 @@ import {
   mergeApplicationResource,
   mergeConversation,
   mergeAppRunnerResource,
+  mergeCatalogSchemaResource,
   mergeInterceptorResource,
   mergeKeyResource,
   mergeModelResource,
@@ -257,6 +258,51 @@ describe('Server :: Core :: asset-metadata', () => {
 
     expect(result).not.toHaveProperty('dial:applicationTypeRoutes');
     expect(result.$id).toEqual('plain');
+  });
+
+  test('mergeCatalogSchemaResource decodes the resource name back into $id and passes the body through', () => {
+    const content = {
+      $schema: 'https://dial.epam.com/catalog_schemas/schema#',
+      'dial:catalogEntityType': 'agent',
+      'dial:catalogDisplayName': 'Agent',
+      properties: { summary: { type: 'string', 'dial:meta': { 'dial:tab': 'About' } } },
+    };
+    const meta = metadata({
+      url: 'catalog_schemas/platform/https%253A%252F%252Fhost%252Fagent',
+      author: 'ivy',
+      createdAt: 100,
+      updatedAt: 200,
+    });
+
+    const result = mergeCatalogSchemaResource(content, meta);
+
+    expect(result.$id).toEqual('https://host/agent');
+    expect(result.name).toEqual('https%3A%2F%2Fhost%2Fagent');
+    expect(result.path).toEqual('https%3A%2F%2Fhost%2Fagent');
+    expect(result.folderId).toEqual('');
+    expect(result.author).toEqual('ivy');
+    expect(result.createdAt).toEqual('100');
+    expect(result.updatedAt).toEqual('200');
+    expect(result['dial:catalogEntityType']).toEqual('agent');
+    expect(result.properties).toEqual(content.properties);
+  });
+
+  test('mergeCatalogSchemaResource leaves a plain name as its own $id', () => {
+    const result = mergeCatalogSchemaResource({ $schema: 's' }, metadata({ url: 'catalog_schemas/platform/plain' }));
+
+    expect(result.$id).toEqual('plain');
+  });
+
+  test('toResourceInfoList decodes a catalog schema row name to its $id while leaving path encoded', () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [metadata({ nodeType: 'ITEM', url: 'catalog_schemas/platform/https%253A%252F%252Fhost%252Fagent' })],
+    });
+
+    const result = toResourceInfoList(node, ResourceType.CATALOG_SCHEMA);
+
+    expect(result[0].name).toEqual('https://host/agent');
+    expect(result[0].path).toEqual('https%3A%2F%2Fhost%2Fagent');
   });
 
   test('flat merges project createdAt from metadata', () => {

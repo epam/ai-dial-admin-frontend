@@ -5,11 +5,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/Platform/AppRunners/CreateProperties';
+import CatalogSchemaCreateProperties from '@/src/components/Assets/Platform/CatalogSchemas/CreateProperties';
 import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
-import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import { DialAppRunnerResource, DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -45,6 +46,21 @@ const Properties = <T extends object>({
       <AppRunnerCreateProperties
         entity={entity as DialAppRunnerResource}
         names={props.names}
+        isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as App Runner above: a catalog schema is
+  // identified by `$id`, and its display name lives under `dial:catalogDisplayName` rather than the
+  // generic `displayName` the shared form writes.
+  if (view === ApplicationRoute.PlatformCatalogSchemas) {
+    return (
+      <CatalogSchemaCreateProperties
+        entity={entity as DialCatalogSchemaResource}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
         isModal={props.isModal}
         onChangeEntity={props.onChangeEntity}
       />

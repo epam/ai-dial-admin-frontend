@@ -125,6 +125,10 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner),
       });
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.CatalogSchemas) : t(FileManagerI18nKey.CatalogSchema),
+      });
     case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor),
@@ -212,6 +216,13 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1
+          ? t(FileManagerI18nKey.CatalogSchemas)
+          : t(FileManagerI18nKey.CatalogSchema)
+        ).toLowerCase(),
       });
     case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
