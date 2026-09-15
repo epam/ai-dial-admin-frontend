@@ -26,6 +26,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -43,6 +44,7 @@ interface Props {
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
   translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   /** True when `originalApp` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
@@ -87,6 +89,7 @@ const PlatformApplicationView: FC<Props> = ({
   interceptors,
   globalInterceptors,
   translators,
+  catalogSchemas,
   optionWarnings,
   isConfigFileSource,
 }) => {
@@ -242,6 +245,7 @@ const PlatformApplicationView: FC<Props> = ({
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
             translators={translators}
+            catalogSchemas={catalogSchemas}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
             originalApplication={originalApp}

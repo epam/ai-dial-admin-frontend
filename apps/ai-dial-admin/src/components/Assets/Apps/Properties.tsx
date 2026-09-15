@@ -7,6 +7,7 @@ import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -32,6 +33,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
@@ -40,11 +42,19 @@ interface Props {
   asset: DialApplicationResource;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialApplicationResource) => void;
   isPublication?: boolean;
 }
 
-const ApplicationAssetProperties: FC<Props> = ({ asset, runners, translators, onChange, isPublication }) => {
+const ApplicationAssetProperties: FC<Props> = ({
+  asset,
+  runners,
+  translators,
+  catalogSchemas,
+  onChange,
+  isPublication,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { codeAppEditorUrl } = useAppContext();
@@ -161,6 +171,14 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, translators, on
           onChange={(default_headers) => onChange({ ...asset, default_headers })}
         />
         <MaxRetryAttempts entity={asset} onChangeEntity={onChange} isAsset />
+        {!isPublication && (
+          <CatalogSchemaField
+            schemaId={asset.catalog_schema_id}
+            options={catalogSchemas?.options}
+            optionsError={catalogSchemas?.error}
+            onChange={(catalog_schema_id) => onChange({ ...asset, catalog_schema_id })}
+          />
+        )}
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationResource, DialExternalService, ToolsetAuthType } from '@/src/models/dial/resource';
+import { resolveLocalizedText } from '@/src/utils/entities/localized-value';
 import ExternalServiceAuthButtons, { EXTERNAL_SERVICE_AUTH_REDIRECT_URL } from './ExternalServiceAuthButtons';
 import ExternalServiceConsentActions from './ExternalServiceConsentActions';
 import ResourceAuthentication from './ResourceAuthentication';
@@ -244,7 +245,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                   {rowAction === ExternalServiceRowAction.Consent && (
                     <ExternalServiceConsentActions
                       appPath={asset.path}
-                      applicationName={asset.display_name || asset.name || asset.path}
+                      applicationName={resolveLocalizedText(asset.display_name) || asset.name || asset.path}
                       serviceId={serviceId}
                       service={service}
                       grantConsent={grantExternalServiceConsent}

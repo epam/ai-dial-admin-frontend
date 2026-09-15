@@ -107,6 +107,31 @@ describe('Platform application server actions', () => {
     expect(body).toMatchObject({ name: 'my-app', endpoint: 'http://mock' });
   });
 
+  test.each([
+    ['create', (app: any) => createPlatformApplication(app)],
+    ['update', (app: any) => updatePlatformApplication(app, 'etag-1')],
+  ])('carries catalog_schema_id and catalog_properties through a %s', async (_label, action) => {
+    await action({
+      ...platformApp,
+      catalog_schema_id: 'https://host/agent-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalog_schema_id: 'https://host/agent-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves an application carrying no catalog metadata untouched', async () => {
+    await updatePlatformApplication(platformApp, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalog_schema_id');
+    expect(body).not.toHaveProperty('catalog_properties');
+  });
+
   test('getPlatformApplication reads a platform-prefixed path with the caller-supplied etag', async () => {
     await getPlatformApplication('platform/my-app', 'etag-1');
 

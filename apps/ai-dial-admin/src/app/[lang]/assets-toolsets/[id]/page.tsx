@@ -9,6 +9,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialRole } from '@/src/models/dial/role';
+import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -75,7 +76,11 @@ export default async function Page(params: {
   // interceptors read on the sibling assets-applications page — an option-list problem must not
   // prevent the toolset from loading. Core-direct (`readConfigEntities`), not the admin-BE role list,
   // which cannot see a role declared only in Core's configuration file.
-  roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false);
+  const [rolesResult, catalogSchemas] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readCatalogSchemaOptions(token),
+  ]);
+  roles = rolesResult;
 
   if (toolset == null) {
     notFound();
@@ -89,11 +94,18 @@ export default async function Page(params: {
           etag={etag}
           originalToolset={toolset}
           roles={roles}
+          catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
           isConfigFileSource={isConfigFileMode}
         />
       ) : (
-        <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
+        <ToolsetView
+          oAuthCode={oAuthCode}
+          etag={etag}
+          originalToolset={toolset}
+          toolsets={toolsets || []}
+          catalogSchemas={catalogSchemas}
+        />
       )}
     </SaveValidationContextProvider>
   );

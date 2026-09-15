@@ -15,3 +15,10 @@ export const CATALOG_META_LOCALIZED = 'dial:localized';
 /** The type/format pair Core's meta-schema requires alongside `dial:file`. */
 export const CATALOG_FILE_PROPERTY_TYPE = 'string';
 export const CATALOG_FILE_PROPERTY_FORMAT = 'dial-file-encoded';
+
+/** The default locale Core falls back to when a schema declares no `dial:defaultLocale`. */
+export const CATALOG_FALLBACK_LOCALE = 'en';
+
+/** `DialFileFormat`'s own pattern and length cap — what `format: "dial-file-encoded"` accepts. */
+export const CATALOG_FILE_REFERENCE_PATTERN = /^files\/[a-zA-Z0-9]+\/.*$/;
+export const CATALOG_FILE_REFERENCE_MAX_LENGTH = 4096;

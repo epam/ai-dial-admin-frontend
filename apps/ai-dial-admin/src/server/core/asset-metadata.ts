@@ -231,6 +231,10 @@ export const mergeModelResource = (
  * type needs: the resource name is a percent-encoded `$id` (recovered here, since `$id` is the
  * runner's identity everywhere in the UI), and Core's `dial:applicationTypeRoutes` is a name-keyed
  * object that the route editors consume as an array.
+ *
+ * Unlike `mergeCatalogSchemaResource`, the decoded name still wins over the body's own `$id` here.
+ * The two can differ for a runner created outside this console, with the same consequence — see that
+ * function — but correcting it needs the app-runner capability's own delta, so it is left as is.
  */
 export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
@@ -247,17 +251,26 @@ export const mergeAppRunnerResource = (
   } as DialAppRunnerResource;
 };
 
-/** Same `$id`-as-resource-name identity as an app runner, without its route conversion. */
+/**
+ * Same `$id`-as-resource-name identity as an app runner, without its route conversion — but the
+ * stored body's own `$id` wins where it declares one.
+ *
+ * A schema this console created stores the two identically by construction. One created elsewhere
+ * can live under any legal blob name, because Core keys its merged configuration by `$id` and never
+ * compares the two; overwriting `$id` with the decoded name would then show the wrong identity and
+ * turn the next save into an `$id` change, which Core rejects with a conflict.
+ */
 export const mergeCatalogSchemaResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialCatalogSchemaResource => {
   const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]);
+  const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
   return {
     ...content,
     ...fields,
     name,
-    $id: fromCoreSchemaResourceName(name),
+    $id: declaredId ?? fromCoreSchemaResourceName(name),
   } as DialCatalogSchemaResource;
 };
 

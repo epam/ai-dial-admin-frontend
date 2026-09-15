@@ -463,6 +463,31 @@ describe('Platform toolset server actions', () => {
     expect(body).toMatchObject({ name: 'my-toolset', endpoint: 'http://mock' });
   });
 
+  test.each([
+    ['create', (toolset: any) => createPlatformToolset(toolset)],
+    ['update', (toolset: any) => updatePlatformToolset(toolset, 'etag-1')],
+  ])('carries catalog_schema_id and catalog_properties through a %s', async (_label, action) => {
+    await action({
+      ...platformToolset,
+      catalog_schema_id: 'https://host/toolset-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalog_schema_id: 'https://host/toolset-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves a toolset carrying no catalog metadata untouched', async () => {
+    await updatePlatformToolset(platformToolset, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalog_schema_id');
+    expect(body).not.toHaveProperty('catalog_properties');
+  });
+
   test('updatePlatformToolset strips read-only/derived fields before writing', async () => {
     const toolsetWithExtras = {
       ...platformToolset,
