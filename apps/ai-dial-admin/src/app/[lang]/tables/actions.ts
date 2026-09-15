@@ -23,11 +23,11 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-export async function getTables(): Promise<AnalyticsTable[] | null> {
+export async function getTables(): Promise<ServerActionResponse<AnalyticsTable[]>> {
   return analyticsDataApi.getTables(await token());
 }
 
-export async function getTable(name: string): Promise<AnalyticsTable | null> {
+export async function getTable(name: string): Promise<ServerActionResponse<AnalyticsTable>> {
   return analyticsDataApi.getTable(name, await token());
 }
 
@@ -55,7 +55,7 @@ export async function addRows(name: string, dto: WriteRowsDto): Promise<ServerAc
   return analyticsDataApi.addRows(name, dto, await token());
 }
 
-export async function getTableAccess(name: string): Promise<TableAccess | null> {
+export async function getTableAccess(name: string): Promise<ServerActionResponse<TableAccess>> {
   return analyticsDataApi.getTableAccess(name, await token());
 }
 

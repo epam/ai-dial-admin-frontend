@@ -24,7 +24,6 @@ interface Props {
   feedback: FeedbackFilter;
   onFeedbackChange: (value: FeedbackFilter) => void;
   isFeedbackCapped: boolean;
-  hasSchemaError?: boolean;
   onToggleColumnsPanel: () => void;
 }
 
@@ -38,7 +37,6 @@ const ConversationsToolbar: FC<Props> = ({
   feedback,
   onFeedbackChange,
   isFeedbackCapped,
-  hasSchemaError,
   onToggleColumnsPanel,
 }) => {
   const t = useI18n();
@@ -67,12 +65,6 @@ const ConversationsToolbar: FC<Props> = ({
           onClick={onToggleColumnsPanel}
         />
       </div>
-      {hasSchemaError && (
-        <div className="flex w-full items-center gap-1.5 text-warning dial-tiny-text" role="status">
-          <IconAlertTriangle size={NOTICE_ICON_SIZE} aria-hidden />
-          <span>{t(ConversationsTraceI18nKey.SchemaUnavailableNotice)}</span>
-        </div>
-      )}
       {isFeedbackCapped && (
         <div className="flex w-full items-center gap-1.5 text-warning dial-tiny-text" role="status">
           <IconAlertTriangle size={NOTICE_ICON_SIZE} aria-hidden />

@@ -32,6 +32,11 @@ const MANY_VALUES: ConversationFieldValue[] = Array.from({ length: 12 }, (_, i) 
 }));
 
 const requestFieldValues = vi.fn();
+
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
 const onModelChange = vi.fn();
 
 // The grid normally owns the filter lifecycle: it collects the component's callbacks through this context
@@ -82,7 +87,8 @@ const selectAllCheckbox = () => screen.getByRole('checkbox', { name: Conversatio
 beforeEach(() => {
   vi.clearAllMocks();
   lifecycle = {};
-  requestFieldValues.mockResolvedValue(VALUES);
+  showNotification.mockClear();
+  requestFieldValues.mockResolvedValue({ success: true, response: VALUES });
 });
 
 describe('ConversationValueFilter', () => {
@@ -204,7 +210,7 @@ describe('ConversationValueFilter', () => {
       await waitFor(() => expect(optionsGroup()).toBeInTheDocument());
       expect(screen.queryAllByRole('textbox')).toHaveLength(0);
 
-      requestFieldValues.mockResolvedValue(MANY_VALUES);
+      requestFieldValues.mockResolvedValue({ success: true, response: MANY_VALUES });
       await act(async () => {
         lifecycle.afterGuiDetached?.();
       });
@@ -216,7 +222,7 @@ describe('ConversationValueFilter', () => {
     // Presentational only: narrowing what renders must never change what is selected, or clearing the term
     // would silently drop values the operator had already chosen.
     test('narrows the list without changing the selection', async () => {
-      requestFieldValues.mockResolvedValue(MANY_VALUES);
+      requestFieldValues.mockResolvedValue({ success: true, response: MANY_VALUES });
       renderFilter({ values: ['pending'] });
       await openFilter();
 
@@ -262,7 +268,7 @@ describe('ConversationValueFilter', () => {
   });
 
   test('an empty result says so and offers nothing to select', async () => {
-    requestFieldValues.mockResolvedValue([]);
+    requestFieldValues.mockResolvedValue({ success: true, response: [] });
     renderFilter();
     await openFilter();
 
@@ -276,7 +282,7 @@ describe('ConversationValueFilter', () => {
   // Never a text entry in its place: an operator who opened one control and was handed another would enter a
   // value under the wrong operator.
   test('a failed read says so, in the error treatment, and offers no text entry', async () => {
-    requestFieldValues.mockResolvedValue(null);
+    requestFieldValues.mockResolvedValue({ success: false, status: 500 });
     renderFilter();
     await openFilter();
 
@@ -287,6 +293,37 @@ describe('ConversationValueFilter', () => {
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
     expect(onModelChange).not.toHaveBeenCalled();
+  });
+
+  test('a failed read is reported by notification as well, quoting the service', async () => {
+    requestFieldValues.mockResolvedValue({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'value read timed out',
+      requestId: 'trace-1',
+    });
+    renderFilter();
+    await openFilter();
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'value read timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+  });
+
+  test('a failed read states the service message in place rather than the fixed string', async () => {
+    requestFieldValues.mockResolvedValue({ success: false, status: 503, errorMessage: 'value read timed out' });
+    renderFilter();
+    await openFilter();
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('value read timed out'));
+    expect(screen.getByRole('status')).not.toHaveTextContent(ConversationsTraceI18nKey.ValueFilterEmpty);
   });
 
   // The list is faceted against the page's other narrowing, so one held from a previous period or search

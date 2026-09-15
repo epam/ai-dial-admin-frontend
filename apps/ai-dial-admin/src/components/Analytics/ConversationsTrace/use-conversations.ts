@@ -11,6 +11,7 @@ import {
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
@@ -236,7 +237,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   // The opened column's own filter is sent along and dropped by the query builder, which is where that rule
   // is stated and tested.
   const requestFieldValues = useCallback(
-    async (fieldName: string): Promise<ConversationFieldValue[] | null> => {
+    async (fieldName: string): Promise<ServerActionResponse<ConversationFieldValue[]>> => {
       const columnFilters = translateConversationFilterModel(
         gridApi?.getFilterModel() as ConversationGridFilterModel,
         modelScope,
@@ -253,7 +254,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         ...(arrayFilters ? { arrayFilters } : {}),
       });
 
-      return result.success ? (result.response ?? []) : null;
+      return result.success ? { ...result, response: result.response ?? [] } : result;
     },
     [filters, gridApi, key, modelScope],
   );

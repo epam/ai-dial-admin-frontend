@@ -7,6 +7,7 @@ import {
   getConversationHopMcp,
   getConversationHopProtocol,
 } from '@/src/app/[lang]/conversations-trace/actions';
+import { useHopReadReport } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import {
   ConversationSpanRow,
@@ -16,6 +17,7 @@ import {
   HopReadState,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
 
 interface Params {
@@ -30,20 +32,25 @@ interface Params {
 // component, while the held key is built from the current ones — so a scope change re-fired the effect and
 // committed an answer read against the old scope under the new key, which is the exact confusion the key
 // discipline exists to prevent. `use-hop-envelope.ts` passes both as arguments for the same reason.
-type FactsRunner<T> = (
+type FactsRunner<T extends object> = (
   scope: SessionScope,
   traceId: string,
   span: ConversationSpanRow,
   request: ReturnType<typeof useProtectedRequest>,
-) => Promise<T>;
+) => Promise<ServerActionResponse<T> | undefined>;
 
 // Held per hop with the same key discipline as the envelope reads, so an answer for a hop the reader has left
 // can never appear under the hop they moved to.
-const useHeldFacts = <T>({ scope, traceId, span, isEnabled }: Params, run: FactsRunner<T>, onFailure: T) => {
+const useHeldFacts = <T extends object>(
+  { scope, traceId, span, isEnabled }: Params,
+  run: FactsRunner<T>,
+  onFailure: T,
+) => {
   const [facts, setFacts] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
   const heldKeyRef = useRef<string | null>(null);
+  const onReadFailed = useHopReadReport();
 
   const spanId = span && isEnabled ? span.core_span_id : null;
   const heldKey = spanId === null ? null : `${scope.id}:${traceId}:${spanId}`;
@@ -66,14 +73,19 @@ const useHeldFacts = <T>({ scope, traceId, span, isEnabled }: Params, run: Facts
 
     const read = async () => {
       try {
-        const value = await run(scope, traceId, span, getReqRef.current);
+        const result = await run(scope, traceId, span, getReqRef.current);
 
         if (heldKeyRef.current === heldKey) {
-          setFacts(value);
+          if (result && !result.success) {
+            onReadFailed(result);
+          }
+
+          setFacts((result?.response as T) ?? onFailure);
         }
       } catch {
         if (heldKeyRef.current === heldKey) {
           setFacts(onFailure);
+          onReadFailed();
         }
       } finally {
         if (heldKeyRef.current === heldKey) {
@@ -83,7 +95,7 @@ const useHeldFacts = <T>({ scope, traceId, span, isEnabled }: Params, run: Facts
     };
 
     void read();
-  }, [heldKey, scope, traceId, span, spanId, run, onFailure]);
+  }, [heldKey, scope, traceId, span, spanId, run, onFailure, onReadFailed]);
 
   return { facts, isLoading };
 };
@@ -133,13 +145,13 @@ const runMcp: FactsRunner<HopMcpFacts> = async (scope, traceId, span, request) =
     span.deployment,
   );
 
-  return (result?.response as HopMcpFacts) ?? FAILED_MCP;
+  return result;
 };
 
 const runEmbedding: FactsRunner<HopEmbeddingFacts> = async (scope, traceId, span, request) => {
   const result = await request(getConversationHopEmbedding, scope, traceId, span.core_span_id, span.request_time);
 
-  return (result?.response as HopEmbeddingFacts) ?? FAILED_EMBEDDING;
+  return result;
 };
 
 const runProtocol: FactsRunner<HopProtocolFacts> = async (scope, traceId, span, request) => {
@@ -152,7 +164,7 @@ const runProtocol: FactsRunner<HopProtocolFacts> = async (scope, traceId, span, 
     span.mcp_method ?? null,
   );
 
-  return (result?.response as HopProtocolFacts) ?? FAILED_PROTOCOL;
+  return result;
 };
 
 export const useHopMcpFacts = (params: Params) => useHeldFacts<HopMcpFacts>(params, runMcp, FAILED_MCP);

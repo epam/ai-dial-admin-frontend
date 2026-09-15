@@ -1985,6 +1985,21 @@ bodies would withdraw facts the caller is entitled to.
 nothing — three distinct facts, and rendering any two identically hides an outage behind an entitlement or an
 entitlement behind an empty result.
 
+**A failed read SHALL be reported by notification**, under *An Analytics read failure is reported by
+notification, in the service's own words*, carrying the service's own header, message and request id. A
+withheld body and a hop that recorded nothing are states of the record and SHALL stay stated in place, with
+no notification: neither is a failure this console suffered.
+
+**The panel SHALL keep a statement where the body would have been**, saying that this hop could not be
+read — distinct from the withheld statement and from the recorded-nothing one, as the rule above requires.
+That statement SHALL say only that: the cause, the service's message and the request id belong to the
+notification. Without it the panel goes blank on a failure and reads as a hop that recorded nothing, which
+is the confusion this requirement exists to prevent.
+
+**An error the log recorded for the hop is not a failed read.** A hop whose own error message was recorded
+in the usage log SHALL state that message in place as it does now, and SHALL raise no notification: those
+are words the service stored about the traced call, not a report about this console's own request.
+
 **A kind whose two halves are different shapes SHALL still state each half by its own grant, on the tab that
 reads that column.** An MCP hop's arguments are the request column and its result the response column, and an
 embedding hop's dimension count is its only response-column field. Where one column is granted and the other
@@ -2025,6 +2040,26 @@ hop.
 
 - **WHEN** a body is withheld, a read fails, and a hop recorded nothing
 - **THEN** each is stated differently from the other two
+
+#### Scenario: A failed hop body read notifies and states the failure in place
+
+- **WHEN** the hop body read fails for an opened hop
+- **THEN** an error notification reports the failure, carrying the service's message and request id
+- **AND** the panel states that this hop could not be read, distinctly from a withheld body and from a hop
+  that recorded nothing
+- **AND** dismissing the notification leaves that statement in the panel
+
+#### Scenario: A withheld body raises no notification
+
+- **WHEN** a body column is absent from the caller's schema and a hop is opened
+- **THEN** the withheld state is stated as it is now
+- **AND** no error notification is raised
+
+#### Scenario: An error recorded for the hop raises no notification
+
+- **WHEN** an opened hop carries an error message recorded in the usage log
+- **THEN** that message is stated in the panel
+- **AND** no error notification is raised for it
 
 #### Scenario: A half-granted MCP hop states which half was withheld
 

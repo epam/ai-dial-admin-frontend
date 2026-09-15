@@ -72,8 +72,8 @@ const EvaluatorPipelinesGrid: FC<Props> = ({ pipelines }) => {
 
   if (pipelines == null) {
     return (
-      <div role="status" className="text-error dial-small">
-        {t(AnalyticsEvaluatorsI18nKey.UsedByLoadFailed)}
+      <div role="status" className="text-secondary dial-small">
+        {t(AnalyticsEvaluatorsI18nKey.UsedByUnavailable)}
       </div>
     );
   }

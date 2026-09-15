@@ -11,15 +11,17 @@ import { useConversations } from '@/src/components/Analytics/ConversationsTrace/
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
 import { CONVERSATIONS_HEADER_STACK_HEIGHT } from '@/src/constants/analytics/conversations-trace';
 import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { ReadFailure } from '@/src/models/server-action';
 
 interface Props {
   schemaFields?: AnalyticsEntityField[] | null;
-  hasSchemaError?: boolean;
+  schemaFailure?: ReadFailure | null;
 }
 
-const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => {
+const ConversationsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
   const t = useI18n();
   const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
@@ -44,6 +46,8 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
   } = useConversations(schemaFields);
 
   const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
+
+  useReadFailureNotification(schemaFailure, ConversationsTraceI18nKey.SchemaLoadFailed);
 
   const emptyStateTitle = hasLoadError
     ? ConversationsTraceI18nKey.ConversationsLoadFailed
@@ -72,7 +76,6 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
         isFeedbackCapped={isFeedbackCapped}
-        hasSchemaError={hasSchemaError}
         onToggleColumnsPanel={onToggleColumnsPanel}
       />
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
