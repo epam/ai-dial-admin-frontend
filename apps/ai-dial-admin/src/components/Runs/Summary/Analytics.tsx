@@ -16,6 +16,8 @@ import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
 const NO_DATA_VALUE = '—';
+/** TODO: remove this flag and show cost cards again */
+const SHOW_COST_CARDS = false;
 
 interface Props {
   run: Run;
@@ -26,7 +28,11 @@ interface Props {
 const Analytics: FC<Props> = ({ run, overallScore }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
-  const { costs, isLoading: costsLoading, unavailable: costsUnavailable } = useRunCosts(run?.id);
+  const {
+    costs,
+    isLoading: costsLoading,
+    unavailable: costsUnavailable,
+  } = useRunCosts(SHOW_COST_CARDS ? run?.id : undefined);
 
   if (!data) {
     return (
@@ -86,22 +92,26 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgMetricEvalSeconds == null && !isRunIncomplete}
       />
-      <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
-        title={t(RunsI18nKey.TestCaseLlmCost)}
-        value={testCaseCostDisplay ?? NO_DATA_VALUE}
-        description={costDescription}
-        isLoading={costsLoading}
-        error={hasCostError}
-      />
-      <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
-        title={t(RunsI18nKey.MetricEvalCost)}
-        value={metricEvalCostDisplay ?? NO_DATA_VALUE}
-        description={costDescription}
-        isLoading={costsLoading}
-        error={hasCostError}
-      />
+      {SHOW_COST_CARDS && (
+        <>
+          <DialAnalyticsCard
+            className={ANALYTICS_KPI_CARD_CLASS}
+            title={t(RunsI18nKey.TestCaseLlmCost)}
+            value={testCaseCostDisplay ?? NO_DATA_VALUE}
+            description={costDescription}
+            isLoading={costsLoading}
+            error={hasCostError}
+          />
+          <DialAnalyticsCard
+            className={ANALYTICS_KPI_CARD_CLASS}
+            title={t(RunsI18nKey.MetricEvalCost)}
+            value={metricEvalCostDisplay ?? NO_DATA_VALUE}
+            description={costDescription}
+            isLoading={costsLoading}
+            error={hasCostError}
+          />
+        </>
+      )}
     </div>
   );
 };

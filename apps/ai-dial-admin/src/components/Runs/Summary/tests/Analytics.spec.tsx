@@ -143,7 +143,8 @@ describe('Runs Summary :: Analytics', () => {
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });
 
-  test('renders cost cards with dollar values', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders cost cards with dollar values', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -155,7 +156,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getAllByText('Runs.AvgPerTestCase').length).toBeGreaterThanOrEqual(2);
   });
 
-  test('renders em dash when a cost field is null', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders em dash when a cost field is null', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -165,7 +167,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getByText('$0')).toBeInTheDocument();
   });
 
-  test('shows Cost data unavailable without dropping other KPI cards', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows Cost data unavailable without dropping other KPI cards', async () => {
     mockQueries();
     mockCosts(null);
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -184,7 +187,8 @@ describe('Runs Summary :: Analytics', () => {
     }
   });
 
-  test('shows loading on cost cards while costs resolve after analytics', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows loading on cost cards while costs resolve after analytics', async () => {
     mockQueries();
     let resolveCosts: (value: { avgTestCaseCost: number; avgMetricEvalCost: number }) => void = () => undefined;
     getRunCostsMock.mockReturnValue(
