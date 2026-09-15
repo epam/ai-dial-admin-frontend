@@ -2827,7 +2827,6 @@ export enum AnalyticsPipelinesI18nKey {
   VarTransform = 'AnalyticsPipelines.VarTransform',
   VarBinding = 'AnalyticsPipelines.VarBinding',
   VarValue = 'AnalyticsPipelines.VarValue',
-  OutputsDerivedNote = 'AnalyticsPipelines.OutputsDerivedNote',
   AddVariable = 'AnalyticsPipelines.AddVariable',
   VariablesEmpty = 'AnalyticsPipelines.VariablesEmpty',
   PlaceholdersTitle = 'AnalyticsPipelines.PlaceholdersTitle',

@@ -1680,7 +1680,7 @@ rather than from the projection.
 - **THEN** the request carries the compiled view
 - **AND** the grain key and version column are presented from it
 
-### Requirement: An enrichment pipeline's evaluator inputs are authored as variables
+### Requirement: An enrichment pipeline declares its evaluator's inputs and nothing else
 
 An enrichment pipeline declares what its evaluator receives as **variables**: a set of names, each
 bound either to a column of the read source or to a jsonata expression over it. The console SHALL
@@ -1690,11 +1690,10 @@ service refuses a variable declaring both, and the unselected member SHALL be ke
 out of the request rather than erased.
 
 Where the model's answer lands is derived by the service from the evaluator's outputs matched to the
-target's columns, and is not a member of the request. The console SHALL NOT offer an **editor** for it,
-and SHALL present it as **further rows of the same list, disabled** — the same three cells, numbered
-after the variables — so one list states everything that passes between the pipeline and its evaluator.
-A derived output also carries the transform that reads it out of the response; that has no cell here,
-and stays readable in the JSON editor.
+target's columns, and is not a member of the request. The console SHALL NOT present it in the form at
+all — neither as an editor nor as disabled rows. The section is what the operator declares, and a
+derived member shown among declared ones reads as something they chose and may change. It remains
+readable in the JSON editor, which presents the pipeline whole.
 
 Variables belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
 
@@ -1711,11 +1710,11 @@ A row carrying no name or no value SHALL be omitted from the request rather than
 - **THEN** its evaluator inputs are presented as rows of a name, a binding selection and one value field
 - **AND** the field presented is the one the selection names, and no other
 
-#### Scenario: The derived outputs read as further rows of the same list
+#### Scenario: The derived outputs are not presented in the form
 
 - **WHEN** an enrichment pipeline whose evaluator has resolved is opened
-- **THEN** each derived output is presented as a disabled row of that list, bound to its target column
-- **AND** no editor for the output mapping is offered
+- **THEN** the variables section presents only the declared variables
+- **AND** the derived outputs are readable in the JSON editor instead
 
 #### Scenario: A sql evaluator is offered no variables at all
 

@@ -2761,8 +2761,6 @@ export default {
     VarTransform: 'Transform (JSONata)',
     VarBinding: 'Bound to',
     VarValue: 'Value',
-    OutputsDerivedNote:
-      "The disabled rows are where the evaluator's answer lands: derived from its outputs and the target's columns, so they are read here and never sent.",
     AddVariable: '+ Variable',
     VariablesEmpty: 'No variables declared.',
     PlaceholdersTitle: 'Template placeholders',
