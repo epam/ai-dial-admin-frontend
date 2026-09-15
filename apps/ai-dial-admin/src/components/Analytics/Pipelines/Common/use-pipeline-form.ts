@@ -122,6 +122,8 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
     isMemberSelectValid,
     isTargetResolved,
     hasReadyWhen,
+    // Derived by the service and never edited, so it is read from the stored pipeline rather than the draft.
+    outputs: pipeline?.outputs,
     ...resolution,
   };
 };

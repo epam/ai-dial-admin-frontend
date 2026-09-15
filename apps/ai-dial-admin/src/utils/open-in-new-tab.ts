@@ -11,8 +11,8 @@ export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
 };
 
-export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown) => {
-  const url = getUrnForEntity(route, entity);
+export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, urlSuffix?: string) => {
+  const url = `${getUrnForEntity(route, entity)}${urlSuffix ?? ''}`;
   window.open(url, '_blank');
 };
 

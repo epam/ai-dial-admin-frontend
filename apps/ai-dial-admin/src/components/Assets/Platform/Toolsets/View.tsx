@@ -39,6 +39,8 @@ interface Props {
   roles: DialRole[];
   /** i18n keys for non-fatal problems from the server-side role-population read, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalToolset` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 /**
@@ -52,13 +54,27 @@ interface Props {
  * selector, no publish, no move) and which server actions get called differ here — mirrors
  * `Assets/Platform/Applications/View.tsx`.
  */
-const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, roles, optionWarnings }) => {
+const PlatformToolsetView: FC<Props> = ({
+  etag,
+  oAuthCode,
+  originalToolset,
+  roles,
+  optionWarnings,
+  isConfigFileSource,
+}) => {
   const t = useI18n();
   const router = useRouter();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing role reads as deleted. Mirrors

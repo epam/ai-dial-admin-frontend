@@ -75,15 +75,11 @@ beforeEach(() => {
 });
 
 describe('PipelineDetailView — the typed document reaches the request', () => {
-  test('the document is the request: no members the service assigns', async () => {
+  test('the document is the pipeline as served, resolved members and all', async () => {
     const user = userEvent.setup();
     await openEditor(user);
 
-    const document = documentOf();
-    expect(document).toMatchObject({ name: rule.name, filter: rule.filter });
-    expect(document).not.toHaveProperty('id');
-    expect(document).not.toHaveProperty('generation');
-    expect(document).not.toHaveProperty('grain_key');
+    expect(documentOf()).toEqual(rule);
   });
 
   test('changing a member the fields do not present reaches the request', async () => {

@@ -45,6 +45,8 @@ interface Props {
   translators?: ResourceInfo[];
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalApp` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 /**
@@ -86,13 +88,21 @@ const PlatformApplicationView: FC<Props> = ({
   globalInterceptors,
   translators,
   optionWarnings,
+  isConfigFileSource,
 }) => {
   const t = useI18n();
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector } = useAppContext();
+  const { visualizerConnector, setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);

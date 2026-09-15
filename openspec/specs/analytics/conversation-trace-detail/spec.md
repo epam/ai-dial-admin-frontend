@@ -150,8 +150,11 @@ SHALL treat both as first-class — for the Response tab's assembled statement a
 its Chat tab alike.
 
 **Preferred source — `assembled_response`.** Where the producer persists it, this column holds the merged
-response message: a single JSON object whose first choice's message content is the readable answer, already
-reassembled from whatever streaming the call used. Reading it avoids reassembling a chunk transcript.
+response message: a single JSON object carrying the readable answer in whatever shape the hop's dialect states
+it, already reassembled from whatever streaming the call used. Reading it avoids reassembling a chunk
+transcript. **The shape SHALL be read through the hop's dialect, never assumed** — the column is one column
+for every dialect, and reading it as chat completions alone reports an empty answer for a response that is
+recorded whole.
 
 **Guaranteed fallback — `response_body`.** The assembled column is not always populated. It is null for every
 row ingested before the producer began writing it, and hop rows live for a year, so a recently upgraded
@@ -159,12 +162,19 @@ instance carries up to a year of spans for which the raw body is the **only** so
 minority of rows, current ones included, also store a value that is not JSON. The fallback is therefore an
 ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
 
-The fallback SHALL decode `response_body` in whichever of three formats it is written:
+The fallback SHALL decode `response_body` in whichever of four formats it is written:
 
 - a stream of OpenAI server-sent-event chunks — the concatenation of the streamed content deltas in arrival
   order;
 - a single JSON object — the first choice's message content;
-- JSON-RPC over server-sent events, for an `mcp` hop — the concatenation of the result's content parts.
+- JSON-RPC over server-sent events, for an `mcp` hop — the concatenation of the result's content parts;
+- the messages dialect's own two forms — a merged message whose typed content blocks carry the answer, and a
+  stream of block-delta frames whose text fragments concatenate into it in arrival order.
+
+**The assembled column stores a frame transcript often enough to be an ordinary case, not a defect.** Roughly
+one recorded response in twelve holds the transcript rather than the merged message, concentrated in the `mcp`
+and messages-dialect traffic. A decoder that assumes the column is always merged therefore fails on real
+current rows, and the same format detection the fallback performs SHALL serve the assembled column too.
 
 The format SHALL be determined from the body itself, not from a recorded flag. The hop log carries **no**
 streaming column; whether a call streamed is stated inside the request body, and a request body that is
@@ -176,8 +186,10 @@ cases are indistinguishable to a reader and SHALL be indistinguishable in behavi
 as unavailable while a decodable raw body for it exists.
 
 Where neither source yields text, the response SHALL state its own read state and the Chat tab SHALL add no
-trailing turn. Neither MUST yield the raw body, a partial fragment, or a fabricated substitute: a malformed
-body is an unknown message, and rendering bytes at the reader would present transport detail as conversation.
+trailing turn — **except on a hop the log records as failed**, whose recorded error the Chat tab states under
+its own requirement. Neither MUST yield the raw body, a partial fragment, or a fabricated substitute: a
+malformed body is an unknown message, and rendering bytes at the reader would present transport detail as
+conversation.
 
 A response whose decoded content is empty, or which carries no content key at all, SHALL NOT be treated as an
 empty step. Its output is in the response's tool calls, whose names exist **only** in a response body — the
@@ -186,8 +198,26 @@ hop log carries no column for them.
 #### Scenario: The assembled response is preferred where present
 
 - **WHEN** a span's assembled response is present and parseable
-- **THEN** the assistant text is its first choice's message content
+- **THEN** the assistant text is read from it in the shape the hop's dialect states
 - **AND** the raw response body is not decoded for that span
+
+#### Scenario: A merged messages-dialect response is read from its content blocks
+
+- **WHEN** a messages-dialect hop's assembled response is a merged message carrying typed content blocks
+- **THEN** the assistant text is the concatenation of its text blocks
+- **AND** its tool-use blocks are stated as the calls the response asked for
+
+#### Scenario: A streamed messages-dialect response is reassembled from its frames
+
+- **WHEN** a messages-dialect response is recorded as a stream of block-delta frames
+- **THEN** the assistant text is the concatenation of their text fragments in arrival order
+- **AND** the span does not render as having recorded nothing
+
+#### Scenario: A frame transcript in the assembled column is decoded, not rejected
+
+- **WHEN** a span's assembled response holds a frame transcript rather than a merged message
+- **THEN** it is decoded by the same format detection the raw fallback uses
+- **AND** the span does not render as unavailable
 
 #### Scenario: A null assembled response falls back to the raw body
 
@@ -223,7 +253,7 @@ hop log carries no column for them.
 
 #### Scenario: Neither source yields a placeholder, not raw bytes
 
-- **WHEN** the assembled response is unusable and the raw body cannot be parsed in any of the three formats
+- **WHEN** a hop that did not fail has an unusable assembled response and a raw body that parses in none of the four formats
 - **THEN** the Response tab states its read-state placeholder and the Chat tab adds no trailing turn
 - **AND** no part of either raw value is rendered
 
@@ -1531,6 +1561,19 @@ system message, its `text` and `tool_result` blocks as the message's text, and i
 calls — so every dialect normalises into one shape and a reader never has to know which one they are looking
 at.
 
+**The mapping SHALL govern the response as well as the request.** A dialect whose request is parsed and whose
+response is not is the worst of both: the hop opens, its history renders, and its answer is reported as
+absent while sitting in the recorded body one tab away. The messages dialect's response SHALL therefore be
+decoded by that dialect's own decoder — its merged form is a top-level message whose `content[]` blocks carry
+the answer and its `tool_use` blocks the calls, and its streamed form carries them as `content_block_delta`
+frames with tool arguments arriving as `input_json_delta` fragments to be concatenated per block.
+
+**That dialect states its finish reason and its cache usage under its own keys**, `stop_reason` at the top of
+the merged message — or of the `message_delta` frame that reports it — rather than `choices[0].finish_reason`,
+and `cache_read_input_tokens` directly in `usage` rather than under a `*_tokens_details` member. Both SHALL be
+read under the keys the dialect spells: a fact read under one dialect's spelling alone is silently absent for
+every hop of the other, which is indistinguishable from a call that reported none.
+
 **Only chat completions carries its system prompt inside the message list; the other two carry it outside.**
 Chat completions states it as a `system`-role message, the messages dialect as a top-level `system`, and the
 Responses dialect as a top-level `instructions` (393 of 472 sampled hops). **A parser SHALL therefore never
@@ -1582,6 +1625,24 @@ message list.
 
 - **WHEN** a request carries its system prompt as a top-level field rather than as a message
 - **THEN** the Request tab states it as a system message
+
+#### Scenario: The messages dialect's response is decoded by its own decoder
+
+- **WHEN** a hop's endpoint marks the messages dialect and its response is recorded in that dialect's shape
+- **THEN** the answer is decoded from that shape
+- **AND** it is not decoded as a first choice's message
+
+#### Scenario: The messages dialect's finish reason is read under its own key
+
+- **WHEN** a messages-dialect response states `stop_reason`
+- **THEN** the response's facts state that finish reason
+- **AND** the absence of a chat-completions finish reason does not leave it unstated
+
+#### Scenario: The messages dialect's cached prompt tokens are read under its own key
+
+- **WHEN** a messages-dialect response reports its cache-read count directly in its usage
+- **THEN** the response's facts state the cached prompt tokens
+- **AND** the count is not reported as absent for want of a details member
 
 #### Scenario: A quoted role string does not become a message
 
@@ -1978,3 +2039,57 @@ hop.
 - **AND** an embedding hop is opened
 - **THEN** the probe text renders on the Request tab
 - **AND** the Response tab states the dimension count as withheld rather than as absent
+
+### Requirement: A failed hop states the error it recorded, in its conversation
+
+A hop the log records as failed answered its caller with an error payload, and that payload is the one thing a
+reader opens a failed hop to see. The Chat tab SHALL state it, in place of the trailing answer the hop never
+produced.
+
+**It SHALL be marked as a failure, never dressed as an assistant turn.** The hop said nothing; something
+refused it. Rendering an error in the bubble that states what the model replied would report a refusal as
+speech, and a reader scanning a trace for where it broke would read past it.
+
+**A structured error SHALL be stated by its message.** Both error shapes the log records carry one — a
+JSON-RPC error object states it under `error.message`, and a dialect's error object under its own `message`
+member — and stating the whole object instead buries one readable sentence in envelope fields the reader did
+not ask for. A recorded error that is a bare string is already that sentence and SHALL be stated as recorded.
+
+**An error that parses as neither SHALL NOT be rendered as text.** The tab SHALL say the hop failed and send
+the reader to the recorded bytes, under the same treatment every other statement of nothing-to-show uses. The
+bytes remain one switch away on the facts line, so the unreadable case costs a click rather than an answer.
+
+**The statement SHALL be gated by the same column grant the answer is.** A reader not shown response bodies is
+not shown an error read out of one, and the tab SHALL state that it is withheld exactly as it does for an
+answer.
+
+**The failure SHALL be announced, not only coloured.** An error surfacing where an answer was expected is a
+state change with no persistent visible confirmation elsewhere on the tab.
+
+#### Scenario: A failed hop states its recorded error message
+
+- **WHEN** a hop recorded as failed carries a structured error in its recorded body
+- **THEN** the Chat tab states that error's message after the conversation
+- **AND** it is marked as a failure rather than as an assistant turn
+
+#### Scenario: A bare-string error is stated as recorded
+
+- **WHEN** a failed hop's recorded error is a plain string rather than an object
+- **THEN** the Chat tab states that string
+
+#### Scenario: An unreadable error is not rendered as text
+
+- **WHEN** a failed hop's recorded body parses as no error shape
+- **THEN** the Chat tab states that the hop failed
+- **AND** it offers no fragment of the recorded body in place of the message
+
+#### Scenario: A withheld response column withholds the error too
+
+- **WHEN** a failed hop's response body column is not granted to the reader
+- **THEN** the Chat tab states that the answer is withheld
+- **AND** no error is read from that column
+
+#### Scenario: A successful hop with no answer adds no failure statement
+
+- **WHEN** a hop that succeeded yielded no assistant text
+- **THEN** the Chat tab adds no trailing turn and no failure statement

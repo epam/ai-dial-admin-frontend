@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { FreshnessMode, Pipeline, PipelineKind, PipelinePriority, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, SourceMode } from '@/src/models/analytics/pipeline-ui';
 import {
   buildPipelineDto,
@@ -21,6 +21,7 @@ const pipeline: Pipeline = {
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',
+  outputs: [{ name: 'rating', column: 'rating' }],
   generation: 3,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
@@ -34,8 +35,12 @@ describe('Utils :: analytics :: toPipelineDraft', () => {
     getReadOnlyMembers().forEach((key) => expect(draft).not.toHaveProperty(key));
   });
 
+  test('drops the derived output mapping the compiled projection carries', () => {
+    expect(toPipelineDraft(pipeline)).not.toHaveProperty('outputs');
+  });
+
   test('keeps a member no control presents', () => {
-    expect(toPipelineDraft({ ...pipeline, cadence: '60s' }).cadence).toBe('60s');
+    expect(toPipelineDraft({ ...pipeline, filter: 'success = true' }).filter).toBe('success = true');
   });
 
   test('does not mutate the pipeline it was given', () => {
@@ -85,13 +90,19 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
   });
 
   test('drops an empty array rather than sending it', () => {
-    expect(buildPipelineDto({ ...draft, output_bindings: [], input_bindings: [] })).not.toHaveProperty(
-      'output_bindings',
-    );
+    expect(buildPipelineDto({ ...draft, inputs: [] })).not.toHaveProperty('inputs');
+  });
+
+  test('drops an emptied variables map rather than sending it', () => {
+    expect(buildPipelineDto({ ...draft, vars: {} })).not.toHaveProperty('vars');
+  });
+
+  test('drops an emptied advanced block, which means the runner defaults', () => {
+    expect(buildPipelineDto({ ...draft, advanced: {} })).not.toHaveProperty('advanced');
   });
 
   test('keeps a knob deliberately set to zero', () => {
-    expect(buildPipelineDto({ ...draft, batch_chunk: 0 }).batch_chunk).toBe(0);
+    expect(buildPipelineDto({ ...draft, advanced: { rows_per_call: 0 } }).advanced?.rows_per_call).toBe(0);
   });
 
   test('keeps enabled false', () => {
@@ -194,10 +205,9 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       ...toPipelineDraft(pipeline),
       group_by: [{ column: 'chat_id' }],
       measures: [{ name: 'n', fn: 'count' }],
-      freshness: { mode: FreshnessMode.Periodic },
     }) as Record<string, unknown>;
 
-    ['group_by', 'measures', 'freshness'].forEach((key) => expect(dto).not.toHaveProperty(key));
+    ['group_by', 'measures'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 
   test('an aggregate declaration sends no enrichment member', () => {
@@ -209,13 +219,10 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
       evaluator_name: 'feedback-rollup',
       evaluator_version: 2,
-      output_bindings: [{ column: 'a', var: 'a' }],
-      cadence: '60s',
-      priority: PipelinePriority.Live,
+      vars: { request: { column: 'request_body' } },
+      advanced: { scan_every: '60s' },
     }) as Record<string, unknown>;
 
-    ['evaluator_name', 'evaluator_version', 'output_bindings', 'cadence', 'priority'].forEach((key) =>
-      expect(dto).not.toHaveProperty(key),
-    );
+    ['evaluator_name', 'evaluator_version', 'vars', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -88,6 +88,7 @@ const response = (overrides: Partial<HopResponseEnvelope> = {}): HopResponseEnve
   reasoningText: null,
   finishReason: 'stop',
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: 50,
   ...overrides,
@@ -104,6 +105,7 @@ const renderPanel = (props: Partial<Parameters<typeof HopChatPanel>[0]> = {}) =>
       response={response()}
       isResponseLoading={false}
       isResponseGranted
+      hasFailed={false}
       {...props}
     />,
   );
@@ -266,5 +268,73 @@ describe('HopChatPanel', () => {
     renderPanel();
 
     expect(getConversationHopMessage).not.toHaveBeenCalled();
+  });
+  // The one question a reader opens a failed hop to ask, answered by an empty panel until now.
+  test('states a failed hop’s recorded error in place of an answer', () => {
+    renderPanel({
+      hasFailed: true,
+      response: response({
+        text: null,
+        state: HopReadState.Unstructured,
+        errorText: 'Bad Request: Missing session ID',
+      }),
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Bad Request: Missing session ID');
+  });
+
+  test('states a failure as an alert rather than as an assistant turn', () => {
+    renderPanel({
+      hasFailed: true,
+      response: response({ text: null, state: HopReadState.Unstructured, errorText: 'upstream refused' }),
+    });
+
+    const conversation = screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorChatLabel });
+
+    expect(within(conversation).queryByText('the final answer')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: turn(MessageRole.Assistant) })).not.toBeInTheDocument();
+  });
+
+  test('sends the reader to the recorded bytes when the error is not readable', () => {
+    renderPanel({
+      hasFailed: true,
+      response: response({ text: null, state: HopReadState.Unstructured, errorText: null }),
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(ConversationsTraceI18nKey.InspectorChatHopFailed);
+  });
+
+  test('withholds the error with the column it was read from', () => {
+    renderPanel({
+      hasFailed: true,
+      isResponseGranted: false,
+      response: response({ text: null, state: HopReadState.Unstructured, errorText: 'refused' }),
+    });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.InspectorChatAnswerWithheld)).toBeInTheDocument();
+  });
+
+  test('announces no failure while the response read is still outstanding', () => {
+    renderPanel({ hasFailed: true, isResponseLoading: true, response: null });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('adds no failure statement to a hop that succeeded', () => {
+    renderPanel({ response: response({ text: null, state: HopReadState.NoBody }) });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+  // A hop is recorded as failed on `success: false` as well as on a 4xx, and a 200 that reported failure can
+  // still carry a readable answer. Replacing it with "go read the bytes" would withhold what the reader came
+  // for, so the answer stands and no failure note is added.
+  test('keeps the answer of a failed hop that still answered', () => {
+    renderPanel({ hasFailed: true, response: response({ text: 'the final answer', errorText: null }) });
+
+    const conversation = screen.getByRole('group', { name: ConversationsTraceI18nKey.InspectorChatLabel });
+
+    expect(within(conversation).getByText('the final answer')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

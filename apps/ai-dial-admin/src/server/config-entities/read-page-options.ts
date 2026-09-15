@@ -21,8 +21,9 @@ export async function readConfigEntities<T>(
   token: Token,
   type: ConfigFileEntityType,
   warnings: EntitiesI18nKey[],
+  showOnlyConfigFiles = false,
 ): Promise<T[]> {
-  const result = await getConfigEntityOptions(token, type);
+  const result = await getConfigEntityOptions(token, type, showOnlyConfigFiles);
 
   if (!result.success) {
     errorLog(`Failed to read ${type} options from Core: ${result.failure.reason} ${result.failure.errorMessage ?? ''}`);

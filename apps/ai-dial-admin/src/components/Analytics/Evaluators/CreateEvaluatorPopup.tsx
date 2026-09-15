@@ -6,20 +6,18 @@ import {
   DialFormPopup,
   DialInput,
   DialRadioGroup,
-  DialSelectField,
   PopupSize,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
 import { createEvaluator } from '@/src/app/[lang]/evaluators/actions';
-import EvaluatorVarsEditor from '@/src/components/Analytics/Evaluators/EvaluatorVarsEditor';
+import OutputsEditor from '@/src/components/Analytics/Evaluators/OutputsEditor';
 import { useCreateEvaluatorForm } from '@/src/components/Analytics/Evaluators/use-create-evaluator-form';
-import { withStrandedOption } from '@/src/components/Analytics/Evaluators/utils';
 import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { EvaluatorPreset, EvaluatorType } from '@/src/models/analytics/evaluator';
+import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { getEvaluatorCreatedMessage } from '@/src/utils/analytics/evaluator-created-message';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
@@ -28,8 +26,6 @@ interface Props {
   onClose: () => void;
   onCreated: () => void;
 }
-
-const presetOptions = [{ value: EvaluatorPreset.ChatCompletion, label: EvaluatorPreset.ChatCompletion }];
 
 const CreateEvaluatorPopup: FC<Props> = ({ existingNames, onClose, onCreated }) => {
   const t = useI18n();
@@ -43,7 +39,6 @@ const CreateEvaluatorPopup: FC<Props> = ({ existingNames, onClose, onCreated }) 
   // Keyed on sql rather than on llm, as EvaluatorProperties is, so a type the service adds later
   // degrades to offering what it can instead of offering nothing.
   const isSql = draft.type === EvaluatorType.Sql;
-  const outputVars = draft.output_vars ?? [];
 
   const typeRadios: RadioButtonWithContent[] = [
     { id: EvaluatorType.Llm, name: t(AnalyticsEvaluatorsI18nKey.EvaluatorTypeLlm) },
@@ -104,36 +99,22 @@ const CreateEvaluatorPopup: FC<Props> = ({ existingNames, onClose, onCreated }) 
         />
 
         {!isSql && (
-          <>
-            <DialSelectField
-              id="create-evaluator-preset"
-              label={t(AnalyticsEvaluatorsI18nKey.Preset)}
-              required
-              options={withStrandedOption(presetOptions, draft.preset)}
-              value={draft.preset ?? ''}
-              onChange={(value) => onChange({ preset: value as EvaluatorPreset })}
-            />
-
-            <DialInput
-              id="create-evaluator-model"
-              labelProps={{ label: t(AnalyticsEvaluatorsI18nKey.Model), required: true }}
-              value={draft.model ?? ''}
-              onChange={(v) => onChange({ model: v ?? '' })}
-            />
-          </>
+          <DialInput
+            id="create-evaluator-model"
+            labelProps={{ label: t(AnalyticsEvaluatorsI18nKey.Model), required: true }}
+            value={draft.model ?? ''}
+            onChange={(v) => onChange({ model: v ?? '' })}
+          />
         )}
 
         <section aria-label={t(AnalyticsEvaluatorsI18nKey.SectionOutputVars)} className="flex flex-col gap-2">
           <h2 className="text-primary dial-small">{t(AnalyticsEvaluatorsI18nKey.SectionOutputVars)}</h2>
-          <EvaluatorVarsEditor
-            id="create-evaluator-output-var"
-            title={t(AnalyticsEvaluatorsI18nKey.SectionOutputVars)}
-            vars={outputVars}
-            hasExpression
-            // Required on the shared editor's Props, but this modal has nothing to say while the list
-            // is empty: submit stays disabled and that is the whole feedback (design.md §11.2, §11.3).
-            emptyText=""
-            onChange={(output_vars) => onChange({ output_vars })}
+          {/* No empty state: while the list is empty the disabled submit is the whole feedback. */}
+          <OutputsEditor
+            outputs={draft.outputs}
+            type={draft.type}
+            hasRefinement={false}
+            onChange={(outputs) => onChange({ outputs })}
           />
         </section>
       </div>

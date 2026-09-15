@@ -7,6 +7,7 @@ import { removeRole, updateRole } from '@/src/app/[lang]/platform-roles/actions'
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -22,15 +23,25 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalRole: DialRoleResource;
+  /** True when `originalRole` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const RoleAssetView: FC<Props> = ({ etag, originalRole }) => {
+const RoleAssetView: FC<Props> = ({ etag, originalRole, isConfigFileSource }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformRoles);
   const router = useRouter();
   const { fetchFiles } = useRolesFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+  const { setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(structuredClone(originalRole));
@@ -43,8 +54,11 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole }) => {
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   useEffect(() => {

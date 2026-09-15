@@ -18,8 +18,13 @@ export const navigateEntityUrl = (url: string, push: (url: string) => void, even
   push(url);
 };
 
-export const onCellClicked = (e: CellClickedEvent, route: ApplicationRoute, push: (url: string) => void): void => {
+export const onCellClicked = (
+  e: CellClickedEvent,
+  route: ApplicationRoute,
+  push: (url: string) => void,
+  urlSuffix?: string,
+): void => {
   if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) return;
   const event = e.event as MouseEvent | undefined;
-  navigateEntityUrl(getUrnForEntity(route, e.data), push, event);
+  navigateEntityUrl(`${getUrnForEntity(route, e.data)}${urlSuffix ?? ''}`, push, event);
 };

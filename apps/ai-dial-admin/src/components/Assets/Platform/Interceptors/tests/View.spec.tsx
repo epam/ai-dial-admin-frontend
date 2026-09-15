@@ -12,17 +12,26 @@ vi.mock('@/src/app/[lang]/platform-interceptors/actions', () => ({
   getInterceptors: vi.fn().mockResolvedValue([]),
 }));
 
+let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ onSave }: any) => (
-    <button type="button" onClick={onSave}>
-      save
-    </button>
-  ),
+  default: ({ onSave, jsonConfiguration }: any) => {
+    capturedJsonConfiguration = jsonConfiguration;
+    return (
+      <button type="button" onClick={onSave}>
+        save
+      </button>
+    );
+  },
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly }),
+}));
 
 const interceptor = (overrides: Partial<DialInterceptorResource> = {}): DialInterceptorResource =>
   ({
@@ -54,5 +63,24 @@ describe('InterceptorAssetView', () => {
     render(<InterceptorAssetView etag="etag" originalInterceptor={interceptor()} />);
 
     expect(screen.getByText('tabs-content')).toBeInTheDocument();
+  });
+
+  test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
+    const { unmount } = render(
+      <InterceptorAssetView etag="etag" originalInterceptor={interceptor()} isConfigFileSource />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed interceptor', () => {
+    render(<InterceptorAssetView etag="etag" originalInterceptor={interceptor()} />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });
 });

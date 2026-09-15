@@ -33,6 +33,7 @@ const FAILED_RESPONSE: HopResponseEnvelope = {
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: null,
 };

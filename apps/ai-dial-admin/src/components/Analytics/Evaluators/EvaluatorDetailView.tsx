@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -27,7 +27,8 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
-import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { toEvaluatorDraft } from '@/src/utils/analytics/evaluator-dto';
 import { PipelineListItem } from '@/src/models/analytics/pipeline';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getEvaluatorTabs } from '@/src/utils/tabs/utils';
@@ -52,6 +53,10 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
   const [isSaving, setIsSaving] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  // Seeded from the version as served rather than from the form's draft: the draft normalizes a version
+  // stored before `outputs` into the current shape, which the document would then report as what is
+  // stored. What may be sent back is decided on save, by `buildDto`.
+  const [documentSeed, setDocumentSeed] = useState<CreateEvaluatorDto | null>(null);
 
   const nameRegisteredAt = useLocalDateTimeString(summary?.created_at);
   const versionRegisteredAt = useLocalDateTimeString(evaluator.created_at);
@@ -68,6 +73,21 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
   // form would keep the previous version's values while the rest of the page showed the new one.
   const { reset } = form;
   useEffect(() => reset(), [reset]);
+
+  // A version stored before `outputs` is edited in the shape it was written in, so what comes back out of
+  // the editor is normalized the same way a read is — otherwise a document carrying only `output_vars`
+  // would assemble a request with no outputs at all, which the service refuses.
+  const onEditedDocument = useCallback(
+    (next: SetStateAction<CreateEvaluatorDto>) =>
+      form.replaceDraft((prev) => toEvaluatorDraft((typeof next === 'function' ? next(prev) : next) as Evaluator)),
+    [form],
+  );
+
+  // The document follows the version on screen. Only while the editor is open: seeding it before that
+  // would make the toggle show a version the page has since navigated away from.
+  useEffect(() => {
+    setDocumentSeed((seed) => (seed ? evaluator : seed));
+  }, [evaluator]);
 
   const onSave = useCallback(async () => {
     if ((shouldCheckShape && !form.isValid) || isSaving) return;
@@ -105,14 +125,19 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
     setIsConfirmOpen(true);
   }, [isEditorEnabled, jsonErrors, showNotification, t, dispatch]);
 
-  const onToggleEditor = useCallback(() => setIsEditorEnabled((prev) => !prev), []);
+  const onToggleEditor = useCallback(() => {
+    // Entering the editor is barred while anything is unsaved, so the stored version is also the draft.
+    if (!isEditorEnabled) setDocumentSeed(evaluator);
+    setIsEditorEnabled((prev) => !prev);
+  }, [isEditorEnabled, evaluator]);
 
   // The dispatch has to precede the reset, as in SimpleButtonsWrapper: `EntityJsonEditor` keeps its editor
   // id across the remount, so a stale marker would otherwise hold the change bar up on its own.
   const onDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
     form.reset();
-  }, [dispatch, form]);
+    setDocumentSeed(evaluator);
+  }, [dispatch, evaluator, form]);
 
   const tabContent =
     activeTab === EntityViewTab.Properties ? (
@@ -212,8 +237,8 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
       <div className="flex-1 overflow-auto min-h-0 flex flex-col">
         {isEditorEnabled ? (
           <EntityJsonEditor
-            entity={form.draft}
-            setSelectedEntity={form.replaceDraft}
+            entity={documentSeed}
+            setSelectedEntity={onEditedDocument}
             ignoredFields={EVALUATOR_IGNORED_FIELDS}
             readonly={isDisabled}
           />

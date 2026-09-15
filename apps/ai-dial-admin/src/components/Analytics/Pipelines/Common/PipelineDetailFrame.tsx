@@ -16,7 +16,6 @@ import { updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineReadOnlyFacts from '@/src/components/Analytics/Pipelines/Common/PipelineReadOnlyFacts';
-import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
@@ -29,6 +28,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
 import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -43,6 +43,11 @@ interface Props {
   children: ReactNode;
 }
 
+// A predicate naming a sensitive column fails with 403 rather than the 422 a bad expression gets, and the
+// two have different remedies — so the heading says which happened instead of reading as a rejected
+// expression.
+const FORBIDDEN = 403;
+
 const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const t = useI18n();
   const router = useRouter();
@@ -55,7 +60,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglePromptOpen, setIsTogglePromptOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [documentSeed, setDocumentSeed] = useState<PipelineDraft | null>(null);
+  const [documentSeed, setDocumentSeed] = useState<Pipeline | PipelineDraft | null>(null);
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
 
   const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
@@ -81,24 +86,36 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
   const isChangeBarShown = isFullAdmin && (isChanged || hasJsonErrors);
 
+  // The document is what the service holds, not what a save would send: every member of the response is
+  // shown, the resolved ones included. What may be sent back is decided on save, by `buildDto`, which
+  // drops the read-only members — so nothing here is hidden to keep a request valid.
   useEffect(() => {
     reset(pipeline);
-    setDocumentSeed((seed) => (seed ? storedDocument : seed));
-  }, [pipeline, reset, storedDocument]);
+    setDocumentSeed((seed) => (seed ? pipeline : seed));
+  }, [pipeline, reset]);
 
   const onDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
     reset(pipeline);
-    setDocumentSeed(storedDocument);
-  }, [dispatch, pipeline, reset, storedDocument]);
+    setDocumentSeed(pipeline);
+  }, [dispatch, pipeline, reset]);
 
   const onToggleEditor = useCallback(() => {
-    if (!isEditorEnabled) setDocumentSeed(draftDocument);
+    // Entering the editor is barred while anything is unsaved, so the stored object is also the draft.
+    if (!isEditorEnabled) setDocumentSeed(pipeline);
     // The strip is withdrawn with the rest of the body while the document is on screen, so leaving
     // the editor has to bring it back on Properties rather than on whatever was selected before.
     setActiveTab(EntityViewTab.Properties);
     setIsEditorEnabled((prev) => !prev);
-  }, [isEditorEnabled, draftDocument]);
+  }, [isEditorEnabled, pipeline]);
+
+  const saveFailureHeader = useCallback(
+    (res: ServerActionResponse) =>
+      res.status === FORBIDDEN
+        ? t(AnalyticsPipelinesI18nKey.SaveForbidden)
+        : (res.errorHeader ?? t(AnalyticsPipelinesI18nKey.SaveFailed)),
+    [t],
+  );
 
   const onSave = useCallback(async () => {
     if ((shouldCheckFields && !form.isValid) || isGroupKeyMissing || isSaving) return;
@@ -113,9 +130,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
       return;
     }
 
-    showNotification(
-      getErrorNotification(res.errorHeader || t(AnalyticsPipelinesI18nKey.SaveFailed), res.errorMessage, res.requestId),
-    );
+    showNotification(getErrorNotification(saveFailureHeader(res), res.errorMessage, res.requestId));
   }, [
     shouldCheckFields,
     form.isValid,
@@ -123,6 +138,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     isSaving,
     pipeline.name,
     buildDto,
+    saveFailureHeader,
     showNotification,
     t,
     router,
@@ -141,7 +157,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const onToggleEnabled = useCallback(async () => {
     setIsTogglePromptOpen(false);
     setIsSaving(true);
-    const res = await updatePipeline(pipeline.name, { ...storedDocument, enabled: !pipeline.enabled });
+    // Only the flag: a body carrying any declaration member re-declares the pipeline, which a running
+    // aggregate one answers 409 for, and re-validates and bumps the change token for every other kind.
+    const res = await updatePipeline(pipeline.name, { enabled: !pipeline.enabled });
     setIsSaving(false);
 
     if (res.success) {
@@ -150,10 +168,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
       return;
     }
 
-    showNotification(
-      getErrorNotification(res.errorHeader || t(AnalyticsPipelinesI18nKey.SaveFailed), res.errorMessage, res.requestId),
-    );
-  }, [pipeline, storedDocument, showNotification, t, router]);
+    showNotification(getErrorNotification(saveFailureHeader(res), res.errorMessage, res.requestId));
+  }, [pipeline, saveFailureHeader, showNotification, t, router]);
 
   const toggleLabel = t(
     pipeline.enabled ? AnalyticsPipelinesI18nKey.DisablePipeline : AnalyticsPipelinesI18nKey.EnablePipeline,
@@ -182,10 +198,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const properties = (
     <>
       <PipelineReadOnlyFacts pipeline={pipeline} readSource={readSource} />
-      <div className="flex flex-col gap-y-6 pt-6">
-        {children}
-        <PipelineStateSection state={pipeline.state} />
-      </div>
+      {/* The runtime state is placed by the kind's own section, which is what knows where its tail is. */}
+      <div className="flex flex-col gap-y-6 pt-6">{children}</div>
     </>
   );
 
@@ -241,7 +255,11 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
       <div className="flex-1 overflow-auto min-h-0 flex flex-col">
         {isEditorEnabled && (
-          <EntityJsonEditor entity={documentSeed} setSelectedEntity={form.replaceDraft} readonly={!isFullAdmin} />
+          <EntityJsonEditor
+            entity={documentSeed as PipelineDraft | null}
+            setSelectedEntity={form.replaceDraft}
+            readonly={!isFullAdmin}
+          />
         )}
         {isAuditShown && (
           <div className="flex min-h-0 flex-1 flex-col">

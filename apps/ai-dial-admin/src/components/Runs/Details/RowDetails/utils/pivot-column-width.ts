@@ -9,6 +9,7 @@ import {
   ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
   ROW_DETAIL_PIVOT_SCORE_COL_WIDTH,
   ROW_DETAIL_PIVOT_STATUS_COL_WIDTH,
+  ROW_DETAIL_PIVOT_TEXT_COL_WIDTH,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField, PivotColumnWidthTier } from '@/src/components/Runs/Details/RowDetails/models';
 import { PivotColumn } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
@@ -21,6 +22,7 @@ const PIVOT_COLUMN_WIDTH_BY_TIER: Record<PivotColumnWidthTier, number> = {
   [PivotColumnWidthTier.Duration]: ROW_DETAIL_PIVOT_DURATION_COL_WIDTH,
   [PivotColumnWidthTier.Score]: ROW_DETAIL_PIVOT_SCORE_COL_WIDTH,
   [PivotColumnWidthTier.Default]: ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH,
+  [PivotColumnWidthTier.Text]: ROW_DETAIL_PIVOT_TEXT_COL_WIDTH,
 };
 
 export const resolvePivotFieldWidthTier = (field: RowDetailField): PivotColumnWidthTier => {
@@ -39,6 +41,10 @@ export const resolvePivotFieldWidthTier = (field: RowDetailField): PivotColumnWi
 
   if (field.isScoreIndicator) {
     return PivotColumnWidthTier.Score;
+  }
+
+  if (!field.isNumeric) {
+    return PivotColumnWidthTier.Text;
   }
 
   return PivotColumnWidthTier.Default;
