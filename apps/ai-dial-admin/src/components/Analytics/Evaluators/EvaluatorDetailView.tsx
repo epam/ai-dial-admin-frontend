@@ -26,21 +26,30 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
+import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { useI18n } from '@/src/locales/client';
 import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { toEvaluatorDraft } from '@/src/utils/analytics/evaluator-dto';
 import { PipelineListItem } from '@/src/models/analytics/pipeline';
+import { ReadFailure } from '@/src/models/server-action';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getEvaluatorTabs } from '@/src/utils/tabs/utils';
 
 interface Props {
   evaluator: Evaluator;
   summary: EvaluatorSummary | null;
-  hasSummaryError?: boolean;
+  summaryFailure?: ReadFailure | null;
   referencingPipelines: PipelineListItem[] | null;
+  referencingFailure?: ReadFailure | null;
 }
 
-const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, referencingPipelines }) => {
+const EvaluatorDetailView: FC<Props> = ({
+  evaluator,
+  summary,
+  summaryFailure,
+  referencingPipelines,
+  referencingFailure,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
@@ -48,6 +57,11 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
   const { dispatch, jsonErrors } = useSaveValidationContext();
 
   const form = useEvaluatorForm({ evaluator, summary });
+
+  useReadFailureNotification(summaryFailure, AnalyticsEvaluatorsI18nKey.VersionListFailed);
+  // Reported here rather than in the Pipelines tab: that tab unmounts on a tab switch, and with it the
+  // record of having reported, so returning to it raised the same failure again.
+  useReadFailureNotification(referencingFailure, AnalyticsEvaluatorsI18nKey.UsedByLoadFailed);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSaving, setIsSaving] = useState(false);
@@ -151,7 +165,7 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
           </LabelledText>
           <LabelledText
             label={t(AnalyticsEvaluatorsI18nKey.RegisteredAtEvaluator)}
-            text={hasSummaryError ? t(AnalyticsEvaluatorsI18nKey.Unavailable) : nameRegisteredAt || notSet}
+            text={summaryFailure ? t(AnalyticsEvaluatorsI18nKey.Unavailable) : nameRegisteredAt || notSet}
           />
           <LabelledText
             label={t(AnalyticsEvaluatorsI18nKey.RegisteredAtVersion)}
@@ -194,12 +208,6 @@ const EvaluatorDetailView: FC<Props> = ({ evaluator, summary, hasSummaryError, r
           )}
         </div>
       </div>
-
-      {hasSummaryError && (
-        <div role="status" className="text-secondary dial-small">
-          {t(AnalyticsEvaluatorsI18nKey.VersionListFailed)}
-        </div>
-      )}
 
       {!isEditorEnabled && (
         // HeaderTabs carries `flex-1`, so without this row wrapper it grows vertically in the column.

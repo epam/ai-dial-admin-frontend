@@ -179,13 +179,19 @@ const QueryBuilder: FC<Props> = ({
     resetAiQuery();
     setIsLoadingSchema(true);
     setSchemaError(null);
-    const schema = await getEntitySchema(name);
-    if (schema) {
-      setState({ ...createInitialState(state.functions), entityName: name, fields: schema.fields || [] });
+    const schemaRead = await getEntitySchema(name);
+    if (schemaRead.response) {
+      setState({ ...createInitialState(state.functions), entityName: name, fields: schemaRead.response.fields || [] });
     } else {
       setState({ ...createInitialState(state.functions), entityName: name });
       setSchemaError(t(QueryBuilderI18nKey.SchemaLoadFailed));
-      showNotification(getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed)));
+      showNotification(
+        getErrorNotification(
+          schemaRead.errorHeader ?? t(QueryBuilderI18nKey.SchemaLoadFailed),
+          schemaRead.errorMessage,
+          schemaRead.requestId,
+        ),
+      );
     }
     setIsLoadingSchema(false);
   };
@@ -253,9 +259,15 @@ const QueryBuilder: FC<Props> = ({
   const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
     if (!entityName || entityName === state.entityName) return state.fields;
     if (!entities.some((e) => e.name === entityName)) return state.fields;
-    const schema = await getEntitySchema(entityName);
-    if (schema) return schema.fields || [];
-    showNotification(getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed)));
+    const schemaRead = await getEntitySchema(entityName);
+    if (schemaRead.response) return schemaRead.response.fields || [];
+    showNotification(
+      getErrorNotification(
+        schemaRead.errorHeader ?? t(QueryBuilderI18nKey.SchemaLoadFailed),
+        schemaRead.errorMessage,
+        schemaRead.requestId,
+      ),
+    );
     return [];
   };
 

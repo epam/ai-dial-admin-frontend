@@ -467,20 +467,40 @@ describe('ConversationsTraceView :: capped feedback result', () => {
 });
 
 describe('ConversationsTraceView :: schema availability', () => {
-  test('reports that the additional columns are unavailable when the schema could not be read', () => {
-    render(<ConversationsTraceView schemaFields={null} hasSchemaError />);
+  test('reports a failed schema read by notification rather than as a toolbar notice', async () => {
+    render(
+      <ConversationsTraceView
+        schemaFields={null}
+        schemaFailure={{ errorHeader: 'Upstream unavailable', errorMessage: 'schema read timed out' }}
+      />,
+    );
 
-    expect(screen.getByText(ConversationsTraceI18nKey.SchemaUnavailableNotice)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(showNotificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Upstream unavailable', description: 'schema read timed out' }),
+      ),
+    );
+    expect(screen.queryByText(ConversationsTraceI18nKey.SchemaLoadFailed)).not.toBeInTheDocument();
+  });
+
+  test('falls back to its own title when the service supplied no header', async () => {
+    render(<ConversationsTraceView schemaFields={null} schemaFailure={{}} />);
+
+    await waitFor(() =>
+      expect(showNotificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ title: ConversationsTraceI18nKey.SchemaLoadFailed }),
+      ),
+    );
   });
 
   test('says nothing about the schema when it was read', () => {
     renderView(SCHEMA_FIELDS);
 
-    expect(screen.queryByText(ConversationsTraceI18nKey.SchemaUnavailableNotice)).not.toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.SchemaLoadFailed)).not.toBeInTheDocument();
   });
 
   test('still renders the curated columns when the schema is unavailable', () => {
-    render(<ConversationsTraceView schemaFields={null} hasSchemaError />);
+    render(<ConversationsTraceView schemaFields={null} schemaFailure={{}} />);
 
     expect(screen.getByRole('heading', { name: ConversationsTraceI18nKey.Title })).toBeInTheDocument();
   });

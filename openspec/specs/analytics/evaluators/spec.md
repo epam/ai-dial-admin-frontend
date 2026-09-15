@@ -23,9 +23,16 @@ version requires full-admin rights". Page access and mutation access are distinc
 service answers them differently.
 
 A registry holding no evaluators is an ordinary state and SHALL render as the console with an empty grid. A
-**failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
-NOT resolve to a not-found result — the same reasoning the pipelines listing already applies: an operator must
-be able to tell "nothing registered" from "the service is unreachable".
+**failed** listing fetch SHALL also render the console and SHALL NOT resolve to a not-found result — the same
+reasoning the pipelines listing already applies: an operator must be able to tell "nothing registered" from
+"the service is unreachable". That failure SHALL be reported by an error notification carrying the service's
+own header, message and request id, under *An Analytics read failure is reported by notification, in the
+service's own words*, and SHALL NOT be stated as text above the grid.
+
+The page's second read — the enrichment pipelines the **used by** column is derived from — SHALL be reported
+the same way when it fails. No text SHALL be inserted above the grid for it: the column's own cells already
+state that the count is unavailable, so a sentence above the grid repeats per page what the cells state per
+row.
 
 The route SHALL be registered in the breadcrumb configuration so the trail reads from the Evaluators
 listing to the evaluator.
@@ -43,8 +50,18 @@ listing to the evaluator.
 #### Scenario: A failed listing states the failure instead of a not-found page
 
 - **WHEN** the server-side evaluators listing fetch fails
-- **THEN** the console still renders, reporting that the evaluators could not be loaded
+- **THEN** the console still renders
+- **AND** an error notification reports the failure, carrying the service's message and request id
+- **AND** no failure text is rendered above the grid
 - **AND** the page does not resolve to a not-found result
+
+#### Scenario: A failed usage read notifies and leaves the cells to state the absence
+
+- **WHEN** the enrichment pipelines read fails while the evaluators listing succeeds
+- **THEN** every evaluator is still listed
+- **AND** an error notification reports the failure
+- **AND** the used-by cells state that the count is unavailable
+- **AND** no failure text is rendered above the grid
 
 #### Scenario: Forbidden caller sees Page403 and no evaluators are fetched
 
@@ -225,9 +242,11 @@ read the evaluators listing alongside the addressed version to obtain it. The sw
 issue **no** request of its own, and no request per offered version.
 
 When that listing read fails while the version read succeeds, the page SHALL still render the version it
-was asked for, the switcher SHALL offer only that version, and the page SHALL state that the version list
-could not be loaded. A degraded switcher is preferable to a page that cannot render a version it
-successfully read.
+was asked for and the switcher SHALL offer only that version. A degraded switcher is preferable to a page
+that cannot render a version it successfully read. The failure SHALL be reported by an error notification
+carrying the service's own header, message and request id, and SHALL NOT be stated as text in the page
+header — the switcher standing at one version is itself the visible degradation, and the notification is
+what says why.
 
 #### Scenario: Every version is offered
 
@@ -249,8 +268,9 @@ successfully read.
 
 - **WHEN** the evaluators listing read fails and the addressed version read succeeds
 - **THEN** the version's own content is rendered
-- **AND** the switcher offers only that version and the page states that the version list could not be
-  loaded
+- **AND** the switcher offers only that version
+- **AND** an error notification reports the failure, carrying the service's message and request id
+- **AND** no failure text is rendered in the page header
 
 ### Requirement: The two registration timestamps are labelled by what each dates
 
@@ -336,8 +356,16 @@ When no pipeline references the evaluator, the tab SHALL say so explicitly. That
 looking for: nothing else in the console reports it, and no endpoint lets them act on it by deleting the
 entry.
 
-When the pipelines listing fails, the tab SHALL state that the referencing pipelines could not be loaded, and
-SHALL NOT state that none reference it.
+When the pipelines listing fails, the failure SHALL be reported by an error notification carrying the
+service's own header, message and request id. The tab SHALL NOT state that none reference the evaluator, and
+SHALL keep a statement in its place that the referencing pipelines are unavailable — the tab has no content
+of its own to render, and an unexplained blank tab is exactly the "nothing references it" reading this rule
+exists to prevent. That statement SHALL say only that the list is unavailable; the cause, the service's
+message and the request id belong to the notification.
+
+The notification SHALL be raised from a surface that outlives the tab. This tab is mounted only while it is
+the open one, so a report raised inside it is discarded on every tab switch and re-raised on every return —
+the same failure reported as many times as the operator changes tabs.
 
 #### Scenario: Referencing pipelines are listed with their own facts
 
@@ -363,8 +391,10 @@ SHALL NOT state that none reference it.
 #### Scenario: A failed pipelines listing is not reported as unreferenced
 
 - **WHEN** the pipelines listing fetch fails
-- **THEN** the tab states that the referencing pipelines could not be loaded
+- **THEN** an error notification reports the failure, carrying the service's message and request id
+- **AND** the tab states in place that the referencing pipelines are unavailable
 - **AND** it does not state that no pipeline references the evaluator
+- **AND** dismissing the notification leaves that statement on the tab
 
 ### Requirement: The evaluator detail page presents Properties and Pipelines as tabs
 

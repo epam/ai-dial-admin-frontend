@@ -50,9 +50,18 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const [editTarget, setEditTarget] = useState<AnalyticsTable | null>(null);
 
   const reload = useCallback(async () => {
-    const list = await getTables();
-    if (Array.isArray(list)) setTables(list);
-    else showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.TablesLoadFailed)));
+    const read = await getTables();
+    if (read.success) {
+      setTables(read.response ?? []);
+      return;
+    }
+    showNotification(
+      getErrorNotification(
+        read.errorHeader ?? t(AnalyticsTablesI18nKey.TablesLoadFailed),
+        read.errorMessage,
+        read.requestId,
+      ),
+    );
   }, [showNotification, t]);
 
   const onConfirmDelete = async () => {
@@ -79,7 +88,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const onOpenEdit = async (tbl?: AnalyticsTable) => {
     if (!tbl) return;
     const full = await getTable(tbl.name);
-    if (full) setEditTarget(full);
+    if (full.response) setEditTarget(full.response);
   };
 
   const onSubmitEditMetadata = async (dto: UpdateTableDto) => {

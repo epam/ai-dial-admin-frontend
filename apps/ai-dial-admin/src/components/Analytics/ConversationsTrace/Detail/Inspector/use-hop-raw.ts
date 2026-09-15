@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { getConversationHopRawBody } from '@/src/app/[lang]/conversations-trace/actions';
+import { useHopReadReport } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { HopInspectorSide, HopRawBody, HopReadState, SessionScope } from '@/src/models/analytics/conversations-trace';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
@@ -28,19 +29,26 @@ export const useHopRaw = ({ scope, traceId, coreSpanId, requestTime, side }: Par
   const [body, setBody] = useState<HopRawBody | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
+  const onReadFailed = useHopReadReport();
 
   const onRequestRaw = useCallback(async () => {
     setIsLoading(true);
 
     try {
       const result = await getReqRef.current(getConversationHopRawBody, scope, traceId, coreSpanId, requestTime, side);
+
+      if (result && !result.success) {
+        onReadFailed(result);
+      }
+
       setBody((result?.response as HopRawBody) ?? FAILED);
     } catch {
       setBody(FAILED);
+      onReadFailed();
     } finally {
       setIsLoading(false);
     }
-  }, [scope, traceId, coreSpanId, requestTime, side]);
+  }, [scope, traceId, coreSpanId, requestTime, side, onReadFailed]);
 
   return { body, isLoading, onRequestRaw };
 };
