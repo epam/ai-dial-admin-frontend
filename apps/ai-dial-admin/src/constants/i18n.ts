@@ -2112,6 +2112,8 @@ export enum RunsI18nKey {
   TestCaseLlmCost = 'Runs.TestCaseLlmCost',
   MetricEvalCost = 'Runs.MetricEvalCost',
   CostDataUnavailable = 'Runs.CostDataUnavailable',
+  Calculating = 'Runs.Calculating',
+  CostCalculatingElapsed = 'Runs.CostCalculatingElapsed',
   AvgPerTestCase = 'Runs.AvgPerTestCase',
   Pass = 'Runs.Pass',
   Fail = 'Runs.Fail',

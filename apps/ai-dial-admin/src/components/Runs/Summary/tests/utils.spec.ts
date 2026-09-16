@@ -25,6 +25,7 @@ import {
   buildTestCasesStatusQuery,
   fillUnscoredMetricBars,
   formatAvgRunTimeSeconds,
+  formatElapsedMmSs,
   formatRunCost,
   getMetricFieldPath,
   getMetricOutputDescriptions,
@@ -661,5 +662,18 @@ describe('Runs Summary :: result parsers', () => {
   test('formatRunCost keeps sub-dollar significant digits', () => {
     expect(formatRunCost(0.0004)).toBe('$0.0004');
     expect(formatRunCost(0.0123)).toBe('$0.012');
+  });
+
+  test('formatElapsedMmSs formats minutes and seconds', () => {
+    expect(formatElapsedMmSs(0)).toBe('00:00');
+    expect(formatElapsedMmSs(15_000)).toBe('00:15');
+    expect(formatElapsedMmSs(180_000)).toBe('03:00');
+    expect(formatElapsedMmSs(65_000)).toBe('01:05');
+  });
+
+  test('formatElapsedMmSs treats negative or non-finite input as zero', () => {
+    expect(formatElapsedMmSs(-1)).toBe('00:00');
+    expect(formatElapsedMmSs(Number.NaN)).toBe('00:00');
+    expect(formatElapsedMmSs(Number.POSITIVE_INFINITY)).toBe('00:00');
   });
 });

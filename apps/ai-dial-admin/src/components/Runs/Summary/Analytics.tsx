@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -10,14 +10,17 @@ import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
-import { formatAvgRunTimeSeconds, formatRunCost, hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
+import {
+  formatAvgRunTimeSeconds,
+  formatElapsedMmSs,
+  formatRunCost,
+  hasOverallScoreThreshold,
+} from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
 const NO_DATA_VALUE = '—';
-/** TODO: remove this flag and show cost cards again */
-const SHOW_COST_CARDS = false;
 
 interface Props {
   run: Run;
@@ -25,14 +28,19 @@ interface Props {
   overallScore?: number | null;
 }
 
+const CostCalculatingValue: FC<{ label: string }> = ({ label }) => (
+  <div className="flex items-center gap-1" role="status">
+    <span aria-hidden>
+      <DialLoader size={20} fullWidth={false} />
+    </span>
+    <span className="dial-small-text text-secondary">{label}</span>
+  </div>
+);
+
 const Analytics: FC<Props> = ({ run, overallScore }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
-  const {
-    costs,
-    isLoading: costsLoading,
-    unavailable: costsUnavailable,
-  } = useRunCosts(SHOW_COST_CARDS ? run?.id : undefined);
+  const { costs, unavailable: costsUnavailable, elapsedMs: costsElapsedMs } = useRunCosts(run?.id);
 
   if (!data) {
     return (
@@ -56,8 +64,28 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
    * a dash; only a settled run turns an absent value into an error tag.
    */
   const isRunIncomplete = isIncompleteRunStatus(run.status);
-  const hasCostError = costsUnavailable && !isRunIncomplete;
-  const costDescription = hasCostError ? t(RunsI18nKey.CostDataUnavailable) : t(RunsI18nKey.AvgPerTestCase);
+  /**
+   * Pending = no settled outcome yet. Do not key only on `costsLoading`: an idle frame
+   * (`costs == null && !unavailable`) must show Calculating, not an em dash.
+   */
+  const costsCalculating = costs == null && !costsUnavailable;
+  const hasCostError = costsUnavailable;
+  const costDescription = costsCalculating
+    ? t(RunsI18nKey.CostCalculatingElapsed, { elapsed: formatElapsedMmSs(costsElapsedMs) })
+    : hasCostError
+      ? t(RunsI18nKey.CostDataUnavailable)
+      : t(RunsI18nKey.AvgPerTestCase);
+  const calculatingLabel = t(RunsI18nKey.Calculating);
+
+  const costCardValue = (display: string | null): ReactNode => {
+    if (costsCalculating) {
+      return <CostCalculatingValue label={calculatingLabel} />;
+    }
+    if (hasCostError) {
+      return undefined;
+    }
+    return display ?? NO_DATA_VALUE;
+  };
 
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
@@ -92,26 +120,20 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgMetricEvalSeconds == null && !isRunIncomplete}
       />
-      {SHOW_COST_CARDS && (
-        <>
-          <DialAnalyticsCard
-            className={ANALYTICS_KPI_CARD_CLASS}
-            title={t(RunsI18nKey.TestCaseLlmCost)}
-            value={testCaseCostDisplay ?? NO_DATA_VALUE}
-            description={costDescription}
-            isLoading={costsLoading}
-            error={hasCostError}
-          />
-          <DialAnalyticsCard
-            className={ANALYTICS_KPI_CARD_CLASS}
-            title={t(RunsI18nKey.MetricEvalCost)}
-            value={metricEvalCostDisplay ?? NO_DATA_VALUE}
-            description={costDescription}
-            isLoading={costsLoading}
-            error={hasCostError}
-          />
-        </>
-      )}
+      <DialAnalyticsCard
+        className={ANALYTICS_KPI_CARD_CLASS}
+        title={t(RunsI18nKey.TestCaseLlmCost)}
+        value={costCardValue(testCaseCostDisplay)}
+        description={costDescription}
+        error={hasCostError}
+      />
+      <DialAnalyticsCard
+        className={ANALYTICS_KPI_CARD_CLASS}
+        title={t(RunsI18nKey.MetricEvalCost)}
+        value={costCardValue(metricEvalCostDisplay)}
+        description={costDescription}
+        error={hasCostError}
+      />
     </div>
   );
 };
