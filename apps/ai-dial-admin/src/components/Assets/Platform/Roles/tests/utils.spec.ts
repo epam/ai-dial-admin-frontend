@@ -10,6 +10,15 @@ import {
   toCoreShareField,
 } from '../utils';
 
+// `DialRoleResource` also requires the identity fields; the tests only care about `share`, so the
+// factory supplies the rest once instead of a cast per fixture.
+const roleWith = (share?: DialRoleResource['share']): DialRoleResource => ({
+  name: 'role',
+  path: 'public/role',
+  folderId: 'public',
+  share,
+});
+
 describe('toCoreShareField', () => {
   test("maps invitationTtl to Core's snake_case invitation_ttl", () => {
     expect(toCoreShareField('invitationTtl')).toBe('invitation_ttl');
@@ -22,9 +31,7 @@ describe('toCoreShareField', () => {
 
 describe('getAssetSharingData', () => {
   test("reads invitation_ttl/max_accepted_users under Core's uppercase resource-type key", () => {
-    const role = {
-      share: { [PlatformSharingType.APPLICATION]: { invitation_ttl: 24, max_accepted_users: 5 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24, max_accepted_users: 5 } });
 
     const row = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.APPLICATION);
 
@@ -33,7 +40,7 @@ describe('getAssetSharingData', () => {
   });
 
   test('lists all seven sharing types, including Credentials and Skills, even when the role has no share entries', () => {
-    const rows = getAssetSharingData({} as DialRoleResource);
+    const rows = getAssetSharingData(roleWith());
 
     expect(rows).toHaveLength(7);
     expect(rows.map((row) => row.name)).toEqual(Object.values(PlatformSharingType));
@@ -41,9 +48,7 @@ describe('getAssetSharingData', () => {
   });
 
   test('leaves a type with no share entry as undefined rather than "0"', () => {
-    const role = {
-      share: { [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } });
 
     const applicationRow = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.APPLICATION);
     const toolsetRow = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.TOOL_SET);
@@ -53,11 +58,7 @@ describe('getAssetSharingData', () => {
   });
 
   test('treats Core\'s -1 "not provided" sentinel as absent, not as a literal -1', () => {
-    const role = {
-      share: {
-        [PlatformSharingType.TOOL_SET]: { invitation_ttl: -1, max_accepted_users: -1 },
-      },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.TOOL_SET]: { invitation_ttl: -1, max_accepted_users: -1 } });
 
     const row = getAssetSharingData(role).find((r) => r.name === PlatformSharingType.TOOL_SET);
 
@@ -68,7 +69,7 @@ describe('getAssetSharingData', () => {
 
 describe('applySharingChange', () => {
   test('writes the raw value to invitation_ttl with no ms<->hours conversion', () => {
-    const role = {} as DialRoleResource;
+    const role = roleWith();
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
 
@@ -77,7 +78,7 @@ describe('applySharingChange', () => {
   });
 
   test('writes the raw value to max_accepted_users', () => {
-    const role = {} as DialRoleResource;
+    const role = roleWith();
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'maxAcceptedUsers', 5);
 
@@ -85,9 +86,7 @@ describe('applySharingChange', () => {
   });
 
   test('preserves the other field on the same sharing type when only one is edited', () => {
-    const role = {
-      share: { [PlatformSharingType.APPLICATION]: { max_accepted_users: 5 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { max_accepted_users: 5 } });
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
 
@@ -95,9 +94,7 @@ describe('applySharingChange', () => {
   });
 
   test('clearing a field removes it from the entry, leaving a sibling field intact', () => {
-    const role = {
-      share: { [PlatformSharingType.APPLICATION]: { max_accepted_users: 5, invitation_ttl: 24 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { max_accepted_users: 5, invitation_ttl: 24 } });
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', '' as unknown as number);
 
@@ -105,9 +102,7 @@ describe('applySharingChange', () => {
   });
 
   test('drops the sharing type entry once every field on it is cleared', () => {
-    const role = {
-      share: { [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.APPLICATION]: { invitation_ttl: 24 } });
 
     const cleared = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', '' as unknown as number);
 
@@ -115,7 +110,7 @@ describe('applySharingChange', () => {
   });
 
   test('writes a literal 0 when the user enters it manually, rather than treating it as clearing the field', () => {
-    const role = {} as DialRoleResource;
+    const role = roleWith();
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'maxAcceptedUsers', 0);
 
@@ -123,9 +118,7 @@ describe('applySharingChange', () => {
   });
 
   test('leaves other sharing types untouched', () => {
-    const role = {
-      share: { [PlatformSharingType.CONVERSATION]: { invitation_ttl: 72 } },
-    } as DialRoleResource;
+    const role = roleWith({ [PlatformSharingType.CONVERSATION]: { invitation_ttl: 72 } });
 
     const result = applySharingChange(role, PlatformSharingType.APPLICATION, 'invitationTtl', 24);
 

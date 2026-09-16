@@ -218,7 +218,7 @@ describe('EvaluatorDetailView — the typed JSON reaches the request', () => {
     await write(user, area, { ...legacy, model: 'gpt-4o' });
     await submit(user);
 
-    const request = vi.mocked(createEvaluator).mock.calls[0][0] as Record<string, unknown>;
+    const request = vi.mocked(createEvaluator).mock.calls[0][0];
     expect(request.outputs).toEqual({ topic: { prose: 'One to three words.' } });
     expect(request).not.toHaveProperty('output_vars');
     expect(request).not.toHaveProperty('response_schema');

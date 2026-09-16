@@ -240,7 +240,7 @@ describe('CreateEvaluatorPopup — flipping to sql rebuilds the request', () => 
     fireEvent.click(submitButton());
 
     await vi.waitFor(() => expect(createEvaluator).toHaveBeenCalled());
-    const request = vi.mocked(createEvaluator).mock.calls[0][0] as Record<string, unknown>;
+    const request = vi.mocked(createEvaluator).mock.calls[0][0];
 
     ['preset', 'model', 'params', 'request_template'].forEach((key) => expect(request).not.toHaveProperty(key));
     expect(request.outputs).toEqual({ total: 'count(*)' });

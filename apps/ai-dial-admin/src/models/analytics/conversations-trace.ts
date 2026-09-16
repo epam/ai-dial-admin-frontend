@@ -351,6 +351,10 @@ export interface ConversationDetailRow {
   'session_insights.resolution_status'?: string | null;
   'session_insights.activity_type'?: string | null;
   'session_insights.activity_sub_task_type'?: string | null;
+  // The enrichment can add an insight column without a frontend change — the detail panel renders
+  // whatever the schema declares — so the row carries any `session_insights.*` value the service
+  // returns, not only the ones named above.
+  [insightColumn: `session_insights.${string}`]: string | number | boolean | null | undefined;
 }
 
 export interface ConversationDetailResult {

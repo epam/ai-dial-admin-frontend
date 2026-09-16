@@ -90,17 +90,17 @@ describe('toEvaluatorOutputs', () => {
 
 describe('toEvaluatorDraft', () => {
   test('drops the members the service assigns', () => {
-    const draft = draftOf(llm) as Record<string, unknown>;
+    const draft = draftOf(llm);
 
-    expect(draft.version).toBeUndefined();
-    expect(draft.created_at).toBeUndefined();
+    expect(draft).not.toHaveProperty('version');
+    expect(draft).not.toHaveProperty('created_at');
     expect(draft.name).toBe('conversation-insights');
   });
 
   test('drops the superseded members rather than carrying them to a save', () => {
-    const draft = draftOf(supersededLlm) as Record<string, unknown>;
+    const draft = draftOf(supersededLlm);
 
-    ['output_vars', 'input_vars', 'response_schema'].forEach((key) => expect(draft[key]).toBeUndefined());
+    ['output_vars', 'input_vars', 'response_schema'].forEach((key) => expect(draft).not.toHaveProperty(key));
     expect(draft.outputs).toHaveLength(2);
   });
 });
@@ -125,7 +125,7 @@ describe('buildEvaluatorDto', () => {
   });
 
   test('registers a version seeded from a superseded one in the current shape', () => {
-    const dto = buildEvaluatorDto(draftOf(supersededLlm)) as Record<string, unknown>;
+    const dto = buildEvaluatorDto(draftOf(supersededLlm));
 
     ['output_vars', 'input_vars', 'response_schema'].forEach((key) => expect(dto).not.toHaveProperty(key));
     expect(dto.outputs).toEqual({
@@ -156,12 +156,9 @@ describe('buildEvaluatorDto', () => {
   });
 
   test('carries a member the console does not present', () => {
-    const dto = buildEvaluatorDto({ ...draftOf(llm), unknown_member: 'kept' } as CreateEvaluatorDto) as Record<
-      string,
-      unknown
-    >;
+    const dto = buildEvaluatorDto({ ...draftOf(llm), unknown_member: 'kept' } as CreateEvaluatorDto);
 
-    expect(dto.unknown_member).toBe('kept');
+    expect(dto).toHaveProperty('unknown_member', 'kept');
   });
 });
 

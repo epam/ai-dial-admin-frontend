@@ -222,7 +222,8 @@ describe('TestCasesList', () => {
       isReadOnlyAdmin: false,
       isFullAdmin: true,
       isEnableAuth: false,
-    } as ReturnType<typeof AppContext.useAppContext>);
+      // Only the members this component reads; the cast is what marks it as a partial fake.
+    } as unknown as ReturnType<typeof AppContext.useAppContext>);
 
     const { unmount } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
     unmount();

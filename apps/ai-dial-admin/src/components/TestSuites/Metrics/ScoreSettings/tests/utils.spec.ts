@@ -235,7 +235,11 @@ describe('parseFunctionParameterFieldName', () => {
 
 describe('getFunctionName', () => {
   test('reads the function name from the expression select', () => {
-    const expression = { select: [{ expr: { type: ExprType.Fn, name: 'roc_auc', args: [] } }] } as StructuredQuery;
+    const expression: StructuredQuery = {
+      entity: 'eval_summaries',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: { type: ExprType.Fn, name: 'roc_auc', args: [] } }],
+    };
 
     expect(getFunctionName(expression)).toBe(OverallScoreFunctionName.RocAuc);
   });

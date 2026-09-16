@@ -84,7 +84,7 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
   });
 
   test('never sends a member the API refuses', () => {
-    const dto = buildPipelineDto({ ...draft, generation: 9, state: {} } as PipelineDraft) as Record<string, unknown>;
+    const dto = buildPipelineDto({ ...draft, generation: 9, state: {} } as PipelineDraft);
 
     getReadOnlyMembers().forEach((key) => expect(dto).not.toHaveProperty(key));
   });
@@ -205,7 +205,7 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       ...toPipelineDraft(pipeline),
       group_by: [{ column: 'chat_id' }],
       measures: [{ name: 'n', fn: 'count' }],
-    }) as Record<string, unknown>;
+    });
 
     ['group_by', 'measures'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
@@ -221,7 +221,7 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       evaluator_version: 2,
       vars: { request: { column: 'request_body' } },
       advanced: { scan_every: '60s' },
-    }) as Record<string, unknown>;
+    });
 
     ['evaluator_name', 'evaluator_version', 'vars', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
