@@ -85,7 +85,7 @@ const hideColumn = (colId: string) =>
 const awaitGridReady = () => waitFor(() => expect(columnVisibleHandler).toBeDefined());
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
-  chat_id: '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204',
+  client_session_id: '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204',
   project_id: 'data-team',
   user_hash: 'db7327ba3decd351',
   turn_count: 3,
@@ -99,7 +99,9 @@ const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
 });
 
 const FIRST_PAGE = [row()];
-const SECOND_PAGE = [row({ chat_id: 'c41e8a90-2f76-4bd3-9e05-18c7b6a4f2de', project_id: 'acme-support-bot' })];
+const SECOND_PAGE = [
+  row({ client_session_id: 'c41e8a90-2f76-4bd3-9e05-18c7b6a4f2de', project_id: 'acme-support-bot' }),
+];
 
 const PERIOD: ConversationPeriodSummary = {
   totals: { conversations: 212, cost: '654.07' },
@@ -257,7 +259,7 @@ describe('ConversationsTraceView :: paging', () => {
   });
 
   test('leaves the end of the result unknown when a full block arrives without a total', async () => {
-    const fullBlock = Array.from({ length: PAGE_SIZE }, (_unused, index) => row({ chat_id: `c${index}` }));
+    const fullBlock = Array.from({ length: PAGE_SIZE }, (_unused, index) => row({ client_session_id: `c${index}` }));
     getConversations.mockResolvedValue({ success: true, response: { rows: fullBlock, total: null } });
     renderView();
 
