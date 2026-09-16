@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import ModelAssetProperties from '../Properties';
@@ -138,5 +139,72 @@ describe('Model asset Properties :: responses defaults gating', () => {
     renderProperties();
 
     expect(defaultsHeading(EntityFieldsI18nKey.completionDefaults)).toBeInTheDocument();
+  });
+});
+
+describe('Model asset Properties :: interface base URL fallback', () => {
+  const ifaceBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
+  // DialLabel renders the required marker as a `*` span inside the label, so it lands in the
+  // input's accessible name.
+  const queryIfaceBaseUrlInputWithMarker = () =>
+    screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\*$`) });
+
+  test('Should not mark an empty interface base_url required while the entity base_url is set', () => {
+    renderProperties({
+      baseUrl: 'http://model-base',
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: undefined } },
+    });
+
+    expect(ifaceBaseUrlInput()).toBeInTheDocument();
+    expect(queryIfaceBaseUrlInputWithMarker()).toBeNull();
+  });
+
+  test('Should mark an empty interface base_url required while the entity base_url is empty', () => {
+    renderProperties({
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: undefined } },
+    });
+
+    expect(queryIfaceBaseUrlInputWithMarker()).not.toBeNull();
+  });
+
+  test('Should show no required error for an emptied interface base_url while the entity base_url is set', async () => {
+    const user = userEvent.setup();
+    renderProperties({
+      baseUrl: 'http://model-base',
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'http://iface-base' } },
+    });
+
+    await user.clear(ifaceBaseUrlInput());
+
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+  });
+
+  test('Should omit an emptied interface base_url from the change payload while keeping the entry and its defaults', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ModelAssetProperties
+        asset={
+          {
+            ...baseAsset,
+            baseUrl: 'http://model-base',
+            interfaces: {
+              [DeploymentInterfaceType.OpenAIChatCompletions]: {
+                base_url: 'http://iface-base',
+                defaults: { temperature: 1 },
+              },
+            },
+          } as DialModelResource
+        }
+        onChange={onChange}
+      />,
+    );
+
+    await user.clear(ifaceBaseUrlInput());
+
+    const [updatedAsset] = onChange.mock.calls[onChange.mock.calls.length - 1];
+    const updatedInterface = updatedAsset.interfaces[DeploymentInterfaceType.OpenAIChatCompletions];
+    expect(updatedInterface.base_url).toBeUndefined();
+    expect(updatedInterface.defaults).toEqual({ temperature: 1 });
   });
 });

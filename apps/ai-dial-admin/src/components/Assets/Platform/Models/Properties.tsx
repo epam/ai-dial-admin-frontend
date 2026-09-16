@@ -98,6 +98,7 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, onChange }) => {
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={MODEL_INTERFACE_TYPES}
           translators={translators}
+          entityBaseUrl={asset.baseUrl}
           isAsset
         />
         <EndpointControl

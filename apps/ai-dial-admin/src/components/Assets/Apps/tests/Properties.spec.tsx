@@ -14,7 +14,8 @@ vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
 }));
 vi.mock('@/src/components/BaseControls/Icon', () => ({ default: () => <div>icon-control</div> }));
 vi.mock('@/src/components/BaseControls/InterfacesField/InterfacesField', () => ({
-  default: () => <div>interfaces-field</div>,
+  // Renders the entityBaseUrl prop so the wiring test can see what the view passed through.
+  default: ({ entityBaseUrl }: { entityBaseUrl?: string }) => <div>interfaces-field:{entityBaseUrl ?? 'none'}</div>,
 }));
 vi.mock('@/src/components/BaseControls/MaxRetryAttempts', () => ({ default: () => <div>max-retry-attempts</div> }));
 vi.mock('@/src/components/BaseControls/Topics', () => ({ default: () => <div>topics-control</div> }));
@@ -60,6 +61,18 @@ describe('ApplicationAssetProperties', () => {
 
     expect(screen.getByText(EntityFieldsI18nKey.baseUrl)).toBeInTheDocument();
     expect(screen.getByDisplayValue('http://app-base')).toBeInTheDocument();
+  });
+
+  test('passes the entity-level base_url to InterfacesField as the per-interface fallback', () => {
+    render(<ApplicationAssetProperties asset={{ ...baseAsset, base_url: 'http://app-base' }} onChange={vi.fn()} />);
+
+    expect(screen.getByText('interfaces-field:http://app-base')).toBeInTheDocument();
+  });
+
+  test('passes no fallback to InterfacesField when the entity-level base_url is empty', () => {
+    render(<ApplicationAssetProperties asset={baseAsset} onChange={vi.fn()} />);
+
+    expect(screen.getByText('interfaces-field:none')).toBeInTheDocument();
   });
 
   test('renders a default headers editor', () => {
