@@ -22,7 +22,7 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
   const t = useI18n();
 
   return (
-    <div className="p-4 flex flex-col bg-layer-3 flex-1 rounded h-[324px] md:min-w-[400px] lg:min-w-[520px] w-full">
+    <div className="p-4 flex flex-col bg-layer-3 flex-1 rounded min-h-[324px] md:min-w-[400px] lg:min-w-[520px] w-full overflow-hidden">
       <div className="mb-3 flex flex-row gap-x-3 items-center">
         <div
           className={classNames(
@@ -35,7 +35,7 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
         <h2>{t(menuGroup.key)}</h2>
       </div>
       <p className="small mb-3">{t(menuGroup.descriptionKey)}</p>
-      <ul className="flex flex-col gap-x-2">
+      <ul className="flex flex-col flex-1 min-h-0 overflow-y-auto">
         {menuGroup.items.map((item) => (
           <li
             key={item.key}
