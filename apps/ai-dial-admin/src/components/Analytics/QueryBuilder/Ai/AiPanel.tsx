@@ -6,6 +6,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButton,
+  DialLoader,
   DialPrimaryButton,
   DialTextarea,
   ElementSize,
@@ -28,6 +29,8 @@ interface Props {
   loadedMessageIndex: number | null;
   runInFlight: boolean;
 }
+
+const LOADER_SIZE = 18;
 
 const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) => {
   const t = useI18n();
@@ -161,9 +164,10 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
           disabled={loading}
           rows={3}
         />
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
+          {loading && <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />}
           <DialPrimaryButton
-            label={loading ? t(QueryBuilderI18nKey.AiSending) : t(QueryBuilderI18nKey.AiSend)}
+            label={t(QueryBuilderI18nKey.AiSend)}
             iconBefore={<IconSparkles size={18} stroke={2} />}
             onClick={onSend}
             disabled={sendDisabled}

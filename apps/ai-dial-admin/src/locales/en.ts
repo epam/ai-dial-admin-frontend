@@ -56,6 +56,7 @@ export default {
   },
   Basic: {
     None: '- None -',
+    Loading: 'Loading…',
     Preview: 'Preview',
     PreviewPrompt: 'Preview prompt',
     Optional: 'Optional',

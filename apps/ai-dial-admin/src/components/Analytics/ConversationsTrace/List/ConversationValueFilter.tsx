@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonAppearance, DialCheckbox, DialInput, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialCheckbox, DialInput, DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconSearch } from '@tabler/icons-react';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
 import classNames from 'classnames';
@@ -28,6 +28,8 @@ const STATE_MESSAGE_KEY: Partial<Record<ConversationValuesState, string>> = {
 // Above this many values, reading the list is slower than typing at it. Matches the threshold the shared
 // list popup uses (`Multiselect`'s modal content), so the two controls appear to have the same rule.
 const SEARCH_THRESHOLD = 10;
+
+const LOADER_SIZE = 18;
 
 type Props = CustomFilterProps<ConversationRow, ConversationGridContext, ConversationValueFilterModel>;
 
@@ -154,21 +156,29 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
   const messageKey = STATE_MESSAGE_KEY[state];
   const stateMessage = failureMessage ?? (messageKey ? t(messageKey) : '');
   const isAvailable = state === ConversationValuesState.Available;
+  const isLoading = state === ConversationValuesState.Loading;
 
   return (
     <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
       {/* Always mounted so a transition between states is announced rather than only redrawn. Kept separate
-          from every control's own label: the labels stay stable while this carries the transient message. */}
+          from every control's own label: the labels stay stable while this carries the transient message.
+          While loading, the spinner beside it carries the wait visually and the message stays announced —
+          the spinner is hidden from assistive tech so this region remains the single announcement. */}
       <span
         role="status"
         aria-live="polite"
         className={classNames(
-          'dial-tiny-text',
+          isLoading ? 'sr-only' : 'dial-tiny-text',
           state === ConversationValuesState.LoadFailed ? 'text-error' : 'text-secondary',
         )}
       >
         {stateMessage}
       </span>
+      {isLoading && (
+        <div aria-hidden className="flex justify-center">
+          <DialLoader size={LOADER_SIZE} fullWidth={false} />
+        </div>
+      )}
       {isAvailable && values.length > SEARCH_THRESHOLD && (
         <DialInput
           id={`value-filter-search-${fieldName}`}
