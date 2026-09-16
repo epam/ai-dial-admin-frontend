@@ -222,7 +222,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
           />
         ) : (
           <TabsContent
-            key={discardKey}
             view={ApplicationRoute.Applications}
             activeTab={activeTab}
             selectedApplication={selectedApplication}
