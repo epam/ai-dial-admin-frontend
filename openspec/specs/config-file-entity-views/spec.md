@@ -2,13 +2,14 @@
 
 ## Purpose
 The UI surface that exposes DIAL Core's config-file entity population on platform and asset list
-views, gated behind a `showConfigFiles` toggle that appears only when the admin backend is not
-configured. Allows an admin to view read-only, config-file-sourced entity detail pages by navigating
+views, behind a `showConfigFiles` toggle that renders on the covered views regardless of whether the
+admin backend is configured — with it, the toggle offers Core's config-file population alongside the
+admin-backend one. Allows an admin to view read-only, config-file-sourced entity detail pages by navigating
 from the toggled-on list, without introducing new routes. Covers the toggle's placement and
 persistence, the shared name-only list component swap, the lazy names-only data fetch, and the
 `configFile=true` detail page rendering on platform/asset routes. Created by archiving change
 `add-config-file-entity-views`; expanded to cover App Runners as a seventh entity type by
-`expand-config-file-entity-views`.
+`expand-config-file-entity-views`; the toggle made always-visible by `always-show-config-files-toggle`.
 
 ## Requirements
 

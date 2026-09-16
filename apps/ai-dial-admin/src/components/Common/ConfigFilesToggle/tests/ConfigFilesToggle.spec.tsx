@@ -27,12 +27,12 @@ describe('ConfigFilesToggle', () => {
     expect(screen.getByRole('switch')).toBeTruthy();
   });
 
-  test('is absent when the admin API is enabled', () => {
+  test('renders when the admin API is enabled', () => {
     mockContext.adminApiEnabled = true;
 
     render(<ConfigFilesToggle />);
 
-    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.getByRole('switch')).toBeTruthy();
   });
 
   test('clicking it calls toggleShowConfigFiles', async () => {

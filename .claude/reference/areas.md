@@ -117,6 +117,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `SystemProperties` | `system-properties` | `SystemProperties` |
 | `Home` | `home` | `WelcomeView` |
 | `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
+| `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
 
 ---
 
