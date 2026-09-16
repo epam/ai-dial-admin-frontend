@@ -22,8 +22,6 @@ const baseContext: Partial<AssetsFolderContext> = {
   fetchedFoldersData: {},
   fetchFiles: vi.fn(),
   toggleFolder: vi.fn(),
-  bulkSelectedData: {},
-  setBulkSelectedData: vi.fn(),
   isFetchingFiles: false,
 };
 

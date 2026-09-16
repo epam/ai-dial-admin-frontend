@@ -12,7 +12,9 @@ vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 
-const key = (overrides: Partial<DialKeyResource> = {}): DialKeyResource =>
+// `description` is deliberately among the overrides in two cases: the point of those tests is that the
+// action does not forward a member the resource type does not declare.
+const key = (overrides: Partial<DialKeyResource> & Record<string, unknown> = {}): DialKeyResource =>
   ({
     name: 'my-key',
     path: 'platform/my-key',

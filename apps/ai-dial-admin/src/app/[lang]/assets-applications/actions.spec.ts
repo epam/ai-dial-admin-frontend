@@ -34,12 +34,39 @@ import {
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 vi.mock('@/src/server/applications/exim');
 vi.mock('@/src/server/applications/zip-exim');
+
+const resourceBase = {
+  created_at: 0,
+  updated_at: 0,
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+};
+
+// `DialApplicationResource` requires the whole Core payload; the tests care about a handful of members,
+// so the factory carries the rest and the payload assertions match on what each case is about.
+const appResource = (overrides: Partial<DialApplicationResource> = {}): DialApplicationResource => ({
+  ...resourceBase,
+  // No `name` default: these cases assert the resource path the action builds, and `getVersionedName`
+  // folds the name into it — a fixture name would change every expected path.
+  path: 'applications/public/my-app',
+  folderId: 'public',
+  version: '1.0',
+  input_attachment_types: [],
+  application_properties: {},
+  ...overrides,
+});
 
 describe('Assets application :: server actions', () => {
   beforeEach(() => {
@@ -135,14 +162,14 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateApp(
-      {
+      appResource({
         folderId: 'public',
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
         version: '1.0',
-      },
+      }),
       'etag',
     );
     expect(getUserToken).toHaveBeenCalled();
@@ -150,7 +177,7 @@ describe('Assets application :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.APPLICATION,
       'public__1.0',
-      {
+      expect.objectContaining({
         folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
         application_properties: { key: 'value' },
@@ -159,7 +186,7 @@ describe('Assets application :: server actions', () => {
         version: undefined,
         source: undefined,
         display_version: '1.0',
-      },
+      }),
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
@@ -169,12 +196,12 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await updateApp(
-      {
+      appResource({
         folderId: 'public',
         path: 'test',
         version: '1.0',
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
-      },
+      }),
       'etag',
     );
 
@@ -193,13 +220,13 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateApp(
-      {
+      appResource({
         folderId: 'public',
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
         version: '1.0',
         max_input_attachments: 2000,
-      },
+      }),
       'etag',
     );
 
@@ -210,34 +237,43 @@ describe('Assets application :: server actions', () => {
   test('Should call createApp action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+      }),
+    );
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'public__1.0', {
-      folderId: undefined,
-      nodeType: DialFileNodeType.FOLDER,
-      path: undefined,
-      version: undefined,
-      source: undefined,
-      displayVersion: '1.0',
-      application_type_schema_id: undefined,
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({
+        folderId: undefined,
+        nodeType: DialFileNodeType.FOLDER,
+        path: undefined,
+        version: undefined,
+        source: undefined,
+        displayVersion: '1.0',
+        application_type_schema_id: undefined,
+      }),
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('createApp keeps a non-empty interface entry when calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    await createApp({
-      folderId: 'public',
-      path: 'test',
-      version: '1.0',
-      interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
-    });
+    await createApp(
+      appResource({
+        folderId: 'public',
+        path: 'test',
+        version: '1.0',
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
+      }),
+    );
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -252,13 +288,15 @@ describe('Assets application :: server actions', () => {
   test('createApp rejects an invalid viewerUrl before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-      viewer_url: 'https://exa mple.com',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+        viewer_url: 'https://exa mple.com',
+      }),
+    );
 
     expect(result.success).toBe(false);
     expect(assetApi.put).not.toHaveBeenCalled();
@@ -271,12 +309,14 @@ describe('Assets application :: server actions', () => {
       errorMessage: 'Application already exists',
     });
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+      }),
+    );
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toBe('Application already exists');

@@ -34,7 +34,8 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPlatformToolsetResource } from '@/src/models/dial/resource';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
-import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialToolsetResource, ToolsetAuthCredentialLevel } from '@/src/models/dial/resource';
 import { ImportFileType } from '@/src/types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -43,6 +44,39 @@ vi.mock('@/src/app/api/api');
 vi.mock('@/src/server/toolsets/exim');
 vi.mock('@/src/server/toolsets/mcp-client');
 vi.mock('@/src/server/toolsets/zip-exim');
+
+// `DialToolsetResource` requires the whole Core payload; these cases care about the path and the auth
+// call, so the factory carries the rest.
+const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialToolsetResource => ({
+  created_at: 0,
+  updated_at: 0,
+  description: '',
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+  forward_per_request_key: false,
+  allowed_tools: [],
+  updatedAt: '0',
+  name: 'my-toolset',
+  path: 'toolsets/public/my-toolset',
+  folderId: 'public',
+  version: '1.0',
+  ...overrides,
+});
+
+// The sign-in/out actions take the asset shape, not the Core resource — `nodeType` is even typed
+// differently on the two (`DialFileNodeType` vs `string`).
+const assetToolset = (overrides: Partial<AssetToolset> = {}): AssetToolset => ({
+  name: 'my-toolset',
+  path: 'toolsets/public/my-toolset',
+  folderId: 'public',
+  version: '1.0',
+  ...overrides,
+});
 
 describe('Assets Toolset :: server actions', () => {
   beforeEach(() => {
@@ -127,7 +161,7 @@ describe('Assets Toolset :: server actions', () => {
         folderId: 'platform/',
         nodeType: DialFileNodeType.FOLDER,
         path: 'my-toolset',
-        version: undefined,
+        version: '',
       },
       'etag-1',
     );
@@ -154,22 +188,23 @@ describe('Assets Toolset :: server actions', () => {
   test('Should call createToolset action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createToolset({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createToolset(
+      toolsetResource({ folderId: 'public', nodeType: DialFileNodeType.FOLDER, path: 'test' }),
+    );
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'public__1.0', {
-      folderId: undefined,
-      nodeType: DialFileNodeType.FOLDER,
-      path: undefined,
-      version: undefined,
-      allowedTools: void 0,
-      transport: 'SSE',
-      displayVersion: '1.0',
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.TOOLSET,
+      'publicmy-toolset__1.0',
+      expect.objectContaining({
+        folderId: undefined,
+        nodeType: DialFileNodeType.FOLDER,
+        path: undefined,
+        version: undefined,
+        transport: 'SSE',
+        displayVersion: '1.0',
+      }),
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -180,12 +215,9 @@ describe('Assets Toolset :: server actions', () => {
       errorMessage: 'Toolset already exists',
     });
 
-    const result = await createToolset({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createToolset(
+      toolsetResource({ folderId: 'public', nodeType: DialFileNodeType.FOLDER, path: 'test' }),
+    );
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toBe('Toolset already exists');
@@ -290,7 +322,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signIn as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signInToolset(
-      { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
+      assetToolset({ path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER }),
       ToolsetAuthCredentialLevel.GLOBAL,
       'https://redirect.example.com/callback',
       'key',
@@ -310,7 +342,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signOut as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signOutToolset(
-      { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
+      assetToolset({ path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER }),
       ToolsetAuthCredentialLevel.GLOBAL,
     );
     expect(getUserToken).toHaveBeenCalled();

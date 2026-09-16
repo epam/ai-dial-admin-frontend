@@ -57,7 +57,7 @@ const mockPrompt: DialPrompt = {
   name: 'Test Prompt',
   content: 'Test content',
   version: '1.0',
-  type: 'prompt',
+  path: 'prompts/folder1/Test Prompt__1.0',
   folderId: 'folder1',
   id: 'prompt1',
 };
