@@ -136,6 +136,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, translators, on
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
           translators={translators}
+          entityBaseUrl={asset.base_url}
           isAsset
         />
         <ResourceMultiAuth asset={asset} onChange={onChange} />
