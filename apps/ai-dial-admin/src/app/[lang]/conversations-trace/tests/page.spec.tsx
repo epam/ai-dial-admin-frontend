@@ -26,7 +26,7 @@ describe('conversations-trace page', () => {
     const page = await renderPage();
 
     expect(schema()).toHaveBeenCalledOnce();
-    expect(page.props).toMatchObject({ schemaFields: SCHEMA_FIELDS, hasSchemaError: false });
+    expect(page.props).toMatchObject({ schemaFields: SCHEMA_FIELDS, schemaFailure: null });
   });
 
   // The summary has to be an observation of the same fetch cycle as the rows on screen, so one resolved
@@ -50,7 +50,10 @@ describe('conversations-trace page', () => {
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ schemaFields: null, hasSchemaError: true });
+    expect(page.props).toMatchObject({
+      schemaFields: null,
+      schemaFailure: { errorMessage: void 0, errorHeader: void 0, requestId: void 0 },
+    });
   });
 
   test('reports a thrown schema fetch the same way', async () => {
@@ -58,7 +61,10 @@ describe('conversations-trace page', () => {
 
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ schemaFields: null, hasSchemaError: true });
+    expect(page.props).toMatchObject({
+      schemaFields: null,
+      schemaFailure: { errorMessage: void 0, errorHeader: void 0, requestId: void 0 },
+    });
   });
 
   test('renders Page403 and issues no query for a forbidden caller', async () => {

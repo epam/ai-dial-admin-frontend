@@ -1,7 +1,17 @@
-import { HopDialectMessage, HopToolCall, MessageRole } from '@/src/models/analytics/conversations-trace';
-import { asRecords, isRecord, jsonByteLength, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
+import {
+  HopDialectMessage,
+  HopMessagesResponse,
+  HopToolCall,
+  MessageRole,
+} from '@/src/models/analytics/conversations-trace';
+import { asRecords, isRecord, jsonByteLength, parseJson, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const TEXT_BLOCK = 'text';
+const TEXT_DELTA = 'text_delta';
+const INPUT_JSON_DELTA = 'input_json_delta';
+const BLOCK_START_FRAME = 'content_block_start';
+const BLOCK_DELTA_FRAME = 'content_block_delta';
+const MESSAGE_DELTA_FRAME = 'message_delta';
 const TOOL_USE_BLOCK = 'tool_use';
 const TOOL_RESULT_BLOCK = 'tool_result';
 
@@ -120,4 +130,95 @@ export const messagesDialectMessagesOf = (parsed: unknown): HopDialectMessage[] 
   });
 
   return system ? [system, ...messages] : messages;
+};
+
+const stopReasonIn = (value: unknown): string | null =>
+  isRecord(value) && typeof value.stop_reason === 'string' ? value.stop_reason : null;
+
+export const NO_MESSAGES_RESPONSE: HopMessagesResponse = { text: null, toolCalls: [], stopReason: null };
+
+// The merged form: one assistant message whose typed blocks are the same ones the request side reads, so the
+// block readers above serve both halves of the hop rather than being duplicated for the response.
+export const messagesMergedResponseOf = (parsed: unknown): HopMessagesResponse => {
+  if (!isRecord(parsed)) {
+    return NO_MESSAGES_RESPONSE;
+  }
+
+  const blocks = asRecords(parsed.content);
+
+  return {
+    text: blockTextOf(blocks),
+    toolCalls: blockToolCallsOf(blocks),
+    stopReason: stopReasonIn(parsed),
+  };
+};
+
+// Streamed arguments arrive as JSON text in fragments, so a body cut mid-call leaves a fragment that does not
+// parse. It is stated as recorded rather than discarded: a truncated argument list still says what the model
+// was asking for, and dropping it would report the call as having asked for nothing.
+const streamedArgsOf = (args: string): string | null => {
+  if (!args.length) {
+    return null;
+  }
+
+  const parsed = parseJson(args);
+
+  return parsed === null ? args : argsOf(parsed);
+};
+
+/**
+ * The streamed form, accumulated.
+ *
+ * Unlike the Responses dialect, this one never restates the finished message: the text exists only as the
+ * concatenation of its `text_delta` fragments, and a call's arguments only as the `input_json_delta`
+ * fragments that follow the frame naming it. The block index is the slot key — the same role
+ * `tool_calls[].index` plays in the streamed chat-completions decoder — because several blocks stream
+ * interleaved and a single accumulator would splice one call's arguments into another's.
+ */
+export const messagesStreamedResponseOf = (frames: unknown[]): HopMessagesResponse => {
+  const texts: string[] = [];
+  const calls = new Map<number, { name: string; args: string; id: string | null }>();
+  let stopReason: string | null = null;
+
+  for (const frame of frames.filter(isRecord)) {
+    const index = typeof frame.index === 'number' ? frame.index : 0;
+    const block = isRecord(frame.content_block) ? frame.content_block : {};
+    const delta = isRecord(frame.delta) ? frame.delta : {};
+
+    if (frame.type === BLOCK_START_FRAME && block.type === TOOL_USE_BLOCK) {
+      calls.set(index, {
+        name: typeof block.name === 'string' ? block.name : '',
+        args: '',
+        id: typeof block.id === 'string' ? block.id : null,
+      });
+    }
+
+    if (frame.type === BLOCK_DELTA_FRAME && delta.type === TEXT_DELTA && typeof delta.text === 'string') {
+      texts.push(delta.text);
+    }
+
+    // A fragment for a block no frame opened has no call to belong to: its name and id were never recorded,
+    // and inventing a slot for it would state a nameless call.
+    const slot = calls.get(index);
+
+    if (frame.type === BLOCK_DELTA_FRAME && delta.type === INPUT_JSON_DELTA && slot) {
+      calls.set(index, {
+        ...slot,
+        args: slot.args + (typeof delta.partial_json === 'string' ? delta.partial_json : ''),
+      });
+    }
+
+    if (frame.type === MESSAGE_DELTA_FRAME) {
+      stopReason = stopReasonIn(frame.delta) ?? stopReason;
+    }
+  }
+
+  return {
+    text: texts.length ? texts.join('') : null,
+    toolCalls: [...calls.entries()]
+      .sort(([left], [right]) => left - right)
+      .map(([, { name, args, id }]) => ({ name, args: streamedArgsOf(args), id }))
+      .filter(({ name }) => name.length > 0),
+    stopReason,
+  };
 };

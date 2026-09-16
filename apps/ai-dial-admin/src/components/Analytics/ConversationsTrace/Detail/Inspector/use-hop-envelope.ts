@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { getConversationHopRequest, getConversationHopResponse } from '@/src/app/[lang]/conversations-trace/actions';
+import { useHopReadReport } from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/use-hop-read-report';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { NO_CLAMP } from '@/src/utils/analytics/hop-inspector/envelope';
@@ -33,6 +34,7 @@ const FAILED_RESPONSE: HopResponseEnvelope = {
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: null,
 };
@@ -65,6 +67,7 @@ const useHeldRead = <T extends object>(
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
   const heldKeyRef = useRef<string | null>(null);
+  const onReadFailed = useHopReadReport();
 
   const spanId = span && isEnabled ? span.core_span_id : null;
   const requestTime = span?.request_time ?? null;
@@ -94,10 +97,15 @@ const useHeldRead = <T extends object>(
           return;
         }
 
+        if (result && !result.success) {
+          onReadFailed(result);
+        }
+
         setValue((result?.response as T) ?? onFailure);
       } catch {
         if (heldKeyRef.current === heldKey) {
           setValue(onFailure);
+          onReadFailed();
         }
       } finally {
         if (heldKeyRef.current === heldKey) {
@@ -107,7 +115,7 @@ const useHeldRead = <T extends object>(
     };
 
     void run();
-  }, [scope, traceId, spanId, requestTime, heldKey, read, onFailure, side]);
+  }, [scope, traceId, spanId, requestTime, heldKey, read, onFailure, side, onReadFailed]);
 
   return { value, isLoading };
 };

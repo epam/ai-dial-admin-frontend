@@ -6,10 +6,12 @@ import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDet
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelineReadResult } from '@/src/models/analytics/pipeline';
+import { Pipeline } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
+import { toReadFailure } from '@/src/utils/notification';
 import { getPipeline, getPipelines } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -22,8 +24,8 @@ export default async function Page({ params }: { params: Promise<{ name: string 
   const { name } = await params;
   const pipelineName = decodeURIComponent(name);
 
-  let read: PipelineReadResult<Pipeline> = { data: null, isForbidden: false };
-  let evaluators: EvaluatorSummary[] | null = null;
+  let read: ServerActionResponse<Pipeline> = { success: false };
+  let evaluatorsRead: ServerActionResponse<EvaluatorSummary[]> = { success: false };
   let functions: QueryFunction[] | null = null;
   let takenTargets: string[] = [];
 
@@ -33,12 +35,12 @@ export default async function Page({ params }: { params: Promise<{ name: string 
     errorObjLog(e, 'Failed to fetch pipeline');
   }
 
-  if (read.isForbidden) {
+  if (read.status === 403) {
     return <Page403 />;
   }
 
   try {
-    evaluators = await getEvaluators();
+    evaluatorsRead = await getEvaluators();
   } catch (e) {
     errorObjLog(e, 'Failed to fetch evaluators for the pipeline view');
   }
@@ -50,21 +52,21 @@ export default async function Page({ params }: { params: Promise<{ name: string 
   }
 
   try {
-    takenTargets = (await getPipelines()).data?.map((item) => item.target) ?? [];
+    takenTargets = (await getPipelines()).response?.map((item) => item.target) ?? [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch bound pipeline targets');
   }
 
-  if (read.data == null) {
+  if (read.response == null) {
     notFound();
   }
 
   return (
     <SaveValidationContextProvider>
       <PipelineDetailView
-        pipeline={read.data}
-        evaluators={evaluators ?? []}
-        hasEvaluatorsError={evaluators == null}
+        pipeline={read.response}
+        evaluators={evaluatorsRead.response ?? []}
+        evaluatorsFailure={evaluatorsRead.success ? null : toReadFailure(evaluatorsRead)}
         takenTargets={takenTargets}
         functions={functions ?? []}
       />

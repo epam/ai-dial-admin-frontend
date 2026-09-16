@@ -52,8 +52,11 @@ const rule: PipelineListItem = {
 
 describe('PipelinesView — permissions', () => {
   beforeEach(() => {
-    vi.mocked(getEvaluators).mockResolvedValue([{ name: 'feedback-rollup', latest_version: 2 }]);
-    vi.mocked(getPipelines).mockResolvedValue({ data: [rule], isForbidden: false });
+    vi.mocked(getEvaluators).mockResolvedValue({
+      success: true,
+      response: [{ name: 'feedback-rollup', latest_version: 2 }],
+    });
+    vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule] });
   });
 
   test('offers no create action to a caller who is not a full admin', async () => {

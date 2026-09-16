@@ -50,7 +50,6 @@ const rule: Pipeline = {
   generation: 7,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
-  output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
 };
 
 const renderView = () =>
@@ -70,7 +69,7 @@ describe('PipelineDetailView — without full-admin rights', () => {
     vi.mocked(getTable).mockImplementation(
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
-    vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
   });
 
@@ -86,9 +85,9 @@ describe('PipelineDetailView — without full-admin rights', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    const cadence = screen.getByLabelText(AnalyticsPipelinesI18nKey.Cadence, { exact: false });
-    await user.clear(cadence);
-    await user.type(cadence, 'PT2H');
+    const scanEvery = screen.getByLabelText(AnalyticsPipelinesI18nKey.ScanEvery, { exact: false });
+    await user.clear(scanEvery);
+    await user.type(scanEvery, 'PT2H');
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();

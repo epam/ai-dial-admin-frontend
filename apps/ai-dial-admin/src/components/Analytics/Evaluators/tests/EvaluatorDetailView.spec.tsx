@@ -3,6 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createEvaluator } from '@/src/app/[lang]/evaluators/actions';
+
+const showNotification = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
+}));
+
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
 import { AnalyticsEvaluatorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { Evaluator, EvaluatorPreset, EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
@@ -25,9 +31,7 @@ const llm: Evaluator = {
   model: 'gemini-2.5-flash-lite',
   params: { max_tokens: 700 },
   request_template: '{"messages":[]}',
-  response_schema: { type: 'object' },
-  input_vars: [{ name: 'members', type: 'string', jsonata: '$join(members)' }],
-  output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic' }],
+  outputs: [{ name: 'topic', prose: 'One to three lowercase words.' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -35,8 +39,7 @@ const sql: Evaluator = {
   name: 'usage-client-identity',
   version: 2,
   type: EvaluatorType.Sql,
-  input_vars: [],
-  output_vars: [{ name: 'session_id', type: 'string', sql: 'json_extract_string(request_tags, $1)' }],
+  outputs: [{ name: 'session_id', sql: 'json_extract_string(request_tags, $1)' }],
   created_at: '2026-08-19T10:00:00Z',
 };
 
@@ -66,6 +69,75 @@ const renderView = (props?: Partial<Parameters<typeof EvaluatorDetailView>[0]>) 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(createEvaluator).mockResolvedValue({ success: true, response: { ...llm, version: 5 } });
+});
+
+describe('EvaluatorDetailView — a failed version list', () => {
+  beforeEach(() => {
+    showNotification.mockClear();
+  });
+
+  test('reports the failure by notification rather than in the page header', async () => {
+    renderView({
+      summary: null,
+      summaryFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out', requestId: 'trace-1' },
+    });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'registry timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(screen.queryByText(AnalyticsEvaluatorsI18nKey.VersionListFailed)).toBeNull();
+  });
+
+  test('falls back to its own title when the service supplied no header', async () => {
+    renderView({ summary: null, summaryFailure: {} });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsEvaluatorsI18nKey.VersionListFailed }),
+      ),
+    );
+  });
+
+  test('raises nothing when the version list was read', () => {
+    renderView();
+
+    expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  test('reports a failed referencing-pipelines read, quoting the service', async () => {
+    renderView({
+      referencingPipelines: null,
+      referencingFailure: { errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out' },
+    });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Upstream unavailable', description: 'registry timed out' }),
+      ),
+    );
+  });
+
+  test('falls back to its own title for a referencing read the service gave no header for', async () => {
+    renderView({ referencingPipelines: null, referencingFailure: {} });
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsEvaluatorsI18nKey.UsedByLoadFailed }),
+      ),
+    );
+  });
+
+  test('states the registration timestamp as unavailable', () => {
+    renderView({ summary: null, summaryFailure: {} });
+
+    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.Unavailable)).toBeTruthy();
+  });
 });
 
 describe('EvaluatorDetailView — tabs', () => {
@@ -113,10 +185,10 @@ describe('EvaluatorDetailView — Properties fields', () => {
 
     expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.Model)).toBeNull();
     expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.SectionRequestTemplate)).toBeNull();
-    expect(screen.queryByLabelText(AnalyticsEvaluatorsI18nKey.SectionInputVars)).toBeNull();
+    expect(screen.queryByLabelText('AnalyticsEvaluators.Preset')).toBeNull();
   });
 
-  test('always presents the output variables', () => {
+  test('always presents the outputs', () => {
     renderView({ evaluator: sql, summary: { name: sql.name, latest_version: 2 } });
 
     expect(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.SectionOutputVars)).toBeTruthy();
@@ -142,7 +214,7 @@ describe('EvaluatorDetailView — saving as a new version', () => {
 
   test('says so in the confirmation when the latest version could not be read', async () => {
     const user = userEvent.setup();
-    renderView({ summary: null, hasSummaryError: true });
+    renderView({ summary: null, summaryFailure: {} });
 
     await user.type(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.Model), 'x');
     await user.click(screen.getByRole('button', { name: AnalyticsEvaluatorsI18nKey.SaveAsNewVersion }));

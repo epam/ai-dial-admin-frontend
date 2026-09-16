@@ -7,23 +7,24 @@ import EnrichDetailView from '@/src/components/Analytics/Pipelines/Enrich/Enrich
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { Pipeline, PipelineKind } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { ReadFailure } from '@/src/models/server-action';
 
 interface Props {
   pipeline: Pipeline;
   evaluators: EvaluatorSummary[];
-  hasEvaluatorsError?: boolean;
+  evaluatorsFailure?: ReadFailure | null;
   takenTargets: string[];
   functions?: QueryFunction[];
 }
 
-const PipelineDetailView: FC<Props> = ({ pipeline, evaluators, hasEvaluatorsError, takenTargets, functions }) =>
+const PipelineDetailView: FC<Props> = ({ pipeline, evaluators, evaluatorsFailure, takenTargets, functions }) =>
   pipeline.kind === PipelineKind.Aggregate ? (
     <AggregateDetailView pipeline={pipeline} takenTargets={takenTargets} functions={functions} />
   ) : (
     <EnrichDetailView
       pipeline={pipeline}
       evaluators={evaluators}
-      hasEvaluatorsError={hasEvaluatorsError}
+      evaluatorsFailure={evaluatorsFailure}
       takenTargets={takenTargets}
     />
   );

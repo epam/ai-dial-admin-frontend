@@ -5,8 +5,7 @@ import EvaluatorCell from '@/src/components/Analytics/Pipelines/Common/Evaluator
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineKindCell from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
 import TriggerCell from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
-import { AnalyticsPipelinesI18nKey, AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 
 const baseRule: PipelineListItem = {
@@ -14,9 +13,7 @@ const baseRule: PipelineListItem = {
   kind: PipelineKind.Enrich,
   evaluator_name: 'feedback-rollup',
   evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
   target: 'turn_feedback',
-  grain_key: 'response_id',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,
@@ -53,11 +50,10 @@ describe('Pipelines :: TriggerCell', () => {
 });
 
 describe('Pipelines :: EvaluatorCell', () => {
-  test('shows the pinned name, version and type badge', () => {
+  test('shows the pinned name and version', () => {
     render(<EvaluatorCell pipeline={baseRule} />);
 
     expect(screen.getByText('feedback-rollup@2')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.EvaluatorTypeSql)).toBeInTheDocument();
   });
 
   test('marks an unpinned rule as following latest', () => {

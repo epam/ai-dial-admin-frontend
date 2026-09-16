@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useLayoutEffect, useMemo, useRef } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -19,11 +19,12 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   sections: RowDetailSection[];
   focusFieldKey?: string | null;
+  focusRequestId?: number;
 }
 
 const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
 
-const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey }) => {
+const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focusRequestId = 0 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -35,9 +36,9 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey }) =>
   );
   const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns, { includeStickyLabelColumn: false }), [columns]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
-  }, [focusFieldKey, columns]);
+  }, [focusFieldKey, focusRequestId, columns]);
 
   if (columns.length === 0) {
     return null;

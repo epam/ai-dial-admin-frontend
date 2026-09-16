@@ -93,7 +93,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   clearEntitySchemaCache();
   // No readable response column by default, so the tests about the spans read are not also model-body tests.
-  getEntitySchema().mockResolvedValue({ fields: [] });
+  getEntitySchema().mockResolvedValue({ success: true, response: { fields: [] } });
   (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
   (getUserToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(TOKEN_MOCK);
 });
@@ -319,7 +319,10 @@ describe('getConversationSpans', () => {
 describe('getHopBodyGrants', () => {
   test('answers from the entity schema without issuing any query', async () => {
     getEntitySchema().mockResolvedValue({
-      fields: [{ name: 'request_body' }, { name: 'response_body' }],
+      success: true,
+      response: {
+        fields: [{ name: 'dial_usage_log_payload.request_body' }, { name: 'dial_usage_log_payload.response_body' }],
+      },
     });
 
     const result = await getHopBodyGrants();
@@ -329,7 +332,7 @@ describe('getHopBodyGrants', () => {
   });
 
   test('reports the body columns unreadable when the schema names neither', async () => {
-    getEntitySchema().mockResolvedValue({ fields: [{ name: 'trace_id' }] });
+    getEntitySchema().mockResolvedValue({ success: true, response: { fields: [{ name: 'trace_id' }] } });
 
     const result = await getHopBodyGrants();
 
@@ -338,7 +341,7 @@ describe('getHopBodyGrants', () => {
   });
 
   test('reports unreadable rather than throwing when the schema cannot be read', async () => {
-    getEntitySchema().mockResolvedValue(undefined);
+    getEntitySchema().mockResolvedValue({ success: false, status: 403 });
 
     const result = await getHopBodyGrants();
 

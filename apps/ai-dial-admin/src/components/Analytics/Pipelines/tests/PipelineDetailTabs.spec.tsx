@@ -76,7 +76,6 @@ const rule: Pipeline = {
   generation: 7,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
-  output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
   // Carried so the runtime-state section renders: without a `state` it returns null, and the
   // Properties body would then be indistinguishable from one missing a section.
   state: { lag_seconds: 12, has_more: false },
@@ -111,7 +110,7 @@ beforeEach(() => {
   vi.mocked(getTable).mockImplementation(
     async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
   );
-  vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
   vi.mocked(updatePipeline).mockResolvedValue({ success: true });
 });
 

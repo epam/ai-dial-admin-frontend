@@ -115,7 +115,8 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       if (!event.data?.id) return;
       cellClickHandledRef.current = true;
       const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
-      openDetail(event.data.id, { focusFieldKey: mapGridColToPivotField(colId) });
+      const mappedFieldKey = mapGridColToPivotField(colId);
+      openDetail(event.data.id, { focusFieldKey: mappedFieldKey });
     },
     [openDetail],
   );

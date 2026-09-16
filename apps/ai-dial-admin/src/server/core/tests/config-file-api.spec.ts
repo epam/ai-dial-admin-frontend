@@ -119,4 +119,26 @@ describe('Server :: Core :: ConfigFileApi', () => {
     const [calledUrl] = fetch.mock.calls[0];
     expect(calledUrl).toContain('/v1/admin/config/file/interceptors/a%2Fb');
   });
+
+  test.each([
+    ConfigFileEntityType.Models,
+    ConfigFileEntityType.Routes,
+    ConfigFileEntityType.Applications,
+    ConfigFileEntityType.Toolsets,
+    ConfigFileEntityType.Schemas,
+  ])('listNames accepts the newly-widened type %s', async (type) => {
+    fetch.mockResponseOnce(JSON.stringify({ items: [] }), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.listNames(TOKEN_MOCK, type);
+
+    expect(fetch.mock.calls).toHaveLength(1);
+    expect(result.success).toBe(true);
+  });
+
+  test('listNames still refuses Keys', async () => {
+    const result = await instance.listNames(TOKEN_MOCK, ConfigFileEntityType.Keys);
+
+    expect(fetch.mock.calls).toHaveLength(0);
+    expect(!result.success && result.failure.reason).toBe(ConfigFileFailureReason.TypeNotReadable);
+  });
 });

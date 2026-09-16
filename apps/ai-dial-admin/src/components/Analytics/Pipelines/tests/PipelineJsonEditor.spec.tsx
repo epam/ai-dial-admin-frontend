@@ -142,14 +142,13 @@ describe('PipelineDetailView — entering the JSON editor', () => {
     expect(screen.getByRole('heading', { name: rule.name })).toBeInTheDocument();
   });
 
-  test('the document omits the members the service assigns', async () => {
+  test('the document is the pipeline as served, the members the service assigns included', async () => {
     const user = userEvent.setup();
     renderView();
 
     await enableEditor(user);
 
-    expect(mocks.editorProps.current.entity).not.toHaveProperty('id');
-    expect(mocks.editorProps.current.entity).not.toHaveProperty('generation');
+    expect(mocks.editorProps.current.entity).toHaveProperty('generation');
   });
 });
 

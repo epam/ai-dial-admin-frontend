@@ -93,10 +93,6 @@ describe('CreatePipelinePopup', () => {
     await selectEvaluator(user);
     await selectTarget(user);
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
-
-    await waitFor(() => expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.BindingColumn)).toBeTruthy());
-    await user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.BindingColumn), 'rate_event_count');
-    await user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.BindingVariable), 'rate_event_count');
   };
 
   const selectEvaluator = async (user: ReturnType<typeof userEvent.setup>) =>
@@ -115,7 +111,7 @@ describe('CreatePipelinePopup', () => {
     vi.clearAllMocks();
     vi.mocked(getTables).mockResolvedValue([enrichment]);
     vi.mocked(getTable).mockResolvedValue(enrichment);
-    vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(createPipeline).mockResolvedValue({ success: true });
   });
 
@@ -169,11 +165,14 @@ describe('CreatePipelinePopup', () => {
     expect(vi.mocked(createPipeline).mock.calls[0][0].enabled).toBe(false);
   });
 
-  test('does not offer the bindings editor before an evaluator resolves', () => {
+  test('offers no output mapping, which the service derives rather than accepts', async () => {
+    const user = userEvent.setup();
     renderEnrichPopup();
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.OutputBindingsEmpty)).toBeNull();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.OutputBindings)).toBeNull();
+    await selectEvaluator(user);
+    await selectTarget(user);
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionOutputs)).toBeNull();
   });
 
   // The operator can always open the modal; it is here that a missing evaluator is explained and
@@ -185,11 +184,12 @@ describe('CreatePipelinePopup', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
   });
 
-  test('reports a failed evaluator listing rather than claiming none are registered', () => {
+  test('marks the evaluator field rather than claiming none are registered', () => {
     renderEnrichPopup([], { evaluators: [], hasEvaluatorsError: true });
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeNull();
+    expect(screen.queryAllByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toHaveLength(1);
   });
 
   test('blocks submission until the form is complete', () => {
@@ -233,27 +233,14 @@ describe('CreatePipelinePopup', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.ReadyWhenRequired)).toBeTruthy();
   });
 
-  test('warns that a sql evaluator needs an output binding once the editor is usable', async () => {
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await selectEvaluator(user);
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.OutputBindingsRequired)).toBeNull();
-
-    await selectTarget(user);
-
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.OutputBindingsRequired)).toBeTruthy());
-  });
-
-  test('warns that an llm rule without bindings discards its results', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ ...evaluator, type: EvaluatorType.Llm });
+  test('offers no variables editor, which belongs to the detail page', async () => {
     const user = userEvent.setup();
     renderEnrichPopup();
 
     await selectEvaluator(user);
     await selectTarget(user);
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.OutputBindingsDiscarded)).toBeTruthy());
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionVariables)).toBeNull();
   });
 
   test('submits the assembled rule and closes on success', async () => {
@@ -271,7 +258,6 @@ describe('CreatePipelinePopup', () => {
         target: 'turn_feedback',
         trigger: { kind: TriggerKind.OnIngest },
         enabled: false,
-        output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
       }),
     );
     expect(onCreated).toHaveBeenCalledOnce();
@@ -326,7 +312,7 @@ describe('CreatePipelinePopup', () => {
   });
 
   test('does not submit while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const user = userEvent.setup();
     renderEnrichPopup();
 
@@ -340,7 +326,7 @@ describe('CreatePipelinePopup', () => {
   });
 
   test('reports a failed evaluator resolution in the form', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue(null);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
     const user = userEvent.setup();
     renderEnrichPopup();
 

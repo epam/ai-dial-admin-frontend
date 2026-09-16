@@ -1,4 +1,4 @@
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
+import { Evaluator } from '@/src/models/analytics/evaluator';
 
 export enum PipelineKind {
   Enrich = 'enrich',
@@ -9,11 +9,6 @@ export enum TriggerKind {
   OnIngest = 'on_ingest',
   Schedule = 'schedule',
   Group = 'group',
-}
-
-export enum PipelinePriority {
-  Live = 'live',
-  Backfill = 'backfill',
 }
 
 export enum SortDirection {
@@ -34,9 +29,13 @@ export enum TruncUnit {
   Month = 'month',
 }
 
-export enum FreshnessMode {
-  Periodic = 'periodic',
-  Incremental = 'incremental',
+/**
+ * Which projection a read returns. `Source` is the service's default and omits every resolved member;
+ * the console always asks for `Compiled`, which is that same declaration plus what the service derived.
+ */
+export enum PipelineView {
+  Source = 'source',
+  Compiled = 'compiled',
 }
 
 export interface PipelinesListFilters {
@@ -71,15 +70,26 @@ export interface PipelineTrigger {
   member_select?: MemberSelect;
 }
 
-export interface InputBinding {
-  var: string;
+// Always echoed in the object form, whichever spelling the declaration used, so a read never hands back
+// two shapes of one member.
+export interface PipelineVar {
   column?: string;
   jsonata?: string;
 }
 
-export interface OutputBinding {
+export interface PipelineAdvanced {
+  scan_every?: string;
+  rows_per_scan?: number;
+  rows_per_call?: number;
+  rate_rpm?: number;
+  sample_fraction?: number;
+}
+
+/** Derived by the service from the evaluator's outputs and the target's columns; never sent back. */
+export interface PipelineOutput {
+  name: string;
   column: string;
-  var: string;
+  jsonata?: string;
 }
 
 export interface TruncSpec {
@@ -99,10 +109,6 @@ export interface Measure {
   column?: string;
   where?: string;
   distinct?: boolean;
-}
-
-export interface Freshness {
-  mode: FreshnessMode;
 }
 
 export interface PipelineClamp {
@@ -147,17 +153,15 @@ export interface CreatePipelineDto {
   enabled?: boolean;
   evaluator_name?: string;
   evaluator_version?: number;
-  input_bindings?: InputBinding[];
-  output_bindings?: OutputBinding[];
-  sampling?: number;
-  cadence?: string;
-  batch_scan_limit?: number;
-  batch_chunk?: number;
-  rate_rpm?: number;
-  priority?: PipelinePriority;
+  vars?: Record<string, PipelineVar>;
+  advanced?: PipelineAdvanced;
   group_by?: GroupKey[];
   measures?: Measure[];
-  freshness?: Freshness;
+}
+
+/** Body of the enable/disable toggle, which is a state change rather than a re-declaration. */
+export interface PipelineEnabledDto {
+  enabled: boolean;
 }
 
 export interface Pipeline extends Omit<CreatePipelineDto, 'enabled'> {
@@ -169,12 +173,7 @@ export interface Pipeline extends Omit<CreatePipelineDto, 'enabled'> {
   evaluator?: Evaluator;
   grain_key?: string;
   version_column?: string;
-}
-
-export interface PipelineEvaluatorSummary {
-  name: string;
-  version: number;
-  type: EvaluatorType;
+  outputs?: PipelineOutput[];
 }
 
 export interface PipelineListItem {
@@ -188,12 +187,4 @@ export interface PipelineListItem {
   updated_at: string;
   evaluator_name?: string;
   evaluator_version?: number;
-  evaluator?: PipelineEvaluatorSummary;
-  grain_key?: string;
-  version_column?: string;
-}
-
-export interface PipelineReadResult<T> {
-  data: T | null;
-  isForbidden: boolean;
 }

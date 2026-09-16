@@ -28,7 +28,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toEqual(entities);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: entities }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities'),
       expect.objectContaining({ method: 'GET' }),
@@ -41,7 +41,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntitySchema('my entity', TOKEN_MOCK);
 
-    expect(res).toEqual(schema);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: schema }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities/schema/my%20entity'),
       expect.objectContaining({ method: 'GET' }),
@@ -64,7 +64,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getFunctions(TOKEN_MOCK);
 
-    expect(res).toEqual(functions);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: functions }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/functions'),
       expect.objectContaining({ method: 'GET' }),
@@ -131,12 +131,13 @@ describe('Server :: AnalyticsDataApi', () => {
     expect(res.success).toBe(false);
   });
 
-  test('getEntities returns null on a failed response', async () => {
+  test('getEntities carries a failed response as an unsuccessful envelope', async () => {
     fetch.mockResponseOnce('nope', { status: 500 });
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
+    expect(res.response).toBeUndefined();
   });
 
   test('getTables issues GET /v1/tables and unwraps the { tables } envelope', async () => {
@@ -145,7 +146,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTables(TOKEN_MOCK);
 
-    expect(res).toEqual(tables);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: tables }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables'),
       expect.objectContaining({ method: 'GET' }),
@@ -224,7 +225,9 @@ describe('Server :: AnalyticsDataApi', () => {
     };
     fetch.mockResponseOnce(JSON.stringify(table), { headers: { 'content-type': 'application/json' } });
 
-    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(table);
+    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(
+      expect.objectContaining({ success: true, response: table }),
+    );
   });
 
   test('defineTableSchema sends the scan-metadata pair only when declared', async () => {
@@ -280,7 +283,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTableAccess('events', TOKEN_MOCK);
 
-    expect(res).toEqual(access);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: access }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'GET' }),
@@ -340,15 +343,16 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toEqual([savedQuery]);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: [savedQuery] }));
   });
 
-  test('listSavedQueries returns null when the envelope is absent', async () => {
+  test('listSavedQueries reads a missing envelope as an unreadable body', async () => {
     fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res.success).toBe(false);
+    expect(res.response).toBeUndefined();
   });
 
   test('getSavedQuery issues GET on the encoded saved-query URL and returns the parsed query', async () => {
@@ -356,7 +360,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.getSavedQuery('sq /1', TOKEN_MOCK);
 
-    expect(res).toEqual(savedQuery);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: savedQuery }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/saved-queries/sq%20%2F1'),
       expect.objectContaining({ method: 'GET' }),
@@ -447,38 +451,57 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     test('getPipelines unwraps the {pipelines} envelope, not {items}', async () => {
       fetch.mockResponseOnce(JSON.stringify({ pipelines: [pipeline] }), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
     });
 
-    test('getPipelines ignores a list under any other key', async () => {
+    test('getPipelines reads a list under any other key as an unreadable body', async () => {
       fetch.mockResponseOnce(JSON.stringify({ items: [pipeline] }), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+      expect(res.response).toBeUndefined();
     });
 
     // Deployed builds disagree: some answer a bare array, some the wrapper.
     test('getPipelines accepts a bare array as well as the wrapper', async () => {
       fetch.mockResponseOnce(JSON.stringify([pipeline]), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
     });
 
     test('getPipelines reads an empty bare array as no pipelines rather than a failure', async () => {
       fetch.mockResponseOnce(JSON.stringify([]), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [] }),
+      );
     });
 
-    test('getPipelines marks a forbidden read so the page can offer its own fallback', async () => {
+    test('getPipelines carries a refusal as status 403 so the page can render its own fallback', async () => {
       fetch.mockResponseOnce('', { status: 403 });
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: true });
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
     });
 
-    test('getPipelines reports any other failure as readable but empty', async () => {
-      fetch.mockResponseOnce('boom', { status: 500 });
+    test('getPipelines carries any other failure with the service status and words', async () => {
+      fetch.mockResponseOnce('{"error":"upstream","message":"registry timed out"}', { status: 500 });
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 500,
+          errorHeader: 'upstream',
+          errorMessage: 'registry timed out',
+        }),
+      );
     });
 
     test('getPipelines omits enabled entirely when no preference is expressed', async () => {
@@ -488,7 +511,14 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       const url = fetch.mock.calls[0][0] as string;
       expect(url).not.toContain('enabled');
-      expect(url).not.toContain('?');
+    });
+
+    test('getPipelines asks for the compiled projection', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('view=compiled');
     });
 
     test('getPipelines sends enabled=true for the enabled-only filter', async () => {
@@ -551,20 +581,20 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       const res = await instance.getPipeline('turn feedback', TOKEN_MOCK);
 
-      expect(res).toEqual({ data: pipeline, isForbidden: false });
+      expect(res).toEqual(expect.objectContaining({ success: true, response: pipeline }));
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/pipelines/turn%20feedback'),
+        expect.stringContaining('/v1/pipelines/turn%20feedback?view=compiled'),
         expect.objectContaining({ method: 'GET' }),
       );
     });
 
-    test('getPipeline marks a forbidden read rather than reporting the pipeline missing', async () => {
+    test('getPipeline carries a refusal as status 403 rather than reporting the pipeline missing', async () => {
       fetch.mockResponseOnce('', { status: 403 });
 
-      expect(await instance.getPipeline('turn_feedback_live', TOKEN_MOCK)).toEqual({
-        data: null,
-        isForbidden: true,
-      });
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
     });
 
     test('createPipeline POSTs the whole pipeline in one request', async () => {
@@ -613,14 +643,31 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       const items = [{ name: 'conversation-insights', latest_version: 4 }];
       fetch.mockResponseOnce(JSON.stringify({ items }), JSON_HEADERS);
 
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
+      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: items }),
+      );
     });
 
     test('getEvaluators accepts a bare array as well as the wrapper', async () => {
       const items = [{ name: 'conversation-insights', latest_version: 4 }];
       fetch.mockResponseOnce(JSON.stringify(items), JSON_HEADERS);
 
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
+      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: items }),
+      );
+    });
+
+    test('getEvaluators carries a failure with the service status and words', async () => {
+      fetch.mockResponseOnce('{"error":"upstream","message":"registry timed out"}', { status: 500 });
+
+      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 500,
+          errorHeader: 'upstream',
+          errorMessage: 'registry timed out',
+        }),
+      );
     });
 
     test('getEvaluator issues GET on the encoded evaluator URL', async () => {
@@ -628,7 +675,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       const res = await instance.getEvaluator('my evaluator', TOKEN_MOCK);
 
-      expect(res).toEqual(evaluator);
+      expect(res).toEqual(expect.objectContaining({ success: true, response: evaluator }));
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/evaluators/my%20evaluator'),
         expect.objectContaining({ method: 'GET' }),

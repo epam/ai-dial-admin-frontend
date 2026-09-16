@@ -7,6 +7,7 @@ import { removeInterceptor, updateInterceptor } from '@/src/app/[lang]/platform-
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -22,15 +23,25 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalInterceptor: DialInterceptorResource;
+  /** True when `originalInterceptor` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor }) => {
+const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, isConfigFileSource }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformInterceptors);
   const router = useRouter();
   const { fetchFiles } = useInterceptorsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+  const { setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(structuredClone(originalInterceptor));
@@ -42,8 +53,11 @@ const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor }) => {
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   useEffect(() => {

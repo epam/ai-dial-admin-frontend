@@ -29,22 +29,10 @@ interface Props {
   isRequestLoading: boolean;
   response: HopResponseEnvelope | null;
   isResponseLoading: boolean;
-  // The history is gated by the request column and is what this tab is made of; the answer is gated by its
-  // own, and its absence is a statement rather than a missing turn.
   isResponseGranted: boolean;
+  hasFailed: boolean;
 }
 
-// What was actually said, in the order it was said. A turn qualifies when its role is user or assistant and
-// it carries text: everything else in a hop's history is machinery — a system prompt, a tool result, an
-// assistant turn that only called a tool — and the Request tab states all of it, in full, with its sizes.
-//
-// Without this filter the tab is the Request tab in different clothes: on a nested model call, 50 messages
-// render as 50 bubbles, most of them tool traffic, and the exchange is not findable among them. The point of
-// this tab is the exchange.
-//
-// The role alone is not enough. The messages dialect feeds a tool result back as a **user** message carrying
-// `tool_result` blocks, so filtering by role would let machinery through wearing the user's role — the one
-// thing this tab must never do. A message that answers a call is a result whatever role it arrived under.
 const conversationTurnsOf = (messages: HopMessageEntry[]): HopMessageEntry[] =>
   messages.filter(
     ({ role, text, answers }) =>
@@ -53,13 +41,6 @@ const conversationTurnsOf = (messages: HopMessageEntry[]): HopMessageEntry[] =>
       (text ?? '').trim().length > 0,
   );
 
-/**
- * The state of the conversation this span was given, followed by the answer it produced.
- *
- * Reads nothing of its own. Both envelopes are the ones the Request and Response tabs already state, so a
- * second presentation of a body costs no second read — and a clamped turn opens through the same tier-2 read
- * the request's history offers.
- */
 const HopChatPanel: FC<Props> = ({
   scope,
   traceId,
@@ -69,6 +50,7 @@ const HopChatPanel: FC<Props> = ({
   response,
   isResponseLoading,
   isResponseGranted,
+  hasFailed,
 }) => {
   const t = useI18n();
   const { messages, loadingIndexes, onOpen, onClose } = useHopMessage({
@@ -100,6 +82,14 @@ const HopChatPanel: FC<Props> = ({
   // A response whose text is blank put its output somewhere else — commonly in tool calls — so it adds no
   // turn rather than an empty bubble.
   const hasAnswer = (answer ?? '').trim().length > 0;
+  // What the caller actually received, and the one thing a reader opens a failed hop to see. Stated in place
+  // of the answer the hop never produced, and only once the response has been read — a failure announced
+  // while the read is still in flight would be a guess.
+  // Stated only in place of an answer the hop never produced: a hop recorded as failed can still carry a
+  // readable answer — a 200 that reported `success: false` is one — and replacing that answer with "go read
+  // the bytes" would withhold the very thing the reader opened the tab for. Gated on the read having
+  // finished, since a failure announced mid-flight is a guess.
+  const isFailureStated = hasFailed && !hasAnswer && isResponseGranted && !isResponseLoading && response !== null;
 
   return (
     <div
@@ -134,13 +124,20 @@ const HopChatPanel: FC<Props> = ({
           <DialLoader size={INSPECTOR_LOADER_SIZE} ariaLabel={t(ConversationsTraceI18nKey.InspectorLoading)} />
         </div>
       )}
-      {/* Omitted rather than faked where the response yielded nothing: a response with no text put its output
-          somewhere else, commonly in tool calls, and an empty trailing bubble would read as an answer. The
-          reasoning summary is never merged in — it is the model's scratch work, not its reply. */}
       {hasAnswer && (
         <HopChatBubble role={MessageRole.Assistant}>
           <p className="whitespace-pre-wrap break-words text-primary dial-small-text">{answer}</p>
         </HopChatBubble>
+      )}
+      {/* Never in the bubble that says who spoke: the hop said nothing, something refused it, and a refusal
+          wearing the assistant's label reports an outage as speech. A body stating no readable error falls
+          through to the key, which sends the reader to the recorded bytes rather than to a fragment. */}
+      {isFailureStated && (
+        <HopStateNote
+          message={response.errorText ?? undefined}
+          messageKey={ConversationsTraceI18nKey.InspectorChatHopFailed}
+          isFailure
+        />
       )}
     </div>
   );

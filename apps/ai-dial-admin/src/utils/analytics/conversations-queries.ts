@@ -599,14 +599,17 @@ export const buildConversationHopBodyQuery = (
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
-  bodyFields: UsageLogField[],
+  bodyFields: string[],
 ): StructuredQuery => {
-  const selectable = [UsageLogField.TraceId, UsageLogField.EventKind, UsageLogField.RequestUri, ...bodyFields];
+  const plain = [UsageLogField.TraceId, UsageLogField.EventKind, UsageLogField.RequestUri];
   const recordedMillis = toMillis(requestTime);
 
   return rowQuery({
     entity: USAGE_LOG_ENTITY,
-    select: selectable.map((fieldName) => col(field(fieldName))),
+    // Selected under the names the service publishes, qualified enrichment columns included. A projection
+    // alias is not honoured on a row read — the qualified key comes back whatever the query asked for — so
+    // the namespace is stripped where the row is read rather than pretended away here.
+    select: [...plain, ...bodyFields].map((fieldName) => col(field(fieldName))),
     filter: and([
       eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
       eq(UsageLogField.CoreSpanId, value(QueryValueType.String, coreSpanId)),

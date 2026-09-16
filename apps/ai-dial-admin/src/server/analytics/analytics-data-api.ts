@@ -14,12 +14,13 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { Evaluator, EvaluatorRequest, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import {
   CreatePipelineDto,
   Pipeline,
+  PipelineEnabledDto,
   PipelineEnabledFilter,
-  PipelineReadResult,
+  PipelineView,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
 import {
@@ -61,6 +62,10 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
+// The service's default projection omits everything it resolved — the inlined evaluator, the grain key,
+// the version column, the output mapping and the read source — and this console renders all of them.
+export const PIPELINE_READ_URL = (name: string): string => `${PIPELINE_URL(name)}?view=${PipelineView.Compiled}`;
+
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   const params = new URLSearchParams();
 
@@ -68,13 +73,18 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.enabled === PipelineEnabledFilter.Enabled) params.set('enabled', 'true');
   if (filters?.enabled === PipelineEnabledFilter.Disabled) params.set('enabled', 'false');
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
+  params.set('view', PipelineView.Compiled);
 
-  const query = params.toString();
-  return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
+  return `${PIPELINES_URL}?${params.toString()}`;
 };
 
-const readResult = <T>(res: unknown, unwrap: (value: unknown) => T | null): PipelineReadResult<T> =>
-  res === undefined ? { data: null, isForbidden: true } : { data: unwrap(res), isForbidden: false };
+// A 2xx whose body is not a shape the read accepts: `handleResponse` found no error to describe, so the
+// envelope carries the failure and no words.
+const unreadableBody = <T extends object>({ status, requestId }: ServerActionResponse): ServerActionResponse<T> => ({
+  success: false,
+  status,
+  requestId,
+});
 
 export const EVALUATORS_URL = 'v1/evaluators';
 export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
@@ -92,16 +102,16 @@ export class AnalyticsDataApi extends BaseApi {
     return this.getAction(QUERIES_ENTITIES_URL, token);
   }
 
-  getEntities(token: Token): Promise<AnalyticsEntity[] | null> {
-    return this.get<AnalyticsEntity[]>(QUERIES_ENTITIES_URL, token);
+  getEntities(token: Token): Promise<ServerActionResponse<AnalyticsEntity[]>> {
+    return this.getAction(QUERIES_ENTITIES_URL, token);
   }
 
-  getEntitySchema(name: string, token: Token): Promise<AnalyticsEntitySchema | null> {
-    return this.get<AnalyticsEntitySchema>(QUERIES_ENTITY_SCHEMA_URL(name), token);
+  getEntitySchema(name: string, token: Token): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
+    return this.getAction(QUERIES_ENTITY_SCHEMA_URL(name), token);
   }
 
-  getFunctions(token: Token): Promise<QueryFunction[] | null> {
-    return this.get<QueryFunction[]>(QUERIES_FUNCTIONS_URL, token);
+  getFunctions(token: Token): Promise<ServerActionResponse<QueryFunction[]>> {
+    return this.getAction(QUERIES_FUNCTIONS_URL, token);
   }
 
   executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
@@ -131,13 +141,20 @@ export class AnalyticsDataApi extends BaseApi {
   // caller, which is all the list and the detail page need. Writes use the `*Action` variants
   // because their failures are load-bearing: the caller branches on the machine code the envelope
   // carries (see `utils/saved-query-error.ts`).
-  async listSavedQueries(scope: SavedQueryScope, token: Token): Promise<SavedQuery[] | null> {
-    const res = await this.get<SavedQueryListResponse>(SAVED_QUERIES_SCOPE_URL(scope), token);
-    return res?.saved_queries ?? null;
+  async listSavedQueries(scope: SavedQueryScope, token: Token): Promise<ServerActionResponse<SavedQuery[]>> {
+    const res = await this.getAction(SAVED_QUERIES_SCOPE_URL(scope), token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const saved = (res.response as SavedQueryListResponse | undefined)?.saved_queries;
+    return saved ? { ...res, response: saved } : unreadableBody(res);
   }
 
-  getSavedQuery(id: string, token: Token): Promise<SavedQuery | null> {
-    return this.get<SavedQuery>(SAVED_QUERY_URL(id), token);
+  async getSavedQuery(id: string, token: Token): Promise<ServerActionResponse<SavedQuery>> {
+    const res = await this.getAction(SAVED_QUERY_URL(id), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   createSavedQuery(dto: SavedQueryRequest, token: Token): Promise<ServerActionResponse<SavedQuery>> {
@@ -154,13 +171,20 @@ export class AnalyticsDataApi extends BaseApi {
     return this.deleteAction(SAVED_QUERY_URL(id), token);
   }
 
-  async getTables(token: Token): Promise<AnalyticsTable[] | null> {
-    const res = await this.get<{ tables: AnalyticsTable[] }>(TABLES_URL, token);
-    return res?.tables ?? null;
+  async getTables(token: Token): Promise<ServerActionResponse<AnalyticsTable[]>> {
+    const res = await this.getAction(TABLES_URL, token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const tables = (res.response as { tables?: AnalyticsTable[] } | undefined)?.tables;
+    return tables ? { ...res, response: tables } : unreadableBody(res);
   }
 
-  getTable(name: string, token: Token): Promise<AnalyticsTable | null> {
-    return this.get<AnalyticsTable>(TABLE_URL(name), token);
+  async getTable(name: string, token: Token): Promise<ServerActionResponse<AnalyticsTable>> {
+    const res = await this.getAction(TABLE_URL(name), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   createTable(dto: CreateTableDto, token: Token): Promise<ServerActionResponse> {
@@ -190,8 +214,8 @@ export class AnalyticsDataApi extends BaseApi {
   }
 
   // Per-table role lists (write/modify). Admin-only on the backend; a non-admin GET is rejected 403.
-  getTableAccess(name: string, token: Token): Promise<TableAccess | null> {
-    return this.get<TableAccess>(TABLE_ACCESS_URL(name), token);
+  getTableAccess(name: string, token: Token): Promise<ServerActionResponse<TableAccess>> {
+    return this.getAction(TABLE_ACCESS_URL(name), token);
   }
 
   // Full-replace of the table's role lists (admin-only).
@@ -199,43 +223,66 @@ export class AnalyticsDataApi extends BaseApi {
     return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
   }
 
-  async getPipelines(filters: PipelinesListFilters | undefined, token: Token): Promise<PipelineReadResult<Pipeline[]>> {
-    const res = (await this.get<object>(PIPELINES_LIST_URL(filters), token)) as object | null | undefined;
-    return readResult(res, (value) => unwrapList<Pipeline>(value, 'pipelines'));
+  async getPipelines(
+    filters: PipelinesListFilters | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<Pipeline[]>> {
+    const res = await this.getAction(PIPELINES_LIST_URL(filters), token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const pipelines = unwrapList<Pipeline>(res.response, 'pipelines');
+    return pipelines ? { ...res, response: pipelines } : unreadableBody(res);
   }
 
-  async getPipeline(name: string, token: Token): Promise<PipelineReadResult<Pipeline>> {
-    const res = (await this.get<Pipeline>(PIPELINE_URL(name), token)) as Pipeline | null | undefined;
-    return readResult(res, (value) => (value as Pipeline) ?? null);
+  async getPipeline(name: string, token: Token): Promise<ServerActionResponse<Pipeline>> {
+    const res = await this.getAction(PIPELINE_READ_URL(name), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   createPipeline(dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
     return this.postAction<CreatePipelineDto>(PIPELINES_URL, dto, token);
   }
 
-  updatePipeline(name: string, dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
-    return this.patchAction<CreatePipelineDto>(PIPELINE_URL(name), dto, token);
+  // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
+  // answers 409 for; `PipelineEnabledDto` is how the toggle stays a state change.
+  updatePipeline(
+    name: string,
+    dto: CreatePipelineDto | PipelineEnabledDto,
+    token: Token,
+  ): Promise<ServerActionResponse> {
+    return this.patchAction<CreatePipelineDto | PipelineEnabledDto>(PIPELINE_URL(name), dto, token);
   }
 
   deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(PIPELINE_URL(name), token);
   }
 
-  async getEvaluators(token: Token): Promise<EvaluatorSummary[] | null> {
-    const res = await this.get<object>(EVALUATORS_URL, token);
-    return unwrapList<EvaluatorSummary>(res, 'items');
+  async getEvaluators(token: Token): Promise<ServerActionResponse<EvaluatorSummary[]>> {
+    const res = await this.getAction(EVALUATORS_URL, token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const evaluators = unwrapList<EvaluatorSummary>(res.response, 'items');
+    return evaluators ? { ...res, response: evaluators } : unreadableBody(res);
   }
 
-  getEvaluator(name: string, token: Token): Promise<Evaluator | null> {
-    return this.get<Evaluator>(EVALUATOR_URL(name), token);
+  async getEvaluator(name: string, token: Token): Promise<ServerActionResponse<Evaluator>> {
+    const res = await this.getAction(EVALUATOR_URL(name), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
-  getEvaluatorVersion(name: string, version: number, token: Token): Promise<Evaluator | null> {
-    return this.get<Evaluator>(EVALUATOR_VERSION_URL(name, version), token);
+  async getEvaluatorVersion(name: string, version: number, token: Token): Promise<ServerActionResponse<Evaluator>> {
+    const res = await this.getAction(EVALUATOR_VERSION_URL(name, version), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
-  createEvaluator(dto: CreateEvaluatorDto, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    return this.postAction<CreateEvaluatorDto>(EVALUATORS_URL, dto, token);
+  createEvaluator(dto: EvaluatorRequest, token: Token): Promise<ServerActionResponse<Evaluator>> {
+    return this.postAction<EvaluatorRequest>(EVALUATORS_URL, dto, token);
   }
 }

@@ -90,8 +90,11 @@ const rule = (overrides: Partial<PipelineListItem> = {}): PipelineListItem => ({
 
 describe('Pipelines :: PipelinesView', () => {
   beforeEach(() => {
-    vi.mocked(getEvaluators).mockResolvedValue([{ name: 'feedback-rollup', latest_version: 2 }]);
-    vi.mocked(getPipelines).mockResolvedValue({ data: [rule()], isForbidden: false });
+    vi.mocked(getEvaluators).mockResolvedValue({
+      success: true,
+      response: [{ name: 'feedback-rollup', latest_version: 2 }],
+    });
+    vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule()] });
     vi.mocked(deletePipeline).mockResolvedValue({ success: true });
     showNotification.mockClear();
   });
@@ -103,13 +106,44 @@ describe('Pipelines :: PipelinesView', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)).not.toBeInTheDocument();
   });
 
-  // An operator must be able to tell "nothing registered" from "the service is unreachable"; a bare
-  // not-found page conflates the two.
-  test('states the load failure instead of rendering as an empty registry', () => {
-    render(<PipelinesView initialPipelines={[]} hasLoadError />);
+  // An operator must be able to tell "nothing registered" from "the service is unreachable"; the report
+  // is a notification carrying the service's own words, not a sentence above the grid.
+  test('reports a seeded load failure by notification rather than as text above the grid', async () => {
+    render(
+      <PipelinesView
+        initialPipelines={[]}
+        loadFailure={{ errorHeader: 'Upstream unavailable', errorMessage: 'registry timed out', requestId: 'trace-1' }}
+      />,
+    );
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'registry timed out',
+          requestId: 'trace-1',
+        }),
+      ),
+    );
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)).not.toBeInTheDocument();
     expect(screen.getByText('rows: 0')).toBeInTheDocument();
+  });
+
+  test('falls back to its own title when the seeded failure carries no header', async () => {
+    render(<PipelinesView initialPipelines={[]} loadFailure={{}} />);
+
+    await waitFor(() =>
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: AnalyticsPipelinesI18nKey.PipelinesLoadFailed }),
+      ),
+    );
+  });
+
+  test('raises exactly one report for one seeded failure', async () => {
+    render(<PipelinesView initialPipelines={[]} loadFailure={{ errorMessage: 'registry timed out' }} />);
+
+    await waitFor(() => expect(showNotification).toHaveBeenCalledTimes(1));
+    expect(showNotification).toHaveBeenCalledTimes(1);
   });
 
   test('renders the seeded rules and the specified columns', () => {
@@ -143,7 +177,7 @@ describe('Pipelines :: PipelinesView', () => {
   // The modal is where the missing evaluator is visible and where submission is blocked; disabling the
   // action here would hide that explanation behind a control the operator cannot open.
   test('still offers the create action when no evaluator is registered', async () => {
-    vi.mocked(getEvaluators).mockResolvedValue([]);
+    vi.mocked(getEvaluators).mockResolvedValue({ success: true, response: [] });
 
     render(<PipelinesView initialPipelines={[rule()]} />);
 
@@ -185,9 +219,15 @@ describe('Pipelines :: PipelinesView', () => {
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
   });
 
-  test('a failed re-fetch leaves the previously fetched rows in place', async () => {
+  test('a failed re-fetch leaves the previously fetched rows in place and quotes the service', async () => {
     const user = userEvent.setup();
-    vi.mocked(getPipelines).mockResolvedValue({ data: null, isForbidden: false });
+    vi.mocked(getPipelines).mockResolvedValue({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'registry timed out',
+      requestId: 'trace-2',
+    });
     render(<PipelinesView initialPipelines={[rule()]} />);
 
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
@@ -195,7 +235,11 @@ describe('Pipelines :: PipelinesView', () => {
 
     await waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: AnalyticsPipelinesI18nKey.PipelinesLoadFailed }),
+        expect.objectContaining({
+          title: 'Upstream unavailable',
+          description: 'registry timed out',
+          requestId: 'trace-2',
+        }),
       ),
     );
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
@@ -211,17 +255,17 @@ describe('Pipelines :: PipelinesView', () => {
     await waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
   });
 
-  test('clears a seeded load failure once a re-fetch succeeds', async () => {
+  test('a successful re-fetch after a seeded failure raises no further report', async () => {
     const user = userEvent.setup();
-    render(<PipelinesView initialPipelines={[rule()]} hasLoadError />);
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)).toBeInTheDocument();
+    render(<PipelinesView initialPipelines={[rule()]} loadFailure={{ errorMessage: 'registry timed out' }} />);
+    await waitFor(() => expect(showNotification).toHaveBeenCalledTimes(1));
 
     await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
 
-    await waitFor(() =>
-      expect(screen.queryByText(AnalyticsPipelinesI18nKey.PipelinesLoadFailed)).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(getPipelines).toHaveBeenCalledWith());
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: expect.any(String) }));
+    expect(showNotification.mock.calls.filter(([n]) => n.description === 'registry timed out')).toHaveLength(1);
   });
 
   // Narrowing is the grid's job now that the toolbar is gone, so no data column may opt out of it.

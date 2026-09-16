@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 
@@ -14,7 +14,7 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
 
 vi.mock('@/src/utils/auth/auth-request', () => ({ getUserToken: vi.fn().mockResolvedValue('token') }));
 vi.mock('@/src/utils/env/get-auth-toggle', () => ({ getIsEnableAuthToggle: () => false }));
-vi.mock('@/src/components/Assets/Apps/List', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Apps/PageList', () => ({ __esModule: true, default: () => null }));
 
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi } from '@/src/app/api/api';
@@ -29,6 +29,13 @@ const runnersPassedToList = (tree: any): AppRunnerOption[] => tree.props.childre
 describe('Assets > Applications :: runner sources', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // These cases exercise the admin-BE runner-schemes read itself, so the admin API is on here;
+    // the on/off gating of that read is covered separately in admin-api-gating.spec.tsx.
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'https://admin-be.example.com');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test('merges both populations into the picker options', async () => {

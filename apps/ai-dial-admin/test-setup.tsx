@@ -29,7 +29,11 @@ vi.mock('next-auth/react', () => ({
 
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+  usePathname: vi.fn(),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
 
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
@@ -99,20 +103,28 @@ vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnConte
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 
+// Hoisted, not returned as a literal from the mock: a fresh object per call gives `featureFlags`
+// (and the context value itself) a new identity every render, so any component listing one of them
+// in a hook dependency array re-runs its effect forever and the worker dies on heap exhaustion.
+const appContextValue = {
+  sidebar: {
+    show: false,
+    content: null,
+    showSidebar: vi.fn(),
+    closeSidebar: vi.fn(),
+    position: SidebarPosition.Right,
+  },
+  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+  isReadOnlyAdmin: false,
+  isFullAdmin: true,
+  isEnableAuth: false,
+  showConfigFiles: false,
+  toggleShowConfigFiles: vi.fn(),
+  setEntityReadOnly: vi.fn(),
+};
+
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
-    sidebar: {
-      show: false,
-      content: null,
-      showSidebar: vi.fn(),
-      closeSidebar: vi.fn(),
-      position: SidebarPosition.Right,
-    },
-    featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
-    isReadOnlyAdmin: false,
-    isFullAdmin: true,
-    isEnableAuth: false,
-  }),
+  useAppContext: () => appContextValue,
 }));
 
 vi.mock('@/src/context/SaveValidationContext', () => {

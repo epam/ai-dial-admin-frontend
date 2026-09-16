@@ -65,6 +65,18 @@ Row-detail Display SHALL control field visibility/order and diff toggles only. V
 - **WHEN** the panel is on the right
 - **THEN** the body shows the table view
 
+### Requirement: Display settings survive close and reopen
+
+Closing and reopening the compare row-detail panel within the same comparison session SHALL preserve Display field visibility, order, and diff toggles. Changing either compared run SHALL reset Display to defaults.
+
+#### Scenario: Display settings survive close and reopen
+- **WHEN** the user changes Display visibility or diff toggles, closes the panel, and opens it again on the same comparison
+- **THEN** the previously chosen field visibility, order, and diff toggles are still applied
+
+#### Scenario: Changing compared runs resets Display
+- **WHEN** the user changes the primary or compared run
+- **THEN** Display field visibility and diff toggles reset to defaults
+
 ### Requirement: Drawer displays two-run comparison for the clicked row
 
 The compare row-detail panel SHALL display a side-by-side comparison between the primary and compared run results for the selected test case, including diff highlighting and counts.

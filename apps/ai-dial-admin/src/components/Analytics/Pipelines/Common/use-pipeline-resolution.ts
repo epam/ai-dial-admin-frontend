@@ -73,8 +73,9 @@ const useCachedResolution = <T>(key: string | undefined, resolve: (key: string) 
 /**
  * enrichment's `source_table`, so it cannot be resolved until the target has been.
  *
- * Output bindings are written against the **target's** columns; input bindings and every SQL predicate are
- * read against the **source's**. Conflating the two is the likeliest way to get this wrong.
+ * Variables and every SQL predicate are read against the **source's** columns; a measure's name and the
+ * derived output mapping are written against the **target's**. Conflating the two is the likeliest way to
+ * get this wrong.
  */
 export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target: targetName, input }: Params) => {
   const [tables, setTables] = useState<AnalyticsTable[]>([]);
@@ -103,9 +104,10 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
 
   const evaluatorKey = evaluatorName ? `${evaluatorName}@${evaluatorVersion ?? LATEST_VERSION}` : undefined;
 
-  const resolveEvaluator = useCallback((key: string): Promise<Evaluator | null> => {
+  const resolveEvaluator = useCallback(async (key: string): Promise<Evaluator | null> => {
     const [name, version] = key.split('@');
-    return version === LATEST_VERSION ? getEvaluator(name) : getEvaluatorVersion(name, Number(version));
+    const read = await (version === LATEST_VERSION ? getEvaluator(name) : getEvaluatorVersion(name, Number(version)));
+    return read.response ?? null;
   }, []);
 
   const resolveTable = useCallback((name: string): Promise<AnalyticsTable | null> => getTable(name), []);
@@ -138,7 +140,5 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
     grainKey: target.value?.grain?.grain_key ?? '',
     targetColumns: target.value?.columns ?? [],
     sourceColumns: readSource.value?.columns ?? [],
-    outputVars: evaluator.value?.output_vars ?? [],
-    inputVars: evaluator.value?.input_vars ?? [],
   };
 };

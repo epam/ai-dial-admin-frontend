@@ -23,6 +23,7 @@ import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHead
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -55,9 +56,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs = getAppRunnerTabs(t);
+  const tabs = getAppRunnerTabs(t, featureFlags);
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },

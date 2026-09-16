@@ -21,11 +21,19 @@ On the dedicated Run Comparison page Execution Results tab, clicking a grid row 
 
 ### Requirement: Grid cell click scrolls to related pivot field
 
-When the user clicks a cell in the Compare Execution Results grid whose column maps to a pivot field, the system SHALL open the bottom panel for that row (if needed) and horizontally scroll so the related pivot column is visible. Unmapped columns SHALL still open the panel without scrolling to a specific field.
+When the user clicks a cell in the Compare Execution Results grid whose column maps to a detail field, the system SHALL open the current-mode detail panel for that row (if needed) and scroll so the related field is visible: horizontally in the bottom pivot, vertically in the right sidebar table. Mapping SHALL preserve underscored metric leaf keys (for example `exact_match` from `Exact Match_exact_match`). Unmapped columns SHALL still open the panel without scrolling to a specific field.
 
 #### Scenario: Cell click scrolls to field
 - **WHEN** the user clicks an `http` or `cmp_http` cell for a row
 - **THEN** the detail panel shows that row and scrolls to the HTTP pivot column
+
+#### Scenario: Underscored metric leaf scrolls to field
+- **WHEN** the user clicks an `exact_match` metric cell (`Exact Match_exact_match` or `cmp_Exact Match_exact_match`)
+- **THEN** the detail panel shows that row and scrolls to the `exact_match` field
+
+#### Scenario: Cell click scrolls sidebar table to field
+- **WHEN** the row detail is in right-sidebar mode and the user clicks an `answer` or `score` cell
+- **THEN** the sidebar opens (if needed) and scrolls vertically to that field
 
 #### Scenario: Unmapped column still opens panel
 - **WHEN** the user clicks the test case name column
@@ -62,6 +70,18 @@ Row-detail Display SHALL control field visibility/order and diff toggles only. V
 - **THEN** the body shows the pivot view
 - **WHEN** the panel is on the right
 - **THEN** the body shows the table view
+
+### Requirement: Display settings survive close and reopen
+
+Closing and reopening the compare row-detail panel within the same comparison session SHALL preserve Display field visibility, order, and diff toggles. Changing either compared run SHALL reset Display to defaults.
+
+#### Scenario: Display settings survive close and reopen
+- **WHEN** the user changes Display visibility or diff toggles, closes the panel, and opens it again on the same comparison
+- **THEN** the previously chosen field visibility, order, and diff toggles are still applied
+
+#### Scenario: Changing compared runs resets Display
+- **WHEN** the user changes the primary or compared run
+- **THEN** Display field visibility and diff toggles reset to defaults
 
 ### Requirement: Drawer displays two-run comparison for the clicked row
 

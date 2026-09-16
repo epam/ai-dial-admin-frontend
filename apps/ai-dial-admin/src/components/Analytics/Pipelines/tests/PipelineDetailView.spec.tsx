@@ -52,7 +52,6 @@ const rule: Pipeline = {
   generation: 7,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
-  output_bindings: [{ column: 'rate_event_count', var: 'rate_event_count' }],
 };
 
 const renderView = (override?: Partial<Pipeline>) =>
@@ -65,14 +64,14 @@ const renderView = (override?: Partial<Pipeline>) =>
   );
 
 // Looked up by label, not by current value, so the same helper works when an edit restores the original.
-const editSampling = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
-  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.Sampling, { exact: false });
+const editSampleFraction = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
+  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.SampleFraction, { exact: false });
   await user.clear(input);
   await user.type(input, value);
 };
 
-const editCadence = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
-  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.Cadence, { exact: false });
+const editScanEvery = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
+  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.ScanEvery, { exact: false });
   await user.clear(input);
   await user.type(input, value);
 };
@@ -84,7 +83,7 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockImplementation(
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
-    vi.mocked(getEvaluator).mockResolvedValue(evaluator);
+    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
   });
 
@@ -184,7 +183,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Discard })).toBeTruthy();
@@ -192,23 +191,23 @@ describe('PipelineDetailView', () => {
 
   test('withdraws save when the value is edited back to what it was', async () => {
     const user = userEvent.setup();
-    renderView({ cadence: 'PT1H' });
+    renderView({ advanced: { scan_every: 'PT1H' } });
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
 
-    await editCadence(user, 'PT1H');
+    await editScanEvery(user, 'PT1H');
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
   });
 
   test('discard restores the loaded value after confirmation', async () => {
     const user = userEvent.setup();
-    renderView({ cadence: 'PT1H' });
+    renderView({ advanced: { scan_every: 'PT1H' } });
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
 
@@ -220,29 +219,29 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [name, dto] = vi.mocked(updatePipeline).mock.calls[0];
     expect(name).toBe('feedback-live');
-    expect(dto.cadence).toBe('PT2H');
+    expect(dto.advanced?.scan_every).toBe('PT2H');
     expect(refresh).toHaveBeenCalled();
   });
 
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
-    renderView({ filter: 'score > 0.5', cadence: 'PT1H', rate_rpm: 60 });
+    renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editSampling(user, '0.5');
+    await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0];
     expect(dto.filter).toBe('score > 0.5');
-    expect(dto.cadence).toBe('PT1H');
-    expect(dto.rate_rpm).toBe(60);
+    expect(dto.advanced?.scan_every).toBe('PT2H');
+    expect(dto.advanced?.rate_rpm).toBe(60);
   });
 
   test('never sends a member the API refuses', async () => {
@@ -250,13 +249,28 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as unknown as [string, Record<string, unknown>];
     ['evaluator', 'grain_key', 'version_column', 'generation', 'created_at', 'updated_at', 'state'].forEach((key) =>
       expect(dto).not.toHaveProperty(key),
+    );
+  });
+
+  test('reports a refused sensitive column as an entitlement failure, not as a rejected expression', async () => {
+    vi.mocked(updatePipeline).mockResolvedValue({ success: false, status: 403, errorMessage: 'not entitled' });
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsPipelinesI18nKey.SaveForbidden }),
     );
   });
 
@@ -270,7 +284,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
@@ -284,9 +298,8 @@ describe('PipelineDetailView', () => {
 
     [
       AnalyticsPipelinesI18nKey.SectionReadScope,
-      AnalyticsPipelinesI18nKey.SectionInputBindings,
-      AnalyticsPipelinesI18nKey.SectionBindings,
-      AnalyticsPipelinesI18nKey.SectionExecution,
+      AnalyticsPipelinesI18nKey.SectionVariables,
+      AnalyticsPipelinesI18nKey.SectionAdvanced,
     ].forEach((section) => expect(screen.getByRole('button', { name: section })).toBeTruthy());
   });
 
@@ -329,7 +342,7 @@ describe('PipelineDetailView', () => {
     expect(updatePipeline).not.toHaveBeenCalled();
   });
 
-  test('sends the stored rule with enabled flipped, not the pending edits', async () => {
+  test('flips enabled on its own rather than re-declaring the pipeline', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5' });
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
@@ -340,8 +353,9 @@ describe('PipelineDetailView', () => {
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0];
-    expect(dto.enabled).toBe(false);
-    expect(dto.filter).toBe('score > 0.5');
+    // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
+    // answers 409 for.
+    expect(dto).toEqual({ enabled: false });
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -350,7 +364,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
 
-    await editCadence(user, 'PT2H');
+    await editScanEvery(user, 'PT2H');
 
     const toggle = screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline });
     // Withheld in place rather than removed: a vanished control answers "where did it go?" with nothing.

@@ -18,10 +18,13 @@ the question the page exists to answer ("is this table's pipeline missing, or re
 is unanswerable from a view that hides disabled pipelines by default.
 
 A registry holding no pipelines is an ordinary state and SHALL render as the console with an empty grid. A
-**failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
-NOT resolve to a not-found result. A not-found page conflates three conditions an operator needs to tell
-apart — nothing registered, the service unreachable, and the route absent — which is the confusion this page
-exists to remove. The stated failure SHALL clear once a subsequent fetch succeeds.
+**failed** listing fetch SHALL also render the console and SHALL NOT resolve to a not-found result. A
+not-found page conflates three conditions an operator needs to tell apart — nothing registered, the service
+unreachable, and the route absent — which is the confusion this page exists to remove. That failure SHALL be
+reported by an error notification carrying the service's own header, message and request id, under *An
+Analytics read failure is reported by notification, in the service's own words*, and SHALL NOT be stated as
+text above the grid. Exactly one report SHALL be raised per failure: the console already notified on a failed
+client-side re-read, and a page that both notified and wrote the sentence reported the same failure twice.
 
 `/enrichment-rules` SHALL NOT be redirected. The route is removed, and a request for it SHALL resolve to the
 not-found page.
@@ -40,8 +43,15 @@ not-found page.
 #### Scenario: A failed listing states the failure instead of a not-found page
 
 - **WHEN** the server-side pipelines listing fetch fails
-- **THEN** the console still renders, reporting that the pipelines could not be loaded
+- **THEN** the console still renders
+- **AND** an error notification reports the failure, carrying the service's message and request id
+- **AND** no failure text is rendered above the grid
 - **AND** the page does not resolve to a not-found result
+
+#### Scenario: One failure raises one report
+
+- **WHEN** the server-side pipelines listing fetch fails and the console renders
+- **THEN** exactly one error notification is raised for it
 
 #### Scenario: Forbidden caller sees Page403 and no pipelines are fetched
 
@@ -61,11 +71,12 @@ not-found page.
 answer whether they may read a pipeline. The service currently admits only a full admin to the pipeline
 registry, so a caller who passes the section guard can still be refused by the read itself.
 
-The console distinguishes a refusal from a failure — a refused read resolves to no value where a failed one
-resolves to a null — and the pipelines pages SHALL preserve that distinction rather than collapsing both
-into a load failure. A refused listing or a refused pipeline read SHALL render `Page403`. Reporting a refusal
-as "the pipelines could not be loaded" states the wrong cause and sends the operator to check a service that
-is working.
+The console distinguishes a refusal from a failure — a refused read carries HTTP 403 on its read envelope
+where a failed one carries the service's own status — and the pipelines pages SHALL preserve that
+distinction rather than collapsing both into a load failure. A refused listing or a refused pipeline read
+SHALL render `Page403`, and SHALL raise no error notification: the forbidden page is the whole report, and a
+notification beside it would report a refusal as a failure. Reporting a refusal as "the pipelines could not
+be loaded" states the wrong cause and sends the operator to check a service that is working.
 
 This is stated as a fallback rather than as the intended end state: the service is expected to restore
 read access to a read-only caller, at which point such a caller reads the pipeline through the same
@@ -76,6 +87,7 @@ read-only presentation the pages already apply, and this requirement stops being
 - **WHEN** the pipelines listing is refused by the service
 - **THEN** `Page403` is rendered
 - **AND** no load-failure message is presented
+- **AND** no error notification is raised
 
 #### Scenario: A refused pipeline read renders the forbidden page
 
@@ -85,7 +97,7 @@ read-only presentation the pages already apply, and this requirement stops being
 #### Scenario: A failed read is still reported as a failure
 
 - **WHEN** the pipelines listing fails for a reason other than refusal
-- **THEN** the console renders with the load failure stated
+- **THEN** the console renders and an error notification reports the failure
 - **AND** `Page403` is not rendered
 
 ### Requirement: Pipelines listing grid presents both kinds
@@ -100,9 +112,10 @@ Columns SHALL be: **name**, **kind**, **target**, **inputs**, **trigger**, **eva
 **generation**, and **updated at**.
 
 The grain key and the version column are **not** among them. The service resolves those two — and the
-inlined evaluator definition — only for a listing narrowed to one kind; a cross-kind listing is deliberately
-left unresolved, because resolving an aggregate pipeline would cost lookups for fields it has none of. A
-column that could only ever be empty here is not offered, and both are read on the pipeline itself.
+inlined evaluator definition — only for a listing that both asks for the compiled projection **and** is
+narrowed to one kind; a cross-kind listing is deliberately left unresolved, because resolving an aggregate
+pipeline would cost lookups for fields it has none of. A column that could only ever be empty here is not
+offered, and both are read on the pipeline itself.
 
 - The **name** cell SHALL navigate to that pipeline's detail route, `/pipelines/{name}`, while rendering as
   plain text rather than as a link: the name is a value an operator reads and compares across rows, and
@@ -111,9 +124,12 @@ column that could only ever be empty here is not offered, and both are read on t
 - The **trigger** cell SHALL show the trigger kind as a badge and nothing else. A raw six-field cron says
   nothing at a glance, and the schedule and the grouping key are both stated on the pipeline's own page.
 - The **evaluator** cell SHALL show `{evaluator_name}@{version}` and SHALL mark the pin as "latest" when the
-  pipeline declares no `evaluator_version`. Both members are carried by a cross-kind listing. The **type
-  badge** SHALL be shown only where the inlined evaluator definition is present, which is to say only where
-  the listing was narrowed to one kind. The grid SHALL NOT issue a per-row evaluator request to recover it.
+  pipeline declares no `evaluator_version`. Both members are carried by a cross-kind listing. The
+  evaluator's **type** SHALL NOT be shown: a listing carries the name and the pinned version and nothing
+  more, whichever projection is asked for, and the grid SHALL NOT issue a per-row evaluator request to
+  recover it.
+- The **inputs** cell SHALL render what the compiled projection resolved, so an enrichment pipeline that
+  declared no input shows the source it actually reads rather than an empty cell.
 - A column belonging to one kind SHALL render an em dash on a row of the other kind, which is an ordinary
   state rather than a failure: the service omits such a member rather than sending it empty.
 - The **enabled** cell SHALL render as a badge distinguishing an enabled from a disabled pipeline; colour
@@ -131,8 +147,8 @@ refresh client-side, preserving the filters currently applied.
 
 #### Scenario: Listing names the evaluator a pipeline declares
 
-- **WHEN** the listing renders an enrichment pipeline pinned to version 4 of an evaluator
-- **THEN** its evaluator cell shows the evaluator name with version 4
+- **WHEN** the listing renders an enrichment pipeline pinned to a version of an evaluator
+- **THEN** its evaluator cell shows the evaluator name with that version
 - **AND** no additional evaluator request is issued for that row
 
 #### Scenario: The type badge waits for a resolved listing
@@ -140,6 +156,11 @@ refresh client-side, preserving the filters currently applied.
 - **WHEN** a cross-kind listing renders an enrichment pipeline
 - **THEN** its evaluator cell carries no type badge
 - **AND** the same pipeline listed under a single kind carries one
+
+#### Scenario: A resolved input is presented
+
+- **WHEN** the listing renders an enrichment pipeline that declared no input of its own
+- **THEN** its inputs cell shows the source resolved from its target
 
 #### Scenario: An unpinned evaluator is marked latest
 
@@ -199,8 +220,11 @@ registered: the modal is where the shortage is visible and where submission is b
 that opens it would hide the explanation behind a control the operator cannot reach. With no evaluator
 registered the modal SHALL state that one must be registered through the API first, and SHALL block
 submission **of an enrichment pipeline only** — an aggregate pipeline declares no evaluator and SHALL remain
-creatable. A failed evaluator listing SHALL be reported as a load failure rather than as "none are
-registered", which would send the operator to register one they may already have.
+creatable. A failed evaluator listing SHALL NOT be reported as "none are registered", which would send the
+operator to register one they may already have: it SHALL be reported by an error notification carrying the
+service's own header, message and request id, and the evaluator field SHALL carry its own error so the
+control the operator is about to use states its state. No further sentence SHALL be rendered beside the
+field for it — the field's error and the notification already say it twice over.
 
 #### Scenario: Non-admin sees no create action
 
@@ -227,103 +251,10 @@ registered", which would send the operator to register one they may already have
 #### Scenario: A failed evaluator listing is not reported as an empty one
 
 - **WHEN** the evaluator listing fails
-- **THEN** the modal reports the load failure
+- **THEN** an error notification reports the failure, carrying the service's message and request id
+- **AND** the evaluator field carries its own error
+- **AND** no further failure sentence is rendered beside the field
 - **AND** it does not state that no evaluator is registered
-
-### Requirement: The create modal collects a complete pipeline of one kind in one request
-
-The service has no draft state for a pipeline: it is created whole by a single `POST /v1/pipelines`. The
-create modal SHALL therefore assemble a submittable pipeline in one pass.
-
-It SHALL collect **only what a registration requires**. Everything a declaration may carry but need not is
-edited on the pipeline's own page, where the target has resolved and there is room for it — the evaluator
-version, the freshness mode, the read scope and the runtime knobs among them. A registration form that also
-offers the optional members reads as a wall of controls whose necessity the operator has to work out.
-
-**Name** and **kind** SHALL be presented first and always, because both kinds carry them and neither depends
-on the other. Kind SHALL be **preselected** to the first kind: an unchosen pair of radios reads as a form
-waiting for something it never names, and either kind can be switched before anything else is filled in.
-Every field after the kind belongs to one kind or the other.
-
-The modal SHALL be mounted only while open, so closing discards its state without a manual reset, following
-the create-table popup.
-
-For an **enrichment** pipeline the modal SHALL collect, in this order: **name**, **kind**, **evaluator**,
-**trigger kind**, the conditional block for the selected trigger kind, **target**, and — once the editor can
-be used — **output bindings**. Four of these are required by the service and all four SHALL be required to
-submit:
-
-- **name** — validated against the service's identity grammar, lower-case alphanumerics with hyphens and
-  underscores, starting with a letter and no longer than 64 characters. Uniqueness is enforced by the
-  service, not pre-checked here.
-- **evaluator** — selected from the registered evaluators.
-- **target** — selected from tables of type `enrichment`.
-- **trigger kind** — one of `on_ingest`, `schedule`, `group`.
-
-For an **aggregate** pipeline the modal SHALL collect: **name**, **kind**, **target**, **inputs**, the
-**schedule**, **group keys** and **measures**. An aggregate pipeline's trigger is always a schedule, so the
-trigger-kind control SHALL NOT be offered for it. Its **input** SHALL be collected here rather than deferred:
-an aggregate target is a source table, which carries no parent to fall back on, and every control the
-transform offers is scoped to that input's columns.
-
-**Both kinds SHALL be registered not running.** The service stores an aggregate pipeline disabled whatever
-the caller asks, and an enrichment pipeline is enabled from its own page, where its declaration can be read
-back first. The modal SHALL therefore collect no **enabled** choice and SHALL send `false`, which the service
-requires present for an enrichment registration rather than merely defaulted.
-
-The **output bindings** editor SHALL be offered only once it can be used — that is, once both the evaluator
-and the target have resolved. Before that it would be an optional-looking control with nothing to bind
-against; the refusals it carries appear with it.
-
-On success the modal SHALL close, show a success notification, and refresh the listing.
-
-#### Scenario: Name and kind open the form
-
-- **WHEN** the create modal is opened
-- **THEN** the name and the kind are presented before the fields that belong to a kind
-- **AND** the first kind is selected
-
-#### Scenario: An enrichment pipeline needs its four required values
-
-- **WHEN** the enrichment kind is selected with any of name, evaluator, target, or trigger kind unset
-- **THEN** submission is blocked
-
-#### Scenario: Both kinds are registered not running
-
-- **WHEN** a pipeline of either kind is registered
-- **THEN** no enabled choice was collected
-- **AND** the request carries `enabled` as `false`
-
-#### Scenario: The optional members are left to the detail page
-
-- **WHEN** the create modal is opened
-- **THEN** it offers no evaluator version and no freshness mode
-
-#### Scenario: The bindings editor waits until it can be used
-
-- **WHEN** an evaluator is selected and no target has resolved
-- **THEN** no output-bindings editor is presented
-
-#### Scenario: An aggregate pipeline offers no trigger kind
-
-- **WHEN** the aggregate kind is selected
-- **THEN** no trigger-kind control is presented
-- **AND** a schedule is collected
-
-#### Scenario: A name outside the identity grammar is refused
-
-- **WHEN** the user enters a name carrying an upper-case letter or a leading digit
-- **THEN** the control reports it as invalid and submission is blocked
-
-#### Scenario: Modal state is discarded on close
-
-- **WHEN** the user opens the modal, edits fields, and closes it
-- **THEN** re-opening the modal shows a fresh, empty form
-
-#### Scenario: Successful creation refreshes the listing
-
-- **WHEN** creation succeeds
-- **THEN** the modal closes, a success notification is shown, and the new pipeline appears in the listing
 
 ### Requirement: The selected kind determines which members are sent
 
@@ -332,9 +263,14 @@ with HTTP 422 rather than ignoring it. That rejection is what makes one flat sha
 SHALL respect it: the request body SHALL carry only the members of the selected kind, whatever was entered
 before the kind was changed. Hiding a control is not sufficient.
 
-- `kind = enrich` — the body SHALL carry none of `group_by`, `measures`, or `freshness`.
-- `kind = aggregate` — the body SHALL carry none of `evaluator_name`, `evaluator_version`, `input_bindings`,
-  `output_bindings`, `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, or `priority`.
+- `kind = enrich` — the body SHALL carry neither `group_by` nor `measures`.
+- `kind = aggregate` — the body SHALL carry none of `evaluator_name`, `evaluator_version`, `vars`, or
+  `advanced`.
+
+Members the service no longer accepts at all SHALL be sent for neither kind: the output mapping, the
+pipeline priority, the aggregate freshness mode, and the execution knobs under their former flat names.
+Each is refused with the field named, so sending one fails the whole registration rather than being
+ignored.
 
 #### Scenario: Switching kind strips the abandoned members
 
@@ -344,7 +280,12 @@ before the kind was changed. Hiding a control is not sufficient.
 #### Scenario: An enrichment pipeline sends no aggregate members
 
 - **WHEN** an enrichment pipeline is submitted
-- **THEN** the request body carries none of `group_by`, `measures`, or `freshness`
+- **THEN** the request body carries neither `group_by` nor `measures`
+
+#### Scenario: A withdrawn member is never sent
+
+- **WHEN** a pipeline of either kind is submitted
+- **THEN** the request body carries no output mapping, no priority, no freshness and no flat execution knob
 
 #### Scenario: A cross-kind rejection is surfaced
 
@@ -927,101 +868,6 @@ them.
 - **THEN** the enable/disable control is not actionable
 - **AND** the reason is stated rather than left to be guessed
 
-### Requirement: Pipeline output bindings editor
-
-`output_bindings` maps the evaluator's output variables onto the target table's columns; without it an
-enrichment pipeline computes a result and discards it. The console SHALL collect it as a repeater whose every
-row is a pair of selects: a **column**, from the resolved target table's `columns`, and a **variable**, from
-the resolved evaluator version's `output_vars`.
-
-- The editor SHALL enforce the one-to-one mapping by suppressing an already-chosen column or variable from
-  its sibling rows' options. This guard is load-bearing rather than cosmetic: the service does not reject a
-  duplicate, it silently drops a binding, so an unguarded duplicate produces a pipeline that quietly writes
-  less than the operator specified.
-- Each option SHALL display its type alongside its name. When a row pairs a column and a variable whose types
-  disagree, the editor SHALL flag the row. The flag is advisory — the service remains the authority — and
-  SHALL NOT by itself block submission.
-- When the evaluator, the version, or the target table changes so that a chosen column or variable no longer
-  exists, the editor SHALL **mark the affected rows as invalid and retain their values**, and MUST NOT clear
-  them silently. A silent clear destroys work the operator has already done and gives no account of why.
-- Before both an evaluator and a target table are chosen the editor SHALL render an empty state directing the
-  operator to choose them, rather than an empty repeater.
-
-At least one binding SHALL be required to submit when the resolved evaluator's `type` is `sql`, which the
-service rejects outright without one. For an `llm` evaluator the service accepts a pipeline with no bindings,
-and submission SHALL be allowed — but the console SHALL warn that such a pipeline computes results and stores
-none, since that is a silent misconfiguration rather than a deliberate mode.
-
-#### Scenario: Empty state before its inputs are chosen
-
-- **WHEN** the form is open with no evaluator or no target selected
-- **THEN** the output-bindings editor shows a prompt to select an evaluator and a target table
-
-#### Scenario: A chosen column is withheld from sibling rows
-
-- **WHEN** a row binds a target column
-- **THEN** that column is not offered in any other row's column select
-
-#### Scenario: A chosen variable is withheld from sibling rows
-
-- **WHEN** a row binds an output variable
-- **THEN** that variable is not offered in any other row's variable select
-
-#### Scenario: A type mismatch is flagged but not blocking
-
-- **WHEN** a row pairs a column and a variable of disagreeing types
-- **THEN** the row is flagged with the mismatch
-- **AND** submission is not blocked by that flag alone
-
-#### Scenario: Changing the evaluator invalidates rather than clears
-
-- **WHEN** filled rows exist and the user changes the evaluator to one lacking those output variables
-- **THEN** the affected rows keep their values and are marked invalid
-- **AND** no row is silently emptied
-
-#### Scenario: A sql evaluator requires at least one binding
-
-- **WHEN** the resolved evaluator's type is `sql` and no output binding has been added
-- **THEN** submission is blocked
-
-#### Scenario: An llm evaluator with no bindings warns
-
-- **WHEN** the resolved evaluator's type is `llm` and no output binding has been added
-- **THEN** the console warns that the pipeline will compute results and store none
-- **AND** submission remains possible
-
-### Requirement: Pipeline input bindings editor
-
-An input binding maps one of the evaluator's `input_vars` to a value drawn from the read source, either as a
-column or as a JSONata expression over the row. The two are alternatives: a binding SHALL carry a column or
-an expression, never both.
-
-The editor SHALL offer the evaluator's `input_vars` and the read source's columns, SHALL NOT offer a variable
-already bound by another row, and SHALL report a row whose variable or column no longer exists on the
-resolved evaluator or source — a pipeline can outlive the definitions it was written against. A row that is
-incomplete SHALL be omitted from the saved pipeline rather than sent as a partial binding.
-
-#### Scenario: A variable bound elsewhere is not offered again
-
-- **WHEN** an input variable is already bound by one row
-- **THEN** it is not offered in the other rows
-
-#### Scenario: Column and expression are alternatives
-
-- **WHEN** a row's binding is switched from a column to an expression
-- **THEN** the column is cleared
-
-#### Scenario: A stranded binding is reported
-
-- **WHEN** a row binds a variable that the resolved evaluator no longer declares
-- **THEN** that row is reported as unresolvable
-- **AND** the stranded value remains visible rather than rendering as empty
-
-#### Scenario: An incomplete row is not sent
-
-- **WHEN** a row names a variable but neither a column nor an expression
-- **THEN** the saved pipeline omits that binding
-
 ### Requirement: Six-field cron control for a scheduled trigger
 
 The service checks only whether the trigger's cron is present or absent for the selected trigger kind — it
@@ -1068,26 +914,51 @@ of `signal`, `idle`, or `max_staleness` is present. The reason is behavioural ra
 declaration satisfying none of them would leave a group perpetually dirty and never ready, so the pipeline
 would register successfully and then do nothing.
 
-The console SHALL collect `idle` and `max_staleness`, and SHALL require at least one of the two before
-submission. It SHALL also accept an optional `cost_ceiling`, constrained to a positive integer. `signal` — the
-SQL-predicate form of readiness — is not collected by the create modal; the duration form alone yields a
-valid pipeline.
+The console SHALL present the three as **three independently enabled conditions**, each stating in words what
+it means rather than naming its wire member, and SHALL require at least one to be enabled before submission.
+Disabling a condition SHALL keep what was entered on screen while omitting that member from the request, so
+toggling a condition off and on again does not retype it.
 
-Each duration SHALL be entered as a **number paired with a unit** and submitted in the service's short form
-(for example `10` and minutes submitted as `"10m"`), rather than as free text, which offers nothing but a way
-to mistype a format. When a duration control is seeded with an existing value it SHALL round-trip both
-accepted spellings — the short form and the ISO-8601 form — and SHALL fall back to a raw text input holding
-the value verbatim when it matches neither, rather than discarding a value written directly through the API.
+- **quiet for** — `idle`, a duration
+- **finished by a row** — `signal`, a boolean predicate over the read source's columns, in the same bounded
+  grammar as the pipeline's own filter
+- **result older than** — `max_staleness`, a duration
+
+It SHALL also accept an optional `cost_ceiling`, constrained to a positive integer and presented apart from
+the three conditions: it bounds what a ready group may spend rather than deciding whether the group is ready.
+
+Each duration SHALL be offered as a small set of presets appropriate to that condition, plus a custom entry
+whose placeholder states the accepted spelling. The service accepts both the short form and the ISO-8601
+form. A seeded value matching neither SHALL be presented verbatim in the custom entry rather than discarded.
+
+A rejection naming a sensitive column in the predicate SHALL be surfaced as an entitlement failure rather
+than as a grammar error, because the two carry different remedies.
 
 #### Scenario: A group trigger needs at least one readiness condition
 
-- **WHEN** the trigger kind is `group` and neither idle nor max staleness has a value
+- **WHEN** the trigger kind is `group` and no condition is enabled
 - **THEN** submission is blocked with a message that at least one is required
+
+#### Scenario: A disabled condition keeps its value but is not sent
+
+- **WHEN** a duration is entered and its condition is then disabled
+- **THEN** the value remains on screen
+- **AND** the request carries no such member
+
+#### Scenario: A duration is chosen from presets
+
+- **WHEN** a condition's preset is chosen
+- **THEN** the request carries that duration in the service's short form
 
 #### Scenario: A duration is submitted in short form
 
-- **WHEN** the user enters 10 and selects minutes for idle
+- **WHEN** a preset of ten minutes is chosen for the quiet-for condition
 - **THEN** the request carries `trigger.ready_when.idle` as `"10m"`
+
+#### Scenario: A custom duration states its format
+
+- **WHEN** the custom entry is chosen for a duration
+- **THEN** its placeholder states the accepted spelling
 
 #### Scenario: Cost ceiling must be a positive integer
 
@@ -1096,9 +967,14 @@ the value verbatim when it matches neither, rather than discarding a value writt
 
 #### Scenario: An unrecognised duration is preserved verbatim
 
-- **WHEN** a duration control is seeded with a value matching neither the short nor the ISO-8601 form
-- **THEN** it presents that value in a raw text input
+- **WHEN** a duration is seeded with a value matching neither the short nor the ISO-8601 form
+- **THEN** it is presented verbatim in the custom entry
 - **AND** the value is not discarded
+
+#### Scenario: An entitlement failure is distinguished from a grammar failure
+
+- **WHEN** the service refuses the readiness predicate because it names a sensitive column
+- **THEN** the failure is reported as one of access rather than of expression
 
 ### Requirement: A group trigger's grouping key is derived from the target enrichment's grain key
 
@@ -1131,59 +1007,58 @@ A group trigger may declare how members of a group are chosen: a `prefer_sql` pr
 sequence of column and direction, and a `limit`. `limit` is required whenever member selection is declared at
 all, and SHALL be a positive integer no greater than the service's configured group fetch maximum.
 
+The console SHALL present the choice as two states — take every member, or select a few — rather than as an
+optional block whose emptiness the operator has to interpret. Taking every member SHALL omit member selection
+from the request entirely, leaving the assembly's own default policy in place. Switching to it SHALL keep
+what was entered for the selection on screen, so switching back does not retype it.
+
 `prefer_sql` is a **preference, not a filter**: when no member satisfies it, every member becomes a
 candidate. The control SHALL say so, because an operator reading it as a filter would expect an empty result
 instead.
 
-Member selection SHALL be presentable only for a group trigger, and SHALL be omitted entirely from the saved
-pipeline when nothing has been declared.
+The ranking SHALL state that the read source's own order is appended last as a tiebreak, so re-assembling an
+unchanged group selects the same members. Where the columns carrying that order are known from the resolved
+source they MAY be named; where the source has not resolved they SHALL be omitted rather than guessed.
 
-#### Scenario: Declaring member selection requires a limit
+The maximum SHALL be stated as the service's configured ceiling rather than as a fixed number: it is a
+deployment setting, and a deployment configured lower refuses a larger value.
 
-- **WHEN** an order or preference is declared without a limit
-- **THEN** the pipeline cannot be saved and the missing limit is reported
+Member selection SHALL be presentable only for a group trigger.
+
+#### Scenario: Taking every member sends no selection
+
+- **WHEN** take-every-member is selected
+- **THEN** the saved pipeline omits member selection entirely
 
 #### Scenario: Member selection is omitted when empty
 
 - **WHEN** no member-selection member has been declared
 - **THEN** the saved pipeline omits member selection entirely
 
+#### Scenario: Switching back keeps what was entered
+
+- **WHEN** a limit and a ranking are entered, take-every-member is selected, and the selection is chosen again
+- **THEN** the limit and ranking are still presented
+
+#### Scenario: Declaring member selection requires a limit
+
+- **WHEN** an order or preference is declared without a limit
+- **THEN** the pipeline cannot be saved and the missing limit is reported
+
 #### Scenario: The preference is described as a preference
 
 - **WHEN** the `prefer_sql` control is presented
 - **THEN** it states that all members become candidates when none satisfies it
 
+#### Scenario: The tiebreak is stated, and named only when known
+
+- **WHEN** the ranking is presented and the read source has not resolved
+- **THEN** the tiebreak is stated without naming its columns
+
 #### Scenario: Member selection is only offered for a group trigger
 
 - **WHEN** the trigger kind is not group
 - **THEN** member selection is not presented
-
-### Requirement: An enrichment pipeline's execution knobs are presented without invented validation
-
-An enrichment pipeline carries `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, and
-`priority`. The service validates none of these beyond type, and the runner interprets `cadence`. The console
-SHALL present them and SHALL NOT impose constraints the service does not, beyond `sampling` being a fraction
-between 0 and 1 — a bound that follows from its meaning rather than from a guessed policy.
-
-An empty knob SHALL be omitted from the saved pipeline rather than sent as a zero, because zero is a
-meaningful value for several of them.
-
-These members belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
-
-#### Scenario: A cleared knob is omitted, not zeroed
-
-- **WHEN** a numeric knob is cleared
-- **THEN** the saved pipeline omits that member
-
-#### Scenario: Sampling is bounded to a fraction
-
-- **WHEN** a sampling value outside 0 to 1 is entered
-- **THEN** it is reported as invalid and the pipeline cannot be saved
-
-#### Scenario: An aggregate pipeline presents no execution knobs
-
-- **WHEN** an aggregate pipeline is opened
-- **THEN** none of these knobs is presented
 
 ### Requirement: A pipeline's SQL predicate fields are presented as bounded expressions
 
@@ -1212,39 +1087,6 @@ surfacing the service's rejection on save.
 - **WHEN** a pipeline carrying an unparseable predicate is saved
 - **THEN** the service's rejection message is surfaced
 - **AND** the edited values remain in the form
-
-### Requirement: The aggregate section presents group keys, measures and a freshness mode
-
-An aggregate pipeline's transform is the triple: what its rows are grouped by, what is computed for each
-group, and how freshly the target is expected to track its input. The console SHALL present all three.
-
-The **freshness mode** SHALL be a choice between `periodic` and `incremental`, presented with what each
-means rather than as bare identifiers. It is optional; when nothing is chosen the member SHALL be omitted
-rather than sent as a default the operator did not pick.
-
-At least one group key and at least one measure SHALL be required before an aggregate pipeline can be
-submitted: the service refuses a declaration without them, and a rollup that groups by nothing or computes
-nothing has no meaning to fall back on.
-
-#### Scenario: The three parts are presented together
-
-- **WHEN** an aggregate pipeline is opened
-- **THEN** its group keys, measures and freshness mode are presented
-
-#### Scenario: A freshness mode explains itself
-
-- **WHEN** the freshness control is presented
-- **THEN** each mode is presented with what it means rather than as a bare identifier
-
-#### Scenario: An unset freshness mode is omitted
-
-- **WHEN** no freshness mode has been chosen
-- **THEN** the saved pipeline omits the member
-
-#### Scenario: Group keys and measures are both required
-
-- **WHEN** an aggregate pipeline is submitted with no group key or no measure
-- **THEN** submission is blocked and the missing part is named
 
 ### Requirement: A group key is a column or a truncated timestamp, optionally aliased
 
@@ -1290,6 +1132,14 @@ A measure names an aggregate to compute over each group: a **name** for the resu
 the **column** it reads, and two optional qualifiers — a `where` choosing which rows it sees, and `distinct`
 aggregating the group's distinct values rather than its rows.
 
+A measure is a mapping from a source column to a target column, and the console SHALL present it as one: its
+**name** SHALL be chosen from the target table's columns rather than typed free-hand, since the name is the
+target column the measure writes and a typo is otherwise caught only by the service.
+
+The column the measure reads SHALL default to the measure's own name when left unset — except for a
+column-less count — and the control SHALL state that default rather than leaving the field looking
+incomplete. The two names coincide for a minority of measures, so the control SHALL NOT be withheld.
+
 The console SHALL hold no function knowledge of its own. The function list SHALL be derived from the catalog
 the service already serves at `GET /v1/queries/functions`, narrowed to the functions a measure can express:
 
@@ -1297,6 +1147,9 @@ the service already serves at `GET /v1/queries/functions`, narrowed to the funct
 - functions requiring **no more than one** argument, because a measure carries one column and nothing else.
   An aggregate declaring two required arguments cannot be expressed as a measure and the service refuses it,
   so offering it would build a declaration that fails on every run for a reason recorded only in its state.
+
+A catalog description runs from one line to a full paragraph, so it SHALL be revealed on hovering the option
+rather than rendered beneath it: rendered inline it makes the list unscannable.
 
 `distinct` SHALL be offered only for a function the catalog marks as supporting it, and SHALL require a
 column, since a column-less count is a row count with no values to deduplicate.
@@ -1307,14 +1160,39 @@ count, and called with a column it counts that column's values, which is the onl
 deduplicate. Reading "optional" as "takes no column" withholds the control that every rollup's
 `count(distinct …)` measure needs, and leaves such a measure blocked with nothing on screen to fix it.
 
-A measure's **name** is the target column it writes and SHALL be required. A function no longer present in
-the catalog SHALL be reported on the row rather than silently cleared, following the bindings editors.
+A rollup declares measures in numbers that make a per-measure block unreadable, so the list SHALL be
+presented compactly: field labels stated once for the list rather than on every row, the `where` predicate as
+a single line that grows when focused, and the note about which source the columns come from stated once
+below the list.
+
+A function no longer present in the catalog SHALL be reported on the row rather than silently cleared.
+
+#### Scenario: A measure's name is chosen from the target's columns
+
+- **WHEN** a measure is added
+- **THEN** its name is chosen from the target table's columns
+
+#### Scenario: A measure needs a name
+
+- **WHEN** a measure is added without a name
+- **THEN** submission is blocked and the missing name is reported
+
+#### Scenario: An unset column states the default
+
+- **WHEN** a function taking a column is chosen and no column is selected
+- **THEN** the control states that the measure's own name is used
 
 #### Scenario: Only expressible aggregates are offered
 
 - **WHEN** the function control is opened
 - **THEN** it offers the catalog's aggregate functions
 - **AND** it does not offer a function requiring more than one argument
+
+#### Scenario: A function's description is revealed on hover
+
+- **WHEN** the function control is opened
+- **THEN** each option presents its signature
+- **AND** its description is revealed on hovering that option rather than rendered beneath it
 
 #### Scenario: Distinct is offered only where the catalog allows it
 
@@ -1337,10 +1215,11 @@ the catalog SHALL be reported on the row rather than silently cleared, following
 - **WHEN** distinct is chosen and no column is given
 - **THEN** it is reported as invalid and the pipeline cannot be saved
 
-#### Scenario: A measure needs a name
+#### Scenario: The list stays compact as it grows
 
-- **WHEN** a measure is added without a name
-- **THEN** submission is blocked and the missing name is reported
+- **WHEN** a pipeline declaring many measures is opened
+- **THEN** each measure occupies one row
+- **AND** the field labels and the source note are stated once for the list
 
 #### Scenario: An unknown function is reported rather than cleared
 
@@ -1791,3 +1670,334 @@ and performs no action a success or error notification would describe.
 - **THEN** the next request to the analytics activity feed carries the updated `epochTimestampMs` `ge` and
   `le` filters
 
+### Requirement: Pipeline reads ask for the compiled projection explicitly
+
+A pipeline read answers with one of two projections, selected by a `view` query parameter: the authored
+declaration, which is what the service returns when the parameter is absent, or the compiled form,
+which additionally carries the inlined evaluator, the grain key, the version column, the derived output
+mapping and the resolved read source.
+
+Every pipeline read the console issues — the listing and the detail page alike — SHALL ask for the
+compiled projection. The console renders resolved values throughout, and the authored projection omits
+them rather than resolving them, so reading it would empty those surfaces without reporting anything.
+
+The compiled projection is a superset of the authored one, so it is also what seeds an edit. The one
+fact it does not preserve is whether a read source was declared or inherited from the target's parent:
+both appear as a resolved input. That distinction SHALL continue to be recovered from the target table
+rather than from the projection.
+
+#### Scenario: The listing asks for the compiled projection
+
+- **WHEN** the pipelines listing is fetched
+- **THEN** the request carries the compiled view
+
+#### Scenario: The detail page asks for the compiled projection
+
+- **WHEN** a pipeline is opened
+- **THEN** the request carries the compiled view
+- **AND** the grain key and version column are presented from it
+
+### Requirement: An enrichment pipeline declares its evaluator's inputs and nothing else
+
+An enrichment pipeline declares what its evaluator receives as **variables**: a set of names, each
+bound either to a column of the read source or to a jsonata expression over it. The console SHALL
+present them as one section, as rows of a name, a **binding selection**, and the field that selection
+names — a column selector or an expression field. The two SHALL NOT be offered side by side: the
+service refuses a variable declaring both, and the unselected member SHALL be kept on the row and left
+out of the request rather than erased.
+
+Where the model's answer lands is derived by the service from the evaluator's outputs matched to the
+target's columns, and is not a member of the request. The console SHALL NOT present it in the form at
+all — neither as an editor nor as disabled rows. The section is what the operator declares, and a
+derived member shown among declared ones reads as something they chose and may change. It remains
+readable in the JSON editor, which presents the pipeline whole.
+
+Variables belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
+
+For a pipeline whose evaluator is of type `sql` the section SHALL NOT be presented at all, and any
+variables the declaration holds SHALL be dropped once that evaluator resolves: a `sql` evaluator renders
+no request, and the service refuses a `sql` pipeline that declares vars at all. The type is known only
+after the evaluator resolves, so the drop happens then rather than when the name is chosen.
+
+A row carrying no name or no value SHALL be omitted from the request rather than sent blank.
+
+#### Scenario: Variables are authored as name, binding and value
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** its evaluator inputs are presented as rows of a name, a binding selection and one value field
+- **AND** the field presented is the one the selection names, and no other
+
+#### Scenario: The derived outputs are not presented in the form
+
+- **WHEN** an enrichment pipeline whose evaluator has resolved is opened
+- **THEN** the variables section presents only the declared variables
+- **AND** the derived outputs are readable in the JSON editor instead
+
+#### Scenario: A sql evaluator is offered no variables at all
+
+- **WHEN** the selected evaluator resolves to type `sql`
+- **THEN** the variables section is not presented
+- **AND** any variables the declaration held are dropped from it
+
+#### Scenario: An incomplete row is not sent
+
+- **WHEN** a variable row carries a name and no value
+- **THEN** the saved pipeline omits that variable
+
+### Requirement: The evaluator's template placeholders are shown beside the variables
+
+At row grain the service requires the variable names and the evaluator template's `{{placeholder}}`
+names to match **in both directions**: a placeholder with no variable is refused, and a variable
+appearing in no placeholder is refused as unused. The names are written in the evaluator's template,
+which this screen does not otherwise show, so an operator would be guessing them.
+
+For a pipeline whose trigger fires at row grain the console SHALL present the placeholders found in the
+resolved evaluator's template beside the variables editor, each marked as covered by a variable or not,
+and SHALL mark a declared variable matching no placeholder.
+
+At group grain the rule inverts — the placeholders are the service's own group built-ins and the
+variables become fields of each member object rather than placeholders — so the console SHALL NOT
+present this correspondence for a group trigger.
+
+One group-grain rule the console SHALL state, because here — unlike on the evaluator's own page — the
+trigger is known: a group-triggered pipeline whose evaluator's template references no `{{members}}` is
+refused outright, since the rendered prompt would carry none of the group. That SHALL be reported as an
+**error against the evaluator selection**, naming what to do about it, rather than as a hint. The
+evaluator's own page states the same fact as reference only, having no trigger to judge by.
+
+The correspondence hint is guidance, not a gate: it SHALL NOT block submission, because the authority on
+both sides is the service.
+
+#### Scenario: Placeholders are listed for a row-grain pipeline
+
+- **WHEN** an enrichment pipeline whose trigger fires at row grain is opened with its evaluator resolved
+- **THEN** the template's placeholders are listed beside the variables, each marked as covered or not
+
+#### Scenario: An unused variable is marked
+
+- **WHEN** a variable is declared whose name appears in no placeholder
+- **THEN** that row is marked as unused
+
+#### Scenario: No correspondence is shown for a group trigger
+
+- **WHEN** the trigger kind is `group`
+- **THEN** no placeholder correspondence is presented
+
+#### Scenario: A group trigger reports an evaluator whose template omits the group
+
+- **WHEN** the trigger kind is `group` and the resolved evaluator's template references no `{{members}}`
+- **THEN** an error is reported against the evaluator selection
+
+#### Scenario: The hint never blocks a save
+
+- **WHEN** a placeholder is uncovered
+- **THEN** submission is still offered
+
+### Requirement: An enrichment pipeline's execution knobs are grouped under Advanced
+
+An enrichment pipeline carries five execution knobs the runner applies: how often it scans, how many
+rows one scan may claim, how many rows it evaluates per call, a per-minute model-call ceiling, and the
+fraction of eligible rows to evaluate. They are hints to the runner rather than part of the transform,
+so the console SHALL present them together in one collapsible **Advanced** block placed last in the
+section, after the members that describe what the pipeline does.
+
+An empty knob SHALL be omitted from the saved pipeline rather than sent as a zero: an omitted knob means
+the runner's own configured default, which a zero does not.
+
+The sample fraction SHALL be validated by the console as strictly greater than zero and at most one.
+Zero is refused by the service, which names disabling the pipeline as the way to express evaluating
+nothing, and a value above one is refused rather than read as a percentage. This is the one knob the
+console validates; the others it SHALL present without imposing constraints the service does not.
+
+These members belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
+
+#### Scenario: The knobs are grouped and placed last
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** the five knobs are presented together in a collapsible block at the end of the section
+
+#### Scenario: A cleared knob is omitted, not zeroed
+
+- **WHEN** a numeric knob is cleared
+- **THEN** the saved pipeline omits that member
+
+#### Scenario: A sample fraction of zero is refused
+
+- **WHEN** zero is entered as the sample fraction
+- **THEN** it is reported as invalid and the pipeline cannot be saved
+
+#### Scenario: A sample fraction above one is refused
+
+- **WHEN** a value above one is entered as the sample fraction
+- **THEN** it is reported as invalid and the pipeline cannot be saved
+
+#### Scenario: An aggregate pipeline presents no execution knobs
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** none of these knobs is presented
+
+### Requirement: The aggregate section presents group keys and measures
+
+An aggregate pipeline's transform is a pair: what its rows are grouped by, and what is computed for each
+group. The console SHALL present both, and SHALL present no freshness control — the service accepts no
+such member.
+
+At least one measure SHALL be required before an aggregate pipeline can be submitted: a rollup that
+computes nothing has no meaning to fall back on.
+
+Group keys SHALL NOT be required. When none is declared the service derives them from the target's
+ordering key, provided each key is a column of the input under the same name, and echoes the derived
+keys back expanded. The section SHALL state that an empty list means derivation from the target rather
+than presenting the emptiness as an omission.
+
+#### Scenario: The two parts are presented together
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** its group keys and measures are presented
+
+#### Scenario: No freshness control is presented
+
+- **WHEN** an aggregate pipeline is opened
+- **THEN** no freshness mode is offered
+
+#### Scenario: Group keys may be left empty
+
+- **WHEN** an aggregate pipeline is submitted with no group key and at least one measure
+- **THEN** submission is offered
+- **AND** the section states that the keys are derived from the target
+
+#### Scenario: A measure is still required
+
+- **WHEN** an aggregate pipeline is submitted with no measure
+- **THEN** submission is blocked and the missing part is named
+
+### Requirement: The create modal collects what registration requires for one kind
+
+The service has no draft state for a pipeline: it is created whole by a single `POST /v1/pipelines`. The
+create modal SHALL therefore assemble a submittable pipeline in one pass.
+
+It SHALL collect **only what a registration requires**. Everything a declaration may carry but need not is
+edited on the pipeline's own page, where the target has resolved and there is room for it — the evaluator
+version, the read scope, the variables and the execution knobs among them. A registration form that also
+offers the optional members reads as a wall of controls whose necessity the operator has to work out.
+
+**Name** and **kind** SHALL be presented first and always, because both kinds carry them and neither depends
+on the other. Kind SHALL be **preselected** to the first kind: an unchosen pair of radios reads as a form
+waiting for something it never names, and either kind can be switched before anything else is filled in.
+Every field after the kind belongs to one kind or the other.
+
+The modal SHALL be mounted only while open, so closing discards its state without a manual reset, following
+the create-table popup.
+
+For an **enrichment** pipeline the modal SHALL collect, in this order: **name**, **kind**, **evaluator**,
+**trigger kind**, the conditional block for the selected trigger kind, and **target**. Four of these are
+required by the service and all four SHALL be required to submit:
+
+- **name** — validated against the service's identity grammar, lower-case alphanumerics with hyphens and
+  underscores, starting with a letter and no longer than 64 characters. Uniqueness is enforced by the
+  service, not pre-checked here.
+- **evaluator** — selected from the registered evaluators.
+- **target** — selected from tables of type `enrichment`.
+- **trigger kind** — one of `on_ingest`, `schedule`, `group`.
+
+No output-mapping editor SHALL be offered, here or anywhere: the service derives that mapping and accepts no
+member for it.
+
+For an **aggregate** pipeline the modal SHALL collect: **name**, **kind**, **target**, **inputs**, the
+**schedule** and **measures**. An aggregate pipeline's trigger is always a schedule, so the trigger-kind
+control SHALL NOT be offered for it. Its **input** SHALL be collected here rather than deferred: an aggregate
+target is a source table, which carries no parent to fall back on, and every control the transform offers is
+scoped to that input's columns. **Group keys** SHALL NOT be collected here — the service derives them from the
+target when they are absent, which makes them an optional member, and optional members belong to the detail
+page.
+
+**Both kinds SHALL be registered not running.** The service stores an aggregate pipeline disabled whatever
+the caller asks, and an enrichment pipeline is enabled from its own page, where its declaration can be read
+back first. The modal SHALL therefore collect no **enabled** choice and SHALL send `false`, which the service
+requires present for an enrichment registration rather than merely defaulted.
+
+On success the modal SHALL close, show a success notification, and refresh the listing.
+
+#### Scenario: Name and kind open the form
+
+- **WHEN** the create modal is opened
+- **THEN** the name and the kind are presented before the fields that belong to a kind
+- **AND** the first kind is selected
+
+#### Scenario: An enrichment pipeline needs its four required values
+
+- **WHEN** the enrichment kind is selected with any of name, evaluator, target, or trigger kind unset
+- **THEN** submission is blocked
+
+#### Scenario: Both kinds are registered not running
+
+- **WHEN** a pipeline of either kind is registered
+- **THEN** no enabled choice was collected
+- **AND** the request carries `enabled` as `false`
+
+#### Scenario: The optional members are left to the detail page
+
+- **WHEN** the create modal is opened
+- **THEN** it offers no evaluator version, no variables and no execution knobs
+
+#### Scenario: No output mapping is collected
+
+- **WHEN** an evaluator and a target are both selected
+- **THEN** no output-mapping editor is presented
+
+#### Scenario: An aggregate pipeline offers no trigger kind
+
+- **WHEN** the aggregate kind is selected
+- **THEN** no trigger-kind control is presented
+- **AND** a schedule is collected
+
+#### Scenario: An aggregate pipeline collects no group keys
+
+- **WHEN** the aggregate kind is selected
+- **THEN** no group-keys editor is presented
+- **AND** submission is offered once name, target, input, schedule and one measure are set
+
+#### Scenario: A name outside the identity grammar is refused
+
+- **WHEN** the user enters a name carrying an upper-case letter or a leading digit
+- **THEN** the control reports it as invalid and submission is blocked
+
+#### Scenario: Modal state is discarded on close
+
+- **WHEN** the user opens the modal, edits fields, and closes it
+- **THEN** re-opening the modal shows a fresh, empty form
+
+#### Scenario: Successful creation refreshes the listing
+
+- **WHEN** creation succeeds
+- **THEN** the modal closes, a success notification is shown, and the new pipeline appears in the listing
+
+### Requirement: The JSON document is the pipeline as the service serves it
+
+The detail page's JSON editor SHALL present the pipeline **as read**, with nothing removed: the members
+the service assigns (`generation`, `created_at`, `updated_at`, `state`) and the ones the compiled
+projection resolves (`outputs`, `grain_key`, `version_column`, the inlined evaluator) included. The
+document is the only place those are readable; a document that has been tidied down to what a save would
+send reports a pipeline that is not the one stored.
+
+What may be **sent** is decided at submission: assembling the request drops the resolved and assigned
+members, so nothing has to be hidden at presentation to keep the request valid. The service refuses an
+unrecognized member in a request body outright, which is why the document and the request cannot be the
+same object.
+
+Entering the editor is barred while anything is unsaved, so the document it opens on is also the draft.
+
+#### Scenario: The document carries the members the service assigns
+
+- **WHEN** a pipeline is opened as JSON
+- **THEN** the document carries its `generation` and its runtime state
+
+#### Scenario: The document carries what the compiled projection resolved
+
+- **WHEN** an enrichment pipeline whose outputs the service resolved is opened as JSON
+- **THEN** the document carries those outputs
+
+#### Scenario: The assigned members are not sent back
+
+- **WHEN** such a document is edited and the pipeline is saved
+- **THEN** the request carries neither the assigned nor the resolved members

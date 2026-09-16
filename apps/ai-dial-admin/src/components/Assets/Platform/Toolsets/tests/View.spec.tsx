@@ -18,6 +18,14 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', async (importOriginal) => ({
   signOutToolset: vi.fn(),
 }));
 
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({
+    setEntityReadOnly,
+    featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+  }),
+}));
+
 /**
  * Matches `Assets/Platform/Applications/tests/View.spec.tsx`'s scope: a render smoke test, not deep
  * interaction coverage — the component's real dependency surface (`TabsContent`, `SimpleEntityHeader`,
@@ -74,5 +82,28 @@ describe('PlatformToolsetView', () => {
 
     const rolesTab = screen.getByRole('tab', { name: TabsI18nKey.Roles });
     expect(!!rolesTab.querySelector('svg.tabler-icon-alert-triangle')).toBe(expectedWarning);
+  });
+
+  test('Should mark the entity read-only when config-file-sourced, and clear it on unmount', () => {
+    const { unmount } = render(
+      <PlatformToolsetView
+        etag={mockEtag}
+        originalToolset={mockOriginalToolset}
+        roles={mockRoles}
+        isConfigFileSource
+      />,
+    );
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed toolset', () => {
+    render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });
 });

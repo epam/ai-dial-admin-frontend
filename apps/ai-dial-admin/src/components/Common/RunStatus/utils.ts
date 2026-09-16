@@ -1,4 +1,4 @@
-import { TRANSITIONAL_RUN_STATUSES } from '@/src/constants/runs';
+import { INCOMPLETE_RUN_STATUSES, TRANSITIONAL_RUN_STATUSES } from '@/src/constants/runs';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { RunStatus } from '@/src/models/evaluation/run';
 
@@ -25,3 +25,6 @@ export const getStatusLabel = (status: RunStatus | string | undefined, t: (key: 
 
 export const isTransitionalRunStatus = (status?: RunStatus | string): boolean =>
   TRANSITIONAL_RUN_STATUSES.some((transitionalStatus) => transitionalStatus === status);
+
+export const isIncompleteRunStatus = (status?: RunStatus | string): boolean =>
+  INCOMPLETE_RUN_STATUSES.some((incompleteStatus) => incompleteStatus === status);

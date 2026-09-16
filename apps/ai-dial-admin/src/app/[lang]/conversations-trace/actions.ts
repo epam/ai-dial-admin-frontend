@@ -40,7 +40,6 @@ import {
   HopRequestEnvelope,
   HopResponseEnvelope,
   HopBodyFields,
-  UsageLogField,
   ConversationTracePage,
   ConversationTracePageRow,
   HopBodyGrants,
@@ -52,7 +51,8 @@ import {
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import { Token } from '@/src/models/auth';
-import { ServerActionResponse } from '@/src/models/server-action';
+import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
+import { toReadFailure } from '@/src/utils/notification';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -96,6 +96,7 @@ import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
 import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/conversation-trace-groups';
 import { hopBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
+import { unqualified } from '@/src/utils/analytics/conversation-enrichment';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import {
@@ -299,11 +300,9 @@ async function resolveColumnFilters(
 
 export async function getConversationsSchema(): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
   const authToken = await token();
-  const schema = await withEntitySchemaCache(CONVERSATIONS_ENTITY, authToken, () =>
+  return withEntitySchemaCache(CONVERSATIONS_ENTITY, authToken, () =>
     analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, authToken),
   );
-
-  return schema ? { success: true, response: schema } : { success: false };
 }
 
 export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
@@ -489,10 +488,10 @@ export async function getConversationDetail(
 // header, traces and record all resolved.
 async function feedbackSchemaFields(authToken: Token): Promise<string[] | undefined> {
   try {
-    const schema = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
+    const read = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
       analyticsDataApi.getEntitySchema(FEEDBACK_ENTITY, authToken),
     );
-    return schema?.fields?.map(({ name }) => name);
+    return read.response?.fields?.map(({ name }) => name);
   } catch (error) {
     errorObjLog(error, 'Failed to fetch the rating source entity schema');
     return undefined;
@@ -663,11 +662,24 @@ interface HopBodyRead {
   row?: ConversationEntryBodyRow;
   state: HopReadState;
   fields: HopBodyFields;
+  // Present only for `LoadFailed`.
+  failure?: ReadFailure;
 }
 
-const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): UsageLogField[] => {
+// The body columns live in an enrichment, so the service reports them qualified by it — `<enrichment>.<column>`
+// — while this row is keyed by the column itself. Stripping the namespace once, here, is what keeps the move
+// out of every reader below: a projection alias is not honoured on a row read, so the qualified key arrives
+// whatever the query asked for, and a row keyed by it reads as a hop that recorded nothing.
+const bodyRowOf = (raw: Record<string, unknown>): ConversationEntryBodyRow =>
+  Object.fromEntries(
+    Object.entries(raw).map(([key, cell]) => [unqualified(key), cell]),
+  ) as unknown as ConversationEntryBodyRow;
+
+// The names the grant resolved against this instance's schema, not the constants: the read has to select a
+// column under the name the service answered with.
+const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): string[] => {
   if (side === HopInspectorSide.Request) {
-    return [UsageLogField.RequestBody];
+    return fields.requestField === null ? [] : [fields.requestField];
   }
 
   return fields.responseFields;
@@ -686,14 +698,14 @@ async function readHopBody(
   sides: HopInspectorSide[],
 ): Promise<HopBodyRead> {
   const authToken = await token();
-  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+  const schemaRead = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
     analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
   );
 
-  const fields = hopBodyFields(schema?.fields?.map(({ name }) => name) ?? []);
+  const fields = hopBodyFields(schemaRead.response?.fields?.map(({ name }) => name) ?? []);
 
-  if (!schema) {
-    return { state: HopReadState.LoadFailed, fields };
+  if (!schemaRead.response) {
+    return { state: HopReadState.LoadFailed, fields, failure: toReadFailure(schemaRead) };
   }
 
   const readable = sides.filter((side) => isSideReadable(side, fields));
@@ -709,13 +721,19 @@ async function readHopBody(
 
   if (!result.success) {
     errorObjLog(result, 'Failed to fetch the conversation hop bodies');
-    return { state: HopReadState.LoadFailed, fields };
+    return { state: HopReadState.LoadFailed, fields, failure: toReadFailure(result) };
   }
 
-  const row = (result.response?.rows ?? [])[0] as unknown as ConversationEntryBodyRow | undefined;
+  const [raw] = result.response?.rows ?? [];
 
-  return row ? { row, state: HopReadState.Available, fields } : { state: HopReadState.NoBody, fields };
+  return raw
+    ? { row: bodyRowOf(raw as Record<string, unknown>), state: HopReadState.Available, fields }
+    : { state: HopReadState.NoBody, fields };
 }
+
+// Only `LoadFailed` is a failure this console suffered; every other state is the record speaking.
+const hopReadEnvelope = <T extends object>({ state, failure }: HopBodyRead, response: T): ServerActionResponse<T> =>
+  state === HopReadState.LoadFailed ? { success: false, ...failure, response } : { success: true, response };
 
 const EMPTY_PARAMS: HopParams = { stated: [], rest: [] };
 
@@ -738,10 +756,11 @@ export async function getConversationHopRequest(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopRequestEnvelope>> {
-  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = read;
 
   if (!row) {
-    return { success: state !== HopReadState.LoadFailed, response: emptyRequestEnvelope(state) };
+    return hopReadEnvelope(read, emptyRequestEnvelope(state));
   }
 
   const dialect = dialectOf(row.request_uri ?? null);
@@ -775,6 +794,7 @@ const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
   reasoningText: null,
   finishReason: null,
   toolCalls: [],
+  errorText: null,
   facts: NO_FACTS,
   recordedBytes: null,
 });
@@ -785,10 +805,11 @@ export async function getConversationHopResponse(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopResponseEnvelope>> {
-  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
+  const { row, state } = read;
 
   if (!row) {
-    return { success: state !== HopReadState.LoadFailed, response: emptyResponseEnvelope(state) };
+    return hopReadEnvelope(read, emptyResponseEnvelope(state));
   }
 
   return { success: true, response: responseEnvelopeOf(row, dialectOf(row.request_uri ?? null)) };
@@ -805,10 +826,11 @@ export async function getConversationHopMessage(
   requestTime: number | string | null,
   messageIndex: number,
 ): Promise<ServerActionResponse<HopMessageValue>> {
-  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+  const { row, state } = read;
 
   if (!row) {
-    return { success: state !== HopReadState.LoadFailed, response: { state, text: null, toolCalls: [] } };
+    return hopReadEnvelope(read, { state, text: null, toolCalls: [] });
   }
 
   const messages = messagesForDialect(dialectOf(row.request_uri ?? null), parseJson(row.request_body));
@@ -832,13 +854,11 @@ export async function getConversationHopRawBody(
   requestTime: number | string | null,
   side: HopInspectorSide,
 ): Promise<ServerActionResponse<HopRawBody>> {
-  const { row, state } = await readHopBody(traceId, coreSpanId, requestTime, [side]);
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [side]);
+  const { row, state } = read;
 
   if (!row) {
-    return {
-      success: state !== HopReadState.LoadFailed,
-      response: { state, text: null, clamp: NO_CLAMP },
-    };
+    return hopReadEnvelope(read, { state, text: null, clamp: NO_CLAMP });
   }
 
   return {
@@ -856,26 +876,24 @@ export async function getConversationHopMcp(
   toolName: string | null,
   toolset: string | null,
 ): Promise<ServerActionResponse<HopMcpFacts>> {
-  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
+  const { row, state, fields } = read;
 
   if (!row) {
-    return {
-      success: state !== HopReadState.LoadFailed,
-      response: {
-        state,
-        method,
-        toolName,
-        toolset,
-        argumentsText: null,
-        resultText: null,
-        resultClamp: NO_CLAMP,
-        argumentsState: state,
-        resultState: state,
-      },
-    };
+    return hopReadEnvelope(read, {
+      state,
+      method,
+      toolName,
+      toolset,
+      argumentsText: null,
+      resultText: null,
+      resultClamp: NO_CLAMP,
+      argumentsState: state,
+      resultState: state,
+    });
   }
 
   // Both sides are asked for and either may be denied: the read proceeds when *one* is granted, so the facts
@@ -890,24 +908,22 @@ export async function getConversationHopProtocol(
   requestTime: number | string | null,
   method: string | null,
 ): Promise<ServerActionResponse<HopProtocolFacts>> {
-  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
+  const { row, state, fields } = read;
 
   if (!row) {
-    return {
-      success: state !== HopReadState.LoadFailed,
-      response: {
-        state,
-        method,
-        requestText: null,
-        requestState: state,
-        resultText: null,
-        resultClamp: NO_CLAMP,
-        responseState: state,
-      },
-    };
+    return hopReadEnvelope(read, {
+      state,
+      method,
+      requestText: null,
+      requestState: state,
+      resultText: null,
+      resultClamp: NO_CLAMP,
+      responseState: state,
+    });
   }
 
   return { success: true, response: protocolFactsOf({ row, method, grants: fields }) };
@@ -919,24 +935,22 @@ export async function getConversationHopEmbedding(
   coreSpanId: string,
   requestTime: number | string | null,
 ): Promise<ServerActionResponse<HopEmbeddingFacts>> {
-  const { row, state, fields } = await readHopBody(traceId, coreSpanId, requestTime, [
+  const read = await readHopBody(traceId, coreSpanId, requestTime, [
     HopInspectorSide.Request,
     HopInspectorSide.Response,
   ]);
+  const { row, state, fields } = read;
 
   if (!row) {
-    return {
-      success: state !== HopReadState.LoadFailed,
-      response: {
-        state,
-        model: null,
-        inputCount: null,
-        dimensions: null,
-        inputText: null,
-        inputClamp: NO_CLAMP,
-        isDimensionsWithheld: false,
-      },
-    };
+    return hopReadEnvelope(read, {
+      state,
+      model: null,
+      inputCount: null,
+      dimensions: null,
+      inputText: null,
+      inputClamp: NO_CLAMP,
+      isDimensionsWithheld: false,
+    });
   }
 
   return { success: true, response: embeddingFactsOf(row, fields) };
@@ -1024,15 +1038,17 @@ async function resolvePeriodSummary(range: TimeRange, authToken: Token): Promise
  */
 export async function getHopBodyGrants(): Promise<ServerActionResponse<HopBodyGrants>> {
   const authToken = await token();
-  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+  const schemaRead = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
     analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
   );
 
-  if (!schema) {
-    return { success: false, response: { isRequestReadable: false, isResponseReadable: false } };
+  if (!schemaRead.response) {
+    return { ...schemaRead, success: false, response: { isRequestReadable: false, isResponseReadable: false } };
   }
 
-  const { isRequestReadable, isResponseReadable } = hopBodyFields(schema.fields?.map(({ name }) => name) ?? []);
+  const { isRequestReadable, isResponseReadable } = hopBodyFields(
+    schemaRead.response.fields?.map(({ name }) => name) ?? [],
+  );
 
   return { success: true, response: { isRequestReadable, isResponseReadable } };
 }

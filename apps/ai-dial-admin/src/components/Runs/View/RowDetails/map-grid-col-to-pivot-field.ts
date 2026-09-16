@@ -66,13 +66,21 @@ export const mapGridColToPivotField = (colId: string | null | undefined): string
   }
 
   // Metric columns use `${groupKey}_${leafKey}`. Group keys typically include a space or
-  // dotted package name; extracted column ids with underscores stay intact.
-  const lastUnderscore = normalized.lastIndexOf('_');
-  if (lastUnderscore > 0 && lastUnderscore < normalized.length - 1) {
-    const prefix = normalized.slice(0, lastUnderscore);
-    if (/\s|\./.test(prefix)) {
-      return normalized.slice(lastUnderscore + 1);
+  // dotted package name. Split on the first underscore whose prefix looks like a group so
+  // underscored leaf keys (e.g. exact_match) stay intact.
+  let searchFrom = 0;
+  while (searchFrom < normalized.length) {
+    const lastUnderscore = normalized.indexOf('_', searchFrom);
+    if (lastUnderscore <= 0 || lastUnderscore >= normalized.length - 1) {
+      break;
     }
+    const prefix = normalized.slice(0, lastUnderscore);
+    const hasGroupMarker = /\s|\./.test(prefix);
+    const leaf = normalized.slice(lastUnderscore + 1);
+    if (hasGroupMarker) {
+      return leaf;
+    }
+    searchFrom = lastUnderscore + 1;
   }
 
   // Extracted / input binding columns use the field name as colId.

@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "nx serve ai-dial-admin",
-    "test": "nx run-many -t test --runInBand --coverage",
+    "test": "NODE_OPTIONS=--max-old-space-size=4096 nx run-many -t test --runInBand --coverage",
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
     "typecheck": "nx run ai-dial-admin:typecheck",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.44.8",
-    "@epam/ai-dial-ui-kit": "0.14.0-dev.49",
+    "@epam/ai-dial-ui-kit": "0.14.2",
     "@epam/ai-dial-visualizer-connector": "^0.44.8",
     "@floating-ui/react": "^0.27.19",
     "@modelcontextprotocol/sdk": "^1.30.0",

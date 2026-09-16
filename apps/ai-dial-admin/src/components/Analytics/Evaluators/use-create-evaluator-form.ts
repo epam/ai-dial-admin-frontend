@@ -3,9 +3,9 @@
 import { useCallback, useState } from 'react';
 
 import { useI18n } from '@/src/locales/client';
-import { CreateEvaluatorDto, EvaluatorType } from '@/src/models/analytics/evaluator';
+import { CreateEvaluatorDto, EvaluatorRequest, EvaluatorType } from '@/src/models/analytics/evaluator';
 import { FieldError } from '@/src/models/error';
-import { buildEvaluatorDto, isEvaluatorShapeValid } from '@/src/utils/analytics/evaluator-dto';
+import { applyTypeChange, buildEvaluatorDto, isEvaluatorShapeValid } from '@/src/utils/analytics/evaluator-dto';
 import { getEvaluatorNameError } from '@/src/utils/validation/evaluator-name-error';
 
 interface Params {
@@ -17,16 +17,19 @@ export interface CreateEvaluatorFormState {
   onChange: (patch: Partial<CreateEvaluatorDto>) => void;
   nameError: FieldError | null;
   isValid: boolean;
-  buildDto: () => CreateEvaluatorDto;
+  buildDto: () => EvaluatorRequest;
 }
 
-const INITIAL_DRAFT: CreateEvaluatorDto = { name: '', type: EvaluatorType.Llm, output_vars: [] };
+const INITIAL_DRAFT: CreateEvaluatorDto = { name: '', type: EvaluatorType.Llm, outputs: [] };
 
 export const useCreateEvaluatorForm = ({ existingNames }: Params): CreateEvaluatorFormState => {
   const t = useI18n();
   const [draft, setDraft] = useState<CreateEvaluatorDto>(INITIAL_DRAFT);
 
-  const onChange = useCallback((patch: Partial<CreateEvaluatorDto>) => setDraft((prev) => ({ ...prev, ...patch })), []);
+  const onChange = useCallback(
+    (patch: Partial<CreateEvaluatorDto>) => setDraft((prev) => ({ ...prev, ...applyTypeChange(prev, patch) })),
+    [],
+  );
 
   const nameError = getEvaluatorNameError(draft.name, existingNames, t);
 

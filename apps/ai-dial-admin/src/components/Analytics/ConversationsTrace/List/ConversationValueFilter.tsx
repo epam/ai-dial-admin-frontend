@@ -7,6 +7,7 @@ import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ButtonsI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import {
   ConversationFieldValue,
@@ -16,6 +17,7 @@ import {
   ConversationValuesState,
 } from '@/src/models/analytics/conversations-trace';
 import { formatCompactNumber } from '@/src/utils/analytics/conversation-formatting';
+import { getErrorNotification } from '@/src/utils/notification';
 
 const STATE_MESSAGE_KEY: Partial<Record<ConversationValuesState, string>> = {
   [ConversationValuesState.Loading]: ConversationsTraceI18nKey.ValueFilterLoading,
@@ -47,8 +49,10 @@ type Props = CustomFilterProps<ConversationRow, ConversationGridContext, Convers
  */
 const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
 
   const [state, setState] = useState(ConversationValuesState.Loading);
+  const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const [values, setValues] = useState<ConversationFieldValue[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -76,6 +80,7 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
 
     let isCurrent = true;
     setState(ConversationValuesState.Loading);
+    setFailureMessage(null);
     // A term left over from the previous opening would silently hide values from a list that has since been
     // re-resolved against different narrowing.
     setSearch('');
@@ -85,12 +90,23 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
       if (!isCurrent) {
         return;
       }
-      setValues(resolved ?? []);
-      if (!resolved) {
+      setValues(resolved.response ?? []);
+
+      if (!resolved.success) {
+        setFailureMessage(resolved.errorMessage ?? null);
         setState(ConversationValuesState.LoadFailed);
+        showNotification(
+          getErrorNotification(
+            resolved.errorHeader ?? t(ConversationsTraceI18nKey.ValuesLoadFailed),
+            resolved.errorMessage,
+            resolved.requestId,
+          ),
+        );
         return;
       }
-      setState(resolved.length ? ConversationValuesState.Available : ConversationValuesState.Empty);
+
+      setFailureMessage(null);
+      setState(resolved.response?.length ? ConversationValuesState.Available : ConversationValuesState.Empty);
     };
 
     void read();
@@ -98,7 +114,7 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
     return () => {
       isCurrent = false;
     };
-  }, [fieldName, isOpen]);
+  }, [fieldName, isOpen, showNotification, t]);
 
   // Presentational only: narrowing what renders never changes what is selected, so clearing the term brings
   // the hidden values back with their selection intact.
@@ -136,6 +152,7 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
   }, [onModelChange]);
 
   const messageKey = STATE_MESSAGE_KEY[state];
+  const stateMessage = failureMessage ?? (messageKey ? t(messageKey) : '');
   const isAvailable = state === ConversationValuesState.Available;
 
   return (
@@ -150,7 +167,7 @@ const ConversationValueFilter: FC<Props> = ({ model, onModelChange, colDef, cont
           state === ConversationValuesState.LoadFailed ? 'text-error' : 'text-secondary',
         )}
       >
-        {messageKey ? t(messageKey) : ''}
+        {stateMessage}
       </span>
       {isAvailable && values.length > SEARCH_THRESHOLD && (
         <DialInput

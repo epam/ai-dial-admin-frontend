@@ -1,6 +1,7 @@
 'use client';
 
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
+import { ColDef } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -58,8 +59,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   sidebarRef.current = sidebar;
 
   const showDetailPanelRef = useRef<
-    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey?: string | null) => void
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey?: string | null, focusRequestId?: number) => void
   >(() => {});
+  const focusRequestIdRef = useRef(0);
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
@@ -76,6 +78,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [availableMetricGroups, setAvailableMetricGroups] = useState<string[]>([]);
   const [selectedMetricGroups, setSelectedMetricGroups] = useState<Set<string>>(new Set());
   const areMetricGroupsInitializedRef = useRef(false);
+  const displayTreeRef = useRef<ColDef[]>([]);
+  const viewDifferencesOnlyRef = useRef(false);
+  const hideHighlightsRef = useRef(false);
 
   const {
     state: tabState,
@@ -215,6 +220,16 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setSelectedMetricGroups(groups);
   }, []);
 
+  const persistDisplayTree = useCallback((tree: ColDef[]) => {
+    displayTreeRef.current = tree;
+  }, []);
+  const persistViewDifferencesOnly = useCallback((value: boolean) => {
+    viewDifferencesOnlyRef.current = value;
+  }, []);
+  const persistHideHighlights = useCallback((value: boolean) => {
+    hideHighlightsRef.current = value;
+  }, []);
+
   const closeRowDetail = useCallback(() => {
     setSelectedRow(null);
     setFocusFieldKey(null);
@@ -225,7 +240,12 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Bottom);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Bottom, focusFieldKeyRef.current);
+      showDetailPanelRef.current(
+        currentRow,
+        SidebarPosition.Bottom,
+        focusFieldKeyRef.current,
+        focusRequestIdRef.current,
+      );
     }
   }, []);
 
@@ -233,12 +253,17 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setDetailPosition(SidebarPosition.Right);
     const currentRow = selectedRowRef.current;
     if (currentRow) {
-      showDetailPanelRef.current(currentRow, SidebarPosition.Right, focusFieldKeyRef.current);
+      showDetailPanelRef.current(
+        currentRow,
+        SidebarPosition.Right,
+        focusFieldKeyRef.current,
+        focusRequestIdRef.current,
+      );
     }
   }, []);
 
   const showDetailPanel = useCallback(
-    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey: string | null = null) => {
+    (row: CompareAnalyticsRow, position: SidebarPosition, fieldKey: string | null = null, focusRequestId = 0) => {
       const isBottom = position === SidebarPosition.Bottom;
       const content = isBottom ? (
         <CompareRowDetailBottomPanel
@@ -248,8 +273,15 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onClose={closeRowDetail}
           onSwitchToSidebar={switchToSidebar}
           focusFieldKey={fieldKey}
+          focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
           metricGroupOrder={metricGroupOrder}
+          initialDisplayTree={displayTreeRef.current}
+          onDisplayTreeChange={persistDisplayTree}
+          initialViewDifferencesOnly={viewDifferencesOnlyRef.current}
+          onViewDifferencesOnlyChange={persistViewDifferencesOnly}
+          initialHideHighlights={hideHighlightsRef.current}
+          onHideHighlightsChange={persistHideHighlights}
         />
       ) : (
         <CompareRowDetailPanel
@@ -260,14 +292,32 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           position={SidebarPosition.Right}
           onSwitchDisplayMode={switchToBottom}
           focusFieldKey={fieldKey}
+          focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
           metricGroupOrder={metricGroupOrder}
+          initialDisplayTree={displayTreeRef.current}
+          onDisplayTreeChange={persistDisplayTree}
+          initialViewDifferencesOnly={viewDifferencesOnlyRef.current}
+          onViewDifferencesOnlyChange={persistViewDifferencesOnly}
+          initialHideHighlights={hideHighlightsRef.current}
+          onHideHighlightsChange={persistHideHighlights}
         />
       );
       const className = isBottom ? ROW_DETAIL_BOTTOM_CLASS : ROW_DETAIL_SIDEBAR_CLASS;
       sidebarRef.current.showSidebar(content, className, position);
     },
-    [primaryRunName, comparedRunName, closeRowDetail, switchToBottom, switchToSidebar, fieldSchema, metricGroupOrder],
+    [
+      primaryRunName,
+      comparedRunName,
+      closeRowDetail,
+      switchToBottom,
+      switchToSidebar,
+      fieldSchema,
+      metricGroupOrder,
+      persistDisplayTree,
+      persistViewDifferencesOnly,
+      persistHideHighlights,
+    ],
   );
 
   showDetailPanelRef.current = showDetailPanel;
@@ -275,10 +325,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow, options?: { focusFieldKey?: string | null }) => {
       const fieldKey = options?.focusFieldKey ?? null;
+      focusRequestIdRef.current += 1;
 
       setSelectedRow(row);
       setFocusFieldKey(fieldKey);
-      showDetailPanel(row, detailPosition, fieldKey);
+      showDetailPanel(row, detailPosition, fieldKey, focusRequestIdRef.current);
     },
     [showDetailPanel, detailPosition],
   );
@@ -292,6 +343,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   useEffect(() => {
     closeRowDetail();
+    displayTreeRef.current = [];
+    viewDifferencesOnlyRef.current = false;
+    hideHighlightsRef.current = false;
     setAvailableMetricGroups([]);
     setSelectedMetricGroups(new Set());
     areMetricGroupsInitializedRef.current = false;
