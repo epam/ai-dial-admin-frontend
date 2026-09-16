@@ -1,18 +1,19 @@
 import { describe, expect, test } from 'vitest';
 
-import { EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { PipelineListItem, TriggerKind } from '@/src/models/analytics/pipeline';
+import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { PipelineKind, PipelineListItem, TriggerKind } from '@/src/models/analytics/pipeline';
 import { getReferencingPipelines, toEvaluatorRows, toEvaluatorUsage } from '@/src/utils/analytics/evaluator-usage';
 
-const rule = (over: Partial<PipelineListItem>): PipelineListItem => ({
-  id: 'r_1',
+// The listing item is deliberately slimmer than a detail read: `toPipelineListItem` drops the nested
+// `evaluator`, the `grain_key` and the filter, so a rule here is identified by `name`.
+const rule = (over: Partial<PipelineListItem> = {}): PipelineListItem => ({
   name: 'turn-feedback-live',
+  kind: PipelineKind.Enrich,
+  target: 'turn_feedback',
+  inputs: ['dial_usage_log'],
+  trigger: { kind: TriggerKind.OnIngest },
   evaluator_name: 'feedback-rollup',
   evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
-  target_enrichment: 'turn_feedback',
-  grain_key: 'response_id',
-  trigger_kind: TriggerKind.OnIngest,
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',
@@ -29,9 +30,9 @@ const summary = (name: string, over: Partial<EvaluatorSummary> = {}): EvaluatorS
 describe('toEvaluatorUsage', () => {
   test('counts the rules naming each evaluator', () => {
     const usage = toEvaluatorUsage([
-      rule({ id: 'r_1' }),
-      rule({ id: 'r_2' }),
-      rule({ id: 'r_3', evaluator_name: 'conversation-insights' }),
+      rule({ name: 'rule-1' }),
+      rule({ name: 'rule-2' }),
+      rule({ name: 'rule-3', evaluator_name: 'conversation-insights' }),
     ]);
 
     expect([...usage]).toEqual([
@@ -42,9 +43,9 @@ describe('toEvaluatorUsage', () => {
 
   test('counts across versions rather than per version', () => {
     const usage = toEvaluatorUsage([
-      rule({ id: 'r_1', evaluator_version: 2 }),
-      rule({ id: 'r_2', evaluator_version: undefined }),
-      rule({ id: 'r_3', evaluator_version: 4 }),
+      rule({ name: 'rule-1', evaluator_version: 2 }),
+      rule({ name: 'rule-2', evaluator_version: undefined }),
+      rule({ name: 'rule-3', evaluator_version: 4 }),
     ]);
 
     expect(usage.get('feedback-rollup')).toBe(3);
@@ -62,8 +63,8 @@ describe('toEvaluatorUsage', () => {
   // resolves every one of them against `Object.prototype` and counts a function instead of a number.
   test.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])('counts an evaluator named %s', (name) => {
     const usage = toEvaluatorUsage([
-      rule({ id: 'r_1', evaluator_name: name }),
-      rule({ id: 'r_2', evaluator_name: name }),
+      rule({ name: 'rule-1', evaluator_name: name }),
+      rule({ name: 'rule-2', evaluator_name: name }),
     ]);
 
     expect(usage.get(name)).toBe(2);
@@ -116,37 +117,32 @@ describe('toEvaluatorRows', () => {
 describe('getReferencingPipelines', () => {
   test('selects only the rules naming that evaluator', () => {
     const referencing = getReferencingPipelines(
-      [rule({ id: 'r_1' }), rule({ id: 'r_2', evaluator_name: 'conversation-insights' })],
+      [rule({ name: 'rule-1' }), rule({ name: 'rule-2', evaluator_name: 'conversation-insights' })],
       'feedback-rollup',
     );
 
-    expect(referencing.map((item) => item.id)).toEqual(['r_1']);
+    expect(referencing.map((item) => item.name)).toEqual(['rule-1']);
   });
 
   test('keeps the whole rule so the grid can render its own columns', () => {
     const [referencing] = getReferencingPipelines([rule({ evaluator_version: 2 })], 'feedback-rollup');
 
     expect(referencing).toMatchObject({
-      id: 'r_1',
       name: 'turn-feedback-live',
-      target_enrichment: 'turn_feedback',
+      kind: PipelineKind.Enrich,
+      target: 'turn_feedback',
+      trigger: { kind: TriggerKind.OnIngest },
       evaluator_version: 2,
     });
   });
 
-  test('keeps a rule that declares no version, resolved as the service returned it', () => {
-    const [referencing] = getReferencingPipelines(
-      [
-        rule({
-          evaluator_version: undefined,
-          evaluator: { name: 'feedback-rollup', version: 4, type: EvaluatorType.Sql },
-        }),
-      ],
-      'feedback-rollup',
-    );
+  // The listing carries no resolved evaluator object, so "no declared version" is all a row can say:
+  // a rule that pins none still belongs to the evaluator it names, and the column renders empty.
+  test('keeps a rule that declares no version', () => {
+    const [referencing] = getReferencingPipelines([rule({ evaluator_version: undefined })], 'feedback-rollup');
 
+    expect(referencing.evaluator_name).toBe('feedback-rollup');
     expect(referencing.evaluator_version).toBeUndefined();
-    expect(referencing.evaluator.version).toBe(4);
   });
 
   test('is empty when no rule names the evaluator', () => {
