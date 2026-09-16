@@ -66,7 +66,7 @@ export default {
     NoParameters: 'No Parameters',
     NoVariables: 'No Variables',
     NoHeaders: 'No Headers',
-    ShowConfigFiles: 'Show config files',
+    ShowConfigFiles: 'Show config entities',
     Key: 'Key',
     Value: 'Value',
     From: 'From',
