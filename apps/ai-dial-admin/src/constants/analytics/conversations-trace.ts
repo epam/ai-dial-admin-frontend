@@ -15,6 +15,7 @@ import {
   MessageRole,
   ProvenanceEntity,
   ResponseRatingsField,
+  SpanFieldTag,
   SpanKind,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
@@ -116,6 +117,86 @@ export const MODEL_CALL_URI_MARKERS: string[] = [
 // Both body columns are named only when the fetched schema reports them: an instance can persist the
 // assembled column without `response_body`, or the reverse, and one unknown field rejects the whole query.
 export const OPTIONAL_USAGE_LOG_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
+
+// Selected whatever the schema reports, because the tree, the transport line and the span's own badges are
+// built from them: dropping one after a failed schema read would cost the reader the hop chain.
+//
+// Every member MUST be a column the service publishes to **any** caller. A `sensitive` column here is absent
+// from a non-administrator's query model, and naming an absent column rejects the whole query — so the trace
+// would open empty for everyone but a full administrator. The sensitive gate fails open on a stack running
+// with security disabled, so a non-administrator cannot be reproduced locally; `span-fields.spec.ts` asserts
+// the invariant instead.
+export const SPAN_BASE_FIELDS: UsageLogField[] = [
+  UsageLogField.CoreSpanId,
+  UsageLogField.CoreParentSpanId,
+  UsageLogField.EventKind,
+  UsageLogField.Deployment,
+  UsageLogField.ParentDeployment,
+  UsageLogField.RequestMethod,
+  UsageLogField.RequestUri,
+  UsageLogField.ResponseUpstreamUri,
+  UsageLogField.ResponseStatus,
+  UsageLogField.Success,
+  UsageLogField.OperationDurationMs,
+  UsageLogField.TotalTokens,
+  UsageLogField.DeploymentPrice,
+  UsageLogField.TotalPrice,
+  UsageLogField.RequestTime,
+  UsageLogField.ResponseBodyBytes,
+  UsageLogField.RequestBodyBytes,
+  UsageLogField.NumberRequestMessages,
+  UsageLogField.ReasoningTokens,
+  UsageLogField.McpMethod,
+  UsageLogField.McpToolCallName,
+  UsageLogField.ExecutionPath,
+];
+
+// The one column the groups drop: the baggage table's copy of the request time is non-nullable, so an event
+// with no baggage row reads it as the epoch — `1970-01-01` under a label saying "request time" reads as a bug
+// in this console. Excluded by its full name, because the hop log's own `request_time` is a different column
+// that the rail does state.
+export const SPAN_UNREADABLE_FIELDS: string[] = ['usage_request_baggage.request_time'];
+
+// The service returns untagged fields last, so this group lands last by arrival order without being ordered
+// here.
+export const UNTAGGED_SPAN_FIELD_TAG = 'other';
+
+// Money, whatever the schema types it as: a cost column is `decimal` and runs well below the cent, so it
+// reads through the cost formatter — `toLocaleString` keeps three decimals and would state $0.0000075 as 0.
+export const SPAN_COST_TAGS: string[] = [SpanFieldTag.Cost];
+
+// The tags whose zero means "not reported" rather than "measured none". Keyed by tag rather than by column
+// name, so a metered column this frontend has not seen yet is covered too — and a zero on a request-message
+// count stays the real count it is.
+export const SPAN_METERED_TAGS: string[] = [SpanFieldTag.TokenUsage, SpanFieldTag.Cost, SpanFieldTag.Performance];
+
+export const SPAN_FIELD_TAG_LABEL_KEY: Record<string, string> = {
+  [SpanFieldTag.Identifier]: ConversationsTraceI18nKey.SpanTagIdentifier,
+  [SpanFieldTag.Dimension]: ConversationsTraceI18nKey.SpanTagDimension,
+  [SpanFieldTag.Principal]: ConversationsTraceI18nKey.SpanTagPrincipal,
+  [SpanFieldTag.Deployment]: ConversationsTraceI18nKey.SpanTagDeployment,
+  [SpanFieldTag.Request]: ConversationsTraceI18nKey.SpanTagRequest,
+  [SpanFieldTag.Response]: ConversationsTraceI18nKey.SpanTagResponse,
+  [SpanFieldTag.TokenUsage]: ConversationsTraceI18nKey.SpanTagTokenUsage,
+  [SpanFieldTag.Cost]: ConversationsTraceI18nKey.SpanTagCost,
+  [SpanFieldTag.Performance]: ConversationsTraceI18nKey.SpanTagPerformance,
+  [SpanFieldTag.Client]: ConversationsTraceI18nKey.SpanTagClient,
+  [SpanFieldTag.Provenance]: ConversationsTraceI18nKey.SpanTagProvenance,
+  [SpanFieldTag.Tracing]: ConversationsTraceI18nKey.SpanTagTracing,
+  [SpanFieldTag.System]: ConversationsTraceI18nKey.SpanTagSystem,
+  [UNTAGGED_SPAN_FIELD_TAG]: ConversationsTraceI18nKey.SpanTagOther,
+};
+
+// The column a group is previewed by, where its own first field is the wrong answer. Fields arrive sorted by
+// name inside a tag, so `token-usage` would otherwise lead with a cache count — a part of another figure —
+// rather than with the hop's own total.
+export const SPAN_GROUP_SUMMARY_FIELD: Record<string, UsageLogField> = {
+  [SpanFieldTag.TokenUsage]: UsageLogField.TotalTokens,
+  [SpanFieldTag.Performance]: UsageLogField.OperationDurationMs,
+  [SpanFieldTag.Cost]: UsageLogField.TotalPrice,
+  [SpanFieldTag.Request]: UsageLogField.RequestMethod,
+  [SpanFieldTag.Response]: UsageLogField.ResponseStatus,
+};
 
 export const HOP_REQUEST_BODY_FIELD: UsageLogField = UsageLogField.RequestBody;
 
