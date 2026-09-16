@@ -2041,6 +2041,10 @@ export enum TestSuitesI18nKey {
   TrendsTooltipDate = 'TestSuites.TrendsTooltipDate',
   TrendsTooltipRun = 'TestSuites.TrendsTooltipRun',
   TrendsTooltipScore = 'TestSuites.TrendsTooltipScore',
+  TestCaseStability = 'TestSuites.TestCaseStability',
+  TrendsStabilityTooltipTestCase = 'TestSuites.TrendsStabilityTooltipTestCase',
+  TrendsStabilityTooltipPassed = 'TestSuites.TrendsStabilityTooltipPassed',
+  TrendsStabilityNotApplicable = 'TestSuites.TrendsStabilityNotApplicable',
 }
 
 export enum DatasetsI18nKey {

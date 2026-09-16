@@ -1,7 +1,5 @@
 import { PostProcessPopupParams } from 'ag-grid-community';
 
-import { HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
-
 export enum HeatMapTooltipCellResolutionSource {
   EventSource = 'eventSource',
   Pointer = 'pointer',
@@ -20,7 +18,7 @@ export const resolveCenteredPopupLeft = (
   parentWidth: number,
   popupWidth: number,
 ): number => {
-  let left = anchorCenterX - parentLeft - popupWidth / 2;
+  const left = anchorCenterX - parentLeft - popupWidth / 2;
   const maxLeft = parentWidth - popupWidth;
   return Math.max(0, Math.min(left, maxLeft));
 };
@@ -37,8 +35,8 @@ const resolveHeatMapTooltipCellFromPointer = (mouseEvent: MouseEvent | Touch): H
   return cellFromPointer ?? null;
 };
 
-export const resolveHeatMapTooltipCellElement = (
-  params: PostProcessPopupParams<HeatMapRow>,
+export const resolveHeatMapTooltipCellElement = <TData>(
+  params: PostProcessPopupParams<TData>,
 ): HeatMapTooltipCellResolution => {
   if (params.eventSource) {
     return { element: params.eventSource, source: HeatMapTooltipCellResolutionSource.EventSource };
@@ -64,7 +62,7 @@ export const resolveHeatMapTooltipCellElement = (
   return { element: null, source: HeatMapTooltipCellResolutionSource.None };
 };
 
-export const centerHeatMapTooltipPopup = (params: PostProcessPopupParams<HeatMapRow>): boolean => {
+export const centerHeatMapTooltipPopup = <TData>(params: PostProcessPopupParams<TData>): boolean => {
   if (params.type !== 'tooltip') {
     return false;
   }

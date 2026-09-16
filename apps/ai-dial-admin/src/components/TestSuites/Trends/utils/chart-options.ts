@@ -23,6 +23,108 @@ interface OverallChartLabels {
   score: string;
 }
 
+/** Matches `grid` in {@link buildOverallScoreChartOptions}. */
+export const OVERALL_SCORE_TREND_GRID = { left: 48, right: 16, bottom: 28, top: 16 } as const;
+
+/**
+ * Keep the sticky click tooltip away from the pointer and inside the chart view.
+ * Low-score points sit near the x-axis; default placement puts the tooltip under the
+ * cursor, which immediately hides it. Right-edge points also need horizontal clamping.
+ */
+export const resolveOverallScoreTooltipPosition = (
+  point: number[],
+  size: { contentSize: number[]; viewSize: number[] },
+): [number, number] => {
+  const [mouseX, mouseY] = point;
+  const [boxW, boxH] = size.contentSize;
+  const [viewW, viewH] = size.viewSize;
+  const gap = 12;
+
+  let x = mouseX + gap;
+  let y = mouseY - boxH - gap;
+
+  if (y < 0) {
+    y = mouseY + gap;
+  }
+  if (y + boxH > viewH) {
+    y = Math.max(0, viewH - boxH);
+  }
+  if (x + boxW > viewW) {
+    x = mouseX - boxW - gap;
+  }
+  if (x < 0) {
+    x = 0;
+  }
+
+  return [x, y];
+};
+
+/**
+ * Layout fallback when convertFromPixel fails (clicks below the plot / on axis labels).
+ * Assumes `boundaryGap: false` category axis.
+ */
+export const resolveCategoryDataIndexFromLayout = (
+  offsetX: number,
+  chartWidth: number,
+  categoryCount: number,
+  grid: { left: number; right: number } = OVERALL_SCORE_TREND_GRID,
+): number | null => {
+  if (categoryCount <= 0 || chartWidth <= 0) {
+    return null;
+  }
+  if (categoryCount === 1) {
+    return 0;
+  }
+
+  const plotWidth = chartWidth - grid.left - grid.right;
+  if (plotWidth <= 0) {
+    return null;
+  }
+
+  const dataIndex = Math.round(((offsetX - grid.left) / plotWidth) * (categoryCount - 1));
+  if (dataIndex < 0 || dataIndex >= categoryCount) {
+    return null;
+  }
+  return dataIndex;
+};
+
+/** Map a chart-pixel click to a category dataIndex (works below the plot / on axis labels). */
+export const resolveCategoryDataIndexFromPixel = (
+  convertFromPixel: (finder: unknown, value: number | number[]) => unknown,
+  offsetX: number,
+  offsetY: number,
+  categoryCount: number,
+  chartWidth?: number,
+  chartHeight?: number,
+): number | null => {
+  if (categoryCount <= 0) {
+    return null;
+  }
+
+  const toIndex = (raw: unknown): number | null => {
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return null;
+    }
+    const dataIndex = Math.round(value);
+    if (dataIndex < 0 || dataIndex >= categoryCount) {
+      return null;
+    }
+    return dataIndex;
+  };
+
+  // Clamp Y into the plot so grid conversion still works for axis-label clicks.
+  const plotTop = OVERALL_SCORE_TREND_GRID.top;
+  const plotBottom = (chartHeight ?? 220) - OVERALL_SCORE_TREND_GRID.bottom;
+  const clampedY = Math.min(plotBottom - 1, Math.max(plotTop + 1, offsetY));
+
+  return (
+    toIndex(convertFromPixel('grid', [offsetX, clampedY])) ??
+    toIndex(convertFromPixel({ xAxisIndex: 0 }, offsetX)) ??
+    (chartWidth != null ? resolveCategoryDataIndexFromLayout(offsetX, chartWidth, categoryCount) : null)
+  );
+};
+
 export const buildOverallScoreChartOptions = (
   runOrder: TrendsRunPoint[],
   labels: OverallChartLabels,
@@ -46,6 +148,8 @@ export const buildOverallScoreChartOptions = (
     tooltip: {
       trigger: 'axis',
       triggerOn: 'click',
+      alwaysShowContent: true,
+      transitionDuration: 0,
       enterable: true,
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
       confine: false,
@@ -57,8 +161,16 @@ export const buildOverallScoreChartOptions = (
       textStyle: { color: '#EEF1F7', fontSize: 12 },
       axisPointer: {
         type: 'line',
+        snap: true,
         lineStyle: { color: '#9FA6BD', width: 1 },
       },
+      position: (
+        point: number[],
+        _params: unknown,
+        _dom: HTMLElement,
+        _rect: unknown,
+        size: { contentSize: number[]; viewSize: number[] },
+      ) => resolveOverallScoreTooltipPosition(point, size),
       formatter: (params: { dataIndex: number; value: number | null }[]) => {
         const item = params[0];
         if (!item) {
@@ -88,7 +200,12 @@ export const buildOverallScoreChartOptions = (
           </div>`;
       },
     },
-    grid: { left: 48, right: 16, bottom: 28, top: 16 },
+    grid: {
+      left: OVERALL_SCORE_TREND_GRID.left,
+      right: OVERALL_SCORE_TREND_GRID.right,
+      bottom: OVERALL_SCORE_TREND_GRID.bottom,
+      top: OVERALL_SCORE_TREND_GRID.top,
+    },
     xAxis: {
       type: 'category',
       data: categories,

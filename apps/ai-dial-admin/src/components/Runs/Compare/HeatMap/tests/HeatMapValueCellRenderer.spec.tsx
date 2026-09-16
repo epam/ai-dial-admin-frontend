@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapValueCellRenderer';
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 
 const metricRow = {

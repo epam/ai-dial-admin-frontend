@@ -1,4 +1,4 @@
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 
 export const formatHeatMapCellValue = (value: number | null | undefined): string => {
   if (value == null) {

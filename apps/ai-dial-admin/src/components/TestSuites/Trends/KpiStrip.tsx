@@ -8,6 +8,7 @@ import ScoreRangeCard from '@/src/components/TestSuites/Trends/ScoreRangeCard';
 import TrendsKpiCard from '@/src/components/TestSuites/Trends/TrendsKpiCard';
 import { TrendsKpiData } from '@/src/components/TestSuites/Trends/models';
 import { formatScore, formatSuiteRunTime } from '@/src/components/TestSuites/Trends/utils/format';
+import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -17,7 +18,7 @@ interface Props {
 
 const KpiStrip: FC<Props> = ({ kpis }) => {
   const t = useI18n();
-  const runsLabel = t(TestSuitesI18nKey.TrendsRunsCount, { count: kpis.runCount });
+  const runsLabel = formatTrendsRunsCountLabel(t, kpis.runCount);
   const titleWithRuns = (title: string) => `${title} · ${runsLabel}`;
 
   return (

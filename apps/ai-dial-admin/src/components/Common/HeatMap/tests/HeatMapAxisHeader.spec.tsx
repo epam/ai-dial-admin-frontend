@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
 import {
   HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING,
   HEAT_MAP_VALUE_TEXT_MIN_WIDTH,
-} from '@/src/components/Runs/Compare/HeatMap/constants';
-import HeatMapTestCaseHeader from '@/src/components/Runs/Compare/HeatMap/HeatMapTestCaseHeader';
-import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
+} from '@/src/components/Common/HeatMap/constants';
+import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -40,23 +40,24 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 const createColumnMock = (width: number) => ({ getActualWidth: () => width });
 
-type HeatMapTestCaseHeaderProps = IHeaderParams & { label?: string };
+type HeatMapAxisHeaderProps = IHeaderParams & { label?: string };
 
-const createHeaderParams = (
-  width: number,
-  overrides: Partial<Pick<HeatMapTestCaseHeaderProps, 'label' | 'displayName' | 'api'>> = {},
-): HeatMapTestCaseHeaderProps =>
+type HeaderParamOverrides = Partial<Pick<HeatMapAxisHeaderProps, 'label' | 'displayName'>> & {
+  api?: { getGridOption: (key: string) => number };
+};
+
+const createHeaderParams = (width: number, overrides: HeaderParamOverrides = {}): HeatMapAxisHeaderProps =>
   ({
     displayName: 'Row 001',
     label: 'Row 001',
     column: createColumnMock(width),
     api: { getGridOption: () => 0 },
     ...overrides,
-  }) as unknown as HeatMapTestCaseHeaderProps;
+  }) as unknown as HeatMapAxisHeaderProps;
 
-describe('HeatMapTestCaseHeader', () => {
+describe('HeatMapAxisHeader', () => {
   test('renders horizontal header label via DialEllipsisTooltip when column is wide enough', () => {
-    const { container } = render(<HeatMapTestCaseHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)} />);
+    const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)} />);
 
     expect(screen.getByTestId('ellipsis-tooltip')).toHaveTextContent('Row 001');
     expect(screen.queryByTestId('dial-tooltip')).not.toBeInTheDocument();
@@ -64,7 +65,7 @@ describe('HeatMapTestCaseHeader', () => {
   });
 
   test('renders vertical header label wrapped in DialTooltip when column is too narrow', () => {
-    const { container } = render(<HeatMapTestCaseHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)} />);
+    const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)} />);
 
     const tooltip = screen.getByTestId('dial-tooltip');
     expect(tooltip).toBeInTheDocument();
@@ -82,7 +83,7 @@ describe('HeatMapTestCaseHeader', () => {
     const headerHeight = measureVerticalHeatMapHeaderLabelHeight(label) + HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING;
 
     render(
-      <HeatMapTestCaseHeader
+      <HeatMapAxisHeader
         {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1, {
           label,
           displayName: label,

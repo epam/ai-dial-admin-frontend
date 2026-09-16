@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { resolveCenteredPopupLeft } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
+import { resolveCenteredPopupLeft } from '@/src/components/Common/HeatMap/utils/center-heat-map-tooltip-popup';
 
 describe('resolveCenteredPopupLeft', () => {
   test('centers popup on anchor within parent bounds', () => {

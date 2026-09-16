@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 import {
   formatHeatMapCellValue,
   formatHeatMapCellValueForMode,
   formatHeatMapDeltaCellValue,
   shouldShowHeatMapCellValue,
-} from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
+} from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 
 describe('formatHeatMapCellValue', () => {
   test('formats numeric values to three decimals', () => {

@@ -1,15 +1,14 @@
 'use client';
 
-import { FirstDataRenderedEvent, GridApi, GridReadyEvent, RowHeightParams } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
-import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import { HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
-import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
+import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
+import { HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE } from '@/src/components/Common/HeatMap/constants';
+import { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
+import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import {
   buildHeatMapRowsForMode,
@@ -17,13 +16,6 @@ import {
   filterHeatMapRowsByMetricGroups,
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
-import { centerHeatMapTooltipPopup } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
-import {
-  applyHeatMapColumnWidths,
-  getHeatMapValueColumnWidth,
-  resolveHeatMapHeaderHeight,
-  resolveHeatMapRowHeight,
-} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
 import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, isMatchedCompareRow, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
@@ -60,7 +52,6 @@ const HeatMapTab: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { currentTheme } = useTheme();
-  const gridApiRef = useRef<GridApi | null>(null);
 
   const [hasLoadError, setHasLoadError] = useState(false);
   const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
@@ -192,78 +183,6 @@ const HeatMapTab: FC<Props> = ({
     [mergedRowData],
   );
 
-  const fitHeatMapColumns = useCallback(
-    (api: GridApi) => {
-      const centerViewport = document.querySelector('.heat-map-grid .ag-center-cols-viewport') as HTMLElement | null;
-      const availableForTestCases = centerViewport?.clientWidth ?? 0;
-      applyHeatMapColumnWidths(api, availableForTestCases);
-
-      const valueColumnWidth = getHeatMapValueColumnWidth(api);
-      const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth, headerLabels);
-      api.setGridOption('headerHeight', headerHeight);
-      api.resetRowHeights();
-      api.refreshHeader();
-      api.refreshCells({ force: true });
-    },
-    [headerLabels],
-  );
-
-  // Re-fit after columnDefs updates (Absolute/Delta, theme, matching-filter).
-  // onNewColumnsLoaded is the reliable hook: GridView buffers columnDefs one
-  // commit, so this React effect can run before AG Grid has the new columns.
-  useEffect(() => {
-    if (!gridApiRef.current || !columnDefs.length) {
-      return;
-    }
-    fitHeatMapColumns(gridApiRef.current);
-  }, [columnDefs, fitHeatMapColumns]);
-
-  const onGridReady = useCallback(
-    (event: GridReadyEvent) => {
-      gridApiRef.current = event.api;
-      fitHeatMapColumns(event.api);
-    },
-    [fitHeatMapColumns],
-  );
-
-  const gridOptions = useMemo(
-    () => ({
-      headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
-      hidePaddedHeaderRows: false,
-      rowHeight: HEAT_MAP_ROW_HEIGHT,
-      suppressHorizontalScroll: false,
-      alwaysShowHorizontalScroll: false,
-      autoSizeStrategy: undefined,
-      getRowHeight: (params: RowHeightParams<HeatMapRow>) => {
-        const valueColumnWidth = params.api ? getHeatMapValueColumnWidth(params.api) : 0;
-        return resolveHeatMapRowHeight(valueColumnWidth);
-      },
-      defaultColDef: {
-        filter: false,
-        floatingFilter: false,
-        resizable: false,
-        sortable: false,
-      },
-      onFirstDataRendered: (event: FirstDataRenderedEvent) => {
-        fitHeatMapColumns(event.api);
-      },
-      onNewColumnsLoaded: (event: { api: GridApi }) => {
-        fitHeatMapColumns(event.api);
-      },
-      onGridSizeChanged: (event: { api: GridApi }) => {
-        fitHeatMapColumns(event.api);
-      },
-      onColumnResized: (event: { api: GridApi; finished: boolean | undefined }) => {
-        if (event.finished) {
-          event.api.resetRowHeights();
-          event.api.refreshCells({ force: true });
-        }
-      },
-      postProcessPopup: centerHeatMapTooltipPopup,
-    }),
-    [fitHeatMapColumns, headerLabels],
-  );
-
   const isCompareDataReady = results !== null && comparedResults !== null;
 
   if (hasLoadError) {
@@ -279,23 +198,15 @@ const HeatMapTab: FC<Props> = ({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-6">
-      <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
-        <GridView
-          key={`${primaryRunId}-${comparedRunId}`}
-          columnDefs={columnDefs}
-          rowData={visibleRows}
-          additionalGridOptions={gridOptions}
-          emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
-          getRowId={({ data }) => data.id}
-          onGridReady={onGridReady}
-        />
-      </div>
-
-      <div className="flex justify-start shrink-0 pb-2">
-        <ColorScale variant={isDeltaMode ? ColorScaleVariant.Delta : ColorScaleVariant.Compact} />
-      </div>
-    </div>
+    <HeatMapGrid
+      gridKey={`${primaryRunId}-${comparedRunId}`}
+      columnDefs={columnDefs}
+      rowData={visibleRows}
+      headerLabels={headerLabels}
+      emptyTitle={t(EntitiesI18nKey.NoResults)}
+      valueColumnIdPrefix={HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE}
+      colorScaleVariant={isDeltaMode ? ColorScaleVariant.Delta : ColorScaleVariant.Compact}
+    />
   );
 };
 
