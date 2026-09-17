@@ -7,7 +7,7 @@ describe('Cell renderer :: getItems ', () => {
     const params = {
       items: [{ value: 'id', label: 'name' }],
     } as SelectCellRendererParams;
-    const result = getItems(params, (v: string) => v);
+    const result = getItems(params);
     expect(result).toEqual({
       items: [{ value: 'id', label: 'name' }],
       allItemsCount: 1,
@@ -18,7 +18,7 @@ describe('Cell renderer :: getItems ', () => {
       items: [{ value: 'id', label: 'name' }],
       isMulti: true,
     } as SelectCellRendererParams;
-    const result = getItems(params, (v: string) => v);
+    const result = getItems(params);
     expect(result).toEqual({
       items: [{ value: 'id', label: 'name' }],
       allItemsCount: 1,
@@ -29,7 +29,7 @@ describe('Cell renderer :: getItems ', () => {
       data: [{ value: '1' }, { value: '2' }],
       getItems: (data: { value: string }[]) => data.map((item) => ({ value: item.value, label: item.value })),
     } as SelectCellRendererParams;
-    const result = getItems(params, (v: string) => v);
+    const result = getItems(params);
     expect(result).toEqual({
       items: [
         { value: '1', label: '1' },

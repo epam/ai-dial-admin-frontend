@@ -1,3 +1,4 @@
+import { ColGroupDef } from 'ag-grid-community';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
@@ -7,19 +8,19 @@ import { collectLeafStates, getGroupCheckState, toggleColDefNode } from '../util
 
 describe('TreeColumnsPanel :: toggleColDefNode', () => {
   test('returns tree unchanged when path is empty', () => {
-    const tree: ColDef[] = [{ field: 'a', hide: false }];
+    const tree: (ColDef | ColGroupDef)[] = [{ field: 'a', hide: false }];
     expect(toggleColDefNode(tree, [], true)).toBe(tree);
   });
 
   test('hides a top-level leaf', () => {
-    const tree: ColDef[] = [{ field: 'a' }, { field: 'b' }];
+    const tree: (ColDef | ColGroupDef)[] = [{ field: 'a' }, { field: 'b' }];
     const result = toggleColDefNode(tree, [0], true);
     expect(result[0].hide).toBe(true);
     expect(result[1].hide).toBeUndefined();
   });
 
   test('shows a top-level leaf', () => {
-    const tree: ColDef[] = [
+    const tree: (ColDef | ColGroupDef)[] = [
       { field: 'a', hide: true },
       { field: 'b', hide: true },
     ];
@@ -30,13 +31,13 @@ describe('TreeColumnsPanel :: toggleColDefNode', () => {
 
   test('does not mutate the original tree', () => {
     const node: ColDef = { field: 'a', hide: false };
-    const tree: ColDef[] = [node];
+    const tree: (ColDef | ColGroupDef)[] = [node];
     toggleColDefNode(tree, [0], true);
     expect(node.hide).toBe(false);
   });
 
   test('hides a group node and all its leaf descendants recursively', () => {
-    const tree: ColDef[] = [
+    const tree: (ColDef | ColGroupDef)[] = [
       {
         headerName: 'Group',
         children: [{ field: 'a' }, { field: 'b' }],
@@ -50,7 +51,7 @@ describe('TreeColumnsPanel :: toggleColDefNode', () => {
   });
 
   test('hides a deeply nested leaf via a multi-segment path', () => {
-    const tree: ColDef[] = [
+    const tree: (ColDef | ColGroupDef)[] = [
       {
         headerName: 'Group',
         children: [{ field: 'a' }, { field: 'b' }],
@@ -63,7 +64,7 @@ describe('TreeColumnsPanel :: toggleColDefNode', () => {
   });
 
   test('shows a leaf inside a group without touching siblings', () => {
-    const tree: ColDef[] = [
+    const tree: (ColDef | ColGroupDef)[] = [
       {
         headerName: 'Group',
         children: [
@@ -99,7 +100,7 @@ describe('TreeColumnsPanel :: collectLeafStates', () => {
   });
 
   test('collects visibility states from all leaves of a group', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [{ field: 'a' }, { field: 'b', hide: true }],
     };
@@ -107,7 +108,7 @@ describe('TreeColumnsPanel :: collectLeafStates', () => {
   });
 
   test('collects states from deeply nested leaves', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Outer',
       children: [
         {
@@ -121,7 +122,7 @@ describe('TreeColumnsPanel :: collectLeafStates', () => {
   });
 
   test('skips leaves matching skipLeafNames inside nested groups', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [
         { field: 'a', headerName: 'Current' },
@@ -137,7 +138,7 @@ describe('TreeColumnsPanel :: collectLeafStates', () => {
 
 describe('TreeColumnsPanel :: getGroupCheckState', () => {
   test('returns "checked" when all leaves are visible', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [{ field: 'a' }, { field: 'b' }],
     };
@@ -145,7 +146,7 @@ describe('TreeColumnsPanel :: getGroupCheckState', () => {
   });
 
   test('returns "unchecked" when all leaves are hidden', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [
         { field: 'a', hide: true },
@@ -156,7 +157,7 @@ describe('TreeColumnsPanel :: getGroupCheckState', () => {
   });
 
   test('returns "indeterminate" when leaves have mixed visibility', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [{ field: 'a' }, { field: 'b', hide: true }],
     };
@@ -164,7 +165,7 @@ describe('TreeColumnsPanel :: getGroupCheckState', () => {
   });
 
   test('returns "checked" when no non-skipped leaves exist (empty states)', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Group',
       children: [
         { field: 'a', headerName: 'Current', hide: true },
@@ -175,7 +176,7 @@ describe('TreeColumnsPanel :: getGroupCheckState', () => {
   });
 
   test('ignores skipped leaves when computing check state', () => {
-    const node: ColDef = {
+    const node: ColGroupDef = {
       headerName: 'Metric',
       children: [
         { field: 'a', headerName: 'Current', hide: true },

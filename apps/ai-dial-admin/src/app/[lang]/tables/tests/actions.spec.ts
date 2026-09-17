@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { ConfigEntityOrigin, ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -51,8 +51,8 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.getTable).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('createTable passes the identity-only dto + token', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source };
+  test('createTable passes the dto + token', async () => {
+    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, write: TableWriteMode.Append };
     (analyticsDataApi.createTable as any).mockResolvedValue({ success: true });
 
     await createTable(dto);

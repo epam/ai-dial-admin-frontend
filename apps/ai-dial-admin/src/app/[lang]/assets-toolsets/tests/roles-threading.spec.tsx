@@ -28,6 +28,49 @@ vi.mock('@/src/components/Assets/Platform/Toolsets/View', () => ({
 }));
 
 import { getPlatformToolset, getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/dial/resource';
+
+// Both resource types require the whole Core payload; these cases care only about which view the page
+// renders and what `roles` it threads, so the factories carry the rest.
+const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialToolsetResource => ({
+  name: 'my-toolset',
+  path: 'toolsets/public/my-toolset',
+  folderId: 'public',
+  version: '1.0',
+  description: '',
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+  forward_per_request_key: false,
+  allowed_tools: [],
+  created_at: 0,
+  updated_at: 0,
+  updatedAt: '0',
+  ...overrides,
+});
+
+const platformToolset = (overrides: Partial<DialPlatformToolsetResource> = {}): DialPlatformToolsetResource => ({
+  name: 'my-toolset',
+  path: 'toolsets/platform/my-toolset',
+  folderId: 'platform',
+  description: '',
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+  forward_per_request_key: false,
+  allowed_tools: [],
+  created_at: 0,
+  updated_at: 0,
+  ...overrides,
+});
 
 type RenderedElement = { props: { children: { type: unknown; props: Record<string, unknown> } } };
 
@@ -40,8 +83,8 @@ const renderPage = async (path?: string) =>
 describe('assets-toolsets detail page — roles threading', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getToolset).mockResolvedValue({ etag: 'e', response: { name: 'my-toolset', folderId: 'f' } });
-    vi.mocked(getPlatformToolset).mockResolvedValue({ etag: 'e', response: { name: 'my-toolset' } });
+    vi.mocked(getToolset).mockResolvedValue({ success: true, etag: 'e', response: toolsetResource() });
+    vi.mocked(getPlatformToolset).mockResolvedValue({ success: true, etag: 'e', response: platformToolset() });
   });
 
   test('passes the fetched roles to the platform-bucket view', async () => {
