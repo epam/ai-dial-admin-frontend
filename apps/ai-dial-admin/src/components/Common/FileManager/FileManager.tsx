@@ -24,6 +24,7 @@ import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -108,6 +109,7 @@ const FileManager: FC<Props> = ({
 
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { featureFlags } = useAppContext();
   const { showNotification } = useNotification();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
@@ -140,7 +142,7 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      const rootPaths = getRootFolders(view).map((root) => `${root}/`);
+      const rootPaths = getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`);
       fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
       setLoadedPaths(new Set(rootPaths));
     }
@@ -160,7 +162,7 @@ const FileManager: FC<Props> = ({
   // Applications is the one view with two top-level buckets (`platform`/`public` — see
   // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
   // wrapper instead of reusing one bucket's own node as the tree's virtual root.
-  const isMultiRootView = getRootFolders(view).length > 1;
+  const isMultiRootView = getRootFolders(view, featureFlags.catalogEnabled).length > 1;
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);

@@ -11,6 +11,7 @@ const ICON_SIZE = 16;
 
 const baseFlags: FeatureFlags = {
   adminApiEnabled: true,
+  catalogEnabled: true,
   dashboardEnabled: true,
   deploymentsEnabled: true,
   evaluationEnabled: true,

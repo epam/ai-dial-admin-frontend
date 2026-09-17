@@ -54,6 +54,7 @@ export default async function Layout({ children, params }: { children: ReactNode
 
   const featureFlags: FeatureFlags = {
     adminApiEnabled: process.env.DIAL_ADMIN_API_URL != null,
+    catalogEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('catalog'),
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
     evaluationEnabled: process.env.DIAL_EVAL_API_URL != null,
