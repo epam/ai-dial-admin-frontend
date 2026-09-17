@@ -8,6 +8,7 @@ const t = (key: string) => key;
 
 const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   adminApiEnabled: false,
+  catalogEnabled: true,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: false,

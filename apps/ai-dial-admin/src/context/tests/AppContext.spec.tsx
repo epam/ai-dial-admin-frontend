@@ -10,15 +10,16 @@ const { AppContextProvider, useAppContext }: typeof import('@/src/context/AppCon
 
 const FEATURE_FLAGS: FeatureFlags = {
   adminApiEnabled: true,
+  catalogEnabled: true,
   dashboardEnabled: true,
   deploymentsEnabled: true,
   evaluationEnabled: true,
-  mcpRegistryEnabled: true,
-  nimEnabled: true,
-  hfEnabled: true,
-  analyticsEnabled: true,
-  analyticsConversationsEnabled: true,
-  queryAssistantEnabled: true,
+  mcpRegistryEnabled: false,
+  nimEnabled: false,
+  hfEnabled: false,
+  analyticsEnabled: false,
+  analyticsConversationsEnabled: false,
+  queryAssistantEnabled: false,
 };
 
 const Harness: FC = () => {
