@@ -84,7 +84,20 @@ noticing. Rejected: `bg-accent-tertiary` (purple carries no meaning here) and `b
 against the track).
 
 A 1px `border-tertiary` (#0C101D) hairline separates adjacent non-zero segments; visually it reads
-as the `bg-layer-1` track showing through.
+as the `bg-layer-1` track showing through. It is load-bearing: red against yellow is only 1.86:1,
+so hue alone does not carry the boundary between two adjacent fills.
+
+**`bg-red-400` / `bg-yellow-400` are theme tokens, not stock Tailwind.** `tailwind.config.js` maps
+them to `var(--bg-red-400, …)` and `var(--bg-yellow-400, …)`, so they follow a themes-service
+palette like every other token here; the names read like the stock palette, which invites the
+opposite conclusion. Rejected: `bg-error` / `bg-warning`. Those are alert *surface* tints (#402027,
+#3F3D25) meant to sit behind text, and as bar fills they measure 1.31:1 and 1.72:1 against the
+`bg-layer-1` track — against the 3:1 `a11y.md` asks — versus 6.29:1 and 11.71:1 today. The
+saturated equivalents exist only as `text-*` / `stroke-*` tokens, which is why the legend dots use
+`text-error` / `text-warning` while the fills use the `bg-*` pair. The two default to the same hex,
+so a theme that overrode `--text-error` without `--bg-red-400` would drift a dot from its segment;
+that is the cost of the split, and the fix would be new semantic fill tokens in the shared config
+rather than a change in this panel.
 
 ### D3 — Panel chrome is `SummarySection`, sized to its content
 
