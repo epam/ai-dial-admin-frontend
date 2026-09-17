@@ -3,7 +3,6 @@ import { FC, useMemo } from 'react';
 import { getApplicationContainers } from '@/src/app/actions/deployments';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import IconControl from '@/src/components/BaseControls/Icon';
-import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
@@ -14,7 +13,6 @@ import DeploymentProperties from '@/src/components/EntityMainProperties/Properti
 import SourceField from '@/src/components/SourceField/SourceField';
 import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -69,11 +67,6 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         getContainers={getApplicationContainers}
         isEntityImmutable={true}
         codeAppEditorUrl={codeAppEditorUrl}
-      />
-      <InterfacesField
-        interfaces={application.interfaces}
-        onChangeInterfaces={(interfaces) => onChangeApplication({ ...application, interfaces })}
-        allowedTypes={APPLICATION_INTERFACE_TYPES}
       />
       <OverrideNameControl entity={props.entity as any} onChangeEntity={props.onChangeEntity} />
       <EntityAttachments {...props} />
