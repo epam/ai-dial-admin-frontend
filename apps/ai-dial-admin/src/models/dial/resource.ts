@@ -1,4 +1,7 @@
+import { JSONSchema7 } from 'json-schema';
+
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
 import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
@@ -220,6 +223,29 @@ export interface DialRouteResource extends ModifiedEntity {
 }
 
 /**
+ * A catalog schema resource (`catalog_schemas/platform/{encodeURIComponent($id)}`) as returned by
+ * Core. The body is stored verbatim and only the `$id` is validated — unique at create, immutable
+ * afterwards — so `validateCatalogSchema` enforces every other meta-schema constraint.
+ *
+ * `properties`/`required` are the schema's own JSON-Schema keywords; a property's `dial:file` and
+ * `dial:meta` hints stay inside the body rather than becoming typed fields here.
+ */
+export interface DialCatalogSchemaResource extends ModifiedEntity {
+  $id?: string;
+  ['dial:catalogEntityType']?: CatalogEntityType;
+  ['dial:catalogDisplayName']?: string;
+  ['dial:defaultLocale']?: string;
+  properties?: JSONSchema7['properties'];
+  required?: string[];
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+}
+
+/**
  * A translator resource (`translators/platform/{name}`) as returned by Core. Flat and unversioned
  * like `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`, and — unlike any of
  * those — a plain POJO on Core (`Translator` extends neither `Deployment` nor `RoleBasedEntity`), so
@@ -331,6 +357,7 @@ export interface DialPlatformToolsetResource
 export type PlatformAsset =
   | DialModelResource
   | DialAppRunnerResource
+  | DialCatalogSchemaResource
   | DialInterceptorResource
   | DialTranslatorResource
   | DialRouteResource

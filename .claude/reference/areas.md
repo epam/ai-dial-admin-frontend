@@ -44,6 +44,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Catalog/PlatformRoles` | `platform-roles` | — |
 | `Catalog/PlatformKeys` | `platform-keys` | — |
 | `Catalog/PlatformTranslators` | `platform-translators` | `Assets/Platform/Translators` |
+| `Catalog/PlatformCatalogSchemas` | `platform-catalog-schemas` | `Assets/Platform/CatalogSchemas` |
 
 ### `Assets`
 | Area | Route slug | Component folder |
@@ -117,6 +118,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `SystemProperties` | `system-properties` | `SystemProperties` |
 | `Home` | `home` | `WelcomeView` |
 | `AdminApiAvailability` | — (route guards on all Admin-API routes) | `Menu`, `Content`, `WelcomeView` |
+| `ConfigFiles` | — (toggle on the seven entity list views) | `Common/ConfigFilesToggle` |
 
 ---
 

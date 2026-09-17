@@ -31,7 +31,9 @@ export enum TruncUnit {
 
 /**
  * Which projection a read returns. `Source` is the service's default and omits every resolved member;
- * the console always asks for `Compiled`, which is that same declaration plus what the service derived.
+ * `Compiled` is that same declaration plus what the service derived. `Compiled` resolves for
+ * `PipelineKind.Enrich` alone — the service refuses it for a cross-kind listing and for a single read of
+ * any other kind — so a read names it only where it is served, never unconditionally.
  */
 export enum PipelineView {
   Source = 'source',

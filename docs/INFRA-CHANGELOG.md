@@ -2,7 +2,7 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
-## Unreleased
+## 0.21.0
 
 ### Added
 
@@ -11,6 +11,12 @@ All notable infrastructure-relevant changes to this project will be documented i
 - `ANALYTICS_PUBLIC_URL` [Preview] — the REST endpoint of the Analytics data-access service as an _external_ client would reach it, used to prefill the copyable snippets in a table's Connect panel. Distinct from `DIAL_ANALYTICS_API_URL`, which is how this app reaches the service and is commonly an in-cluster address a user's machine cannot resolve. When unset the snippets show a `<analytics-base-url>` placeholder (default: unset)
 - `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` [Preview] — the Arrow Flight SQL endpoint as an external client would reach it, e.g. `grpc://analytics.example.com:32010`, used to prefill the Flight SQL snippets in the Connect panel. Not derived from `ANALYTICS_PUBLIC_URL`: it is a separately exposed gRPC port with a different scheme and commonly a different host. When unset the snippets show a `grpc://<analytics-host>:32010` placeholder (default: unset)
 - `ANALYTICS_CONVERSATIONS_ENABLED` [Preview] — enables the Conversations sub-item in the Analytics section. Takes effect only when `ANALYTICS_ENABLED` is `true`; when disabled, the sub-item is hidden and the rest of the Analytics section stays available, so Analytics can be rolled out without the conversation trace view (default: `false`)
+
+#### Core API Migration
+
+- Full DIAL Core API migration [Preview] — the `Catalog` menu group (Platform Models, Interceptors, Translators, Routes, App Runners, Roles, Keys on the `/platform-*` routes) reads and writes DIAL Core config resources directly instead of proxying through the admin backend, which is being phased out
+- `DIAL_CORE_API_URL` — required since 0.19.0, and the Core-direct `Catalog` views additionally depend on it; the migration cannot be exercised while it is unset. The variable itself is not Preview — the migration is
+- `DISABLE_MENU_ITEMS` — recommended to include `catalog` while the migration is Preview. The `Catalog` group is not behind a feature flag (unlike `DEPLOYMENTS_ENABLED` / `ANALYTICS_ENABLED`), so it renders for every user unless disabled here; keep `DIAL_ADMIN_API_URL` set so the admin-backend-backed `Entities`, `Builders`, `Access Management`, and `Audit` groups remain available as the supported path
 
 ## 0.19.0
 

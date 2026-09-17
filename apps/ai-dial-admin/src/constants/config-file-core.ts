@@ -19,8 +19,10 @@ export const CORE_CONFIG_FILE_URL = 'v1/admin/config/file';
  * config-file type is that entity's file-sourced population (confirmed against Core's
  * `FileConfigController` — `listFileConfigSchemas` is documented as "file-sourced application type
  * schemas", the same term App Runners uses for itself, and `entitySource()` resolves it to
- * `config.getApplicationTypeSchemas()`). `CatalogSchemas` remains excluded — it is a distinct,
- * unrelated map (`config.getCatalogSchemas()`) with no admin-console surface of its own.
+ * `config.getApplicationTypeSchemas()`). `CatalogSchemas` remains excluded for a different
+ * reason: `Catalog ▸ Catalog Schemas` exists (`platform-catalog-schemas`), but reads only the
+ * API-written half. Its config-file population (`config.getCatalogSchemas()`) is deferred to the
+ * follow-up change that also adds the consumer side, so widening this set is that change's call.
  */
 export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new Set([
   ConfigFileEntityType.Interceptors,

@@ -7,6 +7,7 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformCatalogSchemas ||
     view === ApplicationRoute.PlatformInterceptors ||
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
@@ -41,6 +42,7 @@ export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
 const VIEWS_WITHOUT_TOPIC_CATALOGUE: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformInterceptors,
 ];
 

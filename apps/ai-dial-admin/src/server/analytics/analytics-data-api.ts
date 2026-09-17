@@ -20,6 +20,7 @@ import {
   Pipeline,
   PipelineEnabledDto,
   PipelineEnabledFilter,
+  PipelineKind,
   PipelineView,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
@@ -62,9 +63,11 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
-// The service's default projection omits everything it resolved — the inlined evaluator, the grain key,
-// the version column, the output mapping and the read source — and this console renders all of them.
-export const PIPELINE_READ_URL = (name: string): string => `${PIPELINE_URL(name)}?view=${PipelineView.Compiled}`;
+// `Compiled` is what carries everything the service resolved — the inlined evaluator, the grain key, the
+// version column, the output mapping and the read source — and it resolves for the `Enrich` kind alone:
+// the service refuses it with 422 for any other kind rather than answering the declaration under the
+// compiled name. So the projection is named per read, by whoever knows the kind.
+export const PIPELINE_READ_URL = (name: string, view: PipelineView): string => `${PIPELINE_URL(name)}?view=${view}`;
 
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   const params = new URLSearchParams();
@@ -73,9 +76,15 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.enabled === PipelineEnabledFilter.Enabled) params.set('enabled', 'true');
   if (filters?.enabled === PipelineEnabledFilter.Disabled) params.set('enabled', 'false');
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
-  params.set('view', PipelineView.Compiled);
 
-  return `${PIPELINES_URL}?${params.toString()}`;
+  // No `view`: the service serves `compiled` in a listing only alongside `kind=enrich` and refuses the
+  // cross-kind combination with 400. The default `source` carries the evaluator name and pinned version
+  // as declared, so those cells are unaffected; `inputs` it carries as declared rather than as resolved,
+  // which leaves the cell empty for the one pipeline that declared no input and inherits its target's —
+  // read on that pipeline's own page, which does ask for `compiled`.
+  const query = params.toString();
+
+  return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
 };
 
 // A 2xx whose body is not a shape the read accepts: `handleResponse` found no error to describe, so the
@@ -237,9 +246,24 @@ export class AnalyticsDataApi extends BaseApi {
     return pipelines ? { ...res, response: pipelines } : unreadableBody(res);
   }
 
+  /**
+   * Two reads for an enrich pipeline, one for every other kind. `view=compiled` resolves for `Enrich`
+   * alone and the kind is not known until the declaration has been read, so the projection is chosen
+   * from the first answer rather than guessed. A failed second read is reported rather than downgraded to
+   * the first: the detail view renders `grain_key` and `version_column` as "not set" when they are
+   * absent, which for an enrich pipeline would be a false statement rather than a missing one.
+   */
   async getPipeline(name: string, token: Token): Promise<ServerActionResponse<Pipeline>> {
-    const res = await this.getAction(PIPELINE_READ_URL(name), token);
-    return res.success && !res.response ? unreadableBody(res) : res;
+    const source = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Source), token);
+
+    if (!source.success) return source;
+    if (!source.response) return unreadableBody(source);
+    if ((source.response as Pipeline).kind !== PipelineKind.Enrich) return source;
+
+    const compiled = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Compiled), token);
+    if (!compiled.success) return compiled;
+
+    return compiled.response ? compiled : unreadableBody(compiled);
   }
 
   createPipeline(dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
