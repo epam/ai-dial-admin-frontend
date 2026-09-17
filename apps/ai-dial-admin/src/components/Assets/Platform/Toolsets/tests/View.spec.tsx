@@ -64,7 +64,12 @@ describe('PlatformToolsetView', () => {
     render(<PlatformToolsetView etag={mockEtag} originalToolset={mockOriginalToolset} roles={mockRoles} />);
 
     const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
-    expect(tabLabels).toEqual([TabsI18nKey.Properties, TabsI18nKey.Tools, TabsI18nKey.Roles, TabsI18nKey.Catalog]);
+    expect(tabLabels).toEqual([
+      TabsI18nKey.Properties,
+      TabsI18nKey.Tools,
+      TabsI18nKey.Roles,
+      TabsI18nKey.CatalogMetadata,
+    ]);
   });
 
   test.each([
