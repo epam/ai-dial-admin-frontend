@@ -1,4 +1,9 @@
-import { FileImportMap } from '@/src/models/file';
+import { AssetImportGridData, ParsedAssets } from '@/src/models/import-asset';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { FileImportGridData, FileImportMap } from '@/src/models/file';
+import { ImportResult } from '@/src/models/import';
 import { ImportStatus } from '@/src/types/import';
 import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,12 +20,57 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 import { PromptsI18nKey, FoldersI18nKey, ApplicationsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 
+const importResult = (overrides: Partial<ImportResult> = {}): ImportResult => ({
+  sourcePath: 'source/prompt__1.0.0',
+  targetPath: 'target/prompt__1.0.0',
+  status: ImportStatus.SUCCESS,
+  ...overrides,
+});
+
+const assetRow = (overrides: Partial<AssetImportGridData> = {}): AssetImportGridData => ({
+  index: 0,
+  name: 'item1',
+  version: '1.0.0',
+  assetName: 'id_for_prompt',
+  ...overrides,
+});
+
+const fileRow = (overrides: Partial<FileImportGridData> = {}): FileImportGridData => ({
+  index: 0,
+  name: 'file.jpg',
+  fileName: 'file',
+  extension: '.jpg',
+  ...overrides,
+});
+
+const promptAsset = (overrides: Partial<DialPrompt> = {}): DialPrompt => ({
+  path: 'prompts/public/folder',
+  folderId: 'public',
+  version: '1.0.0',
+  ...overrides,
+});
+
+// `changeFilesMap` replaces a Files-view entry with a real `File` and stores it through
+// `as unknown as DialFile` (see the util), so the fixture mirrors that rather than invent a shape.
+const importedFile = (name: string): DialFile => new File([], name, { type: 'text/plain' }) as unknown as DialFile;
+
+const entryOf = (map: Map<string, FileImportMap>, key: string): FileImportMap => {
+  const entry = map.get(key);
+  if (!entry) {
+    throw new Error(`no import entry under ${key}`);
+  }
+  return entry;
+};
+
+const promptAt = (map: Map<string, FileImportMap>, key: string, index: number): DialPrompt =>
+  entryOf(map, key).files[index] as DialPrompt;
+
 describe('Import :: getImportResults', () => {
   const folderName = 'testFolder';
   const mockT = vi.fn().mockReturnValue('Translated Text');
 
   test('should call showNotification 1 time for success', () => {
-    const results = [{ status: ImportStatus.SUCCESS }];
+    const results = [importResult()];
     const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
@@ -29,7 +79,7 @@ describe('Import :: getImportResults', () => {
   });
 
   test('should call showNotification 2 times for success and error', () => {
-    const results = [{ status: ImportStatus.SUCCESS }, { status: ImportStatus.ERROR, targetPath: 'path' }];
+    const results = [importResult(), importResult({ status: ImportStatus.ERROR, targetPath: 'path' })];
     const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
@@ -39,9 +89,9 @@ describe('Import :: getImportResults', () => {
 
   test('should call showNotification 3 times for success and error and skip', () => {
     const results = [
-      { status: ImportStatus.SUCCESS },
-      { status: ImportStatus.ERROR, targetPath: 'path' },
-      { status: ImportStatus.SKIP, targetPath: 'path' },
+      importResult(),
+      importResult({ status: ImportStatus.ERROR, targetPath: 'path' }),
+      importResult({ status: ImportStatus.SKIP, targetPath: 'path' }),
     ];
     const mockShowNotification = vi.fn();
 
@@ -52,12 +102,12 @@ describe('Import :: getImportResults', () => {
 
   test('should call showNotification 3 times for success and error and skip even if more than 1 item of each', () => {
     const results = [
-      { status: ImportStatus.SUCCESS },
-      { status: ImportStatus.SUCCESS },
-      { status: ImportStatus.ERROR, targetPath: 'path' },
-      { status: ImportStatus.ERROR, targetPath: 'path2' },
-      { status: ImportStatus.SKIP, targetPath: 'path' },
-      { status: ImportStatus.SKIP, targetPath: 'path2' },
+      importResult(),
+      importResult(),
+      importResult({ status: ImportStatus.ERROR, targetPath: 'path' }),
+      importResult({ status: ImportStatus.ERROR, targetPath: 'path2' }),
+      importResult({ status: ImportStatus.SKIP, targetPath: 'path' }),
+      importResult({ status: ImportStatus.SKIP, targetPath: 'path2' }),
     ];
     const mockShowNotification = vi.fn();
 
@@ -100,17 +150,11 @@ describe('Import :: getMultipleImportStatus', () => {
 
 describe('Import :: generatePromptRowDataForImportGrid', () => {
   test('convert to row data without existing prompts', () => {
-    const map = new Map();
-    map.set('item1', {
-      files: [
-        {
-          id: 'id_for_prompt__1.0.0',
-        },
-      ],
-      isInvalid: false,
-    });
+    const map = new Map<string, FileImportMap>([
+      ['item1', { files: [promptAsset({ id: 'id_for_prompt__1.0.0' })], isInvalid: false }],
+    ]);
 
-    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>);
+    const result = generateAssetRowDataForImportGrid(map);
 
     expect(result).toEqual([
       {
@@ -124,17 +168,11 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
   });
 
   test('convert to row data with existing prompts', () => {
-    const map = new Map();
-    map.set('item1', {
-      files: [
-        {
-          id: 'id_for_prompt__1.0.0',
-        },
-      ],
-      isInvalid: false,
-    });
+    const map = new Map<string, FileImportMap>([
+      ['item1', { files: [promptAsset({ id: 'id_for_prompt__1.0.0' })], isInvalid: false }],
+    ]);
 
-    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
+    const result = generateAssetRowDataForImportGrid(map, [promptAsset({ path: 'somePath/folder' })]);
 
     expect(result).toEqual([
       {
@@ -158,7 +196,7 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
       isInvalid: true,
     });
 
-    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
+    const result = generateAssetRowDataForImportGrid(map, [promptAsset({ path: 'somePath/folder' })]);
 
     expect(result).toEqual([
       {
@@ -175,22 +213,14 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
 
 describe('Import :: isErrorPromptNode', () => {
   test('should return true', () => {
-    const data = {
-      version: '1.0.0',
-      assetName: 'name',
-      existingNames: ['name__1.0.0'],
-    };
+    const data = assetRow({ version: '1.0.0', assetName: 'name', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
 
     expect(result).toBeTruthy();
   });
 
   test('should return false', () => {
-    const data = {
-      version: '2.0.0',
-      assetName: 'name',
-      existingNames: ['name__1.0.0'],
-    };
+    const data = assetRow({ version: '2.0.0', assetName: 'name', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
 
     expect(result).toBeFalsy();
@@ -199,22 +229,14 @@ describe('Import :: isErrorPromptNode', () => {
 
 describe('Import :: isErrorFileNode', () => {
   test('should return true', () => {
-    const data = {
-      fileName: 'file',
-      extension: '.jpg',
-      existingNames: ['file.jpg'],
-    };
+    const data = fileRow({ fileName: 'file', extension: '.jpg', existingNames: ['file.jpg'] });
     const result = isErrorFileNode(data);
 
     expect(result).toBeTruthy();
   });
 
   test('should return false', () => {
-    const data = {
-      fileName: 'file',
-      extension: '.jpg',
-      existingNames: ['file.png'],
-    };
+    const data = fileRow({ fileName: 'file', extension: '.jpg', existingNames: ['file.png'] });
     const result = isErrorFileNode(data);
 
     expect(result).toBeFalsy();
@@ -233,109 +255,106 @@ describe('Import :: isInvalidJson', () => {
   });
 
   test('returns true if first prompt id does not match regex', () => {
-    const parsedData = { prompts: [{ id: 'invalid_id' }] };
+    const parsedData: ParsedAssets = { prompts: [promptAsset({ id: 'invalid_id' })] };
     expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(true);
   });
 
   test('returns false if first prompt id matches regex', () => {
-    const parsedData = { prompts: [{ id: 'prompts/public/folder/subfolder/myPrompt__v1' }] };
+    const parsedData: ParsedAssets = { prompts: [promptAsset({ id: 'prompts/public/folder/subfolder/myPrompt__v1' })] };
     expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(false);
   });
 
   test('returns false for valid applications in non-prompts view', () => {
-    const parsedData = { applications: [{ id: 'anything' }] };
+    const parsedData: ParsedAssets = {
+      applications: [
+        { path: 'applications/public/app', folderId: 'public', version: '1.0.0', id: 'anything' } as AssetApp,
+      ],
+    };
     expect(isInvalidJson(parsedData, ApplicationRoute.Files)).toBe(true);
   });
 });
 
 describe('Import :: changeFilesMap', () => {
-  let prevMap;
+  let prevMap: Map<string, FileImportMap>;
 
   beforeEach(() => {
     // Initialize prevMap with files as an array of file objects
-    prevMap = new Map([
+    prevMap = new Map<string, FileImportMap>([
       [
         'key1',
         {
           files: [
-            { id: '123', name: 'oldFileName', type: 'text/plain' }, // File 0
-            { id: '456', name: 'anotherFile', type: 'text/plain' }, // File 1
+            promptAsset({ id: '123', name: 'oldFileName' }), // File 0
+            promptAsset({ id: '456', name: 'anotherFile' }), // File 1
           ],
+          isInvalid: false,
         },
       ],
     ]);
   });
 
   test('should update version in file id when field is "version"', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
+    const result = changeFilesMap(
+      prevMap,
+      assetRow({ name: 'key1', index: 0 }),
+      'version',
+      'v2',
+      ApplicationRoute.Prompts,
+    );
 
-    expect(result.get('key1').files[0].id).toBe('123__v2');
+    expect(promptAt(result, 'key1', 0).id).toBe('123__v2');
   });
 
   test('should update assetName and file name when field is "assetName"', () => {
     const result = changeFilesMap(
       prevMap,
-      { name: 'key1', index: 1 },
+      assetRow({ name: 'key1', index: 1 }),
       'assetName',
       'newassetName',
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[1].id).toBe('newassetName');
-    expect(result.get('key1').files[1].name).toBe('newassetName');
+    expect(promptAt(result, 'key1', 1).id).toBe('newassetName');
+    expect(promptAt(result, 'key1', 1).name).toBe('newassetName');
   });
 
   test('should preserve the existing version when field is "assetName"', () => {
-    const versionedMap = new Map([
-      [
-        'key1',
-        {
-          files: [{ id: 'oldFileName__1.0.3', name: 'oldFileName', type: 'text/plain' }],
-        },
-      ],
+    const versionedMap = new Map<string, FileImportMap>([
+      ['key1', { files: [promptAsset({ id: 'oldFileName__1.0.3', name: 'oldFileName' })], isInvalid: false }],
     ]);
 
     const result = changeFilesMap(
       versionedMap,
-      { name: 'key1', index: 0 },
+      assetRow({ name: 'key1', index: 0 }),
       'assetName',
       'newassetName',
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[0].id).toBe('newassetName__1.0.3');
-    expect(result.get('key1').files[0].name).toBe('newassetName');
+    expect(promptAt(result, 'key1', 0).id).toBe('newassetName__1.0.3');
+    expect(promptAt(result, 'key1', 0).name).toBe('newassetName');
   });
 
   test('should update file content when field is "fileName"', () => {
     const result = changeFilesMap(
       prevMap,
-      { name: 'key1', index: 1 },
+      assetRow({ name: 'key1', index: 1 }),
       'fileName',
       'newFileName',
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[1].name).toBe('newFileName');
-    expect(result.get('key1').files[1] instanceof File).toBe(true);
+    expect(promptAt(result, 'key1', 1).name).toBe('newFileName');
+    expect(entryOf(result, 'key1').files[1] instanceof File).toBe(true);
   });
 
   test('should update imported file names for Files view', () => {
-    const fileMap = new Map([
-      [
-        'key1.txt',
-        {
-          files: [
-            { name: 'oldFileName.txt', type: 'text/plain' },
-            { name: 'anotherFile.txt', type: 'text/plain' },
-          ],
-          isInvalid: false,
-        },
-      ],
+    const fileMap = new Map<string, FileImportMap>([
+      ['key1.txt', { files: [importedFile('oldFileName.txt'), importedFile('anotherFile.txt')], isInvalid: false }],
     ]);
     const result = changeFilesMap(
       fileMap,
-      { name: 'key1.txt', index: 1 },
+      assetRow({ name: 'key1.txt', index: 1 }),
       'fileName',
       'newFileName',
       ApplicationRoute.Files,
@@ -346,10 +365,16 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should return a new map with updated file details', () => {
-    const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
+    const newMap = changeFilesMap(
+      prevMap,
+      assetRow({ name: 'key1', index: 0 }),
+      'version',
+      'v2',
+      ApplicationRoute.Prompts,
+    );
 
     expect(newMap).not.toBe(prevMap);
-    expect(newMap.get('key1').files[0].id).toBe('123__v2');
+    expect(promptAt(newMap, 'key1', 0).id).toBe('123__v2');
   });
 });
 

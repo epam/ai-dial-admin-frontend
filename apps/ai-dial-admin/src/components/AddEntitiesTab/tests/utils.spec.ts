@@ -10,6 +10,7 @@ import {
   getRelevantModelsForAdapter,
   getRelevantAppRunnersForInterceptor,
 } from '../utils';
+import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
@@ -47,14 +48,13 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { day: 1, enabled: true } },
-          model1: { day: 1 },
+          limits: { model: { day: '1', enabled: true } },
         },
         data,
       ),
     ).toEqual([
       {
-        day: 1,
+        day: '1',
         minute: 'Not specified',
         week: 'Not specified',
         month: 'Not specified',
@@ -69,17 +69,16 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { minute: 1, week: 2, month: 3, enabled: true } },
-          model1: { minute: 1, week: 2, month: 3 },
+          limits: { model: { minute: '1', week: '2', month: '3', enabled: true } },
         },
         data,
       ),
     ).toEqual([
       {
         day: 'Not specified',
-        minute: 1,
-        week: 2,
-        month: 3,
+        minute: '1',
+        week: '2',
+        month: '3',
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
@@ -91,17 +90,16 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { minute: 1, week: 2, month: 3, enabled: true } },
-          model1: { minute: 1, week: 2, month: 3 },
+          limits: { model: { minute: '1', week: '2', month: '3', enabled: true } },
         },
         data,
       ),
     ).toEqual([
       {
         day: 'Not specified',
-        minute: 1,
-        week: 2,
-        month: 3,
+        minute: '1',
+        week: '2',
+        month: '3',
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
@@ -114,16 +112,15 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       getEntitiesForRole(
         {
           limits: {
-            model: { day: 1, enabled: true },
-            model2: { minute: 1, week: 2, month: 3, enabled: true },
+            model: { day: '1', enabled: true },
+            model2: { minute: '1', week: '2', month: '3', enabled: true },
           },
-          model1: { day: 1 },
         },
         data,
       ),
     ).toEqual([
       {
-        day: 1,
+        day: '1',
         minute: 'Not specified',
         week: 'Not specified',
         month: 'Not specified',
@@ -133,15 +130,16 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       },
       {
         day: 'Not specified',
-        minute: 1,
-        week: 2,
-        month: 3,
+        minute: '1',
+        week: '2',
+        month: '3',
       },
     ]);
   });
 
   test('Should return empty array if role.limits is null or not an object', () => {
-    expect(getEntitiesForRole({ limits: null }, data)).toEqual([]);
+    // The Core API can answer with a literal null here, which the model types as optional-only.
+    expect(getEntitiesForRole({ limits: null } as unknown as DialRole, data)).toEqual([]);
     expect(getEntitiesForRole({ limits: undefined }, data)).toEqual([]);
   });
 
@@ -154,8 +152,8 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       getEntitiesForRole(
         {
           limits: {
-            model: { minute: 10, enabled: true },
-            model2: { month: 5, enabled: true },
+            model: { minute: '10', enabled: true },
+            model2: { month: '5', enabled: true },
           },
         },
         data,
@@ -163,7 +161,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     ).toEqual([
       {
         day: 'Not specified',
-        minute: 10,
+        minute: '10',
         week: 'Not specified',
         month: 'Not specified',
         name: 'model',
@@ -174,7 +172,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         day: 'Not specified',
         minute: 'Not specified',
         week: 'Not specified',
-        month: 5,
+        month: '5',
       },
     ]);
   });
