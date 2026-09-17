@@ -39,7 +39,10 @@ skipped. Cost accepted: a commit made mid-refactor can fail on a file the author
 **Typecheck the app project only; keep the spec project measurable but ungated.** The spec project's 725
 errors across 154 files cannot land as one reviewable PR, and a gate that always fails is the state this
 change exists to end. `tsconfig.spec.json` gets only the `types` fix, so `tsc -p tsconfig.spec.json` is a
-one-command progress meter for the follow-up change.
+one-command progress meter for the follow-up change. That follow-up cleared the count over ten PRs
+(#4458–#4461, #4581–#4584, #4595, #4599, #4601, #4602) and then flipped the spec project to blocking in
+both places the app project already gates — so this decision now reads as history, not as current
+behavior.
 
 **`@testing-library/jest-dom/vitest`, not the bare package name.** The bare name resolves to `jest.d.ts`,
 which augments `namespace jest` and carries `/// <reference types="jest" />`; `@types/jest` is not
