@@ -69,3 +69,10 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
 };
 
 export const mainListEntitiesViewClassName = 'py-4 px-6';
+
+/**
+ * Column state is stored per view, and the reworked runs columns cannot be reconciled with what earlier
+ * versions stored (a separate id column, a hidden Test Suite ID, widths for columns that no longer
+ * exist), so the runs list reads and writes a versioned key and starts from its own defaults.
+ */
+export const RUNS_LIST_STORAGE_KEY = `${ApplicationRoute.Runs}-v2`;

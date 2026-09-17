@@ -1,7 +1,10 @@
 'use client';
 
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
+
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
+
 import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
@@ -12,13 +15,11 @@ interface Props {
 const GAP_WIDTH = 8;
 
 const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
-  if (!items) {
-    return;
-  }
+  const tags = useMemo(() => items ?? [], [items]);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement[]>([]);
   const hiddenCountRef = useRef<HTMLDivElement | null>(null);
-  const [visibleCount, setVisibleCount] = useState(items.length);
+  const [visibleCount, setVisibleCount] = useState(tags.length);
 
   const setItemRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -37,7 +38,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
     let totalWidth = 0;
     let fitCount = 0;
 
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < tags.length; i++) {
       const itemEl = itemsRef.current[i];
       if (!itemEl) continue;
 
@@ -47,7 +48,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
       fitCount++;
     }
 
-    if (fitCount < items.length && fitCount > 0) {
+    if (fitCount < tags.length && fitCount > 0) {
       while (totalWidth + hiddenCounterWidth > containerWidth && fitCount > 0) {
         fitCount--;
         const removedWidth = itemsRef.current[fitCount]?.offsetWidth || 0;
@@ -56,7 +57,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
     }
 
     setVisibleCount(fitCount);
-  }, [items]);
+  }, [tags]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -76,22 +77,33 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
     tagClassName,
   );
 
+  if (!items) {
+    return null;
+  }
+
+  const hiddenItems = tags.slice(visibleCount);
+  const hiddenItemsLabel = hiddenItems.join(', ');
+
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
-      {items.slice(0, visibleCount).map((item, index) => (
+      {tags.slice(0, visibleCount).map((item, index) => (
         <div key={`shown-${item}-${index}`} ref={setItemRef(index)} className={itemClassName}>
           {item}
         </div>
       ))}
 
-      {visibleCount < items.length && (
-        <div ref={hiddenCountRef} className={itemClassName}>
-          +{items.length - visibleCount}
-        </div>
+      {!!hiddenItems.length && (
+        <DialTooltip tooltip={hiddenItemsLabel}>
+          {/* A button, not a div: the hidden names have to be reachable by keyboard, not hover alone. */}
+          <button type="button" className={mergeClasses(itemClassName, 'cursor-default')}>
+            +{hiddenItems.length}
+            <span className="sr-only">{hiddenItemsLabel}</span>
+          </button>
+        </DialTooltip>
       )}
 
       <div className="absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap">
-        {items.map((item, index) => (
+        {tags.map((item, index) => (
           <div
             key={`hidden-${item}-${index}`}
             ref={setItemRef(index)}
@@ -101,7 +113,7 @@ const TagsCellRenderer: FC<Props> = ({ items, tagClassName }) => {
           </div>
         ))}
         <div ref={hiddenCountRef} className={classNames(itemClassName, 'inline-block')}>
-          +{items.length}
+          +{tags.length}
         </div>
       </div>
     </div>

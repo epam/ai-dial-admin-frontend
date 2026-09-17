@@ -13,6 +13,11 @@ import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/Im
 import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
 import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
+import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import OptionalValueCellRenderer, {
+  MISSING_VALUE_DISPLAY,
+} from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
+import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
@@ -136,7 +141,16 @@ import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpa
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
+import {
+  getMockRunCost,
+  getMockRunMetricNames,
+  getMockRunOverallScore,
+  getMockRunTarget,
+} from '@/src/components/Runs/mocks/run-list-mock-data';
+import { formatRunCost } from '@/src/components/Runs/Summary/utils';
+import { formatRunDuration, formatRunScore, getRunDurationMs } from '@/src/components/Runs/utils/run-list-values';
 import { Metric } from '@/src/models/evaluation/metric';
+import { Run } from '@/src/models/evaluation/run';
 import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
@@ -1273,56 +1287,158 @@ export const DATASETS_COLUMN: ColDef[] = [
   { ...UPDATED_AT_COLUMN, ...dateFilter },
 ];
 
+const RUN_STATUS_COLUMN_WIDTH = 65;
+
+const RUN_TARGET_COLUMN_MIN_WIDTH = 100;
+const RUN_DATE_COLUMN_MIN_WIDTH = 166;
+
+/** Neither sortable nor filterable: the run listing endpoint cannot order or filter on these values. */
+const derivedRunColDef: Partial<ColDef> = { sortable: false, filter: false, hide: false };
+
 export const RUNS_COLUMN: ColDef[] = [
   {
-    field: 'id',
-    colId: 'id',
-    headerName: 'ID',
-    ...evalStringFilter([GridFilterType.EQUALS]),
+    field: 'status',
+    colId: 'status',
+    headerName: 'Status',
+    headerTooltip: 'Status',
+    cellRenderer: RunStatusCellRenderer,
+    cellRendererParams: { isLabelHidden: true },
+    tooltipValueGetter: () => undefined,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    // A free-text input cannot match a fixed status, so the filter row keeps only its filter button.
+    floatingFilterComponent: EmptyFloatingFilter,
+    width: RUN_STATUS_COLUMN_WIDTH,
+    // Both bounds, so neither the grid's global `minWidth` nor its `flex` can stretch the column.
+    minWidth: RUN_STATUS_COLUMN_WIDTH,
+    maxWidth: RUN_STATUS_COLUMN_WIDTH,
+    cellClass: 'flex items-center justify-center',
     hide: false,
-  },
-  {
-    field: 'testSuiteId',
-    colId: 'testSuiteId',
-    headerName: 'Test Suite ID',
-    ...evalStringFilter([GridFilterType.EQUALS]),
-    hide: true,
   },
   {
     field: 'testRunName',
     colId: 'testRunName',
-    headerName: 'Test run name',
+    headerName: 'Test case run name',
+    cellRenderer: TitleSubtitleCellRenderer,
+    cellRendererParams: { getSubtitle: (data?: Run) => data?.id },
+    tooltipValueGetter: () => undefined,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     hide: false,
   },
   {
     field: 'runConfig.numberOfRuns',
     colId: 'runConfig.numberOfRuns',
-    headerName: 'Number of runs',
-    filter: false,
-    sortable: false,
-    hide: false,
+    headerName: 'Runs',
+    maxWidth: 68,
+    ...derivedRunColDef,
   },
   {
     field: 'numberOfTestCases',
     colId: 'numberOfTestCases',
-    headerName: 'Number of test cases',
-    filter: false,
-    sortable: false,
+    headerName: 'Test cases',
+    maxWidth: 98,
+    ...derivedRunColDef,
+  },
+  {
+    field: 'testSuiteId',
+    colId: 'testSuiteId',
+    headerName: 'Test Suite ID',
+    ...evalStringFilter([GridFilterType.EQUALS]),
     hide: false,
   },
-  { field: 'createdAt', headerName: 'Created date', ...dateTimeColumn, ...dateFilter, hide: true },
-  { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn, ...dateFilter, hide: false },
-  { field: 'completedAt', headerName: 'End date', ...dateTimeColumn, ...dateFilter, hide: false },
   {
-    field: 'status',
-    headerName: 'Status',
-    cellRenderer: RunStatusCellRenderer,
+    field: 'target',
+    colId: 'target',
+    headerName: 'Target',
+    valueGetter: ({ data }) => getMockRunTarget(data as Run)?.name ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: TitleSubtitleCellRenderer,
+    cellRendererParams: { getSubtitle: (data?: Run) => getMockRunTarget(data)?.kind },
     tooltipValueGetter: () => undefined,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...derivedRunColDef,
+    minWidth: RUN_TARGET_COLUMN_MIN_WIDTH,
+  },
+  {
+    field: 'metrics',
+    colId: 'metrics',
+    headerName: 'Metrics',
+    valueGetter: ({ data }) => getMockRunMetricNames(data as Run),
+    cellRenderer: TagsCellRenderer,
+    cellRendererParams: (params: { value: string[] }) => ({
+      items: params.value,
+      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
+    }),
+    tooltipValueGetter: () => null,
+    ...derivedRunColDef,
+  },
+  {
+    field: 'startedAt',
+    colId: 'startedAt',
+    headerName: 'Start Date',
+    ...dateTimeColumn,
+    ...dateFilter,
     hide: false,
+    minWidth: RUN_DATE_COLUMN_MIN_WIDTH,
+  },
+  {
+    field: 'completedAt',
+    colId: 'completedAt',
+    headerName: 'End Date',
+    ...dateTimeColumn,
+    ...dateFilter,
+    hide: false,
+    minWidth: RUN_DATE_COLUMN_MIN_WIDTH,
+  },
+  {
+    field: 'duration',
+    colId: 'duration',
+    headerName: 'Duration',
+    valueGetter: ({ data }) => getRunDurationMs(data as Run),
+    valueFormatter: ({ value }) => formatRunDuration(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 88,
+    ...derivedRunColDef,
+  },
+  {
+    field: 'cost',
+    colId: 'cost',
+    headerName: 'Cost',
+    valueGetter: ({ data }) => getMockRunCost(data as Run),
+    valueFormatter: ({ value }) => formatRunCost(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 100,
+    ...derivedRunColDef,
+  },
+  {
+    field: 'overallScore',
+    colId: 'overallScore',
+    headerName: 'Overall score',
+    valueGetter: ({ data }) => getMockRunOverallScore(data as Run),
+    valueFormatter: ({ value }) => formatRunScore(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    cellRenderer: OptionalValueCellRenderer,
+    maxWidth: 110,
+    ...derivedRunColDef,
   },
 ];
+
+const SUITE_SCOPED_RUN_COL_IDS = ['testSuiteId'];
+
+/** For a list already scoped to one test suite, where repeating the suite id on every row says nothing. */
+export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
+  (col) => !SUITE_SCOPED_RUN_COL_IDS.includes(col.colId ?? ''),
+);
+
+const COMPARE_RUN_PICKER_COL_IDS = [
+  'status',
+  'testRunName',
+  'runConfig.numberOfRuns',
+  'numberOfTestCases',
+  'startedAt',
+  'completedAt',
+];
+
+/** The compare picker exists to identify a run, so it carries only the identifying columns. */
+export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = RUNS_COLUMN.filter((col) =>
+  COMPARE_RUN_PICKER_COL_IDS.includes(col.colId ?? ''),
+);
 
 export const METRICS_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID', hide: false },
