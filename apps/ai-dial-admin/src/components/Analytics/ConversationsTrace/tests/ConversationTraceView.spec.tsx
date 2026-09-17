@@ -10,12 +10,15 @@ import { toMillis } from '@/src/utils/analytics/conversation-formatting';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationSpanNode,
-  ConversationSpanRow,
   ConversationTraceFigures,
   HopBodyGrants,
   SessionScope,
+  SpanFieldGroup,
+  SpanFieldRow,
+  SpanFieldTag,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 // The inspector's reads are the component's only side effects: mocked so the trace view's own rendering is
 // what is under test, and so a suppressed side can be told apart from one whose read has not answered yet.
@@ -41,7 +44,7 @@ const GRANTS: HopBodyGrants = { isRequestReadable: true, isResponseReadable: tru
 
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 
-const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow => ({
+const span = (overrides: Partial<SpanFieldRow> = {}): SpanFieldRow => ({
   core_span_id: 's1',
   core_parent_span_id: null,
   event_kind: 'llm_call',
@@ -91,6 +94,41 @@ const FIGURES: ConversationTraceFigures = {
   durationMs: 1500,
 };
 
+// As the resolver builds them from the fetched schema: the tag the catalog groups the column under, plus the
+// service's own label and type.
+const FIELD_GROUPS: SpanFieldGroup[] = [
+  {
+    tag: SpanFieldTag.Identifier,
+    fields: [
+      { name: 'core_span_id', label: 'Span ID', type: AnalyticsFieldType.String, tag: SpanFieldTag.Identifier },
+      {
+        name: 'core_parent_span_id',
+        label: 'Parent span ID',
+        type: AnalyticsFieldType.String,
+        tag: SpanFieldTag.Identifier,
+      },
+    ],
+  },
+  {
+    tag: SpanFieldTag.Deployment,
+    fields: [
+      { name: 'execution_path', label: 'Execution path', type: AnalyticsFieldType.Array, tag: SpanFieldTag.Deployment },
+    ],
+  },
+  {
+    tag: SpanFieldTag.TokenUsage,
+    fields: [
+      { name: 'prompt_tokens', label: 'Prompt tokens', type: AnalyticsFieldType.Long, tag: SpanFieldTag.TokenUsage },
+      {
+        name: 'completion_tokens',
+        label: 'Completion tokens',
+        type: AnalyticsFieldType.Long,
+        tag: SpanFieldTag.TokenUsage,
+      },
+    ],
+  },
+];
+
 describe('ConversationTraceView', () => {
   const renderTrace = (props: Partial<ComponentProps<typeof ConversationTraceView>> = {}) =>
     render(
@@ -99,6 +137,7 @@ describe('ConversationTraceView', () => {
         bodyGrants={GRANTS}
         figures={FIGURES}
         spans={SPANS}
+        fieldGroups={FIELD_GROUPS}
         hasLoadError={false}
         selectedSpanId={null}
         onSelectSpan={vi.fn()}
@@ -268,16 +307,17 @@ describe('ConversationTraceView', () => {
   });
 });
 
-const renderDetail = (node: ConversationSpanNode | null) => render(<ConversationSpanDetail node={node} />);
+const renderDetail = (node: ConversationSpanNode | null, fieldGroups: SpanFieldGroup[] = FIELD_GROUPS) =>
+  render(<ConversationSpanDetail node={node} fieldGroups={fieldGroups} />);
+
+const nodes: ConversationSpanNode[] = SPANS.map((row) => ({
+  span: row,
+  kind: SpanKind.Llm,
+  hasFailed: false,
+  startedAtMs: toMillis(row.request_time),
+}));
 
 describe('ConversationSpanDetail', () => {
-  const nodes: ConversationSpanNode[] = SPANS.map((span) => ({
-    span,
-    kind: SpanKind.Llm,
-    hasFailed: false,
-    startedAtMs: toMillis(span.request_time),
-  }));
-
   test('asks for a selection while no hop is chosen', () => {
     renderDetail(null);
 
@@ -299,17 +339,36 @@ describe('ConversationSpanDetail', () => {
     expect(screen.queryByText('200')).toBeNull();
   });
 
-  // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is
-  // indistinguishable between a real sub-millisecond operation and a producer that never reported one.
-  // The recorded duration is stated; an offset from the start of the trace still is not, because hops
-  // interleave and a bar would assert a timeline the ordering rule refuses to claim.
-  test('places the hop by its own recorded time and states its duration, but no offset', () => {
+  // Its absolute recorded time, to the millisecond: a turn's hops routinely start inside the same second,
+  // so an instant stated to the second answers nothing about their order. No offset from the start of the
+  // trace either — hops interleave, and a bar would assert a timeline the ordering rule refuses to claim.
+  test('places the hop by its own recorded time, to the millisecond and with no offset', () => {
     renderDetail(nodes[1]);
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanRecordedAt)).toBeInTheDocument();
-    expect(screen.getByText(new Date('2026-08-13T10:59:07.100Z').toLocaleString())).toBeInTheDocument();
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailDuration)).toBeInTheDocument();
+    expect(screen.getByText(/:07\.100/)).toBeInTheDocument();
     expect(screen.queryByText('+1.5s')).toBeNull();
+  });
+
+  // The tile carries the per-span figures no other surface states; the duration and the token total are on
+  // the row of the tree, and inside their own groups below, but not here.
+  test('keeps the duration and the token total out of the figure tile', () => {
+    renderDetail(nodes[0]);
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailDuration)).toBeNull();
+    expect(screen.queryByText(ConversationsTraceI18nKey.TraceTokens)).toBeNull();
+  });
+
+  // Own beside chain: a row of the tree states whichever applies to it, so this is the only surface where
+  // the pair is visible — and the pair is the answer to why an application hop reports no cost of its own.
+  test('states the own cost beside the chain cost', () => {
+    renderDetail({ ...nodes[0], span: span({ deployment_price: null, total_price: '0.0112755' }) });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanCostOwn)).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanCostChain)).toBeInTheDocument();
+    // The own figure is the one this hop has nothing for, and the pair states that rather than hiding it.
+    expect(screen.getByText(UNAVAILABLE_VALUE)).toBeInTheDocument();
+    expect(screen.getByText('$0.011')).toBeInTheDocument();
   });
 
   test('marks metadata the log did not record as unavailable', () => {
@@ -345,39 +404,126 @@ describe('ConversationSpanDetail', () => {
   });
 });
 
-describe('ConversationSpanDetail — MCP hops', () => {
-  test('renders the routing chain in the order the log recorded it', () => {
-    renderDetail({
-      span: span({ execution_path: ['deep-research-app', 'gpt-5.4-2026-03-05'] }),
-      kind: SpanKind.Llm,
-      hasFailed: false,
-      startedAtMs: 1000,
-    });
+describe('ConversationSpanDetail — grouped fields', () => {
+  const user = () => userEvent.setup();
 
-    expect(screen.getByText(ConversationsTraceI18nKey.SpanRouting)).toBeInTheDocument();
-    expect(screen.getByText('deep-research-app → gpt-5.4-2026-03-05')).toBeInTheDocument();
+  test('lists a group per tag the schema reports, with the count of fields this hop has', () => {
+    renderDetail(nodes[0]);
+
+    expect(
+      screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagIdentifier) }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagTokenUsage) }),
+    ).toBeInTheDocument();
   });
 
-  test('states the MCP method and tool where the hop recorded them', () => {
-    renderDetail({
-      span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'a_search_tool' }),
-      kind: SpanKind.Mcp,
-      hasFailed: false,
-      startedAtMs: 1000,
-    });
+  test('states a group’s fields when it is opened, and not before', async () => {
+    renderDetail(nodes[0]);
 
-    expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeInTheDocument();
-    // Once, in the fact row. The heading names the server that served the call, not the tool it called.
-    expect(screen.getAllByText('a_search_tool')).toHaveLength(1);
-    expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeInTheDocument();
-    expect(screen.getByText('tools/call')).toBeInTheDocument();
+    expect(screen.queryByText('Span ID')).toBeNull();
+
+    await user().click(screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagIdentifier) }));
+
+    expect(screen.getByText('Span ID')).toBeInTheDocument();
+    // Including the one this hop recorded nothing for: a dash is the answer, an absent row is a question
+    // about the schema.
+    expect(screen.getByText('Parent span ID')).toBeInTheDocument();
+    expect(screen.getAllByText(UNAVAILABLE_VALUE).length).toBeGreaterThan(0);
   });
 
-  test('omits the MCP rows for a hop that recorded none of them', () => {
-    renderDetail({ span: span(), kind: SpanKind.Llm, hasFailed: false, startedAtMs: 1 });
+  test('opening one group closes the one already open', async () => {
+    renderDetail(nodes[0]);
+    const identity = screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagIdentifier) });
+    const deployment = screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagDeployment) });
 
-    expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeNull();
-    expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeNull();
-    expect(screen.queryByText(ConversationsTraceI18nKey.SpanRouting)).toBeNull();
+    await user().click(identity);
+    expect(identity).toHaveAttribute('aria-expanded', 'true');
+
+    await user().click(deployment);
+
+    expect(deployment).toHaveAttribute('aria-expanded', 'true');
+    expect(identity).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('keeps a group with nothing recorded listed and operable, with its fields dashed', async () => {
+    renderDetail(nodes[0]);
+
+    const tokens = screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagTokenUsage) });
+    await user().click(tokens);
+
+    expect(screen.getByText('Prompt tokens')).toBeInTheDocument();
+    expect(screen.getByText('Completion tokens')).toBeInTheDocument();
+  });
+
+  // A metered zero is not a value: a core predating a token column stores zero for a call it never metered,
+  // so the row states a dash rather than a figure the hop never reported.
+  test('dashes a metered zero rather than stating it', async () => {
+    renderDetail({ ...nodes[0], span: span({ prompt_tokens: 0, completion_tokens: 0 }) });
+
+    await user().click(screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagTokenUsage) }));
+
+    expect(screen.getAllByText(UNAVAILABLE_VALUE).length).toBeGreaterThanOrEqual(2);
+  });
+
+  test('renders an array-valued field as the list the log recorded', async () => {
+    renderDetail({ ...nodes[0], span: span({ execution_path: ['deep-research-app', 'gpt-5.4-2026-03-05'] }) });
+
+    await user().click(screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagDeployment) }));
+
+    expect(screen.getByText('deep-research-app, gpt-5.4-2026-03-05')).toBeInTheDocument();
+  });
+
+  // A failed schema read leaves the rail with its own facts and no groups: describing a field without the
+  // schema would mean inventing its label, its type and its group here.
+  test('states why there are no groups when the schema could not be read', () => {
+    renderDetail(nodes[0], []);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanFieldsUnavailable)).toBeInTheDocument();
+    expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
+  });
+
+  // Selecting another hop re-states the rail against that hop, and keeps the reader's place in the set: a
+  // reader comparing one group across two hops is asking the same question twice.
+  test('states the newly selected hop’s values and keeps the open group', async () => {
+    const { rerender } = renderDetail(nodes[0]);
+
+    await user().click(screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagIdentifier) }));
+    expect(screen.getByText('s1')).toBeInTheDocument();
+
+    rerender(<ConversationSpanDetail node={nodes[1]} fieldGroups={FIELD_GROUPS} />);
+
+    // The same group is still open, now stating the other hop's own span id.
+    expect(
+      screen.getByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanTagIdentifier) }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('s2')).toBeInTheDocument();
+    // The field the entry hop had no value for is rendered now that this hop does have one: the group
+    // follows the selected span, not the one the reader opened it on.
+    expect(screen.getByText('Parent span ID')).toBeInTheDocument();
+    // And the headline facts follow the selection too.
+    expect(screen.getByText(/:07\.100/)).toBeInTheDocument();
+  });
+
+  // Left open across a change of selection it would re-title and re-fill itself with another hop's record.
+  test('closes the JSON dialog when another hop is selected', async () => {
+    const { rerender } = renderDetail(nodes[0]);
+
+    await user().click(screen.getByRole('button', { name: ConversationsTraceI18nKey.SpanJsonOpen }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    rerender(<ConversationSpanDetail node={nodes[1]} fieldGroups={FIELD_GROUPS} />);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  test('offers the whole record as JSON, including what the groups leave out', async () => {
+    renderDetail(nodes[0]);
+
+    await user().click(screen.getByRole('button', { name: ConversationsTraceI18nKey.SpanJsonOpen }));
+
+    // The viewer itself is Monaco, which renders nothing in jsdom — so the assertion is that the dialog
+    // opened and is named by the hop whose record it holds.
+    expect(screen.getByRole('dialog')).toHaveTextContent('switchyard-model');
   });
 });

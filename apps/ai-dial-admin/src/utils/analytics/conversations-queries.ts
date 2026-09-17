@@ -545,42 +545,16 @@ export const buildConversationTraceFiguresQuery = (
     page: offsetPage(0, limit),
   });
 
-// Scoped by `trace_id` alone, deliberately. A `chat_id` predicate here excluded the rows the listing counts —
-// a root carrying no header, and the Core-internal calls recorded under the trace — so the drawer contradicted
-// the card that opened it: one measured trace's card states two hops while a header-scoped read returned one,
-// and the root the card describes was absent from its own span tree. No trace carries two distinct non-empty
-// chat ids, so the trace id alone cannot draw in another conversation's rows.
-export const buildConversationSpansQuery = (traceId: string, limit: number): StructuredQuery =>
+// Scoped by `trace_id` alone, deliberately: a `chat_id` predicate drops the rows the listing counts — a root
+// carrying no header, and the Core-internal calls recorded under the trace — so the drawer contradicts the
+// card that opened it. No trace carries two distinct non-empty chat ids, so the trace id alone cannot draw in
+// another conversation's rows.
+export const buildConversationSpansQuery = (traceId: string, limit: number, fieldNames: string[]): StructuredQuery =>
   rowQuery({
     entity: USAGE_LOG_ENTITY,
-    select: [
-      col(field(UsageLogField.CoreSpanId)),
-      col(field(UsageLogField.CoreParentSpanId)),
-      col(field(UsageLogField.EventKind)),
-      col(field(UsageLogField.Deployment)),
-      col(field(UsageLogField.ParentDeployment)),
-      col(field(UsageLogField.RequestMethod)),
-      col(field(UsageLogField.RequestUri)),
-      col(field(UsageLogField.ResponseUpstreamUri)),
-      col(field(UsageLogField.ResponseStatus)),
-      col(field(UsageLogField.Success)),
-      col(field(UsageLogField.OperationDurationMs)),
-      col(field(UsageLogField.TotalTokens)),
-      col(field(UsageLogField.DeploymentPrice)),
-      // The chain-inclusive price, and the only cost figure a hop that metered nothing of its own has: an
-      // application hop records a null `deployment_price` while its subtree really did spend.
-      col(field(UsageLogField.TotalPrice)),
-      col(field(UsageLogField.RequestTime)),
-      col(field(UsageLogField.ResponseBodyBytes)),
-      // Plain columns, and the inspector's only pre-body facts: the request message count is what the Request
-      // tab's badge states, and it stays right when a body read is clamped or withheld.
-      col(field(UsageLogField.RequestBodyBytes)),
-      col(field(UsageLogField.NumberRequestMessages)),
-      col(field(UsageLogField.ReasoningTokens)),
-      col(field(UsageLogField.McpMethod)),
-      col(field(UsageLogField.McpToolCallName)),
-      col(field(UsageLogField.ExecutionPath)),
-    ],
+    // Supplied by the caller, resolved against the fetched schema: a `sensitive` column is absent from the
+    // schema below full administrator, and naming a field the schema does not carry rejects the whole read.
+    select: fieldNames.map((fieldName) => col(field(fieldName))),
     filter: eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
     sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit, true),
