@@ -91,7 +91,8 @@
 - [x] 5.4b Retitle the Overall Score KPI in
       `apps/ai-dial-admin/src/components/TestSuites/Trends/KpiStrip.tsx` to
       `Overall Score · Latest Run`, since `latestOverallScore` is the newest run's score rather than
-      an aggregate over the window. Rename `CasePassRateLatestRun` to `TrendsLatestRun`, now that two
+      an aggregate over the window, and move Avg Test Suite Run Time to the end of the strip so the
+      score cards sit together. Rename `CasePassRateLatestRun` to `TrendsLatestRun`, now that two
       features share the label. Verify the existing Trends specs pass unchanged.
 - [x] 5.5 Render `CasePassRatePanel` in
       `apps/ai-dial-admin/src/components/TestSuites/Trends/Trends.tsx` below `KpiStrip`, in the

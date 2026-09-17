@@ -31,7 +31,8 @@ returns exactly those per-run counts, so the gap is now a frontend-only one.
   counts, not from the suite's `overallScoreThreshold` — see design.md D11.
 - New API client method, server action, response model, and i18n keys for the panel.
 - Retitle the Overall Score KPI from `· {n} Runs` to `· Latest Run`. Its value is the newest run's
-  score, not an aggregate over the window, so the shared suffix was wrong on that card alone.
+  score, not an aggregate over the window, so the shared suffix was wrong on that card alone. Move
+  Avg Test Suite Run Time to the end of the strip, so the score cards sit together.
 
 ## Non-goals
 
