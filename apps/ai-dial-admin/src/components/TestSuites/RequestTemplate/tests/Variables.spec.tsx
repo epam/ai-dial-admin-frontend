@@ -7,7 +7,7 @@ import { InputBindingRowData, TemplateVariable } from '@/src/models/evaluation/t
 import { TestCaseItemType } from '@/src/types/evaluation';
 import Variables from '../components/Variables';
 
-const mockGenerateVariablesRowData = vi.fn(() => [] as InputBindingRowData[]);
+const mockGenerateVariablesRowData = vi.fn((..._args: unknown[]) => [] as InputBindingRowData[]);
 vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
   generateVariablesRowData: (...args: unknown[]) => mockGenerateVariablesRowData(...args),
 }));

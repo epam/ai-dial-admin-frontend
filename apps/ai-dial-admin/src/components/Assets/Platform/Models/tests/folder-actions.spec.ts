@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { getGridColumns, getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
@@ -51,7 +51,7 @@ type ColumnFactory = (dateLocale?: unknown, dateOptions?: unknown) => { colId?: 
  * the updated-at one and two columns sharing a `colId` silently collide in ag-grid.
  */
 const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
-  getGridColumns(view).map((column) => {
+  getGridColumns(view, vi.fn(), {}, false).map((column) => {
     const resolved = typeof column === 'function' ? (column as ColumnFactory)('en-US', void 0) : column;
 
     return resolved.colId ?? resolved.field;

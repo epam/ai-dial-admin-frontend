@@ -32,6 +32,7 @@ const RECORD: ConversationDetailRow = {
   total_price: '10.79380012',
   success_count: 0,
   duration_ms: 0,
+  deployments: ['gpt-4o'],
   avg_duration_ms: 0,
 };
 
@@ -69,7 +70,7 @@ describe('conversationTitle', () => {
   test('resolves a grid row and a detail row identically', () => {
     const title = 'Refund policy for EU orders';
 
-    expect(conversationTitle({ client_session_id: RECORD.client_session_id, 'session_insights.title': title })).toBe(
+    expect(conversationTitle({ 'session_insights.title': title })).toBe(
       conversationTitle({ ...RECORD, 'session_insights.title': title }),
     );
   });
