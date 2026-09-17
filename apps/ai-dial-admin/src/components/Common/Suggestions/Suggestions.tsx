@@ -1,5 +1,7 @@
-import classNames from 'classnames';
 import React, { FC, MouseEventHandler, useCallback } from 'react';
+
+import classNames from 'classnames';
+import { startCase } from 'lodash';
 
 import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
 
@@ -8,9 +10,16 @@ interface Props {
   highlightIndex: number;
   onSelectSuggestion: (suggestion: MultiValueOption) => void;
   onHightLightSuggestion: (idx: number) => void;
+  isUpperCased?: boolean;
 }
 
-const Suggestions: FC<Props> = ({ suggestions, highlightIndex, onSelectSuggestion, onHightLightSuggestion }) => {
+const Suggestions: FC<Props> = ({
+  suggestions,
+  highlightIndex,
+  onSelectSuggestion,
+  onHightLightSuggestion,
+  isUpperCased = true,
+}) => {
   const handleSelectSuggestion = useCallback(
     (opt: MultiValueOption): MouseEventHandler<HTMLLIElement> =>
       (e) => {
@@ -40,7 +49,7 @@ const Suggestions: FC<Props> = ({ suggestions, highlightIndex, onSelectSuggestio
           onMouseEnter={handleHightLightSuggestion(idx)}
           onMouseDown={handleSelectSuggestion(opt)}
         >
-          <span className="small">{opt.label.toUpperCase()}</span>
+          <span className="small">{isUpperCased ? opt.label.toUpperCase() : startCase(opt.label)}</span>
           <span className="small text-secondary truncate">{opt.value}</span>
         </li>
       ))}

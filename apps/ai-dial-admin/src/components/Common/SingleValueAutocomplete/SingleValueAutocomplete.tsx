@@ -1,40 +1,36 @@
-import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { DialErrorText, DialTag } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialLabel, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
-
-export interface MultiValueOption {
-  label: string;
-  value: string;
-}
+import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
 
 interface Props {
-  selected: MultiValueOption[];
+  elementId?: string;
+  label?: string;
+  value: string;
   availableItems: MultiValueOption[];
   placeholder?: string;
   error?: string;
-  isReadOnlyAdmin?: boolean;
   caption?: string;
-  onAdd: (item: MultiValueOption) => void;
-  onRemove: (index: number) => void;
+  disabled?: boolean;
+  onChange: (value: string) => void;
 }
 
-const MultiValueAutocomplete: FC<Props> = ({
-  selected,
+const SingleValueAutocomplete: FC<Props> = ({
+  elementId,
+  label,
+  value,
   availableItems,
   placeholder,
   error = '',
-  isReadOnlyAdmin = false,
   caption,
-  onAdd,
-  onRemove,
+  disabled = false,
+  onChange,
 }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const [inputValue, setInputValue] = useState('');
-  const [wraps, setWraps] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlight, setHighlight] = useState(0);
 
@@ -43,12 +39,11 @@ const MultiValueAutocomplete: FC<Props> = ({
       availableItems
         .filter(
           (opt) =>
-            !selected.some((s) => s.value === opt.value) &&
-            (opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
-              opt.value.toLowerCase().includes(inputValue.toLowerCase())),
+            opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
+            opt.value.toLowerCase().includes(inputValue.toLowerCase()),
         )
         .slice(0, 5),
-    [availableItems, inputValue, selected],
+    [availableItems, inputValue],
   );
 
   const shouldShowSuggestions = useMemo(
@@ -56,41 +51,25 @@ const MultiValueAutocomplete: FC<Props> = ({
     [filteredSuggestions.length, showSuggestions],
   );
 
-  useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      if (containerRef.current) {
-        setWraps(containerRef.current.scrollHeight > containerRef.current.clientHeight + 10);
-      }
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const addItem = useCallback(
+  const commit = useCallback(
     (item: MultiValueOption | string) => {
-      let newItem: MultiValueOption;
-      if (typeof item === 'string') {
-        if (!item.trim()) return;
-        newItem = { label: item.trim(), value: item.trim() };
-      } else {
-        newItem = item;
-      }
-      if (selected.some((s) => s.value === newItem.value)) return;
-      onAdd(newItem);
+      const newValue = typeof item === 'string' ? item.trim() : item.value;
+      if (!newValue) return;
+      onChange(newValue);
       setInputValue('');
       setShowSuggestions(false);
       setHighlight(0);
     },
-    [selected, onAdd],
+    [onChange],
   );
-
-  const handleRemoveItem = useCallback((idx: number) => () => onRemove(idx), [onRemove]);
 
   const handleInputChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     setInputValue(e.target.value);
     setHighlight(0);
     setShowSuggestions(true);
   }, []);
+
+  const handleRemoveValue = useCallback(() => onChange(''), [onChange]);
 
   const handleInputBlur = useCallback(() => setShowSuggestions(false), []);
 
@@ -104,39 +83,41 @@ const MultiValueAutocomplete: FC<Props> = ({
         e.preventDefault();
         setShowSuggestions(true);
         setHighlight((h) => (h - 1 + filteredSuggestions.length) % Math.max(filteredSuggestions.length, 1));
-      } else if (e.key === 'Enter' || e.key === ',') {
+      } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filteredSuggestions[highlight]) {
-          addItem(filteredSuggestions[highlight]);
+          commit(filteredSuggestions[highlight]);
         } else if (inputValue.trim()) {
-          addItem(inputValue);
+          commit(inputValue);
         }
       } else if (e.key === 'Escape') {
         setShowSuggestions(false);
       }
     },
-    [addItem, filteredSuggestions, highlight, inputValue],
+    [commit, filteredSuggestions, highlight, inputValue],
   );
 
   const handleSetHighlight = useCallback((idx: number) => setHighlight(idx), []);
 
+  const selectedLabel = useMemo(
+    () => availableItems.find((opt) => opt.value === value)?.label ?? value,
+    [availableItems, value],
+  );
+
   return (
-    <div className={classNames('flex flex-col gap-y-1', STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
+      {label && <DialLabel label={label} />}
       <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
-        <div
-          ref={containerRef}
-          className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
-        >
-          {selected.map((att, idx) => (
-            <DialTag key={att.value} label={att.label} closable onRemove={handleRemoveItem(idx)} />
-          ))}
-          <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+        <div className="flex flex-wrap items-center gap-2">
+          {value && <DialTag label={selectedLabel} closable onRemove={handleRemoveValue} />}
+          <div className="flex items-center gap-2 flex-1 min-w-[120px]">
             <input
+              id={elementId}
               value={inputValue}
               onChange={handleInputChange}
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
-              disabled={isReadOnlyAdmin}
+              disabled={disabled}
               className="outline-none border-none w-full flex-1 p-1 dial-input h-auto"
               placeholder={placeholder || ''}
             />
@@ -148,14 +129,15 @@ const MultiValueAutocomplete: FC<Props> = ({
         <Suggestions
           suggestions={filteredSuggestions}
           highlightIndex={highlight}
-          onSelectSuggestion={addItem}
+          onSelectSuggestion={commit}
           onHightLightSuggestion={handleSetHighlight}
+          isUpperCased={false}
         />
       )}
-      {!isReadOnlyAdmin && <DialErrorText text={error} />}
+      {!disabled && <DialErrorText text={error} />}
       {caption && <div className="text-secondary tiny pt-2">{caption}</div>}
     </div>
   );
 };
 
-export default MultiValueAutocomplete;
+export default SingleValueAutocomplete;

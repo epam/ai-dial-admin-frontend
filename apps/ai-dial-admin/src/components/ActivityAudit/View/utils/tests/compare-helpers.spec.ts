@@ -136,6 +136,50 @@ describe('Activity audit :: convertPricing', () => {
     );
   });
 
+  test('should render a conditional cache rate as a readable expression under the token unit', () => {
+    const pricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: '==', value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toBe(`${ModelViewI18nKey.Tokens} ${ModelViewI18nKey.PerMillion}, cacheRead: ttl == 1h ? 6 : 3.75`);
+  });
+
+  test('should keep a conditional cache rate per-token under the character unit', () => {
+    const pricing = {
+      unit: PricingType.CharWithoutWhitespace,
+      cacheRead: {
+        test: { field: 'ttl', operator: '==', value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toBe(`${ModelViewI18nKey.CharWithoutWhitespace}, cacheRead: ttl == 1h ? 0.000006 : 0.00000375`);
+  });
+
+  test('should show the prompt-rate fallback for an omitted branch', () => {
+    const pricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: '==', value: '1h' },
+        ifTrue: '0.000006',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toContain(`cacheRead: ttl == 1h ? 6 : ${ModelViewI18nKey.PromptRate}`);
+  });
+
   test('should handle string values gracefully in non-token mode', () => {
     const pricing = {
       unit: PricingType.CharWithoutWhitespace,

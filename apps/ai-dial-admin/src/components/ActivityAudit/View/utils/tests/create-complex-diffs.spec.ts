@@ -377,6 +377,28 @@ describe('Activity audit :: fillStringArray', () => {
     expect(diffs[0].value).toContain('ModelView.Pricing.Tokens ModelView.Pricing.PerMillion');
   });
 
+  test('should compare a flat-to-tree pricing revision as readable strings', () => {
+    const diffs: any[] = [];
+    const flatPricing = { unit: PricingType.Token, cacheRead: '0.0000002' };
+    const treePricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: '==', value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const t = (str: string) => str;
+    compareStringArray(diffs, EntityParameterKeys.PRICING, flatPricing, treePricing, false, t);
+
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.CHANGED);
+    // The legacy flat scaling has no parseFloat cleanup, so the float artifact is the recorded value.
+    expect(diffs[0].pairedValue).toContain('cacheRead: 0.19999999999999998');
+    expect(diffs[0].value).toContain('cacheRead: ttl == 1h ? 6 : 3.75');
+  });
+
   test('should handle non-pricing key even with translator', () => {
     const diffs: any[] = [];
     const obj = { x: 1, y: 2 };

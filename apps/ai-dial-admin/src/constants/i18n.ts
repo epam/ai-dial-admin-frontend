@@ -558,6 +558,15 @@ export enum ModelViewI18nKey {
   Tokens = 'ModelView.Pricing.Tokens',
   CharWithoutWhitespace = 'ModelView.Pricing.CharWithoutWhitespace',
   PerMillion = 'ModelView.Pricing.PerMillion',
+  Field = 'ModelView.Pricing.Field',
+  Operator = 'ModelView.Pricing.Operator',
+  IfTrue = 'ModelView.Pricing.IfTrue',
+  IfFalse = 'ModelView.Pricing.IfFalse',
+  ConditionalRate = 'ModelView.Pricing.ConditionalRate',
+  ConfigureConditional = 'ModelView.Pricing.ConfigureConditional',
+  UseFlatRate = 'ModelView.Pricing.UseFlatRate',
+  PromptRate = 'ModelView.Pricing.PromptRate',
+  FieldPlaceholder = 'ModelView.Pricing.FieldPlaceholder',
 }
 
 export enum AttachmentsI18nKey {

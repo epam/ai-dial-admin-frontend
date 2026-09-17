@@ -17,6 +17,8 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { formatPricingRate } from '@/src/components/ModelView/Pricing/utils';
+import { PricingRate, PricingType } from '@/src/models/dial/model';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
@@ -162,6 +164,15 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
+// A cache rate is flat-or-tree: a flat rate keeps its stored string as before, a tree renders as the
+// readable conditional with per-million leaves under the token unit.
+const getCacheRateTooltip = (
+  rate: PricingRate | undefined,
+  unit: string | undefined,
+  t: (str: string) => string,
+): string | undefined =>
+  typeof rate === 'string' || rate == null ? rate : formatPricingRate(rate, unit === PricingType.Token, t);
+
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
@@ -195,13 +206,14 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.cacheRead,
+    tooltipValueGetter: (params) => getCacheRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
   },
   {
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.cacheWrite,
+    tooltipValueGetter: (params) =>
+      getCacheRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
   },
 ];
 
