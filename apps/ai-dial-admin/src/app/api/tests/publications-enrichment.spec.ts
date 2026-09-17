@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { PromptPublication } from '@/src/models/dial/publications';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -50,7 +51,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
       JSON_HEADERS,
     );
 
-    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     // Every request must have gone to Core (the admin BE URL never appears).
     for (const call of fetch.mock.calls) {
@@ -62,7 +63,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(fetch.mock.calls[3][0]).toContain('v1/metadata/prompts/');
 
     expect(result.resourceIssues).toEqual([]);
-    const prompts = result.prompts as { prompt: Record<string, unknown> }[];
+    const prompts = result.prompts ?? [];
     expect(prompts[0].prompt).toMatchObject({
       content: 'prompt body',
       name: 'P',

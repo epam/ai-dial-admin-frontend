@@ -115,7 +115,7 @@ describe('insightValueText', () => {
   // A machine-looking value in a column the schema types as a plain string is what the record holds, and
   // rewriting it on shape rather than on type would silently edit a file name or an identifier.
   test('leaves an underscored value alone where the schema types it as a string', () => {
-    const text = insightValueText(row({ 'session_insights.activity_detail': 'bug_fixing' } as ConversationDetailRow), {
+    const text = insightValueText(row({ 'session_insights.activity_detail': 'bug_fixing' }), {
       ...column('session_insights.activity_detail'),
     });
 
@@ -123,7 +123,7 @@ describe('insightValueText', () => {
   });
 
   test('renders a timestamp in the local format the other panels use', () => {
-    const text = insightValueText(row({ 'session_insights.enriched_at': 1756000000000 } as ConversationDetailRow), {
+    const text = insightValueText(row({ 'session_insights.enriched_at': 1756000000000 }), {
       ...column('session_insights.enriched_at', { type: AnalyticsFieldType.Timestamp }),
     });
 
@@ -132,7 +132,7 @@ describe('insightValueText', () => {
   });
 
   test('renders a recorded false rather than treating it as absent', () => {
-    const text = insightValueText(row({ 'session_insights.truncated': false } as ConversationDetailRow), {
+    const text = insightValueText(row({ 'session_insights.truncated': false }), {
       ...column('session_insights.truncated', { type: AnalyticsFieldType.Boolean }),
     });
 
@@ -140,7 +140,7 @@ describe('insightValueText', () => {
   });
 
   test('renders a zero rather than treating it as absent', () => {
-    const text = insightValueText(row({ 'session_insights.evaluator_version': 0 } as ConversationDetailRow), {
+    const text = insightValueText(row({ 'session_insights.evaluator_version': 0 }), {
       ...column('session_insights.evaluator_version', { type: AnalyticsFieldType.Integer }),
     });
 

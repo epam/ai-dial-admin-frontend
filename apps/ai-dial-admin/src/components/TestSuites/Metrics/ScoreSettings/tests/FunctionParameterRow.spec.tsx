@@ -10,6 +10,7 @@ import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-sui
 import FunctionParameterRow from '../FunctionParameterRow';
 import { FunctionParameterSource, FunctionParameterSourceType } from '../models';
 import { buildFunctionParameterFieldName, parseFunctionParameterFieldName } from '../utils';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialLabel: ({ label }: any) => <span>{label}</span>,
@@ -47,7 +48,9 @@ vi.mock('@/src/components/Common/TabSelector/TabSelector', () => ({
   ),
 }));
 
-const testCaseSchema: TestCaseSchema[] = [{ name: 'y_true_float', type: 'number' } as TestCaseSchema];
+const testCaseSchema: TestCaseSchema[] = [
+  { name: 'y_true_float', type: TestCaseItemType.NUMBER, required: false, description: '' },
+];
 const responseColumns: ResponseColumn[] = [{ name: 'y_pred', displayName: 'Y pred', expression: '', type: 'number' }];
 const metrics: Metric[] = [
   { name: 'Classifier', outputSchema: { type: 'object', properties: { score: { type: 'number' } } } },
