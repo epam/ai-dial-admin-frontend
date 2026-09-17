@@ -48,6 +48,11 @@ export async function getTestCaseRunResultDetails(id: string) {
   return analyticsApi.getTestCaseRunResultDetails(id, token);
 }
 
+export async function getTestCasePassRate(testSuiteId: string, lastN: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getTestCasePassRate(testSuiteId, lastN, token);
+}
+
 export async function getMetricSnapshots(filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getMetricSnapshots(filters, token);
