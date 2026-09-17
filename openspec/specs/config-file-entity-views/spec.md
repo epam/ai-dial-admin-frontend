@@ -11,7 +11,8 @@ persistence, the shared name-only list component swap, the lazy names-only data 
 `add-config-file-entity-views`; expanded to cover App Runners as a seventh entity type by
 `expand-config-file-entity-views`; the toggle made always-visible by
 `always-show-config-files-toggle`; expanded to cover Catalog Schemas as an eighth entity type by
-`apply-catalog-schemas-to-deployments`.
+`apply-catalog-schemas-to-deployments`; the dual-bucket navigation URLs and query-flag joining
+normalized by `fix-config-file-dual-bucket-navigation`.
 
 ## Requirements
 
@@ -87,15 +88,27 @@ The shared config-file list component SHALL render a single name column (plus th
 - **THEN** each row's action column offers "open in new tab" and no other row action (no remove, duplicate, or move)
 
 ### Requirement: A config-file entity row links to its platform/asset detail route
-The system SHALL navigate to the entity type's platform/asset detail route (`/platform-models/{id}`, `/assets-applications/{id}`, `/platform-interceptors/{id}`, `/platform-routes/{id}`, `/platform-roles/{id}`, `/assets-toolsets/{id}`, `/platform-app-runners/{id}`, `/platform-catalog-schemas/{id}`) when a row in the config-file-backed list is clicked, or when its "open in new tab" row action is used, appending a `configFile=true` query parameter in both cases. The entity type's bare/admin-grid detail route (e.g. `/models/{id}`, `/applications/{id}`) SHALL NOT be used for this navigation. No new, dedicated route SHALL be introduced for this.
+The system SHALL navigate to the entity type's platform/asset detail route (`/platform-models/{id}`, `/assets-applications/{id}`, `/platform-interceptors/{id}`, `/platform-routes/{id}`, `/platform-roles/{id}`, `/assets-toolsets/{id}`, `/platform-app-runners/{id}`, `/platform-catalog-schemas/{id}`) when a row in the config-file-backed list is clicked, or when its "open in new tab" row action is used, appending a `configFile=true` query parameter in both cases. The flag SHALL be joined as a proper query parameter — `?` when the built route carries no query string, `&` when it already does. For the dual-bucket routes (`/assets-applications/{id}`, `/assets-toolsets/{id}`), the navigation URL SHALL be the bare `{id}` segment plus the flag — no `path` query parameter — the same segment shape a platform-bucket row of that type produces. The entity type's bare/admin-grid detail route (e.g. `/models/{id}`, `/applications/{id}`) SHALL NOT be used for this navigation. No new, dedicated route SHALL be introduced for this.
 
 #### Scenario: Clicking a config-file model row navigates to the platform route
 - **WHEN** a user clicks a row in the config-file-backed Models list
 - **THEN** the browser navigates to `/platform-models/{id}?configFile=true`
 
+#### Scenario: Clicking a config-file application row navigates without a path parameter
+- **WHEN** a user clicks a row in the config-file-backed Applications list
+- **THEN** the browser navigates to `/assets-applications/{id}?configFile=true`, with no `path` query parameter
+
+#### Scenario: Clicking a config-file toolset row navigates without a path parameter
+- **WHEN** a user clicks a row in the config-file-backed Toolsets list
+- **THEN** the browser navigates to `/assets-toolsets/{id}?configFile=true`, with no `path` query parameter
+
+#### Scenario: The query flag joins onto a route that already has a query string
+- **WHEN** the system appends the `configFile=true` flag to a detail-route URL that already carries a query parameter
+- **THEN** the flag is joined with `&`, not with a second `?`
+
 #### Scenario: The "open in new tab" row action includes the query flag
 - **WHEN** a user activates the "open in new tab" row action on a config-file-backed list row
-- **THEN** the new tab opens the same platform/asset detail route the row click would (e.g. `/platform-models/{id}?configFile=true`), not the bare detail route
+- **THEN** the new tab opens the same platform/asset detail route the row click would (e.g. `/platform-models/{id}?configFile=true`, `/assets-applications/{id}?configFile=true`), not the bare detail route
 
 ### Requirement: A detail page opened with `configFile=true` renders read-only, sourced from Core's config file
 When a covered entity's platform/asset detail route (`platform-models/[id]`, `assets-applications/[id]`, `platform-interceptors/[id]`, `platform-routes/[id]`, `platform-roles/[id]`, `assets-toolsets/[id]`, `platform-app-runners/[id]`) is requested with `configFile=true`, the system SHALL fetch the entity via `configFileApi` instead of the platform/asset entity's normal fetch, SHALL resolve any embedded Roles/Interceptors picker through the config-file-aware read, and SHALL render the platform/asset view read-only — no field on the page SHALL be editable, regardless of the viewer's own admin role. The view SHALL NOT render the ADMIN|CORE format toggle when its JSON editor is opened, since a config-file-sourced entity has no admin-backend "compare with Core" projection of its own to switch to — it already is Core's own view. The entity type's bare/admin-grid detail route SHALL NOT respond to `configFile=true` — it has no config-file branch.

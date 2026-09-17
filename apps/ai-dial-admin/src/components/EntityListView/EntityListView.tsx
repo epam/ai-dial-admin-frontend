@@ -15,7 +15,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-view';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { appendUrlQuery, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import Actions from './Components/Actions';
 import { onCellClicked } from './utils/on-cell-clicked';
@@ -40,8 +40,8 @@ interface Props<T> {
   isConfigFileSource?: boolean;
 }
 
-/** `config-file-entity-views`: routes a config-file-sourced row to the same detail page, read-only. */
-const CONFIG_FILE_URL_SUFFIX = '?configFile=true';
+/** `config-file-entity-views`: routes a config-file-sourced row to the same detail page, read-only. Bare — `appendUrlQuery` supplies the separator. */
+const CONFIG_FILE_URL_SUFFIX = 'configFile=true';
 
 const BaseEntityList = <T extends object>({
   data,
@@ -159,7 +159,9 @@ const BaseEntityList = <T extends object>({
         toggleColumnsPanel={toggleColumnsPanel}
         view={route}
         onGridReady={onGridReady}
-        getHref={(data) => `${getUrnForEntity(route, data)}${isConfigFileSource ? CONFIG_FILE_URL_SUFFIX : ''}`}
+        getHref={(data) =>
+          isConfigFileSource ? appendUrlQuery(getUrnForEntity(route, data), CONFIG_FILE_URL_SUFFIX) : getUrnForEntity(route, data)
+        }
         headerExtra={headerExtra}
       >
         <EntityListHeaderButtons
