@@ -26,7 +26,6 @@ const enrichPipeline: Pipeline = {
   version_column: '_ingested_at',
   trigger: { kind: TriggerKind.Group, group_by: 'chat_id', ready_when: { idle: '30m' } },
   filter: 'length(chat_id) > 0',
-  output_bindings: [{ column: 'title', var: 'title' }],
   enabled: true,
   generation: 10,
   created_at: '2026-08-17T11:59:13Z',
@@ -73,7 +72,6 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     const item = toPipelineListItem(enrichPipeline);
 
     expect(item).not.toHaveProperty('filter');
-    expect(item).not.toHaveProperty('output_bindings');
     expect(item).not.toHaveProperty('created_at');
   });
 

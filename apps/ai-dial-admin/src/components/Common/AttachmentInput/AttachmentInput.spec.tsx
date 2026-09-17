@@ -52,7 +52,7 @@ describe('Common components - AttachmentInput', () => {
     await userEvent.type(input, 'doc');
 
     const list = await screen.findByRole('list');
-    const suggestion = within(list).getAllByText((_, node) => node?.textContent?.startsWith('DOC'))[1];
+    const suggestion = within(list).getAllByText((_, node) => !!node?.textContent?.startsWith('DOC'))[1];
     expect(suggestion).toBeInTheDocument();
 
     await userEvent.click(suggestion);
