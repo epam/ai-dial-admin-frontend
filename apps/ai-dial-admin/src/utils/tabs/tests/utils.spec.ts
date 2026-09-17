@@ -92,6 +92,7 @@ const t = vi.fn((id) => id);
 
 const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   adminApiEnabled: false,
+  catalogEnabled: true,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: false,

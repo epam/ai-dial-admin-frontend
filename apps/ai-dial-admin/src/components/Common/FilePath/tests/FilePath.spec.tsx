@@ -45,10 +45,21 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 const platformRoot = { name: 'platform', path: 'platform/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 const publicRoot = { name: 'public', path: 'public/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 
-const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
-  const context = () => ({ files, fetchFiles: vi.fn() }) as unknown as AssetsFolderContext;
+const { mockFeatureFlags } = vi.hoisted(() => ({
+  mockFeatureFlags: {
+    catalogEnabled: true,
+  },
+}));
 
-  return render(
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ featureFlags: mockFeatureFlags }),
+}));
+
+const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
+  const fetchFiles = vi.fn();
+  const context = () => ({ files, fetchFiles }) as unknown as AssetsFolderContext;
+
+  render(
     <FilePath
       label="label"
       placeholder="placeholder"
@@ -59,6 +70,8 @@ const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplicatio
       view={view}
     />,
   );
+
+  return fetchFiles;
 };
 
 describe('FilePath', () => {
@@ -80,5 +93,23 @@ describe('FilePath', () => {
     await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
 
     expect(screen.getByText('root:public')).toBeInTheDocument();
+  });
+
+  test('fetches both bucket roots for a dual-bucket view when Catalog is enabled', () => {
+    mockFeatureFlags.catalogEnabled = true;
+
+    const fetchFiles = renderFilePath([]);
+
+    expect(fetchFiles).toHaveBeenCalledOnce();
+    expect(fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']);
+  });
+
+  test('fetches only the public root for a dual-bucket view when Catalog is disabled', () => {
+    mockFeatureFlags.catalogEnabled = false;
+
+    const fetchFiles = renderFilePath([]);
+
+    expect(fetchFiles).toHaveBeenCalledOnce();
+    expect(fetchFiles).toHaveBeenCalledWith('public/');
   });
 });

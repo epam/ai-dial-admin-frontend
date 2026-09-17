@@ -119,7 +119,7 @@ const appContextValue = {
     closeSidebar: vi.fn(),
     position: SidebarPosition.Right,
   },
-  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
+  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true, catalogEnabled: true },
   isReadOnlyAdmin: false,
   isFullAdmin: true,
   isEnableAuth: false,
