@@ -62,7 +62,7 @@ const CasePassRatePanel: FC<Props> = ({ bars, isLoading }) => {
         <div className={classNames(READOUT_COLUMN_CLASSES, 'xl:border-l xl:border-secondary')}>{readout}</div>
       </div>,
       <p className={classNames(READOUT_COLUMN_CLASSES, 'hidden dial-body-semi-text text-primary xl:block')}>
-        {t(TestSuitesI18nKey.CasePassRateLatestRun)}
+        {t(TestSuitesI18nKey.TrendsLatestRun)}
       </p>,
     );
 

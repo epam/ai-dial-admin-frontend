@@ -8,18 +8,18 @@ suite's optional overall score threshold.
 
 ### Requirement: Cases Passed panel placement and data source
 The Trends tab SHALL render a **Cases Passed** panel that reports per-run case-level outcome counts
-for the suite's most recent runs, positioned after the KPI strip and before the Overall Score Trend
-chart. The panel SHALL read the analytics case-pass-rate endpoint
+for the suite's most recent runs, positioned after the KPI strip and after the Overall Score Trend
+chart, sharing an even-split row with it. The panel SHALL read the analytics case-pass-rate endpoint
 (`GET /api/v1/analytics/eval-summaries/test-case-pass-rate/{testSuiteId}`) with `lastN` set to the
 Trends run-window size, and SHALL NOT derive its counts from any other source. That response names
 no run, so each run's name, creation date, status and detail-page route SHALL come from the suite's
 runs list, joined on `testSuiteRunId`.
 
-#### Scenario: Panel renders between the KPI strip and the score chart
+#### Scenario: Panel renders after the KPI strip and the score chart
 - **WHEN** the Trends tab loads for a suite with at least one run returned by the case-pass-rate
   endpoint
-- **THEN** the Cases Passed panel appears after the KPI strip and before the Overall Score Trend
-  chart
+- **THEN** the Cases Passed panel appears after the KPI strip and after the Overall Score Trend
+  chart, in the same row as that chart
 
 #### Scenario: Window size matches the Trends window
 - **WHEN** the Trends run-window size is 10

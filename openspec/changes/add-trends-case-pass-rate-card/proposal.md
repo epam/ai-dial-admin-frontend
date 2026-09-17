@@ -10,7 +10,7 @@ returns exactly those per-run counts, so the gap is now a frontend-only one.
 ## What Changes
 
 - Add a **Cases Passed** panel to the Trends tab, sharing a row with Overall Score Trend at an even
-  width split below the KPI strip: a stacked bar per run (oldest → newest) on the left and a
+  width split below the KPI strip, in the row's second half: a stacked bar per run (oldest → newest) on the left and a
   latest-run readout on the right.
 - Each bar stacks four groups bottom-up — pass (`successPassedCount`), fail (`successNotPassedCount`), error
   (`failedCount`) and not scored (`successNoVerdictCount`) — over a fixed-height track whose full height is
@@ -30,6 +30,8 @@ returns exactly those per-run counts, so the gap is now a frontend-only one.
   replaced by a "Lack scoring" note, where a `0 / N` readout would be wrong. Read from the run's
   counts, not from the suite's `overallScoreThreshold` — see design.md D11.
 - New API client method, server action, response model, and i18n keys for the panel.
+- Retitle the Overall Score KPI from `· {n} Runs` to `· Latest Run`. Its value is the newest run's
+  score, not an aggregate over the window, so the shared suffix was wrong on that card alone.
 
 ## Non-goals
 

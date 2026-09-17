@@ -25,7 +25,7 @@ const KpiStrip: FC<Props> = ({ kpis }) => {
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
       <TrendsKpiCard
         className="flex-1 sm:min-w-[180px]"
-        title={titleWithRuns(t(RunsI18nKey.OverallScore))}
+        title={`${t(RunsI18nKey.OverallScore)} · ${t(TestSuitesI18nKey.TrendsLatestRun)}`}
         value={kpis.latestOverallScore != null ? formatScore(kpis.latestOverallScore) : undefined}
         description={t(RunsI18nKey.OverallScoreDescription)}
         isError={kpis.latestOverallScore == null}

@@ -139,7 +139,7 @@ describe('Trends', () => {
     expect(screen.queryByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).not.toBeInTheDocument();
   });
 
-  test('renders the Cases Passed panel between the KPI strip and the Overall Score Trend chart', async () => {
+  test('renders the Cases Passed panel after the KPI strip and the Overall Score Trend chart', async () => {
     (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [] });
     (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
       content: [{ id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 400 }],
@@ -164,8 +164,8 @@ describe('Trends', () => {
     const chartHeading = screen.getByRole('heading', { name: new RegExp(TestSuitesI18nKey.OverallScoreTrend) });
     const kpiTitle = screen.getByText(new RegExp(TestSuitesI18nKey.AvgTestSuiteRunTime));
 
-    expect(kpiTitle.compareDocumentPosition(panelHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(panelHeading.compareDocumentPosition(chartHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(kpiTitle.compareDocumentPosition(chartHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(chartHeading.compareDocumentPosition(panelHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     // Whether the two sit in one row or stack is decided entirely by classes - the DOM is the same
     // either way - and jsdom computes no layout, so the split can only be asserted through the

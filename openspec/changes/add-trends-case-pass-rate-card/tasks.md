@@ -88,9 +88,14 @@
       loading skeleton (frame, empty tracks, placeholder readout), the `bars: []` "no runs yet" line,
       and the `casePassRate === null` unavailable line. Verify its component spec covers all three
       states plus a 4-run window rendering exactly 4 bars.
+- [x] 5.4b Retitle the Overall Score KPI in
+      `apps/ai-dial-admin/src/components/TestSuites/Trends/KpiStrip.tsx` to
+      `Overall Score · Latest Run`, since `latestOverallScore` is the newest run's score rather than
+      an aggregate over the window. Rename `CasePassRateLatestRun` to `TrendsLatestRun`, now that two
+      features share the label. Verify the existing Trends specs pass unchanged.
 - [x] 5.5 Render `CasePassRatePanel` in
-      `apps/ai-dial-admin/src/components/TestSuites/Trends/Trends.tsx` below `KpiStrip`, sharing an
-      even-split row with `OverallScoreTrend`, passing `data.casePassRate` and `isLoading`. Verify
+      `apps/ai-dial-admin/src/components/TestSuites/Trends/Trends.tsx` below `KpiStrip`, in the
+      second half of an even-split row it shares with `OverallScoreTrend`, passing `data.casePassRate` and `isLoading`. Verify
       `tests/Trends.spec.tsx` asserts the panel's presence, its position relative to the two siblings
       and that both halves sit in one row container.
 

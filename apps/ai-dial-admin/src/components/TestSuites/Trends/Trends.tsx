@@ -91,15 +91,15 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
       )}
       <KpiStrip kpis={kpis} />
       {/*
-        Cases Passed and Overall Score Trend share a row at an even split. `items-stretch` squares
+        Overall Score Trend and Cases Passed share a row at an even split. `items-stretch` squares
         their heights off against each other; below xl they stack, each at its natural height.
       */}
       <div className="flex shrink-0 flex-col gap-4 xl:flex-row xl:items-stretch">
         <div className="min-w-0 xl:w-1/2">
-          <CasePassRatePanel bars={data.casePassRate} isLoading={isLoading} />
+          <OverallScoreTrend runOrder={data.runOrder} runCount={kpis.runCount} isLoading={isLoading} />
         </div>
         <div className="min-w-0 xl:w-1/2">
-          <OverallScoreTrend runOrder={data.runOrder} runCount={kpis.runCount} isLoading={isLoading} />
+          <CasePassRatePanel bars={data.casePassRate} isLoading={isLoading} />
         </div>
       </div>
       <MetricTrends

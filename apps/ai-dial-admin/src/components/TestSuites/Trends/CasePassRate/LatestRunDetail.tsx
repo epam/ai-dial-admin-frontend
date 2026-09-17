@@ -37,7 +37,7 @@ const LatestRunDetail: FC<Props> = ({ detail }) => {
         readout starts a row higher and the card is shorter. Below xl the columns stack, where a
         heading in the header would sit far from the content it names.
       */}
-      <p className="dial-body-semi-text text-primary xl:hidden">{t(TestSuitesI18nKey.CasePassRateLatestRun)}</p>
+      <p className="dial-body-semi-text text-primary xl:hidden">{t(TestSuitesI18nKey.TrendsLatestRun)}</p>
 
       <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
         {bar.href ? (

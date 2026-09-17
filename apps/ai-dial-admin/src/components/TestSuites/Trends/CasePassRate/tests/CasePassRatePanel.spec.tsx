@@ -71,7 +71,7 @@ describe('CasePassRatePanel', () => {
     render(<CasePassRatePanel bars={bars(3)} />);
 
     // One copy per breakpoint: the header cell is `xl:block`, the readout's own is `xl:hidden`.
-    expect(screen.getAllByText('TestSuites.CasePassRateLatestRun')).toHaveLength(2);
+    expect(screen.getAllByText('TestSuites.TrendsLatestRun')).toHaveLength(2);
   });
 
   test('fills the half of the row it is given', () => {
