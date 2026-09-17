@@ -1,31 +1,11 @@
-# config-file-entity-views Specification
+## MODIFIED Requirements
 
-## Purpose
-The UI surface that exposes DIAL Core's config-file entity population on platform and asset list
-views, behind a `showConfigFiles` toggle that renders on the covered views regardless of whether the
-admin backend is configured — with it, the toggle offers Core's config-file population alongside the
-admin-backend one. Allows an admin to view read-only, config-file-sourced entity detail pages by navigating
-from the toggled-on list, without introducing new routes. Covers the toggle's placement and
-persistence, the shared name-only list component swap, the lazy names-only data fetch, and the
-`configFile=true` detail page rendering on platform/asset routes. Created by archiving change
-`add-config-file-entity-views`; expanded to cover App Runners as a seventh entity type by
-`expand-config-file-entity-views`; the toggle made always-visible by
-`always-show-config-files-toggle`. Catalog Schemas was covered as an eighth type by
-`apply-catalog-schemas-to-deployments` and withdrawn again by
-`remove-catalog-schemas-config-file-view` — that view carries no toggle.
-
-## Requirements
-
-### Requirement: `showConfigFiles` toggle exists in `AppContext`
-The system SHALL expose a `showConfigFiles: boolean` value and a toggle function on `AppContextType`, defaulting to `false` and persisted to `localStorage` the same way `sidebarOpen` is (read on mount, written on every toggle).
-
-#### Scenario: Default value is false
-- **WHEN** the app loads with no prior stored value
-- **THEN** `showConfigFiles` is `false`
-
-#### Scenario: Toggling persists across reloads
-- **WHEN** a user toggles `showConfigFiles` on and reloads the app
-- **THEN** `showConfigFiles` is still `true`
+<!--
+The Catalog Schemas scenario below was authored as `Toggle appears on Catalog Schemas` with inverted
+content, because a MODIFIED requirement may not drop a scenario the current spec still has — no
+route could rename it. It was renamed to its present heading when this delta was synced into the
+consolidated spec.
+-->
 
 ### Requirement: The toggle control is rendered only where it applies
 The system SHALL render a `showConfigFiles` toggle control, placed adjacent to the page title, on exactly seven views: `platform-models`, `platform-interceptors`, `platform-routes`, `platform-roles`, `platform-app-runners`, `assets-applications`, and `assets-toolsets` — regardless of whether `featureFlags.adminApiEnabled` is set. The control SHALL NOT be rendered on `platform-keys`, `platform-catalog-schemas`, or any other route.
@@ -98,45 +78,20 @@ The system SHALL navigate to the entity type's platform/asset detail route (`/pl
 - **WHEN** a user activates the "open in new tab" row action on a config-file-backed list row
 - **THEN** the new tab opens the same platform/asset detail route the row click would (e.g. `/platform-models/{id}?configFile=true`), not the bare detail route
 
-### Requirement: A detail page opened with `configFile=true` renders read-only, sourced from Core's config file
-When a covered entity's platform/asset detail route (`platform-models/[id]`, `assets-applications/[id]`, `platform-interceptors/[id]`, `platform-routes/[id]`, `platform-roles/[id]`, `assets-toolsets/[id]`, `platform-app-runners/[id]`) is requested with `configFile=true`, the system SHALL fetch the entity via `configFileApi` instead of the platform/asset entity's normal fetch, SHALL resolve any embedded Roles/Interceptors picker through the config-file-aware read, and SHALL render the platform/asset view read-only — no field on the page SHALL be editable, regardless of the viewer's own admin role. The view SHALL NOT render the ADMIN|CORE format toggle when its JSON editor is opened, since a config-file-sourced entity has no admin-backend "compare with Core" projection of its own to switch to — it already is Core's own view. The entity type's bare/admin-grid detail route SHALL NOT respond to `configFile=true` — it has no config-file branch.
-
-#### Scenario: A config-file-sourced model detail view is read-only
-- **WHEN** a user opens `/platform-models/{id}?configFile=true`
-- **THEN** the model is read from `configFileApi`, and every field on the page is disabled
-
-#### Scenario: The view returns to normal after leaving
-- **WHEN** a user navigates away from a `configFile=true` detail view to any other page
-- **THEN** that other page is not read-only as a result of having visited the config-file view
-
-#### Scenario: Direct navigation to a covered detail route with the flag works without the admin API
-- **WHEN** `DIAL_ADMIN_API_URL` is unset and a user navigates directly to `/platform-interceptors/{id}?configFile=true`
-- **THEN** the page renders the config-file-sourced interceptor read-only, rather than redirecting home
-
-#### Scenario: A config-file-sourced App Runner detail view is read-only
-- **WHEN** a user opens `/platform-app-runners/{id}?configFile=true`
-- **THEN** the runner is read from `configFileApi`, and every field on the page is disabled
-
-#### Scenario: The format toggle is hidden on a config-file-sourced detail view
-- **WHEN** a user opens the JSON editor on any `configFile=true` detail view
-- **THEN** no ADMIN|CORE format selector is rendered, only the editor itself
-
-#### Scenario: The format toggle still renders on the equivalent admin-backend view
-- **WHEN** a user opens the JSON editor on the platform/asset detail view without `configFile=true`
-- **THEN** the ADMIN|CORE format selector renders as before this change
-
-#### Scenario: The bare admin-grid detail route ignores the config-file flag
-- **WHEN** a user navigates to `/models/{id}?configFile=true`
-- **THEN** the page behaves exactly as `/models/{id}` without the flag — the admin-grid view, not a config-file read
-
-### Requirement: App Runners is a covered config-file entity type
-The system SHALL treat App Runners (`platform-app-runners` / `application-runners`) as a seventh covered entity type, on equal footing with the original six, reading its config-file population under `ConfigFileEntityType.Schemas`.
-
-#### Scenario: App Runners' config-file list is reachable the same way as the other six
-- **WHEN** a user turns `showConfigFiles` on for `platform-app-runners`
-- **THEN** the config-file-backed list renders, fetching App Runner names from Core's config-file `schemas` type
-
 #### Scenario: An App Runner config-file row opens its detail route with the query flag
 - **WHEN** a user clicks a row in the config-file-backed App Runners list
 - **THEN** the browser navigates to `/application-runners/{id}?configFile=true`
 
+## REMOVED Requirements
+
+### Requirement: Catalog schemas are a covered config-file type
+
+**Reason**: This surface covers the views whose population is split between the admin backend and
+Core's configuration file. Catalog Schemas was added as an eighth type because Core exposes
+`catalog_schemas` on its file-config route, which is a statement about Core, not about which views
+carry the toggle — Issue #4605 reports the resulting toggle as a bug.
+
+**Migration**: None for stored data; nothing was written through this surface. A file-declared
+catalog schema stays readable at its own detail address, which resolves either population and
+renders a file-declared schema read-only — see `platform-catalog-schemas`. Operators who need the
+full list of file-declared schemas read Core's own `/v1/admin/config/file/catalog_schemas` route.
