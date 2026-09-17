@@ -13,6 +13,7 @@ export const PLATFORM_ROOT_FOLDER = 'platform';
 const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformInterceptors,
   ApplicationRoute.PlatformTranslators,
   ApplicationRoute.PlatformRoutes,

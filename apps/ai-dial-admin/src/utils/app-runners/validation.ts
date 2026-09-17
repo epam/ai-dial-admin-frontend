@@ -1,8 +1,9 @@
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { CORE_ROUTE_METHODS, CORE_UNENCODABLE_ID_CHARS } from './constants';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
+import { CORE_ROUTE_METHODS } from './constants';
 import { CORE_ROUTE_NAME_PATTERN, getCoreRouteName } from './core-app-routes';
-import { hasUnencodableRunnerIdChars } from './core-runner-name';
+import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
 
 export interface AppRunnerValidationError {
   field: string;
@@ -66,7 +67,7 @@ export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValid
     errors.push({ field: '$id', message: 'Id is required' });
   } else if (typeof runner.$id !== 'string') {
     errors.push({ field: '$id', message: 'Id must be a string' });
-  } else if (hasUnencodableRunnerIdChars(runner.$id)) {
+  } else if (hasUnencodableSchemaIdChars(runner.$id)) {
     errors.push({ field: '$id', message: `Id must not contain any of ${CORE_UNENCODABLE_ID_CHARS.join(' ')}` });
   }
 

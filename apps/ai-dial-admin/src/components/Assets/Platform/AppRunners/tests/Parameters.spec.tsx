@@ -11,7 +11,12 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
 }));
 
 vi.mock('@/src/components/Common/SchemaGrid/SchemaGrid', () => ({
-  default: ({ isReadonly }: any) => <div>schema-grid:readonly={String(isReadonly)}</div>,
+  default: ({ isReadonly, schema, onChange }: any) => (
+    <div>
+      <div>schema-grid:readonly={String(isReadonly)}</div>
+      <button onClick={() => onChange(schema)}>emit-schema</button>
+    </div>
+  ),
 }));
 
 const ENDPOINT = 'dial:applicationTypeSchemaEndpoint';
@@ -54,6 +59,28 @@ describe('AppRunnerAssetParameters', () => {
     });
     expect(screen.getByText('Failed to download application schema')).toBeInTheDocument();
     expect(screen.queryByText(EntitiesI18nKey.NoConfigurationSchema)).not.toBeInTheDocument();
+  });
+
+  test('Should merge the grid schema into the runner without dropping its properties', async () => {
+    const properties = {
+      attachment: {
+        type: 'string',
+        format: 'dial-file-encoded',
+        'dial:file': true,
+        'dial:meta': { 'dial:propertyKind': 'client' },
+      },
+    };
+    const onChange = vi.fn();
+
+    render(
+      <AppRunnerAssetParameters
+        runner={runner({ properties } as Partial<DialAppRunnerResource>)}
+        onChange={onChange}
+      />,
+    );
+    (await screen.findByText('emit-schema')).click();
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ properties }), undefined);
   });
 
   test('Should show the no-parameters state when the runner genuinely has none', async () => {

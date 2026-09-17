@@ -1093,6 +1093,151 @@ describe('fieldsToJsonSchema and jsonSchemaToFields round-trip', () => {
   });
 });
 
+describe('fieldsToJsonSchema preserves keywords the grid does not render', () => {
+  const dialSchema: JSONSchema7 = {
+    type: 'object',
+    properties: {
+      badge: {
+        type: 'string',
+        format: 'dial-file-encoded',
+        'dial:file': true,
+        'dial:meta': { 'dial:tab': 'Summary', 'dial:widget': 'image' },
+      } as JSONSchema7,
+      spec: {
+        type: 'object',
+        properties: {
+          logo: {
+            type: 'string',
+            format: 'dial-file-encoded',
+            'dial:file': true,
+            'dial:meta': { 'dial:widget': 'image' },
+          } as JSONSchema7,
+          note: { type: 'string', 'dial:meta': { 'dial:localized': true } } as JSONSchema7,
+        },
+      },
+    },
+  };
+
+  test('should round-trip format, dial:file and dial:meta at every nesting depth', () => {
+    const result = fieldsToJsonSchema(jsonSchemaToFields(dialSchema));
+
+    expect(result).toEqual(dialSchema);
+  });
+
+  test('should keep those keywords when an unrelated field is edited', () => {
+    const fields = jsonSchemaToFields(dialSchema);
+    const edited = fields.map((field) => (field.name === 'spec' ? { ...field, description: 'Specification' } : field));
+
+    const result = fieldsToJsonSchema(edited);
+    const badge = result.properties!.badge as JSONSchema7 & Record<string, unknown>;
+    const spec = result.properties!.spec as JSONSchema7 & Record<string, unknown>;
+    const logo = spec.properties!.logo as JSONSchema7 & Record<string, unknown>;
+
+    expect(badge.format).toEqual('dial-file-encoded');
+    expect(badge['dial:file']).toBe(true);
+    expect(badge['dial:meta']).toEqual({ 'dial:tab': 'Summary', 'dial:widget': 'image' });
+    expect(spec.description).toEqual('Specification');
+    expect(logo['dial:file']).toBe(true);
+    expect(logo['dial:meta']).toEqual({ 'dial:widget': 'image' });
+  });
+
+  test('should round-trip an app-runner-shaped property carrying dial:propertyKind beside dial:file', () => {
+    const runnerSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        secret: {
+          type: 'string',
+          'dial:meta': { 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 },
+        } as JSONSchema7,
+        attachment: {
+          type: 'string',
+          format: 'dial-file-encoded',
+          'dial:file': true,
+          'dial:meta': { 'dial:propertyKind': 'client' },
+        } as JSONSchema7,
+      },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(runnerSchema));
+
+    expect(result).toEqual(runnerSchema);
+  });
+
+  test('should round-trip the value keywords the grid reads but never edits', () => {
+    const valueSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        tier: { type: 'string', enum: ['gold', 'silver'], default: 'gold', pattern: '^[a-z]+$' },
+        weight: { type: 'number', minimum: 1, maximum: 10, default: 3 },
+        counts: { type: 'object', properties: { retries: { type: 'integer', default: 2, maximum: 5 } } },
+      },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(valueSchema));
+
+    expect(result).toEqual(valueSchema);
+  });
+
+  test('should keep a numeric enum numeric rather than stringifying it', () => {
+    const numericEnum: JSONSchema7 = { type: 'object', properties: { size: { type: 'integer', enum: [1, 2, 3] } } };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(numericEnum));
+
+    expect((result.properties!.size as JSONSchema7).enum).toEqual([1, 2, 3]);
+  });
+
+  test('should keep a default through an unrelated edit, so schema defaults survive', () => {
+    const withDefault: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        model: { type: 'string', default: 'gpt-4' },
+        label: { type: 'string' },
+      },
+    };
+    const fields = jsonSchemaToFields(withDefault);
+    const edited = fields.map((field) => (field.name === 'label' ? { ...field, title: 'Label' } : field));
+
+    const result = fieldsToJsonSchema(edited);
+
+    expect((result.properties!.model as JSONSchema7).default).toEqual('gpt-4');
+  });
+
+  test('should not re-emit a $ref alongside the resolved type it was expanded into', () => {
+    const withRef: JSONSchema7 = {
+      type: 'object',
+      definitions: { named: { type: 'string', title: 'Named' } },
+      properties: { alias: { $ref: '#/definitions/named' } },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(withRef));
+    const alias = result.properties!.alias as JSONSchema7;
+
+    expect(alias).not.toHaveProperty('$ref');
+    expect(alias.type).toEqual('string');
+  });
+
+  test('should not invent the keywords for a property that never declared them', () => {
+    const plain: JSONSchema7 = { type: 'object', properties: { name: { type: 'string' } } };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(plain));
+    const name = result.properties!.name as JSONSchema7 & Record<string, unknown>;
+
+    expect(name).not.toHaveProperty('format');
+    expect(name).not.toHaveProperty('dial:file');
+    expect(name).not.toHaveProperty('dial:meta');
+  });
+});
+
+describe('fieldsToJsonSchema drops an emptied dial:meta', () => {
+  test('should omit dial:meta entirely when a row carries none', () => {
+    const fields = jsonSchemaToFields({ type: 'object', properties: { a: { type: 'string' } } });
+
+    const result = fieldsToJsonSchema(fields.map((field) => ({ ...field, dialMeta: {} })));
+
+    expect(result.properties!.a).not.toHaveProperty('dial:meta');
+  });
+});
+
 describe('flattenFields', () => {
   test('should return only the add-root-field row for empty fields', () => {
     const result = flattenFields([]);

@@ -13,6 +13,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.Files]: MenuI18nKey.Files,
   [ApplicationRoute.PlatformModels]: MenuI18nKey.Models,
   [ApplicationRoute.PlatformAppRunners]: MenuI18nKey.PlatformAppRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: MenuI18nKey.PlatformCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: MenuI18nKey.PlatformInterceptors,
   [ApplicationRoute.PlatformRoutes]: MenuI18nKey.PlatformRoutes,
   [ApplicationRoute.PlatformRoles]: MenuI18nKey.PlatformRoles,

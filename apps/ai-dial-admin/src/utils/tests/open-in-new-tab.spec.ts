@@ -240,6 +240,22 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('http%3A%2F%2Frunner');
   });
 
+  test('Should double-encode a catalog-schema name the same way an app-runner name is encoded', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' });
+    expect(result).toEqual('https%253A%252F%252Fhost%252Fagent');
+  });
+
+  test('Should produce the same catalog-schema segment from $id as from a row-click name', () => {
+    const fromId = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { $id: 'https://host/agent' });
+    const fromRowClickName = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https://host/agent' });
+    expect(fromId).toEqual(fromRowClickName);
+  });
+
+  test('Should return the singly-encoded Core path for a catalog schema when forRemove is true', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' }, true);
+    expect(result).toEqual('https%3A%2F%2Fhost%2Fagent');
+  });
+
   test('Should return encoded name for PlatformRoutes (no ?path= appended)', () => {
     const result = getEntityPath(ApplicationRoute.PlatformRoutes, { name: 'my-route' });
     expect(result).toEqual('my-route');

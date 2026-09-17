@@ -19,6 +19,7 @@ export enum ApplicationRoute {
   // Platform entities
   PlatformModels = '/platform-models',
   PlatformAppRunners = '/platform-app-runners',
+  PlatformCatalogSchemas = '/platform-catalog-schemas',
   PlatformInterceptors = '/platform-interceptors',
   PlatformTranslators = '/platform-translators',
   PlatformRoutes = '/platform-routes',

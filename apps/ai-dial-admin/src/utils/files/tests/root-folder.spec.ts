@@ -13,6 +13,7 @@ describe('Root Folder Utils :: getRootFolder', () => {
   test.each([
     ApplicationRoute.PlatformModels,
     ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformCatalogSchemas,
     ApplicationRoute.PlatformInterceptors,
     ApplicationRoute.PlatformRoutes,
     ApplicationRoute.PlatformRoles,
@@ -36,6 +37,7 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
   test.each([
     ApplicationRoute.PlatformModels,
     ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformCatalogSchemas,
     ApplicationRoute.PlatformInterceptors,
     ApplicationRoute.PlatformRoutes,
     ApplicationRoute.PlatformRoles,

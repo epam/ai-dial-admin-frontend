@@ -109,6 +109,11 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
+    // A duplicate would reuse the `$id`, which Core rejects with a conflict.
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformAppRunners:
     case ApplicationRoute.PlatformInterceptors:
@@ -184,6 +189,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.AppRunner,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.CatalogSchema,
           icon: null,
         },
       ];
@@ -383,6 +396,7 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
     case ApplicationRoute.PlatformRoutes:
@@ -391,6 +405,7 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.PlatformModels: {
       const itemLabel = (() => {
         if (view === ApplicationRoute.PlatformAppRunners) return FileManagerI18nKey.AppRunner;
+        if (view === ApplicationRoute.PlatformCatalogSchemas) return FileManagerI18nKey.CatalogSchema;
         if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
