@@ -160,7 +160,9 @@ const BaseEntityList = <T extends object>({
         view={route}
         onGridReady={onGridReady}
         getHref={(data) =>
-          isConfigFileSource ? appendUrlQuery(getUrnForEntity(route, data), CONFIG_FILE_URL_SUFFIX) : getUrnForEntity(route, data)
+          isConfigFileSource
+            ? appendUrlQuery(getUrnForEntity(route, data), CONFIG_FILE_URL_SUFFIX)
+            : getUrnForEntity(route, data)
         }
         headerExtra={headerExtra}
       >

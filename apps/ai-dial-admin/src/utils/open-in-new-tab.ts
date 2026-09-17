@@ -17,8 +17,7 @@ export const escapePercentSign = (str: string): string => {
  * a second `?` (encoded by the router as `%3F…`) on query-carrying routes (Issue #4590);
  * `Assets/Resources/utils.ts`'s `setUrl` is the same check for the toolset-auth redirect.
  */
-export const appendUrlQuery = (url: string, query: string): string =>
-  `${url}${url.includes('?') ? '&' : '?'}${query}`;
+export const appendUrlQuery = (url: string, query: string): string => `${url}${url.includes('?') ? '&' : '?'}${query}`;
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, urlSuffix?: string) => {
   const urn = getUrnForEntity(route, entity);
@@ -78,7 +77,9 @@ export const getEntityPath = (
       }
 
       if (entity.path == null && entity.folderId == null) {
-        return forRemove ? decodeURIComponent(escapePercentSign(entity.name || '')) : encodeURIComponent(entity.name || '');
+        return forRemove
+          ? decodeURIComponent(escapePercentSign(entity.name || ''))
+          : encodeURIComponent(entity.name || '');
       }
 
       const path = version
