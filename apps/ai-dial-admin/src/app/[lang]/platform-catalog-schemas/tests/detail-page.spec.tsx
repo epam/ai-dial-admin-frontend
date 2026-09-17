@@ -39,7 +39,11 @@ describe('Catalog schema detail page :: resolving either population', () => {
   });
 
   test('reads the API-written half first, under the route segment as Core stores it', async () => {
-    vi.mocked(getCatalogSchema).mockResolvedValue({ success: true, response: { $id: SCHEMA_ID }, etag: 'etag-1' });
+    vi.mocked(getCatalogSchema).mockResolvedValue({
+      success: true,
+      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      etag: 'etag-1',
+    });
 
     const rendered = await renderPage();
 
