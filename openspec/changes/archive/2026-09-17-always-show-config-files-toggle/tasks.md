@@ -10,7 +10,7 @@
 ## 3. Quality checks
 
 - [x] 3.1 Sweep the touched feature's specs (`ConfigFilesToggle`, `ConfigFileListSwap`, `BaseAssetList`, the `PageList` specs, `EntityListView.spec`) for any other assertion that the toggle is hidden when `adminApiEnabled` is `true`, and update them to the new behavior
-- [ ] 3.2 Run `npx vitest run src/components/Common/ConfigFilesToggle/tests/ConfigFilesToggle.spec.tsx` from `apps/ai-dial-admin/`, then the full gates: `npm run lint`, `npm run typecheck`, `npm run test`
+- [x] 3.2 Run `npx vitest run src/components/Common/ConfigFilesToggle/tests/ConfigFilesToggle.spec.tsx` from `apps/ai-dial-admin/`, then the full gates: `npm run lint`, `npm run typecheck`, `npm run test`
 
 ## 4. Browser verification
 

@@ -95,6 +95,10 @@ failure in full.
 
 ## 4. Browser verification
 
+**Not run.** Archived on 2026-09-17 at the owner's request, with the change already merged to
+`development` (PR #4495). The four scenarios below were never sent to a browser; every other
+scenario of this change is covered by the unit tests in 1.2, 2.4 and 3.5.
+
 - [ ] 4.1 Run the `spec-browser-verify` skill against the local app (`http://localhost:4200` —
   `npm start` is `nx serve ai-dial-admin`, which listens on 4200, not 3000) for exactly four
   scenarios: `Single date commits through the end of today`,
