@@ -25,17 +25,10 @@ const KpiStrip: FC<Props> = ({ kpis }) => {
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-stretch">
       <TrendsKpiCard
         className="flex-1 sm:min-w-[180px]"
-        title={titleWithRuns(t(RunsI18nKey.OverallScore))}
+        title={`${t(RunsI18nKey.OverallScore)} · ${t(TestSuitesI18nKey.TrendsLatestRun)}`}
         value={kpis.latestOverallScore != null ? formatScore(kpis.latestOverallScore) : undefined}
         description={t(RunsI18nKey.OverallScoreDescription)}
         isError={kpis.latestOverallScore == null}
-      />
-      <TrendsKpiCard
-        className="flex-1 sm:min-w-[180px]"
-        title={titleWithRuns(t(TestSuitesI18nKey.AvgTestSuiteRunTime))}
-        value={kpis.avgRunTimeMs != null ? formatSuiteRunTime(kpis.avgRunTimeMs) : undefined}
-        description={t(TestSuitesI18nKey.AvgPerRuns, { count: kpis.runCount })}
-        isError={kpis.avgRunTimeMs == null}
       />
       <ScoreRangeCard
         className={classNames('flex-1 sm:min-w-[180px]')}
@@ -48,6 +41,13 @@ const KpiStrip: FC<Props> = ({ kpis }) => {
       {kpis.thresholdStats != null && (
         <RunsPassedThresholdCard className="flex-1 sm:min-w-[180px]" stats={kpis.thresholdStats} />
       )}
+      <TrendsKpiCard
+        className="flex-1 sm:min-w-[180px]"
+        title={titleWithRuns(t(TestSuitesI18nKey.AvgTestSuiteRunTime))}
+        value={kpis.avgRunTimeMs != null ? formatSuiteRunTime(kpis.avgRunTimeMs) : undefined}
+        description={t(TestSuitesI18nKey.AvgPerRuns, { count: kpis.runCount })}
+        isError={kpis.avgRunTimeMs == null}
+      />
     </div>
   );
 };

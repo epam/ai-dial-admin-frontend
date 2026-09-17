@@ -13,6 +13,7 @@ import {
   getRunResults,
   getRuns,
   getMetricSnapshots,
+  getTestCasePassRate,
   getTestCaseRunResultDetails,
   getTestCaseRunResults,
   removeRun,
@@ -84,6 +85,17 @@ describe('Runs :: server actions', () => {
     const result = await cancelRun('run-id');
 
     expect(result).toEqual(errorResponse);
+  });
+
+  test('delegates getTestCasePassRate to the analytics api with the suite id, window and token', async () => {
+    const response = { testSuiteId: 'suite-1', runs: [] };
+    (analyticsApi.getTestCasePassRate as any).mockResolvedValue(response);
+
+    const result = await getTestCasePassRate('suite-1', 10);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getTestCasePassRate).toHaveBeenCalledWith('suite-1', 10, TOKEN_MOCK);
+    expect(result).toEqual(response);
   });
 
   test('Should call getRunResults action and return extraction results', async () => {

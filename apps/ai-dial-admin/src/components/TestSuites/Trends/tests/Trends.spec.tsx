@@ -8,6 +8,7 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   executeStructuredQuery: vi.fn(),
+  getTestCasePassRate: vi.fn(),
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -46,9 +47,10 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
   DialSegmentedControl: () => <div>segments</div>,
   DialEllipsisTooltip: ({ text }: { text: string }) => <span>{text}</span>,
+  DialTooltip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
-import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getTestCasePassRate } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 
 describe('Trends', () => {
@@ -56,6 +58,9 @@ describe('Trends', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: the case-pass-rate endpoint is unavailable, so its panel stays out of the way of
+    // the assertions the other cards make.
+    (getTestCasePassRate as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   test('shows info message when there are no runs', async () => {
@@ -134,6 +139,44 @@ describe('Trends', () => {
     expect(screen.queryByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).not.toBeInTheDocument();
   });
 
+  test('renders the Cases Passed panel after the KPI strip and the Overall Score Trend chart', async () => {
+    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [] });
+    (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: [{ id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 400 }],
+    });
+    (getTestCasePassRate as ReturnType<typeof vi.fn>).mockResolvedValue({
+      testSuiteId: 'suite-1',
+      runs: [
+        {
+          testSuiteRunId: 'run-1',
+          failedCount: 1,
+          successPassedCount: 25,
+          successNotPassedCount: 3,
+          successNoVerdictCount: 0,
+          totalCount: 29,
+        },
+      ],
+    });
+
+    render(<Trends selectedTestSuite={suite} />);
+
+    const panelHeading = await screen.findByRole('heading', { name: new RegExp(TestSuitesI18nKey.CasesPassed) });
+    const chartHeading = screen.getByRole('heading', { name: new RegExp(TestSuitesI18nKey.OverallScoreTrend) });
+    const kpiTitle = screen.getByText(new RegExp(TestSuitesI18nKey.AvgTestSuiteRunTime));
+
+    expect(kpiTitle.compareDocumentPosition(chartHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(chartHeading.compareDocumentPosition(panelHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Whether the two sit in one row or stack is decided entirely by classes - the DOM is the same
+    // either way - and jsdom computes no layout, so the split can only be asserted through the
+    // classes that declare it.
+    const panelHalf = panelHeading.closest('.xl\\:w-1\\/2');
+    const chartHalf = chartHeading.closest('.xl\\:w-1\\/2');
+
+    expect(panelHalf?.parentElement).toBe(chartHalf?.parentElement);
+    expect(panelHalf?.parentElement).toHaveClass('xl:flex-row');
+  });
+
   test('shows Runs Passed Threshold card when suite threshold is set', async () => {
     (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
       rows: [
@@ -163,8 +206,9 @@ describe('Trends', () => {
     render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.5 }} />);
 
     await waitFor(() => {
-      expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
-      expect(screen.getByText(new RegExp(TestSuitesI18nKey.TrendsLastNRuns))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toHaveTextContent(
+        TestSuitesI18nKey.TrendsLastNRuns,
+      );
       expect(screen.getByText('/ 2')).toBeInTheDocument();
       expect(screen.getByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
       expect(screen.getByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();
