@@ -473,6 +473,18 @@ const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 
 /**
+ * Formats elapsed milliseconds as `MM:SS` for the cost-card calculating description.
+ * Negative or non-finite input is treated as zero.
+ */
+export const formatElapsedMmSs = (ms: number): string => {
+  const safeMs = !Number.isFinite(ms) || ms < 0 ? 0 : ms;
+  const totalSeconds = Math.floor(safeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+/**
  * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite
  * so callers can render an em dash. Zero is a real value (`$0`).
  */

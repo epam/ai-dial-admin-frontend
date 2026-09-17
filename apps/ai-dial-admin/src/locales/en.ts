@@ -2299,6 +2299,8 @@ export default {
     TestCaseLlmCost: 'Test Case LLM Cost',
     MetricEvalCost: 'Metric-Eval Cost',
     CostDataUnavailable: 'Cost data unavailable',
+    Calculating: 'Calculating…',
+    CostCalculatingElapsed: '{elapsed} elapsed · usually under 2 min',
     AvgPerTestCase: 'avg per test case',
     Pass: 'pass',
     Fail: 'fail',
