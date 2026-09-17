@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { SuiteType, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { IndexedTryOutItem } from '@/src/utils/evaluation/tryout-sections';
 import {
   getRequestTurnCounts,
   getTryOutSectionShape,
@@ -89,7 +90,7 @@ describe('shouldShowTurnLabels', () => {
 
 describe('groupTryOutSections', () => {
   test('multi-turn only slices under one request', () => {
-    const items = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    const items: (IndexedTryOutItem & { id: string })[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
     expect(groupTryOutSections(items, [3])).toEqual([
       {
         requestIndex: 0,
@@ -103,7 +104,7 @@ describe('groupTryOutSections', () => {
   });
 
   test('multi-request only puts one turn per request', () => {
-    const items = [{ id: 'r0' }, { id: 'r1' }];
+    const items: (IndexedTryOutItem & { id: string })[] = [{ id: 'r0' }, { id: 'r1' }];
     expect(groupTryOutSections(items, [1, 1])).toEqual([
       { requestIndex: 0, turns: [{ turnIndex: 0, item: items[0] }] },
       { requestIndex: 1, turns: [{ turnIndex: 0, item: items[1] }] },
@@ -111,7 +112,7 @@ describe('groupTryOutSections', () => {
   });
 
   test('combined uses request-major order', () => {
-    const items = [{ id: '0-0' }, { id: '0-1' }, { id: '1-0' }, { id: '1-1' }];
+    const items: (IndexedTryOutItem & { id: string })[] = [{ id: '0-0' }, { id: '0-1' }, { id: '1-0' }, { id: '1-1' }];
     expect(groupTryOutSections(items, [2, 2])).toEqual([
       {
         requestIndex: 0,
@@ -131,7 +132,7 @@ describe('groupTryOutSections', () => {
   });
 
   test('mixed turn counts and short history stop early', () => {
-    const items = [{ id: 'r0' }, { id: 'r1-t0' }];
+    const items: (IndexedTryOutItem & { id: string })[] = [{ id: 'r0' }, { id: 'r1-t0' }];
     expect(groupTryOutSections(items, [1, 3])).toEqual([
       { requestIndex: 0, turns: [{ turnIndex: 0, item: items[0] }] },
       { requestIndex: 1, turns: [{ turnIndex: 0, item: items[1] }] },

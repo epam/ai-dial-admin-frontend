@@ -4,7 +4,7 @@ import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { CreatePipelineDto, PipelineEnabledFilter, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
-import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -165,7 +165,12 @@ describe('Server :: AnalyticsDataApi', () => {
   });
 
   test('createTable POSTs the identity-only create payload to /v1/tables', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, description: 'Raw events' };
+    const dto: CreateTableDto = {
+      name: 'events',
+      type: AnalyticsTableType.Source,
+      description: 'Raw events',
+      write: TableWriteMode.Append,
+    };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.createTable(dto, TOKEN_MOCK);

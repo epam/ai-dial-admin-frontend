@@ -112,7 +112,7 @@ describe('AppRunners :: merged picker', () => {
   test('a platform runner whose content $id was edited resolves and stores the corrected id, not the picker option $id', async () => {
     vi.mocked(getRunner).mockResolvedValueOnce({
       success: true,
-      response: { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' },
+      response: { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe', name: 'edited', folderId: 'public' },
     });
     const onChangeValue = vi.fn();
     render(

@@ -7,7 +7,7 @@ import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
-  chat_id: 'chat-1',
+  client_session_id: 'conversations/chat-1',
   project_id: 'internal-copilot',
   user_hash: 'db7327ba3decd351',
   turn_count: 3,
