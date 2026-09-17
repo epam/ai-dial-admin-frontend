@@ -55,8 +55,16 @@ describe('onCellClicked', () => {
     expect(window.open).not.toHaveBeenCalled();
   });
 
-  test('appends the url suffix when provided', () => {
-    onCellClicked(makeEvent(), route, push, '?configFile=true');
+  test('appends the url suffix with ? when the URN has no query string', () => {
+    onCellClicked(makeEvent(), route, push, 'configFile=true');
     expect(push).toHaveBeenCalledWith('/adapters/entity-1?configFile=true');
+  });
+
+  test('appends the url suffix with & when the URN already has a query string', () => {
+    const data = { name: 'MyApp', path: 'public/MyApp__1.0', folderId: 'public/', version: '1.0' };
+    onCellClicked(makeEvent({ data }), ApplicationRoute.AssetsApplications, push, 'configFile=true');
+    expect(push).toHaveBeenCalledWith(
+      `/assets-applications/${encodeURIComponent('MyApp')}?path=${encodeURIComponent('public/MyApp__1.0')}&configFile=true`,
+    );
   });
 });
