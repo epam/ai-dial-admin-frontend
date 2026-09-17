@@ -1,10 +1,10 @@
 import { FC, useState } from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import MethodTabContent from '../MethodTabContent';
 
@@ -13,16 +13,16 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getDeploymentById: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('@/src/components/TestSuites/RequestTemplate/RequestTemplate', () => ({
-  default: ({ testSuite, onChangeTestSuite, jsonataVariables }: any) => (
+vi.mock('@/src/components/TestSuites/View/RequestDynamicConfiguration', () => ({
+  default: ({ requestView, onChangeRequestView, title }: any) => (
     <div>
-      <span>RequestTemplate:{testSuite.endpointRef?.relativeUrlPattern ?? 'none'}</span>
-      <span>RequestTemplateVariables:{(jsonataVariables ?? []).map((v: any) => v.name).join(',')}</span>
+      <span>RequestDynamicConfiguration:{requestView.endpointRef?.relativeUrlPattern ?? 'none'}</span>
+      <span>RequestDynamicConfigurationTitle:{title ?? 'none'}</span>
       <button
         type="button"
-        onClick={() => onChangeTestSuite({ ...testSuite, requestTemplate: { urlTemplate: 'changed' } }, true)}
+        onClick={() => onChangeRequestView({ ...requestView, requestTemplate: { urlTemplate: 'changed' } }, true)}
       >
-        Change Request Template
+        Change Dynamic Configuration
       </button>
     </div>
   ),
@@ -37,8 +37,8 @@ vi.mock('@/src/components/TestSuites/EndpointSchema/EndpointSchema', () => ({
   ),
 }));
 
-vi.mock('@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal', () => ({
-  default: () => <div>ChangeMethodModal</div>,
+vi.mock('@/src/components/TestSuites/Modals/EditRequestWizard/EditRequestWizard', () => ({
+  default: ({ isNewRequest }: any) => <div>EditRequestWizard:{isNewRequest ? 'new' : 'edit'}</div>,
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/components/TryOutButton', () => ({
@@ -75,21 +75,36 @@ describe('MethodTabContent - request chain', () => {
   test('renders request chips for the suite and its additional requests', () => {
     render(<Harness initialSuite={baseSuite} />);
 
-    expect(screen.getByText('1. Main request')).toBeInTheDocument();
-    expect(screen.getByText('2. Second')).toBeInTheDocument();
+    expect(screen.getByText('Main request')).toBeInTheDocument();
+    expect(screen.getByText('Second')).toBeInTheDocument();
   });
 
-  test('shows the selected request data in RequestTemplate and EndpointSchema', async () => {
+  test('shows the selected request data in Dynamic Configuration and EndpointSchema', async () => {
     const user = userEvent.setup();
     render(<Harness initialSuite={baseSuite} />);
 
-    expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
+    expect(screen.getByText('RequestDynamicConfiguration:/v1/main')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
 
-    expect(screen.getByText('RequestTemplate:/v1/second')).toBeInTheDocument();
+    expect(screen.getByText('RequestDynamicConfiguration:/v1/second')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchema:/v1/second')).toBeInTheDocument();
-    expect(screen.queryByText('RequestTemplate:/v1/main')).not.toBeInTheDocument();
+    expect(screen.queryByText('RequestDynamicConfiguration:/v1/main')).not.toBeInTheDocument();
+  });
+
+  test('always titles Dynamic Configuration with the static heading, regardless of the chain', async () => {
+    const user = userEvent.setup();
+    render(<Harness initialSuite={baseSuite} />);
+
+    expect(
+      screen.getByText(`RequestDynamicConfigurationTitle:${TestSuitesI18nKey.DynamicConfiguration}`),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
+
+    expect(
+      screen.getByText(`RequestDynamicConfigurationTitle:${TestSuitesI18nKey.DynamicConfiguration}`),
+    ).toBeInTheDocument();
   });
 
   test('renders TryOutButton only for the first request', async () => {
@@ -98,7 +113,7 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.getByText('TryOut')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
 
     expect(screen.queryByText('TryOut')).not.toBeInTheDocument();
   });
@@ -109,12 +124,12 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.queryByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
 
     expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).toBeInTheDocument();
   });
 
-  test('passes the previous requests output columns to both editors as JSONata variables', async () => {
+  test('passes the previous requests output columns to EndpointSchema as JSONata variables', async () => {
     const user = userEvent.setup();
     const suiteWithColumns: TestSuite = {
       ...baseSuite,
@@ -122,12 +137,10 @@ describe('MethodTabContent - request chain', () => {
     };
     render(<Harness initialSuite={suiteWithColumns} />);
 
-    expect(screen.getByText('RequestTemplateVariables:')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchemaVariables:')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
 
-    expect(screen.getByText('RequestTemplateVariables:answer')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchemaVariables:answer')).toBeInTheDocument();
   });
 
@@ -139,33 +152,59 @@ describe('MethodTabContent - request chain', () => {
     };
     render(<Harness initialSuite={suiteWithColumns} />);
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
 
     expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo)).toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).not.toBeInTheDocument();
   });
 
-  test('adding a request appends an entry and selects it', async () => {
+  test('adding a request appends an entry, selects it, and opens the wizard as a new request', async () => {
     const user = userEvent.setup();
     render(<Harness initialSuite={baseSuite} />);
 
-    await user.click(screen.getByRole('button', { name: TestSuitesI18nKey.AddRequest }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
 
-    expect(screen.getByText(`3. ${TestSuitesI18nKey.Request}`)).toBeInTheDocument();
-    expect(screen.getByText('RequestTemplate:none')).toBeInTheDocument();
+    expect(screen.getByText(`${TestSuitesI18nKey.Request} 3`)).toBeInTheDocument();
+    expect(screen.getByText('RequestDynamicConfiguration:none')).toBeInTheDocument();
+    expect(screen.getByText('EditRequestWizard:new')).toBeInTheDocument();
+  });
+
+  test('opens the wizard for editing (not as a new request) via the Edit request button', async () => {
+    const user = userEvent.setup();
+    render(<Harness initialSuite={baseSuite} />);
+
+    expect(screen.queryByText(/EditRequestWizard:/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: TestSuitesI18nKey.EditRequest }));
+
+    expect(screen.getByText('EditRequestWizard:edit')).toBeInTheDocument();
   });
 
   test('removing a request drops the chip and reselects the previous one', async () => {
     const user = userEvent.setup();
     render(<Harness initialSuite={baseSuite} />);
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
-    const removeButtons = screen.getAllByRole('button', { name: TestSuitesI18nKey.RemoveRequest });
-    await user.click(removeButtons[0]);
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
+    const actionTriggers = screen.getAllByRole('button', { name: ButtonsI18nKey.Actions });
+    await user.click(actionTriggers[1]);
+    await user.click(screen.getByRole('menuitem', { name: ActionMenuOperationI18nKey.Delete }));
 
-    expect(screen.queryByText('2. Second')).not.toBeInTheDocument();
-    expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
-    expect(screen.getAllByText(/RequestTemplate:/)).toHaveLength(1);
+    expect(screen.queryByText('Second')).not.toBeInTheDocument();
+    expect(screen.getByText('RequestDynamicConfiguration:/v1/main')).toBeInTheDocument();
+    expect(screen.getAllByText(/RequestDynamicConfiguration:/)).toHaveLength(1);
+  });
+
+  test('renaming a request via the sidebar menu propagates the new name', async () => {
+    const user = userEvent.setup();
+    render(<Harness initialSuite={baseSuite} />);
+
+    const actionTriggers = screen.getAllByRole('button', { name: ButtonsI18nKey.Actions });
+    await user.click(actionTriggers[1]);
+    await user.click(screen.getByRole('menuitem', { name: ActionMenuOperationI18nKey.Rename }));
+    fireEvent.change(screen.getByDisplayValue('Second'), { target: { value: 'Renamed request' } });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
+
+    expect(screen.getByText('Renamed request')).toBeInTheDocument();
   });
 
   test('clamps the selection when an external reset shrinks the request chain', async () => {
@@ -173,16 +212,16 @@ describe('MethodTabContent - request chain', () => {
     const onChange = vi.fn();
     const { rerender } = render(<MethodTabContent testSuite={baseSuite} onChange={onChange} />);
 
-    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
-    expect(screen.getByText('RequestTemplate:/v1/second')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Second' }));
+    expect(screen.getByText('RequestDynamicConfiguration:/v1/second')).toBeInTheDocument();
 
     // Simulates an external reset (e.g. discard changes) replacing the suite prop with a shorter
     // chain, independent of this component's own onChange.
     const shrunkSuite: TestSuite = { ...baseSuite, additionalRequests: [] };
     rerender(<MethodTabContent testSuite={shrunkSuite} onChange={onChange} />);
 
-    expect(screen.queryByText('2. Second')).not.toBeInTheDocument();
-    expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
+    expect(screen.queryByText('Second')).not.toBeInTheDocument();
+    expect(screen.getByText('RequestDynamicConfiguration:/v1/main')).toBeInTheDocument();
     expect(screen.getByText('TryOut')).toBeInTheDocument();
   });
 
@@ -191,7 +230,7 @@ describe('MethodTabContent - request chain', () => {
     const onChange = vi.fn();
     render(<Harness initialSuite={baseSuite} onChange={onChange} />);
 
-    await user.click(screen.getByText('Change Request Template'));
+    await user.click(screen.getByText('Change Dynamic Configuration'));
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ id: 'suite-1' }), true);
   });
