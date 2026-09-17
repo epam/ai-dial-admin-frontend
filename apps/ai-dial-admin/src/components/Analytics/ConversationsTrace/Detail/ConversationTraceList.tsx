@@ -3,6 +3,7 @@
 import {
   DialEllipsisTooltip,
   DialLinkButton,
+  DialLoader,
   DialNoDataContent,
   DialNotification,
   NotificationVariant,
@@ -32,6 +33,7 @@ import { formatTimeToLocalString } from '@/src/utils/formatting/date';
 
 const ICON_SIZE = 14;
 const NOTIFICATION_ICON_SIZE = 16;
+const LOADER_SIZE = 18;
 
 const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-primary bg-layer-3 px-3 py-2.5';
 
@@ -371,9 +373,9 @@ const ConversationTraceList: FC<Props> = ({
         {/* This is the landing view and it fetches on mount, so without this the panel renders empty while it
             does — and again on every appended page. */}
         {isLoading && (
-          <p role="status" className="p-2 text-center text-secondary dial-tiny-text">
-            {t(BasicI18nKey.Loading)}
-          </p>
+          <div className="flex justify-center p-2">
+            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(BasicI18nKey.Loading)} />
+          </div>
         )}
         {/* A manual fallback for the observer: a viewport tall enough to hold every loaded card never
             intersects the sentinel, and the reader would otherwise have no way to ask for the next page. */}
