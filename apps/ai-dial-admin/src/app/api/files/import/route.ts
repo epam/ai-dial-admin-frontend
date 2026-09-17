@@ -11,6 +11,7 @@ import { importPlainFiles, importZipFile, InvalidImportZipError } from '@/src/se
 interface ImportConfig {
   path: string;
   conflictResolutionStrategy: string;
+  flatImport?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -39,7 +40,13 @@ export async function POST(req: NextRequest) {
   try {
     const outcome =
       fileType === ImportFileType.ARCHIVE
-        ? await importZipFile(formData.get('file') as File, config.path, upload, FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD)
+        ? await importZipFile(
+            formData.get('file') as File,
+            config.path,
+            upload,
+            FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD,
+            config.flatImport,
+          )
         : await importPlainFiles(
             formData.getAll('files') as File[],
             config.path,
