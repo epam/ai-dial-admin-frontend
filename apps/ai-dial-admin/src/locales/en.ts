@@ -2113,6 +2113,10 @@ export default {
     TrendsTooltipDate: 'Date:',
     TrendsTooltipRun: 'Run:',
     TrendsTooltipScore: 'Score:',
+    TestCaseStability: 'Test Case Stability',
+    TrendsStabilityTooltipTestCase: 'Test case:',
+    TrendsStabilityTooltipPassed: 'Passed:',
+    TrendsStabilityNotApplicable: 'N/A',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

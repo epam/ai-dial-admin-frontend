@@ -8,6 +8,7 @@ import MetricStatisticControl from '@/src/components/Common/MetricStatistics/Met
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import MetricTrendCard from '@/src/components/TestSuites/Trends/MetricTrendCard';
 import { MetricTrendGroup, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
+import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -41,9 +42,7 @@ const MetricTrends: FC<Props> = ({ runOrder, runCount, statistics, byStatistic, 
       title={
         <>
           {t(TestSuitesI18nKey.MetricTrends)}{' '}
-          <span className="font-normal text-secondary">
-            · {t(TestSuitesI18nKey.TrendsRunsCount, { count: runCount })}
-          </span>
+          <span className="dial-body-text text-secondary">· {formatTrendsRunsCountLabel(t, runCount)}</span>
         </>
       }
       control={

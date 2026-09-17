@@ -14,6 +14,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getRuns: vi.fn(),
 }));
 
+vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
+  default: () => <div data-testid="heat-map-grid" />,
+}));
+
 vi.mock('echarts-for-react', () => ({
   default: () => <div>chart</div>,
 }));
@@ -83,27 +87,35 @@ describe('Trends', () => {
       expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
       expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
       expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+      expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
     });
   });
 
   test('renders KPI and section titles when data is available', async () => {
-    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
-      rows: [
-        {
-          test_suite_run_id: 'run-1',
-          metric_name: 'overall',
-          metric_score_name: 'overall',
-          value: 0.58,
-          computed_at_ms: 1000,
-        },
-        {
-          test_suite_run_id: 'run-1',
-          metric_name: 'ragas.faithfulness',
-          metric_score_name: 'AVG',
-          value: 0.7,
-          computed_at_ms: 1000,
-        },
-      ],
+    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockImplementation(async (query: { entity?: string }) => {
+      if (query?.entity === 'eval_summaries') {
+        return {
+          rows: [{ test_suite_run_id: 'run-1', test_case_name: 'case-a', score: 0.5, passed: true }],
+        };
+      }
+      return {
+        rows: [
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'overall',
+            metric_score_name: 'overall',
+            value: 0.58,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'AVG',
+            value: 0.7,
+            computed_at_ms: 1000,
+          },
+        ],
+      };
     });
     (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
       content: [{ id: 'run-1', testRunName: 'Run#1', startedAt: 0, completedAt: 341 }],
@@ -115,6 +127,7 @@ describe('Trends', () => {
       expect(screen.getByText(TestSuitesI18nKey.TrendsSingleRunMessage)).toBeInTheDocument();
       expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
       expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
+      expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
       expect(screen.getByText('0.58')).toBeInTheDocument();
     });
 

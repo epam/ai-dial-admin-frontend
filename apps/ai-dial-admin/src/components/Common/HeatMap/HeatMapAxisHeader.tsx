@@ -11,15 +11,15 @@ import {
   HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING,
   HEAT_MAP_HEADER_VERTICAL_FONT_SIZE,
   HEAT_MAP_HEADER_VERTICAL_LINE_HEIGHT,
-} from '@/src/components/Runs/Compare/HeatMap/constants';
-import { shouldShowHeatMapCellValue } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
-import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
+} from '@/src/components/Common/HeatMap/constants';
+import { shouldShowHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 
 interface Props extends IHeaderParams {
   label?: string;
 }
 
-const HeatMapTestCaseHeader: FC<Props> = ({ displayName, label, column, api }) => {
+const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
   const headerLabel = label ?? displayName;
   const columnWidth = column?.getActualWidth() ?? 0;
   const isHorizontal = shouldShowHeatMapCellValue(columnWidth);
@@ -68,4 +68,4 @@ const HeatMapTestCaseHeader: FC<Props> = ({ displayName, label, column, api }) =
   );
 };
 
-export default HeatMapTestCaseHeader;
+export default HeatMapAxisHeader;

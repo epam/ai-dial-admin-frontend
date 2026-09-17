@@ -5,18 +5,18 @@ import {
   getDeltaHeatCellStyle,
   getDeltaNeutralHeatCellStyle,
 } from '@/src/components/Common/ColorScale/utils';
-import HeatMapCellTooltip from '@/src/components/Runs/Compare/HeatMap/HeatMapCellTooltip';
-import HeatMapLabelCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapLabelCellRenderer';
-import HeatMapTestCaseHeader from '@/src/components/Runs/Compare/HeatMap/HeatMapTestCaseHeader';
-import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapValueCellRenderer';
 import {
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_LABEL_COL_WIDTH,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   getHeatMapDefaultCellStyle,
-} from '@/src/components/Runs/Compare/HeatMap/constants';
+} from '@/src/components/Common/HeatMap/constants';
+import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
+import { formatHeatMapCellValueForMode } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+import HeatMapCellTooltip from '@/src/components/Runs/Compare/HeatMap/HeatMapCellTooltip';
+import HeatMapLabelCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapLabelCellRenderer';
+import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapValueCellRenderer';
 import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
-import { formatHeatMapCellValueForMode } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
 import { buildHeatMapCellTooltipData } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-cell-tooltip-data';
 import {
   formatHeatMapTestCaseHeader,
@@ -78,19 +78,19 @@ export const buildHeatMapColumns = (
     return {
       colId,
       headerName: headerLabel,
-      headerComponent: HeatMapTestCaseHeader,
+      headerComponent: HeatMapAxisHeader,
       headerComponentParams: { label: headerLabel },
       headerClass: 'heat-map-test-case-header',
       minWidth: HEAT_MAP_VALUE_COL_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
       cellRendererSelector: (params) => {
-        if (params.data?.rowType === HeatMapRowType.Group) {
+        if (params.data?.rowType === HeatMapRowType.Group || params.data?.isGroup) {
           return undefined;
         }
         return { component: HeatMapValueCellRenderer, params: { colorDisplayMode } };
       },
       valueGetter: (params: ValueGetterParams<HeatMapRow>) => {
-        if (params.data?.rowType === HeatMapRowType.Group) {
+        if (params.data?.rowType === HeatMapRowType.Group || params.data?.isGroup) {
           return '';
         }
         const value = params.data?.values?.[colId];
@@ -100,7 +100,7 @@ export const buildHeatMapColumns = (
         return formatHeatMapCellValueForMode(value, isDeltaMode);
       },
       cellStyle: (params) => {
-        if (params.data?.rowType === HeatMapRowType.Group) {
+        if (params.data?.rowType === HeatMapRowType.Group || params.data?.isGroup) {
           return getHeatMapDefaultCellStyle();
         }
 
