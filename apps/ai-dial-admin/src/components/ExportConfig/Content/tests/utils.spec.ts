@@ -59,13 +59,13 @@ describe('Config content Utils :: getActualTabs', () => {
   });
 
   test('Should return tabs for full core config', () => {
-    const res = getActualTabs(ExportType.Full, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
+    const res = getActualTabs(ExportType.Full, ExportFormat.CORE, { roles: true }, mockTranslate);
 
     expect(res).toEqual([{ id: EntityType.ROLE, label: MenuI18nKey.Roles }]);
   });
 
   test('Should return tabs for custom admin config', () => {
-    const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true, files: true }, mockTranslate);
+    const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true }, mockTranslate);
 
     expect(res).toEqual([
       { id: EntityType.MODEL, label: MenuI18nKey.Models },

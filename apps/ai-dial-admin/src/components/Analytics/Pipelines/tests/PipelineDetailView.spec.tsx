@@ -10,6 +10,7 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
 import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 vi.mock('@/src/app/[lang]/evaluators/actions');
@@ -223,7 +224,7 @@ describe('PipelineDetailView', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
-    const [name, dto] = vi.mocked(updatePipeline).mock.calls[0];
+    const [name, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(name).toBe('feedback-live');
     expect(dto.advanced?.scan_every).toBe('PT2H');
     expect(refresh).toHaveBeenCalled();
@@ -238,7 +239,7 @@ describe('PipelineDetailView', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
-    const [, dto] = vi.mocked(updatePipeline).mock.calls[0];
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto.filter).toBe('score > 0.5');
     expect(dto.advanced?.scan_every).toBe('PT2H');
     expect(dto.advanced?.rate_rpm).toBe(60);
@@ -352,7 +353,7 @@ describe('PipelineDetailView', () => {
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
-    const [, dto] = vi.mocked(updatePipeline).mock.calls[0];
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
     // answers 409 for.
     expect(dto).toEqual({ enabled: false });

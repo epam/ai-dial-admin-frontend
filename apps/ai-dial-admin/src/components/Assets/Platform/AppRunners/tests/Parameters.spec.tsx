@@ -83,6 +83,13 @@ describe('AppRunnerAssetParameters', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ properties }), undefined);
   });
 
+  /**
+   * Deliberately unlike the catalog-schema Parameters tab, which renders its grid with no properties
+   * at all. The gate this pins also covers an endpoint-owned schema that resolved empty, where the
+   * grid is read-only and has nothing to add; the endpoint-less case below is the same dead end that
+   * tab fixed, left to this capability's own change. A failed resolve never reaches it — the test
+   * above pins that it returns `ResolvedSchemaFailed` instead.
+   */
   test('Should show the no-parameters state when the runner genuinely has none', async () => {
     render(<AppRunnerAssetParameters runner={runner()} onChange={vi.fn()} />);
 

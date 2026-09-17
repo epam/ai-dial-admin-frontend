@@ -28,7 +28,7 @@ The system SHALL expose a `showConfigFiles: boolean` value and a toggle function
 - **THEN** `showConfigFiles` is still `true`
 
 ### Requirement: The toggle control is rendered only where it applies
-The system SHALL render a `showConfigFiles` toggle control, placed adjacent to the page title, on exactly eight views: `platform-models`, `platform-interceptors`, `platform-routes`, `platform-roles`, `platform-app-runners`, `platform-catalog-schemas`, `assets-applications`, and `assets-toolsets` — regardless of whether `featureFlags.adminApiEnabled` is set. The control SHALL NOT be rendered on `platform-keys` or any other route.
+The system SHALL render a `showConfigFiles` toggle control, placed adjacent to the page title, on exactly seven views: `platform-models`, `platform-interceptors`, `platform-routes`, `platform-roles`, `platform-app-runners`, `assets-applications`, and `assets-toolsets` — regardless of whether `featureFlags.adminApiEnabled` is set. The control SHALL NOT be rendered on `platform-keys`, `platform-catalog-schemas`, or any other route.
 
 #### Scenario: Toggle appears on a covered view without the admin API
 - **WHEN** a user opens `platform-models` and `DIAL_ADMIN_API_URL` is unset
@@ -44,14 +44,14 @@ The system SHALL render a `showConfigFiles` toggle control, placed adjacent to t
 
 #### Scenario: Toggle appears on App Runners
 - **WHEN** a user opens `platform-app-runners`
-- **THEN** the `showConfigFiles` toggle is rendered next to the page title, the same as on the other seven covered views
+- **THEN** the `showConfigFiles` toggle is rendered next to the page title, the same as on the other six covered views
 
-#### Scenario: Toggle appears on Catalog Schemas
+#### Scenario: Toggle is absent on Catalog Schemas
 - **WHEN** a user opens `platform-catalog-schemas`
-- **THEN** the `showConfigFiles` toggle is rendered next to the page title, the same as on the other seven covered views
+- **THEN** no `showConfigFiles` toggle is rendered, the same as on `platform-keys`
 
 ### Requirement: Toggling swaps the list component in place
-On each of the eight covered views, the system SHALL render the existing asset/platform list (`BaseAssetList`) when `showConfigFiles` is `false`, and a shared, name-only config-file list component when `showConfigFiles` is `true` — on the same route, with no navigation. That shared component SHALL be the same one across all eight covered views, parameterized by the view's `ApplicationRoute`, rather than each entity type rendering its own full-columns admin-grid list component for this branch. The toggle control SHALL also be rendered in the config-file list's own header, so the user can switch back.
+On each of the seven covered views, the system SHALL render the existing asset/platform list (`BaseAssetList`) when `showConfigFiles` is `false`, and a shared, name-only config-file list component when `showConfigFiles` is `true` — on the same route, with no navigation. That shared component SHALL be the same one across all seven covered views, parameterized by the view's `ApplicationRoute`, rather than each entity type rendering its own full-columns admin-grid list component for this branch. The toggle control SHALL also be rendered in the config-file list's own header, so the user can switch back.
 
 #### Scenario: Turning the toggle on swaps to the config-file list
 - **WHEN** a user on `platform-models` turns `showConfigFiles` on
@@ -62,11 +62,11 @@ On each of the eight covered views, the system SHALL render the existing asset/p
 - **THEN** the page renders `BaseAssetList` again
 
 #### Scenario: The same list component renders for every covered entity type
-- **WHEN** a user turns `showConfigFiles` on for any of the eight covered views
+- **WHEN** a user turns `showConfigFiles` on for any of the seven covered views
 - **THEN** the same shared list component renders, differing only in the route it links rows to and the data it was given
 
 ### Requirement: Config-file entity data is fetched lazily, only when the toggle is on
-The system SHALL NOT fetch config-file entity data for any of the eight covered views until the user turns `showConfigFiles` on for that view. Turning it on SHALL trigger a request for that entity type's config-file entity **names** (not their full bodies); turning it off, or never turning it on, SHALL issue no such request.
+The system SHALL NOT fetch config-file entity data for any of the seven covered views until the user turns `showConfigFiles` on for that view. Turning it on SHALL trigger a request for that entity type's config-file entity **names** (not their full bodies); turning it off, or never turning it on, SHALL issue no such request.
 
 #### Scenario: No config-file request on initial page load
 - **WHEN** a user opens `platform-models` with `showConfigFiles` off
@@ -77,7 +77,7 @@ The system SHALL NOT fetch config-file entity data for any of the eight covered 
 - **THEN** a single request for that entity type's config-file entity names is issued, with no follow-up request per name
 
 ### Requirement: The config-file-backed list shows only entity names
-The shared config-file list component SHALL render a single name column (plus the action column carrying the "open in new tab" action) for every covered entity type, and SHALL NOT render any of the type-specific columns (status, endpoint, type, etc.) the entity's own admin-grid list shows. This applies uniformly across all eight covered views — there is no per-entity-type column configuration for this list.
+The shared config-file list component SHALL render a single name column (plus the action column carrying the "open in new tab" action) for every covered entity type, and SHALL NOT render any of the type-specific columns (status, endpoint, type, etc.) the entity's own admin-grid list shows. This applies uniformly across all seven covered views — there is no per-entity-type column configuration for this list.
 
 #### Scenario: A config-file list shows a name column and nothing else
 - **WHEN** a user turns `showConfigFiles` on for any covered view
@@ -152,25 +152,3 @@ The system SHALL treat App Runners (`platform-app-runners` / `application-runner
 - **WHEN** a user clicks a row in the config-file-backed App Runners list
 - **THEN** the browser navigates to `/application-runners/{id}?configFile=true`
 
-### Requirement: Catalog schemas are a covered config-file type
-
-Catalog schemas SHALL be readable on this surface: the toggled-on list SHALL show the names DIAL
-Core's configuration file declares, and opening one SHALL render its read-only detail view, the same
-way the other covered types behave.
-
-#### Scenario: The config-file list shows file-declared schema names
-
-- **WHEN** a user toggles `showConfigFiles` on `platform-catalog-schemas`
-- **THEN** the list shows the catalog-schema names Core's configuration file declares, with no
-  create, delete, or bulk-delete action
-
-#### Scenario: A file-sourced schema renders read-only
-
-- **WHEN** a user opens an entry from that list
-- **THEN** its detail view renders the schema with no save action
-
-#### Scenario: A schema absent from the configuration file is not found
-
-- **WHEN** a user navigates directly to the config-file detail route for a name the configuration
-  file does not declare
-- **THEN** the page reports it as not found rather than rendering an empty schema

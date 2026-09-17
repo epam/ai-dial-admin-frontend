@@ -47,6 +47,14 @@ describe('Assets Conversations :: Properties', () => {
         selectedConversation={{
           name: 'Chat',
           version: '1.0.0',
+          descriptionKeywords: [],
+          endpoint: '',
+          iconUrl: '',
+          temperature: 0,
+          messages: [],
+          path: 'conversations/public/Chat',
+          folderId: 'public',
+          author: 'someone',
           model: { id: 'gpt-4' },
         }}
       />,
@@ -82,6 +90,14 @@ describe('Assets Conversations :: Properties', () => {
         selectedConversation={{
           name: 'Chat',
           version: '1.0.0',
+          descriptionKeywords: [],
+          endpoint: '',
+          iconUrl: '',
+          temperature: 0,
+          messages: [],
+          path: 'conversations/public/Chat',
+          folderId: 'public',
+          author: 'someone',
           model: { id: 'msh-responses' },
         }}
       />,
@@ -104,6 +120,14 @@ describe('Assets Conversations :: Properties', () => {
         selectedConversation={{
           name: 'Chat',
           version: '1.0.0',
+          descriptionKeywords: [],
+          endpoint: '',
+          iconUrl: '',
+          temperature: 0,
+          messages: [],
+          path: 'conversations/public/Chat',
+          folderId: 'public',
+          author: 'someone',
           model: { id: 'missing' },
         }}
       />,

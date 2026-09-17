@@ -10,7 +10,7 @@ import DuplicateAsset from '../DuplicateAsset';
 
 // A non-numeric last version segment makes `getInitialVersion` fall back to `DEFAULT_NEW_ENTITY_VERSION`
 // ('1.0.0'), so the clone's derived version is deterministic without affecting the external-services walk.
-const versionsMapFor = (name: string) => ({ [name]: ['1.0.x'] });
+const versionsMapFor = (name = '') => ({ [name]: ['1.0.x'] });
 
 const renderModal = (entity: AssetWithVersion, onDuplicate = vi.fn()) => {
   render(
