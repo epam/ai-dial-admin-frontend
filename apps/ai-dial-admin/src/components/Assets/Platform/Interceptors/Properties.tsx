@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
@@ -14,14 +15,16 @@ import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfac
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptorResource, DialResourceFeatures } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   asset: DialInterceptorResource;
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialInterceptorResource) => void;
 }
 
-const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
+const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange }) => {
   const t = useI18n();
 
   return (
@@ -58,6 +61,12 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
         <Defaults values={asset.defaults} onChangeValues={(defaults) => onChange({ ...asset, defaults })} />
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.PlatformInterceptors} />
         <ForwardAuthTokenField view={ApplicationRoute.PlatformInterceptors} entity={asset} onChangeEntity={onChange} />
+        <CatalogSchemaField
+          schemaId={asset.catalogSchemaId}
+          options={catalogSchemas?.options}
+          optionsError={catalogSchemas?.error}
+          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId })}
+        />
       </div>
     </div>
   );

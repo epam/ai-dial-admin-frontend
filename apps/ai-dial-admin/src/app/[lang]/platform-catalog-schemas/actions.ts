@@ -2,10 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, catalogSchemasApi, configFileApi } from '@/src/app/api/api';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
@@ -107,4 +108,26 @@ export async function removeCatalogSchema(path: string, etag?: string) {
 export async function bulkDeleteCatalogSchemas(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.CATALOG_SCHEMA, paths);
+}
+
+/**
+ * The schema body the values editor renders from, resolved by `$id` against the merged
+ * configuration. Deliberately not an `assetApi` read: a schema declared in Core's configuration
+ * file has no bucket resource to read, and a selection may name either population.
+ */
+export async function getCatalogSchemaById(id: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return catalogSchemasApi.schema(token, id);
+}
+
+/** `config-file-entity-views`: the catalog-schema names Core's configuration file declares. */
+export async function getConfigFileCatalogSchemas() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.CatalogSchemas);
+}
+
+/** `config-file-entity-views`: reads one file-declared catalog schema by name. */
+export async function getConfigFileCatalogSchema(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialCatalogSchemaResource>(token, ConfigFileEntityType.CatalogSchemas, name);
 }

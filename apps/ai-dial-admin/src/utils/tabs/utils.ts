@@ -32,6 +32,7 @@ export enum EntityViewTab {
   Attachments = 'Attachments',
   Tools = 'Tools',
   ParameterSchema = 'ParameterSchema',
+  Catalog = 'Catalog',
   Files = 'Files',
   ApplicationRunners = 'ApplicationRunners',
   Images = 'Images',
@@ -174,6 +175,11 @@ export const toolsTab = (t: (key: string) => string) => ({
 export const parameterSchemaTab = (t: (key: string) => string) => ({
   id: EntityViewTab.ParameterSchema,
   label: t(TabsI18nKey.ParameterSchema),
+});
+
+export const catalogTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Catalog,
+  label: t(TabsI18nKey.Catalog),
 });
 
 export const entitiesTab = (t: (key: string) => string) => ({
@@ -445,10 +451,18 @@ export const getTabsForAsset = (
   rolesWarning?: boolean,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
-    return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t), appRouteTab(t)];
+    return [
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+    ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
-    const tabs = [propertiesTab(t), toolsTab(t)];
+    const tabs = [propertiesTab(t), toolsTab(t), catalogTab(t)];
     if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
       tabs.push(auditTab(t));
     }
@@ -458,7 +472,7 @@ export const getTabsForAsset = (
     return [propertiesTab(t), conversationTab(t)];
   }
   if (view === ApplicationRoute.PlatformModels) {
-    const tabs = [propertiesTab(t), featuresTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
+    const tabs = [propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
     if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
       tabs.push(auditTab(t));
     }
@@ -471,7 +485,7 @@ export const getTabsForAsset = (
     return [propertiesTab(t), parametersTab(t)];
   }
   if (view === ApplicationRoute.PlatformInterceptors) {
-    return [propertiesTab(t), parameterSchemaTab(t)];
+    return [propertiesTab(t), parameterSchemaTab(t), catalogTab(t)];
   }
   if (view === ApplicationRoute.PlatformRoutes) {
     return [propertiesTab(t), rolesTab(t, rolesWarning)];

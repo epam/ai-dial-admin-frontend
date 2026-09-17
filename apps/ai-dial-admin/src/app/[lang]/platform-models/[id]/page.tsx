@@ -9,6 +9,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
+import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
@@ -54,10 +55,11 @@ export default async function Page(params: {
   // matching Assets > App Runners — rather than the admin-BE list, which cannot see roles/interceptors
   // declared in Core's configuration file, and which is a different population from `Assets > Roles`/
   // `Assets > Interceptors`' own API-written one.
-  const [roles, interceptors, globalInterceptors] = await Promise.all([
+  const [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
     readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
     readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
+    readCatalogSchemaOptions(token),
   ]);
 
   if (model == null) {
@@ -74,6 +76,7 @@ export default async function Page(params: {
         globalInterceptors={globalInterceptors}
         optionWarnings={optionWarnings}
         translators={translators}
+        catalogSchemas={catalogSchemas}
         isConfigFileSource={isConfigFileMode}
       />
     </SaveValidationContextProvider>

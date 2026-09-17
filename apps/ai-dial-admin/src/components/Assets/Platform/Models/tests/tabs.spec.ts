@@ -27,19 +27,21 @@ const tabIds = (featureFlags?: FeatureFlags) =>
   getTabsForAsset(t, ApplicationRoute.PlatformModels, featureFlags).map((tab) => tab.id);
 
 describe('Model asset :: detail view tab set', () => {
-  test('Should expose exactly Properties, Features, Roles and Interceptors in order', () => {
+  test('Should expose exactly Properties, Features, Catalog, Roles and Interceptors in order', () => {
     expect(tabIds()).toEqual([
       EntityViewTab.Properties,
       EntityViewTab.Features,
+      EntityViewTab.Catalog,
       EntityViewTab.Roles,
       EntityViewTab.Interceptors,
     ]);
   });
 
-  test('Should append Audit as the fifth and last tab when the dashboard feature and admin API are enabled', () => {
+  test('Should append Audit as the last tab when the dashboard feature and admin API are enabled', () => {
     expect(tabIds(dashboardFlags)).toEqual([
       EntityViewTab.Properties,
       EntityViewTab.Features,
+      EntityViewTab.Catalog,
       EntityViewTab.Roles,
       EntityViewTab.Interceptors,
       EntityViewTab.Audit,
@@ -50,6 +52,7 @@ describe('Model asset :: detail view tab set', () => {
     expect(tabIds(flags({ dashboardEnabled: true }))).toEqual([
       EntityViewTab.Properties,
       EntityViewTab.Features,
+      EntityViewTab.Catalog,
       EntityViewTab.Roles,
       EntityViewTab.Interceptors,
     ]);

@@ -1,3 +1,6 @@
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialInterceptorResource } from '@/src/models/dial/resource';
+
 /**
  * Which surface wrote an interceptor option offered by the widened attach picker (`Interceptors.tsx`)
  * — the admin-BE-tracked `Entities > Interceptors` row, or the Core-only `Assets > Interceptors`
@@ -16,3 +19,9 @@ export enum AssetInterceptorOrigin {
 export interface AssetInterceptorTagged {
   assetOrigin: AssetInterceptorOrigin;
 }
+
+/**
+ * One option of the widened attach picker, from either population. Not `BaseEntity`: the asset-side
+ * resource types its display fields as `LocalizedText`, which the admin-BE base does not allow.
+ */
+export type InterceptorOption = (DialInterceptor | DialInterceptorResource) & AssetInterceptorTagged;

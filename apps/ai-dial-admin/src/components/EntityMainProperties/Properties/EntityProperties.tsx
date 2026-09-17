@@ -82,7 +82,7 @@ const EntityProperties: FC<Props> = ({
           optional
           isFullWidth={!isEntityImmutable}
           enableSemanticValidation={false}
-          onChange={(displayVersion) => onChangeEntity({ ...entity, displayVersion } as DialModelResource)}
+          onChange={(displayVersion) => onChangeEntity({ ...entity, displayVersion } as unknown as BaseEntity)}
         />
       )}
 

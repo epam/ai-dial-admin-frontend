@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -26,6 +27,7 @@ import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
@@ -34,10 +36,11 @@ import { supportsResponsesInterface } from '@/src/utils/models/responses-interfa
 interface Props {
   asset: DialModelResource;
   translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialModelResource) => void;
 }
 
-const ModelAssetProperties: FC<Props> = ({ asset, translators, onChange }) => {
+const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, onChange }) => {
   const t = useI18n();
   const showResponsesDefaults = supportsResponsesInterface(asset);
 
@@ -153,6 +156,12 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, onChange }) => {
           <EmbeddingDimensions model={asset} onChangeModel={onChange} />
         )}
         <Pricing model={asset} onChangeModel={onChange} />
+        <CatalogSchemaField
+          schemaId={asset.catalogSchemaId}
+          options={catalogSchemas?.options}
+          optionsError={catalogSchemas?.error}
+          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId })}
+        />
       </div>
     </div>
   );

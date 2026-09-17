@@ -2,6 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
+import { LocalizedText } from '@/src/models/dial/localized';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
 import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
@@ -31,7 +32,11 @@ export interface DialResource extends BaseEntity {
   etag?: string;
 }
 
-export interface DialApplicationResource extends DialResource, EntityDefaults {
+export interface DialApplicationResource
+  extends Omit<DialResource, 'display_name' | 'description' | 'intro'>, EntityDefaults {
+  display_name?: LocalizedText;
+  description?: LocalizedText;
+  intro?: LocalizedText;
   application_type_schema_id?: string;
   input_attachment_types: string[];
   max_input_attachments?: number | string;
@@ -54,6 +59,15 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
    * field as `userRoles` would silently never see a value back.
    */
   user_roles?: string[];
+  /**
+   * Snake_case, unlike `DialModelResource`/`DialInterceptorResource`, for the reason `user_roles`
+   * documents: Core declares the pair on `Deployment` as `catalogSchemaId`/`catalogProperties` with
+   * a `@JsonAlias` covering both spellings, but `Application`/`ToolSet` are
+   * `@JsonNaming(SnakeCaseStrategy)`, so a read only ever returns the snake_case names. Declared on
+   * the user-bucket shape so the platform-bucket one inherits it — Core carries it on both.
+   */
+  catalog_schema_id?: string;
+  catalog_properties?: Record<string, unknown>;
 }
 
 export interface DialExternalService {
@@ -111,10 +125,10 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   pricing?: DialModelPricing;
   upstreams?: DialModelEndpoint[];
   embeddingDimensions?: number;
-  displayName?: string;
+  displayName?: LocalizedText;
   displayVersion?: string;
-  description?: string;
-  intro?: string;
+  description?: LocalizedText;
+  intro?: LocalizedText;
   reference?: string;
   iconUrl?: string;
   endpoint?: string;
@@ -183,8 +197,8 @@ export interface DialInterceptorResource extends ModifiedEntity {
   author?: string;
   status?: DialModelResourceStatus;
   validationWarnings?: CoreValidationWarning[];
-  displayName?: string;
-  description?: string;
+  displayName?: LocalizedText;
+  description?: LocalizedText;
   iconUrl?: string;
   endpoint?: string | null;
   interfaces?: Record<string, DialResourceInterface>;
@@ -193,6 +207,8 @@ export interface DialInterceptorResource extends ModifiedEntity {
   descriptionKeywords?: string[];
   features?: DialResourceFeatures;
   defaults?: Record<string, unknown>;
+  catalogSchemaId?: string;
+  catalogProperties?: Record<string, unknown>;
 }
 
 /**
@@ -377,9 +393,11 @@ export interface DialModelResourceFeatures extends DialResourceFeatures {
   auto_caching_supported: boolean;
 }
 
-export interface DialToolsetResource extends DialResource {
+export interface DialToolsetResource extends Omit<DialResource, 'display_name' | 'description' | 'intro'> {
   name: string;
-  description: string;
+  display_name?: LocalizedText;
+  description: LocalizedText;
+  intro?: LocalizedText;
   defaults?: Record<string, unknown>;
   responses_defaults?: Record<string, unknown>;
   forward_per_request_key: boolean;
@@ -391,6 +409,8 @@ export interface DialToolsetResource extends DialResource {
   updatedAt: string;
   /** See `DialApplicationResource.user_roles` — `ToolSet` is also `@JsonNaming(SnakeCaseStrategy)`. */
   user_roles?: string[];
+  catalog_schema_id?: string;
+  catalog_properties?: Record<string, unknown>;
 }
 
 /**

@@ -20,6 +20,9 @@ vi.mock('@/src/app/api/api', () => ({
 }));
 
 const { roles } = vi.hoisted(() => ({ roles: [{ name: 'admin' }] }));
+vi.mock('@/src/server/catalog-schemas/read-options', () => ({
+  readCatalogSchemaOptions: vi.fn().mockResolvedValue({ options: [] }),
+}));
 vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readConfigEntities: vi.fn().mockResolvedValue(roles),
   readGlobalInterceptors: vi.fn().mockResolvedValue([]),

@@ -19,12 +19,21 @@ vi.mock('@/src/app/[lang]/platform-catalog-schemas/actions', () => ({
   getCatalogSchemas: vi.fn().mockResolvedValue([]),
 }));
 
+let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ onSave }: any) => (
-    <button type="button" onClick={onSave}>
-      save
-    </button>
-  ),
+  default: ({ onSave, jsonConfiguration }: any) => {
+    capturedJsonConfiguration = jsonConfiguration;
+    return (
+      <button type="button" onClick={onSave}>
+        save
+      </button>
+    );
+  },
+}));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly }),
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
@@ -94,5 +103,29 @@ describe('CatalogSchemaView', () => {
     expect(showNotificationSpy).toHaveBeenCalledWith(
       expect.objectContaining({ description: 'Schema $id cannot be changed after creation' }),
     );
+  });
+});
+
+describe('CatalogSchemaView :: config-file source', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('marks a file-declared schema read-only and hides the format selector', () => {
+    const { unmount } = render(<CatalogSchemaView etag="etag" originalSchema={schema()} isConfigFileSource />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('leaves an API-written schema editable', () => {
+    render(<CatalogSchemaView etag="etag" originalSchema={schema()} />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(false);
   });
 });
