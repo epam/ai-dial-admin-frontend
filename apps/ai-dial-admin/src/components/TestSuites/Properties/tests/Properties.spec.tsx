@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { SuiteType } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import TestSuiteProperties from '../Properties';
 
@@ -47,7 +47,11 @@ vi.mock('@/src/components/BaseControls/Description', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/Modals/Create/CreateTestSuite', () => ({
-  default: () => <div>CreateTestSuite</div>,
+  default: ({ currentEntity, onCreate }: { currentEntity: TestSuite; onCreate: (suite: TestSuite) => void }) => (
+    <button type="button" onClick={() => onCreate(currentEntity)}>
+      Finish update
+    </button>
+  ),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -191,6 +195,21 @@ describe('TestSuiteProperties', () => {
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
+  });
+
+  test('finishing the target picker without a target change preserves a hand-edited model', async () => {
+    const user = userEvent.setup();
+    const suite = {
+      deploymentRef: { id: 'app-1', name: 'My App', type: DeploymentType.Application },
+      endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses' },
+      requestTemplate: { body: { content: { model: 'hand-edited', input: 'hello' } } },
+    } as TestSuite;
+
+    render(<TestSuiteProperties testSuite={suite} onChange={onChangeMock} />);
+
+    await user.click(screen.getByRole('button', { name: 'Finish update' }));
+
+    expect(onChangeMock).toHaveBeenCalledWith(suite);
   });
 
   test('Open for MCP asset toolset uses mcpDeploymentRef without by-id lookup', async () => {
