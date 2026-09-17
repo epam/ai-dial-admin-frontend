@@ -24,15 +24,15 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:applicationTypeBucketCopy']: TypeBucketCopy.ENABLED,
       ['dial:applicationTypeIconUrl']: 'icon1.svg',
       properties: {
-        properties1: '1',
-        properties2: '2',
+        properties1: { type: 'string' },
+        properties2: { type: 'string' },
       },
     });
 
     expect(res).toEqual({
       properties: {
-        properties1: '1',
-        properties2: '2',
+        properties1: { type: 'string' },
+        properties2: { type: 'string' },
       },
     });
   });

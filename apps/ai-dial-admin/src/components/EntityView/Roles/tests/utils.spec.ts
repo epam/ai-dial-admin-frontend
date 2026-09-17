@@ -134,7 +134,7 @@ describe('isDisableRole', () => {
   });
 
   test('returns false if roleLimits is not empty and isPublic is falsy', () => {
-    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: false };
+    const entity = { roleLimits: { admin: { minute: '1' } }, isPublic: false };
     expect(isDisableRole(entity)).toBe(false);
   });
 
@@ -144,7 +144,7 @@ describe('isDisableRole', () => {
   });
 
   test('returns false if isPublic is true and roleLimits is not empty', () => {
-    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: true };
+    const entity = { roleLimits: { admin: { minute: '1' } }, isPublic: true };
     expect(isDisableRole(entity)).toBe(false);
   });
 });

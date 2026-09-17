@@ -8,7 +8,18 @@ import { FeatureFlags } from '@/src/models/feature-flags';
 const { AppContextProvider, useAppContext }: typeof import('@/src/context/AppContext') =
   await vi.importActual('@/src/context/AppContext');
 
-const FEATURE_FLAGS: FeatureFlags = { deploymentsEnabled: true, adminApiEnabled: true };
+const FEATURE_FLAGS: FeatureFlags = {
+  adminApiEnabled: true,
+  dashboardEnabled: true,
+  deploymentsEnabled: true,
+  evaluationEnabled: true,
+  mcpRegistryEnabled: true,
+  nimEnabled: true,
+  hfEnabled: true,
+  analyticsEnabled: true,
+  analyticsConversationsEnabled: true,
+  queryAssistantEnabled: true,
+};
 
 const Harness: FC = () => {
   const { showConfigFiles, toggleShowConfigFiles, isReadOnlyAdmin, setEntityReadOnly } = useAppContext();

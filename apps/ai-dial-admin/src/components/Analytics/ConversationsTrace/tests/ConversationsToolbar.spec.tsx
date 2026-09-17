@@ -23,6 +23,9 @@ const renderToolbar = (overrides: Partial<Parameters<typeof ConversationsToolbar
     feedback: FeedbackFilter.All,
     onFeedbackChange: vi.fn(),
     ...overrides,
+    // after the spread: `overrides` is a `Partial`, so it would otherwise widen these required props
+    isFeedbackCapped: overrides.isFeedbackCapped ?? false,
+    onToggleColumnsPanel: overrides.onToggleColumnsPanel ?? vi.fn(),
   };
 
   render(<ConversationsToolbar {...props} />);
