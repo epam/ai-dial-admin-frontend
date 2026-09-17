@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 
-import AttachmentInput, { Props } from './AttachmentInput';
+import AttachmentInput, { AttachmentType, Props } from './AttachmentInput';
 
 const options = [
   { label: 'PDF', value: 'pdf' },
@@ -20,9 +20,9 @@ const onChange = vi.fn();
 const ControlledAttachmentInput = (props: Partial<Props> & { initialValues?: string[] }) => {
   const [values, setValues] = useState<string[] | undefined>(props.initialValues);
 
-  const handleChange = (newValues?: string[]) => {
+  const handleChange = (newValues?: string[], type?: AttachmentType) => {
     setValues(newValues);
-    onChange(newValues);
+    onChange(newValues, type);
   };
 
   return (
@@ -44,6 +44,13 @@ describe('Common components - AttachmentInput', () => {
     expect(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments)).toBeChecked();
   });
 
+  test('selects "No attachments" when initialValues is an empty array', () => {
+    renderComponent({ initialValues: [] });
+
+    expect(screen.getByLabelText(AttachmentsI18nKey.NoAttachments)).toBeChecked();
+    expect(screen.queryByText(AttachmentsI18nKey.SpecificAttachmentsRequired)).not.toBeInTheDocument();
+  });
+
   test('filters suggestions while typing and adds one on click', async () => {
     renderComponent();
     await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
@@ -57,7 +64,7 @@ describe('Common components - AttachmentInput', () => {
 
     await userEvent.click(suggestion);
 
-    expect(onChange).toHaveBeenLastCalledWith(['doc']);
+    expect(onChange).toHaveBeenLastCalledWith(['doc'], void 0);
     expect(screen.queryByRole('list ')).toBeNull();
   });
 
@@ -68,7 +75,7 @@ describe('Common components - AttachmentInput', () => {
 
     await userEvent.click(allRadio);
 
-    expect(onChange).toHaveBeenLastCalledWith(['*/*']);
+    expect(onChange).toHaveBeenLastCalledWith(['*/*'], AttachmentType.ALL);
   });
 
   test('opens suggestion list when typing', async () => {
@@ -134,13 +141,13 @@ describe('Common components - AttachmentInput', () => {
     await userEvent.click(allRadio);
 
     await waitFor(() => {
-      expect(onChange).toHaveBeenLastCalledWith(['*/*']);
+      expect(onChange).toHaveBeenLastCalledWith(['*/*'], AttachmentType.ALL);
     });
 
     await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
 
     await waitFor(() => {
-      expect(onChange).toHaveBeenLastCalledWith([]);
+      expect(onChange).toHaveBeenLastCalledWith([], AttachmentType.SPECIFIC);
 
       const input = screen.getByPlaceholderText(placeHolder);
       expect(input).toBeInTheDocument();
