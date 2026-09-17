@@ -49,7 +49,10 @@ describe('Server :: Toolsets :: zip-exim :: extractToolsetsFromZip', () => {
 
     const result = await extractToolsetsFromZip(buffer);
 
-    expect(result.toolSets.map((t) => t.id).sort()).toEqual(['toolsets/public/a__1.0', 'toolsets/public/b__1.0']);
+    expect((result.toolSets ?? []).map((t) => t.id).sort()).toEqual([
+      'toolsets/public/a__1.0',
+      'toolsets/public/b__1.0',
+    ]);
   });
 
   test('ignores an entry outside the toolSets/ prefix', async () => {
@@ -60,7 +63,7 @@ describe('Server :: Toolsets :: zip-exim :: extractToolsetsFromZip', () => {
 
     const result = await extractToolsetsFromZip(buffer);
 
-    expect(result.toolSets.map((t) => t.id)).toEqual(['toolsets/public/a__1.0']);
+    expect((result.toolSets ?? []).map((t) => t.id)).toEqual(['toolsets/public/a__1.0']);
   });
 
   test('rejects an archive with no valid toolSets entries', async () => {

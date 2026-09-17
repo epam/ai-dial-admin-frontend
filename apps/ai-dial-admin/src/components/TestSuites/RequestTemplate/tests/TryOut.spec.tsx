@@ -6,7 +6,14 @@ import { describe, expect, test, vi } from 'vitest';
 import { getTestCaseTemplateVariables, tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
-import { SuiteType, TestCase, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import {
+  SuiteType,
+  TemplateVariable,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TryOutHistoryEntry,
+} from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { getTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/tryout-storage';
 import TryOut from '../components/TryOut';
@@ -330,7 +337,7 @@ describe('TryOut Columns tab request binding', () => {
 
 describe('TryOut request tabs', () => {
   test('hides request tabs while preview variables are loading', async () => {
-    let resolveVariables: (value: unknown[]) => void = () => undefined;
+    let resolveVariables: (value: TemplateVariable[] | null) => void = () => undefined;
     vi.mocked(getTestCaseTemplateVariables).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
