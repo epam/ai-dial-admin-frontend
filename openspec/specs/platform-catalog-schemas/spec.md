@@ -222,6 +222,11 @@ SHALL make those properties editable. Unlike an app runner, a catalog schema dec
 schema endpoint — DIAL Core resolves it from configuration alone — so there is no resolved read to
 perform and no read-only mode to enter.
 
+Because the tab is always editable, it SHALL offer the property editor even when the schema declares
+no properties yet, so the first property can be created here rather than only through the raw JSON
+editor. An empty presentation is the editor's own, reserved for the case where editing is not
+offered at all.
+
 The tab SHALL expose the catalog presentation hints each property may carry — the tab and section it
 renders in, its order, its widget, and whether its value is a locale map — as editable fields
 alongside the property's name, type, title, description, and requiredness. The widget selection SHALL
@@ -245,10 +250,12 @@ offer exactly the values Core's catalog meta-schema allows: `text`, `richText`, 
 - **THEN** the options are exactly `text`, `richText`, `badge`, `chips`, `url`, `boolean`, `image`,
   and `date`
 
-#### Scenario: A schema with no properties says so
+#### Scenario: A schema with no properties still offers the property editor
 
-- **WHEN** a schema declares no properties
-- **THEN** the tab shows an empty state rather than a blank area
+- **WHEN** a user opens the Parameters tab of a schema that declares no properties
+- **THEN** the property editor is shown, empty, with its add-field action — not an empty state in
+  place of it
+- **AND** adding a field and saving stores that first property on the schema
 
 #### Scenario: Editing preserves extensions the tab does not render
 
