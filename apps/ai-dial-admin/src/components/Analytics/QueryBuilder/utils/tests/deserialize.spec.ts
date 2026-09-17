@@ -24,6 +24,7 @@ import {
   QuerySortNulls,
   QueryValueType,
   StructuredQuery,
+  QueryFnExpr,
 } from '@/src/models/analytics/query';
 import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
@@ -43,7 +44,7 @@ describe('parseQuery round-trip', () => {
   test('row query with filter, projection, sort and offset page', () => {
     const s = base();
     s.distinct = true;
-    s.select = ['project_id', 'chat_id'];
+    s.select = [createColumnRow('project_id'), createColumnRow('chat_id')];
 
     const eq = createPredicate();
     eq.field = 'event_kind';
@@ -275,7 +276,7 @@ describe('isBuilderRepresentable', () => {
 });
 
 describe('parseQuery — row-mode function columns', () => {
-  const extractExpr = {
+  const extractExpr: QueryFnExpr = {
     type: QueryExprType.Fn,
     name: 'json_extract_string',
     args: [
@@ -481,7 +482,7 @@ describe('isBuilderRepresentable — function calls', () => {
 
   // The saved-queries grid labels a query's editor without loading the catalog.
   test('with no catalog given, a function call is taken at face value', () => {
-    expect(isBuilderRepresentable(call('regexp_extract', []))).toBe(true);
+    expect(isBuilderRepresentable(call('regexp_extract', []), null)).toBe(true);
   });
 
   test('an empty catalog leaves no function query representable', () => {
