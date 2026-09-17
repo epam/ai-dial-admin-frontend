@@ -269,7 +269,48 @@ describe('getConversationSpans', () => {
 
     const result = await getConversationSpans(TRACE_ID);
 
-    expect(result.response).toEqual({ spans: [SPAN_ROW], total: 922 });
+    expect(result.response?.spans).toEqual([SPAN_ROW]);
+    expect(result.response?.total).toBe(922);
+  });
+
+  // The rail's field set travels with the spans, resolved from the same schema read the body grant already
+  // performs — so the groups describe the projection that read actually named.
+  test('returns the field groups the rail presents, resolved from the hop log schema', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+    getEntitySchema().mockResolvedValue({
+      success: true,
+      response: {
+        fields: [{ name: 'usage_client_identity.client_type', type: 'string', source: 'client_type', tag: 'client' }],
+      },
+    });
+
+    const result = await getConversationSpans(TRACE_ID);
+
+    expect(result.response?.fieldGroups).toEqual([
+      {
+        tag: 'client',
+        fields: [
+          {
+            name: 'usage_client_identity.client_type',
+            label: 'Client type',
+            type: 'string',
+            tag: 'client',
+          },
+        ],
+      },
+    ]);
+  });
+
+  // A schema this console cannot read costs the rail its groups and nothing else: the tree, the bodies and
+  // the rail's own figures are built from the columns the projection falls back to.
+  test('still returns the spans when the schema read fails, with no field groups', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+    getEntitySchema().mockResolvedValue({ success: false, response: undefined });
+
+    const result = await getConversationSpans(TRACE_ID);
+
+    expect(result.response?.spans).toEqual([SPAN_ROW]);
+    expect(result.response?.fieldGroups).toEqual([]);
   });
 
   test('an absent total resolves to null rather than a guessed count', async () => {
@@ -280,14 +321,15 @@ describe('getConversationSpans', () => {
     expect(result.response?.total).toBeNull();
   });
 
-  // The tree is built from the hop rows alone, so the trace read is one query and reads no body at all.
-  test('issues one query and reads no schema', async () => {
+  // One query for the rows, and the schema the body grant already fetches for the field set — so the rail's
+  // fields cost no request of their own and no body is read at all.
+  test('issues one query and reuses the cached schema read', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
 
     await getConversationSpans(TRACE_ID);
 
     expect(execute()).toHaveBeenCalledOnce();
-    expect(getEntitySchema()).not.toHaveBeenCalled();
+    expect(getEntitySchema()).toHaveBeenCalledWith(USAGE_LOG_ENTITY, TOKEN_MOCK);
   });
 
   // Checked against the projected names rather than the serialized query, because `response_body_bytes` — a

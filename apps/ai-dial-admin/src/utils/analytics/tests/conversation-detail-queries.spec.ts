@@ -5,6 +5,7 @@ import {
   CONVERSATIONS_ENTITY,
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_SPAN_LIMIT,
+  SPAN_BASE_FIELDS,
   CONVERSATION_TRACE_PAGE_SIZE,
   FEEDBACK_ENTITY,
   OPTIONAL_DETAIL_SELECT_FIELDS,
@@ -314,7 +315,10 @@ describe('buildConversationFeedbackQuery', () => {
 });
 
 describe('buildConversationSpansQuery', () => {
-  const query = () => buildConversationSpansQuery(TRACE_ID, CONVERSATION_SPAN_LIMIT);
+  // The projection is the caller's now: it resolves the field set against the fetched schema, and falls
+  // back to the columns the tree is built from.
+  const query = (names: string[] = SPAN_BASE_FIELDS) =>
+    buildConversationSpansQuery(TRACE_ID, CONVERSATION_SPAN_LIMIT, names);
 
   test('reads the usage log in row mode, with no grouping', () => {
     const built = query();
@@ -342,30 +346,15 @@ describe('buildConversationSpansQuery', () => {
   test('selects the span hierarchy, its cost and what each hop did', () => {
     const names = selectedNames(query().select);
 
-    expect(names).toEqual([
-      UsageLogField.CoreSpanId,
-      UsageLogField.CoreParentSpanId,
-      UsageLogField.EventKind,
-      UsageLogField.Deployment,
-      UsageLogField.ParentDeployment,
-      UsageLogField.RequestMethod,
-      UsageLogField.RequestUri,
-      UsageLogField.ResponseUpstreamUri,
-      UsageLogField.ResponseStatus,
-      UsageLogField.Success,
-      UsageLogField.OperationDurationMs,
-      UsageLogField.TotalTokens,
-      UsageLogField.DeploymentPrice,
-      UsageLogField.TotalPrice,
-      UsageLogField.RequestTime,
-      UsageLogField.ResponseBodyBytes,
-      UsageLogField.RequestBodyBytes,
-      UsageLogField.NumberRequestMessages,
-      UsageLogField.ReasoningTokens,
-      UsageLogField.McpMethod,
-      UsageLogField.McpToolCallName,
-      UsageLogField.ExecutionPath,
-    ]);
+    expect(names).toEqual(SPAN_BASE_FIELDS);
+  });
+
+  // Exactly what it was handed, in that order. A projection that added a column of its own would name one
+  // the caller never checked against the schema, and one unknown field rejects the whole read.
+  test('names the fields it was given and nothing else', () => {
+    const names = selectedNames(query([UsageLogField.CoreSpanId, 'usage_client_identity.client_type']).select);
+
+    expect(names).toEqual([UsageLogField.CoreSpanId, 'usage_client_identity.client_type']);
   });
 
   // The inspector's only pre-body facts. Plain columns, so the Request tab's message count is known before

@@ -685,9 +685,63 @@ export interface HopTreeRow {
   isLastChild: boolean;
 }
 
+export type SpanFieldRow = ConversationSpanRow & Record<string, unknown>;
+
 export interface ConversationSpansPage {
-  spans: ConversationSpanRow[];
+  spans: SpanFieldRow[];
   total: number | null;
+  // Resolved from the hop-log schema by the same read that fetched the spans: the two must describe one
+  // projection, or the rail states a field the query never selected as one the hop recorded nothing for.
+  fieldGroups: SpanFieldGroup[];
+}
+
+// The tags the hop-log catalog groups its columns under, as this release labels them. The set is not closed:
+// a tag outside it is presented under the schema's own spelling, so a column the service publishes under a
+// new tag reaches the rail without a release.
+export enum SpanFieldTag {
+  Identifier = 'identifier',
+  Dimension = 'dimension',
+  Principal = 'principal',
+  Deployment = 'deployment',
+  Request = 'request',
+  Response = 'response',
+  TokenUsage = 'token-usage',
+  Cost = 'cost',
+  Performance = 'performance',
+  Client = 'client',
+  Provenance = 'provenance',
+  Tracing = 'tracing',
+  System = 'system',
+}
+
+export interface SpanFieldDescriptor {
+  name: string;
+  label: string;
+  type: AnalyticsFieldType;
+  tag: string;
+}
+
+export interface SpanObjectEntry {
+  key: string;
+  text: string;
+}
+
+export interface SpanFactRowProps {
+  label: string;
+  value: string;
+  isMono?: boolean;
+  valueClassName?: string;
+}
+
+export interface SpanFieldGroup {
+  tag: string;
+  fields: SpanFieldDescriptor[];
+}
+
+// The projection the span read names, and the groups the rail presents it as.
+export interface SpanFieldSet {
+  names: string[];
+  groups: SpanFieldGroup[];
 }
 
 // What kind of call a hop stands for. Named as the hop log names them, and deliberately carrying no failure
@@ -709,7 +763,7 @@ export enum SpanKind {
 }
 
 export interface ConversationSpanNode {
-  span: ConversationSpanRow;
+  span: SpanFieldRow;
   kind: SpanKind;
   hasFailed: boolean;
   startedAtMs: number | null;

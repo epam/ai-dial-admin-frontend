@@ -50,6 +50,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, insightColumns, feedb
           figures={trace.figures}
           title={trace.title}
           spans={trace.spans}
+          fieldGroups={trace.fieldGroups}
           bodyGrants={bodyGrants}
           hasLoadError={trace.hasLoadError}
           selectedSpanId={selectedSpanId}
