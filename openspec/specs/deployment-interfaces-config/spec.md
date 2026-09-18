@@ -73,12 +73,22 @@ Before persisting an entity, an interface entry's empty or blank `base_url`/`bas
 be omitted from that entry in the payload sent to the backend (stored as absent in draft state, so
 no empty string ever reaches the wire); the entry itself SHALL be retained, whatever else it
 carries. An empty string on the wire is not an absent value to DIAL Core — it is a present, broken
-base URL — so the field is omitted rather than sent blank.
+base URL — so the field is omitted rather than sent blank. The same SHALL hold for an upstream
+interface entry's `endpoint` value (the per-upstream interface override in the upstream endpoints
+editor): an empty or blank `endpoint` SHALL be stored absent in draft state, because Core dials a
+present-but-empty `endpoint` for that interface instead of falling back to the upstream's own
+`baseUrl`, and every completion to the model then fails.
 
 #### Scenario: Empty interface base_url is omitted while the entry is kept
 - **WHEN** an admin saves a platform model whose entity-level `base_url` is set with a passthrough
   interface whose `base_url` is empty
 - **THEN** the save payload includes that interface entry with no `base_url`/`baseUrl` field on it
+
+#### Scenario: An empty upstream interface endpoint is omitted while the entry is kept
+- **WHEN** an admin adds an interface to a model's upstream in the upstream endpoints editor, leaves
+  its Endpoint field empty, and saves
+- **THEN** the saved interface entry carries no `endpoint` field, so Core serves that interface from
+  the upstream's own base URL
 
 #### Scenario: An entry carrying only an omitted base_url is persisted
 - **WHEN** an admin adds an interface row, leaves its `base_url` empty, changes nothing else on the

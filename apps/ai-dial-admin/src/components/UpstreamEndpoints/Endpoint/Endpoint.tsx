@@ -52,7 +52,8 @@ const Endpoint: FC<Props> = ({
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isModelView = view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels;
-  const isInterfacesHidden = view === ApplicationRoute.Models;
+  const isInterfacesHidden =
+    view === ApplicationRoute.Models || view === ApplicationRoute.Routes || view === ApplicationRoute.PlatformRoutes;
   const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
 
   const idValidationField = `upstream-id-${index}`;
