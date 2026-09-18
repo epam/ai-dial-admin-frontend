@@ -1,23 +1,25 @@
 'use client';
 
 import { useCallback } from 'react';
+
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModelPricing, PricingRate, PricingType } from '@/src/models/dial/model';
-import classNames from 'classnames';
-import { getMultipliedRate, getMultipliedValue, getRealRate, getPriceRealValue } from './utils';
 import PricingRateControl from './PricingRateControl';
+import { getMultipliedRate, getMultipliedValue, getPriceRealValue, getRealRate } from './utils';
 
 interface Props<T> {
   model: T;
   onChangeModel: (model: T) => void;
+  isAsset?: boolean;
 }
 
-const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel }: Props<T>) => {
+const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel, isAsset }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -123,23 +125,25 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
           disabled={isPriceDisabled}
         />
       </div>
-      <div className="flex flex-col gap-y-4 flex-wrap lg:flex-row lg:gap-x-2 lg:items-start">
-        <PricingRateControl
-          elementId="cacheReadPrice"
-          label={t(ModelViewI18nKey.CacheReadPrice)}
-          value={getMultipliedRate(model.pricing?.cacheRead, isTokenType)}
-          onChange={onChangeCacheRead}
-          disabled={isCacheRateDisabled}
-        />
+      {isAsset && (
+        <div className="flex flex-col gap-y-4 flex-wrap lg:flex-row lg:gap-x-2 lg:items-start">
+          <PricingRateControl
+            elementId="cacheReadPrice"
+            label={t(ModelViewI18nKey.CacheReadPrice)}
+            value={getMultipliedRate(model.pricing?.cacheRead, isTokenType)}
+            onChange={onChangeCacheRead}
+            disabled={isCacheRateDisabled}
+          />
 
-        <PricingRateControl
-          elementId="cacheWritePrice"
-          label={t(ModelViewI18nKey.CacheWritePrice)}
-          value={getMultipliedRate(model.pricing?.cacheWrite, isTokenType)}
-          onChange={onChangeCacheWrite}
-          disabled={isCacheRateDisabled}
-        />
-      </div>
+          <PricingRateControl
+            elementId="cacheWritePrice"
+            label={t(ModelViewI18nKey.CacheWritePrice)}
+            value={getMultipliedRate(model.pricing?.cacheWrite, isTokenType)}
+            onChange={onChangeCacheWrite}
+            disabled={isCacheRateDisabled}
+          />
+        </div>
+      )}
     </div>
   );
 };
