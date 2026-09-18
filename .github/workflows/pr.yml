@@ -35,10 +35,10 @@ jobs:
         run: npm run validate:agent-docs
 
   # Types are the one thing neither `npm run lint` nor vitest sees: eslint ignores `*.spec.ts(x)` and
-  # vitest strips types through esbuild. The app project is a hard gate at zero errors. The spec project
-  # is reported only — it still carries the errors catalogued in
-  # openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md, and this step exits
-  # 0 on purpose so those never turn a PR red. Whoever removes the last one should make it a gate too.
+  # vitest strips types through esbuild. Both projects are hard gates at zero errors — the spec project
+  # became one once the fixture debt catalogued in
+  # openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md was cleared. The
+  # spec step still writes the per-file breakdown to the job summary, so a red run names the files.
   typecheck:
     name: Typecheck
     runs-on: ubuntu-24.04
@@ -53,21 +53,28 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Typecheck app source
         run: npm run typecheck
-      - name: Report spec-file type errors
+      - name: Typecheck spec files
         run: |
-          npm run --silent typecheck:specs > spec-typecheck.log 2>&1 || true
-          count=$(grep -c 'error TS' spec-typecheck.log || true)
-          {
-            echo "## Spec-file type errors: ${count}"
-            echo
-            echo "Reported, not gated. \`npm run typecheck:specs\` from the repository root reproduces this."
-            echo
-            echo "### Files with the most errors"
-            echo '```'
-            grep -oE '^[^(]*\.(ts|tsx)' spec-typecheck.log | sort | uniq -c | sort -rn | head -15 || true
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          exit 0
+          set +e
+          npm run --silent typecheck:specs > spec-typecheck.log 2>&1
+          status=$?
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            count=$(grep -c 'error TS' spec-typecheck.log || true)
+            {
+              echo "## Spec-file type errors: ${count}"
+              echo
+              echo "\`npm run typecheck:specs\` from the repository root reproduces this."
+              echo
+              echo "### Files with the most errors"
+              echo '```'
+              grep -oE '^[^(]*\.(ts|tsx)' spec-typecheck.log | sort | uniq -c | sort -rn | head -15 || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          exit "$status"
 
   run_tests:
     uses: epam/ai-dial-ci/.github/workflows/node_pr.yml@4.11.0
