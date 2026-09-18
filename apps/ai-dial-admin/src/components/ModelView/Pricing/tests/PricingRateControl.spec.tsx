@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ModelViewI18nKey } from '@/src/constants/i18n';
-import { PricingOperator, PricingRate } from '@/src/models/dial/model';
+import { PricingOperator, PricingRate, PricingRateNode } from '@/src/models/dial/model';
 import PricingRateControl from '../PricingRateControl';
 
 // Same replacement as Pricing.spec.tsx: a native select stays queryable as a combobox with options.
@@ -23,7 +23,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ),
 }));
 
-const testNode = (field = 'ttl'): PricingRate => ({
+const testNode = (field = 'ttl'): PricingRateNode => ({
   test: { field, operator: PricingOperator.EQ, value: '1h' },
   ifTrue: '6',
   ifFalse: '3.75',
