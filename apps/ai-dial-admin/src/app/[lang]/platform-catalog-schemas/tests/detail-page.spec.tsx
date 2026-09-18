@@ -80,7 +80,11 @@ describe('Catalog schema detail page :: resolving either population', () => {
    * actually has. A stale link carrying it must not skip the API-written read.
    */
   test('ignores a configFile flag on the address, still reading the API-written half first', async () => {
-    vi.mocked(getCatalogSchema).mockResolvedValue({ success: true, response: { $id: SCHEMA_ID }, etag: 'etag-1' });
+    vi.mocked(getCatalogSchema).mockResolvedValue({
+      success: true,
+      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      etag: 'etag-1',
+    });
 
     const rendered = await (Page as unknown as (props: unknown) => Promise<RenderedElement>)({
       params: Promise.resolve({ id: SEGMENT }),
