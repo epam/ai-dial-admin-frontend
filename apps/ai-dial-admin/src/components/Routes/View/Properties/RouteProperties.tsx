@@ -35,6 +35,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { IconRefresh } from '@tabler/icons-react';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -289,6 +290,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
 
       <div className={classNames(route.response && 'hidden')}>
         <UpstreamEndpoints
+          view={ApplicationRoute.Routes}
           disabled={disabled || isReadOnlyAdmin}
           entity={route}
           onChangeEntity={onChange}
