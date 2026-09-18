@@ -179,7 +179,7 @@ export const parameterSchemaTab = (t: (key: string) => string) => ({
 
 export const catalogTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Catalog,
-  label: t(TabsI18nKey.Catalog),
+  label: t(TabsI18nKey.CatalogMetadata),
 });
 
 export const entitiesTab = (t: (key: string) => string) => ({

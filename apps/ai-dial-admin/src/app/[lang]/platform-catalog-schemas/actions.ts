@@ -120,13 +120,7 @@ export async function getCatalogSchemaById(id: string): Promise<ServerActionResp
   return catalogSchemasApi.schema(token, id);
 }
 
-/** `config-file-entity-views`: the catalog-schema names Core's configuration file declares. */
-export async function getConfigFileCatalogSchemas() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return configFileApi.listNames(token, ConfigFileEntityType.CatalogSchemas);
-}
-
-/** `config-file-entity-views`: reads one file-declared catalog schema by name. */
+/** Reads the schema Core's configuration file declares under this `$id`, keyed as Core keys it. */
 export async function getConfigFileCatalogSchema(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return configFileApi.getEntity<DialCatalogSchemaResource>(token, ConfigFileEntityType.CatalogSchemas, name);

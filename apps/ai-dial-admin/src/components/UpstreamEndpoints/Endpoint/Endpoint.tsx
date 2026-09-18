@@ -52,7 +52,7 @@ const Endpoint: FC<Props> = ({
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isModelView = view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels;
-
+  const isInterfacesHidden = view === ApplicationRoute.Models;
   const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
 
   const idValidationField = `upstream-id-${index}`;
@@ -277,13 +277,15 @@ const Endpoint: FC<Props> = ({
                 containerClassName="w-full"
                 onChange={onChangeSecretExtraData}
               />
-              <InterfacesField<DialUpstreamInterface>
-                interfaces={endpoint.interfaces}
-                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
-                allowedTypes={MODEL_INTERFACE_TYPES}
-                variant={InterfaceFieldVariant.Endpoint}
-                disabled={disabled}
-              />
+              {!isInterfacesHidden && (
+                <InterfacesField<DialUpstreamInterface>
+                  interfaces={endpoint.interfaces}
+                  onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                  allowedTypes={MODEL_INTERFACE_TYPES}
+                  variant={InterfaceFieldVariant.Endpoint}
+                  disabled={disabled}
+                />
+              )}
             </>
           )}
         </div>
@@ -333,16 +335,18 @@ const Endpoint: FC<Props> = ({
                 onChange={onChangeSecretExtraData}
               />
             </div>
-            <div className="mt-2 w-full">
-              <InterfacesField<DialUpstreamInterface>
-                interfaces={endpoint.interfaces}
-                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
-                allowedTypes={MODEL_INTERFACE_TYPES}
-                variant={InterfaceFieldVariant.Endpoint}
-                disabled={disabled}
-                className="w-full"
-              />
-            </div>
+            {!isInterfacesHidden && (
+              <div className="mt-2 w-full">
+                <InterfacesField<DialUpstreamInterface>
+                  interfaces={endpoint.interfaces}
+                  onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                  allowedTypes={MODEL_INTERFACE_TYPES}
+                  variant={InterfaceFieldVariant.Endpoint}
+                  disabled={disabled}
+                  className="w-full"
+                />
+              </div>
+            )}
           </>
         )}
       </div>

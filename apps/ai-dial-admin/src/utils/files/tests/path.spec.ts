@@ -70,24 +70,24 @@ describe('Utils :: files :: getFolderNameAndPath', () => {
 
 describe('Utils :: files :: getListOfPathsToMove', () => {
   test('Should return correct list of paths from prompts', () => {
-    const res = getListOfPathsToMove({ name: 'name' }, null, [
-      { name: 'name', path: 'path' },
-      { name: 'name', path: 'path2' },
-      { name: 'name', path: 'path3' },
-      { name: 'name2', path: 'path4' },
+    const res = getListOfPathsToMove({ name: 'name', path: 'prompts/public/name', folderId: 'public' }, null, [
+      { name: 'name', path: 'path', folderId: 'public' },
+      { name: 'name', path: 'path2', folderId: 'public' },
+      { name: 'name', path: 'path3', folderId: 'public' },
+      { name: 'name2', path: 'path4', folderId: 'public' },
     ]);
     expect(res).toEqual(['path', 'path2', 'path3']);
   });
 
   test('Should return correct list of paths from map', () => {
     const res = getListOfPathsToMove(
-      { name: 'name', folderId: 'folder' },
+      { name: 'name', path: 'folder/name', folderId: 'folder' },
       {
         'folder/': [
-          { name: 'name', path: 'path' },
-          { name: 'name', path: 'path2' },
-          { name: 'name', path: 'path3' },
-          { name: 'name2', path: 'path4' },
+          { name: 'name', path: 'path', folderId: 'public' },
+          { name: 'name', path: 'path2', folderId: 'public' },
+          { name: 'name', path: 'path3', folderId: 'public' },
+          { name: 'name2', path: 'path4', folderId: 'public' },
         ],
       },
       null,
@@ -96,13 +96,13 @@ describe('Utils :: files :: getListOfPathsToMove', () => {
   });
   test('Should return correct list of paths from map with extension', () => {
     const res = getListOfPathsToMove(
-      { name: 'name.txt', folderId: 'folder' },
+      { name: 'name.txt', path: 'folder/name.txt', folderId: 'folder' },
       {
         'folder/': [
-          { name: 'name.txt', path: 'path' },
-          { name: 'name.txt', path: 'path2' },
-          { name: 'name.txt', path: 'path3' },
-          { name: 'name2.txt', path: 'path4' },
+          { name: 'name.txt', path: 'path', folderId: 'public' },
+          { name: 'name.txt', path: 'path2', folderId: 'public' },
+          { name: 'name.txt', path: 'path3', folderId: 'public' },
+          { name: 'name2.txt', path: 'path4', folderId: 'public' },
         ],
       },
       null,
@@ -112,7 +112,12 @@ describe('Utils :: files :: getListOfPathsToMove', () => {
   });
 
   test('Should return  empty array', () => {
-    const res = getListOfPathsToMove({ name: 'name.txt', folderId: 'folder' }, null, null, true);
+    const res = getListOfPathsToMove(
+      { name: 'name.txt', path: 'folder/name.txt', folderId: 'folder' },
+      null,
+      null,
+      true,
+    );
     expect(res).toEqual([]);
   });
 });
@@ -121,10 +126,10 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
   test('Should return all paths from a record of DialFiles', () => {
     const record = {
       'folder1/': [
-        { path: 'folder1/file1', name: 'file1', nodeType: 'item' },
-        { path: 'folder1/file2', name: 'file2', nodeType: 'item' },
+        { path: 'folder1/file1', name: 'file1', folderId: 'folder1', nodeType: DialFileNodeType.ITEM },
+        { path: 'folder1/file2', name: 'file2', folderId: 'folder1', nodeType: DialFileNodeType.ITEM },
       ],
-      'folder2/': [{ path: 'folder2/file3', name: 'file3', nodeType: 'item' }],
+      'folder2/': [{ path: 'folder2/file3', name: 'file3', folderId: 'folder1', nodeType: DialFileNodeType.ITEM }],
     };
 
     const res = getListOfPathsToBulkDelete(record);
@@ -134,8 +139,8 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
   test('Should return all paths from a record of DialPrompts', () => {
     const record = {
       'folder1/': [
-        { path: 'folder1/prompt1', name: 'prompt1', prompt: 'Write a poem' },
-        { path: 'folder1/prompt2', name: 'prompt2', prompt: 'Write code' },
+        { path: 'folder1/prompt1', name: 'prompt1', folderId: 'folder1', version: '1.0', content: 'Write a poem' },
+        { path: 'folder1/prompt2', name: 'prompt2', folderId: 'folder1', version: '1.0', content: 'Write code' },
       ],
     };
 
@@ -235,8 +240,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -250,8 +256,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -265,8 +272,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -281,7 +289,8 @@ describe('Utils :: files :: checkSelectedPath', () => {
       {
         path: '/project',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        folderId: '/',
+        items: [],
       },
     ];
 
