@@ -6,7 +6,12 @@ import { describe, expect, test, vi } from 'vitest';
 
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType, InterfaceFieldVariant, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
+import {
+  DeploymentInterfaceType,
+  InterfaceFieldVariant,
+  InterfaceMode,
+  TranslatorReference,
+} from '@/src/models/dial/interfaces';
 
 type InterfaceValue = {
   baseUrl?: string;
