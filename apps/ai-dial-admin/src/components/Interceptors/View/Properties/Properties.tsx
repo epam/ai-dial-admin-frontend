@@ -4,7 +4,6 @@ import { FC } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getInterceptorContainers } from '@/src/app/actions/deployments';
-import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaintainerControl from '@/src/components/BaseControls/Maintainer';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
@@ -13,7 +12,6 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -59,11 +57,6 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
       <Defaults
         values={selectedInterceptor.defaults}
         onChangeValues={(defaults) => onChangeInterceptor({ ...selectedInterceptor, defaults })}
-      />
-      <InterfacesField
-        interfaces={selectedInterceptor.interfaces}
-        onChangeInterfaces={(interfaces) => onChangeInterceptor({ ...selectedInterceptor, interfaces })}
-        allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
       />
       <OverrideNameControl entity={selectedInterceptor as any} onChangeEntity={onChangeInterceptor} />
     </div>

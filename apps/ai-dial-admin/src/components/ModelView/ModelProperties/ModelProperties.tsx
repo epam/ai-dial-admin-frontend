@@ -3,7 +3,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
@@ -13,7 +12,6 @@ import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -91,12 +89,6 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
           validationKey="responsesDefaultKeys"
         />
       )}
-
-      <InterfacesField
-        interfaces={model.interfaces}
-        onChangeInterfaces={(interfaces) => onChangeModel({ ...model, interfaces })}
-        allowedTypes={MODEL_INTERFACE_TYPES}
-      />
 
       <UpstreamEndpoints
         entity={model}

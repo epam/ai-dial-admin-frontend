@@ -60,7 +60,12 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
 
   return (
     <div className="flex flex-col gap-y-8 h-full">
-      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
+      <AppRunnerSource
+        entity={runner}
+        onChangeEntity={onChangeRunner}
+        view={ApplicationRoute.ApplicationRunners}
+        isReadOnlyAdmin={isReadOnlyAdmin}
+      />
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
       <EndpointControl
