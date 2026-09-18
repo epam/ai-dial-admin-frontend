@@ -155,7 +155,7 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
         {asset.type === DialModelResourceType.Embedding && (
           <EmbeddingDimensions model={asset} onChangeModel={onChange} />
         )}
-        <Pricing model={asset} onChangeModel={onChange} />
+        <Pricing model={asset} onChangeModel={onChange} isAsset />
         <CatalogSchemaField
           schemaId={asset.catalogSchemaId}
           options={catalogSchemas?.options}

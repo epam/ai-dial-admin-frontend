@@ -1,6 +1,6 @@
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { UNLIMITED_ACCEPTED_USERS, NO_LIMITS_KEY, UNLIMITED_VALUE, UNLIMITED_KEY } from '@/src/constants/role';
-import { PricingType } from '@/src/models/dial/model';
+import { PricingOperator, PricingType } from '@/src/models/dial/model';
 import { ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import {
@@ -136,6 +136,50 @@ describe('Activity audit :: convertPricing', () => {
     );
   });
 
+  test('should render a conditional cache rate as a readable expression under the token unit', () => {
+    const pricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toBe(`${ModelViewI18nKey.Tokens} ${ModelViewI18nKey.PerMillion}, cacheRead: ttl == 1h ? 6 : 3.75`);
+  });
+
+  test('should keep a conditional cache rate per-token under the character unit', () => {
+    const pricing = {
+      unit: PricingType.CharWithoutWhitespace,
+      cacheRead: {
+        test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toBe(`${ModelViewI18nKey.CharWithoutWhitespace}, cacheRead: ttl == 1h ? 0.000006 : 0.00000375`);
+  });
+
+  test('should show the prompt-rate fallback for an omitted branch', () => {
+    const pricing = {
+      unit: PricingType.Token,
+      cacheRead: {
+        test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+        ifTrue: '0.000006',
+      },
+    };
+
+    const result = convertPricing(pricing, t);
+
+    expect(result).toContain(`cacheRead: ttl == 1h ? 6 : ${ModelViewI18nKey.PromptRate}`);
+  });
+
   test('should handle string values gracefully in non-token mode', () => {
     const pricing = {
       unit: PricingType.CharWithoutWhitespace,
@@ -157,26 +201,26 @@ describe('Activity audit :: convertRoleLimitsIntoString', () => {
   });
 
   test('should convert simple key-value pairs into a comma-separated string', () => {
-    const limits = { maxUsers: 10, active: true };
+    const limits = { day: '10', enabled: true };
     const result = convertRoleLimitsIntoString(limits);
-    expect(result).toBe('maxUsers: 10, active: true');
+    expect(result).toBe('day: 10, enabled: true');
   });
 
   test('should handle string values correctly', () => {
-    const limits = { type: 'admin', level: 'high' };
+    const limits = { minute: '60', week: '1000' };
     const result = convertRoleLimitsIntoString(limits);
-    expect(result).toBe('type: admin, level: high');
+    expect(result).toBe('minute: 60, week: 1000');
   });
 
-  test('should handle numeric, boolean, null, and undefined values gracefully', () => {
+  test('should handle boolean, null, and undefined values gracefully', () => {
     const limits = {
-      limit: 5,
+      day: '5',
       enabled: false,
-      note: null,
-      description: undefined,
+      minute: null,
+      week: undefined,
     };
     const result = convertRoleLimitsIntoString(limits);
-    expect(result).toBe('limit: 5, enabled: false, note: null, description: undefined');
+    expect(result).toBe('day: 5, enabled: false, minute: null, week: undefined');
   });
 
   test('should handle empty object correctly', () => {
@@ -184,23 +228,23 @@ describe('Activity audit :: convertRoleLimitsIntoString', () => {
   });
 
   test('should preserve the key order of the original object', () => {
-    const limits = { a: 1, b: 2, c: 3 };
+    const limits = { day: '1', minute: '2', week: '3' };
     const result = convertRoleLimitsIntoString(limits);
-    expect(result).toBe('a: 1, b: 2, c: 3');
+    expect(result).toBe('day: 1, minute: 2, week: 3');
   });
 });
 
 describe('Activity audit :: fillShareValues', () => {
   test('should push a diff with converted value and CHANGED status when v1 and v2 differ', () => {
     const diffs: any[] = [];
-    const v1 = { limit: '100' };
-    const v2 = { limit: '200' };
+    const v1 = { maxAcceptedUsers: '100' };
+    const v2 = { maxAcceptedUsers: '200' };
 
-    fillShareValues(diffs, 'limit', 'limit', v1, v2, false);
+    fillShareValues(diffs, 'maxAcceptedUsers', 'maxAcceptedUsers', v1, v2, false);
 
     expect(diffs).toHaveLength(1);
     expect(diffs[0]).toEqual({
-      parameter: 'limit.limit',
+      parameter: 'maxAcceptedUsers.maxAcceptedUsers',
       value: '200',
       diffStatus: DiffStatus.CHANGED,
     });
@@ -208,10 +252,10 @@ describe('Activity audit :: fillShareValues', () => {
 
   test('should push a diff with NO_LIMITS_KEY when both values are falsy', () => {
     const diffs: any[] = [];
-    const v1 = { rate: '' };
-    const v2 = { rate: null };
+    const v1 = { invitationTtl: '' };
+    const v2 = { invitationTtl: null };
 
-    fillShareValues(diffs, 'rate', 'rate', v1, v2, false);
+    fillShareValues(diffs, 'invitationTtl', 'invitationTtl', v1, v2, false);
 
     expect(diffs).toHaveLength(1);
     expect(diffs[0].value).toBe(NO_LIMITS_KEY);
@@ -220,14 +264,14 @@ describe('Activity audit :: fillShareValues', () => {
 
   test('should use val1 when v1 exists and v2 is missing', () => {
     const diffs: any[] = [];
-    const v1 = { name: 'John' };
+    const v1 = { maxAcceptedUsers: '10' };
 
-    fillShareValues(diffs, 'name', 'name', v1, undefined, false);
+    fillShareValues(diffs, 'maxAcceptedUsers', 'maxAcceptedUsers', v1, undefined, false);
 
     expect(diffs).toHaveLength(1);
     expect(diffs[0]).toEqual({
-      parameter: 'name.name',
-      value: 'John',
+      parameter: 'maxAcceptedUsers.maxAcceptedUsers',
+      value: '10',
       diffStatus: undefined,
     });
   });
@@ -247,12 +291,12 @@ describe('Activity audit :: fillShareValues', () => {
 
   test('should set status to ADDED when v1 is missing and v2 is present, isCurrent = false', () => {
     const diffs: any[] = [];
-    const v2 = { limit: '500' };
+    const v2 = { maxAcceptedUsers: '500' };
 
-    fillShareValues(diffs, 'limit', 'limit', undefined, v2, false);
+    fillShareValues(diffs, 'maxAcceptedUsers', 'maxAcceptedUsers', undefined, v2, false);
 
     expect(diffs[0]).toEqual({
-      parameter: 'limit.limit',
+      parameter: 'maxAcceptedUsers.maxAcceptedUsers',
       value: '500',
       diffStatus: DiffStatus.ADDED,
     });
@@ -260,12 +304,12 @@ describe('Activity audit :: fillShareValues', () => {
 
   test('should set status to MIRROR when v1 is missing and v2 is present, isCurrent = true', () => {
     const diffs: any[] = [];
-    const v2 = { rate: '999' };
+    const v2 = { maxAcceptedUsers: '999' };
 
-    fillShareValues(diffs, 'rate', 'rate', undefined, v2, true);
+    fillShareValues(diffs, 'maxAcceptedUsers', 'maxAcceptedUsers', undefined, v2, true);
 
     expect(diffs[0]).toEqual({
-      parameter: 'rate.rate',
+      parameter: 'maxAcceptedUsers.maxAcceptedUsers',
       value: '999',
       diffStatus: DiffStatus.MIRROR,
     });
@@ -273,19 +317,19 @@ describe('Activity audit :: fillShareValues', () => {
 
   test('should set status to undefined when both values are equal', () => {
     const diffs: any[] = [];
-    const v1 = { quota: '1000' };
-    const v2 = { quota: '1000' };
+    const v1 = { invitationTtl: '1000' };
+    const v2 = { invitationTtl: '1000' };
 
-    fillShareValues(diffs, 'quota', 'quota', v1, v2, false);
+    fillShareValues(diffs, 'invitationTtl', 'invitationTtl', v1, v2, false);
 
     expect(diffs[0].diffStatus).toBeUndefined();
   });
 
   test('should handle UNLIMITED_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
     const diffs: any[] = [];
-    const v2 = { limit: NO_LIMITS_KEY };
+    const v2 = { maxAcceptedUsers: NO_LIMITS_KEY };
 
-    fillShareValues(diffs, 'limit', 'limit', undefined, v2, false);
+    fillShareValues(diffs, 'maxAcceptedUsers', 'maxAcceptedUsers', undefined, v2, false);
 
     expect(diffs[0].value).toBe(NO_LIMITS_KEY);
   });
