@@ -138,6 +138,7 @@ const setup = (props: {
   onChange?: any;
   isPermissionsChanged: boolean;
   currentRules: DialRule[];
+  originalPublication?: Publication;
   skillManifest?: { name: string; description: string; body: string };
   onChangeSkillDescription?: (description: string) => void;
 }) => {
@@ -147,6 +148,7 @@ const setup = (props: {
     <TabsContent
       view={props.view}
       selectedPublication={props.selectedPublication}
+      originalPublication={props.originalPublication ?? props.selectedPublication}
       activeTab={props.activeTab}
       onChange={onChange}
       isPermissionsChanged={props.isPermissionsChanged}
@@ -404,10 +406,16 @@ describe('Publications :: TabsContent', () => {
       <TabsContent
         view={ApplicationRoute.FilePublications}
         selectedPublication={publication}
+        originalPublication={publication}
         activeTab={EntityViewTab.Permissions}
         onChange={vi.fn()}
         isPermissionsChanged={false}
         currentRules={mockCurrentRules}
+        setAddedFiles={vi.fn()}
+        setSkillAddedFiles={vi.fn()}
+        setSkillRemovedFileNames={vi.fn()}
+        onChangeSkillDescription={vi.fn()}
+        onChangeSkillBody={vi.fn()}
       />,
     );
 
@@ -432,10 +440,16 @@ describe('Publications :: TabsContent', () => {
       <TabsContent
         view={ApplicationRoute.PromptPublications}
         selectedPublication={promptPublication}
+        originalPublication={promptPublication}
         activeTab={EntityViewTab.Properties}
         onChange={vi.fn()}
         isPermissionsChanged={false}
         currentRules={mockCurrentRules}
+        setAddedFiles={vi.fn()}
+        setSkillAddedFiles={vi.fn()}
+        setSkillRemovedFileNames={vi.fn()}
+        onChangeSkillDescription={vi.fn()}
+        onChangeSkillBody={vi.fn()}
       />,
     );
 

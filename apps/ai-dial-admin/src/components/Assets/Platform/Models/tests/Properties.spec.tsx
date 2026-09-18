@@ -152,7 +152,7 @@ describe('Model asset Properties :: interface base URL fallback', () => {
   test('Should not mark an empty interface base_url required while the entity base_url is set', () => {
     renderProperties({
       baseUrl: 'http://model-base',
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: undefined } },
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } },
     });
 
     expect(ifaceBaseUrlInput()).toBeInTheDocument();
@@ -161,7 +161,7 @@ describe('Model asset Properties :: interface base URL fallback', () => {
 
   test('Should mark an empty interface base_url required while the entity base_url is empty', () => {
     renderProperties({
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: undefined } },
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } },
     });
 
     expect(queryIfaceBaseUrlInputWithMarker()).not.toBeNull();

@@ -14,6 +14,7 @@ const makeClients = (): EnrichmentClients => ({
   getAsset: vi.fn(),
   updateAsset: vi.fn(),
   getBucket: vi.fn(),
+  getSkillMetadata: vi.fn(),
   getFileMetadata: vi.fn(),
   uploadFile: vi.fn(),
 });

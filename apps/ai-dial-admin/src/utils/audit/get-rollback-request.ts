@@ -35,7 +35,7 @@ export const rollbackEntityPerRevision = async (
     return getCreateAction(activity.resourceType)?.(previousRevision as any);
   }
 
-  return getUpdateAction(activity.resourceType)?.(previousRevision as any);
+  return getUpdateAction(activity.resourceType)?.(previousRevision as any, DEFAULT_ETAG);
 };
 
 export const rollbackEntityPerType = async (activity: DialActivity) => {

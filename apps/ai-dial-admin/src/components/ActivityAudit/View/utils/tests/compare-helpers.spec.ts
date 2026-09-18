@@ -44,8 +44,8 @@ describe('Activity audit :: generateStringFromObject', () => {
   test('should use convertPricing when translator is provided', () => {
     const pricing = {
       unit: PricingType.Token,
-      input: 0.002,
-      output: 0.003,
+      input: '0.002',
+      output: '0.003',
     };
 
     const result = generateStringFromObject(pricing, t);
@@ -56,7 +56,7 @@ describe('Activity audit :: generateStringFromObject', () => {
   test('should correctly handle character-based pricing when translator is provided', () => {
     const pricing = {
       unit: PricingType.CharWithoutWhitespace,
-      rate: 0.001,
+      rate: '0.001',
     };
 
     const result = generateStringFromObject(pricing, t);
@@ -78,8 +78,8 @@ describe('Activity audit :: convertPricing', () => {
   test('should format token-based pricing correctly (unit = Token)', () => {
     const pricing = {
       unit: PricingType.Token,
-      input: 0.002,
-      output: 0.003,
+      input: '0.002',
+      output: '0.003',
     };
 
     const result = convertPricing(pricing, t);
@@ -89,8 +89,8 @@ describe('Activity audit :: convertPricing', () => {
   test('should format character-based pricing correctly (unit = Character)', () => {
     const pricing = {
       unit: PricingType.CharWithoutWhitespace,
-      input: 0.002,
-      output: 0.003,
+      input: '0.002',
+      output: '0.003',
     };
 
     const result = convertPricing(pricing, t);
@@ -125,9 +125,9 @@ describe('Activity audit :: convertPricing', () => {
   test('should scale cacheRead and cacheWrite like the other token rates', () => {
     const pricing = {
       unit: PricingType.Token,
-      prompt: 0.001,
-      cacheRead: 0.002,
-      cacheWrite: 0.003,
+      prompt: '0.001',
+      cacheRead: '0.002',
+      cacheWrite: '0.003',
     };
 
     const result = convertPricing(pricing, t);

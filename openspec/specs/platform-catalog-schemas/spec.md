@@ -5,10 +5,10 @@ The `Catalog ▸ Catalog Schemas` surface: menu entry, flat list with create/del
 two-tab detail view (Properties, Parameters) over DIAL Core's own `catalog_schemas` config resources
 — the registered JSON-Schema documents that declare what display metadata a catalog entity type
 exposes and how a catalog renders it. Covers the `$id`-as-resource-name identity, the client-side
-meta-schema validation that substitutes for Core's absent write-time checks, and both halves of the
-population — the API-written resources this surface owns and the file-declared ones behind the
-`showConfigFiles` toggle. The consumer side (`catalog_schema_id` / `catalog_properties` on
-deployments) belongs to `catalog-properties-editing`.
+meta-schema validation that substitutes for Core's absent write-time checks. The surface owns the
+API-written resources; the file-declared half is operator-managed and carries no `showConfigFiles`
+toggle here, reachable only at a schema's own detail address. The consumer side
+(`catalog_schema_id` / `catalog_properties` on deployments) belongs to `catalog-properties-editing`.
 
 ## Requirements
 
@@ -222,6 +222,11 @@ SHALL make those properties editable. Unlike an app runner, a catalog schema dec
 schema endpoint — DIAL Core resolves it from configuration alone — so there is no resolved read to
 perform and no read-only mode to enter.
 
+Because the tab is always editable, it SHALL offer the property editor even when the schema declares
+no properties yet, so the first property can be created here rather than only through the raw JSON
+editor. An empty presentation is the editor's own, reserved for the case where editing is not
+offered at all.
+
 The tab SHALL expose the catalog presentation hints each property may carry — the tab and section it
 renders in, its order, its widget, and whether its value is a locale map — as editable fields
 alongside the property's name, type, title, description, and requiredness. The widget selection SHALL
@@ -245,10 +250,12 @@ offer exactly the values Core's catalog meta-schema allows: `text`, `richText`, 
 - **THEN** the options are exactly `text`, `richText`, `badge`, `chips`, `url`, `boolean`, `image`,
   and `date`
 
-#### Scenario: A schema with no properties says so
+#### Scenario: A schema with no properties still offers the property editor
 
-- **WHEN** a schema declares no properties
-- **THEN** the tab shows an empty state rather than a blank area
+- **WHEN** a user opens the Parameters tab of a schema that declares no properties
+- **THEN** the property editor is shown, empty, with its add-field action — not an empty state in
+  place of it
+- **AND** adding a field and saving stores that first property on the schema
 
 #### Scenario: Editing preserves extensions the tab does not render
 
@@ -326,24 +333,37 @@ surface remains usable when that service is unavailable.
   configured
 - **THEN** no admin-backend request is required for any of those operations
 
-### Requirement: The config-file population is read on the same terms as every other covered view
+### Requirement: A file-declared schema is reachable at its own address, not through a list
 
-The config-file-sourced half of the catalog-schema population is read here, on the same terms as on
-the other views `config-file-entity-views` covers. The system SHALL render the `showConfigFiles`
-toggle on this surface, and SHALL swap the list for the read-only, config-file-sourced one while it
-is on.
+This surface owns the catalog schemas written through DIAL Core's API. It SHALL NOT offer the
+`showConfigFiles` toggle and SHALL NOT present a config-file-backed list: the file-declared half of
+the population is operator-managed in `aidial.config.json`, and nothing here can create, edit, or
+delete it.
 
-#### Scenario: The config-file toggle is offered on this surface
+A file-declared schema SHALL still open at the ordinary detail address. Because Core keys its
+configuration-file catalog schemas by `$id` — the same identity this surface uses in the route — one
+address resolves either population: the system SHALL read the API-written resource first and, when
+none exists, SHALL read the configuration-file half by that `$id`. A schema resolved that way SHALL
+render read-only, and a `$id` in neither population SHALL be reported as not found.
+
+#### Scenario: The list offers no config-file toggle
 
 - **WHEN** a user opens `/platform-catalog-schemas`
-- **THEN** the `showConfigFiles` toggle is rendered next to the page title
+- **THEN** no `Show config entities` toggle is rendered next to the page title, and the list shows
+  the API-written schemas only
 
-#### Scenario: The views covered before this capability are unaffected
+#### Scenario: A schema a deployment points at opens even when only the configuration file declares it
 
-- **WHEN** a user opens any view the config-file entity surface covered before catalog schemas joined
-- **THEN** its toggle behaves exactly as before
+- **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and that `$id`
+  has no API-written resource
+- **THEN** the schema the configuration file declares is shown
 
-#### Scenario: A config-file-sourced schema opens read-only
+#### Scenario: A file-declared schema is read-only
 
-- **WHEN** a user toggles the config-file list on and opens one of its entries
-- **THEN** the schema's detail view renders with no save, delete, or create action
+- **WHEN** the detail view resolves a schema from the configuration file
+- **THEN** it renders with no save, delete, or create action
+
+#### Scenario: An unknown id is not found
+
+- **WHEN** a user opens a detail address whose `$id` is in neither population
+- **THEN** the page reports it as not found rather than rendering an empty schema

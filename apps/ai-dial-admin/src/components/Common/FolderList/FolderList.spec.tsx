@@ -4,15 +4,16 @@ import { describe, expect, test } from 'vitest';
 import FolderList from './FolderList';
 
 const fakeContext = () => ({
+  isFetchingFiles: false,
   files: [],
   expandedFolders: new Set<string>(),
+  setExpandedFolders: vi.fn(),
   filePath: '',
+  setFilePath: vi.fn(),
   fetchedFoldersData: {},
   fetchFiles: () => [],
   toggleFolder: () => void 0,
   data: [],
-  bulkSelectedData: {},
-  setBulkSelectedData: () => {},
 });
 
 describe('FolderList', () => {

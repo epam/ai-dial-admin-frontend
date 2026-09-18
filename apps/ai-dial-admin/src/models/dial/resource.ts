@@ -207,6 +207,7 @@ export interface DialInterceptorResource extends ModifiedEntity {
   descriptionKeywords?: string[];
   features?: DialResourceFeatures;
   defaults?: Record<string, unknown>;
+  baseUrl?: string;
   catalogSchemaId?: string;
   catalogProperties?: Record<string, unknown>;
 }

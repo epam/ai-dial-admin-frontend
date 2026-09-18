@@ -15,13 +15,13 @@ describe('Footer', () => {
   });
 
   test('renders FE and BE versions', () => {
-    render(<Footer beVersion="4.5.6" />);
+    render(<Footer beVersion="4.5.6" onChangeCoreVersion={vi.fn()} />);
     expect(screen.getByText('Admin: [FE]1.2.3')).toBeInTheDocument();
     expect(screen.getByText('[BE]4.5.6')).toBeInTheDocument();
   });
 
   test('renders BE version as null', () => {
-    render(<Footer beVersion={null} />);
+    render(<Footer beVersion={null} onChangeCoreVersion={vi.fn()} />);
     expect(screen.getByText('Admin: [FE]1.2.3')).toBeInTheDocument();
     expect(screen.getByText('[BE]')).toBeInTheDocument();
   });

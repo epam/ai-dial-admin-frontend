@@ -11,7 +11,7 @@ const row = (
   rating_down: number | null,
   caveat: Partial<ConversationRow> = {},
 ): ConversationRow => ({
-  chat_id: 'chat-1',
+  client_session_id: 'chat-1',
   first_request_time: 0,
   project_id: 'data-team',
   user_hash: 'db7327ba3decd351',
@@ -30,8 +30,18 @@ const row = (
 const renderCell = (data?: ConversationRow | null) =>
   render(<RatingCellRenderer {...({ data } as ICellRendererParams<ConversationRow>)} />);
 
-const up = () => screen.getByText(ConversationsTraceI18nKey.RatingUp).parentElement;
-const down = () => screen.getByText(ConversationsTraceI18nKey.RatingDown).parentElement;
+// The label is an `sr-only` span; the count and the icon sit beside it, so each assertion is about the
+// span that wraps all three.
+const side = (label: string): HTMLElement => {
+  const container = screen.getByText(label).parentElement;
+  if (!container) {
+    throw new Error(`no container rendered around ${label}`);
+  }
+  return container;
+};
+
+const up = () => side(ConversationsTraceI18nKey.RatingUp);
+const down = () => side(ConversationsTraceI18nKey.RatingDown);
 
 describe('RatingCellRenderer', () => {
   test('always shows both a positive and a negative count, as the design does', () => {

@@ -14,6 +14,7 @@ import {
   ARRAY_VALUE_PAGE_SIZE,
   CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
+  CHAT_ID_SESSION_SOURCE,
   RAW_BODY_BYTE_BUDGET,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
@@ -28,6 +29,7 @@ import {
   HopInspectorSide,
   HopReadState,
   MessageRole,
+  SessionScope,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -848,7 +850,7 @@ describe('getConversationsSchema', () => {
 });
 
 describe('the hop inspector reads', () => {
-  const CHAT_ID = 'chat-1';
+  const SCOPE: SessionScope = { id: 'chat-1', source: CHAT_ID_SESSION_SOURCE };
   const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
   const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
 
@@ -881,7 +883,7 @@ describe('the hop inspector reads', () => {
   });
 
   const readRequest = (requestTime: number | string | null = 1787052797216) =>
-    getConversationHopRequest(CHAT_ID, 'tr1', 'sp1', requestTime);
+    getConversationHopRequest(SCOPE, 'tr1', 'sp1', requestTime);
 
   // Tier 1: roles, positions, sizes and clamped texts cross to the browser; the body does not.
   test('ships an envelope and no raw body', async () => {
@@ -956,7 +958,7 @@ describe('the hop inspector reads', () => {
   test('a side the caller does not hold is withheld without reading anything', async () => {
     schemaOf([UsageLogField.RequestBody]);
 
-    const result = await getConversationHopResponse(CHAT_ID, 'tr1', 'sp1', 1);
+    const result = await getConversationHopResponse(SCOPE, 'tr1', 'sp1', 1);
 
     expect(result.success).toBe(true);
     expect(result.response?.state).toBe(HopReadState.ColumnWithheld);
@@ -1003,7 +1005,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 1);
+    const result = await getConversationHopMessage(SCOPE, 'tr1', 'sp1', 1, 1);
 
     expect(result.response?.text).toBe('the prompt');
     expect(JSON.stringify(result.response)).not.toContain('quartermaster');
@@ -1013,7 +1015,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    expect((await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 9)).response?.state).toBe(HopReadState.NoBody);
+    expect((await getConversationHopMessage(SCOPE, 'tr1', 'sp1', 1, 9)).response?.state).toBe(HopReadState.NoBody);
   });
 
   // An assistant message that only called a tool: the call is what it said, so tier 2 carries it.
@@ -1026,7 +1028,7 @@ describe('the hop inspector reads', () => {
     });
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: withCall })] } });
 
-    const result = await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 0);
+    const result = await getConversationHopMessage(SCOPE, 'tr1', 'sp1', 1, 0);
 
     // The tier-2 read of one message carries the call's id for the same reason the envelope does.
     expect(result.response?.toolCalls).toEqual([{ name: 'calc', args: '{"a":1}', id: null }]);
@@ -1038,7 +1040,7 @@ describe('the hop inspector reads', () => {
     const huge = 'x'.repeat(RAW_BODY_BYTE_BUDGET + 50);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: huge })] } });
 
-    const result = await getConversationHopRawBody(CHAT_ID, 'tr1', 'sp1', 1, HopInspectorSide.Request);
+    const result = await getConversationHopRawBody(SCOPE, 'tr1', 'sp1', 1, HopInspectorSide.Request);
 
     expect(result.response?.clamp).toEqual({
       isClamped: true,
@@ -1051,7 +1053,7 @@ describe('the hop inspector reads', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await getConversationHopResponse(CHAT_ID, 'tr1', 'sp1', 1);
+    const result = await getConversationHopResponse(SCOPE, 'tr1', 'sp1', 1);
 
     expect(result.response?.text).toBe('the answer');
     expect(result.response?.finishReason).toBe('stop');

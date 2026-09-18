@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import {
-  getCatalogSchema,
-  getConfigFileCatalogSchema,
-  getConfigFileCatalogSchemas,
-} from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import { getCatalogSchema, getConfigFileCatalogSchema } from '@/src/app/[lang]/platform-catalog-schemas/actions';
 import { assetApi, configFileApi } from '@/src/app/api/api';
 import { CONFIG_FILE_ENTITY_VIEWS } from '@/src/constants/config-file-entity-views';
 import { READABLE_CONFIG_FILE_TYPES } from '@/src/constants/config-file-core';
@@ -25,25 +21,21 @@ describe('Catalog schemas :: config-file population', () => {
     (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
+  /**
+   * The type is readable while the view is not covered: this set guards every `ConfigFileApi` read,
+   * including the single read the detail route falls back to (Issue #4605).
+   */
   test('is a readable config-file type', () => {
     expect(READABLE_CONFIG_FILE_TYPES.has(ConfigFileEntityType.CatalogSchemas)).toBe(true);
   });
 
-  test('is a covered config-file entity view', () => {
-    expect(CONFIG_FILE_ENTITY_VIEWS.has(ApplicationRoute.PlatformCatalogSchemas)).toBe(true);
+  test('is not a covered config-file entity view, so the page renders no toggle', () => {
+    expect(CONFIG_FILE_ENTITY_VIEWS.has(ApplicationRoute.PlatformCatalogSchemas)).toBe(false);
   });
 
-  test('the eight covered views are exactly the ones expected', () => {
-    expect([...CONFIG_FILE_ENTITY_VIEWS]).toHaveLength(8);
+  test('the seven covered views are exactly the ones expected', () => {
+    expect([...CONFIG_FILE_ENTITY_VIEWS]).toHaveLength(7);
     expect(CONFIG_FILE_ENTITY_VIEWS.has(ApplicationRoute.PlatformKeys)).toBe(false);
-  });
-
-  test('lists the names the configuration file declares', async () => {
-    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
-
-    await getConfigFileCatalogSchemas();
-
-    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.CatalogSchemas);
   });
 
   test('reads one file-declared schema by name', async () => {

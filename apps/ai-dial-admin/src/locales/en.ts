@@ -666,7 +666,7 @@ export default {
     Conversation: 'Conversation',
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
-    Catalog: 'Catalog',
+    CatalogMetadata: 'Catalog metadata',
     ApplicationRunners: 'Application Runners',
     InstallationLog: 'Installation log',
     Instances: 'Instances',

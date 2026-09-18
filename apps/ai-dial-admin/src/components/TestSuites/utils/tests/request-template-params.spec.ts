@@ -16,10 +16,12 @@ describe('getTemplateParameters', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{tenantId}}/resource/${{resourceId:default-id}}',
       body: {
-        metadata: {
-          owner: '${{owner}}',
+        content: {
+          metadata: {
+            owner: '${{owner}}',
+          },
+          tags: ['${{tag1}}', '${{tag2:default-tag}}'],
         },
-        tags: ['${{tag1}}', '${{tag2:default-tag}}'],
       },
       headers: [
         { key: 'x-user', value: '${{userId}}' },
@@ -47,10 +49,12 @@ describe('getTemplateParameters', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{id}}/${{id:default-id}}',
       body: {
-        ref: '${{id}}',
-        nested: {
-          another: '${{other}}',
-          list: ['${{id}}', '${{other}}'],
+        content: {
+          ref: '${{id}}',
+          nested: {
+            another: '${{other}}',
+            list: ['${{id}}', '${{other}}'],
+          },
         },
       },
       headers: [{ key: 'x-id', value: '${{id}}' }],
@@ -64,7 +68,9 @@ describe('getTemplateParameters', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{  tenantId  }}',
       body: {
-        id: '${{  resourceId :default-resource }}',
+        content: {
+          id: '${{  resourceId :default-resource }}',
+        },
       },
     };
 
@@ -75,11 +81,13 @@ describe('getTemplateParameters', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/static',
       body: {
-        count: 12,
-        enabled: true,
-        details: {
-          nullable: null,
-          values: [1, false, { deep: '${{deepVar}}' }],
+        content: {
+          count: 12,
+          enabled: true,
+          details: {
+            nullable: null,
+            values: [1, false, { deep: '${{deepVar}}' }],
+          },
         },
       },
     };
@@ -105,7 +113,7 @@ describe('getTemplateParameterVariables', () => {
   test('should return empty array when template has no placeholders', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/static',
-      body: { message: 'static text' },
+      body: { content: { message: 'static text' } },
     };
 
     expect(getTemplateParameterVariables(template)).toEqual([]);
@@ -115,7 +123,9 @@ describe('getTemplateParameterVariables', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{tenantId}}/resource/${{resourceId:default-id}}',
       body: {
-        metadata: { owner: '${{owner}}' },
+        content: {
+          metadata: { owner: '${{owner}}' },
+        },
       },
       headers: [{ key: 'x-user', value: '${{userId}}' }],
       queryParams: [{ key: 'page', value: '${{page:1}}' }],
@@ -156,7 +166,7 @@ describe('getTemplateParameterVariables', () => {
   test('should dedupe repeated placeholders, keeping the first occurrence default', () => {
     const template: TestSuiteRequestTemplate = {
       urlTemplate: '/api/${{id:first-default}}/${{id:second-default}}',
-      body: { ref: '${{id}}' },
+      body: { content: { ref: '${{id}}' } },
     };
 
     expect(getTemplateParameterVariables(template)).toEqual([

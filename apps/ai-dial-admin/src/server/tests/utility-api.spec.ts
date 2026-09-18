@@ -1,4 +1,5 @@
 import { ExportRequest } from '@/src/models/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -41,7 +42,12 @@ describe('Server :: UtilityApi', () => {
   });
 
   test('should preview export config', async () => {
-    const exportRequest: ExportRequest = { configIds: ['id1'] };
+    const exportRequest: ExportRequest = {
+      $type: ExportType.Custom,
+      exportFormat: ExportFormat.ADMIN,
+      componentTypes: [],
+      components: [],
+    };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.previewExportConfig(exportRequest, TOKEN_MOCK);
