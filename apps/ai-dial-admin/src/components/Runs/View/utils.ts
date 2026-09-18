@@ -150,8 +150,9 @@ type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
-  headerComponent: EllipsisHeader,
+  headerComponentParams: { innerHeaderComponent: EllipsisHeader },
   colId: field,
+  sortable: true,
   ...lockedWidthColDef(width),
   ...NO_FILTER_COL_DEF,
   valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),

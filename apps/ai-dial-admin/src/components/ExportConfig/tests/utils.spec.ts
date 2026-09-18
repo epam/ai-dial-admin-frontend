@@ -24,8 +24,6 @@ describe('Export Config Utils :: getComponentTypes', () => {
         runners: true,
         interceptors: true,
         adapters: true,
-        prompts: true,
-        files: true,
       },
       ExportFormat.CORE,
       ExportType.Full,
@@ -56,8 +54,6 @@ describe('Export Config Utils :: getComponentTypes', () => {
         runners: true,
         interceptors: true,
         adapters: true,
-        prompts: true,
-        files: true,
       },
       ExportFormat.ADMIN,
       ExportType.Full,
@@ -92,7 +88,6 @@ describe('Export Config Utils :: getComponentTypes', () => {
   test('Should return empty if ExportType is Custom regardless of config', () => {
     const res = getComponentTypes(
       {
-        entities: true,
         roles: true,
         adapters: true,
         keys: true,
@@ -153,16 +148,16 @@ describe('Export Config Utils :: getComponents', () => {
 describe('Export Config Utils :: getFilteredData', () => {
   const mockData = {
     [EntityType.MODEL]: [
-      { id: 1, topics: ['topic1', 'topic2'] },
-      { id: 2, topics: ['topic3'] },
-      { id: 3, topics: ['topic1', 'topic3'] },
+      { id: '1', topics: ['topic1', 'topic2'] },
+      { id: '2', topics: ['topic3'] },
+      { id: '3', topics: ['topic1', 'topic3'] },
     ],
     [EntityType.APPLICATION]: [
-      { id: 4, topics: ['topic1'] },
-      { id: 5, topics: ['topic2'] },
+      { id: '4', topics: ['topic1'] },
+      { id: '5', topics: ['topic2'] },
     ],
-    [EntityType.ROLE]: [{ id: 6, topics: ['topic2', 'topic4'] }],
-    [EntityType.TOOLSET]: [{ id: 7, descriptionKeywords: ['topic1', 'topic3'] }],
+    [EntityType.ROLE]: [{ id: '6', topics: ['topic2', 'topic4'] }],
+    [EntityType.TOOLSET]: [{ id: '7', descriptionKeywords: ['topic1', 'topic3'] }],
   };
 
   test('Should return all data if selectedTopics is empty', () => {
@@ -178,8 +173,8 @@ describe('Export Config Utils :: getFilteredData', () => {
   test('Should filter data based on selected topics', () => {
     const res = getFilteredData(mockData, EntityType.MODEL, ['topic1']);
     expect(res).toEqual([
-      { id: 1, topics: ['topic1', 'topic2'] },
-      { id: 3, topics: ['topic1', 'topic3'] },
+      { id: '1', topics: ['topic1', 'topic2'] },
+      { id: '3', topics: ['topic1', 'topic3'] },
     ]);
   });
 

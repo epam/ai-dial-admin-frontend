@@ -1,5 +1,3 @@
-import { BaseEntity } from '@/src/models/dial/base-entity';
-
 export const getNamesConfigurations = (namesWithVersions: string[]) => {
   const names: string[] = [];
   const versionsMap: Record<string, string[]> = {};
@@ -19,9 +17,11 @@ export const getNamesConfigurations = (namesWithVersions: string[]) => {
   };
 };
 
+// The `!= null` guards below are load-bearing: Core returns an explicit `null` name for an entity it
+// could not resolve, which `BaseEntity` types as merely optional.
 export const filterDisplayNamesWithVersions = (
-  entities?: { displayName?: string; displayVersion?: string }[] | null,
-  currentModel?: { displayName?: string; displayVersion?: string },
+  entities?: { displayName?: string | null; displayVersion?: string | null }[] | null,
+  currentModel?: { displayName?: string | null; displayVersion?: string | null },
 ): string[] => {
   return (
     (entities?.reduce((acc, curr) => {
@@ -37,7 +37,10 @@ export const filterDisplayNamesWithVersions = (
   );
 };
 
-export const filterDisplayNames = (entities?: BaseEntity[] | null, currentDisplayName?: string): string[] => {
+export const filterDisplayNames = (
+  entities?: { displayName?: string | null }[] | null,
+  currentDisplayName?: string,
+): string[] => {
   return (
     (entities?.reduce((acc, curr) => {
       if (curr.displayName != null && curr.displayName !== currentDisplayName) {
@@ -48,7 +51,7 @@ export const filterDisplayNames = (entities?: BaseEntity[] | null, currentDispla
   );
 };
 
-export const filterNames = (entities?: BaseEntity[] | null, currentName?: string): string[] => {
+export const filterNames = (entities?: { name?: string | null }[] | null, currentName?: string): string[] => {
   return (
     (entities?.reduce((acc, curr) => {
       if (curr.name != null && curr.name !== currentName) {

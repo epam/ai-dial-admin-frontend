@@ -718,7 +718,7 @@ export enum TabsI18nKey {
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
-  Catalog = 'Tabs.Catalog',
+  CatalogMetadata = 'Tabs.CatalogMetadata',
   ApplicationRunners = 'Tabs.ApplicationRunners',
   InstallationLog = 'Tabs.InstallationLog',
   Instances = 'Tabs.Instances',

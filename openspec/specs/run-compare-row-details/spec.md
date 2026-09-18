@@ -1,3 +1,13 @@
+# run-compare-row-details Specification
+
+## Purpose
+The row-detail panel of the Run Comparison page's Execution Results tab: which surface a row click
+opens (bottom pivot by default, right sidebar on request) and how that choice survives a close, how a
+cell click scrolls to the field its column maps to, how a truncated pivot cell opens both runs' values,
+and which display settings the panel keeps between openings.
+
+## Requirements
+
 ### Requirement: Compare page row click opens bottom detail by default
 
 On the dedicated Run Comparison page Execution Results tab, clicking a grid row SHALL open the row-detail panel at the bottom (pivot) by default. Closing the panel SHALL preserve bottom mode so the next row click reopens the bottom panel. The user MAY switch to the right sidebar (table) and back via the panel header.

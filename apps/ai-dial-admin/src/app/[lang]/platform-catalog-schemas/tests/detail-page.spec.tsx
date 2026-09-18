@@ -27,11 +27,7 @@ type RenderedElement = { props: { children: { props: Record<string, unknown> } }
 const SCHEMA_ID = 'https://dial.epam.com/catalog-schemas/agent';
 const SEGMENT = encodeURIComponent(SCHEMA_ID);
 
-const renderPage = async (configFile?: string) =>
-  (await Page({
-    params: Promise.resolve({ id: SEGMENT }),
-    searchParams: Promise.resolve({ configFile }),
-  })) as unknown as RenderedElement;
+const renderPage = async () => (await Page({ params: Promise.resolve({ id: SEGMENT }) })) as unknown as RenderedElement;
 
 describe('Catalog schema detail page :: resolving either population', () => {
   beforeEach(() => {
@@ -39,7 +35,11 @@ describe('Catalog schema detail page :: resolving either population', () => {
   });
 
   test('reads the API-written half first, under the route segment as Core stores it', async () => {
-    vi.mocked(getCatalogSchema).mockResolvedValue({ success: true, response: { $id: SCHEMA_ID }, etag: 'etag-1' });
+    vi.mocked(getCatalogSchema).mockResolvedValue({
+      success: true,
+      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      etag: 'etag-1',
+    });
 
     const rendered = await renderPage();
 
@@ -74,13 +74,25 @@ describe('Catalog schema detail page :: resolving either population', () => {
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  test('reads only the config-file half on the explicit config-file route', async () => {
-    vi.mocked(getConfigFileCatalogSchema).mockResolvedValue({ success: true, data: { $id: SCHEMA_ID } } as never);
+  /**
+   * The `configFile=true` branch went with the config-file list (Issue #4605): the flag belongs to
+   * the seven covered views, and the fallback above reaches the same schema from the address a user
+   * actually has. A stale link carrying it must not skip the API-written read.
+   */
+  test('ignores a configFile flag on the address, still reading the API-written half first', async () => {
+    vi.mocked(getCatalogSchema).mockResolvedValue({
+      success: true,
+      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      etag: 'etag-1',
+    });
 
-    const rendered = await renderPage('true');
+    const rendered = await (Page as unknown as (props: unknown) => Promise<RenderedElement>)({
+      params: Promise.resolve({ id: SEGMENT }),
+      searchParams: Promise.resolve({ configFile: 'true' }),
+    });
 
-    expect(getCatalogSchema).not.toHaveBeenCalled();
-    expect(getConfigFileCatalogSchema).toHaveBeenCalledWith(SCHEMA_ID);
-    expect(rendered.props.children.props.isConfigFileSource).toBe(true);
+    expect(getCatalogSchema).toHaveBeenCalledOnce();
+    expect(getConfigFileCatalogSchema).not.toHaveBeenCalled();
+    expect(rendered.props.children.props.isConfigFileSource).toBe(false);
   });
 });

@@ -39,10 +39,18 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange
         />
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
+        <EndpointControl
+          id="base_url"
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          endpoint={asset.baseUrl}
+          onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+        />
         <InterfacesField
           interfaces={asset.interfaces}
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
+          entityBaseUrl={asset.baseUrl}
           isAsset
         />
         <EndpointControl

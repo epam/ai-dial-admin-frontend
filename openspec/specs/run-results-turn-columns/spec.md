@@ -1,8 +1,12 @@
 # run-results-turn-columns Specification
 
 ## Purpose
-TBD - created by archiving change add-multi-turn-test-cases. Update Purpose after archive.
+
+Defines how the run Extraction Result grid presents request and turn positions for single-request,
+chained-request, and multi-turn test cases while preserving flat-row navigation and sorting behavior.
+
 ## Requirements
+
 ### Requirement: Run results show the turn number and total turn count
 
 The run results grid SHALL display two columns in the `EXECUTION` column group, immediately after `# Run number`:
@@ -48,3 +52,23 @@ This is a deliberate scope boundary: turn grouping in results is deferred so tha
 - **WHEN** a metric is scored for each turn of a conversation
 - **THEN** each turn's row shows its own score in the existing metric columns
 
+### Requirement: Request and Turn columns are sortable
+
+The Extraction Result grid SHALL allow users to sort rows numerically by the displayed Request and
+Turn values. Sorting either column SHALL remain available and SHALL apply to the currently visible
+rows while the Test Case name filter is active.
+
+#### Scenario: Results are sorted by request number
+
+- **WHEN** a user sorts the Request column
+- **THEN** the result rows are ordered numerically by request number in the selected direction
+
+#### Scenario: Results are sorted by turn number
+
+- **WHEN** a user sorts the Turn column
+- **THEN** the result rows are ordered numerically by turn number in the selected direction
+
+#### Scenario: Filtered results remain sortable
+
+- **WHEN** a user filters results by Test Case name and then sorts the Request or Turn column
+- **THEN** the visible matching rows are ordered numerically by the selected column in the selected direction
