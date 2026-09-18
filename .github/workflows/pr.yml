@@ -38,7 +38,8 @@ jobs:
   # vitest strips types through esbuild. Both projects are hard gates at zero errors — the spec project
   # became one once the fixture debt catalogued in
   # openspec/changes/archive/2026-09-08-enable-typescript-typecheck-gate/proposal.md was cleared. The
-  # spec step still writes the per-file breakdown to the job summary, so a red run names the files.
+  # spec step reports through scripts/report-spec-typecheck.mjs, so a red run names every file, groups
+  # its errors in the log and annotates the lines they are on.
   typecheck:
     name: Typecheck
     runs-on: ubuntu-24.04
@@ -53,28 +54,14 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Typecheck app source
         run: npm run typecheck
+      # tsc's output is captured, not streamed, so the reporter can group it by file, annotate the
+      # offending lines and fill the job summary. Keep the shell to these three lines: whatever is
+      # written here is echoed into the step log above the report, where the errors belong.
       - name: Typecheck spec files
         run: |
-          set +e
-          npm run --silent typecheck:specs > spec-typecheck.log 2>&1
-          status=$?
-          set -e
-
-          if [ "$status" -ne 0 ]; then
-            count=$(grep -c 'error TS' spec-typecheck.log || true)
-            {
-              echo "## Spec-file type errors: ${count}"
-              echo
-              echo "\`npm run typecheck:specs\` from the repository root reproduces this."
-              echo
-              echo "### Files with the most errors"
-              echo '```'
-              grep -oE '^[^(]*\.(ts|tsx)' spec-typecheck.log | sort | uniq -c | sort -rn | head -15 || true
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          exit "$status"
+          npm run --silent typecheck:specs > spec-typecheck.log 2>&1 || status=$?
+          node scripts/report-spec-typecheck.mjs spec-typecheck.log "${status:-0}"
+          exit "${status:-0}"
 
   run_tests:
     uses: epam/ai-dial-ci/.github/workflows/node_pr.yml@4.11.0
