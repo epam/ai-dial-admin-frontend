@@ -36,7 +36,7 @@ interface TestModel {
 
 describe('Pricing', () => {
   const renderPricing = (pricing?: DialModelPricing, onChangeModel = vi.fn()) => {
-    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} isAsset/>);
+    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} isAsset />);
     return onChangeModel;
   };
 
