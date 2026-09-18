@@ -119,8 +119,8 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       name: 'n',
       description: 'd',
       grantedKeys: [],
-      limits: {},
-      share: {},
+      share: { a: {} },
+      limits: { a: {} },
     });
   });
 
