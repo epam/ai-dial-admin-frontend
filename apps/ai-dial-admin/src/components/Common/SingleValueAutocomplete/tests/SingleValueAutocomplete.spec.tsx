@@ -40,9 +40,9 @@ describe('SingleValueAutocomplete', () => {
 
     await typeIntoInput('ser');
 
-    expect(screen.getByText('SERVICETIER')).toBeTruthy();
-    expect(screen.queryByText('CACHEDREADTOKENS')).toBeNull();
-    expect(screen.queryByText('TTL')).toBeNull();
+    expect(screen.getByText('Service Tier')).toBeTruthy();
+    expect(screen.queryByText('Cached Read Tokens')).toBeNull();
+    expect(screen.queryByText('Ttl')).toBeNull();
   });
 
   test('commits the clicked suggestion', async () => {
@@ -50,7 +50,7 @@ describe('SingleValueAutocomplete', () => {
     renderAutocomplete({ onChange });
 
     await typeIntoInput('tt');
-    await userEvent.click(screen.getByText('TTL'));
+    await userEvent.click(screen.getByText('Ttl'));
 
     expect(onChange).toHaveBeenCalledWith('ttl');
   });
@@ -88,10 +88,10 @@ describe('SingleValueAutocomplete', () => {
     renderAutocomplete();
 
     await typeIntoInput('tt');
-    expect(screen.getByText('TTL')).toBeTruthy();
+    expect(screen.getByText('Ttl')).toBeTruthy();
 
     await userEvent.keyboard('{Escape}');
-    expect(screen.queryByText('TTL')).toBeNull();
+    expect(screen.queryByText('Ttl')).toBeNull();
   });
 
   test('disables the input when disabled', () => {

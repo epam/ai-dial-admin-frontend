@@ -106,7 +106,7 @@ const SingleValueAutocomplete: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
-      {label && <DialLabel label={label} />}
+      {label && <DialLabel htmlFor={elementId} label={label} />}
       <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
         <div className="flex flex-wrap items-center gap-2">
           {value && <DialTag label={selectedLabel} closable onRemove={handleRemoveValue} />}
