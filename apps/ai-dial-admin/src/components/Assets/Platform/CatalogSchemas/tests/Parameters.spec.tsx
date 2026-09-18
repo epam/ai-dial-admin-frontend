@@ -13,6 +13,7 @@ vi.mock('@/src/components/Common/SchemaGrid/SchemaGrid', () => ({
       <div>schema-grid:readonly={String(isReadonly)}</div>
       <div>schema-grid:meta={(metaColumns ?? []).join(',')}</div>
       <button onClick={() => onChange(schema)}>emit-schema</button>
+      <button onClick={() => onChange({ properties: { added: { type: 'string' } } })}>add-field</button>
     </div>
   ),
 }));
@@ -38,6 +39,7 @@ describe('CatalogSchemaParameters', () => {
     render(<CatalogSchemaParameters schema={withProperties()} onChange={vi.fn()} />);
 
     expect(screen.getByText('schema-grid:readonly=undefined')).toBeInTheDocument();
+    expect(screen.queryByText(EntitiesI18nKey.NoConfigurationSchema)).not.toBeInTheDocument();
   });
 
   test('Should ask the grid for the catalog presentation-hint columns', () => {
@@ -46,10 +48,29 @@ describe('CatalogSchemaParameters', () => {
     expect(screen.getByText(`schema-grid:meta=${CATALOG_SCHEMA_META_COLUMNS.join(',')}`)).toBeInTheDocument();
   });
 
-  test('Should show the empty state when the schema declares no properties', () => {
+  /** The grid carries the only add-field action, so gating it on emptiness was a dead end. */
+  test('Should render the grid, not an empty state, when the schema declares no properties', () => {
     render(<CatalogSchemaParameters schema={schema()} onChange={vi.fn()} />);
 
-    expect(screen.getByText(EntitiesI18nKey.NoConfigurationSchema)).toBeInTheDocument();
+    expect(screen.getByText('schema-grid:readonly=undefined')).toBeInTheDocument();
+    expect(screen.queryByText(EntitiesI18nKey.NoConfigurationSchema)).not.toBeInTheDocument();
+  });
+
+  test('Should store the first property added to a schema that declared none, keeping its identity', () => {
+    const onChange = vi.fn();
+
+    render(<CatalogSchemaParameters schema={schema()} onChange={onChange} />);
+    screen.getByText('add-field').click();
+
+    expect(onChange).toHaveBeenCalledWith(
+      {
+        $id: 'https://dial.epam.com/catalog_schemas/agent',
+        'dial:catalogEntityType': CatalogEntityType.Agent,
+        'dial:catalogDisplayName': 'Agent',
+        properties: { added: { type: 'string' } },
+      },
+      undefined,
+    );
   });
 
   test('Should hand the edited schema back with dial:file, format and dial:meta intact', () => {

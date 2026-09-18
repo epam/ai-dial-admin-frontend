@@ -8,9 +8,9 @@ import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete, getRes
 describe('generatePromptRowDataForDelete', () => {
   test('should group prompts by name and collect versions', () => {
     const input: DialPrompt[] = [
-      { id: '1', name: 'PromptA', version: 'v1' },
-      { id: '2', name: 'PromptA', version: 'v2' },
-      { id: '3', name: 'PromptB', version: 'v1' },
+      { id: '1', name: 'PromptA', version: 'v1', path: 'prompts/public/PromptA__v1', folderId: 'public' },
+      { id: '2', name: 'PromptA', version: 'v2', path: 'prompts/public/PromptA__v2', folderId: 'public' },
+      { id: '3', name: 'PromptB', version: 'v1', path: 'prompts/public/PromptB__v1', folderId: 'public' },
     ];
 
     const result = generatePromptRowDataForDelete(input);
@@ -30,7 +30,9 @@ describe('generatePromptRowDataForDelete', () => {
   });
 
   test('should handle single prompt', () => {
-    const input: DialPrompt[] = [{ id: '1', name: 'PromptX', version: 'v1' }];
+    const input: DialPrompt[] = [
+      { id: '1', name: 'PromptX', version: 'v1', path: 'prompts/public/PromptX__v1', folderId: 'public' },
+    ];
     const result = generatePromptRowDataForDelete(input);
 
     expect(result).toHaveLength(1);
@@ -40,8 +42,22 @@ describe('generatePromptRowDataForDelete', () => {
 
   test('should retain original prompt fields and add versions array', () => {
     const input: DialPrompt[] = [
-      { id: '1', name: 'TestPrompt', version: 'v1', content: 'test content' },
-      { id: '2', name: 'TestPrompt', version: 'v2', content: 'should be ignored' },
+      {
+        id: '1',
+        name: 'TestPrompt',
+        version: 'v1',
+        path: 'prompts/public/TestPrompt__v1',
+        folderId: 'public',
+        content: 'test content',
+      },
+      {
+        id: '2',
+        name: 'TestPrompt',
+        version: 'v2',
+        path: 'prompts/public/TestPrompt__v2',
+        folderId: 'public',
+        content: 'should be ignored',
+      },
     ];
 
     const result = generatePromptRowDataForDelete(input);
@@ -55,7 +71,7 @@ describe('generatePromptRowDataForDelete', () => {
 
   test('should ignore undefined or null versions', () => {
     const input: any[] = [
-      { id: '1', name: 'PromptA', version: 'v1' },
+      { id: '1', name: 'PromptA', version: 'v1', path: 'prompts/public/PromptA__v1', folderId: 'public' },
       { id: '2', name: 'PromptA', version: null },
       { id: '3', name: 'PromptA' },
     ];

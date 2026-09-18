@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import { EntityFieldsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ActionType, PublicationStatus } from '@/src/models/dial/publications';
 import BaseProperties from '../BaseProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -43,7 +44,12 @@ describe('BaseProperties', () => {
       displayAuthor: 'John Doe',
       folderId: '/test/folder',
       files: [],
-      action: 'download',
+      action: ActionType.DELETE,
+      path: 'publications/public/request',
+      requestName: 'request',
+      author: 'John Doe',
+      createdAt: '2026-08-21T09:37:29Z',
+      status: PublicationStatus.PENDING,
     };
 
     render(<BaseProperties publication={publication} onChange={mockOnChange} getContext={mockGetContext} />);
@@ -59,7 +65,12 @@ describe('BaseProperties', () => {
       displayAuthor: '',
       folderId: '/test/folder',
       files: [],
-      action: 'none',
+      action: ActionType.ADD,
+      path: 'publications/public/request',
+      requestName: 'request',
+      author: '',
+      createdAt: '2026-08-21T09:37:29Z',
+      status: PublicationStatus.PENDING,
     };
 
     render(<BaseProperties publication={publication} onChange={mockOnChange} getContext={mockGetContext} />);
@@ -79,7 +90,12 @@ describe('BaseProperties', () => {
       displayAuthor: 'John Doe',
       folderId: '/test/folder',
       files: [],
-      action: 'download',
+      action: ActionType.DELETE,
+      path: 'publications/public/request',
+      requestName: 'request',
+      author: 'John Doe',
+      createdAt: '2026-08-21T09:37:29Z',
+      status: PublicationStatus.PENDING,
     };
 
     render(<BaseProperties publication={publication} onChange={mockOnChange} getContext={mockGetContext} />);
@@ -92,7 +108,12 @@ describe('BaseProperties', () => {
       displayAuthor: 'John Doe',
       folderId: '/test/folder',
       files: [],
-      action: 'download',
+      action: ActionType.DELETE,
+      path: 'publications/public/request',
+      requestName: 'request',
+      author: 'John Doe',
+      createdAt: '2026-08-21T09:37:29Z',
+      status: PublicationStatus.PENDING,
     };
 
     render(<BaseProperties publication={publication} onChange={mockOnChange} getContext={mockGetContext} />);

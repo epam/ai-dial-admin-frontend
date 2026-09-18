@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import EntityProperties from '../EntityProperties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { DialModelResource } from '@/src/models/dial/resource';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 vi.mock('@/src/app/[lang]/interceptor-templates/actions', () => ({
   getInterceptorTemplatesList: vi.fn(),
@@ -44,10 +44,18 @@ describe('EntityProperties', () => {
 
   test('shows an optional display version field for the model asset view', () => {
     const onChangeEntity = vi.fn();
+    // The prop is a `BaseEntity`; the component reads `displayVersion` off it, which no entity type
+    // carrying a plain-string `displayName` declares.
+    const model: BaseEntity & { displayVersion: string } = {
+      name: 'my-model',
+      displayName: '',
+      description: '',
+      displayVersion: '1.0.0',
+    };
     render(
       <EntityProperties
         view={ApplicationRoute.PlatformModels}
-        entity={{ name: 'my-model', displayName: '', description: '', displayVersion: '1.0.0' } as DialModelResource}
+        entity={model}
         names={[]}
         onChangeEntity={onChangeEntity}
       />,

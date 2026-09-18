@@ -28,7 +28,7 @@ describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
     const result = await buildApplicationsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.APPLICATION, 'public/folder/name__1.0');
-    expect(result.applications[0]).toEqual({
+    expect((result.applications ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
       id: 'applications/public/folder/name__1.0',

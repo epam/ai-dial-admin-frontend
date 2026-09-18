@@ -572,16 +572,16 @@ describe('Activity audit :: fillDefaultLimits', () => {
 describe('Activity audit :: compareUpstreams', () => {
   const makeEndpoint = (endpoint: string, config: Partial<DialModelEndpoint> = {}): DialModelEndpoint => ({
     endpoint,
-    url: `${endpoint}.com`,
-    active: true,
-    timeout: 1000,
+    baseUrl: `https://${endpoint}.com`,
+    key: 'upstream-key',
+    weight: 1000,
     ...config,
   });
 
   test('should mark endpoint as REMOVED when present in val1 but not in val2', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const val1 = [makeEndpoint('api1')];
-    const val2: EntityParameterKeys[] = [];
+    const val2: DialModelEndpoint[] = [];
 
     compareUpstreams(diffMap, val1, val2);
 
@@ -594,7 +594,7 @@ describe('Activity audit :: compareUpstreams', () => {
 
   test('should mark endpoint as ADDED when present in val2 but not in val1', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    const val1: EntityParameterKeys[] = [];
+    const val1: DialModelEndpoint[] = [];
     const val2 = [makeEndpoint('api2')];
 
     compareUpstreams(diffMap, val1, val2);
@@ -608,8 +608,8 @@ describe('Activity audit :: compareUpstreams', () => {
 
   test('should compare common endpoints with changed fields and mark as CHANGED', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    const val1 = [makeEndpoint('api3', { timeout: 1000 })];
-    const val2 = [makeEndpoint('api3', { timeout: 2000 })];
+    const val1 = [makeEndpoint('api3', { weight: 1000 })];
+    const val2 = [makeEndpoint('api3', { weight: 2000 })];
 
     compareUpstreams(diffMap, val1, val2);
 
@@ -617,7 +617,7 @@ describe('Activity audit :: compareUpstreams', () => {
     const diffs = diffMap[sectionKey];
 
     expect(diffs.some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
-    expect(diffs.find((d) => d.parameter === 'timeout')?.value).toBe('2000');
+    expect(diffs.find((d) => d.parameter === 'weight')?.value).toBe('2000');
   });
 
   test('should produce multiple UPSTREAMS sections for multiple endpoints', () => {
@@ -648,7 +648,7 @@ describe('Activity audit :: compareUpstreams', () => {
   test('should preserve provided isCurrent flag (mirror status)', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const val1 = [makeEndpoint('api1')];
-    const val2: EntityParameterKeys[] = [];
+    const val2: DialModelEndpoint[] = [];
 
     compareUpstreams(diffMap, val1, val2, true);
 
@@ -660,9 +660,9 @@ describe('Activity audit :: compareUpstreams', () => {
 describe('Activity audit :: fillUpstreams', () => {
   const makeEndpoint = (endpoint: string, extra: Partial<DialModelEndpoint> = {}): DialModelEndpoint => ({
     endpoint,
-    url: `${endpoint}.example.com`,
-    active: true,
-    timeout: 1000,
+    baseUrl: `https://${endpoint}.example.com`,
+    key: 'upstream-key',
+    weight: 1000,
     ...extra,
   });
 
@@ -680,9 +680,9 @@ describe('Activity audit :: fillUpstreams', () => {
     expect(api1Diffs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ parameter: 'endpoint', value: 'api1' }),
-        expect.objectContaining({ parameter: 'url', value: 'api1.example.com' }),
-        expect.objectContaining({ parameter: 'active', value: 'true' }),
-        expect.objectContaining({ parameter: 'timeout', value: '1000' }),
+        expect.objectContaining({ parameter: 'baseUrl', value: 'https://api1.example.com' }),
+        expect.objectContaining({ parameter: 'key', value: 'upstream-key' }),
+        expect.objectContaining({ parameter: 'weight', value: '1000' }),
       ]),
     );
 
@@ -718,8 +718,8 @@ describe('Activity audit :: fillUpstreams', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const endpoints = [
       makeEndpoint('nested-api', {
-        config: { retries: 3, secure: true },
-      }) as unknown as DialModelEndpoint,
+        extraData: { retries: 3, secure: true },
+      }),
     ];
 
     fillUpstreams(diffMap, endpoints);
@@ -728,7 +728,7 @@ describe('Activity audit :: fillUpstreams', () => {
     expect(diffs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ parameter: 'endpoint', value: 'nested-api' }),
-        expect.objectContaining({ parameter: 'url', value: 'nested-api.example.com' }),
+        expect.objectContaining({ parameter: 'baseUrl', value: 'https://nested-api.example.com' }),
       ]),
     );
   });

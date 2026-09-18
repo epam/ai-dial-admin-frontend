@@ -143,6 +143,7 @@ const TimeFilter: FC<Props> = ({
         if (open) resetDraft();
       }}
       allowedPlacements={['bottom-start', 'bottom-end']}
+      matchReferenceWidth={false}
       renderOverlay={() => (
         <div className="flex flex-row items-stretch bg-layer-0 rounded border border-secondary shadow-lg">
           {presetList}

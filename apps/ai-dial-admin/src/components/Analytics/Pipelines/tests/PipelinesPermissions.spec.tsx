@@ -6,7 +6,6 @@ import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
@@ -41,9 +40,7 @@ const rule: PipelineListItem = {
   kind: PipelineKind.Enrich,
   evaluator_name: 'feedback-rollup',
   evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
   target: 'turn_feedback',
-  grain_key: 'response_id',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,

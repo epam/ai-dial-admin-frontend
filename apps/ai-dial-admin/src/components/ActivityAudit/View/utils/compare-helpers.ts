@@ -62,7 +62,7 @@ export const convertPricing = (value: DialModelPricing | undefined, t: (str: str
  * @param {?DialRoleLimits} [limits] - role limits
  * @returns {string} - result string
  */
-export const convertRoleLimitsIntoString = (limits?: DialRoleLimits): string => {
+export const convertRoleLimitsIntoString = (limits?: DialRoleLimits | Record<string, unknown>): string => {
   return limits
     ? Object.entries(limits)
         .map(([key, value]) => `${key}: ${value}`)
@@ -83,8 +83,10 @@ export const fillShareValues = (
   diffs: ActivityAuditDiff[],
   key: string,
   field: string,
-  v1?: DialRoleShare,
-  v2?: DialRoleShare,
+  // The share rows are read by `field`, so any string-valued record is fair game — which is what the
+  // spec's cases (`limit`, `rate`, `quota`) describe.
+  v1?: DialRoleShare | Record<string, string | null | undefined>,
+  v2?: DialRoleShare | Record<string, string | null | undefined>,
   isCurrent?: boolean,
 ) => {
   const val1 = v1?.[field as keyof typeof v1];

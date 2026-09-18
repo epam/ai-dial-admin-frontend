@@ -72,10 +72,10 @@ const InterfacesField = <V extends InterfaceValue>({
   const usedTypes = Object.keys(interfaces) as DeploymentInterfaceType[];
   const availableTypes = allowedTypes.filter((type) => !usedTypes.includes(type));
 
-  // undefined, not '': an untouched row must persist as an entry with no base_url field (Core reads
-  // an empty string as a present, broken URL).
+  // undefined, not '': an untouched row must persist as an entry with no base_url/endpoint field (Core
+  // reads an empty string as a present, broken URL).
   const createEmptyValue = useCallback(
-    (): V => (isEndpointVariant ? { endpoint: '' } : { [baseUrlKey]: undefined }) as V,
+    (): V => (isEndpointVariant ? { endpoint: undefined } : { [baseUrlKey]: undefined }) as unknown as V,
     [isEndpointVariant, baseUrlKey],
   );
 

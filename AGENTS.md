@@ -18,12 +18,13 @@ Things that cost time or fail silently if you don't know them:
   won't resolve.
 - **`npm run test` always runs with coverage.** While iterating use
   `npx vitest run <file> -t "<pattern>"`; save the full run for a final gate.
-- **The typecheck gate covers app source only.** `npm run typecheck` (also `.husky/pre-commit`, and a
-  blocking CI job) runs `tsc -p tsconfig.app.json`, which excludes `*.spec.ts(x)`. The spec project still
-  has ~720 real errors — fixtures that no longer match production types, untyped mocks — so a green test
-  run does not mean a test is type-correct. `npm run typecheck:specs` reports them: pre-commit prints the
-  count and CI puts the worst files in the job summary, but neither blocks, because blocking on a known
-  720 would stop every commit. Make it a gate once the count reaches zero.
+- **Two typecheck gates, both blocking, both at zero.** `npm run typecheck`
+  (`tsc -p tsconfig.app.json`) covers app source; `npm run typecheck:specs`
+  (`tsc -p tsconfig.spec.json`) covers `*.spec.ts(x)` plus `test-setup.tsx`. Both run in
+  `.husky/pre-commit` and in the blocking CI `typecheck` job. A green test run still says nothing about
+  types — vitest strips them through esbuild and eslint ignores spec files — so the spec project is the
+  only thing that catches a fixture drifting from its production type. Keep it at zero: the 726 errors it
+  started with took ten PRs to clear.
 - **Test mocks are centralized in `apps/ai-dial-admin/test-setup.tsx`**, and its mocked `t()` returns
   the i18n key as-is — so component tests assert keys, not translated text. Add missing mocks there,
   not inline in a spec.
@@ -48,8 +49,8 @@ Things that cost time or fail silently if you don't know them:
 - **Analytics archives keep only `proposal.md` and `design.md`** — archiving a change whose deltas
   touch `analytics/*` deletes its `tasks.md` and `specs/` delta, because the delta is already folded
   into the consolidated specs. Analytics-only; every other capability keeps the stock layout.
-- **Pre-commit runs lint-staged, the agent-config validator and the typecheck; pre-push runs the suite.** Don't skip
-  hooks.
+- **Pre-commit runs lint-staged, the agent-config validator and both typechecks; pre-push runs the
+  suite.** Don't skip hooks.
 
 ## Hard constraints
 
