@@ -9,5 +9,6 @@ export interface FeatureFlags {
   hfEnabled: boolean;
   analyticsEnabled: boolean;
   analyticsConversationsEnabled: boolean;
+  analyticsUsageEnabled: boolean;
   queryAssistantEnabled: boolean;
 }

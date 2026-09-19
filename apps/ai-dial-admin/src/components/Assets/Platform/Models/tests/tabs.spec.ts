@@ -17,6 +17,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   hfEnabled: false,
   analyticsEnabled: false,
   analyticsConversationsEnabled: false,
+  analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
   ...overrides,
 });

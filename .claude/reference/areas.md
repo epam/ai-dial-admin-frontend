@@ -106,6 +106,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
 | `analytics/Pipelines` | `pipelines` | `Analytics/Pipelines` |
 | `analytics/Evaluators` | `evaluators` | `Analytics/Evaluators` |
+| `analytics/Usage` | `usage` | `Analytics/Usage` |
 
 ---
 
