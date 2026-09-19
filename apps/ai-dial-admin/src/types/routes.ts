@@ -69,6 +69,7 @@ export enum ApplicationRoute {
 
   // Analytics
   AnalyticsQueries = '/queries',
+  AnalyticsUsage = '/usage',
   AnalyticsTables = '/tables',
   AnalyticsPipelines = '/pipelines',
   AnalyticsEvaluators = '/evaluators',

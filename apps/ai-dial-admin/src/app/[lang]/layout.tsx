@@ -65,6 +65,8 @@ export default async function Layout({ children, params }: { children: ReactNode
     analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
     analyticsConversationsEnabled:
       isValueTruthy(process.env.ANALYTICS_ENABLED) && isValueTruthy(process.env.ANALYTICS_CONVERSATIONS_ENABLED),
+    analyticsUsageEnabled:
+      isValueTruthy(process.env.ANALYTICS_ENABLED) && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
     queryAssistantEnabled:
       isValueTruthy(process.env.ANALYTICS_ENABLED) && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
   };

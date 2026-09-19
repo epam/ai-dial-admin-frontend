@@ -7,6 +7,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import EntityAudit from '../EntityAudit';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_TIME_PERIOD, SINCE_CREATION_PERIOD_ID } from '@/src/constants/global-time-filter';
+import { useAppContext } from '@/src/context/AppContext';
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => {
