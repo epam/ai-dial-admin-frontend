@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
-import { DialModelPricing, PricingType } from '@/src/models/dial/model';
+import { DialModelPricing, PricingOperator, PricingRate, PricingRateNode, PricingType } from '@/src/models/dial/model';
 import Pricing from '../Pricing';
 
 const isReadOnlyAdminMock = vi.fn(() => false);
@@ -36,7 +36,7 @@ interface TestModel {
 
 describe('Pricing', () => {
   const renderPricing = (pricing?: DialModelPricing, onChangeModel = vi.fn()) => {
-    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} />);
+    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} isAsset />);
     return onChangeModel;
   };
 
@@ -154,5 +154,74 @@ describe('Pricing', () => {
     await user.selectOptions(screen.getByRole('combobox'), BasicI18nKey.None);
 
     expect(onChangeModel).toHaveBeenCalledWith({ pricing: undefined });
+  });
+
+  const treeCacheWrite: PricingRate = {
+    test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+    ifTrue: '0.000006',
+    ifFalse: '0.00000375',
+  };
+
+  test('displays every leaf of a stored tree per million', () => {
+    renderPricing({ unit: PricingType.Token, cacheWrite: treeCacheWrite });
+
+    expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfTrue })).toHaveValue(6);
+    expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfFalse })).toHaveValue(3.75);
+  });
+
+  test('stores an entered tree leaf rate per token and omits the untouched empty branch', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({
+      unit: PricingType.Token,
+      cacheWrite: { test: treeCacheWrite.test, ifTrue: '', ifFalse: '' },
+    });
+
+    await user.type(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfTrue }), '6');
+
+    expect(onChangeModel).toHaveBeenLastCalledWith({
+      pricing: {
+        unit: PricingType.Token,
+        cacheWrite: { test: treeCacheWrite.test, ifTrue: '0.000006' },
+      },
+    });
+  });
+
+  test('omits a cleared branch instead of storing zero', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({ unit: PricingType.Token, cacheWrite: treeCacheWrite });
+
+    await user.clear(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfFalse }));
+
+    expect(onChangeModel).toHaveBeenLastCalledWith({
+      pricing: {
+        unit: PricingType.Token,
+        cacheWrite: { test: treeCacheWrite.test, ifTrue: '0.000006' },
+      },
+    });
+  });
+
+  test('converting a flat cache rate to conditional seeds both branches with its value', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({ unit: PricingType.Token, cacheRead: '0.0000002' });
+
+    // Both cache fields are flat, so each offers a toggle; the first in the DOM is cache read.
+    const [cacheReadToggle] = screen.getAllByRole('button', { name: ModelViewI18nKey.ConfigureConditional });
+    await user.click(cacheReadToggle);
+
+    const model = onChangeModel.mock.lastCall?.[0] as TestModel | undefined;
+    const cacheRead = model?.pricing?.cacheRead;
+    expect(typeof cacheRead).toBe('object');
+    expect(cacheRead).toMatchObject({ test: { operator: PricingOperator.EQ } });
+    expect(Number((cacheRead as PricingRateNode).ifTrue)).toBeCloseTo(2e-7, 12);
+    expect(Number((cacheRead as PricingRateNode).ifFalse)).toBeCloseTo(2e-7, 12);
+  });
+
+  test('renders an open tree fully disabled for a read-only administrator', () => {
+    isReadOnlyAdminMock.mockReturnValue(true);
+    renderPricing({ unit: PricingType.Token, cacheWrite: treeCacheWrite });
+
+    expect(screen.queryByRole('button', { name: ModelViewI18nKey.UseFlatRate })).toBeNull();
+    expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfTrue })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: ModelViewI18nKey.Field })).toBeDisabled();
   });
 });
