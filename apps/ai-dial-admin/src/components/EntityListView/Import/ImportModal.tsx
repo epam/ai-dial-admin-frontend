@@ -24,11 +24,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
 
 const MAX_FILES_COUNT = 30;
-const MAX_TOTAL_FILE_SIZE_MB = 64;
-const MAX_TOTAL_FILE_SIZE_BYTES = MAX_TOTAL_FILE_SIZE_MB * 1024 * 1024;
+const MAX_TOTAL_FILE_SIZE_BYTES = MAX_MULTI_FILES_SIZE_MB * 1024 * 1024;
 
 interface Props {
   isModalOpen: boolean;

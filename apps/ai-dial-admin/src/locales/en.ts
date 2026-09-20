@@ -970,9 +970,10 @@ export default {
     ArchiveDescription: 'Only 1 archive file can be imported',
     JsonFileFormatError: 'Only JSON files supported',
     ArchiveFileFormatError: 'Only archive file supported',
-    DialArchiveDescription: 'Only 1 aidial-admin.zip archive file can be imported',
+    DialArchiveDescription: 'Only 1 aidial-admin.zip archive file can be imported. Maximum {size} MB.',
     JsonDescription: 'Up to 30 files could be imported',
-    SeparateFilesDescription: 'Up to 30 files can be imported. Maximum 4 MB per file. Total size must not exceed 64 MB',
+    SeparateFilesDescription:
+      'Up to 30 files can be imported. Maximum {size} MB per file. Total size must not exceed {totalSize} MB',
     File: 'File',
     DropAnyFile: 'Drop file here',
     PrepareTitle: 'Importing {type}',
