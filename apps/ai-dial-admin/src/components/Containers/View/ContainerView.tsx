@@ -21,7 +21,6 @@ import { Image } from '@/src/models/deployments/images';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
-import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -41,7 +40,6 @@ interface Props {
   route: ApplicationRoute;
   names: string[];
   createEntity?: (entity: DialModel | Toolset | DialInterceptor | DialApplication) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: DialToolsetResource) => Promise<ServerActionResponse>;
   createToolset?: (entity: Toolset) => Promise<ServerActionResponse>;
   entityNames?: string[];
   toolsetNames?: string[];
@@ -52,7 +50,6 @@ const ContainerView: FC<Props> = ({
   image,
   route,
   createEntity,
-  createEntityAsAsset,
   createToolset,
   entityNames,
   toolsetNames,
@@ -306,7 +303,6 @@ const ContainerView: FC<Props> = ({
           onDiscard={onDiscard}
           jsonConfiguration={jsonConfiguration}
           createEntity={createEntity}
-          createEntityAsAsset={createEntityAsAsset}
           createToolset={createToolset}
           entityNames={entityNames}
           toolsetNames={toolsetNames}
