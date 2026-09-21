@@ -119,6 +119,27 @@
       repository root; run single specs with `npx vitest run <file>` from `apps/ai-dial-admin/`
       while iterating. Resolve every failure before the change is complete.
 
+## 9. Responsive layout and failure reporting
+
+Follow-up on the shipped module, kept in this change because the deltas it answers to are still
+unarchived.
+
+- [x] 9.1 Reflow the KPI row from the row's measured width rather than a breakpoint: the cards sit
+      on one line when they all fit, and otherwise split across two lines rather than leaving one
+      card alone on the second.
+- [x] 9.2 Give the charts a taller plot area, sample the line series so a long window stays legible,
+      and derive the bucket size from the window alone — a resize SHALL NOT re-issue a request.
+- [x] 9.3 Let the donut sit beside its legend on a narrower card, and let the legend shrink below
+      its longest label: an unbreakable entity name otherwise fixes the list's intrinsic minimum and
+      spills it past the card. Truncate the label with the ui-kit ellipsis tooltip.
+- [x] 9.4 Compact the heatmap's week pager onto the card's title line, widen the day-label column,
+      and raise the row height on a narrow card.
+- [x] 9.5 Keep the breakdown's search and tab control together on one line, and pin `View all` to
+      the title's line.
+- [x] 9.6 Add `Usage/use-load-failure-notice.ts`: one notification per distinct message for the life
+      of a load, shared by the data and heatmap hooks, with the widget left in its empty state.
+- [x] 9.7 Unit tests for 9.1–9.6, and the full gate from 8.4 again.
+
 ## Out of scope
 
 Planned while this change was first written, not built, and deliberately left out rather than

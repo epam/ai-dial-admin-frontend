@@ -20,7 +20,9 @@ const DashboardCard: FC<Props> = ({ title, subtitle, titleActions, headerActions
     aria-label={title}
   >
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-secondary px-[18px] py-4">
-      <div className="flex flex-wrap items-center gap-4">
+      {/* Shrinkable, so the title block wraps its own controls instead of pushing the header
+          actions onto a line of their own. */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-4">
         <div className="flex flex-col gap-0.5">
           <span className="dial-body-semi-text text-primary">{title}</span>
           {subtitle && <span className="dial-small-text text-secondary">{subtitle}</span>}

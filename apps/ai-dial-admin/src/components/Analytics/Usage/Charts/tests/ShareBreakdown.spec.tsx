@@ -79,9 +79,9 @@ describe('ShareBreakdown', () => {
     expect(screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder })).toBeTruthy();
   });
 
-  test('reports the service message when the window could not be read', () => {
-    renderCard({ rows: { data: null, isLoading: false, hasFailed: true, error: 'upstream refused' } });
+  test('keeps the silhouette and states the empty window when the request failed', () => {
+    renderCard({ rows: { data: null, isLoading: false, hasFailed: true } });
 
-    expect(screen.getByText('upstream refused')).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.DonutEmptyCenter)).toBeTruthy();
   });
 });

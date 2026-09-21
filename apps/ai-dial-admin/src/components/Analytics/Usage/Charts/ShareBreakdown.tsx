@@ -2,15 +2,7 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import {
-  DialLinkButton,
-  DialLoader,
-  DialNoDataContent,
-  ElementSize,
-  Popup,
-  PopupSize,
-  Search,
-} from '@epam/ai-dial-ui-kit';
+import { DialLinkButton, DialLoader, ElementSize, Popup, PopupSize, Search } from '@epam/ai-dial-ui-kit';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import DonutFigure from '@/src/components/Analytics/Usage/Charts/DonutFigure';
@@ -21,7 +13,7 @@ import { getSliceColor } from '@/src/components/Analytics/Usage/utils/chart-opti
 import { buildDonutSlices, getSliceShare } from '@/src/components/Analytics/Usage/utils/donut';
 import { formatCompactNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY, getFallbackLabelKey } from '@/src/components/Analytics/Usage/utils/labels';
-import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -78,7 +70,7 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
     return term ? fullSlices.filter((slice) => slice.label.toLowerCase().includes(term)) : fullSlices;
   }, [fullSlices, legendFilter]);
 
-  const isEmptyWindow = !rows.isLoading && !rows.hasFailed && cardSlices.length === 0;
+  const isEmptyWindow = !rows.isLoading && (rows.hasFailed || cardSlices.length === 0);
   const total = windowTotal == null ? null : formatCompactNumber(windowTotal);
   const centerValue = total ? `${total.value}${total.unit ?? ''}` : null;
   const centerCaption = t(AnalyticsUsageI18nKey.DonutTotal);
@@ -94,10 +86,6 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
   const renderFigure = () => {
     if (rows.isLoading) {
       return <DialLoader size={24} />;
-    }
-
-    if (rows.hasFailed) {
-      return <DialNoDataContent title={rows.error ?? t(BasicI18nKey.NoData)} />;
     }
 
     if (isEmptyWindow) {
