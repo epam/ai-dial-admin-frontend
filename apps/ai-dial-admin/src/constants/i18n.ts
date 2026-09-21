@@ -888,6 +888,24 @@ export enum PublicationsI18nKey {
   SkillUnpublishDeclineModalTitle = 'Publications.Skill.UnpublishDeclineModalTitle',
   SkillPublishApproveDescription = 'Publications.Skill.PublishApproveDescription',
   SkillUnpublishApproveDescription = 'Publications.Skill.UnpublishApproveDescription',
+
+  // entities (for approval action notifications)
+  ApplicationPublicationEntity = 'Publications.Entities.Application',
+  ToolsetPublicationEntity = 'Publications.Entities.Toolset',
+  PromptPublicationEntity = 'Publications.Entities.Prompt',
+  FilePublicationEntity = 'Publications.Entities.File',
+  ConversationPublicationEntity = 'Publications.Entities.Conversation',
+  SkillPublicationEntity = 'Publications.Entities.Skill',
+
+  // approval action notifications
+  NotificationDeleteTitle = 'Publications.Notification.DeleteTitle',
+  NotificationDeleteDescription = 'Publications.Notification.DeleteDescription',
+  NotificationDeclineTitle = 'Publications.Notification.DeclineTitle',
+  NotificationDeclineDescription = 'Publications.Notification.DeclineDescription',
+  NotificationPublishTitle = 'Publications.Notification.PublishTitle',
+  NotificationPublishDescription = 'Publications.Notification.PublishDescription',
+  NotificationUnpublishTitle = 'Publications.Notification.UnpublishTitle',
+  NotificationUnpublishDescription = 'Publications.Notification.UnpublishDescription',
 }
 
 export enum CompareI18nKey {

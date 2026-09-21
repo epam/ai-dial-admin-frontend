@@ -11,6 +11,19 @@ export function isAddAction(action: ActionType): boolean {
   return action === ActionType.ADD || action === ActionType.ADD_IF_ABSENT;
 }
 
+const publicationEntityMap: Record<string, PublicationsI18nKey> = {
+  [ApplicationRoute.ApplicationPublications]: PublicationsI18nKey.ApplicationPublicationEntity,
+  [ApplicationRoute.ToolsetPublications]: PublicationsI18nKey.ToolsetPublicationEntity,
+  [ApplicationRoute.PromptPublications]: PublicationsI18nKey.PromptPublicationEntity,
+  [ApplicationRoute.FilePublications]: PublicationsI18nKey.FilePublicationEntity,
+  [ApplicationRoute.ConversationPublications]: PublicationsI18nKey.ConversationPublicationEntity,
+  [ApplicationRoute.SkillPublications]: PublicationsI18nKey.SkillPublicationEntity,
+};
+
+export function getPublicationEntityLabel(route: ApplicationRoute, t: (str: string) => string): string {
+  return t(publicationEntityMap[route]);
+}
+
 export function getModalsTranslations(route: ApplicationRoute, action: ActionType) {
   if (route === ApplicationRoute.PromptPublications) {
     return isAddAction(action)
