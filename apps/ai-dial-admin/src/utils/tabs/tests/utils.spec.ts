@@ -30,7 +30,6 @@ import {
   getAppRunnerTabs,
   getAuditTabs,
   getDeploymentsViewTabs,
-  getEndpointSchemaTabs,
   getFilePublicationTabs,
   getFileSelectInputTabs,
   getInterceptorTabs,
@@ -68,10 +67,8 @@ import {
   propertiesTab,
   publicTab,
   relatedContainersTab,
-  requestSchemaTab,
   responseTab,
   resourcesTab,
-  responseSchemaTab,
   rolesTab,
   runsTab,
   getSkillPublicationTabs,
@@ -515,8 +512,8 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for test suite', () => {
     expect(getTestSuiteTabs(t)).toEqual([
       propertiesTab(t),
-      testSuiteMethodTab(t),
       testCasesTab(t),
+      testSuiteMethodTab(t),
       metricsTab(t),
       runsTab(t),
       trendsTab(t),
@@ -638,10 +635,6 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for test suite request template', () => {
     expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
-  });
-
-  test('returns correct tabs for test suite request template', () => {
-    expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
   });
 
   test('returns correct tabs for file publication', () => {

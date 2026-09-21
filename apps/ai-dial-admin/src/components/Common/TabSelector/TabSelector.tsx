@@ -12,21 +12,32 @@ interface Props {
   tabs: TabOption[];
   activeTab: string;
   onChange: (tabId: string) => void;
+  clearView?: boolean;
 }
 
-const TabSelector: FC<Props> = ({ tabs, activeTab, onChange }) => {
+const TabSelector: FC<Props> = ({ tabs, activeTab, onChange, clearView }) => {
   return (
-    <div className="flex flex-row items-center gap-2 bg-layer-4 rounded w-fit p-1">
-      {tabs.map((tab) => (
+    <div
+      className={classNames(
+        'flex flex-row items-center bg-layer-4 rounded-[4px] w-fit',
+        clearView ? 'border border-primary' : 'gap-2 p-1',
+      )}
+    >
+      {tabs.map((tab, index) => (
         <div
           key={tab.id}
           className={classNames(
-            'flex flex-row gap-1 h-[24px] items-center py-1 px-2 rounded text-primary cursor-pointer hover:bg-accent-primary-alpha',
-            activeTab === tab.id && 'bg-accent-primary-alpha',
+            'flex flex-row gap-1 h-[24px] items-center  cursor-pointer py-1 hover:bg-accent-primary-alpha',
+            activeTab === tab.id ? 'bg-accent-primary-alpha !text-primary' : 'text-secondary',
+            clearView ? 'px-3' : 'px-2 rounded',
+            {
+              'rounded-l-[4px]': clearView && index === 0,
+              'rounded-r-[4px]': clearView && index === tabs.length - 1,
+            },
           )}
           onClick={() => onChange(tab.id)}
         >
-          {activeTab === tab.id && <IconCheck size={16} />}
+          {activeTab === tab.id && !clearView && <IconCheck size={16} />}
           <div className="dial-small-text">{tab.label}</div>
         </div>
       ))}

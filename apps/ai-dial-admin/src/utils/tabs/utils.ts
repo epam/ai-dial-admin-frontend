@@ -54,8 +54,6 @@ export enum EntityViewTab {
   Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
-  RequestSchema = 'RequestSchema',
-  ResponseSchema = 'ResponseSchema',
   Response = 'Response',
   Columns = 'Columns',
   TestSuiteMethod = 'TestSuiteMethod',
@@ -314,16 +312,6 @@ export const headersTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Headers),
 });
 
-export const requestSchemaTab = (t: (key: string) => string) => ({
-  id: EntityViewTab.RequestSchema,
-  label: t(TabsI18nKey.RequestSchema),
-});
-
-export const responseSchemaTab = (t: (key: string) => string) => ({
-  id: EntityViewTab.ResponseSchema,
-  label: t(TabsI18nKey.ResponseSchema),
-});
-
 export const columnsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Columns,
   label: t(TabsI18nKey.Columns),
@@ -570,7 +558,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), metricsTab(t), runsTab(t), trendsTab(t)];
+  return [propertiesTab(t), testCasesTab(t), testSuiteMethodTab(t), metricsTab(t), runsTab(t), trendsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
@@ -626,10 +614,6 @@ export const getRunTabs = (t: (key: string) => string): TabModel[] => {
 
 export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), schemaTab(t), testCasesTab(t)];
-};
-
-export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {
-  return [requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)];
 };
 
 export const getMcpToolSchemaTabs = (t: (key: string) => string): TabModel[] => {

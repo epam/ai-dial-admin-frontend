@@ -4,26 +4,6 @@ import { describe, expect, test, vi, beforeEach, Mock } from 'vitest';
 import TestCases from '../TestCases';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
-vi.mock('../TemplateVariables', () => ({
-  default: ({ selectedTestSuite, onChange }: any) => (
-    <section aria-label="template variables">
-      <span>{selectedTestSuite.id}</span>
-      <button onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TV' }, true)}>TV Change</button>
-    </section>
-  ),
-}));
-
-vi.mock('../AdditionalRequestVariables', () => ({
-  default: ({ selectedTestSuite, requestIndex, onChange }: any) => (
-    <section aria-label={`additional request variables ${requestIndex}`}>
-      <span>{selectedTestSuite.id}</span>
-      <button onClick={() => onChange({ ...selectedTestSuite, name: `Changed by ARV ${requestIndex}` })}>
-        ARV Change {requestIndex}
-      </button>
-    </section>
-  ),
-}));
-
 vi.mock('../TestCasesList', () => ({
   default: ({ selectedTestSuite, onChange }: any) => (
     <section aria-label="test cases list">
@@ -50,24 +30,17 @@ describe('TestCases', () => {
 
   const defaultDatasetProps = { dataset: null, suiteEtag: '' };
 
-  test('renders both TemplateVariables and TestCasesList', () => {
+  test('renders TestCasesList', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
-    expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'test cases list' })).toBeInTheDocument();
   });
 
-  test('passes selectedTestSuite to TemplateVariables', () => {
-    render(
-      <TestCases
-        selectedTestSuite={createTestSuite({ id: 'my-suite' })}
-        onChange={mockOnChange}
-        {...defaultDatasetProps}
-      />,
-    );
+  test('does not render a Dynamic Configuration section', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
-    const tvSection = screen.getByRole('region', { name: 'template variables' });
-    expect(tvSection).toHaveTextContent('my-suite');
+    expect(screen.queryByLabelText(/template variables/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/additional request variables/)).not.toBeInTheDocument();
   });
 
   test('passes selectedTestSuite to TestCasesList', () => {
@@ -83,15 +56,6 @@ describe('TestCases', () => {
     expect(tclSection).toHaveTextContent('my-suite');
   });
 
-  test('passes onChange to TemplateVariables and it triggers correctly', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'TV Change' }));
-
-    expect(mockOnChange).toHaveBeenCalledTimes(1);
-    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TV' }), true);
-  });
-
   test('passes onChange to TestCasesList and it triggers correctly', () => {
     render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
@@ -101,40 +65,6 @@ describe('TestCases', () => {
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));
   });
 
-  test('renders no AdditionalRequestVariables sections when there are no additionalRequests', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
-
-    expect(screen.queryByLabelText(/additional request variables/)).not.toBeInTheDocument();
-  });
-
-  test('renders one AdditionalRequestVariables section per additionalRequests entry', () => {
-    render(
-      <TestCases
-        selectedTestSuite={createTestSuite({ additionalRequests: [{}, {}] })}
-        onChange={mockOnChange}
-        {...defaultDatasetProps}
-      />,
-    );
-
-    expect(screen.getByRole('region', { name: 'additional request variables 1' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'additional request variables 2' })).toBeInTheDocument();
-  });
-
-  test('passes onChange to AdditionalRequestVariables and it triggers correctly', () => {
-    render(
-      <TestCases
-        selectedTestSuite={createTestSuite({ additionalRequests: [{}] })}
-        onChange={mockOnChange}
-        {...defaultDatasetProps}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'ARV Change 1' }));
-
-    expect(mockOnChange).toHaveBeenCalledTimes(1);
-    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by ARV 1' }));
-  });
-
   test('renders with correct container classes', () => {
     const { container } = render(
       <TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />,
@@ -142,21 +72,5 @@ describe('TestCases', () => {
 
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-4', 'min-h-0');
-  });
-
-  test('caps Dynamic Configuration sections so the Test Cases grid keeps remaining height', () => {
-    const { container } = render(
-      <TestCases
-        selectedTestSuite={createTestSuite({ additionalRequests: [{}, {}, {}] })}
-        onChange={mockOnChange}
-        {...defaultDatasetProps}
-      />,
-    );
-
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.firstChild).toHaveClass('max-h-[50%]', 'overflow-y-auto', 'shrink-0');
-    expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'additional request variables 1' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'test cases list' })).toBeInTheDocument();
   });
 });
