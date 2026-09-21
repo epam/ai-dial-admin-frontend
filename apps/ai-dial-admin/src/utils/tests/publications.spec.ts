@@ -1,8 +1,10 @@
 import { ActionType } from '@/src/models/dial/publications';
-import { getActionClassName, getModalsTranslations, isAddAction } from '../publications';
+import { getActionClassName, getModalsTranslations, getPublicationEntityLabel, isAddAction } from '../publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
+
+const t = (key: string) => key;
 
 describe('Utils :: publications :: getActionClass', () => {
   test('Should correctly return action class name', () => {
@@ -97,5 +99,43 @@ describe('getModalsTranslations', () => {
       DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,
       ApproveDescription: PublicationsI18nKey.ToolsetUnpublishApproveDescription,
     });
+  });
+});
+
+describe('getPublicationEntityLabel', () => {
+  test('returns the application publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ApplicationPublications, t)).toBe(
+      PublicationsI18nKey.ApplicationPublicationEntity,
+    );
+  });
+
+  test('returns the toolset publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ToolsetPublications, t)).toBe(
+      PublicationsI18nKey.ToolsetPublicationEntity,
+    );
+  });
+
+  test('returns the prompt publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.PromptPublications, t)).toBe(
+      PublicationsI18nKey.PromptPublicationEntity,
+    );
+  });
+
+  test('returns the file publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.FilePublications, t)).toBe(
+      PublicationsI18nKey.FilePublicationEntity,
+    );
+  });
+
+  test('returns the conversation publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.ConversationPublications, t)).toBe(
+      PublicationsI18nKey.ConversationPublicationEntity,
+    );
+  });
+
+  test('returns the skill publication entity key', () => {
+    expect(getPublicationEntityLabel(ApplicationRoute.SkillPublications, t)).toBe(
+      PublicationsI18nKey.SkillPublicationEntity,
+    );
   });
 });
