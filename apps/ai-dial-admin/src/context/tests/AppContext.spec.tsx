@@ -18,7 +18,7 @@ const FEATURE_FLAGS: FeatureFlags = {
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
+  analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
 };

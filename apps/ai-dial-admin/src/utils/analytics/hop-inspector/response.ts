@@ -1,6 +1,6 @@
-import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
+import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/sessions-trace';
 import {
-  ConversationEntryBodyRow,
+  SessionEntryBodyRow,
   HopDialect,
   HopRawBody,
   HopReadState,
@@ -8,8 +8,8 @@ import {
   HopResponseFacts,
   HopMessagesResponse,
   HopToolCall,
-} from '@/src/models/analytics/conversations-trace';
-import { assistantTextOf, sseFrames, toolCallRequestsOf } from '@/src/utils/analytics/conversation-bodies';
+} from '@/src/models/analytics/sessions-trace';
+import { assistantTextOf, sseFrames, toolCallRequestsOf } from '@/src/utils/analytics/session-bodies';
 import { errorMessageIn } from '@/src/utils/analytics/hop-inspector/failure';
 import {
   NO_MESSAGES_RESPONSE,
@@ -65,7 +65,7 @@ const framesReaderOf = (raw: string): (() => unknown[]) => {
   return () => (frames ??= raw ? sseFrames(raw).map(parseJson) : []);
 };
 
-const sourceOf = (row: ConversationEntryBodyRow): ResponseSource => {
+const sourceOf = (row: SessionEntryBodyRow): ResponseSource => {
   const raw = row.response_body?.trim() ?? '';
   const assembledRaw = row.assembled_response?.trim() ?? '';
 
@@ -195,7 +195,7 @@ const messagesShapeOf = (source: ResponseSource): DecodedResponse => {
   };
 };
 
-const chatShapeOf = (row: ConversationEntryBodyRow, source: ResponseSource): DecodedResponse => ({
+const chatShapeOf = (row: SessionEntryBodyRow, source: ResponseSource): DecodedResponse => ({
   text: assistantTextOf(row),
   reasoningText: null,
   status: finishReasonOf(source),
@@ -299,7 +299,7 @@ const emptyStateOf = (recordedBytes: number | null): HopReadState =>
 // One mapping from dialect to decoder, for the same reason the request side has one: a dialect parsed on one
 // half of a hop and fallen through on the other opens the hop, renders its history, and reports its answer as
 // absent while the answer sits in the recorded body one tab away.
-const shapeOf = (dialect: HopDialect, row: ConversationEntryBodyRow, source: ResponseSource): DecodedResponse => {
+const shapeOf = (dialect: HopDialect, row: SessionEntryBodyRow, source: ResponseSource): DecodedResponse => {
   if (dialect === HopDialect.Responses) {
     return responsesShapeOf(source);
   }
@@ -307,7 +307,7 @@ const shapeOf = (dialect: HopDialect, row: ConversationEntryBodyRow, source: Res
   return dialect === HopDialect.Messages ? messagesShapeOf(source) : chatShapeOf(row, source);
 };
 
-export const responseEnvelopeOf = (row: ConversationEntryBodyRow, dialect: HopDialect): HopResponseEnvelope => {
+export const responseEnvelopeOf = (row: SessionEntryBodyRow, dialect: HopDialect): HopResponseEnvelope => {
   const source = sourceOf(row);
   const decoded = shapeOf(dialect, row, source);
   const { status, toolCalls } = decoded;

@@ -157,7 +157,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         { key: MenuI18nKey.Evaluators, href: ApplicationRoute.AnalyticsEvaluators },
         { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
         { key: MenuI18nKey.AnalyticsUsage, href: ApplicationRoute.AnalyticsUsage },
-        { key: MenuI18nKey.AnalyticsConversations, href: ApplicationRoute.ConversationsTrace },
+        { key: MenuI18nKey.AnalyticsSessions, href: ApplicationRoute.SessionsTrace },
       ],
     },
   ];
@@ -183,10 +183,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
     );
   }
 
-  if (!featureFlags.analyticsConversationsEnabled) {
+  if (!featureFlags.analyticsSessionsEnabled) {
     result = result.map((group) =>
       group.key === MenuI18nKey.Analytics
-        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsConversations) }
+        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsSessions) }
         : group,
     );
   }

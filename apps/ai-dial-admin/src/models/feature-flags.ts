@@ -8,7 +8,7 @@ export interface FeatureFlags {
   nimEnabled: boolean;
   hfEnabled: boolean;
   analyticsEnabled: boolean;
-  analyticsConversationsEnabled: boolean;
+  analyticsSessionsEnabled: boolean;
   analyticsUsageEnabled: boolean;
   queryAssistantEnabled: boolean;
 }

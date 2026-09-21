@@ -10,7 +10,7 @@ The system SHALL expose an Analytics page at `/evaluators`, present in the `Appl
 (`types/routes.ts`) as `AnalyticsEvaluators`, with the route directory `src/app/[lang]/evaluators/`. The
 page SHALL be a server component declaring `export const dynamic = 'force-dynamic'` that calls
 `isAnalyticsForbidden()` before any data access and renders `Page403` when it returns `true`, matching the
-guard the Tables, Pipelines, Queries, and Conversations pages already use. User-facing strings SHALL
+guard the Tables, Pipelines, Queries, and Sessions pages already use. User-facing strings SHALL
 read "Evaluators".
 
 Reaching either page SHALL be governed by that guard **alone**. `GET /v1/evaluators`,

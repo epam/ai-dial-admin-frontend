@@ -51,7 +51,7 @@ describe('paramsOf', () => {
   });
 
   // The only members left out are the ones the history renders in full.
-  test('leaves out the members that carry the conversation itself', () => {
+  test('leaves out the members that carry the session itself', () => {
     const names = paramsOf({ messages: [], system: 'x', input: [], instructions: 'y' }).stated.map(({ name }) => name);
 
     expect(names).toEqual(['temperature', 'max_tokens', 'tools', 'stream']);
