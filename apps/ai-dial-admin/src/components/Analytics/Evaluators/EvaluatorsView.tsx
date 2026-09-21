@@ -14,7 +14,7 @@ import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';

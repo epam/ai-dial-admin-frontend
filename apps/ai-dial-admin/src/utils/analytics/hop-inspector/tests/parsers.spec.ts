@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { MessageRole } from '@/src/models/analytics/conversations-trace';
+import { MessageRole } from '@/src/models/analytics/sessions-trace';
 import { chatCompletionsMessagesOf } from '@/src/utils/analytics/hop-inspector/chat-completions';
 import {
   NO_MESSAGES_RESPONSE,

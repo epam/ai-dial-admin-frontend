@@ -3,7 +3,7 @@ import {
   HopMessagesResponse,
   HopToolCall,
   MessageRole,
-} from '@/src/models/analytics/conversations-trace';
+} from '@/src/models/analytics/sessions-trace';
 import { asRecords, isRecord, jsonByteLength, parseJson, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const TEXT_BLOCK = 'text';

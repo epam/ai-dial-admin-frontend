@@ -1,10 +1,10 @@
-import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
+import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/sessions-trace';
 import {
-  ConversationEntryBodyRow,
+  SessionEntryBodyRow,
   HopEmbeddingFacts,
   HopReadState,
   HopSideGrants,
-} from '@/src/models/analytics/conversations-trace';
+} from '@/src/models/analytics/sessions-trace';
 import { NO_CLAMP, asRecords, clampToBudget, isRecord, parseJson } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const FLOAT32_BYTES = 4;
@@ -60,7 +60,7 @@ const WITHHELD: HopEmbeddingFacts = {
   isDimensionsWithheld: false,
 };
 
-export const embeddingFactsOf = (row: ConversationEntryBodyRow, grants: HopSideGrants): HopEmbeddingFacts => {
+export const embeddingFactsOf = (row: SessionEntryBodyRow, grants: HopSideGrants): HopEmbeddingFacts => {
   // Everything but the dimension count comes from the request column, so a caller denied that column is
   // denied the panel — not shown an embedding that appears to have recorded nothing.
   if (!grants.isRequestReadable) {

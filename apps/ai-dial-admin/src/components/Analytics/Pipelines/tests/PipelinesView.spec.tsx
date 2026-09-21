@@ -6,7 +6,7 @@ import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions
 import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { ActionMenuOperationI18nKey, AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';

@@ -1263,7 +1263,7 @@ the schema, and caching it would extend one outage over the entry's whole lifeti
 
 #### Scenario: A repeated load does not re-query the schema
 
-- **WHEN** the conversations page is loaded twice in succession by the same caller within the entry's lifetime
+- **WHEN** the sessions page is loaded twice in succession by the same caller within the entry's lifetime
 - **THEN** the entity schema is fetched from the analytics service once
 - **AND** the second load renders the same column catalog as the first
 
