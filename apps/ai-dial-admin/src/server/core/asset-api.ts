@@ -5,12 +5,20 @@ import {
   DEFAULT_LIST_LIMIT,
   DEFAULT_LIST_PATH,
   DEFAULT_LIST_PATH_TYPES,
+  FOLDER_NESTED_VERSIONLESS_TYPES,
   PLATFORM_BUCKET_RESOURCE_TYPES,
+  RESOURCE_CONTROLLER_TYPES,
 } from '@/src/constants/assets-core';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { encodeCorePath, parseVersionedPath, stripPrefix, VersionedPathParts } from '@/src/server/publications/path';
+import {
+  encodeCorePath,
+  parsePath,
+  parseVersionedPath,
+  stripPrefix,
+  VersionedPathParts,
+} from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { CoreApi } from './core-api';
@@ -136,10 +144,10 @@ export class AssetApi extends CoreApi {
       return { success: false, errorHeader: 'Not Found', errorMessage: 'Resource metadata not found' };
     }
     const merged = merge(contentResult.response as Record<string, unknown>, metadata) as T;
-    // Flat/unversioned types (e.g. MODEL) never get an `ETag` response header on the content GET
-    // (`ConfigResourceController.handleSingleGet`'s success path doesn't set one) — their blob
-    // etag is only available on the metadata node.
-    const eTag = isVersioned(type) ? contentResult.etag : (metadata.etag ?? contentResult.etag);
+    // `ResourceController`-served types (application, toolset, conversation, prompt) get an
+    // `ETag` response header on the content GET; `ConfigResourceController`-served flat types
+    // (e.g. MODEL) don't — their blob etag is only available on the metadata node.
+    const eTag = RESOURCE_CONTROLLER_TYPES.has(type) ? contentResult.etag : (metadata.etag ?? contentResult.etag);
     return { success: true, response: merged, etag: eTag };
   }
 
@@ -171,12 +179,21 @@ export class AssetApi extends CoreApi {
 
   /**
    * Splits the written path into the admin-format identity fields. Flat/unversioned types (e.g.
-   * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Versioned types are
-   * guarded: a path with no `/` separator (e.g. an empty `folderId` falling back to the bare
-   * `ROOT_FOLDER` = `'public'`) makes `parseVersionedPath` throw — in that case we skip enrichment
-   * rather than fail an otherwise-successful write.
+   * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Folder-nested
+   * versionless types (prompt, conversation) split into folder + plain name with no version.
+   * Versioned types are guarded: a path with no `/` separator (e.g. an empty `folderId` falling
+   * back to the bare `ROOT_FOLDER` = `'public'`) makes the parse throw — in that case we skip
+   * enrichment rather than fail an otherwise-successful write.
    */
   private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> {
+    if (FOLDER_NESTED_VERSIONLESS_TYPES.has(type)) {
+      try {
+        const { path: parsedPath, folderId, name } = parsePath(path);
+        return { path: parsedPath, folderId, name };
+      } catch {
+        return {};
+      }
+    }
     if (!isVersioned(type)) {
       return { path, folderId: '', name: path };
     }

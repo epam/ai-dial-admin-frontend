@@ -16,7 +16,7 @@ interface Props {
   isLoading: boolean;
   hasFailed: boolean;
   emptyTitle: string;
-  emptyDescription?: string;
+  emptyLines?: string[];
   className?: string;
 }
 
@@ -31,15 +31,7 @@ const HEADER_OFFSET_CLASS = 'top-[42px]';
  * empty result keeps the grid — its header names what the table would have held — and states the
  * emptiness over the body.
  */
-const BreakdownGrid: FC<Props> = ({
-  rows,
-  columnDefs,
-  isLoading,
-  hasFailed,
-  emptyTitle,
-  emptyDescription,
-  className,
-}) => {
+const BreakdownGrid: FC<Props> = ({ rows, columnDefs, isLoading, hasFailed, emptyTitle, emptyLines, className }) => {
   if (isLoading) {
     return (
       <div className={classNames('flex items-center justify-center', className)}>
@@ -63,7 +55,7 @@ const BreakdownGrid: FC<Props> = ({
         <div
           className={classNames('absolute inset-x-0 bottom-0 flex items-center justify-center', HEADER_OFFSET_CLASS)}
         >
-          <UsageEmptyState title={emptyTitle} lines={emptyDescription ? [emptyDescription] : void 0} />
+          <UsageEmptyState title={emptyTitle} lines={emptyLines} />
         </div>
       )}
     </div>

@@ -15,6 +15,7 @@ import {
   removeTrailingSlash,
   replacePathPrefix,
   updatePathWithNameAndVersion,
+  updatePathWithName,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -444,6 +445,33 @@ describe('Utils :: files :: updatePathWithNameAndVersion', () => {
     const oldPath = 'abc123XYZ456/def789/item-name__1.0.0';
     const result = updatePathWithNameAndVersion(oldPath, 'new-item', '1.5.0');
     expect(result).toBe('abc123XYZ456/def789/new-item__1.5.0');
+  });
+});
+
+describe('Utils :: files :: updatePathWithName', () => {
+  test('Should update the last segment to the new name', () => {
+    const result = updatePathWithName('folder/my-prompt', 'renamed-prompt');
+    expect(result).toBe('folder/renamed-prompt');
+  });
+
+  test('Should keep a `__` in the new name verbatim — it is part of the name, not a version', () => {
+    const result = updatePathWithName('folder/my-prompt', 'renamed__1.0.0');
+    expect(result).toBe('folder/renamed__1.0.0');
+  });
+
+  test('Should replace a name that carried a `__` suffix verbatim', () => {
+    const result = updatePathWithName('folder/my-prompt__1.0.0', 'renamed-prompt');
+    expect(result).toBe('folder/renamed-prompt');
+  });
+
+  test('Should handle a nested folder structure', () => {
+    const result = updatePathWithName('root/subfolder/nested/prompt', 'new-name');
+    expect(result).toBe('root/subfolder/nested/new-name');
+  });
+
+  test('Should handle a bare name with no folder', () => {
+    const result = updatePathWithName('my-prompt', 'renamed-prompt');
+    expect(result).toBe('renamed-prompt');
   });
 });
 

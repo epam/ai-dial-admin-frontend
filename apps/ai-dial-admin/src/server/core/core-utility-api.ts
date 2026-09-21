@@ -3,6 +3,7 @@ import { CoreUserInfoResponse } from '@/src/models/dial/core-user-info';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { UserInfo } from '@/src/models/user-info';
 import { CoreApi } from './core-api';
+import { Deployment } from '@/src/models/evaluation/deployment';
 
 export const DEPLOYMENTS_URL = 'v1/deployments';
 export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
@@ -19,7 +20,7 @@ const EMAIL_CLAIM = 'email';
  * those aren't duplicated or moved here.
  */
 export class CoreUtilityApi extends CoreApi {
-  checkDeploymentByName(name: string, token: Token) {
+  checkDeploymentByName(name: string, token: Token): Promise<Deployment | null> {
     return this.get(DEPLOYMENT_URL(name), token);
   }
 

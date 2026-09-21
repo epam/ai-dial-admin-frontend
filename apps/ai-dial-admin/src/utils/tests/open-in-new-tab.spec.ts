@@ -143,9 +143,16 @@ describe('Entity list view :: getEntityPath', () => {
 
   test('Should return path field for Prompts when remove passed', () => {
     expect(getEntityPath(ApplicationRoute.Prompts, data, true)).toEqual('path');
+    // Prompts are versionless: the version argument is ignored and the fallback is the plain
+    // folderId + name, with no `__version` graft.
     expect(
-      getEntityPath(ApplicationRoute.Prompts, { ...data, name: 'name', folderId: 'folder' }, true, '1.0.0'),
-    ).toEqual('foldername__1.0.0');
+      getEntityPath(
+        ApplicationRoute.Prompts,
+        { ...data, path: void 0, name: 'name', folderId: 'folder' },
+        true,
+        '1.0.0',
+      ),
+    ).toEqual('foldername');
     expect(getEntityPath(ApplicationRoute.Prompts, { ...data, path: void 0 }, true)).toBeUndefined;
   });
 

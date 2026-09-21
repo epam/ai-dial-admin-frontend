@@ -189,6 +189,6 @@ export const FIELD_TYPE_VALUE_CLASS: Partial<Record<AnalyticsFieldType, ResultVa
 // The catalog's own classification of what a column measures, and the only machine-readable unit signal a
 // field carries that is not its name: there is no unit attribute, `description` states the unit in prose
 // and `display_name` states it in parentheses on some rows only. The frontend already depends on this same
-// tag vocabulary — CONVERSATION_TAG_LABEL_KEY in constants/analytics/conversations-trace.ts maps nine tag
-// values, `performance` among them, to the conversations column picker's group labels.
+// tag vocabulary — SESSION_TAG_LABEL_KEY in constants/analytics/sessions-trace.ts maps nine tag
+// values, `performance` among them, to the sessions column picker's group labels.
 export const DURATION_FIELD_TAG = 'performance';

@@ -18,7 +18,7 @@ import {
   RequestState,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
-import { formatDuration, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { formatDuration, formatPercent, getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
 import { getShareOfTotal } from '@/src/components/Analytics/Usage/utils/kpi-cards';
 import {
   BREAKDOWN_TAB_COLUMN_LABEL_KEY,
@@ -29,6 +29,7 @@ import {
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { TimeRange } from '@/src/models/time-range';
 
 /**
  * The card holds one ranked page from the backend, so its grid offers neither sorting nor its own
@@ -58,6 +59,8 @@ interface Props {
   previousRows: RequestState<BreakdownRow[]>;
   windowTotal: number | null;
   hasComparison: boolean;
+  /** Named in the empty state, so the table says which window held nothing. */
+  window: TimeRange;
   rowLimit: number;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -75,6 +78,7 @@ const BreakdownTable: FC<Props> = ({
   previousRows,
   windowTotal,
   hasComparison,
+  window,
   rowLimit,
   searchTerm,
   onSearchChange,
@@ -206,13 +210,17 @@ const BreakdownTable: FC<Props> = ({
 
   const columnLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, { dimension: columnLabel });
-  const emptyTitle =
-    rows.error ??
-    (searchTerm
-      ? t(AnalyticsUsageI18nKey.SearchNoMatches, { term: searchTerm })
-      : t(AnalyticsUsageI18nKey.BreakdownEmptyTitle));
-  // A failed request states what the service said; an empty window explains itself.
-  const emptyDescription = rows.error || searchTerm ? void 0 : t(AnalyticsUsageI18nKey.BreakdownEmptyBody);
+  const { from: windowFrom, to: windowTo } = getWindowBounds(window);
+  const emptyTitle = searchTerm
+    ? t(AnalyticsUsageI18nKey.SearchNoMatches, { term: searchTerm })
+    : t(AnalyticsUsageI18nKey.BreakdownEmptyTitle);
+  // The same pair the time series states, so the two widgets explain one empty window once.
+  const emptyLines = searchTerm
+    ? void 0
+    : [
+        t(AnalyticsUsageI18nKey.TimeSeriesEmptyIdle, { from: windowFrom, to: windowTo }),
+        t(AnalyticsUsageI18nKey.TimeSeriesEmptyHint),
+      ];
 
   const grid = (
     <BreakdownGrid
@@ -221,7 +229,7 @@ const BreakdownTable: FC<Props> = ({
       isLoading={rows.isLoading}
       hasFailed={rows.hasFailed}
       emptyTitle={emptyTitle}
-      emptyDescription={emptyDescription}
+      emptyLines={emptyLines}
       className="h-[320px]"
     />
   );
@@ -230,23 +238,33 @@ const BreakdownTable: FC<Props> = ({
     <DashboardCard
       title={t(AnalyticsUsageI18nKey.BreakdownTitle)}
       titleActions={
-        <div className="w-[220px]">
-          <Search
-            id="breakdown-search"
-            size={ElementSize.Small}
-            value={searchTerm}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-            onChange={(next) => onSearchChange(next ?? '')}
-          />
+        /* Search travels with the tabs, so a header that wraps keeps the two controls acting on the
+           same rows together on the line below the title. */
+        <div className="flex min-w-0 flex-nowrap items-center gap-3">
+          {/* Shrinks ahead of the tabs, so the pair stays on one line on a narrow card. */}
+          <div className="min-w-[120px] max-w-[220px] flex-1 basis-[220px]">
+            <Search
+              id="breakdown-search"
+              size={ElementSize.Small}
+              value={searchTerm}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              onChange={(next) => onSearchChange(next ?? '')}
+            />
+          </div>
+          <div className="shrink-0">
+            <TabSelector tabs={tabs} activeTab={tab} onChange={(next) => onTabChange(next as BreakdownTab)} />
+          </div>
         </div>
       }
       headerActions={
-        <div className="flex flex-wrap items-center gap-3">
-          <TabSelector tabs={tabs} activeTab={tab} onChange={(next) => onTabChange(next as BreakdownTab)} />
-          {/* The card shows one page, the dialog the full list — a count here would name the page. */}
-          {rowModels.length > 0 && <DialLinkButton label={t(AnalyticsUsageI18nKey.ViewAll)} onClick={onShowAll} />}
-        </div>
+        /* `self-start` keeps this on the title's line once the controls beside the title wrap. */
+        rowModels.length > 0 && (
+          <div className="shrink-0 self-start">
+            {/* The card shows one page, the dialog the full list — a count here would name the page. */}
+            <DialLinkButton label={t(AnalyticsUsageI18nKey.ViewAll)} onClick={onShowAll} />
+          </div>
+        )
       }
     >
       {grid}
@@ -263,7 +281,7 @@ const BreakdownTable: FC<Props> = ({
           isLoading={rows.isLoading}
           hasFailed={rows.hasFailed}
           emptyTitle={emptyTitle}
-          emptyDescription={emptyDescription}
+          emptyLines={emptyLines}
           className="h-[70vh] px-6 pb-4"
         />
       </Popup>

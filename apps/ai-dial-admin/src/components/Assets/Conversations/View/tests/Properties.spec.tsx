@@ -2,20 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { DialConversation } from '@/src/models/dial/conversation';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { ApplicationRoute } from '@/src/types/routes';
 import Properties from '../Properties';
 
-const getDeploymentByIdMock = vi.fn();
+const getDeploymentMock = vi.fn();
 const getAllDeploymentsMock = vi.fn();
 const getModelMock = vi.fn();
 const windowOpenMock = vi.fn();
 
-vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getDeploymentById: (...args: unknown[]) => getDeploymentByIdMock(...args),
-}));
-
 vi.mock('@/src/app/[lang]/conversations/actions', () => ({
+  getDeployment: (...args: unknown[]) => getDeploymentMock(...args),
   getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
@@ -25,7 +23,7 @@ vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
 
 describe('Assets Conversations :: Properties', () => {
   beforeEach(() => {
-    getDeploymentByIdMock.mockReset();
+    getDeploymentMock.mockReset();
     getAllDeploymentsMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
@@ -33,8 +31,21 @@ describe('Assets Conversations :: Properties', () => {
     vi.stubGlobal('open', windowOpenMock);
   });
 
-  test('loads agent via getDeploymentById and opens type-based link', async () => {
-    getDeploymentByIdMock.mockResolvedValue({
+  const conversation = (model: { id: string }): DialConversation => ({
+    name: 'Chat',
+    descriptionKeywords: [],
+    endpoint: '',
+    iconUrl: '',
+    temperature: 0,
+    messages: [],
+    path: 'conversations/public/Chat',
+    folderId: 'public',
+    author: 'someone',
+    model,
+  });
+
+  test('loads agent via getDeployment and opens type-based link', async () => {
+    getDeploymentMock.mockResolvedValue({
       $type: DeploymentType.Model,
       deploymentId: 'gpt-4',
       displayName: 'GPT-4',
@@ -42,26 +53,10 @@ describe('Assets Conversations :: Properties', () => {
 
     const user = userEvent.setup();
 
-    render(
-      <Properties
-        selectedConversation={{
-          name: 'Chat',
-          version: '1.0.0',
-          descriptionKeywords: [],
-          endpoint: '',
-          iconUrl: '',
-          temperature: 0,
-          messages: [],
-          path: 'conversations/public/Chat',
-          folderId: 'public',
-          author: 'someone',
-          model: { id: 'gpt-4' },
-        }}
-      />,
-    );
+    render(<Properties selectedConversation={conversation({ id: 'gpt-4' })} />);
 
     await waitFor(() => {
-      expect(getDeploymentByIdMock).toHaveBeenCalledWith('gpt-4');
+      expect(getDeploymentMock).toHaveBeenCalledWith('gpt-4');
     });
 
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
@@ -76,7 +71,7 @@ describe('Assets Conversations :: Properties', () => {
   });
 
   test('opens Catalog model link when platform model exists', async () => {
-    getDeploymentByIdMock.mockResolvedValue({
+    getDeploymentMock.mockResolvedValue({
       $type: DeploymentType.Model,
       deploymentId: 'msh-responses',
       displayName: 'msh-responses',
@@ -85,23 +80,7 @@ describe('Assets Conversations :: Properties', () => {
 
     const user = userEvent.setup();
 
-    render(
-      <Properties
-        selectedConversation={{
-          name: 'Chat',
-          version: '1.0.0',
-          descriptionKeywords: [],
-          endpoint: '',
-          iconUrl: '',
-          temperature: 0,
-          messages: [],
-          path: 'conversations/public/Chat',
-          folderId: 'public',
-          author: 'someone',
-          model: { id: 'msh-responses' },
-        }}
-      />,
-    );
+    render(<Properties selectedConversation={conversation({ id: 'msh-responses' })} />);
 
     const openButton = await screen.findByRole('button');
     await user.click(openButton);
@@ -112,29 +91,13 @@ describe('Assets Conversations :: Properties', () => {
     );
   });
 
-  test('hides external link when by-id lookup fails', async () => {
-    getDeploymentByIdMock.mockResolvedValue(null);
+  test('hides external link when by-name lookup fails', async () => {
+    getDeploymentMock.mockResolvedValue(null);
 
-    render(
-      <Properties
-        selectedConversation={{
-          name: 'Chat',
-          version: '1.0.0',
-          descriptionKeywords: [],
-          endpoint: '',
-          iconUrl: '',
-          temperature: 0,
-          messages: [],
-          path: 'conversations/public/Chat',
-          folderId: 'public',
-          author: 'someone',
-          model: { id: 'missing' },
-        }}
-      />,
-    );
+    render(<Properties selectedConversation={conversation({ id: 'missing' })} />);
 
     await waitFor(() => {
-      expect(getDeploymentByIdMock).toHaveBeenCalledWith('missing');
+      expect(getDeploymentMock).toHaveBeenCalledWith('missing');
     });
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();

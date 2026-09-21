@@ -25,23 +25,24 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
-import { isDeploymentAsset } from '@/src/utils/is-view';
+import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DialApplicationResource, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
-  entity: AssetWithVersion;
+  entity: AssetWithVersion | DialPrompt;
   versionsMap?: Record<string, string[]>;
   context?: () => AssetsFolderContext;
   onClose: () => void;
-  onDuplicate?: (entity: AssetWithVersion) => void;
+  onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
@@ -57,21 +58,30 @@ const DuplicateAsset: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
+  // Prompts/conversations are versionless: new-entity duplication only — no "New Version"
+  // radio, no version field, name seeded with the "copy" suffix.
+  const isVersionless = isVersionlessAssetView(view);
   const initialName = entity.name;
   const initialFolder = entity.folderId;
-  const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
+  const [duplicationType, setDuplicationType] = useState<string>(
+    isVersionless ? DuplicationTypes.ENTITY : DuplicationTypes.VERSION,
+  );
 
   const duplicationTypes: RadioButtonWithContent[] = [
     { id: DuplicationTypes.VERSION, name: t(EntitiesI18nKey.NewVersion) },
     { id: DuplicationTypes.ENTITY, name: t(EntitiesI18nKey.NewEntity, { entity: t(duplicateEntityMap[view]) }) },
   ];
 
-  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
-    ...entity,
-    name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
-    display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
-    version: getInitialVersion(versionsMap, entity?.name),
-  });
+  const [clonedAsset, setClonedAsset] = useState<AssetWithVersion | DialPrompt>(() =>
+    isVersionless
+      ? { ...entity, name: getClonedEntityName(entity.name) }
+      : {
+          ...entity,
+          name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
+          display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
+          version: getInitialVersion(versionsMap, entity?.name),
+        },
+  );
   const [isInnerValid, setIsInnerValid] = useState(false);
 
   const isToolsetWithAuth = useMemo(() => {
@@ -89,12 +99,14 @@ const DuplicateAsset: FC<Props> = ({
 
   useEffect(() => {
     setIsInnerValid(
-      !!clonedAsset.name &&
-        !!clonedAsset.version &&
-        semver.valid(clonedAsset.version) !== null &&
-        !checkNameVersionCombination(versionsMap, clonedAsset.name, clonedAsset.version),
+      isVersionless
+        ? !!clonedAsset.name
+        : !!clonedAsset.name &&
+            !!(clonedAsset as AssetWithVersion).version &&
+            semver.valid((clonedAsset as AssetWithVersion).version) !== null &&
+            !checkNameVersionCombination(versionsMap, clonedAsset.name, (clonedAsset as AssetWithVersion).version),
     );
-  }, [clonedAsset, versionsMap]);
+  }, [clonedAsset, versionsMap, isVersionless]);
 
   // Initial validation for auth fields
   useEffect(() => {
@@ -136,7 +148,7 @@ const DuplicateAsset: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      setClonedAsset({ ...clonedAsset, version: version || '' });
+      setClonedAsset({ ...clonedAsset, version: version || '' } as AssetWithVersion);
     },
     [setClonedAsset, clonedAsset],
   );
@@ -156,14 +168,14 @@ const DuplicateAsset: FC<Props> = ({
           ...clonedAsset,
           name: initialName,
           version: getInitialVersion(versionsMap, initialName),
-        });
+        } as AssetWithVersion);
       } else {
         setClonedAsset({
           ...clonedAsset,
           folderId: initialFolder,
           name: entity.name === initialName ? getClonedEntityName(entity.name) : entity.name,
           version: DEFAULT_NEW_ENTITY_VERSION,
-        });
+        } as AssetWithVersion);
       }
     },
     [clonedAsset, initialName, initialFolder, entity.name, versionsMap],
@@ -193,18 +205,20 @@ const DuplicateAsset: FC<Props> = ({
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4 gap-4">
-        <DialRadioGroup
-          radioButtons={duplicationTypes}
-          activeRadioButton={duplicationType}
-          elementId="duplicationTypes"
-          fieldTitle={t(EntitiesI18nKey.DuplicationType)}
-          orientation={RadioGroupOrientation.Column}
-          onChange={onChangeDuplicationType}
-        />
+        {!isVersionless && (
+          <DialRadioGroup
+            radioButtons={duplicationTypes}
+            activeRadioButton={duplicationType}
+            elementId="duplicationTypes"
+            fieldTitle={t(EntitiesI18nKey.DuplicationType)}
+            orientation={RadioGroupOrientation.Column}
+            onChange={onChangeDuplicationType}
+          />
+        )}
         <IdControl
           entity={clonedAsset}
           onChangeEntity={setClonedAsset}
-          disabled={duplicationType === DuplicationTypes.VERSION}
+          disabled={!isVersionless && duplicationType === DuplicationTypes.VERSION}
           checkEmptySymbols={false}
         />
         {isDeploymentAsset(view) && (
@@ -214,7 +228,9 @@ const DuplicateAsset: FC<Props> = ({
             required
           />
         )}
-        <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
+        {!isVersionless && (
+          <VersionControl version={(clonedAsset as AssetWithVersion).version} onChange={onChangeVersion} />
+        )}
 
         {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
 

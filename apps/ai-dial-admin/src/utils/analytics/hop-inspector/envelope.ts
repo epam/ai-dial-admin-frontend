@@ -1,4 +1,4 @@
-import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/conversations-trace';
+import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/sessions-trace';
 import {
   HopClamp,
   HopDialect,
@@ -9,7 +9,7 @@ import {
   HopRequestEnvelope,
   HopToolCall,
   MessageRole,
-} from '@/src/models/analytics/conversations-trace';
+} from '@/src/models/analytics/sessions-trace';
 
 const encoder = new TextEncoder();
 

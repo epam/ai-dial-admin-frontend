@@ -1,4 +1,4 @@
-import { HopParam, HopParams } from '@/src/models/analytics/conversations-trace';
+import { HopParam, HopParams } from '@/src/models/analytics/sessions-trace';
 import { isRecord } from '@/src/utils/analytics/hop-inspector/envelope';
 
 // Stated on every hop, with a null value where the body carried none. An absent `temperature` is a debugging
@@ -34,7 +34,7 @@ const LABELLED = [
   'max_completion_tokens',
 ];
 
-// The only members left out: the ones that carry the conversation itself, which the history renders in full.
+// The only members left out: the ones that carry the session itself, which the history renders in full.
 // `input` and `instructions` are the Responses dialect's spelling of `messages` and the system prompt.
 //
 // The DIAL state envelopes are deliberately *not* among them. They are blobs, so they state the names of what

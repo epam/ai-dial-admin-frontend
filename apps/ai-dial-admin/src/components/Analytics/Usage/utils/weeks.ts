@@ -21,15 +21,24 @@ export const getWeekRange = (offset: number, reference: Date = new Date()): Time
   return { startDate: start, endDate: new Date(start.getTime() + 7 * DAY_MS) };
 };
 
-export const formatWeekLabel = (range: TimeRange): string => {
+/**
+ * The year is stated only when the week is not in the current one, so the common label stays short
+ * enough to sit on the card's own header line.
+ */
+export const formatWeekLabel = (range: TimeRange, today: Date = new Date()): string => {
   const lastDay = new Date(range.endDate.getTime() - DAY_MS);
   const sameMonth = lastDay.getMonth() === range.startDate.getMonth();
+  const sameYear = lastDay.getFullYear() === today.getFullYear();
 
   const start = range.startDate.toLocaleDateString(void 0, {
     day: 'numeric',
     ...(sameMonth ? {} : { month: 'short' }),
   });
-  const end = lastDay.toLocaleDateString(void 0, { day: 'numeric', month: 'short', year: 'numeric' });
+  const end = lastDay.toLocaleDateString(void 0, {
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
 
   return `${start} – ${end}`;
 };

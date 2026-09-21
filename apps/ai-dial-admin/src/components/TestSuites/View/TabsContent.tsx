@@ -69,7 +69,12 @@ const TabsContent: FC<Props> = ({
         </PropertiesTabContent>
       )}
       {activeTab === EntityViewTab.TestSuiteMethod && (
-        <MethodTabContent testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
+        <MethodTabContent
+          testSuite={selectedTestSuite}
+          onChange={onChange}
+          isSkipRefresh={isSkipRefresh}
+          dataset={dataset}
+        />
       )}
       {activeTab === EntityViewTab.TestCases && (
         <TestCases

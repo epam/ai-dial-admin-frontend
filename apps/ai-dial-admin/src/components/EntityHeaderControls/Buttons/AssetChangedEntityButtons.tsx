@@ -20,6 +20,8 @@ interface Props {
   existingVersions?: Record<string, string[]>;
   isEditorEnabled?: boolean;
   isAddedVersion?: boolean;
+  /** Versionless views (prompt/conversation) have no save-as-new-version flow. */
+  isVersionlessView?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
@@ -31,6 +33,7 @@ const AssetChangedEntityButtons: FC<Props> = ({
   existingVersions,
   entityName,
   isAddedVersion,
+  isVersionlessView,
 }) => {
   const t = useI18n();
 
@@ -73,7 +76,7 @@ const AssetChangedEntityButtons: FC<Props> = ({
         disableSave={isDisableSave}
         saveLabel={t(ButtonsI18nKey.Save)}
       >
-        {!isAddedVersion && (
+        {!isAddedVersion && !isVersionlessView && (
           <DialNeutralButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
@@ -84,6 +87,7 @@ const AssetChangedEntityButtons: FC<Props> = ({
       </ChangedEntityButtons>
 
       {isModalOpen &&
+        !isVersionlessView &&
         createPortal(
           <AddVersionModal
             header={t(PromptsI18nKey.NewVersionSave)}

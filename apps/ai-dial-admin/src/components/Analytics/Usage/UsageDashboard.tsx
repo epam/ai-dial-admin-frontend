@@ -27,9 +27,10 @@ import {
 } from '@/src/components/Analytics/Usage/models';
 import { useDebouncedValue } from '@/src/components/Analytics/Usage/use-debounced-value';
 import { useHeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
+import { useLoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
 import { buildComparedWindows } from '@/src/components/Analytics/Usage/utils/windows';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { AnalyticsUsageI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useI18n } from '@/src/locales/client';
 import { getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
@@ -49,6 +50,9 @@ const UsageDashboard: FC = () => {
 
   const { timePeriod, timeRange, isCustom, getCurrentTimeRange, onTimePeriodChange, onTimeRangeChange } =
     useTimeFilter();
+
+  // One notice for the page: a failure that reaches both hooks is still one thing that went wrong.
+  const notice = useLoadFailureNotice(t(AnalyticsUsageI18nKey.LoadFailed));
 
   // A preset range is computed from the clock, so calling the getter during render would produce a
   // new window on every pass and re-issue every request forever. The window is a snapshot instead,
@@ -102,9 +106,10 @@ const UsageDashboard: FC = () => {
     donutLimit: isDonutFullOpen ? DONUT_FULL_ROW_LIMIT : DONUT_CARD_ROW_LIMIT,
     timeSeriesView,
     refreshToken,
+    notice,
   });
 
-  const heatmap = useHeatmapWeek({ view, refreshToken });
+  const heatmap = useHeatmapWeek({ view, refreshToken, notice });
 
   const windowTotalCalls = totals.data?.calls ?? null;
   const donutTab = VIEW_BREAKDOWN_TABS[view][0];
@@ -134,7 +139,7 @@ const UsageDashboard: FC = () => {
   return (
     // The widgets scroll inside this panel, so the cards keep a gutter the scrollbar can sit in
     // instead of being drawn over their right edge.
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto pr-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto px-3">
       <h1>{t(MenuI18nKey.AnalyticsUsage)}</h1>
 
       <UsageControls
@@ -158,7 +163,7 @@ const UsageDashboard: FC = () => {
         isComparisonOn={!!windows.previous}
       />
 
-      <div className="flex flex-wrap items-stretch gap-3">
+      <div className="flex shrink-0 flex-wrap items-stretch gap-3">
         <TimeSeries
           view={view}
           window={windows.current}
@@ -191,6 +196,7 @@ const UsageDashboard: FC = () => {
         previousRows={previousTabRows}
         windowTotal={windowTotalCalls}
         hasComparison={!!windows.previous}
+        window={windows.current}
         rowLimit={rowLimit}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

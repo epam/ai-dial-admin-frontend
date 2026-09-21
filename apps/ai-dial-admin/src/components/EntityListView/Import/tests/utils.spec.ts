@@ -46,7 +46,6 @@ const fileRow = (overrides: Partial<FileImportGridData> = {}): FileImportGridDat
 const promptAsset = (overrides: Partial<DialPrompt> = {}): DialPrompt => ({
   path: 'prompts/public/folder',
   folderId: 'public',
-  version: '1.0.0',
   ...overrides,
 });
 
@@ -212,16 +211,40 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
 });
 
 describe('Import :: isErrorPromptNode', () => {
-  test('should return true', () => {
-    const data = assetRow({ version: '1.0.0', assetName: 'name', existingNames: ['name__1.0.0'] });
+  test('should return true for a versioned asset whose name__version already exists', () => {
+    const data = assetRow({ assetName: 'name', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
 
     expect(result).toBeTruthy();
   });
 
-  test('should return false', () => {
-    const data = assetRow({ version: '2.0.0', assetName: 'name', existingNames: ['name__1.0.0'] });
+  test('should return false for a versioned asset whose name__version is new', () => {
+    const data = assetRow({ assetName: 'name', version: '2.0.0', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
+
+    expect(result).toBeFalsy();
+  });
+
+  test('should return true for a versionless prompt whose plain name already exists', () => {
+    const data = {
+      name: 'name__1.0.0',
+      assetName: 'name__1.0.0',
+      existingNames: ['name__1.0.0'],
+      index: 0,
+    };
+    const result = isErrorPromptNode(data, true);
+
+    expect(result).toBeTruthy();
+  });
+
+  test('should return false for a versionless prompt whose plain name is new', () => {
+    const data = {
+      name: 'name',
+      assetName: 'name',
+      existingNames: ['name__1.0.0'],
+      index: 0,
+    };
+    const result = isErrorPromptNode(data, true);
 
     expect(result).toBeFalsy();
   });
@@ -264,6 +287,11 @@ describe('Import :: isInvalidJson', () => {
     expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(false);
   });
 
+  test('returns false for a prompt id with no `__` in the name — the suffix is not required', () => {
+    const parsedData: ParsedAssets = { prompts: [promptAsset({ id: 'prompts/public/folder/myPrompt' })] };
+    expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(false);
+  });
+
   test('returns false for valid applications in non-prompts view', () => {
     const parsedData: ParsedAssets = {
       applications: [
@@ -293,7 +321,23 @@ describe('Import :: changeFilesMap', () => {
     ]);
   });
 
-  test('should update version in file id when field is "version"', () => {
+  test('should update the version fields of a versioned asset when field is "version"', () => {
+    const result = changeFilesMap(
+      prevMap,
+      assetRow({ name: 'key1', index: 0 }),
+      'version',
+      'v2',
+      ApplicationRoute.AssetsApplications,
+    );
+
+    // The versioned row is stored as an asset — read it back with the versioned shape.
+    const updatedFile = result.get('key1')?.files[0] as { version?: string; displayVersion?: string };
+
+    expect(updatedFile.version).toBe('v2');
+    expect(updatedFile.displayVersion).toBe('v2');
+  });
+
+  test('should leave a prompt unchanged when field is "version" — the versionless grid never edits versions', () => {
     const result = changeFilesMap(
       prevMap,
       assetRow({ name: 'key1', index: 0 }),
@@ -302,7 +346,7 @@ describe('Import :: changeFilesMap', () => {
       ApplicationRoute.Prompts,
     );
 
-    expect(promptAt(result, 'key1', 0).id).toBe('123__v2');
+    expect(promptAt(result, 'key1', 0).id).toBe('123');
   });
 
   test('should update assetName and file name when field is "assetName"', () => {
@@ -318,20 +362,26 @@ describe('Import :: changeFilesMap', () => {
     expect(promptAt(result, 'key1', 1).name).toBe('newassetName');
   });
 
-  test('should preserve the existing version when field is "assetName"', () => {
-    const versionedMap = new Map<string, FileImportMap>([
-      ['key1', { files: [promptAsset({ id: 'oldFileName__1.0.3', name: 'oldFileName' })], isInvalid: false }],
+  test('should use the new assetName verbatim for prompts — a `__` in the old name is not re-grafted', () => {
+    const versionlessMap = new Map<string, FileImportMap>([
+      [
+        'key1',
+        {
+          files: [promptAsset({ id: 'oldFileName__1.0.3', name: 'oldFileName__1.0.3' })],
+          isInvalid: false,
+        },
+      ],
     ]);
 
     const result = changeFilesMap(
-      versionedMap,
+      versionlessMap,
       assetRow({ name: 'key1', index: 0 }),
       'assetName',
       'newassetName',
       ApplicationRoute.Prompts,
     );
 
-    expect(promptAt(result, 'key1', 0).id).toBe('newassetName__1.0.3');
+    expect(promptAt(result, 'key1', 0).id).toBe('newassetName');
     expect(promptAt(result, 'key1', 0).name).toBe('newassetName');
   });
 
@@ -368,13 +418,13 @@ describe('Import :: changeFilesMap', () => {
     const newMap = changeFilesMap(
       prevMap,
       assetRow({ name: 'key1', index: 0 }),
-      'version',
-      'v2',
+      'assetName',
+      'newName',
       ApplicationRoute.Prompts,
     );
 
     expect(newMap).not.toBe(prevMap);
-    expect(promptAt(newMap, 'key1', 0).id).toBe('123__v2');
+    expect(promptAt(newMap, 'key1', 0).id).toBe('newName');
   });
 });
 

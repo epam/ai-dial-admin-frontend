@@ -3,9 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
+import { ActionType, PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
 import PromptsList from '../PromptsList';
-import { ActionType } from '@/src/models/dial/publications';
 
 vi.mock('../PromptDetails', () => ({
   default: ({ prompt, onChange, onRemove }: any) => (
@@ -27,43 +26,40 @@ vi.mock('../PromptDetails', () => ({
 
 const mockPrompts: PublicationPrompt[] = [
   {
-    sourceUrl: 'prompts/source/prompt1',
-    targetUrl: 'prompts/public/prompt1',
-    reviewUrl: 'prompts/review/prompt1',
+    sourceUrl: 'prompts/public/first',
+    targetUrl: 'prompts/review/first',
+    reviewUrl: 'prompts/review/first',
     action: ActionType.ADD,
     prompt: {
       id: 'prompt1',
       name: 'First Prompt',
       content: 'First content',
-      version: '1.0.0',
       folderId: 'folder1',
       path: 'publications/prompts/first/1.0.0.json',
     },
   },
   {
-    sourceUrl: 'prompts/source/prompt2',
-    targetUrl: 'prompts/public/prompt2',
-    reviewUrl: 'prompts/review/prompt2',
+    sourceUrl: 'prompts/public/second',
+    targetUrl: 'prompts/review/second',
+    reviewUrl: 'prompts/review/second',
     action: ActionType.ADD,
     prompt: {
       id: 'prompt2',
       name: 'Second Prompt',
       content: 'Second content',
-      version: '2.0.0',
       folderId: 'folder1',
       path: 'publications/prompts/second/2.0.0.json',
     },
   },
   {
-    sourceUrl: 'prompts/source/prompt3',
-    targetUrl: 'prompts/public/prompt3',
-    reviewUrl: 'prompts/review/prompt3',
-    action: ActionType.ADD,
+    sourceUrl: 'prompts/public/third',
+    targetUrl: 'prompts/review/third',
+    reviewUrl: 'prompts/review/third',
+    action: ActionType.DELETE,
     prompt: {
       id: 'prompt3',
       name: 'Third Prompt',
       content: 'Third content',
-      version: '1.5.0',
       folderId: 'folder1',
       path: 'publications/prompts/third/1.5.0.json',
     },
@@ -249,7 +245,7 @@ describe('Publications :: PromptsList', () => {
   test('handles prompts with partial data', () => {
     const partialPrompts: PublicationPrompt[] = [
       { prompt: { id: 'partial1', name: 'Partial Prompt' } as Partial<DialPrompt> } as PublicationPrompt,
-      { prompt: { id: 'partial2', version: '1.0.0' } as Partial<DialPrompt> } as PublicationPrompt,
+      { prompt: { id: 'partial2', name: '' } as Partial<DialPrompt> } as PublicationPrompt,
     ];
 
     const publication = createMockPublication(partialPrompts);

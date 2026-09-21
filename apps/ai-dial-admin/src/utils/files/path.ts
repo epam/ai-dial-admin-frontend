@@ -107,6 +107,14 @@ export const updatePathWithNameAndVersion = (oldPath: string, newName: string, n
   return parts.join('/');
 };
 
+/** Versionless counterpart (prompts/conversations): the new name replaces the last segment verbatim. */
+export const updatePathWithName = (oldPath: string, newName: string): string => {
+  const parts = oldPath.split('/').filter(Boolean);
+  parts.pop();
+  parts.push(newName);
+  return parts.join('/');
+};
+
 export const extractVersionByPath = (path: string) => {
   const match = path.match(/__(.+)$/);
   return match ? match[1] : null;

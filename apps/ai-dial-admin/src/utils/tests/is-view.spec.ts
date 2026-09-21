@@ -6,6 +6,7 @@ import {
   isEntitiesWithDisplayVersion,
   isEvaluationView,
   isToolsetRoute,
+  isVersionlessAssetView,
 } from '../is-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -72,14 +73,33 @@ describe('Utils :: isBuildersView', () => {
 });
 
 describe('Utils :: isAssetWithVersion', () => {
-  test('Should return true', () => {
-    expect(isAssetWithVersion(ApplicationRoute.Prompts)).toBeTruthy();
+  test('Should return true for the versioned asset views', () => {
     expect(isAssetWithVersion(ApplicationRoute.AssetsApplications)).toBeTruthy();
+    expect(isAssetWithVersion(ApplicationRoute.AssetsToolsets)).toBeTruthy();
+  });
+
+  // Prompts and conversations left the versioned group — they are versionless now.
+  test('Should return false for prompts and conversations', () => {
+    expect(isAssetWithVersion(ApplicationRoute.Prompts)).toBeFalsy();
+    expect(isAssetWithVersion(ApplicationRoute.Conversations)).toBeFalsy();
   });
 
   test('Should return false', () => {
     const result = isAssetWithVersion(ApplicationRoute.Models);
     expect(result).toBeFalsy();
+  });
+});
+
+describe('Utils :: isVersionlessAssetView', () => {
+  test('Should return true for prompts and conversations', () => {
+    expect(isVersionlessAssetView(ApplicationRoute.Prompts)).toBeTruthy();
+    expect(isVersionlessAssetView(ApplicationRoute.Conversations)).toBeTruthy();
+  });
+
+  test('Should return false for the versioned asset views and non-asset views', () => {
+    expect(isVersionlessAssetView(ApplicationRoute.AssetsApplications)).toBeFalsy();
+    expect(isVersionlessAssetView(ApplicationRoute.AssetsToolsets)).toBeFalsy();
+    expect(isVersionlessAssetView(ApplicationRoute.Models)).toBeFalsy();
   });
 });
 

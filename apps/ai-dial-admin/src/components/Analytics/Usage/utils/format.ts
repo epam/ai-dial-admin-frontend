@@ -1,3 +1,5 @@
+import { TimeRange } from '@/src/models/time-range';
+
 const UNITS = [
   { threshold: 1e9, suffix: 'B' },
   { threshold: 1e6, suffix: 'M' },
@@ -50,3 +52,13 @@ export const formatWindowBound = (date: Date, isSameDay: boolean): string =>
       ? { hour: '2-digit', minute: '2-digit' }
       : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
   );
+
+/** Both bounds at once, so every widget states the same window the same way. */
+export const getWindowBounds = (window: TimeRange): { from: string; to: string } => {
+  const isSameDay = window.startDate.toDateString() === window.endDate.toDateString();
+
+  return {
+    from: formatWindowBound(window.startDate, isSameDay),
+    to: formatWindowBound(window.endDate, isSameDay),
+  };
+};

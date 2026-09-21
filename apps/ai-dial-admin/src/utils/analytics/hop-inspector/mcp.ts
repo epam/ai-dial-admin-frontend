@@ -1,19 +1,14 @@
-import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
-import {
-  ConversationEntryBodyRow,
-  HopMcpFacts,
-  HopReadState,
-  HopSideGrants,
-} from '@/src/models/analytics/conversations-trace';
-import { decodeResponseBody, jsonRpcArgumentsOf } from '@/src/utils/analytics/conversation-bodies';
+import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/sessions-trace';
+import { SessionEntryBodyRow, HopMcpFacts, HopReadState, HopSideGrants } from '@/src/models/analytics/sessions-trace';
+import { decodeResponseBody, jsonRpcArgumentsOf } from '@/src/utils/analytics/session-bodies';
 import { NO_CLAMP, clampToBudget, textByteLength } from '@/src/utils/analytics/hop-inspector/envelope';
 import { formatJsonText } from '@/src/utils/analytics/hop-inspector/json-text';
 
 interface McpInput {
-  row: ConversationEntryBodyRow;
+  row: SessionEntryBodyRow;
   method: string | null;
   toolName: string | null;
-  // The toolset is the hop's deployment: one measured conversation recorded all 277 of its MCP hops under a
+  // The toolset is the hop's deployment: one measured session recorded all 277 of its MCP hops under a
   // single parent span, distinguishable only by it. There is no session column, so no session field is
   // stated — a field with no source is a field that gets filled with the wrong thing.
   toolset: string | null;
