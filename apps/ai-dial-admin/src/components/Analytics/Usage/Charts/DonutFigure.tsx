@@ -4,6 +4,7 @@ import { FC, useMemo } from 'react';
 
 import ReactECharts from 'echarts-for-react';
 import classNames from 'classnames';
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { DonutSliceView } from '@/src/components/Analytics/Usage/models';
 import { buildDonutOptions } from '@/src/components/Analytics/Usage/utils/chart-options';
@@ -35,7 +36,17 @@ const DonutFigure: FC<Props> = ({ slices, legendSlices, centerValue, centerCapti
   const legend = legendSlices ?? slices;
 
   return (
-    <div className="flex min-h-0 flex-col items-center gap-6">
+    /*
+     * Wrapping row rather than a column: the ring keeps its square and the legend takes what is
+     * left, so a card with room puts the two side by side and a narrower one drops the legend
+     * under the ring. The card's own width decides, not the viewport's — and the two run opposite:
+     * on a wide screen this card shares its row and is the narrower of the two, while on a small
+     * one the row wraps and it gets the full width. The legend's floor is set by a whole model
+     * name plus its figures, since a legend that truncates them is worse than one below the ring. It
+     * is a basis rather than a minimum: a minimum decides the wrap and then keeps the legend wider
+     * than the card it wrapped into, which is an overflow rather than a second line.
+     */
+    <div className="flex min-h-0 min-w-0 flex-wrap items-center justify-center gap-6">
       <div className="relative shrink-0" style={{ height: size, width: size }}>
         <ReactECharts option={options} style={{ height: size, width: size }} opts={{ renderer: 'svg' }} notMerge />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
@@ -43,11 +54,17 @@ const DonutFigure: FC<Props> = ({ slices, legendSlices, centerValue, centerCapti
           <span className="dial-small-text text-secondary">{centerCaption}</span>
         </div>
       </div>
-      <ul className={classNames('flex w-full flex-col gap-4', legendClassName)}>
+      {/*
+       * `min-w-0` on both the list and its rows: the label's own `min-width: 0` lets it shrink once
+       * flex layout runs, but an unbreakable name still counts in full toward the row's intrinsic
+       * minimum, and without this the list refuses to go narrower than its longest label and spills
+       * past the card on both sides.
+       */}
+      <ul className={classNames('flex min-w-0 flex-[1_1_400px] flex-col gap-4', legendClassName)}>
         {legend.map((slice) => (
-          <li key={slice.id} className="flex items-center gap-3 dial-small-text">
+          <li key={slice.id} className="flex min-w-0 items-center gap-3 dial-small-text">
             <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: slice.color }} />
-            <span className="min-w-0 flex-1 truncate text-primary">{slice.label}</span>
+            <EllipsisTooltip className="text-primary" text={slice.label} />
             <span className="shrink-0 tabular-nums text-secondary">{slice.valueLabel}</span>
             <span className="w-10 shrink-0 text-right tabular-nums text-primary">{slice.shareLabel ?? '—'}</span>
           </li>

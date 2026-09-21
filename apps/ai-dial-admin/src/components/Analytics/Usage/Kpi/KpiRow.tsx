@@ -1,8 +1,9 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import KpiCard from '@/src/components/Analytics/Usage/Kpi/KpiCard';
+import { KPI_CARD_MIN_WIDTH } from '@/src/components/Analytics/Usage/constants';
 import {
   BucketPoint,
   KpiCardModel,
@@ -42,6 +43,23 @@ const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
   [KpiMetric.ToolCalls]: AnalyticsUsageI18nKey.KpiTotalToolCalls,
 };
 
+/**
+ * Cards per row: all of them when the row is wide enough to hold them, and half the count rounded
+ * up when it is not.
+ *
+ * Letting a pixel basis decide instead put the row on the bad counts — seven cards at a common
+ * desktop width gave six and a stretched orphan. Measuring is what allows both answers: the width
+ * that matters is the row's own, since these cards sit inside a page whose other widgets share it.
+ * The gap subtracted here is `gap-3`, so the arithmetic has to follow that class if it changes.
+ */
+const CARD_GAP_REM = 0.75;
+const CARD_GAP_PX = 12;
+
+const getCardsPerRow = (count: number, rowWidth: number): number =>
+  rowWidth >= count * KPI_CARD_MIN_WIDTH + (count - 1) * CARD_GAP_PX ? count : Math.ceil(count / 2);
+
+const getCardBasis = (perRow: number): string => `calc((100% - ${(perRow - 1) * CARD_GAP_REM}rem) / ${perRow})`;
+
 const MONEY_METRICS = new Set([KpiMetric.TotalSpend, KpiMetric.CostPerMillionTokens]);
 const RATIO_METRICS = new Set([KpiMetric.ErrorRate]);
 const DURATION_METRICS = new Set([KpiMetric.AvgLatency]);
@@ -69,6 +87,21 @@ const formatFootnoteValue = (metric: KpiMetric, value: number): string => {
 
 const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, isComparisonOn }) => {
   const t = useI18n();
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [rowWidth, setRowWidth] = useState(0);
+
+  useEffect(() => {
+    const row = rowRef.current;
+
+    if (!row || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(([entry]) => setRowWidth(entry.contentRect.width));
+    observer.observe(row);
+
+    return () => observer.disconnect();
+  }, []);
 
   const figures = useMemo(
     () =>
@@ -80,6 +113,8 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, isComparison
       }),
     [view, totals.data, previousTotals.data, buckets.data, isComparisonOn],
   );
+
+  const cardBasis = getCardBasis(getCardsPerRow(figures.length, rowWidth));
 
   const toCard = (figure: KpiFigure): KpiCardModel => {
     const { current, previous } = figure.value;
@@ -103,14 +138,21 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, isComparison
   };
 
   return (
-    <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(196px,1fr))]">
+    /*
+     * Wrapping flex rather than a grid of auto-fit tracks. A grid keeps the tracks it created for
+     * the first row, so a card count that does not divide by them leaves the last row short and the
+     * rest of it blank — seven cards over six tracks sat alone beside five empty columns. Flex
+     * items grow into whatever their own row has left, so every row is full whatever the count.
+     */
+    <div ref={rowRef} className="flex flex-wrap gap-3">
       {figures.map((figure) => (
         <KpiCard
           key={figure.metric}
           card={toCard(figure)}
+          className="min-w-[196px] grow"
+          style={{ flexBasis: cardBasis }}
           isLoading={totals.isLoading}
           hasFailed={totals.hasFailed}
-          error={totals.error}
         />
       ))}
     </div>

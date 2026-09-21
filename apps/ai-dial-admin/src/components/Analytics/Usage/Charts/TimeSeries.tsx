@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ReactECharts from 'echarts-for-react';
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import ChartLegend, { ChartLegendEntry } from '@/src/components/Analytics/Usage/Charts/ChartLegend';
@@ -33,7 +33,7 @@ import {
   buildTimeSeriesOptions,
   getSliceColor,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { formatWindowBound } from '@/src/components/Analytics/Usage/utils/format';
+import { getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 import { padBucketPoints } from '@/src/components/Analytics/Usage/utils/buckets';
 import { buildStackedMatrix } from '@/src/components/Analytics/Usage/utils/stack';
@@ -171,10 +171,8 @@ const TimeSeries: FC<Props> = ({
   const labels = useMemo(() => points.map((point) => formatBucketLabel(point.bucketMs)), [points]);
   const bucketLabel = `${resolution.value}${resolution.unit}`;
   const spendScale = useMemo(() => getSpendScale(window), [window]);
-  const isSameDay = window.startDate.toDateString() === window.endDate.toDateString();
-  const windowFrom = formatWindowBound(window.startDate, isSameDay);
-  const windowTo = formatWindowBound(window.endDate, isSameDay);
-  const isEmptyWindow = !buckets.isLoading && !buckets.hasFailed && (buckets.data?.length ?? 0) === 0;
+  const { from: windowFrom, to: windowTo } = getWindowBounds(window);
+  const isEmptyWindow = !buckets.isLoading && (buckets.hasFailed || (buckets.data?.length ?? 0) === 0);
   // Verbatim, never lowercased: a dimension's name can be an acronym, and "MCP name" folded to
   // "mcp name" reads as a typo.
   const dimensionLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[dimensionTab]);
@@ -211,7 +209,7 @@ const TimeSeries: FC<Props> = ({
     [points, dimensionBuckets.data, namedRows],
   );
 
-  const { options, legend, isLoading, hasFailed, error } = useMemo(() => {
+  const { options, legend, isLoading } = useMemo(() => {
     if (timeSeriesView === TimeSeriesView.ByDimension) {
       const series = [
         ...namedRows.map((row, index) => ({
@@ -239,8 +237,6 @@ const TimeSeries: FC<Props> = ({
           seriesIndex: index,
         })),
         isLoading: buckets.isLoading || dimensionBuckets.isLoading || donutRows.isLoading,
-        hasFailed: buckets.hasFailed || dimensionBuckets.hasFailed,
-        error: buckets.error ?? dimensionBuckets.error,
       };
     }
 
@@ -256,8 +252,6 @@ const TimeSeries: FC<Props> = ({
         // The bars say it: the picked-out one is the current period, the rest are its history.
         legend: [],
         isLoading: spendPeriods.isLoading,
-        hasFailed: spendPeriods.hasFailed,
-        error: spendPeriods.error,
       };
     }
 
@@ -272,8 +266,6 @@ const TimeSeries: FC<Props> = ({
           { id: 'p95', label: t(AnalyticsUsageI18nKey.TimeSeriesLatencyP95), color: LATENCY_P95_COLOR, seriesIndex: 1 },
         ],
         isLoading: buckets.isLoading,
-        hasFailed: buckets.hasFailed,
-        error: buckets.error,
       };
     }
 
@@ -283,8 +275,6 @@ const TimeSeries: FC<Props> = ({
       options: buildTimeSeriesOptions(points, formatBucketLabel),
       legend: [],
       isLoading: buckets.isLoading,
-      hasFailed: buckets.hasFailed,
-      error: buckets.error,
     };
   }, [
     timeSeriesView,
@@ -309,10 +299,6 @@ const TimeSeries: FC<Props> = ({
       );
     }
 
-    if (hasFailed) {
-      return <DialNoDataContent title={error ?? t(BasicI18nKey.NoData)} />;
-    }
-
     if (isEmptyWindow) {
       return (
         <div className="relative flex-1" style={{ minHeight: TIME_SERIES_MIN_HEIGHT }}>
@@ -324,7 +310,7 @@ const TimeSeries: FC<Props> = ({
           />
           <UsageEmptyState
             className="absolute inset-0"
-            pill={t(AnalyticsUsageI18nKey.TimeSeriesEmptyPill)}
+            title={t(AnalyticsUsageI18nKey.BreakdownEmptyTitle)}
             lines={[
               t(AnalyticsUsageI18nKey.TimeSeriesEmptyIdle, { from: windowFrom, to: windowTo }),
               t(AnalyticsUsageI18nKey.TimeSeriesEmptyHint),
@@ -336,11 +322,11 @@ const TimeSeries: FC<Props> = ({
 
     return (
       <>
-        <div ref={plotRef} className="min-h-0 flex-1" style={{ minHeight: TIME_SERIES_MIN_HEIGHT }}>
+        <div ref={plotRef} className="shrink-0 flex-1" style={{ height: TIME_SERIES_MIN_HEIGHT }}>
           <ReactECharts
             ref={chartRef}
             option={options}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '100%', minHeight: TIME_SERIES_MIN_HEIGHT, width: '100%' }}
             opts={{ renderer: 'svg' }}
             notMerge
           />

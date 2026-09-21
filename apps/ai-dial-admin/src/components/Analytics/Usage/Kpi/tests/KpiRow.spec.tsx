@@ -96,9 +96,10 @@ describe('KpiRow', () => {
     expect(screen.getAllByText(AnalyticsUsageI18nKey.KpiDeltaIncrease).length).toBeGreaterThan(0);
   });
 
-  test('reports the service message when the window could not be read', () => {
-    renderRow({ totals: { data: null, isLoading: false, hasFailed: true, error: 'upstream refused' } });
+  test('states no figure when the window could not be read, leaving the message to a notification', () => {
+    renderRow({ totals: { data: null, isLoading: false, hasFailed: true } });
 
-    expect(screen.getAllByText('upstream refused').length).toBeGreaterThan(0);
+    expect(screen.queryByText('$630.88')).toBeNull();
+    expect(screen.getByText(AnalyticsUsageI18nKey.KpiTotalSpend)).toBeTruthy();
   });
 });

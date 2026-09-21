@@ -25,8 +25,15 @@ export const DONUT_CARD_ROW_LIMIT = DONUT_SLICE_COUNT;
  */
 export const DONUT_FULL_ROW_LIMIT = 1000;
 
-/** Floor for the plot when its row has nothing taller to stretch it. */
-export const TIME_SERIES_MIN_HEIGHT = 250;
+/** A KPI card narrower than this stops being readable, and is what decides how many fit a row. */
+export const KPI_CARD_MIN_WIDTH = 196;
+
+/**
+ * Floor for the plot when its row has nothing taller to stretch it. Tall enough for the value axis
+ * to space its ticks: at the old floor a window with a spike crammed five labels into the top
+ * third and left the line reading as a flat rule.
+ */
+export const TIME_SERIES_MIN_HEIGHT = 300;
 
 /**
  * Rows a bucketed request asks for. The backend applies its own limit of 100 when a query states
@@ -48,6 +55,18 @@ export const SEARCH_DEBOUNCE_MS = 350;
  * jumps on every step through the weeks.
  */
 export const HEATMAP_BODY_HEIGHT = 180;
+
+/**
+ * An hour column narrower than this leaves the shared row height looking like a sliver, so the
+ * rows grow to bring the cell back towards square. Measured on the column rather than on the card,
+ * because the column is the thing that looks flat — and it stays right if the day column's width
+ * or the hour count ever changes.
+ */
+export const HEATMAP_FLAT_COLUMN_WIDTH = 56;
+export const HEATMAP_NARROW_ROW_HEIGHT = 28;
+
+/** Roughly the grid's own header row, so the reserved height covers it. */
+export const HEATMAP_HEADER_HEIGHT = 40;
 
 /** The literal the backend emits for a column with no value; never shown to a reader. */
 export const UNDEFINED_VALUE = 'undefined';
