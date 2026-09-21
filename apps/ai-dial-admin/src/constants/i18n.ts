@@ -3270,6 +3270,7 @@ export enum AnalyticsUsageI18nKey {
 
   TimeSeriesTitle = 'AnalyticsUsage.TimeSeriesTitle',
   TimeSeriesSubtitle = 'AnalyticsUsage.TimeSeriesSubtitle',
+  LoadFailed = 'AnalyticsUsage.LoadFailed',
   TimeSeriesEmptySubtitle = 'AnalyticsUsage.TimeSeriesEmptySubtitle',
   TimeSeriesEmptyPill = 'AnalyticsUsage.TimeSeriesEmptyPill',
   TimeSeriesEmptyIdle = 'AnalyticsUsage.TimeSeriesEmptyIdle',
@@ -3298,6 +3299,7 @@ export enum AnalyticsUsageI18nKey {
   HeatmapCellLabel = 'AnalyticsUsage.HeatmapCellLabel',
   HeatmapPreviousWeek = 'AnalyticsUsage.HeatmapPreviousWeek',
   HeatmapNextWeek = 'AnalyticsUsage.HeatmapNextWeek',
+  HeatmapDayColumn = 'AnalyticsUsage.HeatmapDayColumn',
   HeatmapScaleLow = 'AnalyticsUsage.HeatmapScaleLow',
   HeatmapScaleHigh = 'AnalyticsUsage.HeatmapScaleHigh',
   HeatmapCurrentWeek = 'AnalyticsUsage.HeatmapCurrentWeek',

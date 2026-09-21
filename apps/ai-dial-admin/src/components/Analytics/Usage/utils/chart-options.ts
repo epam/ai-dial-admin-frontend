@@ -8,6 +8,13 @@ const GRID_LINE_COLOR = 'rgba(238, 241, 247, .07)';
 const axisLabelStyle = { color: CHART_COLOR.neutral, fontSize: 13 };
 
 /**
+ * Every line downsamples for drawing rather than for fetching. The window decides how many buckets
+ * are asked for; how many of them a plot can separate is its own width's business, and resolving
+ * that in the request meant a browser resize re-issued the page's data.
+ */
+const LINE_SAMPLING = 'lttb' as const;
+
+/**
  * Every figure a chart prints — axis tick, tooltip, legend — stops at two decimals. The raw values
  * carry full float precision (a spend of 20.50087114, a latency of 9149.517302573204) and ECharts
  * renders them verbatim.
@@ -16,7 +23,8 @@ export const formatChartNumber = (value: number): string => value.toLocaleString
 
 const valueAxis = {
   type: 'value' as const,
-  axisLabel: { ...axisLabelStyle, formatter: (value: number) => formatChartNumber(value) },
+  // `hideOverlap` so a short plot drops ticks instead of stacking them into an unreadable block.
+  axisLabel: { ...axisLabelStyle, hideOverlap: true, formatter: (value: number) => formatChartNumber(value) },
   splitLine: { lineStyle: { color: GRID_LINE_COLOR } },
 };
 
@@ -60,10 +68,11 @@ export const buildTimeSeriesOptions = (
   points: BucketPoint[],
   formatBucket: (bucketMs: number) => string,
 ): EChartsOption => ({
-  grid: { left: 58, right: 16, top: 16, bottom: 32 },
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
     type: 'category',
     data: points.map((point) => formatBucket(point.bucketMs)),
+    boundaryGap: false,
     axisLabel: { ...axisLabelStyle, hideOverlap: true },
     axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
     axisTick: { show: false },
@@ -82,6 +91,7 @@ export const buildTimeSeriesOptions = (
       type: 'line',
       data: points.map((point) => point.measures.calls),
       showSymbol: false,
+      sampling: LINE_SAMPLING,
       lineStyle: { width: 1.5, color: CHART_COLOR.accent },
       areaStyle: { color: CHART_COLOR.accent, opacity: 0.12 },
     },
@@ -96,10 +106,11 @@ export interface NamedSeries {
 }
 
 export const buildStackedAreaOptions = (labels: string[], series: NamedSeries[]): EChartsOption => ({
-  grid: { left: 58, right: 16, top: 16, bottom: 32 },
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
     type: 'category',
     data: labels,
+    boundaryGap: false,
     axisLabel: { ...axisLabelStyle, hideOverlap: true },
     axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
     axisTick: { show: false },
@@ -113,6 +124,7 @@ export const buildStackedAreaOptions = (labels: string[], series: NamedSeries[])
     stack: 'calls',
     data: entry.values,
     showSymbol: false,
+    sampling: LINE_SAMPLING,
     lineStyle: { width: 1, color: entry.color },
     areaStyle: { color: entry.color, opacity: 0.45 },
     emphasis: { focus: 'series' },
@@ -121,7 +133,7 @@ export const buildStackedAreaOptions = (labels: string[], series: NamedSeries[])
 });
 
 export const buildBarOptions = (labels: string[], values: number[], accentIndex: number | null): EChartsOption => ({
-  grid: { left: 58, right: 16, top: 16, bottom: 32 },
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
     type: 'category',
     data: labels,
@@ -148,10 +160,11 @@ export const buildLatencyOptions = (
   p50: (number | null)[],
   p95: (number | null)[],
 ): EChartsOption => ({
-  grid: { left: 58, right: 16, top: 16, bottom: 32 },
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
     type: 'category',
     data: labels,
+    boundaryGap: false,
     axisLabel: { ...axisLabelStyle, hideOverlap: true },
     axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
     axisTick: { show: false },
@@ -165,6 +178,7 @@ export const buildLatencyOptions = (
       name: 'p50',
       data: p50,
       showSymbol: false,
+      sampling: LINE_SAMPLING,
       connectNulls: true,
       lineStyle: { width: 1.5, color: LATENCY_P50_COLOR },
       emphasis: { focus: 'series' },
@@ -175,6 +189,7 @@ export const buildLatencyOptions = (
       name: 'p95',
       data: p95,
       showSymbol: false,
+      sampling: LINE_SAMPLING,
       connectNulls: true,
       lineStyle: { width: 1.5, color: LATENCY_P95_COLOR },
       emphasis: { focus: 'series' },

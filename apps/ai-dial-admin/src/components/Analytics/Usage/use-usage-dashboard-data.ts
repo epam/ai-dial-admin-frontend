@@ -38,9 +38,10 @@ import {
 import { buildSpendPeriods, getSpendRange, getSpendScale } from '@/src/components/Analytics/Usage/utils/spend-periods';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import { ChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
+import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 
 const pending = <T>(): RequestState<T> => ({ data: null, isLoading: true, hasFailed: false });
-const failed = <T>(error?: string): RequestState<T> => ({ data: null, isLoading: false, hasFailed: true, error });
+const failed = <T>(): RequestState<T> => ({ data: null, isLoading: false, hasFailed: true });
 const loaded = <T>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
 
 interface QueryOutcome {
@@ -59,6 +60,8 @@ interface Params {
   tabSearch?: string;
   /** Changing this re-issues every request; the manual refresh control increments it. */
   refreshToken: number;
+  /** Shared with the heatmap's hook, so one outage is one notification. */
+  notice: LoadFailureNotice;
 }
 
 export interface UsageDashboardData {
@@ -84,7 +87,10 @@ export const useUsageDashboardData = ({
   timeSeriesView,
   tabSearch,
   refreshToken,
+  notice,
 }: Params): UsageDashboardData => {
+  const { report, reset } = notice;
+
   const [totals, setTotals] = useState<RequestState<UsageMeasures | null>>(pending);
   const [previousTotals, setPreviousTotals] = useState<RequestState<UsageMeasures | null>>(loaded(null));
   const [buckets, setBuckets] = useState<RequestState<BucketPoint[]>>(pending);
@@ -108,6 +114,16 @@ export const useUsageDashboardData = ({
    * Never rejects. A transport failure would otherwise become an unhandled rejection with no
    * `.then` to run, leaving the widget that asked for it on its skeleton for good.
    */
+  /** A failure states itself once, in a notification; the widget it feeds falls back to empty. */
+  const reportFailed = useCallback(
+    <T>(error?: string): RequestState<T> => {
+      report(error);
+
+      return failed<T>();
+    },
+    [report],
+  );
+
   const runQuery = useCallback(async (query: StructuredQuery): Promise<QueryOutcome> => {
     try {
       const response = await executeQuery(query);
@@ -127,19 +143,20 @@ export const useUsageDashboardData = ({
     const generation = viewGeneration.current;
     const isCurrent = () => generation === viewGeneration.current;
 
+    reset();
     setBuckets(pending);
     setTotals(pending);
     const currentScope: QueryScope = { ...baseScope, window: windows.current };
 
     void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error }) => {
       if (!isCurrent()) return;
-      setBuckets(result ? loaded(foldBucketPoints(result)) : failed(error));
+      setBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
     void runQuery(buildTotalsQuery(currentScope)).then(({ result, error }) => {
       if (!isCurrent()) return;
       const row = result?.rows?.[0];
-      setTotals(result ? loaded(row ? readMeasures(row) : null) : failed(error));
+      setTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
 
     if (!windows.previous) {
@@ -154,15 +171,15 @@ export const useUsageDashboardData = ({
 
     void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error }) => {
       if (!isCurrent()) return;
-      setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : failed(error));
+      setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
     void runQuery(buildTotalsQuery(previousScope)).then(({ result, error }) => {
       if (!isCurrent()) return;
       const row = result?.rows?.[0];
-      setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : failed(error));
+      setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
-  }, [baseScope, windows, resolution, refreshToken, runQuery]);
+  }, [baseScope, windows, resolution, refreshToken, runQuery, reset, reportFailed]);
 
   // The stack plots the same entities the share chart names, so it waits for that ranking rather
   // than ranking again — and it is issued only while the split view is the one being read.
@@ -189,12 +206,12 @@ export const useUsageDashboardData = ({
     ).then(({ result, error }) => {
       if (!isCurrent()) return;
       setDimensionBuckets(
-        result ? loaded(foldDimensionBuckets(result, BREAKDOWN_TAB_COLUMN[donutTab])) : failed(error),
+        result ? loaded(foldDimensionBuckets(result, BREAKDOWN_TAB_COLUMN[donutTab])) : reportFailed(error),
       );
     });
     // `seriesKey` stands in for `seriesIds`, which is a fresh array on every response.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseScope, windows, resolution, donutTab, seriesKey, timeSeriesView, refreshToken, runQuery]);
+  }, [baseScope, windows, resolution, donutTab, seriesKey, timeSeriesView, refreshToken, runQuery, reportFailed]);
 
   /**
    * The share chart names the view's leading dimension. Driving it from the breakdown tab made it
@@ -211,10 +228,12 @@ export const useUsageDashboardData = ({
     void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit)).then(
       ({ result, error }) => {
         if (generation !== donutGeneration.current) return;
-        setDonutRows(result ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab])) : failed(error));
+        setDonutRows(
+          result ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab])) : reportFailed(error),
+        );
       },
     );
-  }, [baseScope, view, windows, donutLimit, refreshToken, runQuery]);
+  }, [baseScope, view, windows, donutLimit, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     spendGeneration.current += 1;
@@ -233,10 +252,10 @@ export const useUsageDashboardData = ({
     void runQuery(buildSpendBucketedQuery({ ...baseScope, window: range }, scale.unit)).then(({ result, error }) => {
       if (!isCurrent()) return;
       setSpendPeriods(
-        result ? loaded(buildSpendPeriods(foldSpendBuckets(result), windows.current, scale)) : failed(error),
+        result ? loaded(buildSpendPeriods(foldSpendBuckets(result), windows.current, scale)) : reportFailed(error),
       );
     });
-  }, [baseScope, windows, timeSeriesView, refreshToken, runQuery]);
+  }, [baseScope, windows, timeSeriesView, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     tabGeneration.current += 1;
@@ -248,7 +267,7 @@ export const useUsageDashboardData = ({
     void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit, tabSearch)).then(
       ({ result, error }) => {
         if (!isCurrent()) return;
-        setTabRows(result ? loaded(foldBreakdownRows(result, column)) : failed(error));
+        setTabRows(result ? loaded(foldBreakdownRows(result, column)) : reportFailed(error));
       },
     );
 
@@ -261,10 +280,10 @@ export const useUsageDashboardData = ({
     void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit, tabSearch)).then(
       ({ result, error }) => {
         if (!isCurrent()) return;
-        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column)) : failed(error));
+        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column)) : reportFailed(error));
       },
     );
-  }, [baseScope, windows, tab, tabLimit, tabSearch, refreshToken, runQuery]);
+  }, [baseScope, windows, tab, tabLimit, tabSearch, refreshToken, runQuery, reportFailed]);
 
   // Every request the page has in flight, not just the ones behind the first widget: the control
   // re-enabling while a window is still arriving invites a second round of the same reads.

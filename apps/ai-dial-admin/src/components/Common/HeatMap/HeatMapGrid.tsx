@@ -32,6 +32,8 @@ interface Props<T extends HeatMapGridRow> {
   gridKey?: string;
   className?: string;
   showColorScale?: boolean;
+  /** Fixes the row height instead of letting it follow whether a cell shows its value. */
+  rowHeight?: number;
 }
 
 const HeatMapGrid = <T extends HeatMapGridRow>({
@@ -44,6 +46,7 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
   gridKey,
   className,
   showColorScale = true,
+  rowHeight,
 }: Props<T>) => {
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -82,11 +85,15 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
     () => ({
       headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
       hidePaddedHeaderRows: false,
-      rowHeight: HEAT_MAP_ROW_HEIGHT,
+      rowHeight: rowHeight ?? HEAT_MAP_ROW_HEIGHT,
       suppressHorizontalScroll: false,
       alwaysShowHorizontalScroll: false,
       autoSizeStrategy: undefined,
       getRowHeight: (params: RowHeightParams<T>) => {
+        if (rowHeight != null) {
+          return rowHeight;
+        }
+
         const valueColumnWidth = params.api ? getHeatMapValueColumnWidth(params.api, valueColumnIdPrefix) : 0;
         return resolveHeatMapRowHeight(valueColumnWidth);
       },
@@ -113,7 +120,7 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
       },
       postProcessPopup: centerHeatMapTooltipPopup,
     }),
-    [fitHeatMapColumns, headerLabels, valueColumnIdPrefix],
+    [fitHeatMapColumns, headerLabels, rowHeight, valueColumnIdPrefix],
   );
 
   const getRowId = useCallback(({ data }: GetRowIdParams<T>) => data.id, []);
