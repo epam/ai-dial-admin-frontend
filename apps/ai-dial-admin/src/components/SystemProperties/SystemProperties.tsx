@@ -10,14 +10,16 @@ import GlobalInterceptors from '@/src/components/EntityView/Interceptors/GlobalI
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { GlobalSettings } from '@/src/models/system-properties';
+import { GlobalSettings, RateLimitSchedule as RateLimitScheduleModel } from '@/src/models/system-properties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import Header from './Header';
+import RateLimitSchedule from './RateLimitSchedule';
 
 interface Props {
   interceptors: DialInterceptor[];
@@ -32,6 +34,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
@@ -55,6 +58,12 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
     }));
   }, []);
 
+  const changeRateLimitSchedule = useCallback((rateLimitSchedule: RateLimitScheduleModel) => {
+    setCurrentSettings((prev) =>
+      prev == null ? { globalInterceptors: [], rateLimitSchedule } : { ...prev, rateLimitSchedule },
+    );
+  }, []);
+
   const onSave = useCallback(() => {
     // No blob yet -> omit If-Match (create); a blob already exists -> assert existence with '*'.
     // Core never hands back a real etag to compare against — see settings-api.ts.
@@ -62,6 +71,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
 
     updateProperties(currentSettings as GlobalSettings, etag).then((res) => {
       if (res.success) {
+        dispatch({ type: ValidationActionType.Reset });
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.SystemProperties, t),
@@ -73,7 +83,7 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [currentSettings, doesSettingsExist, router, showNotification, t]);
+  }, [currentSettings, dispatch, doesSettingsExist, router, showNotification, t]);
 
   const onDiscard = useCallback(() => {
     setCurrentSettings(globalSettings);
@@ -99,6 +109,12 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
             interceptors={interceptors}
             currentInterceptors={currentSettings?.globalInterceptors || []}
             onChangeInterceptors={changeInterceptors}
+          />
+        )}
+        {activeTab === EntityViewTab.RateLimitSchedule && (
+          <RateLimitSchedule
+            schedule={currentSettings?.rateLimitSchedule}
+            onChangeRateLimitSchedule={changeRateLimitSchedule}
           />
         )}
       </div>

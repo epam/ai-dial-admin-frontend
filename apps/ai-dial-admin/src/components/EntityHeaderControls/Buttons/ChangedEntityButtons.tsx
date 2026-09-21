@@ -6,12 +6,14 @@ import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import DiscardModal from '@/src/components//EntityView/Modals/Discard/Discard';
 
 interface Props {
+  /** Explicit override; when omitted, Save follows the save-validation context's isValid. */
   disableSave?: boolean;
   children?: ReactNode;
   saveLabel?: string;
@@ -29,6 +31,7 @@ const ChangedEntityButtons: FC<Props> = ({
   isSaveAllowed = true,
 }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -57,7 +60,7 @@ const ChangedEntityButtons: FC<Props> = ({
           className={buttonsClassName}
           label={saveLabel || t(ButtonsI18nKey.Save)}
           onClick={() => onSave?.()}
-          disabled={disableSave}
+          disabled={disableSave ?? !isValid}
         />
       )}
       {isDiscardModalOpen && (

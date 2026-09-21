@@ -700,6 +700,7 @@ export enum TabsI18nKey {
   Roles = 'Tabs.Roles',
   Interceptors = 'Tabs.Interceptors',
   GlobalInterceptors = 'Tabs.GlobalInterceptors',
+  RateLimitSchedule = 'Tabs.RateLimitSchedule',
   ErrorCodes = 'Tabs.ErrorCodes',
   Keys = 'Tabs.Keys',
   Entities = 'Tabs.Entities',
@@ -3318,4 +3319,20 @@ export enum AnalyticsUsageI18nKey {
   DirectCall = 'AnalyticsUsage.DirectCall',
   DirectCallMcpTooltip = 'AnalyticsUsage.DirectCallMcpTooltip',
   DirectCallRouteTooltip = 'AnalyticsUsage.DirectCallRouteTooltip',
+}
+
+export enum SystemPropertiesI18nKey {
+  RateLimitScheduleDescription = 'SystemProperties.RateLimitScheduleDescription',
+  TimezoneLabel = 'SystemProperties.TimezoneLabel',
+  WeekStartDayLabel = 'SystemProperties.WeekStartDayLabel',
+  WeekdayMonday = 'SystemProperties.WeekdayMonday',
+  WeekdayTuesday = 'SystemProperties.WeekdayTuesday',
+  WeekdayWednesday = 'SystemProperties.WeekdayWednesday',
+  WeekdayThursday = 'SystemProperties.WeekdayThursday',
+  WeekdayFriday = 'SystemProperties.WeekdayFriday',
+  WeekdaySaturday = 'SystemProperties.WeekdaySaturday',
+  WeekdaySunday = 'SystemProperties.WeekdaySunday',
+  ResetTimeLabel = 'SystemProperties.ResetTimeLabel',
+  ResetTimePlaceholder = 'SystemProperties.ResetTimePlaceholder',
+  ResetTimeInvalid = 'SystemProperties.ResetTimeInvalid',
 }
