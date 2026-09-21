@@ -11,8 +11,17 @@ export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
 };
 
+/**
+ * Appends a bare query parameter to a built entity URL with the separator the URL requires — `&`
+ * when it already carries a `?`, `?` otherwise. Concatenating a leading-`?` suffix blindly produced
+ * a second `?` (encoded by the router as `%3F…`) on query-carrying routes (Issue #4590);
+ * `Assets/Resources/utils.ts`'s `setUrl` is the same check for the toolset-auth redirect.
+ */
+export const appendUrlQuery = (url: string, query: string): string => `${url}${url.includes('?') ? '&' : '?'}${query}`;
+
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, urlSuffix?: string) => {
-  const url = `${getUrnForEntity(route, entity)}${urlSuffix ?? ''}`;
+  const urn = getUrnForEntity(route, entity);
+  const url = urlSuffix ? appendUrlQuery(urn, urlSuffix) : urn;
   window.open(url, '_blank');
 };
 
@@ -51,7 +60,10 @@ export const getEntityPath = (
     // `/assets-applications/[id]`/`/assets-toolsets/[id]` detail route — a platform-bucket row has no
     // version and no folder tree, so it gets the flat `PlatformModels`-style segment below (bare
     // name, no `?path=`); the query param's presence is exactly what the detail page uses to tell the
-    // two buckets apart.
+    // two buckets apart. A row with neither `path` nor `folderId` is in neither bucket — the
+    // config-file list's `{name}`-only row (`config-file-entity-views`) — and resolves flat too:
+    // every browser row carries a `folderId`, and the fabricated `undefined{name}__undefined` path
+    // this shape used to produce 404s the detail page (Issue #4590).
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
       const entity = data as DialPrompt & { folderId?: string; path?: string };
@@ -62,6 +74,12 @@ export const getEntityPath = (
         // prefix is deliberately dropped for a readable URL (design.md D5).
         const resolvedPath = entity.path || `${PLATFORM_ROOT_FOLDER}/${entity.name || ''}`;
         return forRemove ? decodeURIComponent(escapePercentSign(resolvedPath)) : encodeURIComponent(entity.name || '');
+      }
+
+      if (entity.path == null && entity.folderId == null) {
+        return forRemove
+          ? decodeURIComponent(escapePercentSign(entity.name || ''))
+          : encodeURIComponent(entity.name || '');
       }
 
       const path = version
@@ -75,6 +93,7 @@ export const getEntityPath = (
 
     case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:

@@ -20,7 +20,7 @@ import {
   QueryPredicate,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { UsageLogField } from '@/src/models/analytics/conversations-trace';
+import { UsageLogField, SessionScope } from '@/src/models/analytics/conversations-trace';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -31,6 +31,10 @@ vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
+
+// `getConversationTracePage` takes the scope the rollup resolved, not a bare id: `source: 'chat_id'`
+// is the case these tests cover — an id that came from a conversation header.
+const SCOPE: SessionScope = { id: CHAT_ID, source: UsageLogField.ChatId };
 
 const DETAIL_ROW = {
   chat_id: CHAT_ID,
@@ -269,7 +273,48 @@ describe('getConversationSpans', () => {
 
     const result = await getConversationSpans(TRACE_ID);
 
-    expect(result.response).toEqual({ spans: [SPAN_ROW], total: 922 });
+    expect(result.response?.spans).toEqual([SPAN_ROW]);
+    expect(result.response?.total).toBe(922);
+  });
+
+  // The rail's field set travels with the spans, resolved from the same schema read the body grant already
+  // performs — so the groups describe the projection that read actually named.
+  test('returns the field groups the rail presents, resolved from the hop log schema', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+    getEntitySchema().mockResolvedValue({
+      success: true,
+      response: {
+        fields: [{ name: 'usage_client_identity.client_type', type: 'string', source: 'client_type', tag: 'client' }],
+      },
+    });
+
+    const result = await getConversationSpans(TRACE_ID);
+
+    expect(result.response?.fieldGroups).toEqual([
+      {
+        tag: 'client',
+        fields: [
+          {
+            name: 'usage_client_identity.client_type',
+            label: 'Client type',
+            type: 'string',
+            tag: 'client',
+          },
+        ],
+      },
+    ]);
+  });
+
+  // A schema this console cannot read costs the rail its groups and nothing else: the tree, the bodies and
+  // the rail's own figures are built from the columns the projection falls back to.
+  test('still returns the spans when the schema read fails, with no field groups', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+    getEntitySchema().mockResolvedValue({ success: false, response: undefined });
+
+    const result = await getConversationSpans(TRACE_ID);
+
+    expect(result.response?.spans).toEqual([SPAN_ROW]);
+    expect(result.response?.fieldGroups).toEqual([]);
   });
 
   test('an absent total resolves to null rather than a guessed count', async () => {
@@ -280,14 +325,15 @@ describe('getConversationSpans', () => {
     expect(result.response?.total).toBeNull();
   });
 
-  // The tree is built from the hop rows alone, so the trace read is one query and reads no body at all.
-  test('issues one query and reads no schema', async () => {
+  // One query for the rows, and the schema the body grant already fetches for the field set — so the rail's
+  // fields cost no request of their own and no body is read at all.
+  test('issues one query and reuses the cached schema read', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
 
     await getConversationSpans(TRACE_ID);
 
     expect(execute()).toHaveBeenCalledOnce();
-    expect(getEntitySchema()).not.toHaveBeenCalled();
+    expect(getEntitySchema()).toHaveBeenCalledWith(USAGE_LOG_ENTITY, TOKEN_MOCK);
   });
 
   // Checked against the projected names rather than the serialized query, because `response_body_bytes` — a
@@ -377,7 +423,7 @@ describe('getConversationTracePage', () => {
   test('reads the page, then its roots and figures, with the user token', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0);
+    await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
 
     expect(execute()).toHaveBeenCalledTimes(3);
     expect(execute()).toHaveBeenNthCalledWith(1, expect.anything(), TOKEN_MOCK);
@@ -388,7 +434,7 @@ describe('getConversationTracePage', () => {
   test('scopes the roots and figures to the page own padded window', async () => {
     resolvePage([pageRow('t1', NOON, NOON + 60_000)]);
 
-    await getConversationTracePage(CHAT_ID, 'demo-project', Date.UTC(2025, 0, 1), NOON, 0);
+    await getConversationTracePage(SCOPE, 'demo-project', Date.UTC(2025, 0, 1), NOON, 0);
 
     const [rootsFrom, rootsTo] = boundsOf(1);
     expect(rootsFrom).toBe(Date.UTC(2026, 7, 26) - DAY);
@@ -399,7 +445,7 @@ describe('getConversationTracePage', () => {
   test('resolves nothing further when the page returns no trace', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [] } });
 
-    const result = await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0);
+    const result = await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
 
     expect(result.response).toEqual({ groups: [], hasMore: false });
     expect(execute()).toHaveBeenCalledOnce();
@@ -409,13 +455,13 @@ describe('getConversationTracePage', () => {
   test('reports more only when the page came back full', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    expect((await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0)).response?.hasMore).toBe(false);
+    expect((await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0)).response?.hasMore).toBe(false);
   });
 
   test('a failed page read reports failure with no response', async () => {
     execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
-    const result = await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0);
+    const result = await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
@@ -429,7 +475,7 @@ describe('getConversationTracePage', () => {
       .mockResolvedValueOnce({ success: true, response: { rows: [] } })
       .mockResolvedValueOnce({ success: false, errorMessage: 'figures unavailable' });
 
-    const result = await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0);
+    const result = await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
@@ -448,7 +494,7 @@ describe('getConversationTracePage', () => {
         },
       });
 
-    const result = await getConversationTracePage(CHAT_ID, 'demo-project', NOON, NOON, 0);
+    const result = await getConversationTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
 
     expect(result.success).toBe(true);
     expect(result.response?.groups[0].isRootRecorded).toBe(false);

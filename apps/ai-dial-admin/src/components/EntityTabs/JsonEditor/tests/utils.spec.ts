@@ -1,8 +1,30 @@
+import { MarkerSeverity, Uri } from 'monaco-editor';
+
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { Mock, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '../utils';
 
 type RemoveNotification = Parameters<typeof clearResolvedErrors>[1];
+
+// A monaco marker carries an owner, a resource URI and a full range; these cases only vary the message
+// and the line, so the factory supplies the rest.
+const marker = (overrides: Partial<JSONEditorError> = {}): JSONEditorError => ({
+  owner: 'json',
+  resource: Uri.parse('inmemory://model/1'),
+  severity: MarkerSeverity.Error,
+  message: 'Syntax error',
+  startLineNumber: 1,
+  startColumn: 1,
+  endLineNumber: 1,
+  endColumn: 10,
+  ...overrides,
+});
+
+const notification = (overrides: Partial<JSONEditorErrorNotification> = {}): JSONEditorErrorNotification => ({
+  ...marker(),
+  id: 'notif-1',
+  ...overrides,
+});
 
 describe('clearResolvedErrors', () => {
   let mockRemoveNotification: Mock<RemoveNotification>;
@@ -13,11 +35,7 @@ describe('clearResolvedErrors', () => {
 
   test('should remove notification when error is resolved', () => {
     const errorNotifications: JSONEditorErrorNotification[] = [
-      {
-        id: 'notif-1',
-        message: 'Syntax error',
-        startLineNumber: 5,
-      },
+      notification({ id: 'notif-1', message: 'Syntax error', startLineNumber: 5 }),
     ];
     const errors: JSONEditorError[] = [];
 
@@ -29,21 +47,17 @@ describe('clearResolvedErrors', () => {
 
   test('should not remove notification when error still persists', () => {
     const errorNotifications: JSONEditorErrorNotification[] = [
-      {
-        id: 'notif-1',
-        message: 'Syntax error',
-        startLineNumber: 5,
-      },
+      notification({ id: 'notif-1', message: 'Syntax error', startLineNumber: 5 }),
     ];
     const errors: JSONEditorError[] = [
-      {
+      marker({
         message: 'Syntax error',
         startLineNumber: 5,
         endLineNumber: 5,
         startColumn: 1,
         endColumn: 10,
         severity: 8,
-      },
+      }),
     ];
 
     clearResolvedErrors(errorNotifications, mockRemoveNotification, errors);
@@ -73,7 +87,7 @@ describe('mergeWithIgnoredFields', () => {
 
   test('should preserve multiple ignored fields', () => {
     const prev = { name: 'original', $type: 'mcp' as const, version: '1.0' };
-    const parsed = { name: 'changed', $type: 'adapter' as const, version: '2.0' };
+    const parsed = { name: 'changed', $type: 'mcp' as const, version: '2.0' };
 
     const result = mergeWithIgnoredFields(prev, parsed, ['name', '$type']);
 

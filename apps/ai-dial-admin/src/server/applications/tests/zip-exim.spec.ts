@@ -55,7 +55,7 @@ describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () 
 
     const result = await extractApplicationsFromZip(buffer);
 
-    expect(result.applications.map((a) => a.id).sort()).toEqual([
+    expect((result.applications ?? []).map((a) => a.id).sort()).toEqual([
       'applications/public/a__1.0',
       'applications/public/b__1.0',
     ]);
@@ -72,7 +72,7 @@ describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () 
 
     const result = await extractApplicationsFromZip(buffer);
 
-    expect(result.applications.map((a) => a.id)).toEqual(['applications/public/a__1.0']);
+    expect((result.applications ?? []).map((a) => a.id)).toEqual(['applications/public/a__1.0']);
   });
 
   test('rejects an archive with no valid applications entries', async () => {

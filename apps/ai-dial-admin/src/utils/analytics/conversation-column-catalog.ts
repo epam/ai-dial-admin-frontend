@@ -16,6 +16,9 @@ import {
   NUMERIC_FIELD_TYPES,
   HOP_REQUEST_BODY_FIELD,
   HOP_RESPONSE_BODY_FIELDS,
+  SPAN_BASE_FIELDS,
+  SPAN_UNREADABLE_FIELDS,
+  UNTAGGED_SPAN_FIELD_TAG,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ColumnProvenance,
@@ -23,6 +26,8 @@ import {
   ConversationProjectableFields,
   ProvenanceEntity,
   HopBodyFields,
+  SpanFieldDescriptor,
+  SpanFieldSet,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
@@ -291,5 +296,49 @@ export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields =>
     isResponseReadable: responseFields.length > 0,
     requestField,
     responseFields,
+  };
+};
+
+// `heavy` columns are left out: they are the recorded bodies, which the bodies section reads in tiers and a
+// 360px rail cannot hold.
+//
+// Group order is the order the schema reports the fields in: the service returns them grouped by the entity's
+// own tag ordering, so honouring arrival order keeps no second copy of that ordering here.
+export const spanFields = (schemaFields: AnalyticsEntityField[] = []): SpanFieldSet => {
+  const omitted = new Set<string>(SPAN_UNREADABLE_FIELDS);
+  const reported = new Set(schemaFields.map(({ name }) => name));
+  // The base list is the fallback for a failed schema read, not an addition to a successful one: an instance
+  // whose hop log predates a column in it would have that column named and reject the whole query, costing
+  // the reader the tree.
+  const names = new Set<string>(
+    reported.size ? SPAN_BASE_FIELDS.filter((name) => reported.has(name)) : SPAN_BASE_FIELDS,
+  );
+  const byTag = new Map<string, SpanFieldDescriptor[]>();
+
+  for (const field of schemaFields) {
+    if (field.heavy) {
+      continue;
+    }
+
+    if (omitted.has(field.name)) {
+      continue;
+    }
+
+    names.add(field.name);
+
+    const tag = field.tag || UNTAGGED_SPAN_FIELD_TAG;
+    const descriptor: SpanFieldDescriptor = {
+      name: field.name,
+      label: columnHeaderName(field),
+      type: field.type,
+      tag,
+    };
+
+    byTag.set(tag, [...(byTag.get(tag) ?? []), descriptor]);
+  }
+
+  return {
+    names: [...names],
+    groups: [...byTag].map(([tag, fields]) => ({ tag, fields })),
   };
 };

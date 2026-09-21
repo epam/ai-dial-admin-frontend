@@ -40,7 +40,13 @@ vi.mock('../TabsContent', () => ({ default: () => null }));
 
 const model = { name: 'gpt-4', path: 'gpt-4', folderId: '' } as AssetModel;
 
-const MODEL_TABS = [EntityViewTab.Properties, EntityViewTab.Features, EntityViewTab.Roles, EntityViewTab.Interceptors];
+const MODEL_TABS = [
+  EntityViewTab.Properties,
+  EntityViewTab.Features,
+  EntityViewTab.Catalog,
+  EntityViewTab.Roles,
+  EntityViewTab.Interceptors,
+];
 
 describe('ModelView — Audit tab wiring', () => {
   beforeEach(() => {

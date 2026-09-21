@@ -19,6 +19,9 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
 }));
 vi.mock('@/src/app/[lang]/models/actions', () => ({ getModelsList: vi.fn().mockResolvedValue([]) }));
 vi.mock('@/src/app/[lang]/platform-translators/actions', () => ({ getTranslators: vi.fn().mockResolvedValue([]) }));
+vi.mock('@/src/server/catalog-schemas/read-options', () => ({
+  readCatalogSchemaOptions: vi.fn().mockResolvedValue({ options: [] }),
+}));
 vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readConfigEntities: vi.fn().mockResolvedValue([]),
   readGlobalInterceptors: vi.fn().mockResolvedValue([]),

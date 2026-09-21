@@ -1,5 +1,6 @@
 import {
   DialAppRunnerResource,
+  DialCatalogSchemaResource,
   DialApplicationResource,
   DialInterceptorResource,
   DialKeyResource,
@@ -14,7 +15,7 @@ import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { fromCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
-import { fromCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { fromCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
 import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
@@ -71,6 +72,12 @@ export interface ResourceInfo {
   etag?: string;
 }
 
+/** Core's two schema resource kinds: stored under a percent-encoded JSON-Schema `$id`, body kept verbatim. */
+const SCHEMA_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
+  ResourceType.APP_TYPE_SCHEMA,
+  ResourceType.CATALOG_SCHEMA,
+]);
+
 export const isVersioned = (type: ResourceType): boolean => (VERSIONED_RESOURCE_TYPES as ResourceType[]).includes(type);
 
 const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType): ResourceInfo => {
@@ -79,9 +86,9 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
     ? parseEncodedVersionedPath(metadata.url, prefix)
     : { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
   return {
-    // An app runner's resource name is its percent-encoded `$id`; rows show the `$id` while `path`
+    // A schema resource's name is its percent-encoded `$id`; rows show the `$id` while `path`
     // stays encoded, since that is what the CRUD calls address.
-    name: type === ResourceType.APP_TYPE_SCHEMA ? fromCoreRunnerName(name) : name,
+    name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(name) : name,
     folderId,
     path,
     version,
@@ -224,6 +231,10 @@ export const mergeModelResource = (
  * type needs: the resource name is a percent-encoded `$id` (recovered here, since `$id` is the
  * runner's identity everywhere in the UI), and Core's `dial:applicationTypeRoutes` is a name-keyed
  * object that the route editors consume as an array.
+ *
+ * Unlike `mergeCatalogSchemaResource`, the decoded name still wins over the body's own `$id` here.
+ * The two can differ for a runner created outside this console, with the same consequence — see that
+ * function — but correcting it needs the app-runner capability's own delta, so it is left as is.
  */
 export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
@@ -235,9 +246,32 @@ export const mergeAppRunnerResource = (
     ...content,
     ...fields,
     name,
-    $id: fromCoreRunnerName(name),
+    $id: fromCoreSchemaResourceName(name),
     ...(routes && { 'dial:applicationTypeRoutes': routes }),
   } as DialAppRunnerResource;
+};
+
+/**
+ * Same `$id`-as-resource-name identity as an app runner, without its route conversion — but the
+ * stored body's own `$id` wins where it declares one.
+ *
+ * A schema this console created stores the two identically by construction. One created elsewhere
+ * can live under any legal blob name, because Core keys its merged configuration by `$id` and never
+ * compares the two; overwriting `$id` with the decoded name would then show the wrong identity and
+ * turn the next save into an `$id` change, which Core rejects with a conflict.
+ */
+export const mergeCatalogSchemaResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialCatalogSchemaResource => {
+  const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]);
+  const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
+  return {
+    ...content,
+    ...fields,
+    name,
+    $id: declaredId ?? fromCoreSchemaResourceName(name),
+  } as DialCatalogSchemaResource;
 };
 
 /**
@@ -452,6 +486,7 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.PROMPT]: mergePrompt,
   [ResourceType.MODEL]: mergeModelResource,
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
+  [ResourceType.CATALOG_SCHEMA]: mergeCatalogSchemaResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.TRANSLATOR]: mergeTranslatorResource,
   [ResourceType.ROUTE]: mergeRouteResource,

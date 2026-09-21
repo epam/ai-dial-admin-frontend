@@ -724,6 +724,17 @@ const getExecutionColumn = (colId: string, results = [] as any[]) => {
 describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   const getRunIndexCol = (results = [] as any[]) => getExecutionColumn('runIndex', results);
 
+  test('Should retain the native sortable header around the ellipsis content', () => {
+    const col = getRunIndexCol();
+    expect(col).toEqual(
+      expect.objectContaining({
+        sortable: true,
+        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+      }),
+    );
+    expect(col.headerComponent).toBeUndefined();
+  });
+
   test('Should display 1-based index (backend runIndex is 0-based)', () => {
     const col = getRunIndexCol();
     expect(col.valueGetter({ data: { runIndex: 0 } })).toBe(1);
@@ -753,8 +764,15 @@ describe('Runs View :: executionColumns Request valueGetter', () => {
   test('Should build a Request column headed "Request"', () => {
     const col = getRequestCol();
     expect(col).toEqual(
-      expect.objectContaining({ field: 'requestIndex', headerName: 'Request', colId: 'requestIndex' }),
+      expect.objectContaining({
+        field: 'requestIndex',
+        headerName: 'Request',
+        colId: 'requestIndex',
+        sortable: true,
+        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+      }),
     );
+    expect(col.headerComponent).toBeUndefined();
   });
 
   test('Should display 1-based request number for a 0-based requestIndex', () => {
@@ -814,7 +832,16 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
 
   test('Should build a Turn column headed "Turn"', () => {
     const col = getTurnCol();
-    expect(col).toEqual(expect.objectContaining({ field: 'turnIndex', headerName: 'Turn', colId: 'turnIndex' }));
+    expect(col).toEqual(
+      expect.objectContaining({
+        field: 'turnIndex',
+        headerName: 'Turn',
+        colId: 'turnIndex',
+        sortable: true,
+        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+      }),
+    );
+    expect(col.headerComponent).toBeUndefined();
   });
 
   test('Should display 1-based turn number for a 0-based turnIndex', () => {

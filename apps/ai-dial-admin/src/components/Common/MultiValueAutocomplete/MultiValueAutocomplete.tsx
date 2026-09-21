@@ -4,7 +4,7 @@ import { DialErrorText, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import Suggestions from '@/src/components/Common/AttachmentInput/Suggestions';
+import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
 
 export interface MultiValueOption {
   label: string;

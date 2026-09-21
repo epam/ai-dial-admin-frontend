@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
 import PromptsList from '../PromptsList';
+import { ActionType } from '@/src/models/dial/publications';
 
 vi.mock('../PromptDetails', () => ({
   default: ({ prompt, onChange, onRemove }: any) => (
@@ -26,34 +27,43 @@ vi.mock('../PromptDetails', () => ({
 
 const mockPrompts: PublicationPrompt[] = [
   {
+    sourceUrl: 'prompts/source/prompt1',
+    targetUrl: 'prompts/public/prompt1',
+    reviewUrl: 'prompts/review/prompt1',
+    action: ActionType.ADD,
     prompt: {
       id: 'prompt1',
       name: 'First Prompt',
       content: 'First content',
       version: '1.0.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/first/1.0.0.json',
     },
   },
   {
+    sourceUrl: 'prompts/source/prompt2',
+    targetUrl: 'prompts/public/prompt2',
+    reviewUrl: 'prompts/review/prompt2',
+    action: ActionType.ADD,
     prompt: {
       id: 'prompt2',
       name: 'Second Prompt',
       content: 'Second content',
       version: '2.0.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/second/2.0.0.json',
     },
   },
   {
+    sourceUrl: 'prompts/source/prompt3',
+    targetUrl: 'prompts/public/prompt3',
+    reviewUrl: 'prompts/review/prompt3',
+    action: ActionType.ADD,
     prompt: {
       id: 'prompt3',
       name: 'Third Prompt',
       content: 'Third content',
       version: '1.5.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/third/1.5.0.json',
     },

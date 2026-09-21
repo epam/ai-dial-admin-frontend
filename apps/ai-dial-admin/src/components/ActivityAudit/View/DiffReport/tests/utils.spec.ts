@@ -1,20 +1,21 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditDiffSection } from '@/src/models/activity-audit';
+import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import { filterNotEmptySections, getDiffCount } from '../utils';
 
 describe('Activity audit :: getDiffCount', () => {
-  const createItem = (diffStatus?: DiffStatus) => ({ parameter: 'param', value: 'val', diffStatus });
+  const createItem = (diffStatus?: DiffStatus): ActivityAuditDiff => ({ parameter: 'param', value: 'val', diffStatus });
 
   test('should count ADD statuses correctly', () => {
     const sections = [
       {
-        section1: [createItem(DiffStatus.ADDED), createItem(DiffStatus.ADDED)],
-        section2: [createItem(DiffStatus.REMOVED)],
+        current: [createItem(DiffStatus.ADDED), createItem(DiffStatus.ADDED)],
+        compare: [createItem(DiffStatus.REMOVED)],
       },
       {
-        section3: [createItem(DiffStatus.ADDED)],
+        current: [],
+        compare: [createItem(DiffStatus.ADDED)],
       },
     ];
 
@@ -25,10 +26,12 @@ describe('Activity audit :: getDiffCount', () => {
   test('should count REMOVE statuses correctly', () => {
     const sections = [
       {
-        s1: [createItem(DiffStatus.REMOVED), createItem(DiffStatus.ADDED)],
+        current: [createItem(DiffStatus.REMOVED), createItem(DiffStatus.ADDED)],
+        compare: [],
       },
       {
-        s2: [createItem(DiffStatus.REMOVED), createItem(DiffStatus.REMOVED)],
+        current: [],
+        compare: [createItem(DiffStatus.REMOVED), createItem(DiffStatus.REMOVED)],
       },
     ];
 
@@ -39,10 +42,12 @@ describe('Activity audit :: getDiffCount', () => {
   test('should count CHANGE statuses correctly and divide by 2', () => {
     const sections = [
       {
-        s1: [createItem(DiffStatus.CHANGED), createItem(DiffStatus.CHANGED), createItem(DiffStatus.CHANGED)],
+        current: [createItem(DiffStatus.CHANGED), createItem(DiffStatus.CHANGED), createItem(DiffStatus.CHANGED)],
+        compare: [],
       },
       {
-        s2: [createItem(DiffStatus.CHANGED)],
+        current: [],
+        compare: [createItem(DiffStatus.CHANGED)],
       },
     ];
 
@@ -53,7 +58,8 @@ describe('Activity audit :: getDiffCount', () => {
   test('should return 0 if no matching status found', () => {
     const sections = [
       {
-        s1: [createItem(DiffStatus.ADDED), createItem(DiffStatus.ADDED)],
+        current: [createItem(DiffStatus.ADDED), createItem(DiffStatus.ADDED)],
+        compare: [],
       },
     ];
     const count = getDiffCount(sections, DiffStatus.REMOVED);
@@ -63,7 +69,8 @@ describe('Activity audit :: getDiffCount', () => {
   test('should return 0 when no status argument provided', () => {
     const sections = [
       {
-        s1: [createItem(DiffStatus.ADDED)],
+        current: [createItem(DiffStatus.ADDED)],
+        compare: [],
       },
     ];
     const count = getDiffCount(sections);
@@ -73,7 +80,8 @@ describe('Activity audit :: getDiffCount', () => {
   test('should ignore items without status', () => {
     const sections = [
       {
-        s1: [createItem(), createItem(DiffStatus.ADDED)],
+        current: [createItem(), createItem(DiffStatus.ADDED)],
+        compare: [],
       },
     ];
     const count = getDiffCount(sections, DiffStatus.ADDED);

@@ -1,5 +1,6 @@
-import { JWT } from 'next-auth/jwt';
 import { expect, test, describe, vi, beforeEach } from 'vitest';
+
+import { NextAuthToken } from '@/src/models/auth';
 
 import {
   streamRequest,
@@ -14,7 +15,12 @@ vi.mock('../send-request', () => ({
 }));
 
 describe('Utils :: api :: streamRequest', () => {
-  const mockToken: JWT = { access_token: 'token' };
+  const mockToken: NextAuthToken = {
+    access_token: 'token',
+    providerId: 'keycloak',
+    userId: 'user-1',
+    refreshToken: 'refresh',
+  };
   const mockUrl = 'https://example.com/file';
   const mockFileName = 'file.txt';
 
@@ -113,7 +119,7 @@ describe('Utils :: api :: streamRequest', () => {
       vi.mocked(sendRequest).mockImplementation(() => {
         throw new Error('fail');
       });
-      const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
+      const promise = streamRequest('url', 'file.txt', mockToken, true);
       expect(promise).toBeInstanceOf(Promise);
     });
   });

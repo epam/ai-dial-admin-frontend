@@ -99,6 +99,19 @@ describe('Server :: Files :: import :: importZipFile', () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
+  test('flattens nested archive paths into the destination folder when flatImport is true', async () => {
+    const upload = vi.fn().mockResolvedValue({ success: true } as ServerActionResponse);
+    const zipFile = await buildZip({
+      'files/doc.txt': 'hello',
+      'files/sub/report.pdf': 'pdf-bytes',
+    });
+
+    await importZipFile(zipFile, 'folder/', upload, 5, true);
+
+    const uploadedPaths = upload.mock.calls.map((call) => call[0]);
+    expect(uploadedPaths).toEqual(expect.arrayContaining(['folder/doc.txt', 'folder/report.pdf']));
+  });
+
   test('a path-traversal entry inside the zip is silently excluded, not uploaded', async () => {
     const upload = vi.fn().mockResolvedValue({ success: true } as ServerActionResponse);
     const zipFile = await buildZip({

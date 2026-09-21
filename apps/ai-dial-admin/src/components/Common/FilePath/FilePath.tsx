@@ -15,6 +15,7 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -47,18 +48,19 @@ const FilePath: FC<Props> = ({
   shouldAbleToCreateNewFolder = true,
 }) => {
   const t = useI18n();
+  const { featureFlags } = useAppContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { files, fetchFiles } = context?.() || {};
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 
   useEffect(() => {
-    const rootPaths = getRootFolders(view as ApplicationRoute).map((root) => `${root}/`);
+    const rootPaths = getRootFolders(view as ApplicationRoute, featureFlags.catalogEnabled).map((root) => `${root}/`);
     if (rootPaths.some((path) => !loadedPaths.has(path)) && fetchFiles) {
       fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
       setLoadedPaths(new Set(rootPaths));
     }
-  }, [fetchFiles, loadedPaths, view]);
+  }, [fetchFiles, loadedPaths, view, featureFlags.catalogEnabled]);
 
   useEffect(() => {}, [files]);
 

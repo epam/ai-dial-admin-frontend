@@ -8,19 +8,27 @@ Features, external services, schema-rich apps — see `application-resources-cor
 requirements for the write-path details); the differences this capability covers are structural
 (flat, no folders, no versioning) and surface-level (a restricted action set, a dedicated detail
 view). Created by archiving change `add-platform-applications`.
-
 ## Requirements
-
 ### Requirement: Platform bucket shown above public in the Assets Applications grid
 The system SHALL display a `platform` bucket as a top-level node in the existing
 `Assets ▸ Applications` grid (`/assets-applications`), positioned above the `public` bucket, using the
-same `BaseAssetList` instance the public applications list already uses. No new menu entry and no new
-top-level list route SHALL be introduced for this bucket.
+same `BaseAssetList` instance the public applications list already uses — but only when the Catalog
+menu group is not disabled, i.e. when `DISABLE_MENU_ITEMS` does not contain `catalog`
+(case-insensitive). When the Catalog menu group is disabled, the system SHALL NOT list or display the
+`platform` bucket in this grid: no `platform` list request is issued on mount, refresh, or
+folder-picker load, and the grid renders only the `public` tree, using the same single-root behavior
+as every other assets view. No new menu entry and no new top-level list route SHALL be introduced for
+this bucket.
 
 #### Scenario: Platform bucket appears above public on first load
-- **WHEN** the user navigates to `/assets-applications`
+- **WHEN** the user navigates to `/assets-applications` with no `catalog` entry in `DISABLE_MENU_ITEMS`
 - **THEN** the grid shows a `platform` top-level node above the `public` top-level node, both fetched
   and rendered in the same tree
+
+#### Scenario: Platform bucket skipped when Catalog is disabled
+- **WHEN** the user navigates to `/assets-applications` with `DISABLE_MENU_ITEMS` containing `catalog`
+- **THEN** the grid shows only the `public` tree — no `platform` top-level node is rendered
+- **AND** no `platform` bucket list request is issued (on mount and on every refresh of the tree)
 
 #### Scenario: No separate platform applications list page exists
 - **WHEN** the user looks for a platform applications entry in the sidebar navigation
@@ -247,3 +255,50 @@ entities) are unaffected.
 #### Scenario: A freshly created platform application starts with no granted roles
 - **WHEN** a user creates a new platform-bucket application and opens its Roles tab before granting any role
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
+
+### Requirement: A platform-bucket application exposes its catalog metadata
+
+The system SHALL let an admin attach a catalog schema to a platform-bucket application and edit the
+catalog values it describes, using the shared `catalog-properties-editing` mechanism. The
+platform-application resource SHALL round-trip `catalog_schema_id` and `catalog_properties`.
+
+A user-bucket application SHALL be offered the same editing, with one difference in who rejects an
+invalid write: DIAL Core validates a user-bucket resource on write and answers `400`, whereas a
+platform-bucket resource is only rejected later, when Core assembles its merged configuration. The
+client-side gate applies to both.
+
+#### Scenario: Catalog metadata is offered on an application
+
+- **WHEN** an admin opens an application's detail view in either bucket
+- **THEN** the catalog schema selection and, once a schema is selected, its values editor are offered
+
+#### Scenario: The two fields survive a save
+
+- **WHEN** an admin attaches a schema, fills in values, and saves the application
+- **THEN** both `catalog_schema_id` and `catalog_properties` are written to Core and reappear on
+  reload
+
+#### Scenario: Core's own rejection is surfaced for a user-bucket application
+
+- **WHEN** Core rejects a user-bucket application's catalog values with a `400`
+- **THEN** the error notification carries Core's message rather than a generic failure
+
+### Requirement: Switching App Runner preserves already-set applicationProperties
+The `Assets` resource source editor SHALL, when the user switches the selected App Runner on a
+platform/asset Application, merge the new runner's default `applicationProperties` under the
+entity's existing `applicationProperties` rather than replacing them outright. For any key present
+in both the entity's current `applicationProperties` and the new runner's defaults, the entity's
+existing value SHALL win. A key present only in the new runner's defaults SHALL be added; a key
+present only in the entity's existing values and not in the new runner's schema SHALL be preserved
+unchanged.
+
+#### Scenario: Switching to a runner with the same schema preserves a set value
+- **WHEN** the user has set a value for a parameter (e.g. `openapi`) on an Application, then switches
+  the selected App Runner to a different runner that defines the same parameter
+- **THEN** the parameter's value on the Application is unchanged after the switch
+
+#### Scenario: Switching runner still applies defaults for parameters not already set
+- **WHEN** the user switches the selected App Runner to one that defines a parameter the Application
+  does not already have a value for
+- **THEN** that parameter is added with the new runner's default value
+

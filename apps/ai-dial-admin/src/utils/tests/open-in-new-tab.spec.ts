@@ -1,6 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  appendUrlQuery,
   escapePercentSign,
   getEntityAuditFilterId,
   getEntityPath,
@@ -39,6 +40,13 @@ describe('getUrnForEntity', () => {
     expect(urn).not.toContain('?path=');
   });
 
+  test('returns the bare-name URN, with no ?path=, for a config-file application row', () => {
+    const urn = getUrnForEntity(ApplicationRoute.AssetsApplications, { name: 'my-app' });
+
+    expect(urn).toBe('/assets-applications/my-app');
+    expect(urn).not.toContain('?path=');
+  });
+
   test('returns the versioned ?path= URN, unchanged, for a public-bucket application', () => {
     const entity = { name: 'MyApp', path: 'public/MyApp__1.0', folderId: 'public/', version: '1.0' };
     const urn = getUrnForEntity(ApplicationRoute.AssetsApplications, entity);
@@ -51,6 +59,13 @@ describe('getUrnForEntity', () => {
   test('returns the bare-name URN, with no ?path=, for a platform-bucket toolset', () => {
     const entity = { name: 'my-toolset', path: 'platform/my-toolset' };
     const urn = getUrnForEntity(ApplicationRoute.AssetsToolsets, entity);
+
+    expect(urn).toBe('/assets-toolsets/my-toolset');
+    expect(urn).not.toContain('?path=');
+  });
+
+  test('returns the bare-name URN, with no ?path=, for a config-file toolset row', () => {
+    const urn = getUrnForEntity(ApplicationRoute.AssetsToolsets, { name: 'my-toolset' });
 
     expect(urn).toBe('/assets-toolsets/my-toolset');
     expect(urn).not.toContain('?path=');
@@ -240,6 +255,22 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('http%3A%2F%2Frunner');
   });
 
+  test('Should double-encode a catalog-schema name the same way an app-runner name is encoded', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' });
+    expect(result).toEqual('https%253A%252F%252Fhost%252Fagent');
+  });
+
+  test('Should produce the same catalog-schema segment from $id as from a row-click name', () => {
+    const fromId = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { $id: 'https://host/agent' });
+    const fromRowClickName = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https://host/agent' });
+    expect(fromId).toEqual(fromRowClickName);
+  });
+
+  test('Should return the singly-encoded Core path for a catalog schema when forRemove is true', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' }, true);
+    expect(result).toEqual('https%3A%2F%2Fhost%2Fagent');
+  });
+
   test('Should return encoded name for PlatformRoutes (no ?path= appended)', () => {
     const result = getEntityPath(ApplicationRoute.PlatformRoutes, { name: 'my-route' });
     expect(result).toEqual('my-route');
@@ -288,6 +319,31 @@ describe('Entity list view :: getEntityPath', () => {
       expect(result).toEqual('public/MyEntity__1.0');
     },
   );
+
+  // Regression (Issue #4590): the config-file list's `{name}`-only row is in neither bucket and must
+  // resolve flat — the fabricated `undefined{name}__undefined` path it used to produce 404s the
+  // detail page.
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return the bare encoded name for %s when the row carries neither path nor folderId',
+    (route) => {
+      const result = getEntityPath(route, { name: 'my-item' });
+      expect(result).toEqual('my-item');
+    },
+  );
+});
+
+describe('appendUrlQuery', () => {
+  test('joins with ? when the URL carries no query string', () => {
+    expect(appendUrlQuery('/platform-models/my-model', 'configFile=true')).toBe(
+      '/platform-models/my-model?configFile=true',
+    );
+  });
+
+  test('joins with & when the URL already carries a query string', () => {
+    expect(appendUrlQuery('/assets-applications/my-app?path=public%2Fmy-app__1.0', 'configFile=true')).toBe(
+      '/assets-applications/my-app?path=public%2Fmy-app__1.0&configFile=true',
+    );
+  });
 });
 
 describe('onOpenInNewTab', () => {
@@ -315,10 +371,20 @@ describe('onOpenInNewTab', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith('/runs/compare?runs=run-123,run-456', '_blank');
   });
 
-  test('appends the config-file url suffix when one is given', () => {
+  test('appends the given query with ? when the URL has no query string', () => {
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    onOpenInNewTab(ApplicationRoute.Models, { name: 'entity' }, '?configFile=true');
+    onOpenInNewTab(ApplicationRoute.Models, { name: 'entity' }, 'configFile=true');
     expect(windowOpenSpy).toHaveBeenCalledWith('/models/entity?configFile=true', '_blank');
+  });
+
+  test('appends the given query with & when the URL already has a query string', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const entity = { name: 'MyApp', path: 'public/MyApp__1.0', folderId: 'public/', version: '1.0' };
+    onOpenInNewTab(ApplicationRoute.AssetsApplications, entity, 'configFile=true');
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      `/assets-applications/${encodeURIComponent('MyApp')}?path=${encodeURIComponent('public/MyApp__1.0')}&configFile=true`,
+      '_blank',
+    );
   });
 
   test('omits the suffix when none is given', () => {

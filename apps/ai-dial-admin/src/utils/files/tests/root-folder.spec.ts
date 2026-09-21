@@ -13,6 +13,7 @@ describe('Root Folder Utils :: getRootFolder', () => {
   test.each([
     ApplicationRoute.PlatformModels,
     ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformCatalogSchemas,
     ApplicationRoute.PlatformInterceptors,
     ApplicationRoute.PlatformRoutes,
     ApplicationRoute.PlatformRoles,
@@ -36,6 +37,7 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
   test.each([
     ApplicationRoute.PlatformModels,
     ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformCatalogSchemas,
     ApplicationRoute.PlatformInterceptors,
     ApplicationRoute.PlatformRoutes,
     ApplicationRoute.PlatformRoles,
@@ -77,6 +79,26 @@ describe('Root Folder Utils :: getRootFolders', () => {
     ApplicationRoute.PlatformKeys,
   ])('Should return a single-element array matching getRootFolder for %s', (view) => {
     expect(getRootFolders(view)).toEqual([getRootFolder(view)]);
+  });
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should return only the public root for %s when the platform bucket is disabled',
+    (view) => {
+      expect(getRootFolders(view, false)).toEqual([getRootFolder(view)]);
+    },
+  );
+
+  test('Should keep both buckets for a dual-bucket view when the platform bucket is explicitly enabled', () => {
+    expect(getRootFolders(ApplicationRoute.AssetsApplications, true)).toEqual(['platform', 'public']);
+  });
+
+  test('Should ignore the platform bucket flag for non-dual-bucket views', () => {
+    const views = [ApplicationRoute.Prompts, ApplicationRoute.Conversations, ApplicationRoute.PlatformKeys];
+
+    views.forEach((view) => {
+      expect(getRootFolders(view, false)).toEqual([getRootFolder(view)]);
+      expect(getRootFolders(view, true)).toEqual([getRootFolder(view)]);
+    });
   });
 });
 

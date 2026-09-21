@@ -9,19 +9,27 @@ discovered-tools/sign-in/sign-out all resolve by the toolset's path regardless o
 `toolset-resources-core-api`'s platform requirements for the write-path details); the differences
 this capability covers are structural (flat, no folders, no versioning) and surface-level (a
 restricted action set, a dedicated detail view). Created by archiving change `add-platform-toolsets`.
-
 ## Requirements
-
 ### Requirement: Platform bucket shown above public in the Assets Toolsets grid
 The system SHALL display a `platform` bucket as a top-level node in the existing
 `Assets ▸ Toolsets` grid (`/assets-toolsets`), positioned above the `public` bucket, using the same
-`BaseAssetList` instance the public toolsets list already uses. No new menu entry and no new
-top-level list route SHALL be introduced for this bucket.
+`BaseAssetList` instance the public toolsets list already uses — but only when the Catalog
+menu group is not disabled, i.e. when `DISABLE_MENU_ITEMS` does not contain `catalog`
+(case-insensitive). When the Catalog menu group is disabled, the system SHALL NOT list or display the
+`platform` bucket in this grid: no `platform` list request is issued on mount, refresh, or
+folder-picker load, and the grid renders only the `public` tree, using the same single-root behavior
+as every other assets view. No new menu entry and no new top-level list route SHALL be introduced for
+this bucket.
 
 #### Scenario: Platform bucket appears above public on first load
-- **WHEN** the user navigates to `/assets-toolsets`
+- **WHEN** the user navigates to `/assets-toolsets` with no `catalog` entry in `DISABLE_MENU_ITEMS`
 - **THEN** the grid shows a `platform` top-level node above the `public` top-level node, both fetched
   and rendered in the same tree
+
+#### Scenario: Platform bucket skipped when Catalog is disabled
+- **WHEN** the user navigates to `/assets-toolsets` with `DISABLE_MENU_ITEMS` containing `catalog`
+- **THEN** the grid shows only the `public` tree — no `platform` top-level node is rendered
+- **AND** no `platform` bucket list request is issued (on mount and on every refresh of the tree)
 
 #### Scenario: No separate platform toolsets list page exists
 - **WHEN** the user looks for a platform toolsets entry in the sidebar navigation
@@ -265,3 +273,50 @@ are unaffected.
 #### Scenario: A freshly created platform toolset starts with no granted roles
 - **WHEN** a user creates a new platform-bucket toolset and opens its Roles tab before granting any role
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
+
+### Requirement: A platform-bucket toolset exposes its catalog metadata
+
+The system SHALL let an admin attach a catalog schema to a platform-bucket toolset and edit the
+catalog values it describes, using the shared `catalog-properties-editing` mechanism. The
+platform-toolset resource SHALL round-trip `catalog_schema_id` and `catalog_properties`.
+
+A user-bucket toolset SHALL be offered the same editing, with the same split in who rejects an
+invalid write that applies to applications: Core answers `400` for a user-bucket resource, while a
+platform-bucket one is rejected only at merged-configuration assembly.
+
+#### Scenario: Catalog metadata is offered on a toolset
+
+- **WHEN** an admin opens a toolset's detail view in either bucket
+- **THEN** the catalog schema selection and, once a schema is selected, its values editor are offered
+
+#### Scenario: The two fields survive a save
+
+- **WHEN** an admin attaches a schema, fills in values, and saves the toolset
+- **THEN** both `catalog_schema_id` and `catalog_properties` are written to Core and reappear on
+  reload
+
+#### Scenario: The Tools tab is unaffected
+
+- **WHEN** an admin opens a toolset carrying catalog metadata
+- **THEN** its Tools tab behaves exactly as before
+
+### Requirement: Duplicating a platform-bucket toolset resets OAuth auth settings to NONE
+The platform-bucket duplicate modal SHALL replace, when a `platform`-bucket toolset's
+`auth_settings.authentication_type === OAUTH` is duplicated, that `auth_settings` with
+`{ authentication_type: NONE }` before the duplicate is created, matching the existing
+`public`-bucket toolset duplicate behavior. Core never returns a real `client_secret` on read, so an
+OAuth `auth_settings` copied verbatim fails Core's write-time validation with a
+missing-`CLIENT_SECRET` error. A toolset whose `authentication_type` is `API_KEY`, `NONE`,
+`DIAL_NATIVE`, or unrecognised SHALL be carried over unchanged.
+
+#### Scenario: Duplicating a platform toolset with OAuth auth settings
+- **WHEN** the user duplicates a `platform`-bucket toolset with `auth_settings.authentication_type
+  === OAUTH`
+- **THEN** the created duplicate has `auth_settings` equal to `{ authentication_type: NONE }`
+- **AND** the duplicate is created successfully, with no `CLIENT_SECRET`-required error from Core
+
+#### Scenario: Duplicating a platform toolset with non-OAuth auth settings
+- **WHEN** the user duplicates a `platform`-bucket toolset whose `authentication_type` is `API_KEY`,
+  `NONE`, `DIAL_NATIVE`, or a value the frontend does not recognise
+- **THEN** `auth_settings` is carried over to the duplicate unchanged
+

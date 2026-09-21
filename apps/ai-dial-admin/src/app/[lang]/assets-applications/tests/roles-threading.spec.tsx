@@ -20,6 +20,9 @@ vi.mock('@/src/app/api/api', () => ({
 }));
 
 const { roles } = vi.hoisted(() => ({ roles: [{ name: 'admin' }] }));
+vi.mock('@/src/server/catalog-schemas/read-options', () => ({
+  readCatalogSchemaOptions: vi.fn().mockResolvedValue({ options: [] }),
+}));
 vi.mock('@/src/server/config-entities/read-page-options', () => ({
   readConfigEntities: vi.fn().mockResolvedValue(roles),
   readGlobalInterceptors: vi.fn().mockResolvedValue([]),
@@ -35,6 +38,34 @@ vi.mock('@/src/components/Assets/Platform/Applications/View', () => ({
 }));
 
 import { getApp, getPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
+
+// Both entity types require the whole Core payload; these cases care only about which view the page
+// renders and what `roles` it threads, so the factories carry the rest.
+const assetApp = (overrides: Partial<AssetApp> = {}): AssetApp => ({
+  name: 'my-app',
+  path: 'applications/public/my-app',
+  folderId: 'public',
+  version: '1.0',
+  ...overrides,
+});
+
+const platformApp = (overrides: Partial<DialPlatformApplicationResource> = {}): DialPlatformApplicationResource => ({
+  name: 'my-app',
+  path: 'applications/platform/my-app',
+  folderId: 'platform',
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+  input_attachment_types: [],
+  application_properties: {},
+  ...overrides,
+});
 
 type RenderedElement = { props: { children: { type: unknown; props: Record<string, unknown> } } };
 
@@ -47,8 +78,8 @@ const renderPage = async (path?: string) =>
 describe('assets-applications detail page — roles threading', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getApp).mockResolvedValue({ etag: 'e', response: { name: 'my-app', folderId: 'f' } });
-    vi.mocked(getPlatformApplication).mockResolvedValue({ etag: 'e', response: { name: 'my-app' } });
+    vi.mocked(getApp).mockResolvedValue({ success: true, etag: 'e', response: assetApp() });
+    vi.mocked(getPlatformApplication).mockResolvedValue({ success: true, etag: 'e', response: platformApp() });
   });
 
   test('passes the fetched roles to the platform-bucket view', async () => {

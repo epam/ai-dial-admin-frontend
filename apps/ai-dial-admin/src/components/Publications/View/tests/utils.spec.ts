@@ -131,6 +131,9 @@ describe('getCorrectPublication', () => {
         reviewUrl: '',
         action: ActionType.ADD,
         applicationResource: {
+          application_properties: {},
+          created_at: 0,
+          updated_at: 0,
           name: 'app-resource',
           path: '/app',
           folderId: 'f1',

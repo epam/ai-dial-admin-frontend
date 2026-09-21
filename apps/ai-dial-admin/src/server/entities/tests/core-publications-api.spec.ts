@@ -1,4 +1,4 @@
-import { ActionType, PublicationStatus } from '@/src/models/dial/publications';
+import { ActionType, PromptPublication, PublicationStatus } from '@/src/models/dial/publications';
 import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -14,6 +14,7 @@ const makeClients = (): EnrichmentClients => ({
   getAsset: vi.fn(),
   updateAsset: vi.fn(),
   getBucket: vi.fn(),
+  getSkillMetadata: vi.fn(),
   getFileMetadata: vi.fn(),
   uploadFile: vi.fn(),
 });
@@ -99,12 +100,12 @@ describe('Server :: CorePublicationsApi', () => {
         : Promise.resolve({ success: true, response: { name: 'P', version: '1', content: 'body' } }),
     );
 
-    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     expect(result.path).toBe('public/req');
     expect(result.action).toBe(ActionType.ADD);
     expect(result.resourceIssues).toEqual([]);
-    expect((result.prompts as { prompt: unknown }[])[0].prompt).toEqual({ name: 'P', version: '1', content: 'body' });
+    expect(result.prompts?.[0].prompt).toEqual({ name: 'P', version: '1', content: 'body' });
   });
 
   test('getPublication records an issue when the resource is missing', async () => {
@@ -119,7 +120,7 @@ describe('Server :: CorePublicationsApi', () => {
     );
     (clients.getAsset as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false });
 
-    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     expect(result.prompts).toEqual([]);
     expect(result.resourceIssues).toEqual([

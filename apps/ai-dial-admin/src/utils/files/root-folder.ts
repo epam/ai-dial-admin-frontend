@@ -13,6 +13,7 @@ export const PLATFORM_ROOT_FOLDER = 'platform';
 const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformInterceptors,
   ApplicationRoute.PlatformTranslators,
   ApplicationRoute.PlatformRoutes,
@@ -40,10 +41,15 @@ export const DUAL_BUCKET_VIEWS: readonly ApplicationRoute[] = [
 /**
  * Every other view has exactly one root; this returns that view's single root as a one-element
  * array, and for a `DUAL_BUCKET_VIEWS` member returns both roots with `platform` first, so a caller
- * can fetch/order them without special-casing the view itself.
+ * can fetch/order them without special-casing the view itself. `isPlatformBucketEnabled` is `false`
+ * when the Catalog menu group is disabled (`DISABLE_MENU_ITEMS` contains `catalog`, surfaced as
+ * `featureFlags.catalogEnabled`): the deployment has no reachable platform surface, so a dual-bucket
+ * view degrades to its `public` root alone — the same one-element array every other view gets.
  */
-export const getRootFolders = (view: ApplicationRoute): string[] =>
-  DUAL_BUCKET_VIEWS.includes(view) ? [PLATFORM_ROOT_FOLDER, ROOT_FOLDER] : [getRootFolder(view)];
+export const getRootFolders = (view: ApplicationRoute, isPlatformBucketEnabled = true): string[] =>
+  DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketEnabled
+    ? [PLATFORM_ROOT_FOLDER, ROOT_FOLDER]
+    : [getRootFolder(view)];
 
 /** The bucket segment a path/folderId begins with, for views whose resources can live in either. */
 export const isPlatformBucketPath = (path?: string | null): boolean =>

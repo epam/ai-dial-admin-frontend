@@ -1,10 +1,11 @@
 import { appRunnerParameterKeys, EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { sharingDefaults } from '@/src/components/Roles/constants';
 import { getHoursFromMs } from '@/src/components/Roles/utils';
+import { formatPricingRate } from '@/src/components/ModelView/Pricing/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { UNLIMITED_ACCEPTED_USERS, NO_LIMITS_KEY, UNLIMITED_VALUE, UNLIMITED_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
-import { DialModelPricing, PricingType } from '@/src/models/dial/model';
+import { DialModelPricing, PricingRate, PricingType } from '@/src/models/dial/model';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 
@@ -25,6 +26,16 @@ export const generateStringFromObject = (value?: object, t?: (str: string) => st
     : '';
 };
 
+// A cache rate is flat-or-tree: a flat rate (string, or a number from a legacy audit payload) keeps
+// the historical scaled number, a tree renders as the readable conditional (per-million leaves under
+// the token unit).
+const convertRate = (rate: PricingRate | number, isToken: boolean, t: (str: string) => string): string | number => {
+  if (rate != null && typeof rate === 'object') {
+    return formatPricingRate(rate, isToken, t);
+  }
+  return isToken ? Number(rate) * 1000000 : String(rate);
+};
+
 /**
  * Helper to create correct pricing string
  *
@@ -40,7 +51,7 @@ export const convertPricing = (value: DialModelPricing | undefined, t: (str: str
         ? value === PricingType.Token
           ? `${t?.(ModelViewI18nKey.Tokens)} ${t?.(ModelViewI18nKey.PerMillion)}`
           : `${t?.(ModelViewI18nKey.CharWithoutWhitespace)}`
-        : `${key}: ${isToken ? value * 1000000 : value}`;
+        : `${key}: ${convertRate(value as PricingRate | number, isToken, t)}`;
     })
     .join(', ');
 };
@@ -51,7 +62,7 @@ export const convertPricing = (value: DialModelPricing | undefined, t: (str: str
  * @param {?DialRoleLimits} [limits] - role limits
  * @returns {string} - result string
  */
-export const convertRoleLimitsIntoString = (limits?: DialRoleLimits): string => {
+export const convertRoleLimitsIntoString = (limits?: DialRoleLimits | Record<string, unknown>): string => {
   return limits
     ? Object.entries(limits)
         .map(([key, value]) => `${key}: ${value}`)
@@ -72,8 +83,10 @@ export const fillShareValues = (
   diffs: ActivityAuditDiff[],
   key: string,
   field: string,
-  v1?: DialRoleShare,
-  v2?: DialRoleShare,
+  // The share rows are read by `field`, so any string-valued record is fair game — which is what the
+  // spec's cases (`limit`, `rate`, `quota`) describe.
+  v1?: DialRoleShare | Record<string, string | null | undefined>,
+  v2?: DialRoleShare | Record<string, string | null | undefined>,
   isCurrent?: boolean,
 ) => {
   const val1 = v1?.[field as keyof typeof v1];

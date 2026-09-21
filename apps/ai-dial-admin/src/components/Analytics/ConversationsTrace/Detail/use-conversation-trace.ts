@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { getConversationSpans } from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ConversationSpanRow, ConversationTraceFigures } from '@/src/models/analytics/conversations-trace';
+import { ConversationTraceFigures, SpanFieldGroup, SpanFieldRow } from '@/src/models/analytics/conversations-trace';
 
 /**
  * The span a trace opens on: its entry hop, and the earliest hop otherwise.
@@ -18,13 +18,14 @@ import { ConversationSpanRow, ConversationTraceFigures } from '@/src/models/anal
  * fire long after the hop it belongs to — measured at 36 s on one trace — while some traces record no root at
  * all. Selecting the earliest therefore lands on the conversation *usually*, and this makes it reliable.
  */
-const openingSpanOf = (spans: ConversationSpanRow[]): ConversationSpanRow | undefined =>
+const openingSpanOf = (spans: SpanFieldRow[]): SpanFieldRow | undefined =>
   spans.find(({ core_parent_span_id }) => core_parent_span_id == null) ?? spans[0];
 
 interface TraceState {
   figures: ConversationTraceFigures;
   title?: string;
-  spans: ConversationSpanRow[];
+  spans: SpanFieldRow[];
+  fieldGroups: SpanFieldGroup[];
   hasLoadError: boolean;
 }
 
@@ -48,11 +49,12 @@ export const useConversationTrace = () => {
         figures,
         title,
         spans,
+        fieldGroups: result?.response?.fieldGroups ?? [],
         hasLoadError: !result?.success,
       });
       setSelectedSpanId(openingSpanOf(spans)?.core_span_id ?? null);
     } catch {
-      setTrace({ figures, title, spans: [], hasLoadError: true });
+      setTrace({ figures, title, spans: [], fieldGroups: [], hasLoadError: true });
       setSelectedSpanId(null);
     } finally {
       setIsLoading(false);

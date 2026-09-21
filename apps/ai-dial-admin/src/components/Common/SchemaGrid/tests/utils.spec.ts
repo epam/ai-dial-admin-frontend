@@ -242,6 +242,7 @@ describe('jsonSchemaToFields', () => {
       name: 'name',
       type: 'string',
       required: true,
+      title: '',
       description: 'The name',
       depth: 0,
       parentId: null,
@@ -251,6 +252,7 @@ describe('jsonSchemaToFields', () => {
       name: 'age',
       type: 'integer',
       required: false,
+      title: '',
       description: '',
       depth: 0,
       parentId: null,
@@ -278,6 +280,7 @@ describe('jsonSchemaToFields', () => {
       name: 'threshold',
       type: 'number',
       required: true,
+      title: '',
       minimum: 0,
       maximum: 1,
     });
@@ -322,6 +325,7 @@ describe('jsonSchemaToFields', () => {
       name: 'street',
       type: 'string',
       required: true,
+      title: '',
       description: 'Street name',
       depth: 1,
       parentId: fields[0].id,
@@ -332,6 +336,7 @@ describe('jsonSchemaToFields', () => {
       name: 'zip',
       type: 'string',
       required: false,
+      title: '',
       depth: 1,
       parentId: fields[0].id,
     });
@@ -365,6 +370,7 @@ describe('jsonSchemaToFields', () => {
       name: 'key',
       type: 'string',
       required: true,
+      title: '',
       depth: 1,
       parentId: fields[0].id,
     });
@@ -372,6 +378,7 @@ describe('jsonSchemaToFields', () => {
       name: 'value',
       type: 'string',
       required: false,
+      title: '',
       depth: 1,
       parentId: fields[0].id,
     });
@@ -456,6 +463,7 @@ describe('jsonSchemaToFields', () => {
       name: 'user',
       type: 'object',
       required: false,
+      title: '',
       expanded: true,
     });
     expect(fields[0].children).toHaveLength(2);
@@ -463,6 +471,7 @@ describe('jsonSchemaToFields', () => {
       name: 'login',
       type: 'string',
       required: true,
+      title: '',
       description: 'Username',
     });
     expect(fields[0].children[1]).toMatchObject({ name: 'role', type: 'string', required: false });
@@ -645,6 +654,7 @@ describe('jsonSchemaToFields', () => {
       name: 'deployment',
       type: 'object',
       required: true,
+      title: 'DialDeploymentConfig',
       expanded: true,
       depth: 1,
       parentId: orchestrator.id,
@@ -654,6 +664,7 @@ describe('jsonSchemaToFields', () => {
       name: 'name',
       type: 'string',
       required: true,
+      title: '',
       description: 'Deployment name',
       depth: 2,
       parentId: deployment.id,
@@ -662,6 +673,7 @@ describe('jsonSchemaToFields', () => {
       name: 'parameters',
       type: 'object',
       required: false,
+      title: '',
       depth: 2,
       parentId: deployment.id,
     });
@@ -671,6 +683,7 @@ describe('jsonSchemaToFields', () => {
       name: 'system_prompt',
       type: 'string',
       required: true,
+      title: 'System Prompt',
       depth: 1,
     });
   });
@@ -716,6 +729,7 @@ describe('jsonSchemaToFields', () => {
       name: 'config',
       type: 'object',
       required: true,
+      title: 'ToolConfig',
       expanded: true,
       depth: 1,
     });
@@ -724,6 +738,7 @@ describe('jsonSchemaToFields', () => {
       name: 'endpoint',
       type: 'string',
       required: true,
+      title: '',
       description: 'API endpoint',
       depth: 2,
       parentId: config.id,
@@ -732,6 +747,7 @@ describe('jsonSchemaToFields', () => {
       name: 'timeout',
       type: 'integer',
       required: false,
+      title: '',
       depth: 2,
     });
   });
@@ -750,6 +766,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'orchestrator',
         type: 'object',
         required: false,
+        title: '',
         description: 'Orchestrator config',
         expanded: false,
         children: [],
@@ -773,6 +790,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'username',
         type: 'string',
         required: true,
+        title: '',
         description: 'User name',
         expanded: false,
         children: [],
@@ -784,6 +802,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'active',
         type: 'boolean',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -811,6 +830,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'optional',
         type: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -830,6 +850,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'field',
         type: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -850,6 +871,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'address',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -858,6 +880,7 @@ describe('fieldsToJsonSchema', () => {
             name: 'street',
             type: 'string',
             required: true,
+            title: '',
             description: 'Street name',
             expanded: false,
             children: [],
@@ -869,6 +892,7 @@ describe('fieldsToJsonSchema', () => {
             name: 'city',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -900,6 +924,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'tags',
         type: 'array',
         required: true,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -908,6 +933,7 @@ describe('fieldsToJsonSchema', () => {
             name: 'key',
             type: 'string',
             required: true,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -919,6 +945,7 @@ describe('fieldsToJsonSchema', () => {
             name: 'value',
             type: 'number',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -954,6 +981,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'empty',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -973,6 +1001,7 @@ describe('fieldsToJsonSchema', () => {
         name: 'tags',
         type: 'array',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -1093,6 +1122,151 @@ describe('fieldsToJsonSchema and jsonSchemaToFields round-trip', () => {
   });
 });
 
+describe('fieldsToJsonSchema preserves keywords the grid does not render', () => {
+  const dialSchema: JSONSchema7 = {
+    type: 'object',
+    properties: {
+      badge: {
+        type: 'string',
+        format: 'dial-file-encoded',
+        'dial:file': true,
+        'dial:meta': { 'dial:tab': 'Summary', 'dial:widget': 'image' },
+      } as JSONSchema7,
+      spec: {
+        type: 'object',
+        properties: {
+          logo: {
+            type: 'string',
+            format: 'dial-file-encoded',
+            'dial:file': true,
+            'dial:meta': { 'dial:widget': 'image' },
+          } as JSONSchema7,
+          note: { type: 'string', 'dial:meta': { 'dial:localized': true } } as JSONSchema7,
+        },
+      },
+    },
+  };
+
+  test('should round-trip format, dial:file and dial:meta at every nesting depth', () => {
+    const result = fieldsToJsonSchema(jsonSchemaToFields(dialSchema));
+
+    expect(result).toEqual(dialSchema);
+  });
+
+  test('should keep those keywords when an unrelated field is edited', () => {
+    const fields = jsonSchemaToFields(dialSchema);
+    const edited = fields.map((field) => (field.name === 'spec' ? { ...field, description: 'Specification' } : field));
+
+    const result = fieldsToJsonSchema(edited);
+    const badge = result.properties!.badge as JSONSchema7 & Record<string, unknown>;
+    const spec = result.properties!.spec as JSONSchema7 & Record<string, unknown>;
+    const logo = spec.properties!.logo as JSONSchema7 & Record<string, unknown>;
+
+    expect(badge.format).toEqual('dial-file-encoded');
+    expect(badge['dial:file']).toBe(true);
+    expect(badge['dial:meta']).toEqual({ 'dial:tab': 'Summary', 'dial:widget': 'image' });
+    expect(spec.description).toEqual('Specification');
+    expect(logo['dial:file']).toBe(true);
+    expect(logo['dial:meta']).toEqual({ 'dial:widget': 'image' });
+  });
+
+  test('should round-trip an app-runner-shaped property carrying dial:propertyKind beside dial:file', () => {
+    const runnerSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        secret: {
+          type: 'string',
+          'dial:meta': { 'dial:propertyKind': 'server', 'dial:propertyOrder': 1 },
+        } as JSONSchema7,
+        attachment: {
+          type: 'string',
+          format: 'dial-file-encoded',
+          'dial:file': true,
+          'dial:meta': { 'dial:propertyKind': 'client' },
+        } as JSONSchema7,
+      },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(runnerSchema));
+
+    expect(result).toEqual(runnerSchema);
+  });
+
+  test('should round-trip the value keywords the grid reads but never edits', () => {
+    const valueSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        tier: { type: 'string', enum: ['gold', 'silver'], default: 'gold', pattern: '^[a-z]+$' },
+        weight: { type: 'number', minimum: 1, maximum: 10, default: 3 },
+        counts: { type: 'object', properties: { retries: { type: 'integer', default: 2, maximum: 5 } } },
+      },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(valueSchema));
+
+    expect(result).toEqual(valueSchema);
+  });
+
+  test('should keep a numeric enum numeric rather than stringifying it', () => {
+    const numericEnum: JSONSchema7 = { type: 'object', properties: { size: { type: 'integer', enum: [1, 2, 3] } } };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(numericEnum));
+
+    expect((result.properties!.size as JSONSchema7).enum).toEqual([1, 2, 3]);
+  });
+
+  test('should keep a default through an unrelated edit, so schema defaults survive', () => {
+    const withDefault: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        model: { type: 'string', default: 'gpt-4' },
+        label: { type: 'string' },
+      },
+    };
+    const fields = jsonSchemaToFields(withDefault);
+    const edited = fields.map((field) => (field.name === 'label' ? { ...field, title: 'Label' } : field));
+
+    const result = fieldsToJsonSchema(edited);
+
+    expect((result.properties!.model as JSONSchema7).default).toEqual('gpt-4');
+  });
+
+  test('should not re-emit a $ref alongside the resolved type it was expanded into', () => {
+    const withRef: JSONSchema7 = {
+      type: 'object',
+      definitions: { named: { type: 'string', title: 'Named' } },
+      properties: { alias: { $ref: '#/definitions/named' } },
+    };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(withRef));
+    const alias = result.properties!.alias as JSONSchema7;
+
+    expect(alias).not.toHaveProperty('$ref');
+    expect(alias.type).toEqual('string');
+  });
+
+  test('should not invent the keywords for a property that never declared them', () => {
+    const plain: JSONSchema7 = { type: 'object', properties: { name: { type: 'string' } } };
+
+    const result = fieldsToJsonSchema(jsonSchemaToFields(plain));
+    const name = result.properties!.name as JSONSchema7 & Record<string, unknown>;
+
+    expect(name).not.toHaveProperty('format');
+    expect(name).not.toHaveProperty('dial:file');
+    expect(name).not.toHaveProperty('dial:meta');
+  });
+});
+
+describe('fieldsToJsonSchema drops an emptied dial:meta', () => {
+  test('should omit dial:meta entirely when a row carries none', () => {
+    const fields = jsonSchemaToFields({ type: 'object', properties: { a: { type: 'string' } } });
+
+    const result = fieldsToJsonSchema(fields.map((field) => ({ ...field, dialMeta: {} })));
+
+    expect(result.properties!.a).not.toHaveProperty('dial:meta');
+  });
+});
+
 describe('flattenFields', () => {
   test('should return only the add-root-field row for empty fields', () => {
     const result = flattenFields([]);
@@ -1116,6 +1290,7 @@ describe('flattenFields', () => {
         name: 'obj',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -1124,6 +1299,7 @@ describe('flattenFields', () => {
             name: 'x',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1149,6 +1325,7 @@ describe('flattenFields', () => {
         name: 'name',
         type: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -1160,6 +1337,7 @@ describe('flattenFields', () => {
         name: 'age',
         type: 'integer',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -1183,6 +1361,7 @@ describe('flattenFields', () => {
         name: 'config',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -1191,6 +1370,7 @@ describe('flattenFields', () => {
             name: 'key',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1226,6 +1406,7 @@ describe('flattenFields', () => {
         type: 'array',
         itemsType: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -1234,6 +1415,7 @@ describe('flattenFields', () => {
             name: 'id',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1263,6 +1445,7 @@ describe('flattenFields', () => {
         type: 'array',
         itemsType: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [],
@@ -1287,6 +1470,7 @@ describe('flattenFields', () => {
         name: 'config',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [
@@ -1295,6 +1479,7 @@ describe('flattenFields', () => {
             name: 'key',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1322,6 +1507,7 @@ describe('flattenFields', () => {
         name: 'title',
         type: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [],
@@ -1344,6 +1530,7 @@ describe('flattenFields', () => {
         name: 'empty',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [],
@@ -1371,6 +1558,7 @@ describe('flattenFields', () => {
         name: 'simple',
         type: 'string',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],
@@ -1382,6 +1570,7 @@ describe('flattenFields', () => {
         name: 'nested',
         type: 'object',
         required: false,
+        title: '',
         description: '',
         expanded: true,
         children: [
@@ -1390,6 +1579,7 @@ describe('flattenFields', () => {
             name: 'a',
             type: 'string',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1401,6 +1591,7 @@ describe('flattenFields', () => {
             name: 'b',
             type: 'number',
             required: false,
+            title: '',
             description: '',
             expanded: false,
             children: [],
@@ -1416,6 +1607,7 @@ describe('flattenFields', () => {
         name: 'another',
         type: 'boolean',
         required: false,
+        title: '',
         description: '',
         expanded: false,
         children: [],

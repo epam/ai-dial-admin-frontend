@@ -23,7 +23,7 @@ import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics
 import { insightColumnsOf } from '@/src/utils/analytics/conversation-insights';
 
 const CONVERSATION: ConversationDetailRow = {
-  chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
+  client_session_id: 'Lrr0e6L5bpTND3IY_dN0_',
   project_id: '',
   user_hash: 'db7327ba3decd351',
   turn_count: 12,

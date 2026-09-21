@@ -24,6 +24,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -42,9 +43,10 @@ interface Props {
   oAuthCode?: string | null;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
+  catalogSchemas?: CatalogSchemaOptions;
 }
 
-const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, catalogSchemas }) => {
   const t = useI18n();
   const { featureFlags } = useAppContext();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags);
@@ -178,6 +180,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             activeTab={activeTab}
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedToolset}
           />
         )}

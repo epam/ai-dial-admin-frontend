@@ -6,8 +6,10 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { LocalizedText } from '@/src/models/dial/localized';
 import { FieldError } from '@/src/models/error';
 import { getErrorForIntro } from '@/src/utils/validation/intro-error';
+import { isLocalizedMap, resolveLocalizedText } from '@/src/utils/entities/localized-value';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props<T> {
@@ -17,7 +19,8 @@ interface Props<T> {
   onChangeEntity?: (entity: T) => void;
 }
 
-const IntroControl = <T extends { intro?: string }>({
+/** See `DisplayNameControl` for why a locale map is read-only here. */
+const IntroControl = <T extends { intro?: LocalizedText }>({
   entity,
   onChangeEntity,
   isFullWidth = true,
@@ -30,6 +33,7 @@ const IntroControl = <T extends { intro?: string }>({
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [introError, setIntroError] = useState<FieldError | null>(null);
+  const isMap = isLocalizedMap(entity.intro);
 
   const onChangeIntro = useCallback(
     (intro: string) => {
@@ -46,12 +50,12 @@ const IntroControl = <T extends { intro?: string }>({
       id="intro"
       labelProps={{ label: t(EntityFieldsI18nKey.intro) }}
       placeholder={t(EntityPlaceholdersI18nKey.Intro)}
-      value={entity.intro}
+      value={resolveLocalizedText(entity.intro)}
       error={introError?.text}
       invalid={introError ? true : undefined}
       onChange={onChangeIntro}
       containerClassName={containerClassName}
-      disabled={disabled || isReadOnlyAdmin}
+      disabled={disabled || isReadOnlyAdmin || isMap}
       {...props}
     />
   );

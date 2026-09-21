@@ -2,13 +2,17 @@
 
 ## Purpose
 The UI surface that exposes DIAL Core's config-file entity population on platform and asset list
-views, gated behind a `showConfigFiles` toggle that appears only when the admin backend is not
-configured. Allows an admin to view read-only, config-file-sourced entity detail pages by navigating
+views, behind a `showConfigFiles` toggle that renders on the covered views regardless of whether the
+admin backend is configured — with it, the toggle offers Core's config-file population alongside the
+admin-backend one. Allows an admin to view read-only, config-file-sourced entity detail pages by navigating
 from the toggled-on list, without introducing new routes. Covers the toggle's placement and
 persistence, the shared name-only list component swap, the lazy names-only data fetch, and the
 `configFile=true` detail page rendering on platform/asset routes. Created by archiving change
 `add-config-file-entity-views`; expanded to cover App Runners as a seventh entity type by
-`expand-config-file-entity-views`.
+`expand-config-file-entity-views`; the toggle made always-visible by
+`always-show-config-files-toggle`; expanded to cover Catalog Schemas as an eighth entity type by
+`apply-catalog-schemas-to-deployments`; the dual-bucket navigation URLs and query-flag joining
+normalized by `fix-config-file-dual-bucket-navigation`.
 
 ## Requirements
 
@@ -24,23 +28,27 @@ The system SHALL expose a `showConfigFiles: boolean` value and a toggle function
 - **THEN** `showConfigFiles` is still `true`
 
 ### Requirement: The toggle control is rendered only where it applies
-The system SHALL render a `showConfigFiles` toggle control, placed adjacent to the page title, on exactly seven views: `platform-models`, `platform-interceptors`, `platform-routes`, `platform-roles`, `platform-app-runners`, `assets-applications`, and `assets-toolsets` — and only when `featureFlags.adminApiEnabled` is `false`. The control SHALL NOT be rendered on `platform-keys` or any other route, and SHALL NOT be rendered on any of the seven covered views when `featureFlags.adminApiEnabled` is `true`.
+The system SHALL render a `showConfigFiles` toggle control, placed adjacent to the page title, on exactly seven views: `platform-models`, `platform-interceptors`, `platform-routes`, `platform-roles`, `platform-app-runners`, `assets-applications`, and `assets-toolsets` — regardless of whether `featureFlags.adminApiEnabled` is set. The control SHALL NOT be rendered on `platform-keys`, `platform-catalog-schemas`, or any other route.
 
 #### Scenario: Toggle appears on a covered view without the admin API
 - **WHEN** a user opens `platform-models` and `DIAL_ADMIN_API_URL` is unset
 - **THEN** the `showConfigFiles` toggle is rendered next to the page title
 
-#### Scenario: Toggle is absent with the admin API configured
+#### Scenario: Toggle appears on a covered view with the admin API configured
 - **WHEN** a user opens `platform-models` and `DIAL_ADMIN_API_URL` is set
-- **THEN** no `showConfigFiles` toggle is rendered
+- **THEN** the `showConfigFiles` toggle is still rendered, offering Core's config-file population alongside the admin-backend list
 
 #### Scenario: Toggle is absent on Keys
 - **WHEN** a user opens `platform-keys`, regardless of `DIAL_ADMIN_API_URL`
 - **THEN** no `showConfigFiles` toggle is rendered
 
 #### Scenario: Toggle appears on App Runners
-- **WHEN** a user opens `platform-app-runners` and `DIAL_ADMIN_API_URL` is unset
+- **WHEN** a user opens `platform-app-runners`
 - **THEN** the `showConfigFiles` toggle is rendered next to the page title, the same as on the other six covered views
+
+#### Scenario: Toggle is absent on Catalog Schemas
+- **WHEN** a user opens `platform-catalog-schemas`
+- **THEN** no `showConfigFiles` toggle is rendered, the same as on `platform-keys`
 
 ### Requirement: Toggling swaps the list component in place
 On each of the seven covered views, the system SHALL render the existing asset/platform list (`BaseAssetList`) when `showConfigFiles` is `false`, and a shared, name-only config-file list component when `showConfigFiles` is `true` — on the same route, with no navigation. That shared component SHALL be the same one across all seven covered views, parameterized by the view's `ApplicationRoute`, rather than each entity type rendering its own full-columns admin-grid list component for this branch. The toggle control SHALL also be rendered in the config-file list's own header, so the user can switch back.
@@ -80,15 +88,27 @@ The shared config-file list component SHALL render a single name column (plus th
 - **THEN** each row's action column offers "open in new tab" and no other row action (no remove, duplicate, or move)
 
 ### Requirement: A config-file entity row links to its platform/asset detail route
-The system SHALL navigate to the entity type's platform/asset detail route (`/platform-models/{id}`, `/assets-applications/{id}`, `/platform-interceptors/{id}`, `/platform-routes/{id}`, `/platform-roles/{id}`, `/assets-toolsets/{id}`, `/platform-app-runners/{id}`) when a row in the config-file-backed list is clicked, or when its "open in new tab" row action is used, appending a `configFile=true` query parameter in both cases. The entity type's bare/admin-grid detail route (e.g. `/models/{id}`, `/applications/{id}`) SHALL NOT be used for this navigation. No new, dedicated route SHALL be introduced for this.
+The system SHALL navigate to the entity type's platform/asset detail route (`/platform-models/{id}`, `/assets-applications/{id}`, `/platform-interceptors/{id}`, `/platform-routes/{id}`, `/platform-roles/{id}`, `/assets-toolsets/{id}`, `/platform-app-runners/{id}`, `/platform-catalog-schemas/{id}`) when a row in the config-file-backed list is clicked, or when its "open in new tab" row action is used, appending a `configFile=true` query parameter in both cases. The flag SHALL be joined as a proper query parameter — `?` when the built route carries no query string, `&` when it already does. For the dual-bucket routes (`/assets-applications/{id}`, `/assets-toolsets/{id}`), the navigation URL SHALL be the bare `{id}` segment plus the flag — no `path` query parameter — the same segment shape a platform-bucket row of that type produces. The entity type's bare/admin-grid detail route (e.g. `/models/{id}`, `/applications/{id}`) SHALL NOT be used for this navigation. No new, dedicated route SHALL be introduced for this.
 
 #### Scenario: Clicking a config-file model row navigates to the platform route
 - **WHEN** a user clicks a row in the config-file-backed Models list
 - **THEN** the browser navigates to `/platform-models/{id}?configFile=true`
 
+#### Scenario: Clicking a config-file application row navigates without a path parameter
+- **WHEN** a user clicks a row in the config-file-backed Applications list
+- **THEN** the browser navigates to `/assets-applications/{id}?configFile=true`, with no `path` query parameter
+
+#### Scenario: Clicking a config-file toolset row navigates without a path parameter
+- **WHEN** a user clicks a row in the config-file-backed Toolsets list
+- **THEN** the browser navigates to `/assets-toolsets/{id}?configFile=true`, with no `path` query parameter
+
+#### Scenario: The query flag joins onto a route that already has a query string
+- **WHEN** the system appends the `configFile=true` flag to a detail-route URL that already carries a query parameter
+- **THEN** the flag is joined with `&`, not with a second `?`
+
 #### Scenario: The "open in new tab" row action includes the query flag
 - **WHEN** a user activates the "open in new tab" row action on a config-file-backed list row
-- **THEN** the new tab opens the same platform/asset detail route the row click would (e.g. `/platform-models/{id}?configFile=true`), not the bare detail route
+- **THEN** the new tab opens the same platform/asset detail route the row click would (e.g. `/platform-models/{id}?configFile=true`, `/assets-applications/{id}?configFile=true`), not the bare detail route
 
 ### Requirement: A detail page opened with `configFile=true` renders read-only, sourced from Core's config file
 When a covered entity's platform/asset detail route (`platform-models/[id]`, `assets-applications/[id]`, `platform-interceptors/[id]`, `platform-routes/[id]`, `platform-roles/[id]`, `assets-toolsets/[id]`, `platform-app-runners/[id]`) is requested with `configFile=true`, the system SHALL fetch the entity via `configFileApi` instead of the platform/asset entity's normal fetch, SHALL resolve any embedded Roles/Interceptors picker through the config-file-aware read, and SHALL render the platform/asset view read-only — no field on the page SHALL be editable, regardless of the viewer's own admin role. The view SHALL NOT render the ADMIN|CORE format toggle when its JSON editor is opened, since a config-file-sourced entity has no admin-backend "compare with Core" projection of its own to switch to — it already is Core's own view. The entity type's bare/admin-grid detail route SHALL NOT respond to `configFile=true` — it has no config-file branch.
@@ -131,3 +151,4 @@ The system SHALL treat App Runners (`platform-app-runners` / `application-runner
 #### Scenario: An App Runner config-file row opens its detail route with the query flag
 - **WHEN** a user clicks a row in the config-file-backed App Runners list
 - **THEN** the browser navigates to `/application-runners/{id}?configFile=true`
+

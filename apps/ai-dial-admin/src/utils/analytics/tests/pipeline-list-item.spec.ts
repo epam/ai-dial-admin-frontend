@@ -26,7 +26,6 @@ const enrichPipeline: Pipeline = {
   version_column: '_ingested_at',
   trigger: { kind: TriggerKind.Group, group_by: 'chat_id', ready_when: { idle: '30m' } },
   filter: 'length(chat_id) > 0',
-  output_bindings: [{ column: 'title', var: 'title' }],
   enabled: true,
   generation: 10,
   created_at: '2026-08-17T11:59:13Z',
@@ -64,16 +63,15 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
   });
 
   test('drops the evaluator definition, which only a detail read carries', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+    const item = toPipelineListItem(enrichPipeline);
 
     expect(item).not.toHaveProperty('evaluator');
   });
 
   test('drops the members the listing does not show', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+    const item = toPipelineListItem(enrichPipeline);
 
     expect(item).not.toHaveProperty('filter');
-    expect(item).not.toHaveProperty('output_bindings');
     expect(item).not.toHaveProperty('created_at');
   });
 
@@ -86,9 +84,9 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
   });
 
   test('carries no resolved-only member, which no column reads', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+    const item = toPipelineListItem(enrichPipeline);
 
-    expect(item.grain_key).toBeUndefined();
-    expect(item.version_column).toBeUndefined();
+    expect(item).not.toHaveProperty('grain_key');
+    expect(item).not.toHaveProperty('version_column');
   });
 });

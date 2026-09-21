@@ -65,6 +65,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         { key: MenuI18nKey.PlatformTranslators, href: ApplicationRoute.PlatformTranslators },
         { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
         { key: MenuI18nKey.PlatformAppRunners, href: ApplicationRoute.PlatformAppRunners },
+        { key: MenuI18nKey.PlatformCatalogSchemas, href: ApplicationRoute.PlatformCatalogSchemas },
         { key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles },
         { key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys },
       ],
@@ -155,6 +156,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         { key: MenuI18nKey.Pipelines, href: ApplicationRoute.AnalyticsPipelines },
         { key: MenuI18nKey.Evaluators, href: ApplicationRoute.AnalyticsEvaluators },
         { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
+        { key: MenuI18nKey.AnalyticsUsage, href: ApplicationRoute.AnalyticsUsage },
         { key: MenuI18nKey.AnalyticsConversations, href: ApplicationRoute.ConversationsTrace },
       ],
     },
@@ -171,6 +173,14 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
 
   if (!featureFlags.analyticsEnabled) {
     result = result.filter((item) => item.key !== MenuI18nKey.Analytics);
+  }
+
+  if (!featureFlags.analyticsUsageEnabled) {
+    result = result.map((group) =>
+      group.key === MenuI18nKey.Analytics
+        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsUsage) }
+        : group,
+    );
   }
 
   if (!featureFlags.analyticsConversationsEnabled) {

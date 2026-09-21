@@ -11,6 +11,7 @@ const ICON_SIZE = 16;
 
 const baseFlags: FeatureFlags = {
   adminApiEnabled: true,
+  catalogEnabled: true,
   dashboardEnabled: true,
   deploymentsEnabled: true,
   evaluationEnabled: true,
@@ -19,6 +20,7 @@ const baseFlags: FeatureFlags = {
   hfEnabled: false,
   analyticsEnabled: false,
   analyticsConversationsEnabled: false,
+  analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
 };
 
@@ -319,6 +321,24 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     );
 
     expect(allItems).not.toContain(ApplicationRoute.AnalyticsEvaluators);
+  });
+
+  test('shows the Usage item after Queries when its flag is enabled', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsUsageEnabled: true });
+    const keys = group?.items.map((item) => item.key) ?? [];
+
+    expect(keys).toContain(MenuI18nKey.AnalyticsUsage);
+    expect(keys.indexOf(MenuI18nKey.AnalyticsUsage)).toBe(keys.indexOf(MenuI18nKey.Queries) + 1);
+    expect(group?.items.find((item) => item.key === MenuI18nKey.AnalyticsUsage)?.href).toBe(
+      ApplicationRoute.AnalyticsUsage,
+    );
+  });
+
+  test('hides only the Usage sub-item when its flag is disabled', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsUsageEnabled: false });
+
+    expect(group).toBeDefined();
+    expect(group?.items.map((item) => item.key)).not.toContain(MenuI18nKey.AnalyticsUsage);
   });
 
   test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {

@@ -14,10 +14,11 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
-  ConversationSpanRow,
   ConversationTraceFigures,
   HopBodyGrants,
   SessionScope,
+  SpanFieldGroup,
+  SpanFieldRow,
 } from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
@@ -67,7 +68,10 @@ interface Props {
   // pass never returned, which leaves no card to name it.
   title?: string;
   figures: ConversationTraceFigures;
-  spans: ConversationSpanRow[];
+  spans: SpanFieldRow[];
+  // The groups the rail presents the selected span's fields as, resolved from the hop-log schema by the span
+  // read itself. Empty where that schema could not be read.
+  fieldGroups: SpanFieldGroup[];
   bodyGrants: HopBodyGrants;
   hasLoadError: boolean;
   selectedSpanId: string | null;
@@ -80,6 +84,7 @@ const ConversationTraceView: FC<Props> = ({
   title,
   figures,
   spans,
+  fieldGroups,
   bodyGrants,
   hasLoadError,
   selectedSpanId,
@@ -219,7 +224,7 @@ const ConversationTraceView: FC<Props> = ({
             stream
           )}
         </div>
-        <ConversationSpanDetail node={selected} />
+        <ConversationSpanDetail node={selected} fieldGroups={fieldGroups} />
       </div>
     </div>
   );

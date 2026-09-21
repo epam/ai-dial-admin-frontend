@@ -6,7 +6,12 @@ import { describe, expect, test, vi } from 'vitest';
 
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { DeploymentInterfaceType, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
+import {
+  DeploymentInterfaceType,
+  InterfaceFieldVariant,
+  InterfaceMode,
+  TranslatorReference,
+} from '@/src/models/dial/interfaces';
 
 type InterfaceValue = {
   baseUrl?: string;
@@ -619,5 +624,66 @@ describe('InterfacesField — entity base URL fallback', () => {
 
     expect(getBaseUrlInput()).toBeInTheDocument();
     expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+});
+
+describe('InterfacesField — upstream endpoint variant', () => {
+  const getEndpointInput = () => screen.getByRole('textbox', { name: EntityFieldsI18nKey.endpoint });
+
+  test('adding an interface stores an absent endpoint, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{}}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined },
+    });
+  });
+
+  test('clearing a filled endpoint stores undefined, not an empty string', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.clear(getEndpointInput());
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: undefined },
+    });
+  });
+
+  test('editing the endpoint passes the typed value through', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://x' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        variant={InterfaceFieldVariant.Endpoint}
+      />,
+    );
+
+    await user.type(getEndpointInput(), 'y');
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: { endpoint: 'https://xy' },
+    });
   });
 });

@@ -2,6 +2,8 @@
 
 import { FC } from 'react';
 
+import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
+import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import Tools from '@/src/components/Tools/Tools';
@@ -10,6 +12,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialRole } from '@/src/models/dial/role';
 import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Toolset } from '@/src/models/dial/toolset';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ToolsetAssetProperties from './Properties';
@@ -19,11 +22,17 @@ interface Props {
   originalToolset: AssetToolset;
   selectedToolset: AssetToolset;
   roles?: DialRole[];
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (toolset: AssetToolset) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, originalToolset, roles }) => {
+const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, originalToolset, roles, catalogSchemas }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+
+  const catalogProperties = useCatalogProperties(
+    (selectedToolset as unknown as DialToolsetResource).catalog_schema_id,
+    (selectedToolset as unknown as DialToolsetResource).catalog_properties,
+  );
 
   const onChangeResource = (toolset: DialToolsetResource) => {
     onChange({ ...selectedToolset, ...toolset } as AssetToolset);
@@ -47,6 +56,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
       {activeTab === EntityViewTab.Properties && (
         <ToolsetAssetProperties
           selectedToolset={selectedToolset as unknown as DialToolsetResource}
+          catalogSchemas={catalogSchemas}
           onChange={onChangeResource}
           isPublication={false}
         />
@@ -60,6 +70,15 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
           onChangeEntity={onChange as (toolset: Toolset) => void}
           disabled={isReadOnlyAdmin}
           view={ApplicationRoute.AssetsToolsets}
+        />
+      )}
+
+      {activeTab === EntityViewTab.Catalog && (
+        <CatalogPropertiesEditor
+          {...catalogProperties}
+          schemaId={(selectedToolset as unknown as DialToolsetResource).catalog_schema_id}
+          values={(selectedToolset as unknown as DialToolsetResource).catalog_properties}
+          onChange={(catalog_properties) => onChangeResource({ catalog_properties } as DialToolsetResource)}
         />
       )}
 

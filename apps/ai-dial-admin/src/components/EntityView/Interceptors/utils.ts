@@ -7,15 +7,16 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { withSourceColumn } from '@/src/utils/config-entities/source-column';
-import { AssetInterceptorOrigin, AssetInterceptorTagged } from './models';
+import { AssetInterceptorOrigin, InterceptorOption } from './models';
 
-export const getInterceptorsGridData = (
-  interceptors?: BaseEntity[],
+/** Generic over the option shape: this matches on `name` alone, and the two populations differ. */
+export const getInterceptorsGridData = <T extends { name?: string }>(
+  interceptors?: T[],
   interceptorNames?: string[] | null,
-): BaseEntity[] => {
+): T[] => {
   return (
     interceptorNames
-      ?.map((name) => interceptors?.find((interceptor) => interceptor.name === name) as BaseEntity)
+      ?.map((name) => interceptors?.find((interceptor) => interceptor.name === name) as T)
       .filter(Boolean) || []
   );
 };
@@ -28,7 +29,7 @@ export const getInterceptorsGridData = (
 export const mergeInterceptorOrigins = (
   entityInterceptors: DialInterceptor[],
   assetInterceptors: DialInterceptorResource[],
-): (BaseEntity & AssetInterceptorTagged)[] => [
+): InterceptorOption[] => [
   ...entityInterceptors.map((interceptor) => ({
     ...interceptor,
     assetOrigin: AssetInterceptorOrigin.Entity,
@@ -67,7 +68,8 @@ export const getInterceptorsColumnDefs = (
   open: ((entity?: BaseEntity) => void) | undefined,
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,
-  rows?: BaseEntity[] | null,
+  /** Only probed for an origin tag by the two source-column helpers, never read field by field. */
+  rows?: unknown[] | null,
 ): ColDef[] => {
   const actions = open ? [getOpenInNewTabOperation(open)] : [];
   if (remove) {

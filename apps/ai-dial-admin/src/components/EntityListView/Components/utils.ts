@@ -64,8 +64,6 @@ export const prepareEntityForDuplicate = async <T>(
   if (route === ApplicationRoute.Roles) {
     return {
       ...entity,
-      limits: {},
-      share: {},
       grantedKeys: [],
     };
   }

@@ -6,7 +6,7 @@ import * as actions from '@/src/app/[lang]/datasets/actions';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
+import { ComparisonNode, ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
 import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -165,7 +165,7 @@ describe('TestCasesList', () => {
   test('fetches test cases on mount using datasetId', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
     await waitFor(() => {
       expect(actions.getTestCases).toHaveBeenCalledWith('dataset-123', 0, 1000, [], []);
@@ -174,7 +174,7 @@ describe('TestCasesList', () => {
 
   test('does not fetch when datasetId is missing', async () => {
     const suiteNoDataset: TestSuite = { id: 'suite-1', name: 'Suite' };
-    render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} dataset={null} />);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(actions.getTestCases).not.toHaveBeenCalled();
@@ -183,7 +183,7 @@ describe('TestCasesList', () => {
   test('handles null response from getTestCases gracefully', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(null as any);
 
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
     await waitFor(() => {
       expect(actions.getTestCases).toHaveBeenCalled();
@@ -193,12 +193,18 @@ describe('TestCasesList', () => {
   test('refetches when datasetId changes', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
 
-    const { rerender } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    const { rerender } = render(
+      <TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />,
+    );
 
     await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(1));
 
     rerender(
-      <TestCasesList selectedTestSuite={{ ...mockTestSuite, datasetId: 'dataset-456' }} onChange={mockOnChange} />,
+      <TestCasesList
+        selectedTestSuite={{ ...mockTestSuite, datasetId: 'dataset-456' }}
+        onChange={mockOnChange}
+        dataset={null}
+      />,
     );
 
     await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
@@ -222,9 +228,12 @@ describe('TestCasesList', () => {
       isReadOnlyAdmin: false,
       isFullAdmin: true,
       isEnableAuth: false,
-    } as ReturnType<typeof AppContext.useAppContext>);
+      // Only the members this component reads; the cast is what marks it as a partial fake.
+    } as unknown as ReturnType<typeof AppContext.useAppContext>);
 
-    const { unmount } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    const { unmount } = render(
+      <TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />,
+    );
     unmount();
 
     expect(mockCloseSidebar).toHaveBeenCalledTimes(1);
@@ -269,6 +278,7 @@ describe('TestCasesList — dirty tracking', () => {
         onChange={mockOnChange}
         testCasesActionsRef={actionsRef}
         onDirtyChange={mockOnDirtyChange}
+        dataset={null}
       />,
     );
 
@@ -298,7 +308,14 @@ describe('TestCasesList — dirty tracking', () => {
       ]),
     );
 
-    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} onDirtyChange={mockOnDirtyChange} />);
+    render(
+      <TestCasesList
+        selectedTestSuite={suite}
+        onChange={mockOnChange}
+        onDirtyChange={mockOnDirtyChange}
+        dataset={null}
+      />,
+    );
 
     await waitFor(() => {
       expect(capturedRowData).not.toBeNull();
@@ -312,7 +329,7 @@ describe('TestCasesList — dirty tracking', () => {
 
 describe('TestCasesList — header and included-only filter', () => {
   const mockOnChange = vi.fn();
-  const filterNode = {
+  const filterNode: ComparisonNode = {
     op: ComparisonOp.Co,
     args: [
       { type: ExprType.Field, name: 'test_case_name' },
@@ -360,7 +377,9 @@ describe('TestCasesList — header and included-only filter', () => {
   });
 
   test('renders included-only switch addon', async () => {
-    render(<TestCasesList selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }} onChange={mockOnChange} />);
+    render(
+      <TestCasesList selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }} onChange={mockOnChange} dataset={null} />,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('view-only-included-in-run')).toBeInTheDocument();
@@ -377,6 +396,7 @@ describe('TestCasesList — header and included-only filter', () => {
       <TestCasesList
         selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
         onChange={mockOnChange}
+        dataset={null}
       />,
     );
 
@@ -418,6 +438,7 @@ describe('TestCasesList — header and included-only filter', () => {
       <TestCasesList
         selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
         onChange={mockOnChange}
+        dataset={null}
       />,
     );
 

@@ -32,7 +32,7 @@ describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
     const result = await buildToolsetsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.TOOLSET, 'public/folder/name__1.0');
-    expect(result.toolSets[0]).toEqual({
+    expect((result.toolSets ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
       authSettings: { authenticationType: 'oauth', clientSecret: 'super-secret' },

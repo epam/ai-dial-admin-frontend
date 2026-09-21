@@ -6,11 +6,14 @@ import TopicsCellRenderer from '@/src/components/Analytics/ConversationsTrace/Li
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { ConversationListRow, ConversationsField } from '@/src/models/analytics/conversations-trace';
 
+// The point of these cases is what the renderer does with a value the row type does not allow — an
+// array, an object, a number — so the fake goes through `unknown` deliberately rather than pretending
+// the service only ever sends the declared shape.
 const row = (topics?: unknown): ConversationListRow =>
   ({
     chat_id: '7ab178e9-f72c-43b4-8b58-23caefc3594b',
     ...(topics === undefined ? {} : { [ConversationsField.InsightTopics]: topics }),
-  }) as ConversationListRow;
+  }) as unknown as ConversationListRow;
 
 const renderCell = (topics?: unknown) =>
   render(<TopicsCellRenderer {...({ data: row(topics) } as ICellRendererParams<ConversationListRow>)} />);

@@ -108,14 +108,21 @@ describe('Utils :: isToolsetRoute', () => {
   );
 });
 
+describe('Utils :: isAssetView — catalog schemas', () => {
+  test('Should treat the catalog-schema route as an asset view', () => {
+    expect(isAssetView(ApplicationRoute.PlatformCatalogSchemas)).toBeTruthy();
+  });
+});
+
 describe('Utils :: hasTopicCatalogue', () => {
   // Core has no topic registry, so these surfaces must not reach the admin backend for one.
-  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.PlatformAppRunners])(
-    'Should return false for %s',
-    (route) => {
-      expect(hasTopicCatalogue(route)).toBeFalsy();
-    },
-  );
+  test.each([
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformCatalogSchemas,
+  ])('Should return false for %s', (route) => {
+    expect(hasTopicCatalogue(route)).toBeFalsy();
+  });
 
   // An opt-out list, so anything not listed keeps the catalogue — including surfaces that read their
   // own resource from Core, and an unset view.

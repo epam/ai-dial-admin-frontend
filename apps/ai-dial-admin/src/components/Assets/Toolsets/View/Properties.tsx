@@ -7,6 +7,7 @@ import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ResourceAuthentication from '@/src/components/Assets/Resources/Auth/ResourceAuthentication';
 import ResourceAuthHeader from '@/src/components/Assets/Resources/Auth/ResourceAuthHeader';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -27,16 +28,18 @@ import { useI18n } from '@/src/locales/client';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { Toolset } from '@/src/models/dial/toolset';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   selectedToolset: DialToolsetResource;
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialToolsetResource) => void;
   isPublication?: boolean;
 }
 
-const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
+const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -111,7 +114,11 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
             view={ApplicationRoute.AssetsToolsets}
           />
         )}
-        <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} isAsset />
+        <ToolsetEndpoint
+          entity={selectedToolset}
+          onChange={onChange as (entity: Toolset | DialToolsetResource) => void}
+          isAsset
+        />
         <ResourceAuthentication
           name={selectedToolset.name || ''}
           authSettings={selectedToolset.auth_settings}
@@ -134,6 +141,14 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           }}
         />
         <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} isAsset />
+        {!isPublication && (
+          <CatalogSchemaField
+            schemaId={selectedToolset.catalog_schema_id}
+            options={catalogSchemas?.options}
+            optionsError={catalogSchemas?.error}
+            onChange={(catalog_schema_id) => onChange({ ...selectedToolset, catalog_schema_id })}
+          />
+        )}
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ import {
   ConversationScalarFilter,
   ConversationRow,
   ConversationEntryBodyRow,
-  ConversationSpanRow,
+  SpanFieldRow,
   ConversationSpansPage,
   ConversationsField,
   ConversationTotals,
@@ -95,7 +95,7 @@ import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cach
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
 import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/conversation-trace-groups';
-import { hopBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
+import { hopBodyFields, spanFields } from '@/src/utils/analytics/conversation-column-catalog';
 import { unqualified } from '@/src/utils/analytics/conversation-enrichment';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
@@ -958,20 +958,32 @@ export async function getConversationHopEmbedding(
 
 export async function getConversationSpans(traceId: string): Promise<ServerActionResponse<ConversationSpansPage>> {
   const authToken = await token();
-  const query = buildConversationSpansQuery(traceId, CONVERSATION_SPAN_LIMIT);
+  // A failed schema read is logged and then survivable: the projection falls back to the columns the tree is
+  // built from, so the reader still gets the hop chain without the field groups.
+  const schemaRead = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+  );
+
+  if (!schemaRead.response) {
+    errorObjLog(schemaRead, 'Failed to fetch the hop log schema for the span field set');
+  }
+
+  const { names, groups } = spanFields(schemaRead.response?.fields ?? []);
+  const query = buildConversationSpansQuery(traceId, CONVERSATION_SPAN_LIMIT, names);
   const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
     return { ...result, response: undefined };
   }
 
-  const spans = (result.response?.rows ?? []) as unknown as ConversationSpanRow[];
+  const spans = (result.response?.rows ?? []) as unknown as SpanFieldRow[];
 
   return {
     ...result,
     response: {
       spans,
       total: result.response?.totalCount ?? null,
+      fieldGroups: groups,
     },
   };
 }
