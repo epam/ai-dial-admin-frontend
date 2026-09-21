@@ -54,8 +54,16 @@ Things that cost time or fail silently if you don't know them:
 
 ## Hard constraints
 
-- **Never read `.env*.local`.** A `PreToolUse` hook blocks it. New variables go into `.env.template`
-  as commented entries.
+- **Never read or write `.env*.local`.** A `PreToolUse` hook blocks it. New variables go into
+  `.env.template` as commented entries; if an existing local value must change, name the variable and
+  let the user edit their own file. The hook also refuses two things whose target it cannot see in the
+  command text, because a repo-wide rename once edited `.env.local` through exactly that gap: an
+  **in-place write over a runtime-built path list** (`xargs perl -pi`, `find -exec sed -i`,
+  `perl -i $(…)`), and a **recursive content search** over a directory that holds an env file. Both
+  clear once you exclude env files where the list is built — `--exclude='.env*'`, `! -name '.env*'`,
+  `| grep -v '\.env'` — which is the fix, not a workaround; `grep -rl` (names only) is never blocked.
+  A trailing `# env-guard: reviewed` waives a blind write you have inspected. Regression suite:
+  `bash .claude/hooks/tests/block-env-local-access.test.sh`.
 - **Don't post to GitHub** — issues, PR comments, review replies — without the user explicitly asking
   for that specific action. Implementing a fix is not authorization to reply.
 
