@@ -7,6 +7,7 @@ import { FC } from 'react';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { InputBindingRowData, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType } from '@/src/types/evaluation';
 import VariableRow from './VariableRow';
@@ -15,6 +16,7 @@ interface Props {
   testSuiteId?: string;
   rows: InputBindingRowData[];
   schema?: TestCaseSchema[];
+  samples?: AttributeSamples;
   showTypeSelector?: boolean;
   readonly?: boolean;
   loading?: boolean;
@@ -33,6 +35,7 @@ const DynamicConfiguration: FC<Props> = ({
   testSuiteId,
   rows,
   schema,
+  samples,
   showTypeSelector,
   readonly,
   loading,
@@ -68,6 +71,7 @@ const DynamicConfiguration: FC<Props> = ({
               key={row.templateVariable}
               row={row}
               schema={schema}
+              samples={samples}
               showTypeSelector={showTypeSelector}
               readonly={readonly}
               testSuiteId={testSuiteId}

@@ -9,6 +9,7 @@ import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import AttributeSelect from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeSelect';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { InputBindingRowData, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
@@ -18,6 +19,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 interface Props {
   row: InputBindingRowData;
   schema?: TestCaseSchema[];
+  samples?: AttributeSamples;
   showTypeSelector?: boolean;
   readonly?: boolean;
   testSuiteId?: string;
@@ -30,6 +32,7 @@ interface Props {
 const VariableRow: FC<Props> = ({
   row,
   schema,
+  samples,
   showTypeSelector,
   readonly,
   testSuiteId,
@@ -41,7 +44,7 @@ const VariableRow: FC<Props> = ({
   const t = useI18n();
 
   const tabs = [
-    { id: InputBindingType.Attribute, label: t(TestSuitesI18nKey.Attribute) },
+    { id: InputBindingType.Attribute, label: t(TestSuitesI18nKey.TestCaseColumns) },
     { id: InputBindingType.Constant, label: t(TestSuitesI18nKey.Constant) },
   ];
 
@@ -70,6 +73,7 @@ const VariableRow: FC<Props> = ({
         <AttributeSelect
           disabled={readonly}
           schema={schema ?? []}
+          samples={samples}
           value={row.dataField}
           onChange={(dataField) => onChangeDataField?.(row, dataField)}
         />

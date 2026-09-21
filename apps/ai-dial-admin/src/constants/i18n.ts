@@ -1872,6 +1872,8 @@ export enum TestSuitesI18nKey {
   Attribute = 'TestSuites.Attribute',
   SelectAttribute = 'TestSuites.SelectAttribute',
   TestCaseColumns = 'TestSuites.TestCaseColumns',
+  NoMatchingColumns = 'TestSuites.NoMatchingColumns',
+  MoreDatasetRows = 'TestSuites.MoreDatasetRows',
   TestCase = 'TestSuites.TestCase',
   TestCaseError = 'TestSuites.TestCaseError',
   Response = 'TestSuites.Response',

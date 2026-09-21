@@ -7,10 +7,12 @@ import { getTemplateParameterVariables } from '@/src/components/TestSuites/utils
 import { generateInputBindingsRowData } from '@/src/components/TestSuites/utils/template-variables';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { InputBinding, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { useAttributeSamples } from './use-attribute-samples';
 import { useInputBindingHandlers } from './use-input-binding-handlers';
 
 interface Props {
   testSuiteId?: string;
+  datasetId?: string;
   requestView: TestSuite;
   onChangeRequestView: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   schema?: TestCaseSchema[];
@@ -23,7 +25,17 @@ interface Props {
  * through the matching chain entry (via `fromRequestView`) — the same pair `RequestTemplate` and
  * `EndpointSchema` receive from `MethodTabContent`.
  */
-const RequestDynamicConfiguration: FC<Props> = ({ testSuiteId, requestView, onChangeRequestView, schema, title }) => {
+const RequestDynamicConfiguration: FC<Props> = ({
+  testSuiteId,
+  datasetId,
+  requestView,
+  onChangeRequestView,
+  schema,
+  title,
+}) => {
+  // Loaded here rather than per row: one request serves every attribute dropdown in the tab.
+  const samples = useAttributeSamples(datasetId, schema);
+
   const variables = useMemo(
     () => getTemplateParameterVariables(requestView.requestTemplate),
     [requestView.requestTemplate],
@@ -51,6 +63,7 @@ const RequestDynamicConfiguration: FC<Props> = ({ testSuiteId, requestView, onCh
       testSuiteId={testSuiteId}
       rows={rows}
       schema={schema}
+      samples={samples}
       showTypeSelector
       title={title}
       collapsible={false}

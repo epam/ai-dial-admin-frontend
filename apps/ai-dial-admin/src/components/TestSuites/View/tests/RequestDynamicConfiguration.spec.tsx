@@ -73,7 +73,7 @@ describe('RequestDynamicConfiguration', () => {
     expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
   });
 
-  test('renders Constant and Attribute type selector tabs', () => {
+  test('renders Constant and Test Case Columns type selector tabs', () => {
     render(
       <RequestDynamicConfiguration
         requestView={createRequestView({ requestTemplate: { urlTemplate: '/api/${{question}}' } })}
@@ -82,7 +82,7 @@ describe('RequestDynamicConfiguration', () => {
     );
 
     expect(screen.getByText(TestSuitesI18nKey.Constant)).toBeInTheDocument();
-    expect(screen.getByText(TestSuitesI18nKey.Attribute)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.TestCaseColumns)).toBeInTheDocument();
   });
 
   test('calls onChangeRequestView with updated inputBindings when a constant value changes', async () => {

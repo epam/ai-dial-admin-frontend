@@ -76,21 +76,23 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
                   <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
                 </div>
               )}
-              {activeTab === EntityViewTab.Public && (
-                <PublicFileManager
-                  value={isPublicFile ? filePath : ''}
-                  isModalOpen={isModalOpen}
-                  onChangeSelectedFilePath={setSelectedFilePath}
-                />
-              )}
-              {activeTab === EntityViewTab.Application && (
-                <ApplicationFileManager
-                  id={id}
-                  value={filePath}
-                  selectedFilePath={selectedFilePath}
-                  onChangeSelectedFilePath={setSelectedFilePath}
-                />
-              )}
+              <div className="grow">
+                {activeTab === EntityViewTab.Public && (
+                  <PublicFileManager
+                    value={isPublicFile ? filePath : ''}
+                    isModalOpen={isModalOpen}
+                    onChangeSelectedFilePath={setSelectedFilePath}
+                  />
+                )}
+                {activeTab === EntityViewTab.Application && (
+                  <ApplicationFileManager
+                    id={id}
+                    value={filePath}
+                    selectedFilePath={selectedFilePath}
+                    onChangeSelectedFilePath={setSelectedFilePath}
+                  />
+                )}
+              </div>
             </div>
           </DialFormPopup>
         </DialInputPopup>

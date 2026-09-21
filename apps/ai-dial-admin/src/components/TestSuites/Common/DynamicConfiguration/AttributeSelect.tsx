@@ -1,31 +1,47 @@
 'use client';
 
-import { FC, useId, useState } from 'react';
+import { FC, useId, useMemo, useState } from 'react';
 
-import { DialDropdown } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, DialSearch } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import AttributeOption from '@/src/components/TestSuites/Common/DynamicConfiguration/AttributeOption';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   schema: TestCaseSchema[];
   value?: string;
+  samples?: AttributeSamples;
   disabled?: boolean;
   onChange: (dataField: string) => void;
 }
 
-// Binds a template variable to a test case column. A column is only recognisable from its type and
-// its example value together, which makes the option two lines tall; ui-kit's select renders an
-// option as one fixed-height line, so the list is built on DialDropdown the way CompactSelect and
-// CategorizedFieldDropdown are, with a trigger that keeps the ui-kit input styling.
-const AttributeSelect: FC<Props> = ({ schema, value, disabled, onChange }) => {
+// Binds a template variable to a test case column. Two columns of the same type are only told apart
+// by the data behind them, so each row previews the dataset's own first rows on hover; ui-kit's
+// select has no room for that, which is why the list is built on DialDropdown the way CompactSelect
+// and CategorizedFieldDropdown are, with a trigger that keeps the ui-kit input styling.
+const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange }) => {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const listboxId = useId();
+
+  const term = search.trim().toLowerCase();
+  const visibleFields = useMemo(
+    () => (term ? schema.filter((field) => field.name.toLowerCase().includes(term)) : schema),
+    [schema, term],
+  );
+
+  const onOpenChange = (next: boolean) => {
+    if (next) {
+      setSearch('');
+    }
+    setIsOpen(next);
+  };
 
   const onPick = (dataField: string) => {
     onChange(dataField);
@@ -35,29 +51,37 @@ const AttributeSelect: FC<Props> = ({ schema, value, disabled, onChange }) => {
   return (
     <DialDropdown
       open={isOpen}
-      onOpenChange={setIsOpen}
+      onOpenChange={onOpenChange}
       disabled={disabled}
       placement="bottom-start"
       matchReferenceWidth
       renderOverlay={() => (
         <div className="flex max-h-[352px] min-w-[144px] flex-col overflow-hidden rounded border border-primary bg-layer-0 shadow-lg">
-          <div className="shrink-0 truncate px-3 py-2 dial-tiny-semi-text text-secondary">
-            {t(TestSuitesI18nKey.TestCaseColumns)}
+          <div className="shrink-0 px-3 py-1">
+            <DialSearch
+              id={`${listboxId}-search`}
+              value={search}
+              placeholder={t(BasicI18nKey.Search)}
+              onChange={setSearch}
+            />
           </div>
           <div
             id={listboxId}
             role="listbox"
             aria-label={t(TestSuitesI18nKey.Attribute)}
-            className="min-h-0 flex-1 overflow-y-auto"
+            className="min-h-0 flex-1 overflow-y-auto py-1"
           >
-            {schema.length === 0 ? (
-              <p className="px-3 py-2 dial-tiny-text text-secondary">{t(TestSuitesI18nKey.NoSchemaFields)}</p>
+            {visibleFields.length === 0 ? (
+              <p className="px-3 py-2 dial-tiny-text text-secondary">
+                {schema.length === 0 ? t(TestSuitesI18nKey.NoSchemaFields) : t(TestSuitesI18nKey.NoMatchingColumns)}
+              </p>
             ) : (
-              schema.map((field) => (
+              visibleFields.map((field) => (
                 <AttributeOption
                   key={field.name}
                   field={field}
                   isSelected={field.name === value}
+                  samples={samples}
                   onPick={() => onPick(field.name)}
                 />
               ))

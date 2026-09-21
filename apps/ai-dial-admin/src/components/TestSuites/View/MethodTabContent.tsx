@@ -201,6 +201,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
           <RequestDynamicConfiguration
             key={`dynamic-configuration-${selectedRequestIndex}`}
             testSuiteId={testSuite.id as string}
+            datasetId={dataset?.id}
             requestView={requestView}
             onChangeRequestView={onChangeRequestView}
             schema={dataset?.testCaseSchema}

@@ -1918,6 +1918,8 @@ export default {
     Attribute: 'Attribute',
     SelectAttribute: 'Select attribute',
     TestCaseColumns: 'Test Case Columns',
+    NoMatchingColumns: 'No matching columns',
+    MoreDatasetRows: '+{count} more',
     TestCase: 'Test case',
     TestCaseError: 'Test case error',
     Response: 'Response',
