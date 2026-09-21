@@ -1,4 +1,4 @@
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -14,8 +14,10 @@ import {
 
 // Every fixture here needs `path` and `folderId`, which `DialFile` requires and the utils spread
 // through to their result — so the expectations reuse the same objects rather than restating a shape.
-const promptAsset = (overrides: Partial<DialPrompt> = {}): DialPrompt => ({
-  path: 'prompts/public/folder',
+// Apps stand in for the versioned-asset paths: prompts are versionless, so `generateRowDataForExportGrid`
+// and `changeExportAssetData` no longer accept them.
+const appAsset = (overrides: Partial<AssetApp> = {}): AssetApp => ({
+  path: 'applications/public/folder',
   folderId: 'public',
   version: '1.0.0',
   ...overrides,
@@ -29,26 +31,26 @@ const fileAsset = (overrides: Partial<DialFile> = {}): DialFile => ({
 
 describe('generateRowDataForExportGrid', () => {
   test('Should return similar data', () => {
-    const prompts = [
-      promptAsset({ name: 'name1', version: '1.0.0' }),
-      promptAsset({ name: 'name2', version: '1.0.0' }),
+    const apps = [
+      appAsset({ name: 'name1', version: '1.0.0' }),
+      appAsset({ name: 'name2', version: '1.0.0' }),
     ];
-    const exportedPrompts: AssetWithVersion[] = [];
-    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
+    const exportedApps: AssetWithVersion[] = [];
+    const res = generateRowDataForExportGrid(apps, exportedApps);
     expect(res).toMatchObject([
       { name: 'name1', version: '1.0.0', versions: ['1.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
     ]);
   });
   test('Should return merged data', () => {
-    const prompts = [
-      promptAsset({ name: 'name1', version: '1.0.0' }),
-      promptAsset({ name: 'name1', version: '2.0.0' }),
-      promptAsset({ name: 'name1', version: '3.0.0' }),
-      promptAsset({ name: 'name2', version: '1.0.0' }),
+    const apps = [
+      appAsset({ name: 'name1', version: '1.0.0' }),
+      appAsset({ name: 'name1', version: '2.0.0' }),
+      appAsset({ name: 'name1', version: '3.0.0' }),
+      appAsset({ name: 'name2', version: '1.0.0' }),
     ];
-    const exportedPrompts: AssetWithVersion[] = [];
-    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
+    const exportedApps: AssetWithVersion[] = [];
+    const res = generateRowDataForExportGrid(apps, exportedApps);
     expect(res).toMatchObject([
       { name: 'name1', version: '3.0.0', versions: ['1.0.0', '2.0.0', '3.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
@@ -56,17 +58,17 @@ describe('generateRowDataForExportGrid', () => {
   });
 
   test('Should return merged data with versions if it already exported', () => {
-    const prompts = [
-      promptAsset({ name: 'name1', version: '1.0.0' }),
-      promptAsset({ name: 'name1', version: '2.0.0' }),
-      promptAsset({ name: 'name1', version: '3.0.0' }),
-      promptAsset({ name: 'name2', version: '1.0.0' }),
+    const apps = [
+      appAsset({ name: 'name1', version: '1.0.0' }),
+      appAsset({ name: 'name1', version: '2.0.0' }),
+      appAsset({ name: 'name1', version: '3.0.0' }),
+      appAsset({ name: 'name2', version: '1.0.0' }),
     ];
-    const exportedPrompts = [
-      promptAsset({ name: 'name1', version: '1.0.0' }),
-      promptAsset({ name: 'name1', version: '2.0.0' }),
+    const exportedApps = [
+      appAsset({ name: 'name1', version: '1.0.0' }),
+      appAsset({ name: 'name1', version: '2.0.0' }),
     ];
-    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
+    const res = generateRowDataForExportGrid(apps, exportedApps);
     expect(res).toMatchObject([
       { name: 'name1', version: '1.0.0, 2.0.0', versions: ['1.0.0', '2.0.0', '3.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
@@ -104,7 +106,7 @@ describe('changeExportAssetData', () => {
     expect(res).toEqual({});
   });
   test('Should return object with new filled data for filePath', () => {
-    const nameOne = promptAsset({ name: 'name1', version: '1.0.0' });
+    const nameOne = appAsset({ name: 'name1', version: '1.0.0' });
     const selected = [nameOne];
     const fetched = { filePath: [nameOne] };
     const exported = {};
@@ -113,13 +115,13 @@ describe('changeExportAssetData', () => {
     expect(res).toEqual({ filePath: [nameOne] });
   });
   test('Should return filtered object with data for filePath', () => {
-    const selected = [promptAsset({ name: 'name1', version: '1.0.0, 2.0.0, 3.0.0' })];
+    const selected = [appAsset({ name: 'name1', version: '1.0.0, 2.0.0, 3.0.0' })];
     const fetched = {
       filePath: [
-        promptAsset({ name: 'name1', version: '1.0.0' }),
-        promptAsset({ name: 'name1', version: '2.0.0' }),
-        promptAsset({ name: 'name1', version: '3.0.0' }),
-        promptAsset({ name: 'name2', version: '1.0.0' }),
+        appAsset({ name: 'name1', version: '1.0.0' }),
+        appAsset({ name: 'name1', version: '2.0.0' }),
+        appAsset({ name: 'name1', version: '3.0.0' }),
+        appAsset({ name: 'name2', version: '1.0.0' }),
       ],
     };
     const exported = {};
@@ -127,9 +129,9 @@ describe('changeExportAssetData', () => {
     const res = changeExportAssetData(selected, fetched, filePath, exported);
     expect(res).toEqual({
       filePath: [
-        promptAsset({ name: 'name1', version: '1.0.0' }),
-        promptAsset({ name: 'name1', version: '2.0.0' }),
-        promptAsset({ name: 'name1', version: '3.0.0' }),
+        appAsset({ name: 'name1', version: '1.0.0' }),
+        appAsset({ name: 'name1', version: '2.0.0' }),
+        appAsset({ name: 'name1', version: '3.0.0' }),
       ],
     });
   });

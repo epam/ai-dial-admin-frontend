@@ -105,7 +105,7 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
   return {
     // A schema resource's name is its percent-encoded `$id`; rows show the `$id` while `path`
     // stays encoded, since that is what the CRUD calls address.
-    name: type === ResourceType.APP_TYPE_SCHEMA ? fromCoreRunnerName(parts.name) : parts.name,
+    name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(parts.name) : parts.name,
     folderId: parts.folderId,
     path: parts.path,
     version: parts.version,

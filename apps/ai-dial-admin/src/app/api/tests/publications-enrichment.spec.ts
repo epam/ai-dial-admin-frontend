@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { PromptPublication } from '@/src/models/dial/publications';
+import { ConversationPublication, PromptPublication } from '@/src/models/dial/publications';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -111,14 +111,14 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
       JSON_HEADERS,
     );
 
-    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req2')) as Record<string, unknown>;
+    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req2')) as ConversationPublication;
 
     expect(fetch.mock.calls[1][0]).toContain('v1/conversations/');
     expect(fetch.mock.calls[2][0]).toContain('v1/conversations/');
     expect(fetch.mock.calls[3][0]).toContain('v1/metadata/conversations/');
 
     expect(result.resourceIssues).toEqual([]);
-    const conversations = result.conversations as { conversation: Record<string, unknown> }[];
+    const conversations = result.conversations ?? [];
     // Same versionless contract as prompts: the `__` in the name is part of the name, no version.
     expect(conversations[0].conversation).toMatchObject({
       content: 'conversation body',

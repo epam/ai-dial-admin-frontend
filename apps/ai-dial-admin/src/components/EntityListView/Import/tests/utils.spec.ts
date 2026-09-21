@@ -46,7 +46,6 @@ const fileRow = (overrides: Partial<FileImportGridData> = {}): FileImportGridDat
 const promptAsset = (overrides: Partial<DialPrompt> = {}): DialPrompt => ({
   path: 'prompts/public/folder',
   folderId: 'public',
-  version: '1.0.0',
   ...overrides,
 });
 
@@ -213,22 +212,14 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
 
 describe('Import :: isErrorPromptNode', () => {
   test('should return true for a versioned asset whose name__version already exists', () => {
-    const data = {
-      version: '1.0.0',
-      assetName: 'name',
-      existingNames: ['name__1.0.0'],
-    };
+    const data = assetRow({ assetName: 'name', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
 
     expect(result).toBeTruthy();
   });
 
   test('should return false for a versioned asset whose name__version is new', () => {
-    const data = {
-      version: '2.0.0',
-      assetName: 'name',
-      existingNames: ['name__1.0.0'],
-    };
+    const data = assetRow({ assetName: 'name', version: '2.0.0', existingNames: ['name__1.0.0'] });
     const result = isErrorPromptNode(data);
 
     expect(result).toBeFalsy();
@@ -297,7 +288,7 @@ describe('Import :: isInvalidJson', () => {
   });
 
   test('returns false for a prompt id with no `__` in the name — the suffix is not required', () => {
-    const parsedData = { prompts: [{ id: 'prompts/public/folder/myPrompt' }] };
+    const parsedData: ParsedAssets = { prompts: [promptAsset({ id: 'prompts/public/folder/myPrompt' })] };
     expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(false);
   });
 
@@ -333,7 +324,7 @@ describe('Import :: changeFilesMap', () => {
   test('should update the version fields of a versioned asset when field is "version"', () => {
     const result = changeFilesMap(
       prevMap,
-      { name: 'key1', index: 0 },
+      assetRow({ name: 'key1', index: 0 }),
       'version',
       'v2',
       ApplicationRoute.AssetsApplications,
@@ -347,9 +338,9 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should leave a prompt unchanged when field is "version" — the versionless grid never edits versions', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
+    const result = changeFilesMap(prevMap, assetRow({ name: 'key1', index: 0 }), 'version', 'v2', ApplicationRoute.Prompts);
 
-    expect(result.get('key1').files[0].id).toBe('123');
+    expect(promptAt(result, 'key1', 0).id).toBe('123');
   });
 
   test('should update assetName and file name when field is "assetName"', () => {
@@ -366,25 +357,26 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should use the new assetName verbatim for prompts — a `__` in the old name is not re-grafted', () => {
-    const versionlessMap = new Map([
+    const versionlessMap = new Map<string, FileImportMap>([
       [
         'key1',
         {
-          files: [{ id: 'oldFileName__1.0.3', name: 'oldFileName__1.0.3', type: 'text/plain' }],
+          files: [promptAsset({ id: 'oldFileName__1.0.3', name: 'oldFileName__1.0.3' })],
+          isInvalid: false,
         },
       ],
     ]);
 
     const result = changeFilesMap(
       versionlessMap,
-      { name: 'key1', index: 0 },
+      assetRow({ name: 'key1', index: 0 }),
       'assetName',
       'newassetName',
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[0].id).toBe('newassetName');
-    expect(result.get('key1').files[0].name).toBe('newassetName');
+    expect(promptAt(result, 'key1', 0).id).toBe('newassetName');
+    expect(promptAt(result, 'key1', 0).name).toBe('newassetName');
   });
 
   test('should update file content when field is "fileName"', () => {
@@ -419,14 +411,14 @@ describe('Import :: changeFilesMap', () => {
   test('should return a new map with updated file details', () => {
     const newMap = changeFilesMap(
       prevMap,
-      { name: 'key1', index: 0 },
+      assetRow({ name: 'key1', index: 0 }),
       'assetName',
       'newName',
       ApplicationRoute.Prompts,
     );
 
     expect(newMap).not.toBe(prevMap);
-    expect(newMap.get('key1').files[0].id).toBe('newName');
+    expect(promptAt(newMap, 'key1', 0).id).toBe('newName');
   });
 });
 
