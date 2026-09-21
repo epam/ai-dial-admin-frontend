@@ -31,10 +31,7 @@ const fileAsset = (overrides: Partial<DialFile> = {}): DialFile => ({
 
 describe('generateRowDataForExportGrid', () => {
   test('Should return similar data', () => {
-    const apps = [
-      appAsset({ name: 'name1', version: '1.0.0' }),
-      appAsset({ name: 'name2', version: '1.0.0' }),
-    ];
+    const apps = [appAsset({ name: 'name1', version: '1.0.0' }), appAsset({ name: 'name2', version: '1.0.0' })];
     const exportedApps: AssetWithVersion[] = [];
     const res = generateRowDataForExportGrid(apps, exportedApps);
     expect(res).toMatchObject([
@@ -64,10 +61,7 @@ describe('generateRowDataForExportGrid', () => {
       appAsset({ name: 'name1', version: '3.0.0' }),
       appAsset({ name: 'name2', version: '1.0.0' }),
     ];
-    const exportedApps = [
-      appAsset({ name: 'name1', version: '1.0.0' }),
-      appAsset({ name: 'name1', version: '2.0.0' }),
-    ];
+    const exportedApps = [appAsset({ name: 'name1', version: '1.0.0' }), appAsset({ name: 'name1', version: '2.0.0' })];
     const res = generateRowDataForExportGrid(apps, exportedApps);
     expect(res).toMatchObject([
       { name: 'name1', version: '1.0.0, 2.0.0', versions: ['1.0.0', '2.0.0', '3.0.0'] },

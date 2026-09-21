@@ -338,7 +338,13 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should leave a prompt unchanged when field is "version" — the versionless grid never edits versions', () => {
-    const result = changeFilesMap(prevMap, assetRow({ name: 'key1', index: 0 }), 'version', 'v2', ApplicationRoute.Prompts);
+    const result = changeFilesMap(
+      prevMap,
+      assetRow({ name: 'key1', index: 0 }),
+      'version',
+      'v2',
+      ApplicationRoute.Prompts,
+    );
 
     expect(promptAt(result, 'key1', 0).id).toBe('123');
   });
