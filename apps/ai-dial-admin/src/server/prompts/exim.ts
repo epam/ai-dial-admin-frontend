@@ -17,7 +17,8 @@ import { ResourceType } from '@/src/types/resource-type';
 export { resolveImportDestination } from '@/src/server/assets/import-destination';
 export type ImportPromptsOptions = ImportAssetsOptions;
 
-const PROMPT_ID_REGEX = /^prompts\/public\/([^/]+\/)*[^/]+__[^/]+$/;
+// Versionless: a `__` in the name is neither required nor forbidden — it's just part of the name.
+const PROMPT_ID_REGEX = /^prompts\/public\/([^/]+\/)*[^/]+$/;
 
 export const isValidPromptExportId = (id?: string): boolean => {
   return typeof id === 'string' && PROMPT_ID_REGEX.test(id);

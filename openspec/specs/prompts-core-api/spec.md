@@ -23,12 +23,16 @@ The system SHALL list prompts via the shared Core asset client's metadata read, 
 - **WHEN** `getPrompts` is called without a path
 - **THEN** the underlying metadata read defaults to `"public/"`
 
-### Requirement: Prompt get resolves path via folder listing, then conditional GET
-The system SHALL resolve a prompt's storage path by listing its folder and matching on `name` and `version`, then fetch that resolved path via the shared Core asset client's conditional GET, returning the same `DialPrompt` shape and etag as before.
+### Requirement: Prompt get uses a conditional GET by path
+The system SHALL fetch a single prompt by its storage path via the shared Core asset client's conditional GET (honoring the supplied etag), merged with its metadata, returning the `DialPrompt` shape and etag — mirroring how conversations are fetched today. The prompt model SHALL NOT carry a `version` field.
 
-#### Scenario: Get resolves by name and version
-- **WHEN** `getPrompt(folderId, name, version, etag)` is called
-- **THEN** the folder is listed, the item matching both `name` and `version` is selected, and its resolved path is fetched with the supplied etag
+#### Scenario: Get resolves by path
+- **WHEN** `getPrompt(path, etag)` is called
+- **THEN** the prompt at that exact path is fetched with the supplied etag, with no folder listing, no name matching, and no version matching
+
+#### Scenario: A prompt whose name contains double underscores is fetched unchanged
+- **WHEN** `getPrompt` is called for a stored prompt named `foo__bar`
+- **THEN** the request addresses the path containing `foo__bar` verbatim and the returned model's name is `foo__bar`
 
 ### Requirement: Prompt create rejects on conflict; update requires the current etag
 The system SHALL create a prompt with `If-None-Match: *` (rejecting if a resource already exists at that path) and SHALL update a prompt with `If-Match` set to the caller's etag, matching the admin BE's precondition semantics.
@@ -41,16 +45,20 @@ The system SHALL create a prompt with `If-None-Match: *` (rejecting if a resourc
 - **WHEN** `updatePrompt(prompt, etag)` is called
 - **THEN** the update request to Core includes `If-Match` set to that etag
 
-### Requirement: Prompt delete and move preserve existing conditional/duplicate semantics
-The system SHALL send `If-Match` for single prompt delete when a concrete etag is supplied and no conditional header when omitted; bulk delete SHALL remain unconditional per item; move SHALL preserve the existing duplicate-with-renamed-version behavior when a duplicate name is supplied.
+### Requirement: Prompt delete is conditional and move uses plain destination names
+The system SHALL send `If-Match` for single prompt delete when a concrete etag is supplied and no conditional header when omitted; bulk delete SHALL remain unconditional per item. Move SHALL build destination paths from the plain resource name — when a duplicate name is supplied, that name is used verbatim, with no version suffix extracted from or reapplied to the source path.
 
 #### Scenario: Single delete is conditional when an etag is present
 - **WHEN** `removePrompt(path, etag)` is called with a concrete etag
 - **THEN** the delete request to Core includes `If-Match` set to that etag
 
-#### Scenario: Move with a duplicate name renames the version suffix
+#### Scenario: Move with a duplicate name uses the name verbatim
 - **WHEN** `movePrompts` is called with a `duplicateName`
-- **THEN** the destination path carries the duplicate name with the source's version suffix reapplied, unchanged from current behavior
+- **THEN** the destination path uses `duplicateName` as the resource name, unchanged by anything in the source path
+
+#### Scenario: Move of a name containing double underscores preserves it
+- **WHEN** `movePrompts` moves a prompt named `foo__1.0`
+- **THEN** the destination resource is named `foo__1.0` (or the verbatim `duplicateName` in the duplicate flow), with the `__` treated as part of the name
 
 ### Requirement: Prompt export builds a structured aggregate document directly against Core
 The system SHALL build a `{ prompts: DialPrompt[] }` document (the existing `ParsedAssets` shape) from selected prompt paths by fetching each prompt's merged content+metadata directly from DIAL Core and setting each prompt's `id` to its Core-prefixed path — not a per-file zip archive, and not a new wire type. When a selected path is a folder, the system SHALL first expand it into every descendant prompt resource path at any nesting depth (a recursive walk, not a one-level listing) before fetching merged content+metadata for each; a folder that is empty of prompt resources SHALL contribute no entities without causing the export to fail. The system SHALL exclude `.dial_folder`/`.dial_folder__<version>` technical folder-marker resources encountered during folder expansion, whether they would otherwise be picked up as a folder's direct child or a deeper descendant.
@@ -76,7 +84,7 @@ The system SHALL build a `{ prompts: DialPrompt[] }` document (the existing `Par
 - **THEN** the exported document excludes that marker entirely, and the resulting document can be re-imported without a manual edit
 
 ### Requirement: Prompt import resolves conflicts against Core's live state
-The system SHALL validate each incoming prompt's `id` against the prompt path shape, check whether a prompt already exists at its resolved destination path directly against DIAL Core, and apply the caller-supplied conflict-resolution policy: `OVERRIDE` writes through regardless of an existing conflict; `SKIP` treats an existing conflict as a non-error skipped outcome rather than a failure.
+The system SHALL validate each incoming prompt's `id` against the versionless prompt path shape (`prompts/{bucket}/{folders}/{name}`, where the name segment is any valid filename and `__` is neither required nor forbidden), check whether a prompt already exists at its resolved destination path directly against DIAL Core, and apply the caller-supplied conflict-resolution policy: `OVERRIDE` writes through regardless of an existing conflict; `SKIP` treats an existing conflict as a non-error skipped outcome rather than a failure. Ids from documents exported before this change — whose names carry a `__version` suffix — SHALL be accepted, the suffix being part of the name.
 
 #### Scenario: OVERRIDE writes through despite an existing prompt
 - **WHEN** an incoming prompt targets a path where a prompt already exists and the policy is `OVERRIDE`
@@ -87,8 +95,12 @@ The system SHALL validate each incoming prompt's `id` against the prompt path sh
 - **THEN** that entry is reported as skipped, not as a failure, and does not count toward the consecutive-failure circuit breaker
 
 #### Scenario: An id that fails the path-shape check is rejected
-- **WHEN** an incoming prompt's `id` does not match the expected prompt path shape
+- **WHEN** an incoming prompt's `id` does not match the versionless prompt path shape
 - **THEN** that entry is rejected before any write is attempted against Core
+
+#### Scenario: A previously exported versioned id imports as a literal name
+- **WHEN** an incoming prompt's `id` is `prompts/public/foo__1.0` (exported before this change)
+- **THEN** the import resolves it to a prompt named `foo__1.0`, and the `__1.0` suffix is treated as part of the name
 
 ### Requirement: Prompt import preserves the consecutive-failure circuit breaker
 The system SHALL abort a multi-prompt import batch after a configured number of consecutive real failures, reusing the same circuit-breaker mechanism already built for file import, rather than continuing to attempt every remaining entry.

@@ -4,8 +4,8 @@ import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/Se
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { enrichConversationWithVersion } from '@/src/components/Assets/BaseAssetList/utils';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 
 export const getGridColumns = (
   view: ApplicationRoute,
@@ -76,7 +76,8 @@ export const getGridColumns = (
     }
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Conversations:
-      return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
+      // Versionless rows — a single stored resource each, so no version tags column.
+      return hasFoldersToDelete ? [NAME_COLUMN('Display name')] : [GRID_NAME_COLUMN];
     case ApplicationRoute.Files:
       return hasFoldersToDelete
         ? [NAME_COLUMN('Display name'), SIZE_COLUMN('Size')]
@@ -371,11 +372,14 @@ export const processAssetsData = (
     return asset;
   });
 
+  // A versionless row (prompt/conversation) is a single stored resource — no same-name version
+  // merging, no per-row version selection state.
+  if (isVersionlessAssetView(view)) {
+    return processedAssets;
+  }
+
   return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
     if (curr.nodeType === DialFileNodeType.ITEM) {
-      if (view === ApplicationRoute.Conversations && !curr.version) {
-        curr = enrichConversationWithVersion(curr);
-      }
       curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
       const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
       if (existing) {

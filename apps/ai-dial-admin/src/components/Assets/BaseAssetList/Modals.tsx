@@ -9,6 +9,7 @@ import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
@@ -44,7 +45,7 @@ interface Props {
   ) => void;
   onExport?: (fileType: ImportFileType) => void;
   onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
-  onDuplicate?: (entity: AssetWithVersion) => void;
+  onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onRemove: () => Promise<void>;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }

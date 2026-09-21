@@ -72,8 +72,8 @@ describe('Model asset :: list columns', () => {
     expect(columnIds(VIEW)).toEqual(columnIds(ApplicationRoute.PlatformAppRunners));
   });
 
-  test('Should carry no version column, unlike the foldered views', () => {
+  test('Should carry no version column, unlike the versioned asset views', () => {
     expect(columnIds(VIEW)).not.toContain('version');
-    expect(columnIds(ApplicationRoute.Prompts)).toContain('version');
+    expect(columnIds(ApplicationRoute.AssetsApplications)).toContain('version');
   });
 });

@@ -9,6 +9,7 @@
  * supplied by each resource type's thin wrapper module.
  */
 
+import { FOLDER_NESTED_VERSIONLESS_TYPES } from '@/src/constants/assets-core';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ImportResult } from '@/src/models/import';
@@ -19,7 +20,12 @@ import {
   FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD,
 } from '@/src/server/files/circuit-breaker';
 import { gatherResourceUrls, isFolderNode, isTechnicalItem } from '@/src/server/folders/resource-walk';
-import { decodeCorePath, parseEncodedVersionedPath, stripPrefix } from '@/src/server/publications/path';
+import {
+  decodeCorePath,
+  parseEncodedFolderPath,
+  parseEncodedVersionedPath,
+  stripPrefix,
+} from '@/src/server/publications/path';
 import { ConflictResolutionPolicy, ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { resolveImportDestination } from './import-destination';
@@ -134,7 +140,15 @@ export const importAssetsExport = async <T extends { id?: string }>(
       continue;
     }
 
-    const { folderId: originalFolderId, name, version } = parseEncodedVersionedPath(sourcePath, prefix);
+    // Folder-nested versionless types (prompt/conversation) never split a `__` suffix off the
+    // name; versioned types (application/toolset) keep the `__version` split.
+    const {
+      folderId: originalFolderId,
+      name,
+      version,
+    } = FOLDER_NESTED_VERSIONLESS_TYPES.has(config.resourceType)
+      ? { ...parseEncodedFolderPath(sourcePath, prefix), version: undefined }
+      : parseEncodedVersionedPath(sourcePath, prefix);
     const targetPath = resolveImportDestination(options.path, originalFolderId, name, version, options.flatImport);
     const lastSlashIndex = targetPath.lastIndexOf('/');
     const targetFolderId = lastSlashIndex === -1 ? '' : targetPath.slice(0, lastSlashIndex + 1);

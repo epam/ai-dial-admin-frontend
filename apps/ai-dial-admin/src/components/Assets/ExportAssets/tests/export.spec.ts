@@ -146,10 +146,16 @@ describe('generateExportList', () => {
 });
 
 describe('getExportGridData', () => {
-  const mockFetchedPrompts = [promptAsset({ id: '1', name: 'Prompt 1', versions: ['1.0.0'] })];
-  const mockSelectedPrompts = [promptAsset({ id: '2', name: 'Prompt 2' })];
-  const mockFetchedFiles = [fileAsset({ id: '1', name: 'File 1', extension: '' })];
-  const mockSelectedFiles = [fileAsset({ id: '2', name: 'File 2' })];
+  const mockFetchedPrompts: DialPrompt[] = [
+    { id: '1', name: 'Prompt 1', path: 'public/Prompt 1', folderId: 'public/' },
+  ];
+  const mockSelectedPrompts: DialPrompt[] = [
+    { id: '2', name: 'Prompt 2', path: 'public/Prompt 2', folderId: 'public/' },
+  ];
+  const mockFetchedFiles: DialFile[] = [
+    { id: '1', name: 'File 1', extension: '', path: 'public/File 1', folderId: 'public/' },
+  ];
+  const mockSelectedFiles: DialFile[] = [{ id: '2', name: 'File 2', path: 'public/File 2', folderId: 'public/' }];
 
   test('should call getGridFileData when route is Files', () => {
     const result = getExportGridData(ApplicationRoute.Files, mockFetchedFiles, mockSelectedFiles);
@@ -173,21 +179,22 @@ describe('getExportGridData', () => {
 });
 
 describe('changeExportGridData', () => {
+  // Prompts are versionless: rows match by their plain path, no name+version pairing.
   const mockFetchedPrompts: Record<string, DialPrompt[]> = {
-    filePath: [promptAsset({ id: '1', name: 'Prompt 1' })],
+    filePath: [{ id: '1', name: 'Prompt 1', path: 'public/Prompt 1', folderId: 'public/' }],
   };
   const mockSelectedPrompts: Record<string, DialPrompt[]> = {
-    filePath: [promptAsset({ id: '2', name: 'Prompt 2' })],
+    filePath: [{ id: '2', name: 'Prompt 2', path: 'public/Prompt 2', folderId: 'public/' }],
   };
   const mockFetchedFiles: Record<string, DialFile[]> = {
-    filePath: [fileAsset({ id: '1', name: 'File 1.jpg' })],
+    filePath: [{ id: '1', name: 'File 1.jpg', path: 'public/File 1.jpg', folderId: 'public/' }],
   };
   const mockSelectedFiles: Record<string, DialFile[]> = {
-    filePath: [fileAsset({ id: '2', name: 'File 2' })],
+    filePath: [{ id: '2', name: 'File 2', path: 'public/File 2', folderId: 'public/' }],
   };
   const mockSelectedRows: (DialPrompt | DialFile)[] = [
-    promptAsset({ id: '1', name: 'Prompt 1' }),
-    promptAsset({ id: '2', name: 'File 1', extension: '.jpg' }),
+    { id: '1', name: 'Prompt 1', path: 'public/Prompt 1', folderId: 'public/' },
+    { id: '2', name: 'File 1', extension: '.jpg', path: 'public/File 1.jpg', folderId: 'public/' },
   ];
   const filePath = 'filePath';
 
@@ -200,7 +207,9 @@ describe('changeExportGridData', () => {
       filePath,
     );
 
-    expect(result).toEqual(mockFetchedPrompts);
+    expect(result).toEqual({
+      filePath: [{ id: '1', name: 'Prompt 1', path: 'public/Prompt 1', folderId: 'public/' }],
+    });
   });
 
   test('should return updated file data when route is Files', () => {
@@ -212,7 +221,9 @@ describe('changeExportGridData', () => {
       filePath,
     );
 
-    expect(result).toEqual(mockFetchedFiles);
+    expect(result).toEqual({
+      filePath: [{ id: '1', name: 'File 1.jpg', path: 'public/File 1.jpg', folderId: 'public/' }],
+    });
   });
 
   test('should return empty object if route is not Prompts or Files', () => {

@@ -90,7 +90,7 @@ import {
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { Publication } from '@/src/models/dial/publications';
 import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
@@ -466,7 +466,7 @@ export const EXPORT_COLUMNS = (
       cellClass: NO_BORDER_CLASS,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        getItems: (data: DialPrompt) => data.versions?.map((v) => ({ value: v, label: v })),
+        getItems: (data: AssetWithVersion) => data.versions?.map((v) => ({ value: v, label: v })),
         onChange,
         isMulti: true,
       },

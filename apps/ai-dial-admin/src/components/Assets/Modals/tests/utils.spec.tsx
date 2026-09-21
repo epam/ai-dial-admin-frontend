@@ -25,17 +25,23 @@ const t = (key: string, options?: Record<string, string | number>) => {
 
 describe('Assets Modals utils', () => {
   describe('getGridColumns', () => {
-    test('returns Name and Version columns for prompts, applications and toolsets', () => {
-      const promptsColumns = getGridColumns(ApplicationRoute.Prompts, true);
+    test('returns Name and Version columns for the versioned asset views', () => {
       const appsColumns = getGridColumns(ApplicationRoute.AssetsApplications, true);
       const toolsetsColumns = getGridColumns(ApplicationRoute.AssetsToolsets, true);
 
-      expect(promptsColumns).toHaveLength(2);
-      expect(!!promptsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeTruthy();
+      expect(appsColumns).toHaveLength(2);
       expect(!!appsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeTruthy();
       expect(
         !!toolsetsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version),
       ).toBeTruthy();
+    });
+
+    // Prompts are versionless — each row is a single stored resource, so no version tags column.
+    test('returns only the Name column for prompts', () => {
+      const promptsColumns = getGridColumns(ApplicationRoute.Prompts, true);
+
+      expect(promptsColumns).toHaveLength(1);
+      expect(promptsColumns.some((column) => (column as ColDef).colId === FileManagerColumnKey.Version)).toBeFalsy();
     });
 
     test('returns Name and Size columns for files view', () => {
@@ -188,12 +194,11 @@ describe('Assets Modals utils', () => {
   });
 
   describe('processAssetsData', () => {
-    test('processes single item without folder', () => {
+    test('passes a single prompt through without version selection state', () => {
       const assets = [
         {
           id: 'asset-1',
           name: 'prompt1',
-          version: '1.0',
           folderId: 'folder1',
           path: 'folder1/prompt1',
           nodeType: DialFileNodeType.ITEM,
@@ -201,12 +206,14 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.Prompts);
+      // DeleteAssetsModal casts the fetched rows the same way — the versionless branch
+      // passes them through untouched.
+      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
 
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('prompt1');
-      expect(result[0].versions).toEqual(['1.0']);
-      expect(result[0].selectedVersions).toEqual(['1.0']);
+      expect(result[0].versions).toBeUndefined();
+      expect(result[0].selectedVersions).toBeUndefined();
     });
 
     test('uses selectedVersionsMap when available', () => {
@@ -294,7 +301,6 @@ describe('Assets Modals utils', () => {
             {
               id: 'asset-1',
               name: 'prompt',
-              version: '1.0',
               folderId: 'folder1',
               path: 'folder1/prompt',
               nodeType: DialFileNodeType.ITEM,
@@ -317,7 +323,9 @@ describe('Assets Modals utils', () => {
       expect(result).toEqual([]);
     });
 
-    test('preserves folder structure while deduplicating items', () => {
+    // The versionless contrast to the toolsets dedup test above: for prompts, same-name rows are
+    // distinct resources, never merged into a name+versions pair.
+    test('preserves folder structure for prompts without merging same-name items', () => {
       const assets = [
         {
           id: 'folder-1',
@@ -328,7 +336,6 @@ describe('Assets Modals utils', () => {
             {
               id: 'asset-1',
               name: 'item',
-              version: '1.0',
               folderId: 'folder1',
               path: 'folder1/item',
               nodeType: DialFileNodeType.ITEM,
@@ -336,7 +343,6 @@ describe('Assets Modals utils', () => {
             {
               id: 'asset-2',
               name: 'item',
-              version: '2.0',
               folderId: 'folder1',
               path: 'folder1/item-v2',
               nodeType: DialFileNodeType.ITEM,
@@ -349,9 +355,11 @@ describe('Assets Modals utils', () => {
       const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
 
       expect(result).toHaveLength(1);
-      expect(result[0].items).toHaveLength(1);
-      expect(result[0].items?.[0].versions).toContain('1.0');
-      expect(result[0].items?.[0].versions).toContain('2.0');
+      expect(result[0].items).toHaveLength(2);
+      expect(result[0].items?.[0].name).toBe('item');
+      expect(result[0].items?.[1].name).toBe('item');
+      expect(result[0].items?.[0].versions).toBeUndefined();
+      expect(result[0].items?.[1].versions).toBeUndefined();
     });
   });
 });

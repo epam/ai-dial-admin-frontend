@@ -30,6 +30,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialAppRunnerResource, DialResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -45,6 +46,7 @@ import {
   isPlatformDualBucketView,
   PLATFORM_ROOT_FOLDER,
 } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
@@ -68,7 +70,6 @@ import {
   PlatformBulkDeleteAssetActionMap,
   PlatformCreateAssetActionMap,
   PlatformGetAssetActionMap,
-  enrichConversationWithVersion,
 } from './utils';
 import { ImportResult } from '@/src/components/Assets/types';
 import { compareVersions } from '@/src/utils/entities/versions';
@@ -116,8 +117,10 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     }
 
     setNames(filterNames(folderData));
-    setVersionsMap(getVersionsPerName((folderData || []) as AssetWithVersion[]));
-  }, [filePath, fetchedFoldersData, data]);
+    // The versionless group has no versions to map — an empty map keeps every consumer
+    // (DuplicateAsset, modals) on its versionless branch.
+    setVersionsMap(isVersionlessAssetView(view) ? {} : getVersionsPerName((folderData || []) as AssetWithVersion[]));
+  }, [filePath, fetchedFoldersData, data, view]);
 
   const handleCreateModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
     setIsModalOpen(true);
@@ -299,9 +302,15 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           fetchFiles?.(folderPath);
           if (isCreateDuplicate) {
             const isFlatAsset = isFlatPlatformView(view) || isPlatformDualBucketView(view, folderPath);
-            const entityLabel = isFlatAsset
-              ? asset.name || (asset as DialAppRunnerResource).$id
-              : `${asset.name}__${asset.version}`;
+            // A versionless duplicate is identified by its plain name — no `__version` suffix.
+            let entityLabel: string;
+            if (isFlatAsset) {
+              entityLabel = asset.name || (asset as DialAppRunnerResource).$id || '';
+            } else if (isVersionlessAssetView(view)) {
+              entityLabel = asset.name || '';
+            } else {
+              entityLabel = `${asset.name}__${asset.version}`;
+            }
             showNotification(
               getSuccessNotification(
                 getCreateNotificationTitle(view, t),
@@ -314,14 +323,15 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             // `AssetsToolsets` need it back here to recognize the redirect target as
             // platform-bucket; otherwise `getEntityPath` falls through to the versioned-path
             // branch and builds `?path=undefined{name}__` (design.md D5).
-            router.push(
-              getUrnForEntity(
-                view,
-                isFlatAsset
-                  ? { ...asset, folderId: folderPath }
-                  : { name: asset.name, version: asset.version, folderId: folderPath },
-              ),
-            );
+            let redirectEntity: Parameters<typeof getUrnForEntity>[1];
+            if (isFlatAsset) {
+              redirectEntity = { ...asset, folderId: folderPath };
+            } else if (isVersionlessAssetView(view)) {
+              redirectEntity = { name: asset.name, folderId: folderPath };
+            } else {
+              redirectEntity = { name: asset.name, version: asset.version, folderId: folderPath };
+            }
+            router.push(getUrnForEntity(view, redirectEntity));
           }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -336,7 +346,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   );
 
   const handleDuplicate = useCallback(
-    (asset: AssetWithVersion) => {
+    (asset: AssetWithVersion | DialPrompt) => {
       const platformAsset = asset as unknown as PlatformAsset;
       // A platform-bucket application/toolset row duplicates the same flat, unversioned way the six
       // other flat platform views already do (design.md D2/`platform-applications`/
@@ -358,10 +368,17 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return;
       }
 
-      const newAsset = {
-        ...asset,
-        path: `${asset.folderId}${asset.name}__${asset.version}`,
-      };
+      // A versionless duplicate is addressed by its plain path — no `__version` suffix.
+      let newAsset: AssetWithVersion | DialPrompt;
+      if (isVersionlessAssetView(view)) {
+        newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
+      } else {
+        const versionedAsset = asset as AssetWithVersion;
+        newAsset = {
+          ...versionedAsset,
+          path: `${versionedAsset.folderId}${versionedAsset.name}__${versionedAsset.version}`,
+        };
+      }
       delete (newAsset as AssetApp).reference;
       handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
       handleModalClose();
@@ -389,7 +406,10 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           // Move file
           const filePaths = [];
           const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
-          const paths = getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
+          // A versionless row is its own whole resource — no per-row version selection to expand.
+          const paths = isVersionlessAssetView(view)
+            ? [file.sourceUrl]
+            : getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
           if (moveAsset) {
             promises.push(
@@ -485,11 +505,14 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return asset;
       });
 
+      // A versionless row (prompt/conversation) is a single stored resource — no same-name version
+      // merging, no per-row version selection state.
+      if (isVersionlessAssetView(view)) {
+        return processedAssets;
+      }
+
       return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
         if (curr.nodeType === DialFileNodeType.ITEM) {
-          if (view === ApplicationRoute.Conversations && !curr.version) {
-            curr = enrichConversationWithVersion(curr);
-          }
           curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
           const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
           if (existing) {
@@ -520,7 +543,10 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       setHasSelectedItems(false);
       const filePaths: string[] = [];
       (exportedItems as AssetWithVersion[]).forEach((file) => {
-        if (file.selectedVersions) {
+        if (isVersionlessAssetView(view)) {
+          // A versionless row exports its own plain path — no per-row version expansion.
+          filePaths.push(file.path);
+        } else if (file.selectedVersions) {
           filePaths.push(...file.selectedVersions.map((version) => `${file.folderId}${file.name}__${version}`));
         } else {
           filePaths.push(file.path);
@@ -556,21 +582,26 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       const promises = [];
       if (assets.length > 0) {
+        const isVersionless = isVersionlessAssetView(view);
         // `etag` is optional here and ignored by every entry except `bulkDeleteSkills`, whose delete
         // has no content GET to source an etag from and so requires one from the listing row.
         const assetsPaths: { path: string; etag?: string }[] = [];
         assets.forEach((asset) => {
-          const paths = getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
+          // A versionless row deletes its own plain path — no per-row version expansion, and no
+          // `__`-prefix key to clear from the version-selection map.
+          const paths = isVersionless ? [asset.path] : getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
           if (paths.length > 0) {
             assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag || DEFAULT_ETAG })));
           } else {
             assetsPaths.push({ path: asset.path, etag: asset.etag || DEFAULT_ETAG });
           }
-          const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
-          setSelectedVersionsMap({
-            ...selectedVersionsMap,
-            [prefix]: [],
-          });
+          if (!isVersionless) {
+            const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
+            setSelectedVersionsMap({
+              ...selectedVersionsMap,
+              [prefix]: [],
+            });
+          }
         });
         promises.push(bulkDeleteAsset(assetsPaths));
       }

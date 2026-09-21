@@ -19,7 +19,16 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
 };
 
 export const isAssetWithVersion = (view?: ApplicationRoute): boolean => {
-  return view === ApplicationRoute.Prompts || isDeploymentAsset(view);
+  return isDeploymentAsset(view);
+};
+
+/**
+ * Folder-nested versionless asset views — prompt and conversation. Their names never carry a
+ * `__version` suffix: a `__` in a prompt/conversation name is part of the name itself, never a
+ * name/version delimiter.
+ */
+export const isVersionlessAssetView = (view?: ApplicationRoute): boolean => {
+  return view === ApplicationRoute.Prompts || view === ApplicationRoute.Conversations;
 };
 
 export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {

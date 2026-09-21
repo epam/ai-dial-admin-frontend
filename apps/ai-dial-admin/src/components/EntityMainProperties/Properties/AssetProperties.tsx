@@ -13,11 +13,10 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAssetVersionBusinessError } from '@/src/utils/deployments/validation';
-import { isDeploymentAsset } from '@/src/utils/is-view';
+import { isDeploymentAsset, isVersionlessAssetView } from '@/src/utils/is-view';
 
 interface Props {
   view?: ApplicationRoute;
@@ -51,6 +50,10 @@ const AssetProperties: FC<Props> = ({
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
 
+  // Prompts/conversations are versionless — no version field or validation, mirroring the
+  // platform-bucket `hideVersionField` carve-out for applications.
+  const isVersionless = isVersionlessAssetView(view);
+
   const isDeployment = useMemo(() => {
     return isDeploymentAsset(view);
   }, [view]);
@@ -66,7 +69,7 @@ const AssetProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      onChangeEntity({ ...entity, version } as DialPrompt);
+      onChangeEntity({ ...entity, version } as AssetWithVersion);
       validateVersion(version);
     },
     [entity, onChangeEntity, validateVersion],
@@ -94,7 +97,7 @@ const AssetProperties: FC<Props> = ({
         />
       )}
 
-      {!hideVersionField && (
+      {!hideVersionField && !isVersionless && (
         <VersionControl
           isFullWidth={!isEntityImmutable}
           version={entity.version}

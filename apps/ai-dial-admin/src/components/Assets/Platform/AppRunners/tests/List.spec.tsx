@@ -43,7 +43,8 @@ describe('AppRunnersList :: list affordances', () => {
 
 describe('AppRunnersList :: columns', () => {
   const columns = () => getGridColumns(ApplicationRoute.PlatformAppRunners, vi.fn(), {}, false);
-  const versioned = () => getGridColumns(ApplicationRoute.Prompts, vi.fn(), {}, false);
+  // Prompts are versionless now too, so the versioned contrast is a deployment-asset view.
+  const versioned = () => getGridColumns(ApplicationRoute.AssetsApplications, vi.fn(), {}, false);
 
   test('Should show four metadata-backed columns', () => {
     expect(columns()).toHaveLength(4);

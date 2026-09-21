@@ -1,11 +1,10 @@
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
   addNewVersion,
-  filterLatestVersions,
   getAgentLinkForConversation,
   getDeleteNotificationContent,
   getEntityForUpdate,
@@ -160,41 +159,26 @@ describe('getGridActionLabels', () => {
   });
 });
 
-describe('filterLatestVersions', () => {
-  test('Should return only latest versions', () => {
-    const res = filterLatestVersions([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
-    expect(res).toEqual([
-      { name: 'prompts', version: '7' },
-      { name: 'model', version: '1' },
-    ]);
-  });
-});
-
 describe('getVersionsPerName', () => {
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '1' },
-      { name: 'prompts', version: '2' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '1' },
+      { name: 'app', version: '2' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '2'],
+      app: ['1', '2'],
     });
   });
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '7' },
+      { name: 'app', version: '4' },
+      { name: 'toolset', version: '1' },
+      { name: 'app', version: '1' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '4', '7'],
-      model: ['1'],
+      app: ['1', '4', '7'],
+      toolset: ['1'],
     });
   });
 });

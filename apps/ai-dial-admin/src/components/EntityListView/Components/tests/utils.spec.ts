@@ -390,25 +390,22 @@ describe('Utils :: prepareEntityForDuplicate', () => {
     });
   });
 
-  test('Should extract prompt data for Prompts route', async () => {
+  test('Should extract prompt data for Prompts route without a version field', async () => {
     const prompt = {
       name: 'test-prompt',
       folderId: 'folder',
-      version: '1.0.0',
     };
 
     const result = await prepareEntityForDuplicate(ApplicationRoute.Prompts, prompt, {
       current: {
         name: 'test-prompt',
         folderId: 'folder',
-        version: '1.0.0',
       },
     } as any);
 
     expect(result).toEqual({
       name: 'test-prompt',
       folderId: 'folder',
-      version: '1.0.0',
       description: 'Test Prompt Description',
       content: 'Test prompt content',
     });
