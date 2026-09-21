@@ -1,18 +1,24 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
-import { DialGhostButton, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialLoader, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import { HEATMAP_BODY_HEIGHT } from '@/src/components/Analytics/Usage/constants';
+import {
+  HEATMAP_BODY_HEIGHT,
+  HEATMAP_HEADER_HEIGHT,
+  HEATMAP_FLAT_COLUMN_WIDTH,
+  HEATMAP_NARROW_ROW_HEIGHT,
+} from '@/src/components/Analytics/Usage/constants';
 import { HeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
 import HeatmapScale from '@/src/components/Analytics/Usage/Charts/HeatmapScale';
 import {
   HEATMAP_COL_PREFIX,
+  HEATMAP_DAYS,
   HEATMAP_HOURS,
   HeatmapRow,
   buildHeatmapMatrix,
@@ -24,7 +30,6 @@ import {
 import { formatWeekLabel } from '@/src/components/Analytics/Usage/utils/weeks';
 import {
   HEAT_MAP_LABEL_COL_ID,
-  HEAT_MAP_LABEL_COL_WIDTH,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   getHeatMapDefaultCellStyle,
   getHeatMapGridCellBorderStyle,
@@ -33,20 +38,45 @@ import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader
 import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
 import HeatMapLabelCellRenderer from '@/src/components/Common/HeatMap/HeatMapLabelCellRenderer';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   heatmap: HeatmapWeek;
 }
 
+const PAGER_ICON_PROPS = { size: 16, stroke: 2 };
+
 const formatDayLabel = (dayStartMs: number): string =>
   new Date(dayStartMs).toLocaleDateString(void 0, { weekday: 'short', day: 'numeric' });
 
 const formatHourLabel = (hour: number): string => String(hour).padStart(2, '0');
 
+/**
+ * The shared label column is sized for run names; a weekday and a date need a fraction of it, and
+ * at the shared width the text sat alone against a hand's breadth of empty cell.
+ */
+const DAY_LABEL_COL_WIDTH = 88;
+
 const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
   const t = useI18n();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [bodyWidth, setBodyWidth] = useState(0);
+
+  useEffect(() => {
+    const body = bodyRef.current;
+
+    if (!body || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(([entry]) => setBodyWidth(entry.contentRect.width));
+    observer.observe(body);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const hourColumnWidth = bodyWidth ? (bodyWidth - DAY_LABEL_COL_WIDTH) / HEATMAP_HOURS : 0;
+  const rowHeight = hourColumnWidth && hourColumnWidth < HEATMAP_FLAT_COLUMN_WIDTH ? HEATMAP_NARROW_ROW_HEIGHT : void 0;
   const { buckets, week, weekOffset, onPreviousWeek, onNextWeek, onCurrentWeek } = heatmap;
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
@@ -55,17 +85,17 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
 
   // The grid always draws its seven days, so an empty week is stated in the subtitle rather than by
   // replacing the grid with a message.
-  const isEmptyWeek = !buckets.isLoading && !buckets.hasFailed && matrix.maxValue === 0;
+  const isEmptyWeek = !buckets.isLoading && (buckets.hasFailed || matrix.maxValue === 0);
 
   const columnDefs = useMemo<ColDef<HeatmapRow>[]>(() => {
     const labelColumn: ColDef<HeatmapRow> = {
       colId: HEAT_MAP_LABEL_COL_ID,
       field: 'label',
-      headerName: ' ',
+      headerName: t(AnalyticsUsageI18nKey.HeatmapDayColumn),
       pinned: 'left',
-      width: HEAT_MAP_LABEL_COL_WIDTH,
-      minWidth: HEAT_MAP_LABEL_COL_WIDTH,
-      maxWidth: HEAT_MAP_LABEL_COL_WIDTH,
+      width: DAY_LABEL_COL_WIDTH,
+      minWidth: DAY_LABEL_COL_WIDTH,
+      maxWidth: DAY_LABEL_COL_WIDTH,
       sortable: false,
       filter: false,
       resizable: false,
@@ -142,10 +172,6 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
       );
     }
 
-    if (buckets.hasFailed) {
-      return <DialNoDataContent title={buckets.error ?? t(BasicI18nKey.NoData)} />;
-    }
-
     return (
       <HeatMapGrid
         columnDefs={columnDefs}
@@ -153,6 +179,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
         headerLabels={Array.from({ length: HEATMAP_HOURS }, (_, hour) => formatHourLabel(hour))}
         emptyTitle={t(BasicI18nKey.NoData)}
         valueColumnIdPrefix={HEATMAP_COL_PREFIX}
+        rowHeight={rowHeight}
         showColorScale={false}
         className="flex min-h-0 flex-col"
       />
@@ -168,18 +195,28 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
           : t(AnalyticsUsageI18nKey.HeatmapSubtitle, { timezone })
       }
       headerActions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className={classNames(weekOffset === 0 && 'invisible')} inert={weekOffset === 0}>
-            <DialGhostButton label={t(AnalyticsUsageI18nKey.HeatmapCurrentWeek)} onClick={onCurrentWeek} />
+            <DialGhostButton
+              size={ElementSize.Small}
+              label={t(AnalyticsUsageI18nKey.HeatmapCurrentWeek)}
+              onClick={onCurrentWeek}
+            />
           </div>
           <DialGhostButton
-            iconBefore={<IconChevronLeft {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            size={ElementSize.Small}
+            className="px-1"
+            iconBefore={<IconChevronLeft {...PAGER_ICON_PROPS} aria-hidden />}
             title={t(AnalyticsUsageI18nKey.HeatmapPreviousWeek)}
             onClick={onPreviousWeek}
           />
-          <span className="dial-tiny-text min-w-[150px] text-center text-primary">{formatWeekLabel(week)}</span>
+          <span className="dial-tiny-text min-w-[84px] whitespace-nowrap text-center text-primary">
+            {formatWeekLabel(week)}
+          </span>
           <DialGhostButton
-            iconBefore={<IconChevronRight {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            size={ElementSize.Small}
+            className="px-1"
+            iconBefore={<IconChevronRight {...PAGER_ICON_PROPS} aria-hidden />}
             title={t(AnalyticsUsageI18nKey.HeatmapNextWeek)}
             disabled={weekOffset === 0}
             onClick={onNextWeek}
@@ -187,7 +224,11 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
         </div>
       }
     >
-      <div className="flex flex-col justify-center" style={{ minHeight: HEATMAP_BODY_HEIGHT }}>
+      <div
+        ref={bodyRef}
+        className="flex flex-col justify-center"
+        style={{ minHeight: rowHeight ? HEATMAP_DAYS * rowHeight + HEATMAP_HEADER_HEIGHT : HEATMAP_BODY_HEIGHT }}
+      >
         {renderGrid()}
       </div>
 

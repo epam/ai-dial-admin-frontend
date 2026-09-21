@@ -8,12 +8,14 @@ import { buildBucketedQuery } from '@/src/components/Analytics/Usage/queries';
 import { foldBucketPoints } from '@/src/components/Analytics/Usage/utils/folds';
 import { getWeekRange } from '@/src/components/Analytics/Usage/utils/weeks';
 import { TimeRange } from '@/src/models/time-range';
+import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 
 const HOURLY: { value: number; unit: 'h' } = { value: 1, unit: 'h' };
 
 interface Params {
   view: UsageView;
   refreshToken: number;
+  notice: LoadFailureNotice;
 }
 
 export interface HeatmapWeek {
@@ -29,7 +31,9 @@ export interface HeatmapWeek {
  * The heatmap keeps its own week rather than following the page period: a grid of hour by day is
  * only readable over exactly seven days, and the page's period is free to be an hour or a month.
  */
-export const useHeatmapWeek = ({ view, refreshToken }: Params): HeatmapWeek => {
+export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapWeek => {
+  const { report, reset } = notice;
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [buckets, setBuckets] = useState<RequestState<BucketPoint[]>>({
     data: null,
@@ -53,28 +57,23 @@ export const useHeatmapWeek = ({ view, refreshToken }: Params): HeatmapWeek => {
     generation.current += 1;
     const current = generation.current;
 
+    reset();
     setBuckets({ data: null, isLoading: true, hasFailed: false });
 
     const read = async () => {
       try {
         const response = await executeQuery(buildBucketedQuery({ view, window: week }, HOURLY));
 
-        return response?.success
-          ? { data: foldBucketPoints(response.response ?? null), isLoading: false, hasFailed: false }
-          : {
-              data: null,
-              isLoading: false,
-              hasFailed: true,
-              error: response?.errorMessage ?? response?.errorHeader,
-            };
+        if (response?.success) {
+          return { data: foldBucketPoints(response.response ?? null), isLoading: false, hasFailed: false };
+        }
+
+        report(response?.errorMessage ?? response?.errorHeader);
       } catch (error) {
-        return {
-          data: null,
-          isLoading: false,
-          hasFailed: true,
-          error: error instanceof Error ? error.message : void 0,
-        };
+        report(error instanceof Error ? error.message : void 0);
       }
+
+      return { data: null, isLoading: false, hasFailed: true };
     };
 
     void read().then((state) => {
@@ -82,7 +81,7 @@ export const useHeatmapWeek = ({ view, refreshToken }: Params): HeatmapWeek => {
 
       setBuckets(state);
     });
-  }, [view, week]);
+  }, [view, week, report, reset]);
 
   const onPreviousWeek = useCallback(() => setWeekOffset((offset) => offset + 1), []);
   const onNextWeek = useCallback(() => setWeekOffset((offset) => Math.max(0, offset - 1)), []);

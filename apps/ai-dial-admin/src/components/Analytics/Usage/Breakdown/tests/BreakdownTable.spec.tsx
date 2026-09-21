@@ -40,6 +40,11 @@ const row = (id: string, calls: number, failed = 0): BreakdownRow => ({
 
 const ROWS = [row('gpt-4o', 60), row('claude-sonnet', 40)];
 
+const WINDOW = {
+  startDate: new Date('2026-09-16T00:00:00.000Z'),
+  endDate: new Date('2026-09-17T00:00:00.000Z'),
+};
+
 type Props = Parameters<typeof BreakdownTable>[0];
 
 const renderTable = (props: Partial<Props> = {}) =>
@@ -52,6 +57,7 @@ const renderTable = (props: Partial<Props> = {}) =>
       previousRows={loaded<BreakdownRow[]>([])}
       windowTotal={200}
       hasComparison={false}
+      window={WINDOW}
       rowLimit={10}
       searchTerm=""
       onSearchChange={vi.fn()}
