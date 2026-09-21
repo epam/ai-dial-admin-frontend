@@ -7,7 +7,7 @@ import { BucketPoint, RequestState } from '@/src/components/Analytics/Usage/mode
 import { HeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { getWeekRange } from '@/src/components/Analytics/Usage/utils/weeks';
-import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 // The grid is AG Grid; this spec is about the card around it, not about the library.
 vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
@@ -87,15 +87,10 @@ describe('ActivityHeatmap', () => {
     expect(screen.queryByRole('grid')).toBeNull();
   });
 
-  test('reports the service message when the week could not be read', () => {
-    renderHeatmap({ buckets: { data: null, isLoading: false, hasFailed: true, error: 'upstream refused' } });
-
-    expect(screen.getByText('upstream refused')).toBeTruthy();
-  });
-
-  test('falls back to a plain no-data notice when the failure carried no message', () => {
+  test('keeps the grid and states the empty week when the request failed', () => {
     renderHeatmap({ buckets: { data: null, isLoading: false, hasFailed: true } });
 
-    expect(screen.getByText(BasicI18nKey.NoData)).toBeTruthy();
+    expect(screen.getByRole('grid')).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapEmptySubtitle)).toBeTruthy();
   });
 });

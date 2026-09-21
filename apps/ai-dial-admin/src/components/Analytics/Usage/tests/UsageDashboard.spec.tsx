@@ -7,6 +7,10 @@ import { AnalyticsUsageI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery } from '@/src/models/analytics/query';
 
 const executeQueryMock = vi.fn();
+const showNotificationMock = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
+}));
 vi.mock('@/src/app/[lang]/queries/actions', () => ({
   executeQuery: (...args: unknown[]) => executeQueryMock(...args),
 }));
@@ -35,6 +39,7 @@ const ANY_ROW = {
 
 beforeEach(() => {
   executeQueryMock.mockReset();
+  showNotificationMock.mockReset();
   executeQueryMock.mockResolvedValue({ success: true, response: { rows: [ANY_ROW] } });
 });
 
@@ -95,12 +100,15 @@ describe('UsageDashboard', () => {
     expect(screen.queryByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeNull();
   });
 
-  test('renders the page when every request fails', async () => {
+  test('renders the page when every request fails, stating the failure once', async () => {
     executeQueryMock.mockResolvedValue({ success: false, errorMessage: 'upstream refused' });
 
     render(<UsageDashboard />);
 
-    await waitFor(() => expect(screen.getAllByText('upstream refused').length).toBeGreaterThan(0));
+    // Nine requests failing the same way is one notification, not nine widgets each printing it.
+    await waitFor(() => expect(showNotificationMock).toHaveBeenCalledOnce());
+    expect(showNotificationMock).toHaveBeenCalledWith(expect.objectContaining({ description: 'upstream refused' }));
+    expect(screen.queryByText('upstream refused')).toBeNull();
     expect(screen.getByRole('heading', { name: MenuI18nKey.AnalyticsUsage })).toBeTruthy();
   });
 });

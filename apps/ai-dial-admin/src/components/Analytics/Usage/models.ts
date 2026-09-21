@@ -33,8 +33,6 @@ export interface RequestState<T> {
   data: T | null;
   isLoading: boolean;
   hasFailed: boolean;
-  /** What the service said, so a failure is not shown as an empty result. */
-  error?: string;
 }
 
 export interface ComparedWindows {

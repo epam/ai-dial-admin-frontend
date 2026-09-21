@@ -94,13 +94,21 @@ chart that ends early without saying so.
 - **THEN** the response covers the whole window
 - **AND** the chart's last bucket is the window's last bucket
 
-### Requirement: A failed request degrades only the widgets it feeds
+### Requirement: A failure is stated once, in a notification, and leaves its widget empty
 
-When one request fails, the widgets fed by the others SHALL still render their data. Each widget
-fed by the failed request SHALL state what the service said, falling back to the no-data state when
-it said nothing. A failed request SHALL NOT raise a toast notification — the page is read-only and
-performs no action a notification would describe — and SHALL NOT replace an already-rendered result
-with a broken widget.
+When one request fails, the widgets fed by the others SHALL still render their data. The failure
+SHALL be stated in a notification carrying what the service said, and the widget the failed request
+feeds SHALL render its empty state rather than the message.
+
+The notification SHALL be raised once per distinct message for the life of a load, not once per
+request: the page issues up to nine of them across two hooks, and a backend that is down fails all
+of them the same way. A new load SHALL clear what was already stated, so the same failure is worth
+saying again.
+
+A widget SHALL NOT print the message itself. Seven cards each reading "Load failed" says one thing
+seven times, and an empty state is what the widget has to show either way — a window that reported
+nothing and a window that could not be read look the same on the page, and the notification is what
+tells them apart.
 
 A rejected request SHALL be handled as a failure rather than left unhandled, so no widget is left
 in its loading state indefinitely.
@@ -110,14 +118,15 @@ in its loading state indefinitely.
 - **GIVEN** the tab request fails and the bucketed request succeeds
 - **WHEN** the page settles
 - **THEN** the time series renders its data
-- **AND** the breakdown table states the failure
-- **AND** no toast notification is raised
+- **AND** the breakdown table renders its empty state
 
-#### Scenario: A widget states the failure of its own request
+#### Scenario: One outage is one notification
 
-- **GIVEN** the spend-periods request fails while the bucketed request succeeds
-- **WHEN** the spend plot is showing
-- **THEN** it states the message the spend request returned, not the bucketed request's
+- **GIVEN** every request fails with the same message
+- **WHEN** the page settles
+- **THEN** exactly one notification is raised
+- **AND** it carries that message
+- **AND** no widget prints it
 
 #### Scenario: A rejected request settles its widget
 
