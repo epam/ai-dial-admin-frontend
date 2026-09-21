@@ -42,19 +42,6 @@ export const getAgentLinkForConversation = (
   return `/${currentLocale}${getUrnForEntity(target.route, target.entity)}`;
 };
 
-export const filterLatestVersions = (data: AssetWithVersion[]) => {
-  const latestVersions: Record<string, AssetWithVersion> = {};
-
-  data?.forEach((item) => {
-    const name = item.name as string;
-    if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
-      latestVersions[name] = item as AssetWithVersion;
-    }
-  });
-
-  return Object.values(latestVersions);
-};
-
 export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) => {
   const versionsPerName: Record<string, string[]> = {};
 
@@ -74,14 +61,17 @@ export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) =>
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
+export const getIsNeedToMove = (entity: { folderId?: string }, initialEntity?: { folderId?: string }) => {
   return entity.folderId !== initialEntity?.folderId;
 };
 
-export const getEntityForUpdate = (entity: AssetWithVersion, initialEntity?: AssetWithVersion) => {
+export const getEntityForUpdate = <T extends { folderId?: string }>(
+  entity: T,
+  initialEntity?: { folderId?: string },
+): T => {
   return {
     ...entity,
-    folderId: (initialEntity as AssetWithVersion)?.folderId,
+    folderId: initialEntity?.folderId,
   };
 };
 
@@ -332,17 +322,8 @@ export const getDeleteNotificationContent = (
 
   switch (view) {
     case ApplicationRoute.Conversations: {
-      if (isMultipleVersionsDelete) {
-        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
-        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
-          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Conversation),
-            name: `${nameWithPath}__${version}`,
-          }),
-        );
-
-        return descriptions?.map((description) => ({ title, description }));
-      }
+      // Conversations are versionless — each row is one stored resource, so the description shows
+      // its plain path and the multi-version delete branch never applies.
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
@@ -352,7 +333,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Conversation),
-            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+            name: nameWithPath,
           });
       return { title, description };
     }
@@ -371,17 +352,8 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.Prompts: {
-      if (isMultipleVersionsDelete) {
-        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
-        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
-          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Prompt),
-            name: `${nameWithPath}__${version}`,
-          }),
-        );
-
-        return descriptions?.map((description) => ({ title, description }));
-      }
+      // Prompts are versionless — each row is one stored resource, so the description shows its
+      // plain path and the multi-version delete branch never applies.
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
@@ -391,7 +363,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
-            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+            name: nameWithPath,
           });
       return { title, description };
     }
@@ -934,16 +906,4 @@ export const getImportNotificationContent = (
         skippedDescription: '',
       };
   }
-};
-
-export const getNameAndVersionByPath = (path: string): { name: string; version: string } => {
-  const nameWithVersion = path.split('/').pop() || '';
-  const lastUnderscoreIndex = nameWithVersion.lastIndexOf('__');
-  if (lastUnderscoreIndex === -1) {
-    return { name: nameWithVersion, version: '' };
-  }
-  return {
-    name: nameWithVersion.slice(0, lastUnderscoreIndex),
-    version: nameWithVersion.slice(lastUnderscoreIndex + 2),
-  };
 };

@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { generateMethodPathCombinations } from '../method';
+import { generateMethodPathCombinations, getDefaultRequestTemplateFor } from '../method';
 import { DialRoute } from '@/src/models/dial/route';
+import { CHAT_COMPLETION_SUITE } from '@/src/components/TestSuites/constants/methods';
 
 describe('generateMethodPathCombinations', () => {
   test('should generate all combinations of methods and paths from a single route', () => {
@@ -140,5 +141,28 @@ describe('generateMethodPathCombinations', () => {
     const result = generateMethodPathCombinations();
 
     expect(result).toEqual([]);
+  });
+});
+
+describe('getDefaultRequestTemplateFor', () => {
+  test('returns the chat completion default template for the chat completion endpoint', () => {
+    const result = getDefaultRequestTemplateFor({ method: 'POST', relativeUrlPattern: '/chat/completions' });
+
+    expect(result).toEqual(CHAT_COMPLETION_SUITE.requestTemplate);
+  });
+
+  test('returns an empty JSON body template for any other endpoint', () => {
+    const result = getDefaultRequestTemplateFor({ method: 'GET', relativeUrlPattern: '/search/request' });
+
+    expect(result).toEqual({
+      urlTemplate: '/search/request',
+      body: { contentType: 'application/json', content: {} },
+    });
+  });
+
+  test('returns undefined when the endpoint is not fully configured', () => {
+    expect(getDefaultRequestTemplateFor(undefined)).toBeUndefined();
+    expect(getDefaultRequestTemplateFor({ method: 'GET' })).toBeUndefined();
+    expect(getDefaultRequestTemplateFor({ relativeUrlPattern: '/search' })).toBeUndefined();
   });
 });

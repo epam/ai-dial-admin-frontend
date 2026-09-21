@@ -60,19 +60,37 @@ describe('Assets Prompt :: server actions', () => {
       folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
       content: 'test',
     });
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/test__1.0', {
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/test', {
       name: 'test',
       folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
       content: 'test',
     });
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('createPrompt keeps a `__` in the name verbatim — it is part of the name, not a version', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createPrompt({
+      name: 'my-prompt__1.0',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'my-prompt__1.0',
+      content: 'test',
+    });
+
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/my-prompt__1.0', {
+      name: 'my-prompt__1.0',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'my-prompt__1.0',
+      content: 'test',
+    });
   });
 
   test('createPrompt defaults content to an empty string when omitted', async () => {
@@ -83,7 +101,6 @@ describe('Assets Prompt :: server actions', () => {
       folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
     } as any);
 
     const [, , , body] = (assetApi.put as any).mock.calls[0];
@@ -103,7 +120,6 @@ describe('Assets Prompt :: server actions', () => {
       folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
       content: 'test',
     });
 
@@ -151,7 +167,7 @@ describe('Assets Prompt :: server actions', () => {
   test('importPrompts parses the JSON body and delegates to importPromptsExport', async () => {
     (eximModule.importPromptsExport as any).mockResolvedValue({ importResults: [{ status: 'success' }] });
 
-    const document = { prompts: [{ id: 'prompts/public/name__1.0' }] };
+    const document = { prompts: [{ id: 'prompts/public/name' }] };
     const body = new FormData();
     body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'override' })]));
     body.append('file', new Blob([JSON.stringify(document)]));
@@ -193,7 +209,6 @@ describe('Assets Prompt :: server actions', () => {
       folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
       content: 'content',
     };
     const result = await updatePrompt(prompt as any, 'etag');
@@ -219,7 +234,7 @@ describe('Assets Prompt :: server actions', () => {
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
-  test('movePrompts with duplicateName keeps the source version suffix on the destination', async () => {
+  test('movePrompts with duplicateName uses the name verbatim — a `__` in the source name is part of the name, not a version to graft', async () => {
     (assetApi.move as any).mockResolvedValue(RESPONSE_MOCK);
 
     await movePrompts(['folder/name__2'], 'folder/', false, 'copy');
@@ -228,7 +243,7 @@ describe('Assets Prompt :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.PROMPT,
       'folder/name__2',
-      'folder//copy__2',
+      'folder//copy',
       false,
     );
   });

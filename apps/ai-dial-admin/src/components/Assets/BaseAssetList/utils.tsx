@@ -63,6 +63,7 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import {
   DialAppRunnerResource,
   DialModelResource,
@@ -75,9 +76,10 @@ import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
@@ -179,6 +181,12 @@ export const getGridColumns = (
     ];
   }
 
+  // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
+  // per-row version selection.
+  if (isVersionlessAssetView(view)) {
+    return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  }
+
   return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
 };
 
@@ -189,28 +197,29 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
   return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
-export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialPrompt => {
   const baseEmptyAsset = {
     name: TEMP_FOLDER,
     folderId: path,
-    version: '',
     path: `${path}${TEMP_FOLDER}`,
   };
 
   switch (view) {
     case ApplicationRoute.Prompts:
+      // A prompt never carries a version — the folder-marker body is plain name/folderId/content.
       return { ...baseEmptyAsset, content: '' };
     case ApplicationRoute.AssetsApplications:
-      return { ...baseEmptyAsset, endpoint: '' };
+      return { ...baseEmptyAsset, version: '', endpoint: '' };
     case ApplicationRoute.AssetsToolsets:
       return {
         ...baseEmptyAsset,
+        version: '',
         endpoint: 'http://mock',
         displayName: TEMP_FOLDER,
         transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
     default:
-      return baseEmptyAsset;
+      return { ...baseEmptyAsset, version: '' };
   }
 };
 
@@ -508,11 +517,4 @@ export const PlatformBulkDeleteAssetActionMap: Partial<
 > = {
   [ApplicationRoute.AssetsApplications]: bulkDeletePlatformApplications,
   [ApplicationRoute.AssetsToolsets]: bulkDeletePlatformToolsets,
-};
-
-export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {
-  const fullName = conversation.path.split('/').pop() || '';
-  const { name, version } = getNameVersionFromAsset(fullName);
-
-  return { ...conversation, name, version };
 };

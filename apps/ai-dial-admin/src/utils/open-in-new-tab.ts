@@ -3,6 +3,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
@@ -41,14 +42,13 @@ export const getEntityPath = (
     case ApplicationRoute.ApplicationRunners:
       return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
 
+    // Prompts and conversations are versionless — the path is the folder + plain name, with any
+    // `__` in the name kept verbatim. Files and skills always had this same folder+name shape.
     case ApplicationRoute.Conversations:
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.Skills: {
-      const path = version
-        ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
-        : (data as DialPrompt).path ||
-          `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
+      const path = (data as DialPrompt).path || `${(data as DialPrompt).folderId}${(data as DialPrompt).name || ''}`;
 
       return forRemove
         ? decodeURIComponent(escapePercentSign(path))
@@ -66,7 +66,7 @@ export const getEntityPath = (
     // this shape used to produce 404s the detail page (Issue #4590).
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
-      const entity = data as DialPrompt & { folderId?: string; path?: string };
+      const entity = data as AssetWithVersion;
 
       if (isPlatformBucketPath(entity.path || entity.folderId)) {
         // `forRemove` must still resolve to the resource's storage path (`platform/{name}`) — Core

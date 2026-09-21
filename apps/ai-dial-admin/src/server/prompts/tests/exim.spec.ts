@@ -5,16 +5,16 @@ import { ResourceType } from '@/src/types/resource-type';
 import { buildPromptsExport, importPromptsExport, isValidPromptExportId, resolveImportDestination } from '../exim';
 
 describe('Server :: Prompts :: exim :: isValidPromptExportId', () => {
-  test('accepts a well-shaped id', () => {
-    expect(isValidPromptExportId('prompts/public/folder/name__1.0')).toBe(true);
+  test('accepts an id whose name has no `__`', () => {
+    expect(isValidPromptExportId('prompts/public/folder/name')).toBe(true);
   });
 
   test('accepts a nested-folder id', () => {
-    expect(isValidPromptExportId('prompts/public/a/b/name__1.0')).toBe(true);
+    expect(isValidPromptExportId('prompts/public/a/b/name')).toBe(true);
   });
 
-  test('rejects an id missing the version suffix', () => {
-    expect(isValidPromptExportId('prompts/public/folder/name')).toBe(false);
+  test('accepts a name containing `__` verbatim — it is part of the name, not a version suffix', () => {
+    expect(isValidPromptExportId('prompts/public/folder/name__1.0')).toBe(true);
   });
 
   test('rejects a missing id', () => {
@@ -23,6 +23,8 @@ describe('Server :: Prompts :: exim :: isValidPromptExportId', () => {
 });
 
 describe('Server :: Prompts :: exim :: resolveImportDestination', () => {
+  // The helper is shared with toolsets/applications; the explicit-version cases below exercise
+  // its versioned path, while prompts always pass `undefined` and keep the name verbatim.
   test('flatImport drops the original folder structure', () => {
     expect(resolveImportDestination('public/target/', 'public/source/sub/', 'name', '1.0', true)).toBe(
       'public/target/name__1.0',
@@ -38,20 +40,27 @@ describe('Server :: Prompts :: exim :: resolveImportDestination', () => {
   test('non-flat import with no nested subfolder', () => {
     expect(resolveImportDestination('public/target/', 'public/', 'name', undefined, false)).toBe('public/target/name');
   });
+
+  test('a versionless prompt keeps a `__` in the name verbatim', () => {
+    expect(resolveImportDestination('public/target/', 'public/source/', 'name__1.0', undefined, true)).toBe(
+      'public/target/name__1.0',
+    );
+  });
 });
 
 describe('Server :: Prompts :: exim :: buildPromptsExport', () => {
   test('fetches each selected prompt and sets a prefixed id', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'prompts/public/folder/name__1.0', nodeType: 'ITEM' }),
-      getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0', content: 'hi' }),
+      getMerged: vi.fn().mockResolvedValue({ name: 'name__1.0', content: 'hi' }),
     } as any;
 
     const result = await buildPromptsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.PROMPT, 'public/folder/name__1.0');
+    // A `__` in the fetched name survives into the export document verbatim — no version split.
     expect(result).toEqual({
-      prompts: [{ name: 'name', version: '1.0', content: 'hi', id: 'prompts/public/folder/name__1.0' }],
+      prompts: [{ name: 'name__1.0', content: 'hi', id: 'prompts/public/folder/name__1.0' }],
     });
   });
 
@@ -76,10 +85,12 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
       put: vi.fn().mockResolvedValue({ success: true }),
     } as any;
 
+    // An old exported id with `__1.0` in it: the whole last segment is the name — nothing is
+    // split off as a version, and no `version` field rides along on the body.
     const result = await importPromptsExport(
       assetApi,
       {} as any,
-      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name', version: '1.0' } as any] },
+      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name__1.0' } as any] },
       baseOptions,
     );
 
@@ -87,7 +98,14 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
       {},
       ResourceType.PROMPT,
       'public/target/name__1.0',
-      expect.objectContaining({ name: 'name' }),
+      expect.objectContaining({ name: 'name__1.0' }),
+      { allowOverride: true },
+    );
+    expect(assetApi.put).toHaveBeenCalledWith(
+      {},
+      ResourceType.PROMPT,
+      'public/target/name__1.0',
+      expect.not.objectContaining({ version: expect.anything() }),
       { allowOverride: true },
     );
     expect(result.importResults).toEqual([
@@ -125,7 +143,7 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
     const result = await importPromptsExport(
       assetApi,
       {} as any,
-      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name', version: '1.0' } as any] },
+      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name__1.0' } as any] },
       { path: 'public/target/', conflictResolutionStrategy: 'skip', flatImport: true },
     );
 
@@ -148,7 +166,7 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
     const result = await importPromptsExport(
       assetApi,
       {} as any,
-      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name', version: '1.0' } as any] },
+      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name__1.0' } as any] },
       { path: 'public/target/', conflictResolutionStrategy: 'override', flatImport: true },
     );
 
@@ -164,8 +182,7 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
 
     const prompts = Array.from({ length: 6 }, (_, i) => ({
       id: `prompts/public/source/name${i}__1.0`,
-      name: `name${i}`,
-      version: '1.0',
+      name: `name${i}__1.0`,
     })) as any[];
 
     const result = await importPromptsExport(assetApi, {} as any, { prompts }, baseOptions);

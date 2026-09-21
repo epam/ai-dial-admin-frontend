@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createPrompt, getPrompts, movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
-import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
+import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -13,12 +13,10 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
+import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -29,10 +27,9 @@ import TabsContent from './TabsContent';
 interface Props {
   originalPrompt: DialPrompt;
   etag?: string;
-  prompts?: DialPrompt[] | null;
 }
 
-const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
+const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.Prompts);
   const router = useRouter();
@@ -45,7 +42,6 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const [addedVersions, setAddedVersions] = useState<string[]>([]);
   const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
@@ -68,59 +64,42 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
 
   const onDiscard = useCallback(() => {
     setSelectedPrompt(structuredClone(originalPrompt));
-    setAddedVersions([]);
     setDiscardKey((prev) => prev + 1);
   }, [originalPrompt]);
 
-  const onSave = useCallback(
-    (newVersion?: string) => {
-      const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
-      let updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
-      let updateFunction = updatePrompt;
-      if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
-        updateFunction = createPrompt;
-      }
-      getReqRef.current(updateFunction, updatedEntity as DialPrompt, etag).then((res) => {
-        if (res.success) {
-          setAddedVersions([]);
-          showNotification(
-            getSuccessNotification(
-              newVersion
-                ? getCreateNotificationTitle(ApplicationRoute.Prompts, t)
-                : getUpdateNotificationTitle(ApplicationRoute.Prompts, t),
-              newVersion
-                ? getCreateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t)
-                : getUpdateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t),
-            ),
-          );
-          if (isNeedToMove) {
-            getPrompts(addTrailingSlash(updatedEntity.folderId)).then((prompts) => {
-              const pathsToMove = getListOfPathsToMove(updatedEntity, null, (prompts as DialPrompt[]) || []);
-              const newPath = removeTrailingSlash(selectedPrompt.folderId);
-
-              movePrompts(pathsToMove, newPath).then(() => {
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                router.push(
-                  getUrnForEntity(ApplicationRoute.Prompts, {
-                    name: updatedEntity.name,
-                    path: changePath(updatedEntity.path, newPath),
-                  }),
-                );
-              });
-            });
-          } else {
-            fetchFiles(updatedEntity.folderId);
-            router.push(getUrnForEntity(ApplicationRoute.Prompts, updatedEntity));
-          }
-          router.refresh();
+  const onSave = useCallback(() => {
+    const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
+    const updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
+    getReqRef.current(updatePrompt, updatedEntity, etag).then((res) => {
+      if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Prompts, t),
+            getUpdateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t),
+          ),
+        );
+        if (isNeedToMove) {
+          // A prompt is a single stored resource — move just its own path (no same-name
+          // sibling versions to carry along).
+          movePrompts([updatedEntity.path], removeTrailingSlash(selectedPrompt.folderId)).then(() => {
+            fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+            router.push(
+              getUrnForEntity(ApplicationRoute.Prompts, {
+                name: updatedEntity.name,
+                path: changePath(updatedEntity.path, removeTrailingSlash(selectedPrompt.folderId)),
+              }),
+            );
+          });
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          fetchFiles(updatedEntity.folderId);
+          router.push(getUrnForEntity(ApplicationRoute.Prompts, updatedEntity));
         }
-      });
-    },
-    [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles],
-  );
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      }
+    });
+  }, [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -132,15 +111,11 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
-        assets={prompts}
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
         onChangeActiveTab={setActiveTab}
         onRemove={removePrompt}
-        addedVersions={addedVersions}
-        onChangeAddedVersion={setAddedVersions}
         getAssetContext={usePromptFolder}
-        onChangeAsset={setSelectedPrompt as (asset: Asset) => void}
       />
 
       <div className="flex-1 overflow-auto min-h-0">

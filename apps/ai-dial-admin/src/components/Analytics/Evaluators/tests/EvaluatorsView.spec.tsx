@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EvaluatorsView from '@/src/components/Analytics/Evaluators/EvaluatorsView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEvaluatorsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
 
@@ -76,7 +76,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 }));
 
 const row = (over: Partial<EvaluatorListRow> = {}): EvaluatorListRow => ({
-  name: 'conversation-insights',
+  name: 'session-insights',
   latest_version: 4,
   created_at: '2026-08-17T10:00:00Z',
   usedBy: 3,
@@ -153,9 +153,9 @@ describe('EvaluatorsView', () => {
     const user = userEvent.setup();
     renderView();
 
-    await user.click(screen.getByRole('button', { name: 'open conversation-insights' }));
+    await user.click(screen.getByRole('button', { name: 'open session-insights' }));
 
-    expect(push).toHaveBeenCalledWith('/evaluators/conversation-insights');
+    expect(push).toHaveBeenCalledWith('/evaluators/session-insights');
   });
 
   test('leaves every data column sortable and filterable through the grid', () => {

@@ -66,7 +66,9 @@ export const DEPLOYMENT_IMPORT_RESOLUTIONS = (t: TranslateFn): RadioButtonWithCo
 export const IMPORT_FILE_TYPES = (t: TranslateFn, route?: ApplicationRoute): RadioButtonWithContent[] => {
   const buttons = [ARCHIVE_IMPORT_TYPE(t)];
 
-  if (isAssetWithVersion(route)) {
+  // Prompts are versionless but keep the aggregate JSON import (a `{ prompts: [...] }`
+  // document); apps/toolsets keep theirs.
+  if (isAssetWithVersion(route) || route === ApplicationRoute.Prompts) {
     return [...buttons, DIAL_JSON_IMPORT_TYPE(t)];
   }
   if (route === ApplicationRoute.Files) {

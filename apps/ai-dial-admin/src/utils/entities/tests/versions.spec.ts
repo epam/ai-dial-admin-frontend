@@ -7,14 +7,16 @@ import {
 } from '../versions';
 import { describe, expect, test } from 'vitest';
 
-describe('Prompts utils :: getNameVersionForAsset', () => {
+// These helpers serve the versioned asset views (applications/toolsets) only — prompts and
+// conversations are versionless — so this file is the versioned group's regression guard.
+describe('Versions utils :: getNameVersionForAsset', () => {
   test('Should return name + version', () => {
     const res = getNameVersionForAsset('prompt', '1.0.0');
     expect(res).toEqual('prompt__1.0.0');
   });
 });
 
-describe('Prompts utils :: getNameVersionFromAsset', () => {
+describe('Versions utils :: getNameVersionFromAsset', () => {
   test('Should return name and version', () => {
     const res = getNameVersionFromAsset('prompt__1.0.0');
     expect(res).toEqual({ name: 'prompt', version: '1.0.0' });
@@ -26,7 +28,7 @@ describe('Prompts utils :: getNameVersionFromAsset', () => {
   });
 });
 
-describe('Prompts utils :: modifyNameVersionInAsset', () => {
+describe('Versions utils :: modifyNameVersionInAsset', () => {
   test('Should return name and changed version', () => {
     const res = modifyNameVersionInAsset('prompt__1.0.0', void 0, '2.0.0');
     expect(res).toEqual('prompt__2.0.0');
@@ -78,7 +80,7 @@ describe('Prompts utils :: modifyNameVersionInAsset', () => {
   });
 });
 
-describe('Prompts utils :: getInitialVersion', () => {
+describe('Versions utils :: getInitialVersion', () => {
   test('Should return latest version + 1', () => {
     const res = getInitialVersion({ versions: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
     expect(res).toEqual('1.0.4');
@@ -100,7 +102,7 @@ describe('Prompts utils :: getInitialVersion', () => {
   });
 });
 
-describe('Prompts utils :: checkNameVersionCombination', () => {
+describe('Versions utils :: checkNameVersionCombination', () => {
   test('Should return false if no such prompt name', () => {
     const res = checkNameVersionCombination({ prompt: ['1', '2'] }, 'name', '1');
     expect(res).toBeFalsy();

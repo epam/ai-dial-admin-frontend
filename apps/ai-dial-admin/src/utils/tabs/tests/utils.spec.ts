@@ -30,7 +30,6 @@ import {
   getAppRunnerTabs,
   getAuditTabs,
   getDeploymentsViewTabs,
-  getEndpointSchemaTabs,
   getFilePublicationTabs,
   getFileSelectInputTabs,
   getInterceptorTabs,
@@ -67,11 +66,10 @@ import {
   promptsTab,
   propertiesTab,
   publicTab,
+  rateLimitScheduleTab,
   relatedContainersTab,
-  requestSchemaTab,
   responseTab,
   resourcesTab,
-  responseSchemaTab,
   rolesTab,
   runsTab,
   getSkillPublicationTabs,
@@ -101,7 +99,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
+  analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
   ...overrides,
@@ -420,7 +418,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for system properties', () => {
-    expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t)]);
+    expect(getSystemPropertiesTabs(t)).toEqual([globalInterceptorsTab(t), rateLimitScheduleTab(t)]);
   });
 
   test('returns correct tabs for interceptor', () => {
@@ -515,8 +513,8 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for test suite', () => {
     expect(getTestSuiteTabs(t)).toEqual([
       propertiesTab(t),
-      testSuiteMethodTab(t),
       testCasesTab(t),
+      testSuiteMethodTab(t),
       metricsTab(t),
       runsTab(t),
       trendsTab(t),
@@ -638,10 +636,6 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for test suite request template', () => {
     expect(getTestSuiteRequestTemplateTabs(t)).toEqual([bodyTab(t), parametersTab(t), headersTab(t)]);
-  });
-
-  test('returns correct tabs for test suite request template', () => {
-    expect(getEndpointSchemaTabs(t)).toEqual([requestSchemaTab(t), responseSchemaTab(t), columnsTab(t)]);
   });
 
   test('returns correct tabs for file publication', () => {

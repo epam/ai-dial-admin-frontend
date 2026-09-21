@@ -5,8 +5,8 @@ Direct-to-DIAL-Core client, version-path helper, and content+metadata mappers fo
 
 ## Requirements
 
-### Requirement: Direct Core read/write for versioned asset resources
-The system SHALL provide a server-side client that reads and writes application-resource, toolset-resource, conversation, and prompt content directly against DIAL Core (`GET/PUT/DELETE /v1/{type}/{path}` for content, `GET /v1/metadata/{type}/{path}` for metadata), authenticating with the logged-in user's JWT via the existing Core client pipeline.
+### Requirement: Direct Core read/write for content-addressed asset resources
+The system SHALL provide a server-side client that reads and writes application-resource, toolset-resource, conversation, and prompt content directly against DIAL Core (`GET/PUT/DELETE /v1/{type}/{path}` for content, `GET /v1/metadata/{type}/{path}` for metadata), authenticating with the logged-in user's JWT via the existing Core client pipeline. Application-resource and toolset-resource are versioned (their paths carry a `__version` suffix); conversation and prompt are versionless (their paths are plain `/`-joined segments, and `__` within a name is never interpreted) — the same content-addressed, unversioned treatment the model resource kind already receives.
 
 #### Scenario: Content and metadata are fetched separately and merged
 - **WHEN** an application-resource, toolset-resource, conversation, or prompt is requested by path
@@ -16,27 +16,39 @@ The system SHALL provide a server-side client that reads and writes application-
 - **WHEN** any operation on this client executes
 - **THEN** the request goes to `DIAL_CORE_API_URL`, never to the admin-BE host
 
+#### Scenario: Prompt and conversation names are never version-parsed
+- **WHEN** a conversation or prompt is read or written and its name contains `__`
+- **THEN** the name is used verbatim in the path with no `__` split applied and no version extracted
+
 ### Requirement: Single consolidated version-path helper
-The system SHALL provide exactly one implementation of the `__`-suffix versioned-name parsing and building logic (extract name/version from a versioned name, build a versioned name, build and encode a versioned path), used by every asset mapper that needs it.
+The system SHALL provide exactly one implementation of the `__`-suffix versioned-name parsing and building logic (extract name/version from a versioned name, build a versioned name, build and encode a versioned path), used by every asset mapper that needs it. Its scope SHALL be the versioned group — application-resource and toolset-resource — only; conversation and prompt mappers SHALL NOT use it, in any bucket.
 
 #### Scenario: Version suffix extracted using the last occurrence
-- **WHEN** a versioned name contains more than one `__` occurrence
+- **WHEN** a versioned name of an application-resource or toolset-resource contains more than one `__` occurrence
 - **THEN** the name/version split uses the last `__` occurrence, not the first
 
 #### Scenario: Blank or missing version is treated as unversioned
 - **WHEN** a name has no `__` suffix, or the version portion is blank
 - **THEN** the parsed version is treated as absent (not an empty string) and the name is returned unchanged
 
+#### Scenario: Versionless group never passes through the helper
+- **WHEN** a conversation or prompt name or path is parsed or built
+- **THEN** the version-path helper is not applied, and a name containing `__` is preserved whole
+
 ### Requirement: Content+metadata field merge matches per-type source-of-truth
-For each of application-resource, toolset-resource, conversation, and prompt, the system SHALL populate `name`, `folderId`, `updatedAt`, `author`, and the parsed version from the metadata response, and populate the type-specific content fields from the content response, matching the field split the admin BE's per-type mappers use today.
+For application-resource and toolset-resource, the system SHALL populate `name`, `folderId`, `updatedAt`, `author`, and the parsed version from the metadata response, and populate the type-specific content fields from the content response. For conversation and prompt, the system SHALL populate `name`, `folderId`, `updatedAt`, and `author` from the metadata response and the type-specific content fields from the content response, with no `version` grafted from the URL — a `__` in the name stays part of the name.
 
 #### Scenario: Metadata-sourced fields
-- **WHEN** any of the four versioned types is merged from a content and metadata response pair
-- **THEN** `name`, `folderId`, `updatedAt`, `author`, and `version` come from the metadata response's parsed URL, not the content response
+- **WHEN** any of the four content-addressed types is merged from a content and metadata response pair
+- **THEN** `name`, `folderId`, `updatedAt`, and `author` come from the metadata response's parsed URL, not the content response, and `version` comes from it only for application-resource and toolset-resource
 
 #### Scenario: Content-sourced fields
-- **WHEN** any of the four versioned types is merged
+- **WHEN** any of the four content-addressed types is merged
 - **THEN** its type-specific fields (e.g. `endpoint`/`viewerUrl`/`editorUrl` for application-resource, `content`/`description` for prompt) come from the content response
+
+#### Scenario: Conversation and prompt merge without a version
+- **WHEN** a conversation or prompt is merged from a content and metadata response pair
+- **THEN** the returned model carries no `version` field, and its `name` is the full last path segment including any `__`
 
 ### Requirement: File asset client without versioning
 The system SHALL provide a file-specific client that reads file metadata (`GET /v1/metadata/files/{path}`, including `contentType` and `contentLength`), streams file content, and writes/deletes files against Core — without applying the `__` version-suffix logic, since files are not versioned.
@@ -80,17 +92,17 @@ The system SHALL default the list path to `"public/"` and the page-size limit to
 
 ### Requirement: Write operations resolve with normalized admin-format path fields
 
-On a successful `put` (create or update) of a versioned asset resource, the client SHALL resolve with a response that includes the admin-format identity fields `path`, `folderId`, `name`, and `version`, derived from the resource path written to (via the shared version-path helper). This matches the field shape the merge readers already return, so post-write consumers (redirects, list refresh) receive a consistent object regardless of Core's raw response shape.
+On a successful `put` (create or update) of a content-addressed asset resource, the client SHALL resolve with a response that includes the admin-format identity fields `path`, `folderId`, and `name`, derived from the resource path written to. For the versioned group (application-resource, toolset-resource) the response SHALL additionally include `version`, derived via the shared version-path helper; for conversation and prompt no `version` is included, since their paths carry no version part. This matches the field shape the merge readers already return, so post-write consumers (redirects, list refresh) receive a consistent object regardless of Core's raw response shape.
 
 Existing Core-format fields on the response SHALL be preserved; the admin-format fields SHALL be added alongside them.
 
 #### Scenario: Successful versioned write returns parsed path fields
-- **WHEN** `put` succeeds for a resource written to `folder/Name__1.0`
+- **WHEN** `put` succeeds for an application-resource or toolset-resource written to `folder/Name__1.0`
 - **THEN** the resolved response SHALL include `path`, `folderId=folder/`, `name=Name`, and `version=1.0`
 
-#### Scenario: Unversioned write omits version
-- **WHEN** `put` succeeds for a resource written to a path with no `__version` suffix
-- **THEN** the resolved response SHALL include `path`, `folderId`, and `name`, with `version` undefined
+#### Scenario: Successful versionless write returns path fields without version
+- **WHEN** `put` succeeds for a conversation or prompt written to `folder/Name` (whatever `Name` contains, including `__`)
+- **THEN** the resolved response SHALL include `path`, `folderId=folder/`, and `name=Name`, with `version` undefined
 
 #### Scenario: Failed write is unchanged
 - **WHEN** `put` fails (non-success `ServerActionResponse`)

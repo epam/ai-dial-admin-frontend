@@ -1,3 +1,4 @@
+import { FOLDER_NESTED_VERSIONLESS_TYPES } from '@/src/constants/assets-core';
 import { FILES_PREFIX, PUBLICATIONS_PREFIX } from '@/src/constants/publications-core';
 import { Publication, PublicationFile } from '@/src/models/dial/publications';
 import { ResourceType } from '@/src/types/resource-type';
@@ -88,10 +89,15 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
       continue;
     }
     const asset = wrapper[config.assetKey] as AssetLike;
+    // Folder-nested versionless types (prompt/conversation) target the plain name — no
+    // `__version` suffix; versioned types (application/toolset) keep the versioned-name build.
+    const targetUrl = FOLDER_NESTED_VERSIONLESS_TYPES.has(type)
+      ? encodeCorePath(`${config.prefix}${ensureTrailingSlash(folderId)}${asset?.name ?? ''}`)
+      : buildEncodedPath(config.prefix + ensureTrailingSlash(folderId), asset?.name ?? '', asset?.version);
     resources.push({
       action: actionTypeToCore(wrapper.action),
       sourceUrl: wrapper.sourceUrl,
-      targetUrl: buildEncodedPath(config.prefix + ensureTrailingSlash(folderId), asset?.name ?? '', asset?.version),
+      targetUrl,
     });
     // Skill has no writable JSON asset (its real write path is Core's /v2/skills multipart API,
     // not /v1/{type}/...) — only recalculate its target URL above, never queue an asset PUT.

@@ -1,3 +1,4 @@
+import { FOLDER_NESTED_VERSIONLESS_TYPES } from '@/src/constants/assets-core';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { FILES_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
@@ -16,7 +17,7 @@ import {
   resolvePublicationResourceType,
 } from '../mappers';
 import { CorePublication, CorePublicationResource, CoreResourceAction } from '../models';
-import { parseEncodedVersionedPath } from '../path';
+import { parseEncodedFolderPath, parseEncodedVersionedPath } from '../path';
 import { enrichFileResource } from './file-resource';
 import { PUBLICATION_TYPE_REGISTRY } from './registry';
 import { enrichSkillResource } from './skill-resource';
@@ -24,6 +25,16 @@ import { EnrichmentClients, PublicationTypeConfig } from './types';
 import { resolveResourceUrl } from './url-resolver';
 
 type ResourceWrapper = Record<string, unknown>;
+
+/**
+ * Decodes a publication resource URL to the bare asset path. Folder-nested versionless types
+ * (prompt/conversation) parse with folder semantics so a `__` in the name is never split;
+ * versioned types (application/toolset) keep the `__version`-aware parse.
+ */
+const parseResourceAssetPath = (url: string, config: PublicationTypeConfig): string =>
+  FOLDER_NESTED_VERSIONLESS_TYPES.has(config.resourceType)
+    ? parseEncodedFolderPath(url, config.prefix).path
+    : parseEncodedVersionedPath(url, config.prefix).path;
 
 const enrichAssetResource = async (
   resource: CorePublicationResource,
@@ -34,7 +45,7 @@ const enrichAssetResource = async (
   issues: ResourceIssue[],
 ): Promise<ResourceWrapper | null> => {
   if (status === PublicationStatus.PENDING && resource.action !== CoreResourceAction.DELETE) {
-    const targetPath = parseEncodedVersionedPath(resource.targetUrl ?? '', config.prefix).path;
+    const targetPath = parseResourceAssetPath(resource.targetUrl ?? '', config);
     const existing = await clients.getAsset(token, targetPath, config.resourceType, DEFAULT_ETAG);
     if (existing.success && existing.response) {
       issues.push({
@@ -46,7 +57,7 @@ const enrichAssetResource = async (
     }
   }
 
-  const assetPath = parseEncodedVersionedPath(resolveResourceUrl(resource, status), config.prefix).path;
+  const assetPath = parseResourceAssetPath(resolveResourceUrl(resource, status), config);
   const res = await clients.getAsset(token, assetPath, config.resourceType, DEFAULT_ETAG);
   if (!res.success || !res.response) {
     issues.push({ resourceType: config.resourceType, path: assetPath, message: config.notFoundMessage });

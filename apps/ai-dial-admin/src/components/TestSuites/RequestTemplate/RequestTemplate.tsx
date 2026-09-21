@@ -2,8 +2,14 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialNeutralButton, DialNoDataContent, DialTabs } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import {
+  ButtonAppearance,
+  DialNeutralButton,
+  DialNoDataContent,
+  DialPrimaryButton,
+  DialTabs,
+} from '@epam/ai-dial-ui-kit';
+import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -15,15 +21,15 @@ import TabsContent, { TabsContentRef } from './tabs/TabsContent';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import ContentTypeSelect from './components/ContentTypeSelect';
 import JsonataToggle from './components/JsonataToggle';
-import TemplateVariablesDoc from './components/TemplateVariablesDoc';
 
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite) => void;
   jsonataVariables?: JsonataVariable[];
+  onShowVariableDocsClick?: () => void;
 }
 
-const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVariables }) => {
+const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVariables, onShowVariableDocsClick }) => {
   const t = useI18n();
   const tabs = getTestSuiteRequestTemplateTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Body);
@@ -91,7 +97,12 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVaria
             )}
             {showVariablesDoc && (
               <div className="flex-none">
-                <TemplateVariablesDoc />
+                <DialPrimaryButton
+                  appearance={ButtonAppearance.Ghost}
+                  iconBefore={<IconInfoCircle size={14} />}
+                  label={t(TestSuitesI18nKey.TemplateVariablesViewDoc)}
+                  onClick={onShowVariableDocsClick}
+                />
               </div>
             )}
           </div>

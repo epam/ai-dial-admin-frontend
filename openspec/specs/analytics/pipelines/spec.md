@@ -10,7 +10,7 @@ The system SHALL expose an Analytics page at `/pipelines`, present in the `Appli
 (`types/routes.ts`) as `AnalyticsPipelines`, with the route directory `src/app/[lang]/pipelines/`. The page
 SHALL be a server component declaring `export const dynamic = 'force-dynamic'` that calls
 `isAnalyticsForbidden()` before any data access and renders `Page403` when it returns `true`, matching the
-guard the Tables, Queries, and Conversations pages already use. User-facing strings SHALL read "Pipelines".
+guard the Tables, Queries, and Sessions pages already use. User-facing strings SHALL read "Pipelines".
 
 The listing view SHALL be seeded from an **unfiltered** server-side fetch, so the page opens showing every
 registered pipeline — both kinds, enabled and disabled alike. Narrowing is the user's explicit act, because

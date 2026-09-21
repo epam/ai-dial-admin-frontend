@@ -40,8 +40,8 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
-import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getModalsTranslations, getPublicationEntityLabel, isAddAction } from '@/src/utils/publications';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export interface PublicationsButtonsWrapperProps<T> {
@@ -100,7 +100,25 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const onApprove = useCallback(() => {
     approvePublication(entity.path).then((res) => {
       if (res.success) {
-        if (isAddAction(action)) {
+        const isPublish = isAddAction(action);
+        const entityLabel = getPublicationEntityLabel(view, t);
+        showNotification(
+          getSuccessNotification(
+            t(
+              isPublish ? PublicationsI18nKey.NotificationPublishTitle : PublicationsI18nKey.NotificationUnpublishTitle,
+              {
+                entity: entityLabel,
+              },
+            ),
+            t(
+              isPublish
+                ? PublicationsI18nKey.NotificationPublishDescription
+                : PublicationsI18nKey.NotificationUnpublishDescription,
+              { entity: entityLabel, entityId: entity.requestName },
+            ),
+          ),
+        );
+        if (isPublish) {
           getAssetContext?.().fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
         }
         router.push(view);
@@ -108,30 +126,47 @@ const PublicationsButtonsWrapper = <T extends Publication>({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [action, entity.path, getAssetContext, router, showNotification, view]);
+  }, [action, entity.path, entity.requestName, getAssetContext, router, showNotification, t, view]);
 
   const onDecline = useCallback(
     (comment: string) => {
       declinePublication(entity.path, comment).then((res) => {
         if (res.success) {
+          const entityLabel = getPublicationEntityLabel(view, t);
+          showNotification(
+            getSuccessNotification(
+              t(PublicationsI18nKey.NotificationDeclineTitle, { entity: entityLabel }),
+              t(PublicationsI18nKey.NotificationDeclineDescription, {
+                entity: entityLabel,
+                entityId: entity.requestName,
+              }),
+            ),
+          );
           router.push(view);
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
-    [entity.path, router, showNotification, view],
+    [entity.path, entity.requestName, router, showNotification, t, view],
   );
 
   const onDelete = useCallback(() => {
     deletePublication(entity.path).then((res) => {
       if (res.success) {
+        const entityLabel = getPublicationEntityLabel(view, t);
+        showNotification(
+          getSuccessNotification(
+            t(PublicationsI18nKey.NotificationDeleteTitle, { entity: entityLabel }),
+            t(PublicationsI18nKey.NotificationDeleteDescription, { entity: entityLabel, entityId: entity.requestName }),
+          ),
+        );
         router.push(view);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [entity.path, router, showNotification, view]);
+  }, [entity.path, entity.requestName, router, showNotification, t, view]);
 
   useEffect(() => {
     setKeys(getModalsTranslations(view, action));
