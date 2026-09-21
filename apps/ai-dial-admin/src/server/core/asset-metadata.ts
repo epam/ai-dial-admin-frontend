@@ -19,10 +19,11 @@ import { fromCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-na
 import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
-import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
+import { FOLDER_NESTED_VERSIONLESS_TYPES, VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
 import {
   decodeCorePath,
   parseEncodedFlatPath,
+  parseEncodedFolderPath,
   parseEncodedVersionedPath,
   stripPrefix,
   VersionedPathParts,
@@ -80,18 +81,34 @@ const SCHEMA_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
 
 export const isVersioned = (type: ResourceType): boolean => (VERSIONED_RESOURCE_TYPES as ResourceType[]).includes(type);
 
+/** Versionless but folder-nested (prompt, conversation): folder-path parse, never a `__` split. */
+export const isFolderNestedVersionless = (type: ResourceType): boolean => FOLDER_NESTED_VERSIONLESS_TYPES.has(type);
+
 const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType): ResourceInfo => {
   const prefix = RESOURCE_TYPE_PREFIX[type];
-  const { path, folderId, name, version }: VersionedPathParts = isVersioned(type)
-    ? parseEncodedVersionedPath(metadata.url, prefix)
-    : { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
+  let parts: VersionedPathParts;
+  if (isVersioned(type)) {
+    parts = parseEncodedVersionedPath(metadata.url, prefix);
+  } else if (isFolderNestedVersionless(type)) {
+    // Prompt/conversation: folder + plain name, never a `__` split. A genuine FOLDER row re-adds
+    // the trailing slash `parsePath` strips, matching the skill list mapper and every versioned
+    // type's folder rows — generic path-matching code downstream (`mergeFiles`, per-path fetches)
+    // relies on that convention.
+    const folderParts = parseEncodedFolderPath(metadata.url, prefix);
+    parts = {
+      ...folderParts,
+      path: metadata.nodeType === 'FOLDER' ? `${folderParts.path}/` : folderParts.path,
+    };
+  } else {
+    parts = { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
+  }
   return {
     // A schema resource's name is its percent-encoded `$id`; rows show the `$id` while `path`
     // stays encoded, since that is what the CRUD calls address.
-    name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(name) : name,
-    folderId,
-    path,
-    version,
+    name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(parts.name) : parts.name,
+    folderId: parts.folderId,
+    path: parts.path,
+    version: parts.version,
     author: metadata.author,
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
@@ -115,6 +132,23 @@ const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
     folderId,
     path,
     version: version ?? '',
+    author: metadata.author ?? '',
+    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
+    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
+  };
+};
+
+/**
+ * Versionless folder-nested counterpart of `metadataFields` (prompt, conversation): same metadata
+ * sourcing, but the path parses as folder + plain name — a `__` in the name stays part of the name
+ * and no `version` is grafted.
+ */
+const folderMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+  const { path, folderId, name } = parseEncodedFolderPath(metadata.url, prefix);
+  return {
+    name,
+    folderId,
+    path,
     author: metadata.author ?? '',
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
@@ -198,14 +232,14 @@ export const mergeConversation = (
 ): DialConversation => {
   return {
     ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]),
+    ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]),
   } as DialConversation;
 };
 
 export const mergePrompt = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode): DialPrompt => {
   return {
     ...content,
-    ...metadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]),
+    ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]),
     nodeType: DialFileNodeType.ITEM,
   } as DialPrompt;
 };

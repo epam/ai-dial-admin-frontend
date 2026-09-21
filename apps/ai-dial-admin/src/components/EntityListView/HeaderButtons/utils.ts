@@ -34,6 +34,13 @@ export const getAssetIdByNameAndVersion = (id: string, name?: string, version?: 
   return parts.join('/');
 };
 
+/** Versionless counterpart (prompts): the new name replaces the last id segment verbatim — no `__` join/split. */
+export const getAssetIdByName = (id: string, name?: string) => {
+  const parts = id.split('/');
+  parts[parts.length - 1] = name || parts[parts.length - 1];
+  return parts.join('/');
+};
+
 export const getFormDataForImport = (
   path: string,
   file: ImportData,
@@ -47,7 +54,7 @@ export const getFormDataForImport = (
     switch (route) {
       case ApplicationRoute.Prompts: {
         (file as ParsedAssets).prompts?.forEach((prompt) => {
-          prompt.id = prompt.id && getAssetIdByNameAndVersion(prompt.id, prompt.name, prompt.version);
+          prompt.id = prompt.id && getAssetIdByName(prompt.id, prompt.name);
         });
         break;
       }

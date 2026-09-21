@@ -8,7 +8,6 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
@@ -17,7 +16,7 @@ import { buildPromptsZip, extractPromptsFromZip } from '@/src/server/prompts/zip
 
 export async function createPrompt(prompt: DialPrompt) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const path = `${prompt.folderId}${getVersionedName(prompt.name || '', prompt.version)}`;
+  const path = `${prompt.folderId}${prompt.name || ''}`;
   return assetApi.put(token, ResourceType.PROMPT, path, { ...prompt, content: prompt.content || '' });
 }
 

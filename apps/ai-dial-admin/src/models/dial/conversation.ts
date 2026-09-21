@@ -4,7 +4,6 @@ export interface DialConversation extends BaseEntity {
   descriptionKeywords: string[];
   path: string;
   folderId: string;
-  version?: string;
   author: string;
   endpoint: string;
   iconUrl: string;

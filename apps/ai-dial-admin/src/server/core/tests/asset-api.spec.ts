@@ -66,19 +66,19 @@ describe('Server :: Core :: AssetApi', () => {
 
     const result = await instance.list(TOKEN_MOCK, ResourceType.PROMPT, 'folder/');
 
+    // Prompts are versionless: `a__1.0` is the name verbatim, no version grafted.
     expect(result).toEqual([
       {
-        name: 'a',
+        name: 'a__1.0',
         folderId: 'folder/',
         path: 'folder/a__1.0',
-        version: '1.0',
         author: 'me',
         updatedAt: '123',
         nodeType: 'item',
       },
       {
-        name: '',
-        folderId: 'folder/sub/',
+        name: 'sub',
+        folderId: 'folder/',
         path: 'folder/sub/',
         version: undefined,
         author: undefined,
@@ -108,12 +108,12 @@ describe('Server :: Core :: AssetApi', () => {
 
     expect(result).toMatchObject({
       content: 'hello',
-      name: 'a',
+      name: 'a__1.0',
       folderId: 'folder/',
       path: 'folder/a__1.0',
-      version: '1.0',
       author: 'me',
     });
+    expect((result as { version?: string }).version).toBeUndefined();
   });
 
   test('getMergedWithEtag returns the merged resource plus the content resource etag', async () => {
@@ -129,7 +129,8 @@ describe('Server :: Core :: AssetApi', () => {
 
     expect(result.success).toBe(true);
     expect(result.etag).toBe('etag-9');
-    expect(result.response).toMatchObject({ content: 'hello', name: 'a', version: '1.0' });
+    expect(result.response).toMatchObject({ content: 'hello', name: 'a__1.0' });
+    expect((result.response as { version?: string }).version).toBeUndefined();
   });
 
   test('getMergedWithEtag reads the etag from metadata for an unversioned type (Model), not the content response', async () => {
@@ -234,6 +235,27 @@ describe('Server :: Core :: AssetApi', () => {
     const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'folder/t', { name: 't' });
 
     expect(result.response).toMatchObject({ path: 'folder/t', folderId: 'folder/', name: 't' });
+    expect((result.response as { version?: string }).version).toBeUndefined();
+  });
+
+  test('put merges folder-nested path fields onto a prompt response — the `__` name stays verbatim, no version', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: 'p__1.0', url: 'prompts/folder/p__1.0', bucket: 'b', nodeType: 'ITEM' }),
+      {
+        headers: { 'content-type': 'application/json' },
+      },
+    );
+
+    const result = await instance.put(TOKEN_MOCK, ResourceType.PROMPT, 'folder/p__1.0', { name: 'p__1.0' });
+
+    expect(result.success).toBe(true);
+    expect(result.response).toMatchObject({
+      url: 'prompts/folder/p__1.0',
+      path: 'folder/p__1.0',
+      folderId: 'folder/',
+      // The whole last segment is the name — `__1.0` is not split off as a version.
+      name: 'p__1.0',
+    });
     expect((result.response as { version?: string }).version).toBeUndefined();
   });
 

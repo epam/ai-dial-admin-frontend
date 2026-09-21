@@ -27,7 +27,6 @@ import { EnvVariablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import semver from 'semver/preload';
 
-vi.mock('@/src/utils/validation/version-error');
 vi.mock('@/src/utils/validation/url-error');
 vi.mock('semver/preload');
 

@@ -91,7 +91,7 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeConversation sources name/folderId/version/author/updatedAt from metadata, rest from content', () => {
+  test('mergeConversation sources name/folderId/author/updatedAt from metadata, rest from content', () => {
     const content = { messages: [], temperature: 0.5, endpoint: 'https://conv' };
     const meta = metadata({ url: 'conversations/folder/My Conv', author: 'carol', updatedAt: 333 });
 
@@ -102,23 +102,21 @@ describe('Server :: Core :: asset-metadata', () => {
       name: 'My Conv',
       folderId: 'folder/',
       path: 'folder/My Conv',
-      version: '',
       author: 'carol',
       updatedAt: '333',
     });
   });
 
-  test('mergePrompt sources name/folderId/version/author/updatedAt/nodeType from metadata, rest from content', () => {
+  test('mergePrompt sources name/folderId/author/updatedAt/nodeType from metadata, rest from content — a `__` in the name stays part of the name', () => {
     const content = { content: 'prompt body', description: 'desc' };
     const meta = metadata({ url: 'prompts/folder/My Prompt__1.0', author: 'dave', updatedAt: 444 });
 
     expect(mergePrompt(content, meta)).toEqual({
       content: 'prompt body',
       description: 'desc',
-      name: 'My Prompt',
+      name: 'My Prompt__1.0',
       folderId: 'folder/',
       path: 'folder/My Prompt__1.0',
-      version: '1.0',
       author: 'dave',
       updatedAt: '444',
       nodeType: 'item',
@@ -212,7 +210,10 @@ describe('Server :: Core :: asset-metadata', () => {
     const result = toResourceInfoList(node, ResourceType.PROMPT);
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({ name: 'a', version: '1', nodeType: 'item' });
+    // Prompts are versionless: the `__1` in the url's last segment is the name verbatim, and no
+    // `version` is grafted onto the row.
+    expect(result[0]).toMatchObject({ name: 'a__1', nodeType: 'item' });
+    expect(result[0].version).toBeUndefined();
     expect(result[1]).toMatchObject({ nodeType: 'folder' });
   });
 

@@ -97,7 +97,7 @@ describe('Server :: CorePublicationsApi', () => {
     (clients.getAsset as ReturnType<typeof vi.fn>).mockImplementation((_t, path: string) =>
       path.startsWith('public')
         ? Promise.resolve({ success: false })
-        : Promise.resolve({ success: true, response: { name: 'P', version: '1', content: 'body' } }),
+        : Promise.resolve({ success: true, response: { name: 'P', content: 'body' } }),
     );
 
     const result = (await instance.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
@@ -105,7 +105,7 @@ describe('Server :: CorePublicationsApi', () => {
     expect(result.path).toBe('public/req');
     expect(result.action).toBe(ActionType.ADD);
     expect(result.resourceIssues).toEqual([]);
-    expect(result.prompts?.[0].prompt).toEqual({ name: 'P', version: '1', content: 'body' });
+    expect((result.prompts as { prompt: unknown }[])[0].prompt).toEqual({ name: 'P', content: 'body' });
   });
 
   test('getPublication records an issue when the resource is missing', async () => {
@@ -220,7 +220,8 @@ describe('Server :: CorePublicationsApi', () => {
           sourceUrl: 'prompts/src/P__1',
           targetUrl: 'prompts/old/P__1',
           reviewUrl: 'prompts/review/P__1',
-          prompt: { name: 'P', version: '1', content: 'body' },
+          // A prompt's target is its folder + plain name — the `__1` stays part of the name.
+          prompt: { name: 'P__1', content: 'body' },
         },
       ],
     };

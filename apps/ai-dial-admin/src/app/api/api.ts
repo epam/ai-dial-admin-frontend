@@ -271,7 +271,8 @@ const RESOURCE_TYPES_STRIPPED_BEFORE_PUT: ReadonlySet<ResourceType> = new Set([
 ]);
 
 // Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
-// for the four versioned types, now that the assets→Core migration has landed AssetApi.
+// for the four ResourceController-served types (application/toolset versioned, conversation/
+// prompt versionless), now that the assets→Core migration has landed AssetApi.
 // File resources were already Core-native via filesCoreApi since Phase 1.
 const publicationEnrichmentClients: EnrichmentClients = {
   getAsset: (token, path, type, etag) => assetApi.getMergedWithEtag(token, type, path, etag),

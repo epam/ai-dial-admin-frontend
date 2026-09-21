@@ -3,7 +3,6 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
-import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
@@ -73,13 +72,6 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
 
   return (
     <div className="flex flex-col gap-y-8">
-      {isPublication && (
-        <VersionControl
-          containerClassName="w-[175px]"
-          version={prompt.version}
-          onChange={(version?: string) => onChangePrompt?.({ ...prompt, version: version || '' })}
-        />
-      )}
       <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} isFullWidth={false} />
       <div>
         <div className="flex justify-between mb-2">

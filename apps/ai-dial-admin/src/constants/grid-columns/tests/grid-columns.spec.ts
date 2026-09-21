@@ -324,7 +324,13 @@ describe('Constants :: grid columns', () => {
     const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.Prompts);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'name')).toBe(true);
-    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(true);
+    // Prompts are versionless — no Version column, unlike the deployment-asset views.
+    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(false);
+  });
+
+  test('EXPORT_COLUMNS keeps the Version column for the versioned asset views', () => {
+    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.AssetsApplications);
+    expect(cols.some((c) => c.field === 'version')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for files', () => {
