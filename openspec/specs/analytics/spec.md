@@ -20,9 +20,9 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/query-viewer` | What a run produces — execution, the result grid, stat tiles, table and chart views |
 | `analytics/saved-queries` | Saved queries as addressable objects — storage contract, list page, CRUD, permission gating |
 | `analytics/tables` | The tables catalog, column schema and enum columns, row writes, per-table roles, the Connect panel |
-| `analytics/conversations-listing` | The conversations log page — filters, provenance line, grid columns, ordering and filtering |
-| `analytics/conversation-trace-listing` | One conversation's page — route and guard, header, side panels, the trace listing |
-| `analytics/conversation-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
+| `analytics/sessions-listing` | The sessions log page — filters, provenance line, grid columns, ordering and filtering |
+| `analytics/session-trace-listing` | One session's page — route and guard, header, side panels, the trace listing |
+| `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
 | `analytics/pipelines` | The pipelines console — listing, registration, detail page, bindings and triggers, JSON editing |
 | `analytics/evaluators` | The evaluators console — listing, version-addressed detail, tabs, the append-only version model |
 
@@ -49,7 +49,7 @@ The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value 
 
 ### Requirement: Analytics menu group with Query Builder and Tables sub-items
 
-The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Pipelines" (linking to the Pipelines route), "Evaluators" (linking to the Evaluators route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/pipelines`, `/evaluators`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Pipelines", "Evaluators", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
+The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Pipelines" (linking to the Pipelines route), "Evaluators" (linking to the Evaluators route), "Queries" (linking to the Queries route), and "Sessions" (linking to the Sessions route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/pipelines`, `/evaluators`, and `/sessions` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Pipelines", "Evaluators", "Sessions"). The Sessions label MUST be a distinct `MenuI18nKey` member from the one the existing DIAL Core `/conversations` item uses, so the two read as separate destinations.
 
 "Evaluators" SHALL sit directly after "Pipelines" rather than before it. An evaluator cannot be registered from this console, so a position ahead of Pipelines would read as the first step of a workflow that does not start here; the evaluators page is a reference surface an operator reaches from a pipeline, and placing it next to Pipelines keeps the pair adjacent.
 
@@ -65,7 +65,7 @@ The standalone `/query-builder` route SHALL NOT be present in the menu or in the
 - **AND** it shows a "Pipelines" sub-item linking to `/pipelines`
 - **AND** it shows an "Evaluators" sub-item linking to `/evaluators`, ordered after "Pipelines"
 - **AND** it shows a "Queries" sub-item linking to `/queries`
-- **AND** it shows a "Conversations" sub-item linking to `/conversations-trace`
+- **AND** it shows a "Sessions" sub-item linking to `/sessions`
 - **AND** no "Query Builder" sub-item is present
 
 #### Scenario: The retired route redirects
@@ -90,7 +90,7 @@ The "Analytics" group SHALL be present in the menu only when `featureFlags.analy
 
 ### Requirement: Preview tag on the Analytics group header
 
-The "Analytics" menu group header SHALL display the existing `PreviewTag` component. Because the preview-tag mechanism (`PREVIEW_TAG_MENU_ITEMS` in `MenuItemContent.tsx`) applies only to sub-items, the group header component (`MenuItem.tsx`) SHALL render a `PreviewTag` for groups marked as preview (an opt-in field on `MenuGroupConfiguration`). The tag MUST render only when the sidebar is expanded, and MUST NOT appear on any other group header. Sub-items ("Query Builder", "Tables", "Conversations") MUST NOT each carry their own preview tag.
+The "Analytics" menu group header SHALL display the existing `PreviewTag` component. Because the preview-tag mechanism (`PREVIEW_TAG_MENU_ITEMS` in `MenuItemContent.tsx`) applies only to sub-items, the group header component (`MenuItem.tsx`) SHALL render a `PreviewTag` for groups marked as preview (an opt-in field on `MenuGroupConfiguration`). The tag MUST render only when the sidebar is expanded, and MUST NOT appear on any other group header. Sub-items ("Query Builder", "Tables", "Sessions") MUST NOT each carry their own preview tag.
 
 #### Scenario: Preview tag shown on expanded group header
 
@@ -274,7 +274,7 @@ failure the service described.
 Where an Analytics surface renders despite a failed read, that failure SHALL be reported by an error
 notification rather than by text inserted into the page. A sentence placed in the page's own column flow
 reports the same class of event in a different place from the rest of the console — where a failed save, a
-failed table read and a failed conversations page all raise a notification — and it shifts the content it sits
+failed table read and a failed sessions page all raise a notification — and it shifts the content it sits
 above as it arrives and leaves.
 
 **The notification SHALL carry what the service said.** Its title SHALL be the service's `errorHeader` and its

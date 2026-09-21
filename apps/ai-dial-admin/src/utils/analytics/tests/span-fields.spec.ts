@@ -6,10 +6,10 @@ import {
   SPAN_BASE_FIELDS,
   SPAN_UNREADABLE_FIELDS,
   UNTAGGED_SPAN_FIELD_TAG,
-} from '@/src/constants/analytics/conversations-trace';
-import { SpanFieldTag, UsageLogField } from '@/src/models/analytics/conversations-trace';
+} from '@/src/constants/analytics/sessions-trace';
+import { SpanFieldTag, UsageLogField } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { spanFields } from '@/src/utils/analytics/conversation-column-catalog';
+import { spanFields } from '@/src/utils/analytics/session-column-catalog';
 
 const schemaField = (overrides: Partial<AnalyticsEntityField> & { name: string }): AnalyticsEntityField => ({
   type: AnalyticsFieldType.String,

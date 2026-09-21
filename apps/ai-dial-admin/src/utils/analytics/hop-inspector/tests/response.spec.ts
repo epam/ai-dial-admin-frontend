@@ -1,17 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
-import {
-  ConversationEntryBodyRow,
-  HopDialect,
-  HopReadState,
-  HopSideGrants,
-} from '@/src/models/analytics/conversations-trace';
+import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/sessions-trace';
+import { SessionEntryBodyRow, HopDialect, HopReadState, HopSideGrants } from '@/src/models/analytics/sessions-trace';
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
 import { rawBodyOf, responseEnvelopeOf } from '@/src/utils/analytics/hop-inspector/response';
 
-const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEntryBodyRow => ({
+const row = (overrides: Partial<SessionEntryBodyRow> = {}): SessionEntryBodyRow => ({
   trace_id: 't1',
   event_kind: 'llm_call',
   request_body: '{}',
@@ -22,7 +17,7 @@ const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEnt
 describe('responseEnvelopeOf', () => {
   // Which decoder runs is the caller's decision, taken from the request URI, not something the response row
   // reveals about itself. Every body in this block records the chat-completions shape.
-  const envelopeOf = (source: ConversationEntryBodyRow) => responseEnvelopeOf(source, HopDialect.ChatCompletions);
+  const envelopeOf = (source: SessionEntryBodyRow) => responseEnvelopeOf(source, HopDialect.ChatCompletions);
 
   const assembled = JSON.stringify({
     choices: [{ finish_reason: 'stop', message: { role: 'assistant', content: 'answered' } }],
@@ -179,7 +174,7 @@ describe('responseEnvelopeOf', () => {
 });
 
 describe('responseEnvelopeOf, messages dialect', () => {
-  const envelopeOf = (source: ConversationEntryBodyRow) => responseEnvelopeOf(source, HopDialect.Messages);
+  const envelopeOf = (source: SessionEntryBodyRow) => responseEnvelopeOf(source, HopDialect.Messages);
 
   const merged = JSON.stringify({
     model: 'claude-opus-5',

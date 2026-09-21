@@ -19,7 +19,7 @@ const baseFlags: FeatureFlags = {
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
+  analyticsSessionsEnabled: false,
   analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
 };
@@ -289,7 +289,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
   test('shows the Analytics group with Tables + Enrichment rules + Evaluators + Queries + Conversations when both flags are enabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: true });
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: true });
 
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
@@ -298,14 +298,14 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
       MenuI18nKey.Pipelines,
       MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
-      MenuI18nKey.AnalyticsConversations,
+      MenuI18nKey.AnalyticsSessions,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
       ApplicationRoute.AnalyticsPipelines,
       ApplicationRoute.AnalyticsEvaluators,
       ApplicationRoute.AnalyticsQueries,
-      ApplicationRoute.ConversationsTrace,
+      ApplicationRoute.SessionsTrace,
     ]);
   });
 
@@ -342,7 +342,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   });
 
   test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: true });
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: true });
 
     expect(group?.items.map((item) => item.key)).not.toContain(MenuI18nKey.Conversations);
   });
@@ -353,11 +353,11 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     const allItems = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, analyticsEnabled: false }).flatMap((group) =>
       group.items.map((item) => item.href),
     );
-    expect(allItems).not.toContain(ApplicationRoute.ConversationsTrace);
+    expect(allItems).not.toContain(ApplicationRoute.SessionsTrace);
   });
 
   test('hides only the Conversations sub-item when its flag is disabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsConversationsEnabled: false });
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: false });
 
     expect(group).toBeDefined();
     expect(group?.items.map((item) => item.key)).toEqual([
@@ -366,7 +366,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
       MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
     ]);
-    expect(group?.items.map((item) => item.href)).not.toContain(ApplicationRoute.ConversationsTrace);
+    expect(group?.items.map((item) => item.href)).not.toContain(ApplicationRoute.SessionsTrace);
   });
 
   test('gating composes independently of Deployments and Evaluation', () => {

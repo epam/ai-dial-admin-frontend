@@ -73,5 +73,5 @@ export enum ApplicationRoute {
   AnalyticsTables = '/tables',
   AnalyticsPipelines = '/pipelines',
   AnalyticsEvaluators = '/evaluators',
-  ConversationsTrace = '/conversations-trace',
+  SessionsTrace = '/sessions',
 }
