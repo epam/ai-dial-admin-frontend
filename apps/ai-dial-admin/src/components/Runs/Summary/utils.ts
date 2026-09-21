@@ -2,7 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
-import { ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { ExtractionResultStatus, RunCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -506,3 +506,12 @@ export const formatRunCost = (value: number | null | undefined): string | null =
   const decimals = -exponent + RUN_COST_SIGNIFICANT_DIGITS - 1;
   return `$${stripTrailingZeros(value.toFixed(decimals))}`;
 };
+
+/**
+ * Whether a `GET /costs` payload actually carries a figure. The endpoint responds before the backend
+ * has aggregated the run's usage logs, and that not-ready answer reaches the client in several shapes
+ * — all-null averages, `{}`, or an empty body that `BaseApi` degrades to `''`. None of them are a
+ * result, so the caller must keep waiting rather than settle on them. Zero is a real average.
+ */
+export const hasRunCostFigure = (costs: RunCosts | null | undefined): boolean =>
+  Number.isFinite(costs?.avgTestCaseCost) || Number.isFinite(costs?.avgMetricEvalCost);
