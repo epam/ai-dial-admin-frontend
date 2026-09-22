@@ -1,10 +1,12 @@
 import { PipelineDraft, SourceMode } from '@/src/models/analytics/pipeline-ui';
 import { trimmedString } from '@/src/utils/formatting/trimmed-string';
+import { buildTransformDto, toTransformDraft } from '@/src/utils/analytics/transform-dto';
 import {
   CreatePipelineDto,
   MemberSelect,
   Pipeline,
   PipelineKind,
+  PipelineTransform,
   PipelineTrigger,
   ReadyWhen,
   TriggerKind,
@@ -13,12 +15,14 @@ import {
 interface Context {
   grainKey?: string;
   sourceTable?: string;
+  /** The declaration as read, so a transform still stored in the superseded shape round-trips untouched. */
+  storedTransform?: PipelineTransform;
 }
 
 // Everything the compiled projection resolves. Sending any of it back would re-declare a derived value
 // as an authored one — `outputs` most of all, which the service owns outright.
 const READ_ONLY_MEMBERS: (keyof Pipeline)[] = [
-  'evaluator',
+  'response_schema',
   'grain_key',
   'version_column',
   'outputs',
@@ -28,7 +32,7 @@ const READ_ONLY_MEMBERS: (keyof Pipeline)[] = [
   'state',
 ];
 
-const ENRICH_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['evaluator_name', 'evaluator_version', 'vars', 'advanced'];
+const ENRICH_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['transform', 'advanced'];
 
 const AGGREGATE_ONLY_MEMBERS: (keyof CreatePipelineDto)[] = ['group_by', 'measures'];
 
@@ -37,13 +41,19 @@ export const getReadOnlyMembers = (): string[] => [...READ_ONLY_MEMBERS];
 export const toPipelineDraft = (pipeline: Pipeline): PipelineDraft => {
   const draft = { ...pipeline } as PipelineDraft & Record<string, unknown>;
   READ_ONLY_MEMBERS.forEach((key) => delete draft[key]);
+
+  if (pipeline.transform) draft.transform = toTransformDraft(pipeline.transform);
+
   return draft;
 };
 
 const membersOfOtherKind = (kind?: PipelineKind): (keyof CreatePipelineDto)[] =>
   kind === PipelineKind.Aggregate ? ENRICH_ONLY_MEMBERS : AGGREGATE_ONLY_MEMBERS;
 
-export const buildPipelineDto = (draft: PipelineDraft, { grainKey, sourceTable }: Context = {}): CreatePipelineDto => {
+export const buildPipelineDto = (
+  draft: PipelineDraft,
+  { grainKey, sourceTable, storedTransform }: Context = {},
+): CreatePipelineDto => {
   const dto = { ...draft } as CreatePipelineDto & Record<string, unknown>;
 
   READ_ONLY_MEMBERS.forEach((key) => delete dto[key]);
@@ -51,6 +61,10 @@ export const buildPipelineDto = (draft: PipelineDraft, { grainKey, sourceTable }
 
   dto.name = trimmedString(draft.name);
   dto.trigger = buildTrigger(draft, grainKey);
+
+  if (draft.kind !== PipelineKind.Aggregate && draft.transform) {
+    dto.transform = buildTransformDto(draft.transform, storedTransform);
+  }
 
   if (draft.kind !== PipelineKind.Aggregate && getSourceMode(draft.inputs, sourceTable) === SourceMode.Follow) {
     delete dto.inputs;
@@ -116,8 +130,8 @@ const isEmptyObject = (value: unknown): boolean =>
   typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0;
 
 // A cleared knob must vanish rather than arrive as `0` or `''` — zero is a meaningful value for several.
-// An emptied `advanced` or `vars` goes the same way: the service reads an absent block as "the runner's
-// own defaults", which an empty object does not say.
+// An emptied `advanced` goes the same way: the service reads an absent block as "the runner's own
+// defaults", which an empty object does not say.
 const dropEmptyMembers = (dto: Record<string, unknown>): void => {
   Object.keys(dto).forEach((key) => {
     const value = dto[key];

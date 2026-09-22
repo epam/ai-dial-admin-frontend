@@ -6,7 +6,6 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
   type: AnalyticsTableType.Enrichment,

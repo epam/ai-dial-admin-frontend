@@ -1,17 +1,14 @@
 import { notFound } from 'next/navigation';
 
-import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import { getFunctions } from '@/src/app/[lang]/queries/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { Pipeline } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
-import { toReadFailure } from '@/src/utils/notification';
 import { getPipeline, getPipelines } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +22,6 @@ export default async function Page({ params }: { params: Promise<{ name: string 
   const pipelineName = decodeURIComponent(name);
 
   let read: ServerActionResponse<Pipeline> = { success: false };
-  let evaluatorsRead: ServerActionResponse<EvaluatorSummary[]> = { success: false };
   let functions: QueryFunction[] | null = null;
   let takenTargets: string[] = [];
 
@@ -37,12 +33,6 @@ export default async function Page({ params }: { params: Promise<{ name: string 
 
   if (read.status === 403) {
     return <Page403 />;
-  }
-
-  try {
-    evaluatorsRead = await getEvaluators();
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch evaluators for the pipeline view');
   }
 
   try {
@@ -63,13 +53,7 @@ export default async function Page({ params }: { params: Promise<{ name: string 
 
   return (
     <SaveValidationContextProvider>
-      <PipelineDetailView
-        pipeline={read.response}
-        evaluators={evaluatorsRead.response ?? []}
-        evaluatorsFailure={evaluatorsRead.success ? null : toReadFailure(evaluatorsRead)}
-        takenTargets={takenTargets}
-        functions={functions ?? []}
-      />
+      <PipelineDetailView pipeline={read.response} takenTargets={takenTargets} functions={functions ?? []} />
     </SaveValidationContextProvider>
   );
 }

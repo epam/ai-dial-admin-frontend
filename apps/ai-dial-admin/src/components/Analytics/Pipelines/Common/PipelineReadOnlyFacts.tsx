@@ -4,13 +4,12 @@ import { FC } from 'react';
 
 import Link from 'next/link';
 
-import { evaluatorDetailHref } from '@/src/components/Analytics/Evaluators/utils';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
-import { Pipeline } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind } from '@/src/models/analytics/pipeline';
 
 interface Props {
   pipeline: Pipeline;
@@ -24,7 +23,11 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, readSource }) => {
   const updatedAt = useLocalDateTimeString(pipeline.updated_at);
 
   const notSet = t(AnalyticsPipelinesI18nKey.NotSet);
-  const { evaluator } = pipeline;
+
+  // The field list rather than the document: the document is already in the JSON editor, and the names
+  // are what an operator compares against the target's columns.
+  const isEnrich = pipeline.kind === PipelineKind.Enrich;
+  const schemaFields = Object.keys((pipeline.response_schema?.properties as Record<string, unknown> | undefined) ?? {});
 
   return (
     <section
@@ -45,19 +48,14 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, readSource }) => {
           notSet
         )}
       </LabelledText>
-      {evaluator && (
+      {isEnrich && (
         <>
           <LabelledText label={t(AnalyticsPipelinesI18nKey.GrainKey)} text={pipeline.grain_key || notSet} />
           <LabelledText label={t(AnalyticsPipelinesI18nKey.VersionColumn)} text={pipeline.version_column || notSet} />
-          <LabelledText label={t(AnalyticsPipelinesI18nKey.EvaluatorResolved)}>
-            <Link
-              href={evaluatorDetailHref(evaluator.name, evaluator.version)}
-              className="text-accent-primary hover:underline"
-            >
-              {`${evaluator.name}@${evaluator.version}`}
-            </Link>
-          </LabelledText>
-          <LabelledText label={t(AnalyticsPipelinesI18nKey.EvaluatorType)} text={evaluator.type} />
+          <LabelledText
+            label={t(AnalyticsPipelinesI18nKey.ResponseSchema)}
+            text={schemaFields.length ? schemaFields.join(', ') : notSet}
+          />
         </>
       )}
       <LabelledText label={t(AnalyticsPipelinesI18nKey.Generation)} text={String(pipeline.generation)} />

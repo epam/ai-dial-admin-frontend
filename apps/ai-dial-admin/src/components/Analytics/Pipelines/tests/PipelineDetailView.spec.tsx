@@ -3,17 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
@@ -22,13 +19,6 @@ const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
 }));
-
-const evaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
-};
 
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
@@ -43,8 +33,7 @@ const sourceTable: AnalyticsTable = { name: 'dial_usage_log', type: AnalyticsTab
 const rule: Pipeline = {
   name: 'feedback-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator,
+  transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -56,13 +45,7 @@ const rule: Pipeline = {
 };
 
 const renderView = (override?: Partial<Pipeline>) =>
-  render(
-    <PipelineDetailView
-      pipeline={{ ...rule, ...override }}
-      evaluators={[{ name: 'feedback-rollup', latest_version: 2 }]}
-      takenTargets={['turn_feedback']}
-    />,
-  );
+  render(<PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} />);
 
 // Looked up by label, not by current value, so the same helper works when an edit restores the original.
 const editSampleFraction = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
@@ -84,7 +67,6 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockImplementation(
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
-    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
   });
 
@@ -150,17 +132,22 @@ describe('PipelineDetailView', () => {
     expect(facts).toBeTruthy();
     expect(screen.getByText('response_id')).toBeTruthy();
     expect(screen.getByText('ingested_at')).toBeTruthy();
-    expect(screen.getByText('feedback-rollup@2')).toBeTruthy();
     expect(screen.getByText('7')).toBeTruthy();
   });
 
-  test('links the resolved evaluator to its page at the version the rule resolved to', () => {
+  test('presents the composed response schema, which is what the model is held to', () => {
+    renderView({ response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } } });
+
+    const schema = within(facts()).getByText(AnalyticsPipelinesI18nKey.ResponseSchema).parentElement;
+
+    expect(within(schema as HTMLElement).getByText('rate_event_count')).toBeTruthy();
+  });
+
+  test('offers no evaluator fact and no link to one', () => {
     renderView();
 
-    expect(screen.getByRole('link', { name: 'feedback-rollup@2' })).toHaveAttribute(
-      'href',
-      '/evaluators/feedback-rollup?version=2',
-    );
+    expect(screen.queryByRole('link', { name: /feedback-rollup/ })).toBeNull();
+    expect(screen.queryByText('feedback-rollup@2')).toBeNull();
   });
 
   test('renders an em dash for an absent version column', () => {
@@ -173,7 +160,7 @@ describe('PipelineDetailView', () => {
   test('offers nothing to save until something is edited', async () => {
     renderView();
 
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();
@@ -182,7 +169,7 @@ describe('PipelineDetailView', () => {
   test('offers save and discard once a value changes', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
 
@@ -193,7 +180,7 @@ describe('PipelineDetailView', () => {
   test('withdraws save when the value is edited back to what it was', async () => {
     const user = userEvent.setup();
     renderView({ advanced: { scan_every: 'PT1H' } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
@@ -206,7 +193,7 @@ describe('PipelineDetailView', () => {
   test('discard restores the loaded value after confirmation', async () => {
     const user = userEvent.setup();
     renderView({ advanced: { scan_every: 'PT1H' } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
@@ -218,7 +205,7 @@ describe('PipelineDetailView', () => {
   test('saves the whole rule and re-reads it', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -233,7 +220,7 @@ describe('PipelineDetailView', () => {
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -248,7 +235,7 @@ describe('PipelineDetailView', () => {
   test('never sends a member the API refuses', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -264,7 +251,7 @@ describe('PipelineDetailView', () => {
     vi.mocked(updatePipeline).mockResolvedValue({ success: false, status: 403, errorMessage: 'not entitled' });
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -283,7 +270,7 @@ describe('PipelineDetailView', () => {
     });
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -299,7 +286,7 @@ describe('PipelineDetailView', () => {
 
     [
       AnalyticsPipelinesI18nKey.SectionReadScope,
-      AnalyticsPipelinesI18nKey.SectionVariables,
+      AnalyticsPipelinesI18nKey.SectionTransform,
       AnalyticsPipelinesI18nKey.SectionAdvanced,
     ].forEach((section) => expect(screen.getByRole('button', { name: section })).toBeTruthy());
   });
@@ -335,7 +322,7 @@ describe('PipelineDetailView', () => {
   test('confirms before disabling a rule', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
 
@@ -346,7 +333,7 @@ describe('PipelineDetailView', () => {
   test('flips enabled on its own rather than re-declaring the pipeline', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5' });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
     // The popup takes over the query scope, so this now uniquely matches its confirm button.
@@ -363,7 +350,7 @@ describe('PipelineDetailView', () => {
   test('withholds the toggle while edits are pending, because it would refresh them away', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
 

@@ -2,13 +2,7 @@
 
 import { FC, ReactNode, useMemo } from 'react';
 
-import {
-  DialInput,
-  DialRadioGroup,
-  DialSelectField,
-  RadioButtonWithContent,
-  RadioGroupOrientation,
-} from '@epam/ai-dial-ui-kit';
+import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
@@ -17,13 +11,13 @@ import PipelineSharedFields from '@/src/components/Analytics/Pipelines/Common/Pi
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
 import MemberSelectEditor from '@/src/components/Analytics/Pipelines/Enrich/MemberSelectEditor';
 import ReadyWhenEditor from '@/src/components/Analytics/Pipelines/Enrich/ReadyWhenEditor';
+import TransformSection from '@/src/components/Analytics/Pipelines/Enrich/TransformSection';
 import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/VariablesEditor';
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
-import { LATEST_VERSION, MEMBERS_PLACEHOLDER, NUMBER_INPUT_WIDTH } from '@/src/constants/analytics/pipelines';
+import { NUMBER_INPUT_WIDTH } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { EvaluatorSummary, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { PipelineAdvanced, TriggerKind } from '@/src/models/analytics/pipeline';
+import { PipelineAdvanced, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PlaceholderState, PlaceholderToken } from '@/src/models/analytics/pipeline-ui';
 import { extractPlaceholders } from '@/src/utils/analytics/template-placeholders';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -38,14 +32,12 @@ const NUMERIC_KNOBS = [
 
 interface Props {
   form: EnrichFormState;
-  evaluators: EvaluatorSummary[];
-  hasEvaluatorsError?: boolean;
   isModal?: boolean;
   /** Read-only, and placed here rather than by the frame so it lands just before the runner knobs. */
   stateSection?: ReactNode;
 }
 
-const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModal, stateSection }) => {
+const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
   const t = useI18n();
 
   const { draft, onChange, onTriggerChange } = form;
@@ -54,18 +46,6 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
   // A control alone on its line is width-capped on the detail page and full-width in the modal, matching
   // the convention in QueryProperties.
   const controlClassName = getControlClassName(isModal);
-
-  const selectedEvaluator = evaluators.find((item) => item.name === draft.evaluator_name);
-  const evaluatorOptions = evaluators.map((item) => ({ value: item.name, label: item.name }));
-
-  const latestVersion = selectedEvaluator?.latest_version ?? 0;
-  const versionOptions = [
-    { value: LATEST_VERSION, label: t(AnalyticsPipelinesI18nKey.VersionLatest) },
-    ...Array.from({ length: latestVersion }, (_, index) => {
-      const version = String(latestVersion - index);
-      return { value: version, label: version };
-    }),
-  ];
 
   const triggerRadios: RadioButtonWithContent[] = [
     { id: TriggerKind.OnIngest, name: t(AnalyticsPipelinesI18nKey.TriggerOnIngest) },
@@ -80,68 +60,28 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
   // of each member object, so the correspondence below does not hold there.
   const isRowGrain = trigger?.kind !== TriggerKind.Group;
 
-  // A sql evaluator asks no model anything, so there is no request to render and nothing to bind: the
-  // service refuses a sql pipeline that declares vars at all.
-  const isSqlEvaluator = form.evaluator?.type === EvaluatorType.Sql;
-
-  // The one template rule this form can settle: at group grain the service refuses a declaration whose
-  // template names no `{{members}}`. Unlike the evaluator form, this one knows the trigger.
-  const isMembersMissing =
-    !isRowGrain &&
-    Boolean(form.evaluator?.request_template) &&
-    !extractPlaceholders(form.evaluator?.request_template).includes(MEMBERS_PLACEHOLDER);
-
-  const evaluatorError = (() => {
-    if (hasEvaluatorsError) return t(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed);
-    if (form.hasEvaluatorError) return t(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed);
-    if (isMembersMissing) return t(AnalyticsPipelinesI18nKey.MembersPlaceholderMissing);
-    return undefined;
-  })();
+  // A sql transform renders no request, so there is nothing for a variable to bind into.
+  const isSqlTransform = draft.transform?.type === TransformType.Sql;
 
   const placeholderTokens = useMemo<PlaceholderToken[]>(() => {
     if (!isRowGrain) return [];
 
-    const placeholders = extractPlaceholders(form.evaluator?.request_template);
-    const varNames = Object.keys(draft.vars ?? {});
+    const placeholders = extractPlaceholders(draft.transform?.request_template);
+    const inputNames = Object.keys(draft.transform?.inputs ?? {});
 
     return [
       ...placeholders.map((name) => ({
         name,
-        state: varNames.includes(name) ? PlaceholderState.Covered : PlaceholderState.Uncovered,
+        state: inputNames.includes(name) ? PlaceholderState.Covered : PlaceholderState.Uncovered,
       })),
-      ...varNames
+      ...inputNames
         .filter((name) => !placeholders.includes(name))
         .map((name) => ({ name, state: PlaceholderState.Unused })),
     ];
-  }, [draft.vars, form.evaluator?.request_template, isRowGrain]);
+  }, [draft.transform?.inputs, draft.transform?.request_template, isRowGrain]);
 
-  return (
-    <div className="flex flex-col gap-y-6">
-      <DialSelectField
-        id="pipeline-evaluator"
-        containerClassName={controlClassName}
-        required
-        label={t(AnalyticsPipelinesI18nKey.Evaluator)}
-        options={evaluatorOptions}
-        value={draft.evaluator_name ?? ''}
-        error={evaluatorError}
-        invalid={Boolean(evaluatorError)}
-        onChange={(v) => onChange({ evaluator_name: v as string })}
-      />
-      {!hasEvaluatorsError && evaluators.length === 0 && (
-        <span className="text-secondary dial-small">{t(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)}</span>
-      )}
-      {!isModal && (
-        <DialSelectField
-          id="pipeline-evaluator-version"
-          containerClassName={controlClassName}
-          label={t(AnalyticsPipelinesI18nKey.EvaluatorVersion)}
-          options={versionOptions}
-          value={draft.evaluator_version == null ? LATEST_VERSION : String(draft.evaluator_version)}
-          disabled={!draft.evaluator_name}
-          onChange={(v) => onChange({ evaluator_version: v === LATEST_VERSION ? undefined : Number(v) })}
-        />
-      )}
+  const triggerBlock = (
+    <>
       <DialRadioGroup
         elementId="pipeline-trigger-kind"
         fieldTitle={t(AnalyticsPipelinesI18nKey.TriggerKind)}
@@ -187,18 +127,44 @@ const EnrichSection: FC<Props> = ({ form, evaluators, hasEvaluatorsError, isModa
           )}
         </div>
       )}
+    </>
+  );
+
+  const scopeAndTransformBlock = (
+    <>
       <PipelineSharedFields form={form} isModal={isModal} />
-      {!isModal && !isSqlEvaluator && (
+      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionTransform)}>
+        <TransformSection form={form} isModal={isModal} isDisabled={!form.isTransformReady} />
+      </PipelineSection>
+    </>
+  );
+
+  return (
+    <div className="flex flex-col gap-y-6">
+      {/* The modal asks for the target before the transform, whose outputs are its columns. The detail
+          page keeps the trigger above the sections, belonging as it does to neither kind. */}
+      {isModal ? (
+        <>
+          {scopeAndTransformBlock}
+          {triggerBlock}
+        </>
+      ) : (
+        <>
+          {triggerBlock}
+          {scopeAndTransformBlock}
+        </>
+      )}
+      {!isModal && !isSqlTransform && (
         <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionVariables)}>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-3">
               <VariablesEditor
-                vars={draft.vars}
+                vars={draft.transform?.inputs}
                 columns={form.sourceColumns}
                 isReady={form.isVariablesReady}
-                onChange={(vars) => onChange({ vars })}
+                onChange={(inputs) => form.onTransformChange({ inputs })}
               />
-              {/* Nothing to correspond with when the evaluator has no template at all — a sql one never
+              {/* Nothing to correspond with when the transform has no template at all — a sql one never
                   does — so the heading goes with the chips rather than standing over an empty row. */}
               {isRowGrain && placeholderTokens.length > 0 && (
                 <div className="flex flex-col gap-2">

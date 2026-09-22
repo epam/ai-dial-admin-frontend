@@ -14,7 +14,6 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { Evaluator, EvaluatorRequest, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import {
   CreatePipelineDto,
   Pipeline,
@@ -63,10 +62,10 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
-// `Compiled` is what carries everything the service resolved — the inlined evaluator, the grain key, the
-// version column, the output mapping and the read source — and it resolves for the `Enrich` kind alone:
-// the service refuses it with 422 for any other kind rather than answering the declaration under the
-// compiled name. So the projection is named per read, by whoever knows the kind.
+// `Compiled` is what carries everything the service resolved — the composed response schema, the grain
+// key, the version column, the output mapping and the read source — and it resolves for the `Enrich`
+// kind alone: the service refuses it with 422 for any other kind rather than answering the declaration
+// under the compiled name. So the projection is named per read, by whoever knows the kind.
 export const PIPELINE_READ_URL = (name: string, view: PipelineView): string => `${PIPELINE_URL(name)}?view=${view}`;
 
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
@@ -78,10 +77,10 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
 
   // No `view`: the service serves `compiled` in a listing only alongside `kind=enrich` and refuses the
-  // cross-kind combination with 400. The default `source` carries the evaluator name and pinned version
-  // as declared, so those cells are unaffected; `inputs` it carries as declared rather than as resolved,
-  // which leaves the cell empty for the one pipeline that declared no input and inherits its target's —
-  // read on that pipeline's own page, which does ask for `compiled`.
+  // cross-kind combination with 400. The default `source` carries the authored transform, so the type
+  // cell is unaffected; `inputs` it carries as declared rather than as resolved, which leaves the cell
+  // empty for the one pipeline that declared no input and inherits its target's — read on that
+  // pipeline's own page, which does ask for `compiled`.
   const query = params.toString();
 
   return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
@@ -94,11 +93,6 @@ const unreadableBody = <T extends object>({ status, requestId }: ServerActionRes
   status,
   requestId,
 });
-
-export const EVALUATORS_URL = 'v1/evaluators';
-export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
-export const EVALUATOR_VERSION_URL = (name: string, version: number): string =>
-  `${EVALUATOR_URL(name)}/versions/${encodeURIComponent(String(version))}`;
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -282,31 +276,5 @@ export class AnalyticsDataApi extends BaseApi {
 
   deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(PIPELINE_URL(name), token);
-  }
-
-  async getEvaluators(token: Token): Promise<ServerActionResponse<EvaluatorSummary[]>> {
-    const res = await this.getAction(EVALUATORS_URL, token);
-
-    if (!res.success) {
-      return res;
-    }
-
-    const evaluators = unwrapList<EvaluatorSummary>(res.response, 'items');
-    return evaluators ? { ...res, response: evaluators } : unreadableBody(res);
-  }
-
-  async getEvaluator(name: string, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    const res = await this.getAction(EVALUATOR_URL(name), token);
-    return res.success && !res.response ? unreadableBody(res) : res;
-  }
-
-  async getEvaluatorVersion(name: string, version: number, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    const res = await this.getAction(EVALUATOR_VERSION_URL(name, version), token);
-    return res.success && !res.response ? unreadableBody(res) : res;
-  }
-
-  // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
-  createEvaluator(dto: EvaluatorRequest, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    return this.postAction<EvaluatorRequest>(EVALUATORS_URL, dto, token);
   }
 }

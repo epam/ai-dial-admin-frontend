@@ -3,16 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TriggerKind, TransformType } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -46,13 +43,6 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: () => <div role="application" aria-label="JSON editor" />,
 }));
 
-const evaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
-};
-
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
   type: AnalyticsTableType.Enrichment,
@@ -66,8 +56,7 @@ const sourceTable: AnalyticsTable = { name: 'dial_usage_log', type: AnalyticsTab
 const rule: Pipeline = {
   name: 'feedback-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator,
+  transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -82,13 +71,7 @@ const rule: Pipeline = {
 };
 
 const renderView = (override?: Partial<Pipeline>) =>
-  render(
-    <PipelineDetailView
-      pipeline={{ ...rule, ...override }}
-      evaluators={[{ name: 'feedback-rollup', latest_version: 2 }]}
-      takenTargets={['turn_feedback']}
-    />,
-  );
+  render(<PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} />);
 
 const auditTab = () => screen.getByRole('tab', { name: TabsI18nKey.Audit });
 const propertiesTab = () => screen.getByRole('tab', { name: TabsI18nKey.Properties });
@@ -110,7 +93,6 @@ beforeEach(() => {
   vi.mocked(getTable).mockImplementation(
     async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
   );
-  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
   vi.mocked(updatePipeline).mockResolvedValue({ success: true });
 });
 

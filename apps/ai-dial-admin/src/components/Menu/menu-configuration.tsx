@@ -154,7 +154,6 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       items: [
         { key: MenuI18nKey.Tables, href: ApplicationRoute.AnalyticsTables },
         { key: MenuI18nKey.Pipelines, href: ApplicationRoute.AnalyticsPipelines },
-        { key: MenuI18nKey.Evaluators, href: ApplicationRoute.AnalyticsEvaluators },
         { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
         { key: MenuI18nKey.AnalyticsUsage, href: ApplicationRoute.AnalyticsUsage },
         { key: MenuI18nKey.AnalyticsSessions, href: ApplicationRoute.SessionsTrace },
