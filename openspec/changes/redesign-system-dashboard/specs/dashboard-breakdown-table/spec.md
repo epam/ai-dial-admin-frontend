@@ -1,8 +1,9 @@
 ## Purpose
 
-Defines the page's single tabbed breakdown table — the tab sets each view offers, the
-share-of-calls bar and its normalization, the delta column and when a row may be called new,
-server-side top-N and search, the full-list dialog, and the side panel a row opens.
+Defines the page's single tabbed breakdown table — the tab sets each view offers, what each tab
+counts and states about it, the share-of-calls bar and its normalization, the delta column and when
+a row may be called new, server-side top-N and search, the full-list dialog, and the side panel a
+row opens.
 
 ## ADDED Requirements
 
@@ -34,6 +35,48 @@ The selected period SHALL apply to every tab.
 - **WHEN** the user selects another tab
 - **THEN** one request is issued per window, grouped by the new tab's dimension
 - **AND** the view's totals, bucketed and leading-dimension responses are reused
+
+### Requirement: Each tab states what it counts and what one row aggregates
+
+The table SHALL state, for the active tab, which field the dimension is read from and what a single
+row covers. A tab's name alone does not say it: `Applications` ranks the deployment that *called*
+the model rather than applications that were called, and `Projects` ranks the project the calling
+API key belongs to rather than a project the traffic was about. A reader who cannot tell which of
+those a row is has no way to read the ranking.
+
+The statement SHALL change with the tab, SHALL sit with the table's title rather than inside a
+tooltip, and SHALL name the fallback bucket where the tab has one, so a row labelled `Direct call`
+or `No Project` is explained where it is ranked.
+
+#### Scenario: The statement follows the active tab
+
+- **GIVEN** the `Models` tab is selected
+- **WHEN** the user selects `Projects`
+- **THEN** the table's description changes to the one describing projects
+
+#### Scenario: A fallback bucket is explained where it is ranked
+
+- **WHEN** the `Applications` tab is selected
+- **THEN** its description names the bucket a call made directly against a model falls into
+
+### Requirement: The LLM view states each row's cost
+
+In the LLM view, every tab SHALL carry a cost column holding the sum of the row's prices over the
+window, formatted as money like every other spend figure on the page. A row with no price SHALL
+state no figure rather than a zero.
+
+The MCP view SHALL NOT render the column: an `mcp` row carries no price at all, so the column would
+be an empty one on every row rather than a measure.
+
+#### Scenario: Cost is stated per row in the LLM view
+
+- **WHEN** the `Models` tab renders in the LLM view
+- **THEN** each row states its cost over the window
+
+#### Scenario: The MCP view offers no cost column
+
+- **WHEN** the `MCP Servers` tab renders
+- **THEN** the table has no cost column
 
 ### Requirement: Rows carry a share bar normalized against the window total
 

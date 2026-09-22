@@ -23,8 +23,9 @@
 - [x] 2.3 Add `Usage/utils/folds.ts`: read the typed rows by select alias into measures, bucket
       points, per-dimension bucket points, spend buckets and breakdown rows. Do not import or modify
       the existing dashboard's folds.
-- [x] 2.4 Count tokens only on rows that reached an upstream, so an orchestrator's row does not
-      repeat its children's tokens; leave spend unguarded, since an orchestrator row carries none.
+- [x] 2.4 Sum tokens and spend over the same rows, so cost per 1M tokens divides two figures
+      resting on one basis. Count callers by the principal reference, which an API-key call carries
+      and the anonymized user hash does not.
 - [x] 2.5 Add `Usage/use-usage-dashboard-data.ts` as the request holder: issue each shape per window,
       hold `{ data, isLoading, hasFailed, error }` per shape, drop a superseded response through a
       generation counter, and never reject.
@@ -49,8 +50,8 @@
 - [x] 4.2 Add `Usage/Kpi/Sparkline.tsx` (ECharts): a line over the current window's buckets, no
       axes, legend, tooltip or interaction.
 - [x] 4.3 Add `Usage/Kpi/KpiRow.tsx`: the cards each view offers, in order — spend, requests,
-      tokens, cost per 1M tokens, unique users, error rate and average latency for LLM; requests,
-      tool calls, unique users, error rate and average latency for MCP. A window with no calls
+      tokens, cost per 1M tokens, unique callers, error rate and average latency for LLM; requests,
+      tool calls, unique callers, error rate and average latency for MCP. A window with no calls
       states no figure on any card rather than a zero on some.
 - [x] 4.4 Component tests: per-view composition, value and unit formatting, the empty-window rule,
       the comparison footnote carrying its unit, and the failure state.
@@ -139,6 +140,22 @@ unarchived.
 - [x] 9.6 Add `Usage/use-load-failure-notice.ts`: one notification per distinct message for the life
       of a load, shared by the data and heatmap hooks, with the widget left in its empty state.
 - [x] 9.7 Unit tests for 9.1–9.6, and the full gate from 8.4 again.
+
+## 10. Measure corrections and breakdown legibility
+
+- [x] 10.1 Sum prompt and completion tokens over every row the view covers, dropping the
+      upstream-URI guard: the rows it excluded are ordinary model calls carrying half of all spend,
+      so it unbalanced cost per 1M tokens against its own numerator.
+- [x] 10.2 Count the caller KPI by the principal reference rather than the anonymized user hash,
+      and rename the metric to `Unique callers` — the figure now covers both a token call's user
+      and an API-key call's project.
+- [x] 10.3 Round a chart tooltip's figure to one decimal; an axis tick keeps two. Cost and latency
+      printed a raw float before.
+- [x] 10.4 State under the breakdown's title what the active tab counts and what one of its rows
+      aggregates, naming the tab's fallback bucket where it has one.
+- [x] 10.5 Add the cost column to the breakdown in the LLM view only, since an MCP row carries no
+      price.
+- [x] 10.6 Unit tests for 10.1–10.5.
 
 ## Out of scope
 

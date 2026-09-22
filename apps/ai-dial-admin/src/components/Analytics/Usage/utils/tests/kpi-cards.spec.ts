@@ -37,10 +37,10 @@ describe('buildKpiFigures', () => {
   });
 
   test('reads each metric off the window aggregate', () => {
-    const current = measures({ calls: 100, users: 9, failed: 5, spend: 20, promptTokens: 600, completionTokens: 400 });
+    const current = measures({ calls: 100, callers: 9, failed: 5, spend: 20, promptTokens: 600, completionTokens: 400 });
 
     expect(figureOf(KpiMetric.Requests, llm(current))?.value.current).toBe(100);
-    expect(figureOf(KpiMetric.UniqueUsers, llm(current))?.value.current).toBe(9);
+    expect(figureOf(KpiMetric.UniqueCallers, llm(current))?.value.current).toBe(9);
     expect(figureOf(KpiMetric.TotalSpend, llm(current))?.value.current).toBe(20);
     expect(figureOf(KpiMetric.Tokens, llm(current))?.value.current).toBe(1000);
     expect(figureOf(KpiMetric.ErrorRate, llm(current))?.value.current).toBe(0.05);
@@ -48,7 +48,7 @@ describe('buildKpiFigures', () => {
   });
 
   test('leaves every card blank when the window recorded no calls', () => {
-    const figures = buildKpiFigures(llm(measures({ calls: 0, users: 0 })));
+    const figures = buildKpiFigures(llm(measures({ calls: 0, callers: 0 })));
 
     expect(figures.every((figure) => figure.value.current === null)).toBe(true);
   });

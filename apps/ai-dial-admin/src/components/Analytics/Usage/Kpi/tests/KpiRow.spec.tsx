@@ -12,7 +12,7 @@ const measures = (overrides: Partial<UsageMeasures> = {}): UsageMeasures => ({ .
 
 const FULL = measures({
   calls: 52_400,
-  users: 57,
+  callers: 57,
   failed: 524,
   avgLatencyMs: 7480,
   spend: 630.88,

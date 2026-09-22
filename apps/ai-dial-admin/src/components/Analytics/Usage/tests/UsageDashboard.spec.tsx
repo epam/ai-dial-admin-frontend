@@ -32,7 +32,7 @@ const ANY_ROW = {
   parent_deployment: 'app',
   project_id: 'project',
   calls: 10,
-  users: 2,
+  callers: 2,
   failed: 1,
   spend: 4,
 };
