@@ -37,7 +37,14 @@ describe('buildKpiFigures', () => {
   });
 
   test('reads each metric off the window aggregate', () => {
-    const current = measures({ calls: 100, callers: 9, failed: 5, spend: 20, promptTokens: 600, completionTokens: 400 });
+    const current = measures({
+      calls: 100,
+      callers: 9,
+      failed: 5,
+      spend: 20,
+      promptTokens: 600,
+      completionTokens: 400,
+    });
 
     expect(figureOf(KpiMetric.Requests, llm(current))?.value.current).toBe(100);
     expect(figureOf(KpiMetric.UniqueCallers, llm(current))?.value.current).toBe(9);
