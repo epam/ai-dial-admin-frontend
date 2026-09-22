@@ -5,29 +5,21 @@ import { FC, ReactNode } from 'react';
 import EnrichSection from '@/src/components/Analytics/Pipelines/Enrich/EnrichSection';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import CreatePipelineShell from '@/src/components/Analytics/Pipelines/Common/CreatePipelineShell';
-import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 interface Props {
   kindControl: ReactNode;
-  evaluators: EvaluatorSummary[];
-  hasEvaluatorsError?: boolean;
   takenTargets: string[];
   onClose: () => void;
   onCreated: () => void;
 }
 
-const CreateEnrichPopup: FC<Props> = ({
-  kindControl,
-  evaluators,
-  hasEvaluatorsError,
-  takenTargets,
-  onClose,
-  onCreated,
-}) => {
+const CreateEnrichPopup: FC<Props> = ({ kindControl, takenTargets, onClose, onCreated }) => {
+  // A pipeline is registered not running and enabled from its own page. The service refuses an enrich
+  // registration that omits `enabled` rather than defaulting it.
   const form = useEnrichForm({
-    takenTargets, // A pipeline is registered not running and enabled from its own page. The service refuses an
-    initialDraft: { kind: PipelineKind.Enrich, enabled: false },
+    takenTargets,
+    initialDraft: { kind: PipelineKind.Enrich, enabled: false, transform: { type: TransformType.Llm } },
   });
 
   return (
@@ -40,7 +32,7 @@ const CreateEnrichPopup: FC<Props> = ({
       onClose={onClose}
       onCreated={onCreated}
     >
-      <EnrichSection form={form} evaluators={evaluators} hasEvaluatorsError={hasEvaluatorsError} isModal />
+      <EnrichSection form={form} isModal />
     </CreatePipelineShell>
   );
 };

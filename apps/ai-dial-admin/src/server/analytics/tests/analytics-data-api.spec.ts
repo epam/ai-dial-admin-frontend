@@ -2,8 +2,13 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { CreatePipelineDto, PipelineEnabledFilter, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import {
+  CreatePipelineDto,
+  PipelineEnabledFilter,
+  PipelineKind,
+  TriggerKind,
+  TransformType,
+} from '@/src/models/analytics/pipeline';
 import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -434,9 +439,8 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       target: 'turn_feedback',
       inputs: ['response_ratings'],
       trigger: { kind: TriggerKind.OnIngest },
-      evaluator_name: 'feedback-rollup',
-      evaluator_version: 2,
-      evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
+      response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } },
       grain_key: 'response_id',
       enabled: true,
       generation: 5,
@@ -449,7 +453,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
       trigger: { kind: TriggerKind.OnIngest },
-      evaluator_name: 'feedback-rollup',
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
       enabled: false,
     };
 
@@ -592,7 +596,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     });
 
     test('getPipeline reads the declaration first, then the compiled projection for an enrich pipeline', async () => {
-      const declaration = { ...pipeline, evaluator: undefined, grain_key: undefined };
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined };
       fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
       fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
 
@@ -631,7 +635,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     // Downgrading to the declaration would leave the detail view printing `grain_key` and
     // `version_column` as "not set" — a false statement about an enrich pipeline, not a missing one.
     test('getPipeline reports a failed compiled read rather than falling back to the declaration', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, evaluator: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
       fetch.mockResponseOnce('', { status: 422 });
 
       const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
@@ -656,7 +660,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     });
 
     test('getPipeline reports an unreadable compiled answer rather than an empty success', async () => {
-      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, evaluator: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
       fetch.mockResponseOnce('', { status: 200 });
 
       const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
@@ -708,66 +712,11 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     });
   });
 
-  describe('evaluators', () => {
-    const evaluator = {
-      name: 'conversation-insights',
-      version: 4,
-      type: EvaluatorType.Llm,
-      output_vars: [{ name: 'title', type: 'string' }],
-    };
+  // No evaluator call is exposed at all: the transform travels on the pipeline request, and a client
+  // method for a surface that authors nothing is a way to reintroduce one by accident.
+  test('exposes no call against any /v1/evaluators path', () => {
+    const surface = Object.getOwnPropertyNames(Object.getPrototypeOf(instance));
 
-    test('getEvaluators unwraps the {items} envelope', async () => {
-      const items = [{ name: 'conversation-insights', latest_version: 4 }];
-      fetch.mockResponseOnce(JSON.stringify({ items }), JSON_HEADERS);
-
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
-        expect.objectContaining({ success: true, response: items }),
-      );
-    });
-
-    test('getEvaluators accepts a bare array as well as the wrapper', async () => {
-      const items = [{ name: 'conversation-insights', latest_version: 4 }];
-      fetch.mockResponseOnce(JSON.stringify(items), JSON_HEADERS);
-
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
-        expect.objectContaining({ success: true, response: items }),
-      );
-    });
-
-    test('getEvaluators carries a failure with the service status and words', async () => {
-      fetch.mockResponseOnce('{"error":"upstream","message":"registry timed out"}', { status: 500 });
-
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(
-        expect.objectContaining({
-          success: false,
-          status: 500,
-          errorHeader: 'upstream',
-          errorMessage: 'registry timed out',
-        }),
-      );
-    });
-
-    test('getEvaluator issues GET on the encoded evaluator URL', async () => {
-      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
-
-      const res = await instance.getEvaluator('my evaluator', TOKEN_MOCK);
-
-      expect(res).toEqual(expect.objectContaining({ success: true, response: evaluator }));
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/evaluators/my%20evaluator'),
-        expect.objectContaining({ method: 'GET' }),
-      );
-    });
-
-    test('getEvaluatorVersion issues GET on the pinned-version URL', async () => {
-      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
-
-      await instance.getEvaluatorVersion('conversation-insights', 4, TOKEN_MOCK);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/evaluators/conversation-insights/versions/4'),
-        expect.objectContaining({ method: 'GET' }),
-      );
-    });
+    expect(surface.filter((name) => name.toLowerCase().includes('evaluator'))).toEqual([]);
   });
 });
