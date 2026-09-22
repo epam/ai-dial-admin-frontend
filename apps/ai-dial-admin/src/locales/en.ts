@@ -3051,7 +3051,7 @@ export default {
     KpiRequests: 'Requests',
     KpiTokens: 'Tokens',
     KpiCostPerMillionTokens: 'Cost per 1M tokens',
-    KpiUniqueUsers: 'Unique users',
+    KpiUniqueCallers: 'Unique callers',
     KpiErrorRate: 'Error rate',
     KpiAvgLatency: 'Avg latency',
     KpiTotalToolCalls: 'Total tool calls',
@@ -3113,6 +3113,16 @@ export default {
     ColumnApplication: 'Application',
     ColumnErrorRate: 'Errors',
     ColumnAvgLatency: 'Avg latency',
+    ColumnCost: 'Cost',
+    BreakdownDescriptionModels:
+      'One row per deployment that served a call, covering everything it handled in the window.',
+    BreakdownDescriptionApplications:
+      'One row per deployment that called a model; a call made straight against a model groups under Direct call.',
+    BreakdownDescriptionProjects:
+      'One row per project the calling API key belongs to; a call carrying no project groups under No Project.',
+    BreakdownDescriptionMcpServers:
+      'One row per deployment that served an MCP call, covering every call it handled in the window.',
+    BreakdownDescriptionTools: 'One row per tool name invoked over MCP, covering every invocation in the window.',
     ColumnProject: 'Project',
     ColumnMcpServer: 'MCP name',
     ColumnTool: 'Tool',

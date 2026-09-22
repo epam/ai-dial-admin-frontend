@@ -23,7 +23,7 @@ export enum KpiMetric {
   Requests = 'requests',
   Tokens = 'tokens',
   CostPerMillionTokens = 'cost-per-million-tokens',
-  UniqueUsers = 'unique-users',
+  UniqueCallers = 'unique-callers',
   ErrorRate = 'error-rate',
   AvgLatency = 'avg-latency',
   ToolCalls = 'tool-calls',
@@ -48,7 +48,7 @@ export interface WindowedValue {
 /** Every figure one aggregate row carries. Absent where the view does not report it. */
 export interface UsageMeasures {
   calls: number;
-  users: number;
+  callers: number;
   failed: number;
   avgLatencyMs: number | null;
   spend: number | null;
@@ -148,4 +148,6 @@ export interface BreakdownRowModel {
   isNewRow: boolean;
   errorRate: number | null;
   avgLatencyMs: number | null;
+  /** Null in the MCP view, where a row carries no price at all. */
+  spend: number | null;
 }

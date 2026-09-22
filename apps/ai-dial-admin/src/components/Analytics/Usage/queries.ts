@@ -82,13 +82,16 @@ export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): Q
   return { op: QueryLogicalOperator.And, args: clauses };
 };
 
+/** The principal that made the call: the user id on a token call, the project id on an API-key one. */
+const USER_REF_FIELD = 'usage_client_identity.user_ref';
+
 export const CALLS_ALIAS = 'calls';
 export const SPEND_ALIAS = 'spend';
 export const PROMPT_TOKENS_ALIAS = 'prompt_tokens';
 export const COMPLETION_TOKENS_ALIAS = 'completion_tokens';
 export const FAILED_ALIAS = 'failed';
 export const AVG_LATENCY_ALIAS = 'avg_latency';
-export const USERS_ALIAS = 'users';
+export const CALLERS_ALIAS = 'callers';
 export const BUCKET_ALIAS = 'bucket';
 export const TOOL_CALLS_ALIAS = 'tool_calls';
 export const P50_LATENCY_ALIAS = 'p50_latency';
@@ -102,7 +105,10 @@ export const P95_LATENCY_ALIAS = 'p95_latency';
 const commonMeasures = (view: UsageView) => {
   const measures = [
     { expr: fn('count', []), as: CALLS_ALIAS },
-    { expr: fn('count', [field('user_hash')], true), as: USERS_ALIAS },
+    // `user_hash` is set only on token calls and empty on every API-key one, so counting it folds
+    // all key traffic into a single bucket. `user_ref` is populated on both branches — the user id
+    // for a token call, the project the key belongs to for a key call.
+    { expr: fn('count', [field(USER_REF_FIELD)], true), as: CALLERS_ALIAS },
     {
       expr: fn('sum', [
         fn('if', [field('success'), value('0', QueryValueType.Integer), value('1', QueryValueType.Integer)]),
@@ -113,15 +119,17 @@ const commonMeasures = (view: UsageView) => {
   ];
 
   if (view === UsageView.Llm) {
-    // Tokens are counted only on rows that actually reached an upstream. An orchestrating
-    // application also gets a row, carrying the tokens of the model calls it made — summing every
-    // row would count those twice (measured: 5.1bn of 16.7bn prompt tokens). Spend needs no such
-    // guard: an orchestrator row carries none.
+    // Spend and tokens are summed over the same rows, so a figure derived from both — cost per
+    // 1M tokens — divides two numbers with one basis. An earlier guard counted tokens only where
+    // `response_upstream_uri` was set, on the theory that the empty ones were orchestrator rows
+    // repeating their children's tokens. Measured, they are not: the rows without it are ordinary
+    // model calls carrying half of all spend, while an application's own row carries no price and
+    // 0.2% of the tokens.
     return [
       ...measures,
       { expr: fn('sum', [field('deployment_price')]), as: SPEND_ALIAS },
-      { expr: fn('sum', [upstreamOnly('prompt_tokens')]), as: PROMPT_TOKENS_ALIAS },
-      { expr: fn('sum', [upstreamOnly('completion_tokens')]), as: COMPLETION_TOKENS_ALIAS },
+      { expr: fn('sum', [field('prompt_tokens')]), as: PROMPT_TOKENS_ALIAS },
+      { expr: fn('sum', [field('completion_tokens')]), as: COMPLETION_TOKENS_ALIAS },
     ];
   }
 
@@ -156,9 +164,6 @@ const latencyPercentiles = () => [
   },
 ];
 
-const upstreamOnly = (column: string): QueryExpr =>
-  fn('if', [fn('not_empty', [field('response_upstream_uri')]), field(column), value('0', QueryValueType.Integer)]);
-
 const BUCKET_UNIT: Record<ChartResolution['unit'], string> = { m: 'minute', h: 'hour', d: 'day' };
 
 /**
@@ -188,7 +193,7 @@ export const buildBucketedQuery = (scope: QueryScope, resolution: ChartResolutio
 });
 
 /**
- * One row of totals for the window. Distinct users cannot be summed out of the bucketed response —
+ * One row of totals for the window. Distinct callers cannot be summed out of the bucketed response —
  * a user active in several buckets is one user — so the headline figures come from here.
  */
 export const buildTotalsQuery = (scope: QueryScope): StructuredQuery => ({
