@@ -3,16 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { ActionMenuOperationI18nKey, AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineListItem, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -74,13 +71,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const rule = (overrides: Partial<PipelineListItem> = {}): PipelineListItem => ({
   name: 'turn-feedback-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform_type: TransformType.Sql,
   target: 'turn_feedback',
   inputs: ['response_ratings'],
-  grain_key: 'response_id',
-  version_column: '_updated_at',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,
@@ -90,10 +83,6 @@ const rule = (overrides: Partial<PipelineListItem> = {}): PipelineListItem => ({
 
 describe('Pipelines :: PipelinesView', () => {
   beforeEach(() => {
-    vi.mocked(getEvaluators).mockResolvedValue({
-      success: true,
-      response: [{ name: 'feedback-rollup', latest_version: 2 }],
-    });
     vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule()] });
     vi.mocked(deletePipeline).mockResolvedValue({ success: true });
     showNotification.mockClear();
@@ -151,7 +140,7 @@ describe('Pipelines :: PipelinesView', () => {
 
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
     expect(screen.getByText(/cols:/)).toHaveTextContent(
-      'name|kind|target|inputs|trigger|evaluator|enabled|generation|updatedAt',
+      'name|kind|target|inputs|trigger|transform|enabled|generation|updatedAt',
     );
   });
 
@@ -174,16 +163,11 @@ describe('Pipelines :: PipelinesView', () => {
     await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeEnabled());
   });
 
-  // The modal is where the missing evaluator is visible and where submission is blocked; disabling the
-  // action here would hide that explanation behind a control the operator cannot open.
-  test('still offers the create action when no evaluator is registered', async () => {
-    vi.mocked(getEvaluators).mockResolvedValue({ success: true, response: [] });
-
+  // With the transform on the declaration there is no second registry the create action could depend on.
+  test('offers the create action without reading any other registry', async () => {
     render(<PipelinesView initialPipelines={[rule()]} />);
 
-    await waitFor(() => expect(getEvaluators).toHaveBeenCalled());
     expect(screen.getByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeEnabled();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).not.toBeInTheDocument();
   });
 
   test('deletes a rule and refreshes the listing', async () => {

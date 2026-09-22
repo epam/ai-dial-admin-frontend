@@ -3,16 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createPipeline, getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -56,13 +53,6 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification }),
 }));
 
-const evaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
-};
-
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
   type: AnalyticsTableType.Enrichment,
@@ -77,7 +67,6 @@ describe('CreatePipelinePopup', () => {
   const renderPopup = (takenTargets: string[] = [], props?: Partial<Parameters<typeof CreatePipelinePopup>[0]>) =>
     render(
       <CreatePipelinePopup
-        evaluators={[{ name: 'feedback-rollup', latest_version: 2 }]}
         functions={[]}
         takenTargets={takenTargets}
         onClose={onClose}
@@ -89,14 +78,24 @@ describe('CreatePipelinePopup', () => {
   const renderEnrichPopup = renderPopup;
 
   const fillSubmittableRule = async (user: ReturnType<typeof userEvent.setup>) => {
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'my-rule' } });
     await selectTarget(user);
+    await declareSqlOutput(user);
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
   };
 
-  const selectEvaluator = async (user: ReturnType<typeof userEvent.setup>) =>
-    user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.Evaluator), 'feedback-rollup');
+  // A transform is registered with its type and at least one output; the sql type needs no model. The
+  // column is bound while the type is still llm, whose row labels its own select.
+  const declareSqlOutput = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.AddOutput));
+    await user.selectOptions(
+      screen.getByLabelText(AnalyticsPipelinesI18nKey.OutputColumn, { exact: false, selector: 'select' }),
+      'rate_event_count',
+    );
+    await user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.TransformType), TransformType.Sql);
+    const expression = screen.getByLabelText(`${AnalyticsPipelinesI18nKey.VarExpression} 1`, { exact: false });
+    fireEvent.change(expression, { target: { value: 'count(*)' } });
+  };
 
   const selectTarget = async (user: ReturnType<typeof userEvent.setup>) => {
     await waitFor(() =>
@@ -111,7 +110,6 @@ describe('CreatePipelinePopup', () => {
     vi.clearAllMocks();
     vi.mocked(getTables).mockResolvedValue([enrichment]);
     vi.mocked(getTable).mockResolvedValue(enrichment);
-    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(createPipeline).mockResolvedValue({ success: true });
   });
 
@@ -121,9 +119,9 @@ describe('CreatePipelinePopup', () => {
     const order = [
       AnalyticsPipelinesI18nKey.Name,
       AnalyticsPipelinesI18nKey.Kind,
-      AnalyticsPipelinesI18nKey.Evaluator,
-      AnalyticsPipelinesI18nKey.TriggerKind,
       AnalyticsPipelinesI18nKey.Target,
+      AnalyticsPipelinesI18nKey.SectionTransform,
+      AnalyticsPipelinesI18nKey.TriggerKind,
     ];
     const rendered = document.body.textContent ?? '';
     const positions = order.map((key) => rendered.indexOf(key));
@@ -132,18 +130,44 @@ describe('CreatePipelinePopup', () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
   });
 
-  test('leaves the optional evaluator version to the detail page', () => {
+  test('leaves the optional transform members to the detail page', () => {
     renderEnrichPopup();
 
-    expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.EvaluatorVersion)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionParams)).toBeNull();
+  });
+
+  // The service refuses an llm transform with no template on every write, so registration collects it
+  // even though the placeholder correspondence is only checked at enable.
+  test('collects the request template an llm transform requires', () => {
+    renderEnrichPopup();
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.SectionRequestTemplate)).toBeTruthy();
+  });
+
+  test('blocks submission while an llm transform carries no template', async () => {
+    const user = userEvent.setup();
+    renderEnrichPopup();
+
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'my-rule' } });
+    await selectTarget(user);
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.AddOutput));
+    await user.selectOptions(
+      screen.getByLabelText(AnalyticsPipelinesI18nKey.OutputColumn, { exact: false, selector: 'select' }),
+      'rate_event_count',
+    );
+    fireEvent.change(screen.getByLabelText(AnalyticsPipelinesI18nKey.Model, { exact: false }), {
+      target: { value: 'gpt-4o' },
+    });
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
   });
 
   test('discards its state when closed and reopened', async () => {
     const user = userEvent.setup();
     const { unmount } = renderEnrichPopup();
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'my-rule' } });
     expect(screen.getByDisplayValue('my-rule')).toBeTruthy();
 
     unmount();
@@ -165,31 +189,25 @@ describe('CreatePipelinePopup', () => {
     expect(vi.mocked(createPipeline).mock.calls[0][0].enabled).toBe(false);
   });
 
-  test('offers no output mapping, which the service derives rather than accepts', async () => {
+  test('collects the authored outputs, bound to the target chosen here', async () => {
     const user = userEvent.setup();
     renderEnrichPopup();
 
-    await selectEvaluator(user);
     await selectTarget(user);
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionOutputs)).toBeNull();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.SectionTransform)).toBeTruthy();
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.AddOutput));
+    const column = screen.getByLabelText(AnalyticsPipelinesI18nKey.OutputColumn, {
+      exact: false,
+      selector: 'select',
+    });
+    expect(Array.from(column.querySelectorAll('option')).map((option) => option.value)).toContain('rate_event_count');
   });
 
-  // The operator can always open the modal; it is here that a missing evaluator is explained and
-  // submission is blocked.
-  test('states that no evaluator is registered and blocks submission', () => {
-    renderEnrichPopup([], { evaluators: [] });
+  test('waits for the target before offering a column to bind an output to', () => {
+    renderEnrichPopup();
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeTruthy();
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
-  });
-
-  test('marks the evaluator field rather than claiming none are registered', () => {
-    renderEnrichPopup([], { evaluators: [], hasEvaluatorsError: true });
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toBeTruthy();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeNull();
-    expect(screen.queryAllByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toHaveLength(1);
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TransformEmpty)).toBeTruthy();
   });
 
   test('blocks submission until the form is complete', () => {
@@ -233,11 +251,10 @@ describe('CreatePipelinePopup', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.ReadyWhenRequired)).toBeTruthy();
   });
 
-  test('offers no variables editor, which belongs to the detail page', async () => {
+  test('offers no inputs editor, which belongs to the detail page', async () => {
     const user = userEvent.setup();
     renderEnrichPopup();
 
-    await selectEvaluator(user);
     await selectTarget(user);
 
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionVariables)).toBeNull();
@@ -254,7 +271,7 @@ describe('CreatePipelinePopup', () => {
       expect(createPipeline).toHaveBeenCalledWith({
         name: 'my-rule',
         kind: PipelineKind.Enrich,
-        evaluator_name: 'feedback-rollup',
+        transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
         target: 'turn_feedback',
         trigger: { kind: TriggerKind.OnIngest },
         enabled: false,
@@ -311,27 +328,14 @@ describe('CreatePipelinePopup', () => {
     expect(onCreated).not.toHaveBeenCalled();
   });
 
-  test('does not submit while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
+  test('blocks submission while the transform declares no output', async () => {
     const user = userEvent.setup();
     renderEnrichPopup();
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'my-rule' } });
     await selectTarget(user);
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed)).toBeTruthy());
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
-  });
-
-  test('reports a failed evaluator resolution in the form', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await selectEvaluator(user);
-
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed)).toBeTruthy());
   });
 });

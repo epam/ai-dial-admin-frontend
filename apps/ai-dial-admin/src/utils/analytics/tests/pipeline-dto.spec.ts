@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, SourceMode } from '@/src/models/analytics/pipeline-ui';
 import {
   buildPipelineDto,
@@ -14,8 +13,8 @@ import {
 const pipeline: Pipeline = {
   name: 'existing',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform: { type: TransformType.Sql, outputs: { rating: 'max(rating)' } },
+  response_schema: { type: 'object' },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -93,8 +92,10 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
     expect(buildPipelineDto({ ...draft, inputs: [] })).not.toHaveProperty('inputs');
   });
 
-  test('drops an emptied variables map rather than sending it', () => {
-    expect(buildPipelineDto({ ...draft, vars: {} })).not.toHaveProperty('vars');
+  test('drops an emptied inputs map rather than sending it', () => {
+    const dto = buildPipelineDto({ ...draft, transform: { type: TransformType.Llm, model: 'gpt-4o', inputs: {} } });
+
+    expect(dto.transform).not.toHaveProperty('inputs');
   });
 
   test('drops an emptied advanced block, which means the runner defaults', () => {
@@ -217,12 +218,10 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       target: 'sessions',
       inputs: ['log'],
       trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
-      evaluator_name: 'feedback-rollup',
-      evaluator_version: 2,
-      vars: { request: { column: 'request_body' } },
+      transform: { type: TransformType.Llm, model: 'gpt-4o' },
       advanced: { scan_every: '60s' },
     }) as Record<string, unknown>;
 
-    ['evaluator_name', 'evaluator_version', 'vars', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
+    ['transform', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 });
