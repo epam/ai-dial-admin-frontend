@@ -30,7 +30,7 @@ the latency percentiles possible here and impossible on the realtime dataset.
 - Two views — **LLM / MCP** — selected by the module's own view control. Each offers the cards,
   plots and breakdown dimensions its rows can answer: the MCP view has no spend, because an `mcp`
   row carries no price at all.
-- **KPI row**: Total spend, Requests, Tokens, Cost per 1M tokens, Unique users, **Error rate** and
+- **KPI row**: Total spend, Requests, Tokens, Cost per 1M tokens, Unique callers, **Error rate** and
   **Avg latency**, each with a previous-period delta and a sparkline.
 - **`Compare` control** (`Previous period` / off), **on by default**, governing every widget.
 - **Time series with four plots** behind a tab control: Requests, a stacked split by the view's
@@ -71,7 +71,8 @@ the latency percentiles possible here and impossible on the realtime dataset.
 - `dashboard-query-consolidation`: the per-widget request contract, the row-limit rule every
   bucketed request states, per-request failure degradation, and the manual `Refresh` affordance.
 - `dashboard-kpi-row`: the KPI cards, their delta and sparkline presentation, which request each
-  figure comes from, the upstream-only summation the token figures require, and the rule that a
+  figure comes from, the shared basis the spend and token sums rest on, the principal the caller
+  count is over, and the rule that a
   window with no calls states no figure rather than a zero.
 - `dashboard-breakdown-table`: the tabbed table, its per-view tab sets, the share bar and its
   normalization, the delta column and when a row may be called new, server-side top-N and search,

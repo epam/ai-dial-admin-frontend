@@ -10,7 +10,7 @@ import {
   P95_LATENCY_ALIAS,
   PROMPT_TOKENS_ALIAS,
   SPEND_ALIAS,
-  USERS_ALIAS,
+  CALLERS_ALIAS,
 } from '@/src/components/Analytics/Usage/queries';
 import {
   EMPTY_MEASURES,
@@ -54,7 +54,7 @@ describe('readMeasures', () => {
   test('reads every figure the aggregate carries', () => {
     const measures = readMeasures({
       [CALLS_ALIAS]: 10,
-      [USERS_ALIAS]: 3,
+      [CALLERS_ALIAS]: 3,
       [FAILED_ALIAS]: 1,
       [AVG_LATENCY_ALIAS]: 250.5,
       [SPEND_ALIAS]: '4.25',
@@ -66,7 +66,7 @@ describe('readMeasures', () => {
 
     expect(measures).toMatchObject({
       calls: 10,
-      users: 3,
+      callers: 3,
       failed: 1,
       avgLatencyMs: 250.5,
       spend: 4.25,
