@@ -26,6 +26,7 @@ import {
   FieldDropdownMode,
   FieldOption,
   FilterGroupNode,
+  FilterOperandKind,
   FilterPredicateNode,
   FnArgValue,
   QueryBuilderColor,
@@ -48,11 +49,22 @@ interface Props {
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
 
+// How a call reads in the collapsed row, on either side of the condition.
+const callSummary = (name: string, args: FnArgValue[], options: FieldOption[], fn?: QueryFunction): string =>
+  `${name}(${fn ? functionArgSummary(fn, args, (field) => fieldDisplayName(options, field)) : ''})`;
+
 // How the left operand reads in the collapsed row.
 const operandSummary = (node: FilterPredicateNode, options: FieldOption[], fn?: QueryFunction): string => {
   if (!node.fn) return node.field ? fieldDisplayName(options, node.field) : '…';
-  const args = fn ? functionArgSummary(fn, node.args, (name) => fieldDisplayName(options, name)) : '';
-  return `${node.fn}(${args})`;
+  return callSummary(node.fn, node.args, options, fn);
+};
+
+// How the compared value reads: the call, or the literal the operator asks for.
+const comparedSummary = (node: FilterPredicateNode, options: FieldOption[], rightFn?: QueryFunction): string => {
+  if (node.rightKind === FilterOperandKind.Function) {
+    return node.rightFn ? callSummary(node.rightFn, node.rightArgs, options, rightFn) : '…';
+  }
+  return node.isNull ? 'null' : node.value || '…';
 };
 
 const summaryOf = (
@@ -60,10 +72,13 @@ const summaryOf = (
   options: FieldOption[],
   operatorOptions: SelectOption[],
   fn?: QueryFunction,
+  rightFn?: QueryFunction,
 ): string =>
-  `${operandSummary(node, options, fn)} ${compactSelectLabel(operatorOptions, node.op)} ${
-    node.isNull ? 'null' : node.value || '…'
-  }`;
+  `${operandSummary(node, options, fn)} ${compactSelectLabel(operatorOptions, node.op)} ${comparedSummary(
+    node,
+    options,
+    rightFn,
+  )}`;
 
 const BOOLEAN_VALUES = ['true', 'false'];
 
@@ -86,9 +101,23 @@ const FilterCondition: FC<Props> = ({
   const { state, refresh } = useQueryBuilder();
 
   const fn = functionByName(state.functions, node.fn);
+  const rightFn = functionByName(state.functions, node.rightFn);
   const functionOptions = useMemo(
     () => (isFunctionOperandOffered ? operandFunctionOptions(state.functions) : undefined),
     [isFunctionOperandOffered, state.functions],
+  );
+
+  // `in` compares against a list of literals, which a single call is not, so the kind choice is not
+  // offered there — and a condition switched to `in` is returned to a literal below.
+  const isRightFunctionOffered = !!functionOptions?.length && node.op !== QueryOperator.In;
+  const isComparedToFunction = node.rightKind === FilterOperandKind.Function;
+
+  const rightKindOptions: SelectOption[] = useMemo(
+    () => [
+      { value: FilterOperandKind.Literal, label: t(QueryBuilderI18nKey.Value) },
+      { value: FilterOperandKind.Function, label: t(QueryBuilderI18nKey.Function) },
+    ],
+    [t],
   );
 
   // One resolver for both type-dependent rules below, so the value type and the operator list can
@@ -150,6 +179,26 @@ const FilterCondition: FC<Props> = ({
   const onChangeOperator = (value: string) => {
     node.op = value as QueryOperator;
     if (!isNullable(node.op)) node.isNull = false;
+    if (node.op === QueryOperator.In) node.rightKind = FilterOperandKind.Literal;
+    refresh();
+  };
+
+  const onChangeRightKind = (value: string) => {
+    node.rightKind = value as FilterOperandKind;
+    if (node.rightKind === FilterOperandKind.Function) node.isNull = false;
+    refresh();
+  };
+
+  const onSelectRightFunction = (name: string) => {
+    const picked = functionByName(state.functions, name);
+    if (!picked) return;
+    node.rightFn = picked.name;
+    node.rightArgs = emptyArgs(picked);
+    refresh();
+  };
+
+  const onChangeRightArg = (index: number, value: FnArgValue) => {
+    node.rightArgs[index] = value;
     refresh();
   };
 
@@ -180,7 +229,7 @@ const FilterCondition: FC<Props> = ({
   const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
 
   return (
-    <ChipRow summary={summaryOf(node, fieldOptions, operatorOptions, fn)} onRemove={remove} color={color}>
+    <ChipRow summary={summaryOf(node, fieldOptions, operatorOptions, fn, rightFn)} onRemove={remove} color={color}>
       <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
         mode={FieldDropdownMode.Picker}
@@ -215,16 +264,58 @@ const FilterCondition: FC<Props> = ({
             onChange={onChangeOperator}
           />
         </div>
-        <div className="min-w-[104px] flex-1">
-          <CompactSelect
-            ariaLabel={t(QueryBuilderI18nKey.ValueType)}
-            options={typeOptions}
-            value={node.isNull ? QueryValueType.Null : node.valueType}
-            onChange={onChangeType}
-          />
-        </div>
+        {isRightFunctionOffered && (
+          <div className="min-w-[104px] flex-1">
+            <CompactSelect
+              ariaLabel={t(QueryBuilderI18nKey.ComparedAgainst)}
+              options={rightKindOptions}
+              value={node.rightKind}
+              onChange={onChangeRightKind}
+            />
+          </div>
+        )}
+        {!isComparedToFunction && (
+          <div className="min-w-[104px] flex-1">
+            <CompactSelect
+              ariaLabel={t(QueryBuilderI18nKey.ValueType)}
+              options={typeOptions}
+              value={node.isNull ? QueryValueType.Null : node.valueType}
+              onChange={onChangeType}
+            />
+          </div>
+        )}
       </div>
+      {isComparedToFunction && (
+        <>
+          <CategorizedFieldDropdown
+            id={`qb-cond-right-fn-${node.id}`}
+            mode={FieldDropdownMode.Picker}
+            options={[]}
+            value={node.rightFn ?? ''}
+            functions={functionOptions}
+            placeholder={t(QueryBuilderI18nKey.Function)}
+            ariaLabel={t(QueryBuilderI18nKey.Function)}
+            onSelect={onSelectRightFunction}
+            onSelectFunction={onSelectRightFunction}
+          />
+          {!!rightFn?.args.length && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {rightFn.args.map((arg, i) => (
+                <FnArgEditor
+                  key={`${node.id}-right-${i}`}
+                  id={`qb-cond-${node.id}-right-arg-${i}`}
+                  arg={arg}
+                  value={node.rightArgs[i] ?? {}}
+                  fieldOptions={fieldOptions}
+                  onChange={(value) => onChangeRightArg(i, value)}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
       {!node.isNull &&
+        !isComparedToFunction &&
         (isBoolean ? (
           <div
             role="group"
