@@ -14,12 +14,24 @@ const axisLabelStyle = { color: CHART_COLOR.neutral, fontSize: 13 };
  */
 const LINE_SAMPLING = 'lttb' as const;
 
+/** What a tooltip prints where the series holds no figure for that bucket. */
+const NO_FIGURE = '—';
+
 /**
- * Every figure a chart prints — axis tick, tooltip, legend — stops at two decimals. The raw values
- * carry full float precision (a spend of 20.50087114, a latency of 9149.517302573204) and ECharts
- * renders them verbatim.
+ * Every figure a chart prints — axis tick, tooltip, legend — is rounded here. The raw values carry
+ * full float precision (a spend of 20.50087114, a latency of 9149.517302573204) and ECharts renders
+ * them verbatim otherwise.
  */
-export const formatChartNumber = (value: number): string => value.toLocaleString(void 0, { maximumFractionDigits: 2 });
+export const formatChartNumber = (value: number, maximumFractionDigits = 2): string =>
+  value.toLocaleString(void 0, { maximumFractionDigits });
+
+/**
+ * A tooltip prints one figure large, where a third decimal is noise rather than precision, so it
+ * rounds harder than an axis tick. ECharts hands the formatter whatever the series holds, including
+ * the null a latency series uses for a bucket with no calls.
+ */
+const tooltipValueFormatter = (value: unknown): string =>
+  typeof value === 'number' ? formatChartNumber(value, 1) : NO_FIGURE;
 
 const valueAxis = {
   type: 'value' as const,
@@ -116,7 +128,12 @@ export const buildStackedAreaOptions = (labels: string[], series: NamedSeries[])
     axisTick: { show: false },
   },
   yAxis: valueAxis,
-  tooltip: { ...TOOLTIP_STYLE, trigger: 'axis', axisPointer: { type: 'line', lineStyle: axisPointerStyle } },
+  tooltip: {
+    ...TOOLTIP_STYLE,
+    trigger: 'axis',
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    valueFormatter: tooltipValueFormatter,
+  },
   animation: false,
   series: series.map((entry) => ({
     type: 'line',
@@ -142,7 +159,12 @@ export const buildBarOptions = (labels: string[], values: number[], accentIndex:
     axisTick: { show: false },
   },
   yAxis: valueAxis,
-  tooltip: { ...TOOLTIP_STYLE, trigger: 'axis', axisPointer: { type: 'shadow' } },
+  tooltip: {
+    ...TOOLTIP_STYLE,
+    trigger: 'axis',
+    axisPointer: { type: 'shadow' },
+    valueFormatter: tooltipValueFormatter,
+  },
   animation: false,
   series: [
     {
@@ -170,7 +192,12 @@ export const buildLatencyOptions = (
     axisTick: { show: false },
   },
   yAxis: valueAxis,
-  tooltip: { ...TOOLTIP_STYLE, trigger: 'axis', axisPointer: { type: 'line', lineStyle: axisPointerStyle } },
+  tooltip: {
+    ...TOOLTIP_STYLE,
+    trigger: 'axis',
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    valueFormatter: tooltipValueFormatter,
+  },
   animation: false,
   series: [
     {

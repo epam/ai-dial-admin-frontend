@@ -18,10 +18,16 @@ import {
   RequestState,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
-import { formatDuration, formatPercent, getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
+import {
+  formatDuration,
+  formatMoney,
+  formatPercent,
+  getWindowBounds,
+} from '@/src/components/Analytics/Usage/utils/format';
 import { getShareOfTotal } from '@/src/components/Analytics/Usage/utils/kpi-cards';
 import {
   BREAKDOWN_TAB_COLUMN_LABEL_KEY,
+  BREAKDOWN_TAB_DESCRIPTION_KEY,
   BREAKDOWN_TAB_LABEL_KEY,
   getFallbackLabelKey,
   getFallbackTooltipKey,
@@ -125,6 +131,7 @@ const BreakdownTable: FC<Props> = ({
         isNewRow: previous === 0 && calls > 0,
         errorRate: calls === 0 ? null : row.measures.failed / calls,
         avgLatencyMs: row.measures.avgLatencyMs,
+        spend: row.measures.spend,
       };
     });
   }, [rows.data, previousRows.data, tab, view, windowTotal, hasComparison, rowLimit, t]);
@@ -189,6 +196,26 @@ const BreakdownTable: FC<Props> = ({
         },
       ];
 
+      // Only the LLM view has a price to state: an MCP row carries none, so the column would be a
+      // dash on every row there.
+      if (view === UsageView.Llm) {
+        columns.push({
+          ...BREAKDOWN_COLUMN_BASE,
+          ...filterable,
+          colId: 'cost',
+          headerName: t(AnalyticsUsageI18nKey.ColumnCost),
+          width: 110,
+          cellClass: 'align-right',
+          valueGetter: (params) => {
+            if (params.data?.spend == null) {
+              return '—';
+            }
+            const formatted = formatMoney(params.data.spend);
+            return `${formatted.value}${formatted.unit ?? ''}`;
+          },
+        });
+      }
+
       if (hasComparison) {
         columns.push({
           ...BREAKDOWN_COLUMN_BASE,
@@ -202,7 +229,7 @@ const BreakdownTable: FC<Props> = ({
 
       return columns;
     },
-    [tab, hasComparison, onOpenRow, t],
+    [tab, view, hasComparison, onOpenRow, t],
   );
 
   const cardColumnDefs = useMemo(() => buildColumnDefs(false), [buildColumnDefs]);
@@ -237,6 +264,7 @@ const BreakdownTable: FC<Props> = ({
   return (
     <DashboardCard
       title={t(AnalyticsUsageI18nKey.BreakdownTitle)}
+      subtitle={t(BREAKDOWN_TAB_DESCRIPTION_KEY[tab])}
       titleActions={
         /* Search travels with the tabs, so a header that wraps keeps the two controls acting on the
            same rows together on the line below the title. */

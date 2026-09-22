@@ -7,7 +7,8 @@ See proposal.md — Why. Four facts about the two datasets shape everything belo
   and numbers arrive as strings. The analytics data-access service answers typed `rows` instead, so
   a fold reads a field by name and a decimal arrives as a number.
 - **The usage log carries what the design asks for.** `success`, `operation_duration_ms`,
-  `deployment_price`, `prompt_tokens`, `completion_tokens`, `user_hash`, `event_kind` — which is
+  `deployment_price`, `prompt_tokens`, `completion_tokens`, `usage_client_identity.user_ref`,
+  `event_kind` — which is
   what makes error rate and the latency percentiles computable here and impossible on the realtime
   dataset.
 - **Its query grammar is a closed catalog.** `date_bin`, `date_trunc`, `count` (with `distinct`),
@@ -126,9 +127,11 @@ Nothing is shared with the existing dashboard's positional folds.
 
 Two measure rules live in the builders, stated where the decision is made:
 
-- **Tokens count only on rows that reached an upstream** (`not_empty(response_upstream_uri)`),
-  which is what keeps an orchestrator's row from counting its children's tokens twice. Spend needs
-  no such guard: an orchestrator row carries none.
+- **Tokens and spend are summed over the same rows.** An earlier rule guarded the token sum with
+  `not_empty(response_upstream_uri)`, reading a row without an upstream URI as an orchestrator
+  repeating its children's tokens. Measured, those rows are ordinary model calls holding about half
+  of all spend and two fifths of all prompt tokens, while an application's own row carries no price
+  and a fifth of a percent of the tokens — so the guard only unbalanced cost per 1M tokens.
 - **Percentiles ride the bucketed request alone.** They are an ordered-set aggregate — the engine
   sorts each group — so the totals and the per-dimension rows, which plot no distribution, do not
   pay for them.

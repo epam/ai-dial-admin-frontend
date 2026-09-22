@@ -11,6 +11,9 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   removeRunner: vi.fn(),
   getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: false }),
   getRunners: vi.fn().mockResolvedValue([]),
+  getRunner: vi.fn(),
+  createRunner: vi.fn(),
+  bulkDeleteRunners: vi.fn(),
 }));
 
 // Always-enabled save so validation is the only thing that can stop the request — the real header
