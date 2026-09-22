@@ -4,7 +4,10 @@ import { BUCKET_ROW_LIMIT, USAGE_ENTITY, USAGE_VIEW_EVENT_KINDS } from '@/src/co
 import { BreakdownTab, SpendScaleUnit, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   BUCKET_ALIAS,
+  CALLERS_ALIAS,
   CALLS_ALIAS,
+  COMPLETION_TOKENS_ALIAS,
+  PROMPT_TOKENS_ALIAS,
   P50_LATENCY_ALIAS,
   P95_LATENCY_ALIAS,
   QueryScope,
@@ -70,6 +73,32 @@ describe('buildTotalsQuery', () => {
 
   test('carries the price and token figures in the LLM view', () => {
     expect(aliasesOf(buildTotalsQuery(scope()))).toContain(SPEND_ALIAS);
+  });
+
+  test('counts callers by the principal reference, which an API-key call also carries', () => {
+    const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
+
+    expect(entry?.expr).toEqual({
+      type: QueryExprType.Fn,
+      name: 'count',
+      args: [{ type: QueryExprType.Field, name: 'usage_client_identity.user_ref' }],
+      distinct: true,
+    });
+  });
+
+  test('sums tokens over the same rows as spend, so a figure derived from both shares one basis', () => {
+    const select = buildTotalsQuery(scope()).select ?? [];
+    const tokenAliases = [PROMPT_TOKENS_ALIAS, COMPLETION_TOKENS_ALIAS];
+
+    for (const alias of tokenAliases) {
+      const entry = select.find((item) => item.as === alias);
+
+      expect(entry?.expr).toEqual({
+        type: QueryExprType.Fn,
+        name: 'sum',
+        args: [{ type: QueryExprType.Field, name: alias }],
+      });
+    }
   });
 
   test('carries tool calls instead in the MCP view, which records no price', () => {

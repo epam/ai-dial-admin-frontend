@@ -102,6 +102,14 @@ backend's own runner table, so an asset runner has no row to point at and the cr
 with an unresolvable source. Because a single valid target does not warrant a menu, the action SHALL be a single
 button rather than the two-item dropdown `Entities > Application Runners` offers.
 
+The create modal SHALL offer both of the applications view's bucket roots — `platform` and `public` — as
+destinations in its folder sidebar (the `platform` root only when the Catalog menu group is enabled), and its form
+SHALL follow the destination bucket's shape: no version field when the `platform` bucket is selected, the version
+field shown and required when the `public` bucket is selected. A create into the `platform` bucket SHALL be
+submitted through the platform-bucket create action — writing the flat, unversioned `platform/{name}` resource —
+and SHALL navigate to the new application's detail view at the bare `/assets-applications/{name}` route, which
+SHALL resolve without a 404. A create into the `public` bucket is unchanged.
+
 #### Scenario: Detail view renders exactly five tabs
 
 - **WHEN** a user opens an app-runner asset's detail view
@@ -137,8 +145,23 @@ heading is retained because a scenario's name is the identity a delta rewrites c
 #### Scenario: The create modal opens with the runner as a fixed source
 
 - **WHEN** a user activates `Create Assets Application`
-- **THEN** the shared asset-application create modal opens, requesting name, display name, version, and description
+- **THEN** the shared asset-application create modal opens, requesting name, display name, description, and — only
+  while the `public` bucket is the selected destination — a version
 - **AND** no source field is offered, since the source is the runner the action was started from
+
+#### Scenario: The create modal offers both bucket roots as destinations
+
+- **WHEN** the create modal opens with the Catalog menu group enabled
+- **THEN** the folder sidebar lists the `platform` root and the `public` root, without requiring a prior visit to
+  the Assets Applications view in the same session
+- **AND** when the Catalog menu group is disabled, only the `public` root is listed
+
+#### Scenario: The version field follows the selected destination bucket
+
+- **WHEN** the user selects the `platform` bucket in the create modal's folder sidebar
+- **THEN** no version field is shown and the form can be submitted without one
+- **AND** when the user selects the `public` bucket, the version field is shown and required, unchanged from
+  current behavior
 
 #### Scenario: The new application references the runner by its Core resource name
 
@@ -160,6 +183,13 @@ heading is retained because a scenario's name is the identity a delta rewrites c
   application's detail view
 - **AND** when the request fails, an error notification carrying the server's message is shown and the modal stays
   open
+
+#### Scenario: A platform-bucket create navigates to a resolving detail view
+
+- **WHEN** a user submits the create modal with the `platform` bucket selected
+- **THEN** the application is created at the flat, unversioned `platform/{name}` path, and the browser navigates to
+  `/assets-applications/{name}` — no `path` query parameter — which opens the new application's platform-bucket
+  detail view on its Property tab rather than a 404 page
 
 #### Scenario: The action follows the header's existing gating
 
