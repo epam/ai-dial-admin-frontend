@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -782,5 +782,55 @@ describe('QueryBuilder :: SQL view Run', () => {
     await runSql(user, 'SELECT bad');
 
     await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
+  });
+
+  test('a period picked while the JSON view is open reaches its buffer', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    expect(await screen.findByLabelText('json-editor')).toHaveDisplayValue(/"value": "2"/);
+
+    await user.click(screen.getByRole('button', { name: /Last 2d/i }));
+    await user.click(screen.getByRole('button', { name: /Last 30m/i }));
+
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    expect(editor).toHaveDisplayValue(/"value": "minute"/);
+    expect(editor).toHaveDisplayValue(/"value": "30"/);
+  });
+
+  test('changing the source while the JSON view is open re-seeds its buffer', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getEntitySchema).mockResolvedValue({
+      success: true,
+      response: { fields: [{ name: 'started_at', type: AnalyticsFieldType.Timestamp, source: 'started_at' }] },
+    });
+    renderBuilder({ initialEntities: [...ENTITIES, { name: 'dial_sessions' }] });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Source/ }));
+    await user.click(screen.getByRole('option', { name: 'dial_sessions' }));
+
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    await vi.waitFor(() => expect(editor).toHaveDisplayValue(/"entity": "dial_sessions"/));
+    // The new source's own timestamp column carries the bound, not the previous source's.
+    expect(editor).toHaveDisplayValue(/"name": "started_at"/);
+    expect(editor.value).not.toContain('request_time');
+  });
+
+  test('a time filter change leaves an edited JSON buffer alone', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
+    // A body the builder cannot hold marks the buffer as diverged — it is the user's from here on.
+    // `fireEvent.change` rather than typing: user-event reads `{` as its own key syntax.
+    fireEvent.change(editor, { target: { value: DEEP_JSON } });
+
+    await user.click(screen.getByRole('button', { name: /Last 2d/i }));
+    await user.click(screen.getByRole('button', { name: /Last 30m/i }));
+
+    expect(editor.value).toBe(DEEP_JSON);
   });
 });

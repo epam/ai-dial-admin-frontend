@@ -2409,6 +2409,7 @@ export enum QueryBuilderI18nKey {
   Operator = 'QueryBuilder.Operator',
   Value = 'QueryBuilder.Value',
   ValueType = 'QueryBuilder.ValueType',
+  ComparedAgainst = 'QueryBuilder.ComparedAgainst',
   Direction = 'QueryBuilder.Direction',
   Nulls = 'QueryBuilder.Nulls',
   NullsPrefix = 'QueryBuilder.NullsPrefix',

@@ -144,7 +144,7 @@ const fnRowsOf = (rows: ExpressionRow[], functions: QueryFunction[]): ComputedRo
   rows.flatMap((row) => {
     if (!row.fn) return [];
     const fn = functionByName(functions, row.fn);
-    if (!fn || !requiredArgsFilled(fn, row.args)) return [];
+    if (!fn || !requiredArgsFilled(fn, row.args, functions)) return [];
     return [{ id: row.id, fn, args: row.args, distinct: false, alias: row.alias, aliasEdited: row.aliasEdited }];
   });
 

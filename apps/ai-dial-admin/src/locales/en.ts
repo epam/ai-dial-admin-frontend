@@ -2473,6 +2473,7 @@ export default {
     Operator: 'Operator',
     Value: 'Value',
     ValueType: 'Type',
+    ComparedAgainst: 'Compared against',
     Direction: 'Direction',
     Nulls: 'Nulls',
     NullsPrefix: 'Nulls:',
