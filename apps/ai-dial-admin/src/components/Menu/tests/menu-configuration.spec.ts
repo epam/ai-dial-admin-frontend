@@ -288,7 +288,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics group with Tables + Enrichment rules + Evaluators + Queries + Conversations when both flags are enabled', () => {
+  test('shows the Analytics group with Tables + Pipelines + Queries + Sessions when both flags are enabled', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: true });
 
     expect(group).toBeDefined();
@@ -296,31 +296,25 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
       MenuI18nKey.Pipelines,
-      MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsSessions,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
       ApplicationRoute.AnalyticsPipelines,
-      ApplicationRoute.AnalyticsEvaluators,
       ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.SessionsTrace,
     ]);
   });
 
-  test('orders Evaluators directly after Enrichment rules', () => {
-    const keys = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true })?.items.map((item) => item.key) ?? [];
-
-    expect(keys.indexOf(MenuI18nKey.Evaluators)).toBe(keys.indexOf(MenuI18nKey.Pipelines) + 1);
-  });
-
-  test('hides the Evaluators sub-item when the flag is disabled', () => {
-    const allItems = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, analyticsEnabled: false }).flatMap((group) =>
+  // The transform an evaluator used to carry is declared on the pipeline, so the pair the menu kept
+  // adjacent is one object and there is no second item to order.
+  test('offers no Evaluators sub-item at all', () => {
+    const allItems = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, analyticsEnabled: true }).flatMap((group) =>
       group.items.map((item) => item.href),
     );
 
-    expect(allItems).not.toContain(ApplicationRoute.AnalyticsEvaluators);
+    expect(allItems).not.toContain('/evaluators');
   });
 
   test('shows the Usage item after Queries when its flag is enabled', () => {
@@ -363,7 +357,6 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
       MenuI18nKey.Pipelines,
-      MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
     ]);
     expect(group?.items.map((item) => item.href)).not.toContain(ApplicationRoute.SessionsTrace);

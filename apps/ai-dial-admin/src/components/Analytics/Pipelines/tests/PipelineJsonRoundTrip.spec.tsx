@@ -5,11 +5,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 /**
@@ -34,9 +32,7 @@ vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
 const rule: Pipeline = {
   name: 'insights-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'conversation-insights',
-  evaluator_version: 2,
-  evaluator: { name: 'conversation-insights', version: 2, type: EvaluatorType.Llm },
+  transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title of the session.' } },
   target: 'conversation_insights',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -47,7 +43,7 @@ const rule: Pipeline = {
   updated_at: '2026-02-01T00:00:00Z',
 };
 
-const renderView = () => render(<PipelineDetailView pipeline={rule} evaluators={[]} takenTargets={[]} />);
+const renderView = () => render(<PipelineDetailView pipeline={rule} takenTargets={[]} />);
 
 // Re-queried rather than cached: the editor may re-create the node, and a stale handle sends `paste` to
 // document.body instead, which silently turns an assertion about typed text into an assertion about nothing.
@@ -92,16 +88,18 @@ describe('PipelineDetailView — the typed document reaches the request', () => 
     expect(updatePipeline).toHaveBeenCalledWith(rule.name, expect.objectContaining({ rate_rpm: 120 }));
   });
 
-  test('deleting the pinned evaluator version unpins the rule, with no error', async () => {
+  test('deleting an output from the document stops that column being written, with no error', async () => {
     const user = userEvent.setup();
     await openEditor(user);
 
-    const withoutPin = { ...documentOf() };
-    delete withoutPin.evaluator_version;
-    await write(user, withoutPin);
+    const withoutOutput = { ...documentOf(), transform: { type: 'llm', model: 'gpt-4o', outputs: {} } };
+    await write(user, withoutOutput);
     await save(user);
 
-    expect(updatePipeline).toHaveBeenCalledWith(rule.name, expect.not.objectContaining({ evaluator_version: 2 }));
+    expect(updatePipeline).toHaveBeenCalledWith(
+      rule.name,
+      expect.objectContaining({ transform: expect.objectContaining({ outputs: {} }) }),
+    );
   });
 
   test('renaming saves under the new name against the same rule', async () => {

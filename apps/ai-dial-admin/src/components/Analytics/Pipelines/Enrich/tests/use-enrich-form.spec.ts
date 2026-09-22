@@ -2,30 +2,25 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator, getEvaluatorVersion } from '@/src/app/[lang]/evaluators/actions';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
-import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
+import { Pipeline, TransformType, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 
-const sqlEvaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
+const sqlTransform: TransformDraft = {
+  type: TransformType.Sql,
+  outputs: [{ name: 'rate_event_count', sql: 'count(*)' }],
 };
 
-const llmEvaluator: Evaluator = {
-  name: 'conversation-insights',
-  version: 4,
-  type: EvaluatorType.Llm,
-  output_vars: [{ name: 'title', type: 'string' }],
+const llmTransform: TransformDraft = {
+  type: TransformType.Llm,
+  model: 'gpt-4o',
+  request_template: '{"messages":[{"role":"user","content":"{{title}}"}]}',
+  outputs: [{ name: 'title', prose: 'Title of the session.' }],
 };
 
 const enrichment: AnalyticsTable = {
@@ -68,10 +63,10 @@ const fillRequired = async (result: Form) => {
     result.current.onChange({
       name: 'my-rule',
       kind: PipelineKind.Enrich,
-      evaluator_name: 'feedback-rollup',
       target: 'turn_feedback',
       trigger: { kind: TriggerKind.OnIngest },
       enabled: true,
+      transform: sqlTransform,
     }),
   );
   await waitFor(() => expect(result.current.targetColumns).toHaveLength(1));
@@ -81,8 +76,6 @@ const mockAll = () => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue(allTables);
   vi.mocked(getTable).mockImplementation(async (name) => allTables.find((table) => table.name === name) ?? null);
-  vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: sqlEvaluator });
-  vi.mocked(getEvaluatorVersion).mockResolvedValue({ success: true, response: { ...sqlEvaluator, version: 1 } });
 };
 
 describe('useEnrichForm — resolution', () => {
@@ -113,46 +106,40 @@ describe('useEnrichForm — resolution', () => {
     expect(result.current.availableTargets[0].name).toBe('turn_feedback');
   });
 
-  test('resolves the evaluator definition when one is selected', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-
-    await waitFor(() => expect(result.current.evaluator?.name).toBe('feedback-rollup'));
-    expect(getEvaluator).toHaveBeenCalledWith('feedback-rollup');
-  });
-
-  test('drops the variables once the selected evaluator resolves to sql, which declares none', async () => {
+  test('drops the transform inputs once the type is sql, which declares none', async () => {
     const { result } = renderForm({
-      initialDraft: { kind: PipelineKind.Enrich, vars: { rate: { column: 'rate' } } },
+      initialDraft: {
+        kind: PipelineKind.Enrich,
+        transform: { ...llmTransform, inputs: { rate: { column: 'rate' } } },
+      },
     });
 
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
+    act(() => result.current.onTransformChange({ type: TransformType.Sql }));
 
-    await waitFor(() => expect(result.current.draft.vars).toBeUndefined());
+    await waitFor(() => expect(result.current.draft.transform?.inputs).toBeUndefined());
   });
 
-  test('keeps the variables for an evaluator that resolves to llm', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: llmEvaluator });
+  test('keeps the inputs for an llm transform', async () => {
     const { result } = renderForm({
-      initialDraft: { kind: PipelineKind.Enrich, vars: { title: { column: 'title' } } },
+      initialDraft: {
+        kind: PipelineKind.Enrich,
+        transform: { ...llmTransform, inputs: { title: { column: 'title' } } },
+      },
     });
 
-    act(() => result.current.onChange({ evaluator_name: 'conversation-insights' }));
+    act(() => result.current.onTransformChange({ model: 'gpt-4o-mini' }));
 
-    await waitFor(() => expect(result.current.evaluator?.type).toBe(EvaluatorType.Llm));
-    expect(result.current.draft.vars).toEqual({ title: { column: 'title' } });
+    await waitFor(() => expect(result.current.draft.transform?.model).toBe('gpt-4o-mini'));
+    expect(result.current.draft.transform?.inputs).toEqual({ title: { column: 'title' } });
   });
 
-  test('reads the pinned version when the version is no longer latest', async () => {
+  test('issues no evaluator read at all, the transform being on the declaration', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
 
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-    await waitFor(() => expect(result.current.evaluator).not.toBeNull());
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+    await waitFor(() => expect(result.current.grainKey).toBe('response_id'));
 
-    act(() => result.current.onChange({ evaluator_version: 1 }));
-
-    await waitFor(() => expect(getEvaluatorVersion).toHaveBeenCalledWith('feedback-rollup', 1));
+    expect(vi.mocked(getTable).mock.calls.every(([name]) => name !== 'feedback-rollup')).toBe(true);
   });
 
   test('caches a resolved table so re-selecting it issues no second read', async () => {
@@ -168,58 +155,6 @@ describe('useEnrichForm — resolution', () => {
     await waitFor(() => expect(result.current.grainKey).toBe('response_id'));
 
     expect(vi.mocked(getTable).mock.calls.filter(([name]) => name === 'turn_feedback')).toHaveLength(1);
-  });
-
-  test('caches a resolved evaluator version so re-selecting it issues no second read', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-    await waitFor(() => expect(result.current.evaluator?.version).toBe(2));
-
-    act(() => result.current.onChange({ evaluator_version: 1 }));
-    await waitFor(() => expect(result.current.evaluator?.version).toBe(1));
-
-    act(() => result.current.onChange({ evaluator_version: undefined }));
-    await waitFor(() => expect(result.current.evaluator?.version).toBe(2));
-
-    expect(getEvaluator).toHaveBeenCalledOnce();
-    expect(getEvaluatorVersion).toHaveBeenCalledOnce();
-    expect(result.current.isEvaluatorPending).toBe(false);
-  });
-
-  test('returns the version pin to latest when the evaluator changes', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-    act(() => result.current.onChange({ evaluator_version: 2 }));
-    expect(result.current.draft.evaluator_version).toBe(2);
-
-    act(() => result.current.onChange({ evaluator_name: 'conversation-insights' }));
-
-    expect(result.current.draft.evaluator_version).toBeUndefined();
-  });
-
-  test('reports a failed evaluator resolution', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-
-    await waitFor(() => expect(result.current.hasEvaluatorError).toBe(true));
-    expect(result.current.evaluator).toBeNull();
-    expect(result.current.isEvaluatorPending).toBe(false);
-  });
-
-  test('clears the pending flag when the selection is emptied', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-
-    act(() => result.current.onChange({ evaluator_name: 'feedback-rollup' }));
-    await waitFor(() => expect(result.current.evaluator).not.toBeNull());
-
-    act(() => result.current.onChange({ evaluator_name: '' }));
-
-    expect(result.current.isEvaluatorPending).toBe(false);
-    expect(result.current.evaluator).toBeNull();
   });
 
   test('reports a failed target resolution', async () => {
@@ -373,23 +308,25 @@ describe('useEnrichForm — isValid', () => {
     expect(result.current.isValid).toBe(true);
   });
 
-  test('blocks while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
+  test('blocks a transform that declares no output, which the service refuses', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+    await fillRequired(result);
+    await waitFor(() => expect(result.current.isValid).toBe(true));
 
-    act(() =>
-      result.current.onChange({
-        name: 'my-rule',
-        kind: PipelineKind.Enrich,
-        evaluator_name: 'feedback-rollup',
-        target: 'turn_feedback',
-        trigger: { kind: TriggerKind.OnIngest },
-        enabled: true,
-      }),
-    );
+    act(() => result.current.onTransformChange({ outputs: [] }));
 
-    await waitFor(() => expect(result.current.hasEvaluatorError).toBe(true));
     expect(result.current.isValid).toBe(false);
+  });
+
+  test('blocks an llm transform with no model', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+    await fillRequired(result);
+
+    act(() => result.current.onChange({ transform: { ...llmTransform, model: undefined } }));
+    expect(result.current.isValid).toBe(false);
+
+    act(() => result.current.onTransformChange({ model: 'gpt-4o' }));
+    expect(result.current.isValid).toBe(true);
   });
 
   test('blocks a sample fraction outside the open interval the service accepts', async () => {
@@ -449,8 +386,7 @@ describe('useEnrichForm — isValid', () => {
 const baseRule: Pipeline = {
   name: 'existing-rule',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator: sqlEvaluator,
+  transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -471,7 +407,13 @@ describe('useEnrichForm — editing an existing rule', () => {
     expect(result.current.draft).not.toHaveProperty('id');
     expect(result.current.draft).not.toHaveProperty('generation');
     expect(result.current.draft).not.toHaveProperty('grain_key');
-    expect(result.current.draft).not.toHaveProperty('evaluator');
+    expect(result.current.draft).not.toHaveProperty('response_schema');
+  });
+
+  test('seeds the transform outputs as rows, which the wire keys by target column', () => {
+    const { result } = renderForm({ pipeline: baseRule });
+
+    expect(result.current.draft.transform?.outputs).toEqual([{ name: 'rate_event_count', sql: 'count(*)' }]);
   });
 
   test('carries a member no control presents through to the saved rule', async () => {
@@ -493,7 +435,7 @@ describe('useEnrichForm — editing an existing rule', () => {
 
     const dto = result.current.buildDto() as unknown as Record<string, unknown>;
 
-    ['id', 'evaluator', 'grain_key', 'version_column', 'generation', 'created_at', 'updated_at'].forEach((key) =>
+    ['id', 'response_schema', 'grain_key', 'version_column', 'generation', 'created_at', 'updated_at'].forEach((key) =>
       expect(dto).not.toHaveProperty(key),
     );
   });
@@ -523,27 +465,35 @@ describe('useEnrichForm — buildDto', () => {
     expect(dto).toEqual({
       name: 'my-rule',
       kind: PipelineKind.Enrich,
-      evaluator_name: 'feedback-rollup',
       target: 'turn_feedback',
       trigger: { kind: TriggerKind.OnIngest },
       enabled: true,
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
     });
   });
 
-  test('omits evaluator_version while the pin is latest', async () => {
+  test('sends neither retired evaluator member, which the service refuses at the binding', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    expect(result.current.buildDto()).not.toHaveProperty('evaluator_version');
+    const dto = result.current.buildDto() as unknown as Record<string, unknown>;
+
+    expect(dto).not.toHaveProperty('evaluator_name');
+    expect(dto).not.toHaveProperty('evaluator_version');
+    expect(dto).not.toHaveProperty('vars');
   });
 
-  test('sends evaluator_version as a number once a version is pinned', async () => {
+  test('keys the outputs by target column and drops the llm members from a sql transform', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ evaluator_version: 2 }));
+    act(() => result.current.onTransformChange({ model: 'gpt-4o', request_template: '{}' }));
 
-    expect(result.current.buildDto().evaluator_version).toBe(2);
+    const transform = result.current.buildDto().transform as unknown as Record<string, unknown>;
+
+    expect(transform.outputs).toEqual({ rate_event_count: 'count(*)' });
+    expect(transform).not.toHaveProperty('model');
+    expect(transform).not.toHaveProperty('request_template');
   });
 
   test('sends trigger_cron for a schedule rule', async () => {
@@ -596,13 +546,17 @@ describe('useEnrichForm — buildDto', () => {
     expect(result.current.buildDto().trigger).not.toHaveProperty('member_select');
   });
 
-  test('sends the evaluator inputs as a map keyed by variable name', async () => {
+  test('sends the transform inputs as a map keyed by variable name', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ vars: { request: { column: 'request_body' } } }));
+    act(() =>
+      result.current.onChange({
+        transform: { ...llmTransform, inputs: { request: { column: 'request_body' } } },
+      }),
+    );
 
-    expect(result.current.buildDto().vars).toEqual({ request: { column: 'request_body' } });
+    expect(result.current.buildDto().transform?.inputs).toEqual({ request: { column: 'request_body' } });
   });
 
   test('sends no output mapping, which the service derives rather than accepts', async () => {

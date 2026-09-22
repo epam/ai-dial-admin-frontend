@@ -10,9 +10,12 @@ import {
   TryOutHistoryEntry,
 } from '@/src/models/evaluation/test-suite';
 import { TryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 export interface ParsedTemplateParam {
   name: string;
+  /** Mapped from the placeholder's `|type` hint; `STRING` when it carries none. */
+  effectiveType: TestCaseItemType;
   hasDefault: boolean;
   defaultValue?: string;
 }

@@ -33,24 +33,11 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
   );
 
   const resolution = usePipelineResolution({
-    evaluatorName: draft.evaluator_name,
-    evaluatorVersion: draft.evaluator_version,
     target: draft.target,
     input: getPipelineInput(draft.inputs),
   });
 
-  const onChange = useCallback((patch: PipelineDraft) => {
-    setDraft((prev) => {
-      const next = { ...prev, ...patch };
-
-      // A version pinned against the previous evaluator does not exist on the new one.
-      if (patch.evaluator_name !== undefined && patch.evaluator_name !== prev.evaluator_name) {
-        delete next.evaluator_version;
-      }
-
-      return next;
-    });
-  }, []);
+  const onChange = useCallback((patch: PipelineDraft) => setDraft((prev) => ({ ...prev, ...patch })), []);
 
   const onTriggerChange = useCallback(
     (patch: Partial<PipelineTrigger>) =>
@@ -104,8 +91,13 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
     isMemberSelectValid;
 
   const buildDto = useCallback(
-    (): CreatePipelineDto => buildPipelineDto(draft, { grainKey, sourceTable: resolution.target?.source_table }),
-    [draft, grainKey, resolution.target?.source_table],
+    (): CreatePipelineDto =>
+      buildPipelineDto(draft, {
+        grainKey,
+        sourceTable: resolution.target?.source_table,
+        storedTransform: pipeline?.transform,
+      }),
+    [draft, grainKey, resolution.target?.source_table, pipeline?.transform],
   );
 
   return {

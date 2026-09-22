@@ -42,7 +42,7 @@ const bindingSelect = (index = 1) =>
   screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.VarBinding} ${index}` }).querySelector('select')!;
 
 describe('VariablesEditor', () => {
-  test('states that nothing can be bound until the evaluator and source resolve', () => {
+  test('states that nothing can be bound until the read source resolves', () => {
     render(<VariablesEditor columns={columns} isReady={false} onChange={vi.fn()} />);
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.VariablesEmpty)).toBeTruthy();

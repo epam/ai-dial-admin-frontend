@@ -8,27 +8,17 @@ import CreateAggregatePopup from '@/src/components/Analytics/Pipelines/Aggregate
 import CreateEnrichPopup from '@/src/components/Analytics/Pipelines/Enrich/CreateEnrichPopup';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 
 interface Props {
-  evaluators: EvaluatorSummary[];
-  hasEvaluatorsError?: boolean;
   functions: QueryFunction[];
   takenTargets: string[];
   onClose: () => void;
   onCreated: () => void;
 }
 
-const CreatePipelinePopup: FC<Props> = ({
-  evaluators,
-  hasEvaluatorsError,
-  functions,
-  takenTargets,
-  onClose,
-  onCreated,
-}) => {
+const CreatePipelinePopup: FC<Props> = ({ functions, takenTargets, onClose, onCreated }) => {
   const t = useI18n();
   const [kind, setKind] = useState<PipelineKind>(PipelineKind.Enrich);
 
@@ -61,14 +51,7 @@ const CreatePipelinePopup: FC<Props> = ({
   }
 
   return (
-    <CreateEnrichPopup
-      kindControl={kindControl}
-      evaluators={evaluators}
-      hasEvaluatorsError={hasEvaluatorsError}
-      takenTargets={takenTargets}
-      onClose={onClose}
-      onCreated={onCreated}
-    />
+    <CreateEnrichPopup kindControl={kindControl} takenTargets={takenTargets} onClose={onClose} onCreated={onCreated} />
   );
 };
 
