@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 import { BreakdownRowModel } from '@/src/components/Analytics/Usage/models';
-import { formatCompactNumber, formatDuration, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { formatDuration, formatGroupedNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -25,11 +25,11 @@ const RowDetailPanel: FC<Props> = ({ row, onClose }) => {
     return null;
   }
 
-  const calls = formatCompactNumber(row.calls);
+  const calls = formatGroupedNumber(row.calls);
   const latency = row.avgLatencyMs == null ? null : formatDuration(row.avgLatencyMs);
 
   const tiles: Tile[] = [
-    { labelKey: AnalyticsUsageI18nKey.PanelCalls, value: `${calls.value}${calls.unit ?? ''}` },
+    { labelKey: AnalyticsUsageI18nKey.PanelCalls, value: calls },
     {
       labelKey: AnalyticsUsageI18nKey.PanelShareOfCalls,
       value: row.share == null ? '—' : formatPercent(row.share),

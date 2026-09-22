@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import ActivityHeatmap from '@/src/components/Analytics/Usage/Charts/ActivityHeatmap';
 import { BucketPoint, RequestState } from '@/src/components/Analytics/Usage/models';
+import { UsageView } from '@/src/components/Analytics/Usage/models';
 import { HeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { getWeekRange } from '@/src/components/Analytics/Usage/utils/weeks';
@@ -29,8 +30,8 @@ const week = (offset: number): HeatmapWeek => ({
   onCurrentWeek: vi.fn(),
 });
 
-const renderHeatmap = (overrides: Partial<HeatmapWeek> = {}) =>
-  render(<ActivityHeatmap heatmap={{ ...week(0), ...overrides }} />);
+const renderHeatmap = (overrides: Partial<HeatmapWeek> = {}, view: UsageView = UsageView.Llm) =>
+  render(<ActivityHeatmap heatmap={{ ...week(0), ...overrides }} view={view} />);
 
 describe('ActivityHeatmap', () => {
   test('names the timezone the grid is drawn in', () => {
@@ -92,5 +93,18 @@ describe('ActivityHeatmap', () => {
 
     expect(screen.getByRole('grid')).toBeTruthy();
     expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapEmptySubtitle)).toBeTruthy();
+  });
+
+  test('offers the figure the grid paints, calls or cost', () => {
+    renderHeatmap({ buckets: loaded(busyWeek) });
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCalls)).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
+  });
+
+  test('offers no cost in the MCP view, whose rows carry no price', () => {
+    renderHeatmap({ buckets: loaded(busyWeek) }, UsageView.Mcp);
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
 });
