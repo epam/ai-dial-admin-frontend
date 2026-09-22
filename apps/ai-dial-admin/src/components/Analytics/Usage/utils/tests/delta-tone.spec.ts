@@ -4,7 +4,7 @@ import { KpiMetric } from '@/src/components/Analytics/Usage/models';
 import { DELTA_TONE_CLASS, DeltaTone, getDeltaTone } from '@/src/components/Analytics/Usage/utils/delta-tone';
 
 describe('getDeltaTone', () => {
-  test.each([KpiMetric.Requests, KpiMetric.Tokens, KpiMetric.UniqueUsers, KpiMetric.ToolCalls])(
+  test.each([KpiMetric.Requests, KpiMetric.Tokens, KpiMetric.UniqueCallers, KpiMetric.ToolCalls])(
     'reads a rise in %s as the welcome direction',
     (metric) => {
       expect(getDeltaTone(metric, 0.2)).toBe(DeltaTone.Good);

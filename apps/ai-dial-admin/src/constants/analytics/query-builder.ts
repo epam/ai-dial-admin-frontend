@@ -75,6 +75,12 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
   },
 ];
 
+// The two catalog functions a relative time bound is expressed with, and the only function names
+// the frontend states anywhere. Every function the user picks comes from the served catalog; the
+// toolbar offers no pick — it expresses one fixed meaning, so it has to name what carries it.
+export const RELATIVE_TIME_SUBTRACT_FN = 'date_sub';
+export const RELATIVE_TIME_NOW_FN = 'now';
+
 // The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
 // the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
 // are all the same LIKE and all rejected. One bad predicate fails the whole query, so these are withheld

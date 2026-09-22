@@ -192,3 +192,49 @@ describe('BreakdownTable', () => {
     expect(dialog.columnDefs.some((column) => column.filter === true)).toBe(true);
   });
 });
+
+describe('BreakdownTable cost column and tab description', () => {
+  beforeEach(() => {
+    grids.length = 0;
+  });
+
+  test('states the cost of each row in the LLM view', () => {
+    renderTable();
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).toContain('cost');
+  });
+
+  test('omits the cost column in the MCP view, where a row carries no price', () => {
+    renderTable({ view: UsageView.Mcp, tab: BreakdownTab.McpServers });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
+  });
+
+  test('describes what the active tab counts, so a reader knows what one row aggregates', () => {
+    const { rerender } = renderTable();
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownDescriptionModels)).toBeInTheDocument();
+
+    rerender(
+      <BreakdownTable
+        view={UsageView.Llm}
+        tab={BreakdownTab.Projects}
+        onTabChange={vi.fn()}
+        rows={loaded<BreakdownRow[]>(ROWS)}
+        previousRows={loaded<BreakdownRow[]>([])}
+        windowTotal={200}
+        hasComparison={false}
+        window={WINDOW}
+        rowLimit={10}
+        searchTerm=""
+        onSearchChange={vi.fn()}
+        isShowingAll={false}
+        onShowAll={vi.fn()}
+        onHideAll={vi.fn()}
+        onOpenRow={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownDescriptionProjects)).toBeInTheDocument();
+  });
+});

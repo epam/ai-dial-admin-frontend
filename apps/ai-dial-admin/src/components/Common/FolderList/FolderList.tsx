@@ -18,9 +18,13 @@ interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   context?: () => AssetsFolderContext | RuleFolderContextType;
+  /** Roots the empty-state auto-fetch loads — both buckets for dual-bucket views (see `getRootFolders`). */
+  rootPaths?: string[];
 }
 
-const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
+const DEFAULT_ROOT_PATHS = [`${ROOT_FOLDER}/`];
+
+const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
   const t = useI18n();
   const folderContext = context?.();
 
@@ -53,9 +57,16 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
       !initialPath &&
       (folderContext?.files == null || folderContext?.files?.length === 0)
     ) {
-      folderContext?.fetchFiles(`${ROOT_FOLDER}/`);
+      // Only the assets context has dual-bucket views (Applications/Toolsets) whose empty-state
+      // fetch takes several roots at once; a rule folder always has a single root.
+      const assetsContext = folderContext as AssetsFolderContext | undefined;
+      if (rootPaths.length > 1 && assetsContext) {
+        assetsContext.fetchFiles(rootPaths);
+      } else {
+        folderContext?.fetchFiles(rootPaths[0]);
+      }
     }
-  }, [folderContext, disableAutoFetch, initialPath, scrollToFolder]);
+  }, [folderContext, disableAutoFetch, initialPath, rootPaths, scrollToFolder]);
 
   const getFolderClassName = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;

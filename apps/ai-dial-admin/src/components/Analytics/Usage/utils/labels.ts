@@ -46,3 +46,12 @@ export const BREAKDOWN_TAB_COLUMN_LABEL_KEY: Record<BreakdownTab, AnalyticsUsage
   [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.ColumnMcpServer,
   [BreakdownTab.Tools]: AnalyticsUsageI18nKey.ColumnTool,
 };
+
+/** What each tab counts and what one of its rows aggregates, stated under the card's title. */
+export const BREAKDOWN_TAB_DESCRIPTION_KEY: Record<BreakdownTab, AnalyticsUsageI18nKey> = {
+  [BreakdownTab.Models]: AnalyticsUsageI18nKey.BreakdownDescriptionModels,
+  [BreakdownTab.Applications]: AnalyticsUsageI18nKey.BreakdownDescriptionApplications,
+  [BreakdownTab.Projects]: AnalyticsUsageI18nKey.BreakdownDescriptionProjects,
+  [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.BreakdownDescriptionMcpServers,
+  [BreakdownTab.Tools]: AnalyticsUsageI18nKey.BreakdownDescriptionTools,
+};

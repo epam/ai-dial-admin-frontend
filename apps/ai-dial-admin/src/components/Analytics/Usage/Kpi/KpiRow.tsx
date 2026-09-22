@@ -37,7 +37,7 @@ const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
   [KpiMetric.Requests]: AnalyticsUsageI18nKey.KpiRequests,
   [KpiMetric.Tokens]: AnalyticsUsageI18nKey.KpiTokens,
   [KpiMetric.CostPerMillionTokens]: AnalyticsUsageI18nKey.KpiCostPerMillionTokens,
-  [KpiMetric.UniqueUsers]: AnalyticsUsageI18nKey.KpiUniqueUsers,
+  [KpiMetric.UniqueCallers]: AnalyticsUsageI18nKey.KpiUniqueCallers,
   [KpiMetric.ErrorRate]: AnalyticsUsageI18nKey.KpiErrorRate,
   [KpiMetric.AvgLatency]: AnalyticsUsageI18nKey.KpiAvgLatency,
   [KpiMetric.ToolCalls]: AnalyticsUsageI18nKey.KpiTotalToolCalls,
