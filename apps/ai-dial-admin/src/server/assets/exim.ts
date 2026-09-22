@@ -30,7 +30,7 @@ import { ConflictResolutionPolicy, ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { resolveImportDestination } from './import-destination';
 
-export interface AssetEximConfig<T extends { id?: string }> {
+export interface AssetEximConfig<T extends { id?: string; _metadata?: unknown }> {
   resourceType: ResourceType;
   /** Reads this asset type's entities out of a `ParsedAssets` document. */
   getEntities: (document: ParsedAssets) => T[] | undefined;
@@ -74,7 +74,7 @@ const resolveExportPaths = async (
     : [path];
 
 /** Builds the `{ <field>: T[] }` export document directly from DIAL Core. */
-export const buildAssetsExport = async <T extends { id?: string }>(
+export const buildAssetsExport = async <T extends { id?: string; _metadata?: unknown }>(
   config: AssetEximConfig<T>,
   assetApi: AssetApi,
   token: Token,
@@ -94,17 +94,33 @@ export const buildAssetsExport = async <T extends { id?: string }>(
 };
 
 /**
- * `getMerged`/`buildAssetsExport` graft `folderId`/`path`/`version`/`id` onto every entity
- * (frontend identity fields mirroring the admin backend's metadata split) — Core's content
- * DTOs have no such fields and reject them outright (`FAIL_ON_UNKNOWN_PROPERTIES`, the
- * Jackson default). Use as a type's `transformForPut` (or compose into one) whenever the
- * entity carries no other admin-only fields needing to be stripped before `put`.
+ * Strips flat admin-format identity fields (`folderId`/`path`/`version`/`id`) off an entity before
+ * any write to Core. The merge layer no longer grafts these flat — they nest under `_metadata`,
+ * which `stripMetadata` drops — but `buildAssetsExport` stamps `id` on every entry, and an older
+ * or hand-edited export document may still carry the flat spellings. Core's content DTOs have no
+ * such fields and reject them outright (`FAIL_ON_UNKNOWN_PROPERTIES`, the Jackson default). Use as
+ * a type's `transformForPut` (or compose into one) whenever the entity carries no other
+ * admin-only fields needing to be stripped before `put`.
  */
 export const stripAssetIdentityFields = <T extends { folderId?: string; path?: string; version?: string; id?: string }>(
   entity: T,
 ): T => {
   const { folderId: __folderId, path: __path, version: __version, id: __id, ...rest } = entity;
   return rest as T;
+};
+
+/**
+ * Strips the merge layer's `_metadata` graft object off an entity before any write to Core — the
+ * wholesale replacement for the per-field `status`/`validationWarnings`/`path`/`folderId`/
+ * `author`/`createdAt`/`updatedAt` destructuring every write path used to repeat (see the
+ * `core-resource-entity-metadata` capability). Per-type write quirks that are not merge grafts
+ * (prompt `id`, key `name`/`key`, toolset `reference`/`displayVersion`) stay in their own payload
+ * builders, composed around this strip. Core's strict `FAIL_ON_UNKNOWN_PROPERTIES` deserialization
+ * makes a forgotten strip a loud 400, not a silent data loss.
+ */
+export const stripMetadata = <T extends { _metadata?: unknown }>(entity: T): Omit<T, '_metadata'> => {
+  const { _metadata: __metadata, ...rest } = entity;
+  return rest;
 };
 
 export interface ImportAssetsOptions {
@@ -114,7 +130,7 @@ export interface ImportAssetsOptions {
 }
 
 /** Imports a `{ <field>: T[] }` document directly against DIAL Core. */
-export const importAssetsExport = async <T extends { id?: string }>(
+export const importAssetsExport = async <T extends { id?: string; _metadata?: unknown }>(
   config: AssetEximConfig<T>,
   assetApi: AssetApi,
   token: Token,
@@ -166,7 +182,11 @@ export const importAssetsExport = async <T extends { id?: string }>(
       continue;
     }
 
-    const body = config.transformForPut ? config.transformForPut(entity) : entity;
+    // Export documents carry `_metadata` as provenance, but no written body may: the config
+    // resource DTOs 400 on it, and the resource DTOs would store it verbatim. Stripped here so
+    // every type's import is covered, with or without its own `transformForPut`.
+    const transformed = config.transformForPut ? config.transformForPut(entity) : entity;
+    const body = stripMetadata(transformed);
     const result = await assetApi.put(token, config.resourceType, targetPath, body, { allowOverride: true });
 
     if (result.success) {

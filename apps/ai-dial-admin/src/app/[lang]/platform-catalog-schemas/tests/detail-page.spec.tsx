@@ -37,7 +37,13 @@ describe('Catalog schema detail page :: resolving either population', () => {
   test('reads the API-written half first, under the route segment as Core stores it', async () => {
     vi.mocked(getCatalogSchema).mockResolvedValue({
       success: true,
-      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      // A merged read carries its identity under `_metadata` (the merge layer's graft), never flat —
+      // see `DialCatalogSchemaResource`.
+      response: {
+        $id: SCHEMA_ID,
+        name: SCHEMA_ID,
+        _metadata: { name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      },
       etag: 'etag-1',
     });
 
@@ -82,7 +88,13 @@ describe('Catalog schema detail page :: resolving either population', () => {
   test('ignores a configFile flag on the address, still reading the API-written half first', async () => {
     vi.mocked(getCatalogSchema).mockResolvedValue({
       success: true,
-      response: { $id: SCHEMA_ID, name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      // A merged read carries its identity under `_metadata` (the merge layer's graft), never flat —
+      // see `DialCatalogSchemaResource`.
+      response: {
+        $id: SCHEMA_ID,
+        name: SCHEMA_ID,
+        _metadata: { name: SCHEMA_ID, path: `catalog/${SCHEMA_ID}`, folderId: 'catalog' },
+      },
       etag: 'etag-1',
     });
 

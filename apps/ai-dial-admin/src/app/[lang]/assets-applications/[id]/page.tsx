@@ -80,7 +80,7 @@ export default async function Page(params: {
         return res?.response as AssetApp | null;
       });
 
-      apps = ((await getApps(app?.folderId as string))?.filter(
+      apps = ((await getApps(app?.folderId || app?._metadata?.folderId || ''))?.filter(
         (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
       ) || []) as AssetApp[];
     }

@@ -102,7 +102,7 @@ const RouteAssetView: FC<Props> = ({ etag, originalRoute, roles, optionWarnings,
             getUpdateNotificationDescription(ApplicationRoute.PlatformRoutes, selectedRoute.name, t),
           ),
         );
-        fetchFiles(selectedRoute.folderId);
+        fetchFiles(selectedRoute._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

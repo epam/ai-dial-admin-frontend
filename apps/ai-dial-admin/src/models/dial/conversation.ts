@@ -1,4 +1,5 @@
 import { BaseEntity } from './base-entity';
+import { CoreResourceEntityMetadata } from './resource';
 
 export interface DialConversation extends BaseEntity {
   descriptionKeywords: string[];
@@ -13,6 +14,8 @@ export interface DialConversation extends BaseEntity {
     id: string;
   };
   prompt?: string;
+  /** See `DialPrompt._metadata` — grafted identity/audit fields of a merged detail entity. */
+  _metadata?: CoreResourceEntityMetadata;
 }
 
 export interface DialMessage {

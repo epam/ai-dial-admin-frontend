@@ -110,16 +110,25 @@ describe('Assets app runner :: server actions', () => {
     });
 
     test('Should strip Core-injected and client-side identity fields', async () => {
+      // A merged read carries `path`/`folderId`/`status`/`author` only under `_metadata` (dropped
+      // wholesale by `stripMetadata`); `name`/`createdAt`/`updatedAt` may also sit flat — Core
+      // re-injects `name` on every read and `ModifiedEntity` types the timestamps — and the payload
+      // builder destructures those spellings out.
       await updateRunner(
         {
           ...runner,
           name: 'schemas/platform/qq',
-          status: DialModelResourceStatus.Valid,
-          path: 'platform/qq',
-          folderId: 'platform/',
-          author: 'someone',
           createdAt: '1',
           updatedAt: '2',
+          _metadata: {
+            name: 'schemas/platform/qq',
+            path: 'platform/qq',
+            folderId: 'platform/',
+            status: DialModelResourceStatus.Valid,
+            author: 'someone',
+            createdAt: '1',
+            updatedAt: '2',
+          },
         } as DialAppRunnerResource,
         'etag',
       );

@@ -48,11 +48,15 @@ export const getEntityPath = (
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.Skills: {
-      const path = (data as DialPrompt).path || `${(data as DialPrompt).folderId}${(data as DialPrompt).name || ''}`;
+      const entity = data as DialPrompt;
+      // A merged detail prompt/conversation keeps its identity in `_metadata`; row shapes keep it
+      // flat — hence the flat-first resolution on every read.
+      const path = entity.path || entity._metadata?.path || `${entity.folderId}${entity.name || ''}`;
+      const name = entity.name || entity._metadata?.name || '';
 
       return forRemove
         ? decodeURIComponent(escapePercentSign(path))
-        : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
+        : `${encodeURIComponent(name)}?path=${encodeURIComponent(path)}`;
     }
 
     // Applications and Toolsets are the views whose resources live in both buckets (design.md's
@@ -67,28 +71,31 @@ export const getEntityPath = (
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
       const entity = data as AssetWithVersion;
+      // Same flat-first identity resolution as the prompt branch above: a merged detail entity
+      // carries `path`/`folderId`/`name`/`version` in `_metadata`, create-flow and grid-row
+      // shapes carry them flat.
+      const path = entity.path || entity._metadata?.path;
+      const folderId = entity.folderId || entity._metadata?.folderId;
+      const name = entity.name || entity._metadata?.name || '';
+      const entityVersion = entity.version || entity._metadata?.version;
 
-      if (isPlatformBucketPath(entity.path || entity.folderId)) {
+      if (isPlatformBucketPath(path || folderId)) {
         // `forRemove` must still resolve to the resource's storage path (`platform/{name}`) — Core
         // has no route for a bare name — unlike the URL-segment case just below, where the bucket
         // prefix is deliberately dropped for a readable URL (design.md D5).
-        const resolvedPath = entity.path || `${PLATFORM_ROOT_FOLDER}/${entity.name || ''}`;
-        return forRemove ? decodeURIComponent(escapePercentSign(resolvedPath)) : encodeURIComponent(entity.name || '');
+        const resolvedPath = path || `${PLATFORM_ROOT_FOLDER}/${name}`;
+        return forRemove ? decodeURIComponent(escapePercentSign(resolvedPath)) : encodeURIComponent(name);
       }
 
-      if (entity.path == null && entity.folderId == null) {
-        return forRemove
-          ? decodeURIComponent(escapePercentSign(entity.name || ''))
-          : encodeURIComponent(entity.name || '');
+      if (path == null && folderId == null) {
+        return forRemove ? decodeURIComponent(escapePercentSign(name)) : encodeURIComponent(name);
       }
 
-      const path = version
-        ? `${entity.folderId}${entity.name}__${version}`
-        : entity.path || `${entity.folderId}${entity.name}__${entity.version}`;
+      const fullPath = version ? `${folderId}${name}__${version}` : path || `${folderId}${name}__${entityVersion}`;
 
       return forRemove
-        ? decodeURIComponent(escapePercentSign(path))
-        : `${encodeURIComponent(entity.name as string)}?path=${encodeURIComponent(path)}`;
+        ? decodeURIComponent(escapePercentSign(fullPath))
+        : `${encodeURIComponent(name)}?path=${encodeURIComponent(fullPath)}`;
     }
 
     case ApplicationRoute.PlatformModels:

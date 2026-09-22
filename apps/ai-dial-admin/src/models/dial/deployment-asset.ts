@@ -1,7 +1,7 @@
 import { DialApplication } from './application';
 import { EntityValidityState } from './base-entity';
 import { DialFile } from './file';
-import { DialModelResource } from './resource';
+import { CoreResourceEntityMetadata, DialModelResource } from './resource';
 import { Toolset } from './toolset';
 
 export interface AssetApp extends DialFile, DialApplication, EntityValidityState {
@@ -12,6 +12,13 @@ export interface AssetApp extends DialFile, DialApplication, EntityValidityState
   display_name?: string;
   displayVersion?: string;
   selectedVersions?: string[];
+  /**
+   * Present when this holds a merged Core detail entity: the detail views keep this row-shaped
+   * surface because their create/new-version flows seed the flat identity fields, while a merged
+   * read carries its identity only here (see `CoreResourceEntityMetadata`). Grid/tree rows never
+   * set it.
+   */
+  _metadata?: CoreResourceEntityMetadata;
 }
 
 export interface AssetToolset extends DialFile, Toolset {
@@ -21,6 +28,8 @@ export interface AssetToolset extends DialFile, Toolset {
   display_name?: string;
   displayVersion?: string;
   selectedVersions?: string[];
+  /** See `AssetApp._metadata`. */
+  _metadata?: CoreResourceEntityMetadata;
 }
 
 export interface AssetModel extends DialFile, Omit<DialModelResource, 'name'>, EntityValidityState {

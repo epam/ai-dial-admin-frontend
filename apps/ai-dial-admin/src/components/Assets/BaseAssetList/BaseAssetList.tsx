@@ -31,7 +31,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialAppRunnerResource, DialResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
@@ -355,7 +355,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       // needed here and was the cause of Issue #4420's `Modals.tsx` counterpart — `.path` never
       // carries the bucket prefix, so it always won the `||` and made this check false for a
       // platform-bucket row).
-      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, platformAsset.folderId);
+      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, asset.folderId);
       if (isFlatPlatformView(view) || isPlatformDualBucketDuplicate) {
         const duplicate = getPlatformAssetDuplicate(view, platformAsset);
         // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
@@ -572,7 +572,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const onMultipleRemove = useCallback(async () => {
     if (deletedItems) {
-      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialResource[];
+      // Grid rows carry their identity flat (`path`/`folderId` straight off the listing, never inside
+      // `_metadata`); `etag` rides along only where a listing serves it (skills), which `DialFile`
+      // doesn't declare — hence the widened cast instead of the old `DialResource` one.
+      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as (DialFile & {
+        etag?: string;
+      })[];
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
       // Selection is already scoped to one folder (confirmed in design.md), so a batch is always
       // single-bucket — resolving by the first asset's path is enough, no mixed-bucket case exists.

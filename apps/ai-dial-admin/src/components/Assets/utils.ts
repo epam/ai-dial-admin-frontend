@@ -14,6 +14,7 @@ import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
 const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
   '$type' in deployment && typeof deployment.$type === 'string';
@@ -61,22 +62,31 @@ export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) =>
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: { folderId?: string }, initialEntity?: { folderId?: string }) => {
-  return entity.folderId !== initialEntity?.folderId;
+// A merged detail entity carries its folder identity in `_metadata` (see `CoreResourceEntityMetadata`);
+// a create/new-version flow seeds it flat. Every identity read resolves flat-first to serve both.
+export const getIsNeedToMove = (
+  entity: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+) => {
+  return (
+    (entity.folderId ?? entity._metadata?.folderId) !== (initialEntity?.folderId ?? initialEntity?._metadata?.folderId)
+  );
 };
 
-export const getEntityForUpdate = <T extends { folderId?: string }>(
+export const getEntityForUpdate = <
+  T extends { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+>(
   entity: T,
-  initialEntity?: { folderId?: string },
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
 ): T => {
   return {
     ...entity,
-    folderId: initialEntity?.folderId,
+    folderId: initialEntity?.folderId ?? initialEntity?._metadata?.folderId,
   };
 };
 
 export const addNewVersion = (entity: AssetWithVersion, version: string) => {
-  const path = modifyNameVersionInAsset(entity.path, void 0, version);
+  const path = modifyNameVersionInAsset((entity.path || entity._metadata?.path) as string, void 0, version);
   delete (entity as AssetApp).reference;
   return {
     ...entity,

@@ -122,7 +122,6 @@ export function createFolderContext(
             newFetchedFoldersData[rootPath] = (results[index]?.filter((f) => f.nodeType === DialFileNodeType.ITEM) ??
               []) as Asset[];
           });
-
           const rootNodes = paths.map(
             (rootPath, index) =>
               ({

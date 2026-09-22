@@ -57,12 +57,17 @@ describe('Assets interceptor :: server actions', () => {
   test('Should call createInterceptor action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The read-only projections (identity, `status`) graft under `_metadata`; the payload builder
+    // drops the whole object, so the exact-body assertion below proves the strip.
     const result = await createInterceptor({
       name: 'redactor',
-      path: 'platform/redactor',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
       displayName: 'Redactor',
+      _metadata: {
+        name: 'redactor',
+        path: 'platform/redactor',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.INTERCEPTOR, 'redactor', {
@@ -76,7 +81,7 @@ describe('Assets interceptor :: server actions', () => {
     const rejection = { success: false, errorHeader: 'Bad Request', errorMessage: 'displayName is required' };
     (assetApi.put as any).mockResolvedValue(rejection);
 
-    const result = await createInterceptor({ name: 'redactor', path: 'platform/redactor', folderId: 'platform/' });
+    const result = await createInterceptor({ name: 'redactor' });
 
     expect(result).toBe(rejection);
   });
@@ -84,10 +89,7 @@ describe('Assets interceptor :: server actions', () => {
   test('Should call updateInterceptor action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateInterceptor(
-      { name: 'redactor', path: 'platform/redactor', folderId: 'platform/' },
-      'etag',
-    );
+    const result = await updateInterceptor({ name: 'redactor' }, 'etag');
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -165,8 +167,6 @@ describe('Assets interceptor :: catalog metadata', () => {
   ])('carries catalogSchemaId and catalogProperties through a %s', async (_label, action) => {
     await action({
       name: 'redactor',
-      path: 'platform/redactor',
-      folderId: 'platform/',
       catalogSchemaId: 'https://host/interceptor-card',
       catalogProperties: { tag: 'Featured' },
     });
@@ -179,7 +179,7 @@ describe('Assets interceptor :: catalog metadata', () => {
   });
 
   test('leaves an interceptor carrying no catalog metadata untouched', async () => {
-    await updateInterceptor({ name: 'redactor', path: 'platform/redactor', folderId: 'platform/' }, 'etag');
+    await updateInterceptor({ name: 'redactor' }, 'etag');
 
     const [, , , body] = (assetApi.put as any).mock.calls[0];
     expect(body).not.toHaveProperty('catalogSchemaId');

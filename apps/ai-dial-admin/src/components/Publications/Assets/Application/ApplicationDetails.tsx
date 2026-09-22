@@ -15,15 +15,18 @@ interface Props {
 const ApplicationDetails: FC<Props> = ({ publication, applicationSchemes, onChange }) => {
   const onChangeApplication = useCallback(
     (updatedApplication: DialApplicationResource) => {
-      const path = updatePathWithNameAndVersion(
-        updatedApplication.path,
+      // A publication review copy attaches its storage path flat — it is a stored payload copy,
+      // not a merged Core read, so the path never lives in `_metadata`.
+      const { path } = updatedApplication as DialApplicationResource & { path?: string };
+      const updatedPath = updatePathWithNameAndVersion(
+        path ?? '',
         updatedApplication.name || '',
-        updatedApplication.version,
+        updatedApplication.version ?? '',
       );
       const updatedApplications = [...(publication.applicationResources || [])];
       updatedApplications[0] = {
         ...updatedApplications[0],
-        applicationResource: { ...updatedApplication, path } as unknown as DialApplicationResource,
+        applicationResource: { ...updatedApplication, path: updatedPath } as unknown as DialApplicationResource,
       };
       onChange?.({ ...publication, applicationResources: updatedApplications });
     },

@@ -28,7 +28,7 @@ const metadata = (overrides: Partial<CoreResourceMetadataNode>): CoreResourceMet
 });
 
 describe('Server :: Core :: asset-metadata', () => {
-  test('mergeApplicationResource sources name/folderId/version/author/updatedAt from metadata, rest from content', () => {
+  test('mergeApplicationResource grafts name/folderId/version/author/updatedAt under _metadata, rest from content', () => {
     const content = { endpoint: 'https://app', viewerUrl: 'https://view', maxInputAttachments: 3 };
     const meta = metadata({ url: 'applications/folder/My App__2', author: 'alice', updatedAt: 111 });
 
@@ -36,62 +36,102 @@ describe('Server :: Core :: asset-metadata', () => {
       endpoint: 'https://app',
       viewerUrl: 'https://view',
       maxInputAttachments: 3,
-      name: 'My App',
-      folderId: 'folder/',
-      path: 'folder/My App__2',
-      version: '2',
-      author: 'alice',
-      updatedAt: '111',
+      _metadata: {
+        name: 'My App',
+        folderId: 'folder/',
+        path: 'folder/My App__2',
+        version: '2',
+        author: 'alice',
+        updatedAt: '111',
+      },
     });
   });
 
-  test('mergeApplicationResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId and path both identifying the bucket', () => {
+  test('mergeApplicationResource grafts a platform-bucket resource with bucket-qualified path and folderId under _metadata', () => {
     const content = { endpoint: 'https://app' };
     const meta = metadata({ url: 'applications/platform/my-app', author: 'alice', createdAt: 100, updatedAt: 111 });
 
     expect(mergeApplicationResource(content, meta)).toEqual({
       endpoint: 'https://app',
-      name: 'my-app',
-      path: 'platform/my-app',
-      folderId: 'platform/',
-      author: 'alice',
-      createdAt: '100',
-      updatedAt: '111',
+      _metadata: {
+        name: 'my-app',
+        path: 'platform/my-app',
+        folderId: 'platform/',
+        author: 'alice',
+        createdAt: '100',
+        updatedAt: '111',
+      },
     });
   });
 
-  test('mergeToolsetResource sources name/folderId/version/author/updatedAt from metadata, rest from content', () => {
+  test('mergeApplicationResource keeps inline content audit fields flat and prefers the metadata node over them inside _metadata', () => {
+    const content = { endpoint: 'https://app', author: 'content-author', created_at: 1, updated_at: 2 };
+    const meta = metadata({ url: 'applications/folder/My App__2', createdAt: 42, updatedAt: 52 });
+
+    const result = mergeApplicationResource(content, meta);
+
+    // The content object is never mutated by the merge — its own fields survive flat.
+    expect(result.author).toBe('content-author');
+    expect(result.created_at).toBe(1);
+    expect(result.updated_at).toBe(2);
+    // `_metadata` sources metadata-first; the metadata node's timestamps win over the content's.
+    expect(result._metadata).toMatchObject({
+      name: 'My App',
+      folderId: 'folder/',
+      path: 'folder/My App__2',
+      version: '2',
+      author: 'content-author',
+      createdAt: '42',
+      updatedAt: '52',
+    });
+  });
+
+  test("mergeApplicationResource falls back to the content response's inline timestamps when the metadata node omits them", () => {
+    const content = { endpoint: 'https://app', created_at: 1, updated_at: 2 };
+    const meta = metadata({ url: 'applications/folder/My App__2' });
+
+    const result = mergeApplicationResource(content, meta);
+
+    expect(result._metadata?.createdAt).toEqual('1');
+    expect(result._metadata?.updatedAt).toEqual('2');
+  });
+
+  test('mergeToolsetResource grafts name/folderId/version/author/updatedAt under _metadata, rest from content', () => {
     const content = { endpoint: 'https://ts', maxRetryAttempts: 2 };
     const meta = metadata({ url: 'toolsets/folder/My Toolset__1', author: 'bob', updatedAt: 222 });
 
     expect(mergeToolsetResource(content, meta)).toEqual({
       endpoint: 'https://ts',
       maxRetryAttempts: 2,
-      name: 'My Toolset',
-      folderId: 'folder/',
-      path: 'folder/My Toolset__1',
-      version: '1',
-      author: 'bob',
-      updatedAt: '222',
+      _metadata: {
+        name: 'My Toolset',
+        folderId: 'folder/',
+        path: 'folder/My Toolset__1',
+        version: '1',
+        author: 'bob',
+        updatedAt: '222',
+      },
     });
   });
 
-  test('mergeToolsetResource sources flat name/path/author/createdAt/updatedAt from metadata for a platform-bucket resource, with folderId and path both identifying the bucket', () => {
+  test('mergeToolsetResource grafts a platform-bucket resource with bucket-qualified path and folderId under _metadata', () => {
     const content = { endpoint: 'https://ts' };
     const meta = metadata({ url: 'toolsets/platform/my-toolset', author: 'bob', createdAt: 200, updatedAt: 222 });
 
     expect(mergeToolsetResource(content, meta)).toEqual({
       endpoint: 'https://ts',
-      name: 'my-toolset',
-      path: 'platform/my-toolset',
-      folderId: 'platform/',
-      author: 'bob',
-      createdAt: '200',
-      updatedAt: '222',
+      _metadata: {
+        name: 'my-toolset',
+        path: 'platform/my-toolset',
+        folderId: 'platform/',
+        author: 'bob',
+        createdAt: '200',
+        updatedAt: '222',
+      },
     });
   });
 
-  test('mergeConversation sources name/folderId/author/updatedAt from metadata, rest from content', () => {
+  test('mergeConversation grafts name/folderId/author/updatedAt under _metadata, rest from content', () => {
     const content = { messages: [], temperature: 0.5, endpoint: 'https://conv' };
     const meta = metadata({ url: 'conversations/folder/My Conv', author: 'carol', updatedAt: 333 });
 
@@ -99,31 +139,35 @@ describe('Server :: Core :: asset-metadata', () => {
       messages: [],
       temperature: 0.5,
       endpoint: 'https://conv',
-      name: 'My Conv',
-      folderId: 'folder/',
-      path: 'folder/My Conv',
-      author: 'carol',
-      updatedAt: '333',
+      _metadata: {
+        name: 'My Conv',
+        folderId: 'folder/',
+        path: 'folder/My Conv',
+        author: 'carol',
+        updatedAt: '333',
+      },
     });
   });
 
-  test('mergePrompt sources name/folderId/author/updatedAt/nodeType from metadata, rest from content — a `__` in the name stays part of the name', () => {
+  test('mergePrompt grafts name/folderId/author/updatedAt/nodeType under _metadata, rest from content — a `__` in the name stays part of the name', () => {
     const content = { content: 'prompt body', description: 'desc' };
     const meta = metadata({ url: 'prompts/folder/My Prompt__1.0', author: 'dave', updatedAt: 444 });
 
     expect(mergePrompt(content, meta)).toEqual({
       content: 'prompt body',
       description: 'desc',
-      name: 'My Prompt__1.0',
-      folderId: 'folder/',
-      path: 'folder/My Prompt__1.0',
-      author: 'dave',
-      updatedAt: '444',
-      nodeType: 'item',
+      _metadata: {
+        name: 'My Prompt__1.0',
+        folderId: 'folder/',
+        path: 'folder/My Prompt__1.0',
+        author: 'dave',
+        updatedAt: '444',
+        nodeType: 'item',
+      },
     });
   });
 
-  test('mergeModelResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+  test('mergeModelResource grafts name/path/folderId/author/updatedAt under _metadata (flat, no version), rest from content', () => {
     const content = { type: 'chat', tokenizerModel: 'gpt-4', displayName: 'GPT-4' };
     const meta = metadata({ url: 'models/platform/gpt-4', author: 'eve', updatedAt: 555 });
 
@@ -131,30 +175,34 @@ describe('Server :: Core :: asset-metadata', () => {
       type: 'chat',
       tokenizerModel: 'gpt-4',
       displayName: 'GPT-4',
-      name: 'gpt-4',
-      folderId: '',
-      path: 'gpt-4',
-      author: 'eve',
-      updatedAt: '555',
+      _metadata: {
+        name: 'gpt-4',
+        path: 'gpt-4',
+        folderId: '',
+        author: 'eve',
+        updatedAt: '555',
+      },
     });
   });
 
-  test('mergeInterceptorResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+  test('mergeInterceptorResource grafts name/path/folderId/author/updatedAt under _metadata (flat, no version), rest from content', () => {
     const content = { displayName: 'Redactor', endpoint: 'https://interceptor' };
     const meta = metadata({ url: 'interceptors/platform/redactor', author: 'frank', updatedAt: 666 });
 
     expect(mergeInterceptorResource(content, meta)).toEqual({
       displayName: 'Redactor',
       endpoint: 'https://interceptor',
-      name: 'redactor',
-      folderId: '',
-      path: 'redactor',
-      author: 'frank',
-      updatedAt: '666',
+      _metadata: {
+        name: 'redactor',
+        path: 'redactor',
+        folderId: '',
+        author: 'frank',
+        updatedAt: '666',
+      },
     });
   });
 
-  test('mergeRouteResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+  test('mergeRouteResource grafts name/path/folderId/author/updatedAt under _metadata (flat, no version), rest from content', () => {
     const content = { paths: ['/api'], methods: ['GET'], order: 10 };
     const meta = metadata({ url: 'routes/platform/my-route', author: 'grace', updatedAt: 777 });
 
@@ -162,26 +210,30 @@ describe('Server :: Core :: asset-metadata', () => {
       paths: ['/api'],
       methods: ['GET'],
       order: 10,
-      name: 'my-route',
-      folderId: '',
-      path: 'my-route',
-      author: 'grace',
-      updatedAt: '777',
+      _metadata: {
+        name: 'my-route',
+        path: 'my-route',
+        folderId: '',
+        author: 'grace',
+        updatedAt: '777',
+      },
     });
   });
 
-  test('mergeRoleResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+  test('mergeRoleResource grafts name/path/folderId/author/updatedAt under _metadata (flat, no version), rest from content', () => {
     const content = { costLimit: { minute: 10 }, share: { conversation: { invitation_ttl: 24 } } };
     const meta = metadata({ url: 'roles/platform/my-role', author: 'henry', updatedAt: 888 });
 
     expect(mergeRoleResource(content, meta)).toEqual({
       costLimit: { minute: 10 },
       share: { conversation: { invitation_ttl: 24 } },
-      name: 'my-role',
-      folderId: '',
-      path: 'my-role',
-      author: 'henry',
-      updatedAt: '888',
+      _metadata: {
+        name: 'my-role',
+        path: 'my-role',
+        folderId: '',
+        author: 'henry',
+        updatedAt: '888',
+      },
     });
   });
 
@@ -215,6 +267,9 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result[0]).toMatchObject({ name: 'a__1', nodeType: 'item' });
     expect(result[0].version).toBeUndefined();
     expect(result[1]).toMatchObject({ nodeType: 'folder' });
+    // Rows are the metadata-only grid projection — they stay flat, never carrying `_metadata`.
+    expect(result[0]).not.toHaveProperty('_metadata');
+    expect(result[1]).not.toHaveProperty('_metadata');
   });
 
   test('toResourceInfoList returns an empty array for a node with no items', () => {
@@ -243,12 +298,12 @@ describe('Server :: Core :: asset-metadata', () => {
     const result = mergeAppRunnerResource(content, meta);
 
     expect(result.$id).toEqual('https://host/qq');
-    expect(result.name).toEqual('https%3A%2F%2Fhost%2Fqq');
-    expect(result.path).toEqual('https%3A%2F%2Fhost%2Fqq');
-    expect(result.folderId).toEqual('');
-    expect(result.author).toEqual('ivy');
-    expect(result.createdAt).toEqual('100');
-    expect(result.updatedAt).toEqual('200');
+    expect(result._metadata?.name).toEqual('https%3A%2F%2Fhost%2Fqq');
+    expect(result._metadata?.path).toEqual('https%3A%2F%2Fhost%2Fqq');
+    expect(result._metadata?.folderId).toEqual('');
+    expect(result._metadata?.author).toEqual('ivy');
+    expect(result._metadata?.createdAt).toEqual('100');
+    expect(result._metadata?.updatedAt).toEqual('200');
     expect(result['dial:applicationTypeRoutes']).toEqual([
       { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'http://svc' }] },
     ]);
@@ -278,12 +333,12 @@ describe('Server :: Core :: asset-metadata', () => {
     const result = mergeCatalogSchemaResource(content, meta);
 
     expect(result.$id).toEqual('https://host/agent');
-    expect(result.name).toEqual('https%3A%2F%2Fhost%2Fagent');
-    expect(result.path).toEqual('https%3A%2F%2Fhost%2Fagent');
-    expect(result.folderId).toEqual('');
-    expect(result.author).toEqual('ivy');
-    expect(result.createdAt).toEqual('100');
-    expect(result.updatedAt).toEqual('200');
+    expect(result._metadata?.name).toEqual('https%3A%2F%2Fhost%2Fagent');
+    expect(result._metadata?.path).toEqual('https%3A%2F%2Fhost%2Fagent');
+    expect(result._metadata?.folderId).toEqual('');
+    expect(result._metadata?.author).toEqual('ivy');
+    expect(result._metadata?.createdAt).toEqual('100');
+    expect(result._metadata?.updatedAt).toEqual('200');
     expect(result['dial:catalogEntityType']).toEqual('agent');
     expect(result.properties).toEqual(content.properties);
   });
@@ -301,7 +356,7 @@ describe('Server :: Core :: asset-metadata', () => {
     );
 
     expect(result.$id).toEqual('https://host/agent');
-    expect(result.name).toEqual('legacy-name');
+    expect(result._metadata?.name).toEqual('legacy-name');
   });
 
   test.each([
@@ -338,10 +393,10 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result[0].path).toEqual('https%3A%2F%2Fhost%2Fagent');
   });
 
-  test('flat merges project createdAt from metadata', () => {
+  test('flat merges project createdAt from metadata into _metadata', () => {
     const result = mergeModelResource({}, metadata({ url: 'models/platform/gpt-4', createdAt: 42 }));
 
-    expect(result.createdAt).toEqual('42');
+    expect(result._metadata?.createdAt).toEqual('42');
   });
 
   test('toResourceInfoList decodes an app runner row name to its $id while leaving path encoded', () => {
@@ -359,7 +414,7 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
-  test('mergeKeyResource sources name/folderId/path/author from metadata (flat, no version), rest from content', () => {
+  test('mergeKeyResource grafts name/path/folderId/author under _metadata (flat, no version), rest from content', () => {
     const content = { project: 'proj', secured: true, roles: ['r1'] };
     const meta = metadata({ url: 'keys/platform/my-key', author: 'someone', createdAt: 9, updatedAt: 11 });
 
@@ -367,12 +422,14 @@ describe('Server :: Core :: asset-metadata', () => {
       project: 'proj',
       secured: true,
       roles: ['r1'],
-      name: 'my-key',
-      path: 'my-key',
-      folderId: '',
-      author: 'someone',
-      createdAt: '9',
-      updatedAt: '11',
+      _metadata: {
+        name: 'my-key',
+        path: 'my-key',
+        folderId: '',
+        author: 'someone',
+        createdAt: '9',
+        updatedAt: '11',
+      },
     });
   });
 

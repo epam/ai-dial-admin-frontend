@@ -34,9 +34,15 @@ import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/d
 // renders and what `roles` it threads, so the factories carry the rest.
 const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialToolsetResource => ({
   name: 'my-toolset',
-  path: 'toolsets/public/my-toolset',
   folderId: 'public',
   version: '1.0',
+  // A merged detail read carries its identity under `_metadata` (the merge layer's graft), never flat.
+  _metadata: {
+    name: 'my-toolset',
+    path: 'toolsets/public/my-toolset',
+    folderId: 'public',
+    version: '1.0',
+  },
   description: '',
   description_keywords: [],
   dependencies: [],
@@ -55,8 +61,14 @@ const toolsetResource = (overrides: Partial<DialToolsetResource> = {}): DialTool
 
 const platformToolset = (overrides: Partial<DialPlatformToolsetResource> = {}): DialPlatformToolsetResource => ({
   name: 'my-toolset',
-  path: 'toolsets/platform/my-toolset',
   folderId: 'platform',
+  // A merged platform-bucket read carries its identity under `_metadata` (the merge layer's graft),
+  // never flat — see `DialPlatformToolsetResource`.
+  _metadata: {
+    name: 'my-toolset',
+    path: 'toolsets/platform/my-toolset',
+    folderId: 'platform',
+  },
   description: '',
   description_keywords: [],
   dependencies: [],
@@ -67,8 +79,8 @@ const platformToolset = (overrides: Partial<DialPlatformToolsetResource> = {}): 
   forward_auth_token: false,
   forward_per_request_key: false,
   allowed_tools: [],
-  created_at: 0,
-  updated_at: 0,
+  // `DialPlatformToolsetResource` omits the snake_case `created_at`/`updated_at` the bucketed
+  // resource carries; the platform bucket's write path serves camelCase `ModifiedEntity` spellings.
   ...overrides,
 });
 

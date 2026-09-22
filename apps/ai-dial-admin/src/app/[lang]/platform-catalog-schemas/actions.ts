@@ -6,6 +6,7 @@ import { assetApi, catalogSchemasApi, configFileApi } from '@/src/app/api/api';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -37,19 +38,13 @@ const checkSchemaId = (id?: string): ServerActionResponse | null => {
 /**
  * Core stores this body verbatim, so anything sent persists in the stored schema — including the
  * `name` and `status` Core itself injects on read, which would then break meta-schema conformance.
+ * `status` (with `validationWarnings`) and every other merge graft now nest under `_metadata`,
+ * which `stripMetadata` drops wholesale (see the `core-resource-entity-metadata` capability);
+ * `name` is additionally stripped because Core re-injects it flat on every read, and
+ * `createdAt`/`updatedAt` because `ModifiedEntity` types the pair.
  */
 function toCatalogSchemaPayload(schema: DialCatalogSchemaResource) {
-  const {
-    name: __name,
-    status: __status,
-    validationWarnings: __validationWarnings,
-    path: __path,
-    folderId: __folderId,
-    author: __author,
-    createdAt: __createdAt,
-    updatedAt: __updatedAt,
-    ...payload
-  } = schema;
+  const { name: __name, createdAt: __createdAt, updatedAt: __updatedAt, ...payload } = stripMetadata(schema);
   return payload;
 }
 

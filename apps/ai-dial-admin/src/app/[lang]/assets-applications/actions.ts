@@ -23,6 +23,7 @@ import { buildApplicationsZip, extractApplicationsFromZip } from '@/src/server/a
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
 import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -76,15 +77,17 @@ export async function createApp(app: DialApplicationResource) {
     return validationFailure(validationErrors);
   }
 
-  const folderId = app.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(app.name || '', app.version)}`;
+  // Create flows seed flat `folderId`/`version`; a fetched entity carries them in `_metadata`
+  // instead (see `DialResource`'s field comments) — resolve both spellings.
+  const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
+  const version = app.version ?? app._metadata?.version;
+  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
   const asset = {
-    ...app,
-    displayVersion: app.version,
+    ...stripMetadata(app),
+    displayVersion: version,
     folderId: undefined,
     source: undefined,
     version: undefined,
-    path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
   };
@@ -113,17 +116,19 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
     return validationFailure(validationErrors);
   }
 
-  const folderId = app.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(app.name || '', app.version)}`;
-  const cleaned = stripExternalServiceAuthStatuses(app);
+  // Same flat-vs-`_metadata` resolution as `createApp` — an update's entity is a fetched, merged
+  // read whose identity grafts nest under `_metadata`.
+  const folderId = app.folderId || app._metadata?.folderId || ROOT_FOLDER;
+  const version = app.version ?? app._metadata?.version;
+  const path = `${folderId}${getVersionedName(app.name || '', version)}`;
+  const cleaned = stripExternalServiceAuthStatuses(stripMetadata(app));
   const application = {
     ...cleaned,
     defaults: { ...cleaned.defaults },
-    display_version: cleaned.version,
+    display_version: version,
     folderId: undefined,
     source: undefined,
     version: undefined,
-    path: undefined,
   };
   return assetApi.put(token, ResourceType.APPLICATION, path, application, { etag });
 }
@@ -155,22 +160,20 @@ export async function getPlatformApplications(path: string) {
  * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
  * (the platform bucket's write path) deserializes the request body straight into `Application` via
  * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
- * `toKeyPayload` strips extras for `Key.class`. `status`/`validationWarnings` are read-only
- * projections Core computes, not part of the entity; `author`/`createdAt`/`updatedAt` come from the
- * metadata node, not `Application` itself; `reference` is a client-only tracking id (see
- * `handleDuplicate`/`addNewVersion`, which already strip it before any write). None of these round-trip
- * through the merge readers as content fields, so they must not be sent back on write.
+ * `toKeyPayload` strips extras for `Key.class`. The merge layer's grafts (identity, audit, and the
+ * `status`/`validationWarnings` validity projections) nest under `_metadata`, which `stripMetadata`
+ * drops wholesale (see the `core-resource-entity-metadata` capability). `reference` is stripped on
+ * top of it — a client-only tracking id (see `handleDuplicate`/`addNewVersion`, which already strip
+ * it before any write) — as are `createdAt`/`updatedAt`, which `ModifiedEntity` types but the
+ * platform bucket's reads never serve inline.
  */
 function toPlatformApplicationPayload(app: DialPlatformApplicationResource) {
   const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    author: __author,
+    reference: __reference,
     createdAt: __createdAt,
     updatedAt: __updatedAt,
-    reference: __reference,
     ...payload
-  } = app as DialPlatformApplicationResource & { reference?: string };
+  } = stripMetadata(app) as Omit<DialPlatformApplicationResource, '_metadata'> & { reference?: string };
 
   return payload;
 }

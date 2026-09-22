@@ -54,14 +54,18 @@ describe('Assets translator :: server actions', () => {
   test('Should call createTranslator action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The read-only projections (identity, `status`) graft under `_metadata`; the exact-body
+    // assertion below proves the payload builder drops the whole object.
     const result = await createTranslator({
-      name: 'to-responses',
-      path: 'platform/to-responses',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
       in: DeploymentInterfaceType.AnthropicMessages,
       out: DeploymentInterfaceType.OpenAIResponses,
       baseUrl: 'http://dial-bedrock-translator/to-responses',
+      _metadata: {
+        name: 'to-responses',
+        path: 'platform/to-responses',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TRANSLATOR, 'to-responses', {
@@ -76,11 +80,7 @@ describe('Assets translator :: server actions', () => {
     const rejection = { success: false, errorHeader: 'Unprocessable Entity', errorMessage: 'out is required' };
     (assetApi.put as any).mockResolvedValue(rejection);
 
-    const result = await createTranslator({
-      name: 'to-responses',
-      path: 'platform/to-responses',
-      folderId: 'platform/',
-    });
+    const result = await createTranslator({ name: 'to-responses' });
 
     expect(result).toBe(rejection);
   });
@@ -88,10 +88,7 @@ describe('Assets translator :: server actions', () => {
   test('Should call updateTranslator action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateTranslator(
-      { name: 'to-responses', path: 'platform/to-responses', folderId: 'platform/' },
-      'etag',
-    );
+    const result = await updateTranslator({ name: 'to-responses' }, 'etag');
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,

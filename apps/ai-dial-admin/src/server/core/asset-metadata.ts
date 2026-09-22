@@ -1,10 +1,13 @@
 import {
+  CoreResourceEntityMetadata,
+  CoreValidationWarning,
   DialAppRunnerResource,
   DialCatalogSchemaResource,
   DialApplicationResource,
   DialInterceptorResource,
   DialKeyResource,
   DialModelResource,
+  DialModelResourceStatus,
   DialRoleResource,
   DialRouteResource,
   DialToolsetResource,
@@ -125,16 +128,62 @@ export const toResourceInfoList = (node: CoreResourceMetadataNode | null, type: 
   return node.items.map((item) => toResourceInfo(item, type));
 };
 
-const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+/**
+ * Resolves one `_metadata` timestamp: the metadata node's value wins; where it omits one, the
+ * content response's own inline field backs it up — Core's `ApplicationService`/`ToolSetService`
+ * graft the blob metadata into public-bucket content GETs at serve time (`created_at`/`updated_at`
+ * via their `@JsonNaming(SnakeCaseStrategy)`), and a `Deployment`-based blob (model, interceptor)
+ * can carry the camelCase pair. Both spellings are checked so one fallback covers every serve
+ * path; the winner is stringified per the merge formatters' epoch-milliseconds convention.
+ */
+const graftedTimestamp = (
+  metadataValue: number | undefined,
+  content: Record<string, unknown>,
+  contentKeys: readonly (keyof Record<string, unknown>)[],
+): string | undefined => {
+  if (metadataValue !== undefined) {
+    return String(metadataValue);
+  }
+  for (const key of contentKeys) {
+    const value = content[key];
+    if (typeof value === 'number' || typeof value === 'string') {
+      return String(value);
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Splits Core's read-only validity projections (`status`/`validationWarnings`, served by
+ * `ConfigResourceController` on invalid reads) off the content object so they relocate into
+ * `_metadata` rather than staying flat on the entity. Types Core serves without them (every
+ * `ResourceController`-served read) leave no keys behind in either half.
+ */
+const splitValidityFields = (content: Record<string, unknown>) => {
+  const { status, validationWarnings, ...rest } = content;
+  const validity = {
+    ...(status !== undefined && { status: status as DialModelResourceStatus }),
+    ...(validationWarnings !== undefined && {
+      validationWarnings: validationWarnings as CoreValidationWarning[],
+    }),
+  };
+  return { content: rest, validity };
+};
+
+const metadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
   const { path, folderId, name, version } = parseEncodedVersionedPath(metadata.url, prefix);
   return {
     name,
     folderId,
     path,
     version: version ?? '',
-    author: metadata.author ?? '',
-    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
-    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
   };
 };
 
@@ -143,15 +192,19 @@ const metadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
  * sourcing, but the path parses as folder + plain name — a `__` in the name stays part of the name
  * and no `version` is grafted.
  */
-const folderMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+const folderMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
   const { path, folderId, name } = parseEncodedFolderPath(metadata.url, prefix);
   return {
     name,
     folderId,
     path,
-    author: metadata.author ?? '',
-    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
-    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
   };
 };
 
@@ -160,28 +213,33 @@ const folderMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string
  * is correct for platform-only flat entities (models, roles, routes, interceptors, keys, schemas —
  * see `DuplicatePlatformKeyModal.tsx`'s comment for why `''` matters there). The dual-bucket platform
  * branch (see `dualBucketMetadataFields`) is the one exception: it needs `folderId: 'platform/'` so
- * `isPlatformBucketPath(asset.folderId)` works on a freshly-fetched resource, matching what the write
- * path already sets on create/update — hence the explicit `isDualBucketPlatform` flag rather than
- * inferring it from `prefix`, which flat platform-only prefixes (`MODELS_PREFIX` et al.) already bake
+ * `isPlatformBucketPath(asset._metadata.folderId)` works on a freshly-fetched resource, matching what
+ * the write path already sets on create/update — hence the explicit `isDualBucketPlatform` flag rather
+ * than inferring it from `prefix`, which flat platform-only prefixes (`MODELS_PREFIX` et al.) already bake
  * their fixed `platform/` segment into and would otherwise match too.
  *
  * The same flag governs `path`: a genuinely flat platform-only entity has `path === name` by design
  * (no bucket to qualify against — `getEntityPath`'s flat-platform branch relies on this). A dual-bucket
  * platform resource's `path` must instead be bucket-qualified (`platform/{name}`), matching the shape
  * `metadataFields` already gives a public-bucket resource's `path` — every downstream consumer
- * (delete, discovered-tools, sign-in/out) trusts `.path` as the complete, Core-addressable path, and a
- * bare name resolves to no bucket at all (`ResourceDescriptorFactory.fromAnyUrl` in `ai-dial-core`
- * requires `{type}/{bucket}/{path}`).
+ * (delete, discovered-tools, sign-in/out) trusts `_metadata.path` as the complete, Core-addressable
+ * path, and a bare name resolves to no bucket at all (`ResourceDescriptorFactory.fromAnyUrl` in
+ * `ai-dial-core` requires `{type}/{bucket}/{path}`).
  */
-const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string, isDualBucketPlatform = false) => {
+const flatMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+  isDualBucketPlatform = false,
+): CoreResourceEntityMetadata => {
   const { path, folderId, name } = parseEncodedFlatPath(metadata.url, prefix);
   return {
     name,
     path: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/${name}` : path,
     folderId: isDualBucketPlatform ? `${PLATFORM_ROOT_FOLDER}/` : folderId,
-    author: metadata.author ?? '',
-    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
-    updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
+    author: metadata.author ?? (typeof content.author === 'string' ? content.author : undefined) ?? '',
+    createdAt: graftedTimestamp(metadata.createdAt, content, ['createdAt', 'created_at']),
+    updatedAt: graftedTimestamp(metadata.updatedAt, content, ['updatedAt', 'updated_at']),
   };
 };
 
@@ -193,26 +251,35 @@ const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string, 
  * `platform` segment is folded into the prefix for the flat case (matching how `MODELS_PREFIX` et al.
  * already bake their fixed bucket segment in), so `name` parses correctly.
  */
-const dualBucketMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) => {
+const dualBucketMetadataFields = (
+  metadata: CoreResourceMetadataNode,
+  prefix: string,
+  content: Record<string, unknown>,
+): CoreResourceEntityMetadata => {
   const remainder = decodeCorePath(stripPrefix(metadata.url, prefix));
   if (isPlatformBucketPath(remainder)) {
-    return flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`, true);
+    return flatMetadataFields(metadata, `${prefix}${PLATFORM_ROOT_FOLDER}/`, content, true);
   }
-  return metadataFields(metadata, prefix);
+  return metadataFields(metadata, prefix, content);
 };
 
 /**
  * Merges a Core content DTO with its Core metadata node into the frontend model shape,
- * matching the backend's `*ClientMapper` field split: name/folderId/version/author/updatedAt
- * come from metadata, everything else comes from content.
+ * matching the backend's `*ClientMapper` field split: the identity/audit grafts
+ * (name/folderId/path/version/author/createdAt/updatedAt) nest under `_metadata`, everything
+ * else comes from content untouched.
  */
 export const mergeApplicationResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialApplicationResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]),
+    ...rest,
+    _metadata: {
+      ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION], content),
+      ...validity,
+    },
   } as DialApplicationResource;
 };
 
@@ -220,9 +287,13 @@ export const mergeToolsetResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialToolsetResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]),
+    ...rest,
+    _metadata: {
+      ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET], content),
+      ...validity,
+    },
   } as DialToolsetResource;
 };
 
@@ -230,18 +301,33 @@ export const mergeConversation = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialConversation => {
+  const { content: rest, validity } = splitValidityFields(content);
+  // `DialConversation` keeps declaring flat `path`/`folderId`/`author` for the shared row/tree
+  // shape, but this merge no longer grafts them — they live in `_metadata` (see the
+  // `core-resource-entity-metadata` capability) — hence the widened cast.
   return {
-    ...content,
-    ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]),
-  } as DialConversation;
+    ...rest,
+    _metadata: {
+      ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION], content),
+      ...validity,
+    },
+  } as unknown as DialConversation;
 };
 
 export const mergePrompt = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode): DialPrompt => {
+  const { content: rest, validity } = splitValidityFields(content);
+  // Same widened cast as `mergeConversation` — flat `path`/`folderId`/`author` stay declared on
+  // `DialPrompt` for the shared row/tree shape but are no longer grafted here.
   return {
-    ...content,
-    ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]),
-    nodeType: DialFileNodeType.ITEM,
-  } as DialPrompt;
+    ...rest,
+    _metadata: {
+      ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT], content),
+      // The prompt detail entity's own row-marker identity — Core serves prompts through the
+      // folder-tree shape, where `ITEM` vs `FOLDER` drives the tree/list distinction.
+      nodeType: DialFileNodeType.ITEM,
+      ...validity,
+    },
+  } as unknown as DialPrompt;
 };
 
 /**
@@ -254,9 +340,15 @@ export const mergeModelResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialModelResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.MODEL]),
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.MODEL], content),
+      // Core's model GET injects `status`/`validationWarnings` as read-only projections — the
+      // one flat type whose validity fields every read carries (valid or invalid).
+      ...validity,
+    },
   } as DialModelResource;
 };
 
@@ -274,13 +366,13 @@ export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialAppRunnerResource => {
-  const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]);
+  const { content: rest, validity } = splitValidityFields(content);
+  const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA], content);
   const routes = fromCoreAppRoutes(content['dial:applicationTypeRoutes'] as CoreAppRunnerRoutes | undefined);
   return {
-    ...content,
-    ...fields,
-    name,
-    $id: fromCoreSchemaResourceName(name),
+    ...rest,
+    _metadata: { ..._metadata, ...validity },
+    $id: fromCoreSchemaResourceName(_metadata.name),
     ...(routes && { 'dial:applicationTypeRoutes': routes }),
   } as DialAppRunnerResource;
 };
@@ -298,13 +390,13 @@ export const mergeCatalogSchemaResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialCatalogSchemaResource => {
-  const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]);
+  const { content: rest, validity } = splitValidityFields(content);
+  const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA], content);
   const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
   return {
-    ...content,
-    ...fields,
-    name,
-    $id: declaredId ?? fromCoreSchemaResourceName(name),
+    ...rest,
+    _metadata: { ..._metadata, ...validity },
+    $id: declaredId ?? fromCoreSchemaResourceName(_metadata.name),
   } as DialCatalogSchemaResource;
 };
 
@@ -317,9 +409,13 @@ export const mergeInterceptorResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialInterceptorResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]),
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR], content),
+      ...validity,
+    },
   } as DialInterceptorResource;
 };
 
@@ -334,9 +430,13 @@ export const mergeTranslatorResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialTranslatorResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]),
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR], content),
+      ...validity,
+    },
   } as DialTranslatorResource;
 };
 
@@ -349,9 +449,13 @@ export const mergeRouteResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialRouteResource => {
+  const { content: rest, validity } = splitValidityFields(content);
   return {
-    ...content,
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]),
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE], content),
+      ...validity,
+    },
   } as DialRouteResource;
 };
 
@@ -372,19 +476,23 @@ export const mergeRoleResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialRoleResource => {
-  const { costLimit, limits, ...rest } = content as {
+  const { content: rest, validity } = splitValidityFields(content);
+  const { costLimit, limits, ...remaining } = rest as {
     costLimit?: Record<string, unknown>;
     limits?: Record<string, Record<string, unknown>>;
   };
   return {
-    ...rest,
+    ...remaining,
     ...(costLimit !== undefined && { costLimit: normalizeRoleLimits(costLimit) }),
     ...(limits !== undefined && {
       limits: Object.fromEntries(
         Object.entries(limits || {}).map(([name, roleLimits]) => [name, normalizeRoleLimits(roleLimits)]),
       ),
     }),
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROLE]),
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROLE], content),
+      ...validity,
+    },
   } as DialRoleResource;
 };
 
@@ -413,14 +521,18 @@ export const mergeKeyResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
 ): DialKeyResource => {
-  const { allowedIpAddressRanges, ...rest } = content as {
+  const { content: rest, validity } = splitValidityFields(content);
+  const { allowedIpAddressRanges, ...remaining } = rest as {
     allowedIpAddressRanges?: string[] | { ranges?: IpRangeBean[] } | null;
   };
   const normalizedRanges = normalizeIpRanges(allowedIpAddressRanges);
   return {
-    ...rest,
+    ...remaining,
     ...(normalizedRanges !== undefined && { allowedIpAddressRanges: normalizedRanges }),
-    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]),
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY], content),
+      ...validity,
+    },
   } as DialKeyResource;
 };
 

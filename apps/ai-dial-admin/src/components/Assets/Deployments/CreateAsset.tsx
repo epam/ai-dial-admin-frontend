@@ -76,13 +76,16 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
     // `getRootFolder` (singular) is the right fallback: a dual-bucket view's own root is `public`,
     // unlike `getRootFolders`' platform-first ordering.
     const folderPath = (currentEntity.folderId as string) || `${getRootFolder(view)}/`;
+    // `DialResource` no longer declares the flat `AssetWithVersion` identity (`path` moved to the
+    // merged read's `_metadata`, which a freshly created entity never has) — hence the double cast.
     const createAsset = isPlatformDualBucketView(view, folderPath)
-      ? () => PlatformCreateAssetActionMap[view]!({ ...currentEntity, folderId: folderPath } as AssetWithVersion)
+      ? () =>
+          PlatformCreateAssetActionMap[view]!({ ...currentEntity, folderId: folderPath } as unknown as AssetWithVersion)
       : () =>
           CreateAssetActionMap[view as CreateAssetRoute]({
             ...currentEntity,
             folderId: folderPath,
-          } as AssetWithVersion);
+          } as unknown as AssetWithVersion);
 
     createAsset().then((res) => {
       if (res.success) {
@@ -176,7 +179,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             ) : (
               <AssetProperties
                 view={view}
-                entity={currentEntity as AssetWithVersion}
+                entity={currentEntity as unknown as AssetWithVersion}
                 onChangeEntity={onChangeEntity}
                 names={names}
                 versionsMap={versionsMap}

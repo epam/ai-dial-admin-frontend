@@ -61,10 +61,10 @@ export default async function Page(params: {
 
       toolset = await getToolset(path, etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as AssetToolset | null;
+        return res?.response as unknown as AssetToolset | null;
       });
 
-      toolsets = ((await getToolsets(toolset?.folderId as string))?.filter(
+      toolsets = ((await getToolsets(toolset?.folderId || toolset?._metadata?.folderId || ''))?.filter(
         (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
       ) || []) as AssetToolset[];
     }

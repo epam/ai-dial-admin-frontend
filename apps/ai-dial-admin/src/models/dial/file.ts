@@ -1,4 +1,5 @@
 import { ModifiedEntity } from '@/src/models/dial/base-entity';
+import { CoreResourceEntityMetadata } from './resource';
 
 export interface DialFile extends ModifiedEntity {
   bucket?: string;
@@ -19,6 +20,7 @@ export interface DialFile extends ModifiedEntity {
   permissions?: string[];
   /** Core resource etag, required to delete a file (see `migrate-files-to-core`'s etag bugfix). */
   etag?: string;
+  _metadata?: CoreResourceEntityMetadata;
 }
 
 export enum DialFileNodeType {

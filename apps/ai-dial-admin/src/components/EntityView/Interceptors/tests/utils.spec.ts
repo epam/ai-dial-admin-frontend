@@ -6,9 +6,14 @@ import { AssetInterceptorOrigin } from '../models';
 import { hasAssetInterceptorOrigin, mergeInterceptorOrigins, withAssetSourceColumn } from '../utils';
 
 describe('mergeInterceptorOrigins', () => {
+  // Asset rows come from the Core listing, whose identity (`path`/`folderId`) is flat — a shape
+  // `DialInterceptorResource` no longer declares, since a merged detail read carries it under
+  // `_metadata` instead. Hence the double cast.
   test('tags admin-BE rows as Entity and asset rows as Asset', () => {
     const entityInterceptors = [{ name: 'redactor' }] as DialInterceptor[];
-    const assetInterceptors = [{ name: 'logger', path: 'logger', folderId: '' }] as DialInterceptorResource[];
+    const assetInterceptors = [
+      { name: 'logger', path: 'logger', folderId: '' },
+    ] as unknown as DialInterceptorResource[];
 
     const merged = mergeInterceptorOrigins(entityInterceptors, assetInterceptors);
 
@@ -20,7 +25,9 @@ describe('mergeInterceptorOrigins', () => {
 
   test('a name present in both populations yields two distinguishable rows', () => {
     const entityInterceptors = [{ name: 'shared' }] as DialInterceptor[];
-    const assetInterceptors = [{ name: 'shared', path: 'shared', folderId: '' }] as DialInterceptorResource[];
+    const assetInterceptors = [
+      { name: 'shared', path: 'shared', folderId: '' },
+    ] as unknown as DialInterceptorResource[];
 
     const merged = mergeInterceptorOrigins(entityInterceptors, assetInterceptors);
 

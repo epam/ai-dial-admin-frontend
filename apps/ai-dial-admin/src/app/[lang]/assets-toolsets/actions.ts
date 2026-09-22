@@ -7,6 +7,7 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import {
+  CoreResourceEntityMetadata,
   DialPlatformToolsetResource,
   DialToolsetResource,
   ToolsetAuthCredentialLevel,
@@ -22,6 +23,7 @@ import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
 import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
@@ -34,16 +36,17 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: DialToolsetResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const folderId = toolset.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
+  // Same flat-vs-`_metadata` resolution as `createApp` in `assets-applications/actions.ts`.
+  const folderId = toolset.folderId || toolset._metadata?.folderId || ROOT_FOLDER;
+  const version = toolset.version ?? toolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(token, ResourceType.TOOLSET, path, {
-    ...toolset,
+    ...stripMetadata(toolset),
     allowedTools: getAllowTools(toolset),
     transport: getTransport(toolset),
-    displayVersion: toolset.version,
+    displayVersion: version,
     folderId: undefined,
     version: undefined,
-    path: undefined,
   });
 }
 
@@ -63,13 +66,24 @@ export async function getToolset(path: string, etag: string) {
 
 export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const folderId = toolset.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
+  // The View hands this action a merged detail entity cast to the row shape — its identity grafts
+  // nest under `_metadata`, absent from `AssetToolset`'s type — while create/duplicate flows seed
+  // flat `folderId`/`version`, so both spellings are resolved here (same as `updateApp`).
+  const castToolset = toolset as AssetToolset & { _metadata?: CoreResourceEntityMetadata };
+  const folderId = castToolset.folderId || castToolset._metadata?.folderId || ROOT_FOLDER;
+  const version = castToolset.version ?? castToolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(
     token,
     ResourceType.TOOLSET,
     path,
-    { ...toolset, displayVersion: toolset.version, folderId: undefined, version: undefined, path: undefined },
+    {
+      ...stripMetadata(castToolset),
+      displayVersion: version,
+      folderId: undefined,
+      version: undefined,
+      path: undefined,
+    },
     { etag },
   );
 }
@@ -102,22 +116,20 @@ export async function getPlatformToolsets(path: string) {
  * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
  * (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
  * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
- * `toKeyPayload` strips extras for `Key.class`. `status`/`validationWarnings` are read-only
- * projections Core computes, not part of the entity; `author`/`createdAt`/`updatedAt` come from the
- * metadata node, not `ToolSet` itself; `reference` is a client-only tracking id (see `handleDuplicate`/
- * `addNewVersion`, which already strip it before any write). None of these round-trip through the
- * merge readers as content fields, so they must not be sent back on write.
+ * `toKeyPayload` strips extras for `Key.class`. The merge layer's grafts (identity, audit, and the
+ * `status`/`validationWarnings` validity projections) nest under `_metadata`, which `stripMetadata`
+ * drops wholesale (see the `core-resource-entity-metadata` capability). `reference` is stripped on
+ * top of it — a client-only tracking id (see `handleDuplicate`/`addNewVersion`, which already strip
+ * it before any write) — as are `createdAt`/`updatedAt`, which `ModifiedEntity` types but the
+ * platform bucket's reads never serve inline.
  */
 function toPlatformToolsetPayload(toolset: DialPlatformToolsetResource) {
   const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    author: __author,
+    reference: __reference,
     createdAt: __createdAt,
     updatedAt: __updatedAt,
-    reference: __reference,
     ...payload
-  } = toolset as DialPlatformToolsetResource & { reference?: string };
+  } = stripMetadata(toolset) as Omit<DialPlatformToolsetResource, '_metadata'> & { reference?: string };
 
   return payload;
 }

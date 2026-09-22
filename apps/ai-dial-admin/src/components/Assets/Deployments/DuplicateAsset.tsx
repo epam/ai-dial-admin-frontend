@@ -84,8 +84,11 @@ const DuplicateAsset: FC<Props> = ({
   );
   const [isInnerValid, setIsInnerValid] = useState(false);
 
+  // `entity` is the row-shaped duplicate source; the `Dial*Resource` reads below only touch real
+  // content fields (`auth_settings`, `external_services`), which that shape also carries — hence the
+  // double casts once its flat identity stopped overlapping `DialResource`.
   const isToolsetWithAuth = useMemo(() => {
-    const assetToolset = entity as DialToolsetResource;
+    const assetToolset = entity as unknown as DialToolsetResource;
     return (
       assetToolset.auth_settings?.authentication_type &&
       assetToolset.auth_settings.authentication_type !== ToolsetAuthType.NONE
@@ -94,7 +97,7 @@ const DuplicateAsset: FC<Props> = ({
 
   const authType = useMemo(() => {
     if (!isToolsetWithAuth) return null;
-    return (entity as DialToolsetResource).auth_settings?.authentication_type || null;
+    return (entity as unknown as DialToolsetResource).auth_settings?.authentication_type || null;
   }, [isToolsetWithAuth, entity]);
 
   useEffect(() => {
@@ -111,11 +114,11 @@ const DuplicateAsset: FC<Props> = ({
   // Initial validation for auth fields
   useEffect(() => {
     if (authType === ToolsetAuthType.OAUTH) {
-      (clonedAsset as DialToolsetResource).auth_settings = {
+      (clonedAsset as unknown as DialToolsetResource).auth_settings = {
         authentication_type: ToolsetAuthType.NONE,
       };
     } else if (authType === ToolsetAuthType.API_KEY) {
-      const toolset = entity as DialToolsetResource;
+      const toolset = entity as unknown as DialToolsetResource;
       dispatch({
         type: ValidationActionType.SetField,
         field: 'authSettings.apiKeyHeader',
@@ -125,9 +128,9 @@ const DuplicateAsset: FC<Props> = ({
 
     // Core never returns a real client_secret on read, so an OAuth external service copied
     // verbatim fails Core's write-time validation with a missing-CLIENT_SECRET error.
-    const externalServices = (entity as DialApplicationResource).external_services;
+    const externalServices = (entity as unknown as DialApplicationResource).external_services;
     if (externalServices) {
-      (clonedAsset as DialApplicationResource).external_services = Object.fromEntries(
+      (clonedAsset as unknown as DialApplicationResource).external_services = Object.fromEntries(
         Object.entries(externalServices).map(([key, service]) => [
           key,
           service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
@@ -183,11 +186,11 @@ const DuplicateAsset: FC<Props> = ({
 
   const onChangeApiKeyHeader = useCallback(
     (api_key_header: string) => {
-      const toolset = clonedAsset as DialToolsetResource;
+      const toolset = clonedAsset as unknown as DialToolsetResource;
       setClonedAsset({
         ...toolset,
         auth_settings: { ...toolset.auth_settings!, api_key_header },
-      } as AssetWithVersion);
+      } as unknown as AssetWithVersion);
     },
     [clonedAsset],
   );
@@ -236,7 +239,7 @@ const DuplicateAsset: FC<Props> = ({
 
         {authType === ToolsetAuthType.API_KEY && (
           <ApiKeyHeaderControl
-            apiKeyHeader={(clonedAsset as DialToolsetResource).auth_settings?.api_key_header}
+            apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
             onChange={onChangeApiKeyHeader}
           />
         )}
