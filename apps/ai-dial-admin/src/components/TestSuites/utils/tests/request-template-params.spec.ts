@@ -103,6 +103,40 @@ describe('getTemplateParameters', () => {
 
     expect(getTemplateParameters(template)).toEqual(['question']);
   });
+
+  test('should strip the type hint from the name in all documented placeholder forms', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{tenant|string}}',
+      body: {
+        content: {
+          document: '${{file|file}}',
+          context: '${{ctx|file:public/data.txt}}',
+          temperature: '${{temperature|number:0.7}}',
+        },
+      },
+      headers: [{ key: 'x-attempts', value: '${{attempts|integer}}' }],
+      queryParams: [{ key: 'stream', value: '${{stream|boolean}}' }],
+    };
+
+    expect(getTemplateParameters(template)).toEqual(['tenant', 'file', 'ctx', 'temperature', 'attempts', 'stream']);
+  });
+
+  test('should treat a hinted and an unhinted occurrence of one variable as the same name', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{document|file}}',
+      body: { content: { ref: '${{document}}' } },
+    };
+
+    expect(getTemplateParameters(template)).toEqual(['document']);
+  });
+
+  test('should trim whitespace around a type hint', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{  document  |  file  }}',
+    };
+
+    expect(getTemplateParameters(template)).toEqual(['document']);
+  });
 });
 
 describe('getTemplateParameterVariables', () => {
@@ -195,6 +229,93 @@ describe('getTemplateParameterVariables', () => {
       },
     ]);
   });
+
+  test('should map every documented type hint onto the matching effective type', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{tenant|string}}',
+      body: {
+        content: {
+          attempts: '${{attempts|integer}}',
+          temperature: '${{temperature|number}}',
+          stream: '${{stream|boolean}}',
+          payload: '${{payload|object}}',
+          messages: '${{messages|array}}',
+          document: '${{document|file}}',
+        },
+      },
+    };
+
+    expect(getTemplateParameterVariables(template).map(({ name, effectiveType }) => ({ name, effectiveType }))).toEqual(
+      [
+        { name: 'tenant', effectiveType: TestCaseItemType.STRING },
+        { name: 'attempts', effectiveType: TestCaseItemType.INTEGER },
+        { name: 'temperature', effectiveType: TestCaseItemType.NUMBER },
+        { name: 'stream', effectiveType: TestCaseItemType.BOOLEAN },
+        { name: 'payload', effectiveType: TestCaseItemType.OBJECT },
+        { name: 'messages', effectiveType: TestCaseItemType.ARRAY },
+        { name: 'document', effectiveType: TestCaseItemType.FILE },
+      ],
+    );
+  });
+
+  test('should name the variable after the hint-free name when hint and name are identical', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/upload',
+      body: { content: { attachment: '${{file|file}}' } },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      { name: 'file', hasDefault: false, defaultValue: null, effectiveType: TestCaseItemType.FILE, sources: [] },
+    ]);
+  });
+
+  test('should read a type hint and a default value from the same placeholder', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{ctx|file:public/data.txt}}',
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      {
+        name: 'ctx',
+        hasDefault: true,
+        defaultValue: 'public/data.txt',
+        effectiveType: TestCaseItemType.FILE,
+        sources: [],
+      },
+    ]);
+  });
+
+  test('should fall back to string for an unknown or differently cased type hint', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{first|timestamp}}/${{second|FILE}}/${{third|}}',
+    };
+
+    expect(getTemplateParameterVariables(template).map(({ name, effectiveType }) => ({ name, effectiveType }))).toEqual(
+      [
+        { name: 'first', effectiveType: TestCaseItemType.STRING },
+        { name: 'second', effectiveType: TestCaseItemType.STRING },
+        { name: 'third', effectiveType: TestCaseItemType.STRING },
+      ],
+    );
+  });
+
+  test('should keep a default value that itself contains a pipe or a colon', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{separator:a|b}}',
+      body: { content: { url: '${{endpoint:https://example.com}}' } },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      { name: 'separator', hasDefault: true, defaultValue: 'a|b', effectiveType: TestCaseItemType.STRING, sources: [] },
+      {
+        name: 'endpoint',
+        hasDefault: true,
+        defaultValue: 'https://example.com',
+        effectiveType: TestCaseItemType.STRING,
+        sources: [],
+      },
+    ]);
+  });
 });
 
 describe('filterParameterBindings', () => {
@@ -243,6 +364,33 @@ describe('filterParameterBindings', () => {
     ];
 
     expect(filterParameterBindings(bindings, ['tenantId', 'userId'])).toEqual([]);
+  });
+
+  test('keeps the binding for a placeholder that carries a type hint', () => {
+    const bindings: InputBinding[] = [
+      { templateVariable: 'file', dataField: 'attachment' },
+      { templateVariable: 'ctx', constantValue: 'public/data.txt' },
+    ];
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{ctx|file:public/data.txt}}',
+      body: { content: { attachment: '${{file|file}}' } },
+    };
+
+    expect(filterParameterBindings(bindings, getTemplateParameters(template))).toEqual(bindings);
+  });
+
+  test('drops a binding left behind under the pre-fix hint-inclusive name', () => {
+    const bindings: InputBinding[] = [
+      { templateVariable: 'file|file', dataField: 'attachment' },
+      { templateVariable: 'file', dataField: 'attachment' },
+    ];
+    const template: TestSuiteRequestTemplate = {
+      body: { content: { attachment: '${{file|file}}' } },
+    };
+
+    expect(filterParameterBindings(bindings, getTemplateParameters(template))).toEqual([
+      { templateVariable: 'file', dataField: 'attachment' },
+    ]);
   });
 
   test('drops the binding for a placeholder removed from a jsonataContent expression', () => {
