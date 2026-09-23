@@ -151,10 +151,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconChartBar width={iconSize} height={iconSize} />,
       isPreview: true,
       items: [
+        { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
         { key: MenuI18nKey.Tables, href: ApplicationRoute.AnalyticsTables },
         { key: MenuI18nKey.Pipelines, href: ApplicationRoute.AnalyticsPipelines },
         { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
-        { key: MenuI18nKey.AnalyticsUsage, href: ApplicationRoute.AnalyticsUsage },
         { key: MenuI18nKey.AnalyticsSessions, href: ApplicationRoute.SessionsTrace },
       ],
     },
@@ -173,13 +173,25 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
     result = result.filter((item) => item.key !== MenuI18nKey.Analytics);
   }
 
-  if (!featureFlags.analyticsUsageEnabled) {
-    result = result.map((group) =>
-      group.key === MenuI18nKey.Analytics
-        ? { ...group, items: group.items.filter((item) => item.key !== MenuI18nKey.AnalyticsUsage) }
-        : group,
-    );
+  // One Dashboards item, declared in both groups: `/dashboards` serves the analytics page while both
+  // flags are on and the telemetry dashboard otherwise, so the item sits in the group that owns it.
+  // Both flags, not the usage flag alone: the usage flag without Analytics is a misconfiguration, and
+  // the telemetry dashboard is served instead — only while `dashboardEnabled` allows it.
+  const isAnalyticsDashboard = featureFlags.analyticsEnabled && featureFlags.analyticsUsageEnabled;
+  let dashboardsGroup: MenuI18nKey | undefined;
+  if (isAnalyticsDashboard) {
+    dashboardsGroup = MenuI18nKey.Analytics;
+  } else if (featureFlags.dashboardEnabled) {
+    dashboardsGroup = MenuI18nKey.Audit;
   }
+  result = result.map((group) =>
+    group.key === MenuI18nKey.Analytics || group.key === MenuI18nKey.Audit
+      ? {
+          ...group,
+          items: group.items.filter((item) => item.key !== MenuI18nKey.Dashboard || group.key === dashboardsGroup),
+        }
+      : group,
+  );
 
   if (!featureFlags.analyticsSessionsEnabled) {
     result = result.map((group) =>

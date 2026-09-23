@@ -145,7 +145,7 @@ export default {
     Credentials: 'Credentials',
     FoldersStorage: 'Folders Storage',
 
-    Dashboard: 'Dashboard',
+    Dashboard: 'Dashboards',
     UsageLog: 'Usage Log',
     ActivityAudit: 'Activities',
 
@@ -172,7 +172,6 @@ export default {
 
     Analytics: 'Analytics',
     Queries: 'Queries',
-    AnalyticsUsage: 'Usage',
     Tables: 'Tables',
     Pipelines: 'Pipelines',
     AnalyticsSessions: 'Sessions',

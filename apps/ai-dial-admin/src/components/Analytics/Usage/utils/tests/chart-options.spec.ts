@@ -108,6 +108,19 @@ describe('series colours', () => {
   });
 });
 
+describe('latency gaps', () => {
+  test('draws no line across a bucket with no percentile to state', () => {
+    const series = buildLatencyOptions(['12:00', '13:00'], [1, null], [2, null]).series as {
+      connectNulls?: boolean;
+      sampling?: string;
+    }[];
+
+    expect(series.every((entry) => entry.connectNulls === false)).toBe(true);
+    // `lttb` drops points to fit the pixels, gaps included, so a sampled line bridges them anyway.
+    expect(series.every((entry) => entry.sampling === undefined)).toBe(true);
+  });
+});
+
 describe('buildDonutOptions', () => {
   const seriesOf = (options: { series?: unknown }) =>
     (
