@@ -47,7 +47,11 @@ describe('Modals :: duplicate modal dispatch for dual-bucket views', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
     'renders DuplicateAsset, unchanged, for a public-bucket %s row',
     (view) => {
-      renderDuplicateModal(view, { name: 'MyEntity', _metadata: { folderId: 'public/' }, path: 'public/MyEntity__1.0' });
+      renderDuplicateModal(view, {
+        name: 'MyEntity',
+        _metadata: { folderId: 'public/' },
+        path: 'public/MyEntity__1.0',
+      });
 
       expect(screen.getByText('duplicate-asset')).toBeInTheDocument();
       expect(screen.queryByText('duplicate-platform-asset')).not.toBeInTheDocument();
