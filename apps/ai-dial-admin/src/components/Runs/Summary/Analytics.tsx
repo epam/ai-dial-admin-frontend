@@ -6,7 +6,7 @@ import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
-import { isIncompleteRunStatus } from '@/src/components/Common/RunStatus/utils';
+import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
@@ -19,6 +19,7 @@ import {
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
+import { SuiteType } from '@/src/models/evaluation/test-suite';
 
 const NO_DATA_VALUE = '—';
 
@@ -26,6 +27,8 @@ interface Props {
   run: Run;
   /** Run-level overall score from metric scores data; omitted while loading, null when absent. */
   overallScore?: number | null;
+  /** How many metrics the run computed; omitted while the snapshots are still loading. */
+  metricSnapshotCount?: number;
 }
 
 const CostCalculatingValue: FC<{ label: string }> = ({ label }) => (
@@ -37,10 +40,21 @@ const CostCalculatingValue: FC<{ label: string }> = ({ label }) => (
   </div>
 );
 
-const Analytics: FC<Props> = ({ run, overallScore }) => {
+const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
-  const { costs, unavailable: costsUnavailable, elapsedMs: costsElapsedMs } = useRunCosts(run?.id);
+
+  const isRunInProgress = isTransitionalRunStatus(run?.status);
+  const hasNoResults = data?.statusCounts.total === 0;
+  // An MCP row carries no price at all, so an MCP-tool suite bills only through its metrics.
+  const isUnpricedMcpRun = run?.suiteSnapshot?.suiteType === SuiteType.McpTool && metricSnapshotCount === 0;
+  const canHaveCosts = !isRunInProgress && !hasNoResults && !isUnpricedMcpRun;
+  const {
+    costs,
+    isPending: areCostsPending,
+    unavailable: costsUnavailable,
+    elapsedMs: costsElapsedMs,
+  } = useRunCosts(run?.id, canHaveCosts);
 
   if (!data) {
     return (
@@ -59,18 +73,9 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
   const metricEvalCostDisplay = formatRunCost(costs?.avgMetricEvalCost);
   const showTestCasesPassed = hasOverallScoreThreshold(run.suiteSnapshot?.overallScoreThreshold);
   const hasStatusCounts = statusCounts.total > 0;
-  /**
-   * A run that is still going or was stopped legitimately has nothing to report yet, so its cards show
-   * a dash; only a settled run turns an absent value into an error tag.
-   */
   const isRunIncomplete = isIncompleteRunStatus(run.status);
-  /**
-   * Pending = no settled outcome yet. Do not key only on `costsLoading`: an idle frame
-   * (`costs == null && !unavailable`) must show Calculating, not an em dash.
-   */
-  const costsCalculating = costs == null && !costsUnavailable;
-  const hasCostError = costsUnavailable;
-  const costDescription = costsCalculating
+  const hasCostError = costsUnavailable || (!hasStatusCounts && !isRunIncomplete);
+  const costDescription = areCostsPending
     ? t(RunsI18nKey.CostCalculatingElapsed, { elapsed: formatElapsedMmSs(costsElapsedMs) })
     : hasCostError
       ? t(RunsI18nKey.CostDataUnavailable)
@@ -78,7 +83,7 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
   const calculatingLabel = t(RunsI18nKey.Calculating);
 
   const costCardValue = (display: string | null): ReactNode => {
-    if (costsCalculating) {
+    if (areCostsPending) {
       return <CostCalculatingValue label={calculatingLabel} />;
     }
     if (hasCostError) {
