@@ -12,7 +12,6 @@ import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
-  kindControl: ReactNode;
   name?: string;
   onChangeName: (name: string) => void;
   isValid: boolean;
@@ -22,16 +21,7 @@ interface Props {
   children: ReactNode;
 }
 
-const CreatePipelineShell: FC<Props> = ({
-  kindControl,
-  name,
-  onChangeName,
-  isValid,
-  buildDto,
-  onClose,
-  onCreated,
-  children,
-}) => {
+const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto, onClose, onCreated, children }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -78,7 +68,6 @@ const CreatePipelineShell: FC<Props> = ({
           value={name ?? ''}
           onChange={(v) => onChangeName(v ?? '')}
         />
-        {kindControl}
         {children}
       </div>
     </DialFormPopup>

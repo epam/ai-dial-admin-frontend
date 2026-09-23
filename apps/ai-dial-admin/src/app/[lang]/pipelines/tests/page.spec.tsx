@@ -86,13 +86,12 @@ describe('pipelines page', () => {
     });
   });
 
-  // The measure editor reads its offered functions from the served catalog, and a failed catalog read
-  // degrades that control rather than the page.
-  test('hands the served function catalog to the view', async () => {
-    vi.mocked(getFunctions).mockRejectedValue(new Error('boom'));
-
+  // The listing fetched the catalog for the aggregate create modal's measure editor; registration no
+  // longer collects measures, and the detail page fetches its own.
+  test('asks for no function catalog', async () => {
     const page = await renderPage();
 
-    expect(page.props).toMatchObject({ functions: [] });
+    expect(getFunctions).not.toHaveBeenCalled();
+    expect(page.props).not.toHaveProperty('functions');
   });
 });
