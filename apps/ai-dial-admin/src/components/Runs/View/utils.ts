@@ -29,6 +29,7 @@ import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 
 import { CompareAnalyticsRow, MetricGroup } from './models';
 import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
@@ -201,34 +202,37 @@ const executionColumns: ColDef[] = [
   },
 ];
 
-const staticColumns = [
-  {
-    headerName: ' ',
-    context: { panelName: 'Details' },
-    children: [
-      {
-        field: 'executionStatus',
-        headerName: ' ',
-        context: { panelName: 'Status' },
-        colId: 'status',
-        ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
-        ...NO_FILTER_COL_DEF,
-        cellRenderer: ExecutionStatusCellRenderer,
-      },
-      {
-        field: 'testCaseName',
-        headerName: 'Test Case name',
-        colId: 'testCaseName',
-        ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
-        ...TEXT_FILTER_COL_DEF,
-      },
-    ],
-  },
-  {
-    headerName: EXECUTION_GROUP_HEADER,
-    children: executionColumns,
-  },
-];
+const detailsColumns = {
+  headerName: ' ',
+  context: { panelName: 'Details' },
+  children: [
+    {
+      field: 'executionStatus',
+      headerName: ' ',
+      context: { panelName: 'Status' },
+      colId: 'status',
+      ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
+      ...NO_FILTER_COL_DEF,
+      cellRenderer: ExecutionStatusCellRenderer,
+    },
+    {
+      field: 'testCaseName',
+      headerName: 'Test Case name',
+      colId: 'testCaseName',
+      ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
+      ...TEXT_FILTER_COL_DEF,
+    },
+  ],
+};
+
+/**
+ * An index column that reads the same on every row distinguishes no result from another, so it starts
+ * hidden and the operator re-enables it from the columns panel.
+ */
+const getExecutionGroup = (results: AnalyticsResult[]) => ({
+  headerName: EXECUTION_GROUP_HEADER,
+  children: hideUniformColumns(executionColumns, getUniformExecutionFields(results)),
+});
 
 /**
  * A single row only carries the columns of the request that produced it, so a request chain spreads
@@ -269,7 +273,8 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const input = mergeRecordSchema(results, (result) => result.testCaseData);
 
   return [
-    ...staticColumns,
+    detailsColumns,
+    getExecutionGroup(results),
     ...getMetricsColumns(metrics),
     {
       headerName: INPUT_BINDINGS_GROUP_HEADER,

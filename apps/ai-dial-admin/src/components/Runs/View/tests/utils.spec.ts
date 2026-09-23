@@ -1,3 +1,4 @@
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -1283,5 +1284,79 @@ describe('Runs View :: mergeByTestCaseId', () => {
 
     expect(result.find((row) => row.id === 'p0')?._compared).toBeNull();
     expect(result.find((row) => row.id === 'p1')?._compared?.id).toBe('c1');
+  });
+});
+
+describe('Runs View :: getAnalyticsColumns default column visibility', () => {
+  const groupOf = (results: AnalyticsResult[], headerName: string): ColDef[] =>
+    ((getAnalyticsColumns(results).find((col) => (col as ColGroupDef).headerName === headerName) as ColGroupDef)
+      ?.children ?? []) as ColDef[];
+
+  const visibleExecutionColIds = (results: AnalyticsResult[]): (string | undefined)[] =>
+    groupOf(results, 'Execution')
+      .filter((col) => !col.hide)
+      .map((col) => col.colId);
+
+  test('hides every index column of a single-request, single-turn run', () => {
+    const visible = visibleExecutionColIds([makeResult(), makeResult()]);
+
+    expect(visible).toEqual(['http', 'duration']);
+  });
+
+  test('keeps the turn columns when the run spans several turns', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ turnIndex: 0, totalTurns: 2 }),
+      makeResult({ turnIndex: 1, totalTurns: 2 }),
+    ]);
+
+    expect(visible).toContain('turnIndex');
+    expect(visible).not.toContain('totalTurns');
+  });
+
+  test('keeps the request columns when the run spans several requests', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ requestIndex: 0, totalRequests: 2 }),
+      makeResult({ requestIndex: 1, totalRequests: 2 }),
+    ]);
+
+    expect(visible).toContain('requestIndex');
+  });
+
+  test('keeps the run-number column when a test case was run more than once', () => {
+    const visible = visibleExecutionColIds([makeResult({ runIndex: 0 }), makeResult({ runIndex: 1 })]);
+
+    expect(visible).toContain('runIndex');
+  });
+
+  test('keeps HTTP and Duration visible even when every result carries the same status', () => {
+    const visible = visibleExecutionColIds([
+      makeResult({ responseStatusCode: 200 }),
+      makeResult({ responseStatusCode: 200 }),
+    ]);
+
+    expect(visible).toContain('http');
+    expect(visible).toContain('duration');
+  });
+
+  test('hides no execution column before any result has loaded', () => {
+    const visible = visibleExecutionColIds([]);
+
+    expect(visible).toEqual([
+      'runIndex',
+      'requestIndex',
+      'totalRequests',
+      'turnIndex',
+      'totalTurns',
+      'http',
+      'duration',
+    ]);
+  });
+
+  test('leaves the other groups’ defaults untouched', () => {
+    const results = [makeResult({ testCaseData: { prompt: 'hello' }, extractedColumns: { answer: 'hi' } })];
+
+    expect(groupOf(results, 'INPUT BINDINGS').every((col) => col.hide)).toBe(true);
+    expect(groupOf(results, 'Extracted').some((col) => col.hide)).toBe(false);
+    expect(groupOf(results, ' ').some((col) => col.hide)).toBe(false);
   });
 });
