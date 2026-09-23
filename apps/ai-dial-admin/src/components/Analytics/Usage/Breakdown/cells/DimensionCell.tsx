@@ -23,18 +23,36 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <button
-        type="button"
-        className="min-w-0 truncate text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
-        onClick={() => onOpenRow(data)}
-      >
-        <DialEllipsisTooltip text={data.displayLabel} />
-      </button>
-      {data.isFallbackLabel && data.fallbackTooltip && (
-        <DialTooltip tooltip={data.fallbackTooltip}>
-          <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="shrink-0 text-secondary" aria-hidden />
-        </DialTooltip>
+    <div className="flex min-w-0 flex-col justify-center">
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          className="min-w-0 truncate text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
+          onClick={() => onOpenRow(data)}
+        >
+          <DialEllipsisTooltip text={data.displayLabel} />
+        </button>
+        {data.isFallbackLabel && data.fallbackTooltip && (
+          <DialTooltip tooltip={data.fallbackTooltip}>
+            <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="shrink-0 text-secondary" aria-hidden />
+          </DialTooltip>
+        )}
+      </div>
+      {data.subLabel && (
+        <span className="dial-tiny-text min-w-0 truncate text-secondary">
+          {data.subLabelTooltip ? (
+            <DialTooltip tooltip={data.subLabelTooltip}>
+              <span className="truncate">
+                {data.subLabel}
+                {/* The tooltip holds the names the count stands for, and a pointer is the only way
+                    to it; a screen reader gets them here instead of the bare count. */}
+                <span className="sr-only">{data.subLabelTooltip}</span>
+              </span>
+            </DialTooltip>
+          ) : (
+            <DialEllipsisTooltip text={data.subLabel} />
+          )}
+        </span>
       )}
     </div>
   );
