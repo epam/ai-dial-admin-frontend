@@ -6,7 +6,7 @@ import {
   buildTransformDto,
   getOutputText,
   hasLegacyOutputs,
-  isTransformValid,
+  hasDuplicateOutputName,
   toParamRows,
   toParams,
   toTransformDraft,
@@ -206,7 +206,7 @@ describe('Utils :: analytics :: buildTransformDto', () => {
   });
 });
 
-describe('Utils :: analytics :: isTransformValid', () => {
+describe('Utils :: analytics :: hasDuplicateOutputName', () => {
   const llm: TransformDraft = {
     type: TransformType.Llm,
     model: 'gpt-4o',
@@ -214,36 +214,22 @@ describe('Utils :: analytics :: isTransformValid', () => {
     outputs: [{ name: 'title' }],
   };
 
-  test('accepts an llm transform whose output declares no prose', () => {
-    expect(isTransformValid(llm)).toBe(true);
+  test('reports two outputs bound to one column, which the wire shape collapses', () => {
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: 'title' }, { name: 'title' }] })).toBe(true);
   });
 
-  test('refuses a transform with no type, no output, or a duplicate column', () => {
-    expect(isTransformValid(undefined)).toBe(false);
-    expect(isTransformValid({ ...llm, outputs: [] })).toBe(false);
-    expect(isTransformValid({ ...llm, outputs: [{ name: 'title' }, { name: 'title' }] })).toBe(false);
+  // Two freshly added rows both carry a blank name, and a blank name reaches no request: counting them
+  // as a collision would withhold the save for rows the author has not filled in.
+  test('reports nothing for rows whose name is not yet chosen', () => {
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: '' }, { name: '' }] })).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: '  ' }, { name: 'title' }] })).toBe(false);
   });
 
-  test('refuses an llm transform with no model', () => {
-    expect(isTransformValid({ ...llm, model: undefined })).toBe(false);
-  });
-
-  // The service runs this as a shape check on every write; only the placeholder correspondence is
-  // deferred to enable.
-  test('refuses an llm transform with no request template', () => {
-    expect(isTransformValid({ ...llm, request_template: undefined })).toBe(false);
-    expect(isTransformValid({ ...llm, request_template: '   ' })).toBe(false);
-  });
-
-  test('requires no template of a sql transform, which renders no request', () => {
-    expect(isTransformValid({ type: TransformType.Sql, outputs: [{ name: 'total', sql: 'count(*)' }] })).toBe(true);
-  });
-
-  test('requires every sql output to carry an expression, and no model', () => {
-    const sql: TransformDraft = { type: TransformType.Sql, outputs: [{ name: 'total', sql: 'count(*)' }] };
-
-    expect(isTransformValid(sql)).toBe(true);
-    expect(isTransformValid({ ...sql, outputs: [{ name: 'total' }] })).toBe(false);
+  test('reports nothing for a transform that is merely unfinished', () => {
+    expect(hasDuplicateOutputName(undefined)).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, outputs: [] })).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, model: undefined, request_template: undefined })).toBe(false);
+    expect(hasDuplicateOutputName({ type: TransformType.Sql, outputs: [{ name: 'total' }] })).toBe(false);
   });
 });
 

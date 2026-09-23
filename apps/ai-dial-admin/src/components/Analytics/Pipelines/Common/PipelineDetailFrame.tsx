@@ -35,7 +35,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { buildPipelineDto, getPipelineInput, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
 
-type PipelineFormLike = PipelineFormState & { isValid: boolean };
+type PipelineFormLike = PipelineFormState & { hasFieldErrors: boolean };
 
 interface Props {
   pipeline: Pipeline;
@@ -83,6 +83,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   const shouldCheckFields = !isEditorEnabled;
   const isGroupKeyMissing = draft.trigger?.kind === TriggerKind.Group && !form.grainKey;
+
   const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
   const isChangeBarShown = isFullAdmin && (isChanged || hasJsonErrors);
 
@@ -118,7 +119,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   );
 
   const onSave = useCallback(async () => {
-    if ((shouldCheckFields && !form.isValid) || isGroupKeyMissing || isSaving) return;
+    if ((shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving) return;
 
     setIsSaving(true);
     const res = await updatePipeline(pipeline.name, buildDto());
@@ -133,7 +134,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     showNotification(getErrorNotification(saveFailureHeader(res), res.errorMessage, res.requestId));
   }, [
     shouldCheckFields,
-    form.isValid,
+    form.hasFieldErrors,
     isGroupKeyMissing,
     isSaving,
     pipeline.name,
@@ -217,7 +218,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         <div className="flex flex-row items-center gap-3">
           {isChangeBarShown && (
             <ChangedEntityButtons
-              disableSave={(shouldCheckFields && !form.isValid) || isGroupKeyMissing || isSaving}
+              disableSave={(shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving}
               onDiscard={onDiscard}
               onSave={onTryToSave}
             />
