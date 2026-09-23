@@ -51,6 +51,7 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
           entityBaseUrl={asset.baseUrl}
+          view={ApplicationRoute.PlatformInterceptors}
           isAsset
         />
         <EndpointControl
