@@ -317,24 +317,6 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(allItems).not.toContain('/evaluators');
   });
 
-  test('shows the Usage item after Queries when its flag is enabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsUsageEnabled: true });
-    const keys = group?.items.map((item) => item.key) ?? [];
-
-    expect(keys).toContain(MenuI18nKey.AnalyticsUsage);
-    expect(keys.indexOf(MenuI18nKey.AnalyticsUsage)).toBe(keys.indexOf(MenuI18nKey.Queries) + 1);
-    expect(group?.items.find((item) => item.key === MenuI18nKey.AnalyticsUsage)?.href).toBe(
-      ApplicationRoute.AnalyticsUsage,
-    );
-  });
-
-  test('hides only the Usage sub-item when its flag is disabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsUsageEnabled: false });
-
-    expect(group).toBeDefined();
-    expect(group?.items.map((item) => item.key)).not.toContain(MenuI18nKey.AnalyticsUsage);
-  });
-
   test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: true });
 
@@ -373,5 +355,51 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(keys).toContain(MenuI18nKey.Analytics);
     expect(keys).not.toContain(MenuI18nKey.Deployments);
     expect(keys).not.toContain(MenuI18nKey.Evaluation);
+  });
+});
+
+describe('MENU_CONFIGURATION — Dashboards item', () => {
+  const analyticsOn: FeatureFlags = { ...baseFlags, analyticsEnabled: true, analyticsUsageEnabled: true };
+
+  const dashboardsGroups = (flags: FeatureFlags, disabled: string[] = []) =>
+    getActualMenuItems(MENU_CONFIGURATION(ICON_SIZE, flags), disabled)
+      .filter((group) => group.items.some((item) => item.key === MenuI18nKey.Dashboard))
+      .map((group) => group.key);
+
+  test('is the first Analytics item, pointing at /dashboards, while the analytics page is on', () => {
+    const group = MENU_CONFIGURATION(ICON_SIZE, analyticsOn).find((g) => g.key === MenuI18nKey.Analytics);
+
+    expect(group?.items[0]).toEqual({ key: MenuI18nKey.Dashboard, href: '/dashboards' });
+    expect(dashboardsGroups(analyticsOn)).toEqual([MenuI18nKey.Analytics]);
+  });
+
+  test('stays in Audit while the usage flag is off', () => {
+    expect(dashboardsGroups({ ...baseFlags, analyticsEnabled: true })).toEqual([MenuI18nKey.Audit]);
+  });
+
+  // The usage flag without the analytics flag is a misconfiguration: no analytics, the telemetry item.
+  test('stays in Audit while the analytics flag is off', () => {
+    expect(dashboardsGroups({ ...baseFlags, analyticsUsageEnabled: true })).toEqual([MenuI18nKey.Audit]);
+  });
+
+  test('is absent from Audit when the telemetry dashboard is disabled', () => {
+    expect(dashboardsGroups({ ...baseFlags, dashboardEnabled: false })).toEqual([]);
+  });
+
+  test('stays in Analytics when only the telemetry dashboard is disabled', () => {
+    expect(dashboardsGroups({ ...analyticsOn, dashboardEnabled: false })).toEqual([MenuI18nKey.Analytics]);
+  });
+
+  test('sits in Analytics without the admin API', () => {
+    expect(dashboardsGroups({ ...analyticsOn, adminApiEnabled: false })).toEqual([MenuI18nKey.Analytics]);
+  });
+
+  test('is absent when neither page can render', () => {
+    expect(dashboardsGroups({ ...baseFlags, adminApiEnabled: false })).toEqual([]);
+  });
+
+  test('is hidden by the dashboard token in either group', () => {
+    expect(dashboardsGroups(analyticsOn, ['dashboard'])).toEqual([]);
+    expect(dashboardsGroups(baseFlags, ['dashboard'])).toEqual([]);
   });
 });

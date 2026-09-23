@@ -75,7 +75,6 @@ export enum MenuI18nKey {
   Images = 'Menu.Images',
   Analytics = 'Menu.Analytics',
   Queries = 'Menu.Queries',
-  AnalyticsUsage = 'Menu.AnalyticsUsage',
   Tables = 'Menu.Tables',
   Pipelines = 'Menu.Pipelines',
   AnalyticsSessions = 'Menu.AnalyticsSessions',
