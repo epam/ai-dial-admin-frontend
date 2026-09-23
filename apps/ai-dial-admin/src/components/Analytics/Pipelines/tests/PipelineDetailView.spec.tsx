@@ -216,6 +216,52 @@ describe('PipelineDetailView', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  // The service gates the declaration when the pipeline is armed, so what is merely unwritten reaches
+  // the save; only a value that was authored and cannot be stored as authored holds it back.
+  test('saves a declaration carrying neither trigger nor transform', async () => {
+    const user = userEvent.setup();
+    renderView({ trigger: undefined, transform: undefined });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto).not.toHaveProperty('trigger');
+    expect(dto).not.toHaveProperty('transform');
+  });
+
+  test('saves an llm transform carrying neither model nor request template', async () => {
+    const user = userEvent.setup();
+    renderView({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto.transform?.type).toBe(TransformType.Llm);
+  });
+
+  test('the enable control is offered whatever the declaration holds', async () => {
+    renderView({ trigger: undefined, transform: undefined, enabled: false });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.EnablePipeline })).toBeEnabled();
+  });
+
+  test('a sample fraction of zero still holds the save back', async () => {
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editSampleFraction(user, '0');
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
@@ -278,6 +324,15 @@ describe('PipelineDetailView', () => {
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(screen.getByDisplayValue('PT2H')).toBeTruthy();
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  // The default fixture is a sql transform, which renders no request and whose inputs the service
+  // refuses — so the section is absent rather than empty, and anything typed there would be dropped.
+  test('presents no inputs section for a sql transform', () => {
+    renderView();
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionInputs)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionRequestTemplate)).toBeNull();
   });
 
   // A sql transform renders neither a template nor inputs, hence the llm fixture.

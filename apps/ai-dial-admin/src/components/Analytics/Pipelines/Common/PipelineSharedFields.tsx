@@ -16,10 +16,9 @@ import { getPipelineInput } from '@/src/utils/analytics/pipeline-dto';
 
 interface Props {
   form: PipelineFormState;
-  isModal?: boolean;
 }
 
-const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
+const PipelineSharedFields: FC<Props> = ({ form }) => {
   const t = useI18n();
   const { draft, onChange, availableTargets, sourceName, target } = form;
 
@@ -33,8 +32,8 @@ const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
   const onChangeInput = (input?: string) => onChange({ inputs: input ? [input] : undefined });
 
   return (
-    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionReadScope)} isModal={isModal}>
-      {!isModal && !isAggregate && (
+    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionReadScope)}>
+      {!isAggregate && (
         <SourceField
           input={getPipelineInput(draft.inputs)}
           sourceTable={target?.source_table}
@@ -63,16 +62,14 @@ const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
         onChange={(v) => onChange({ target: v as string })}
       />
 
-      {!isModal && (
-        <SqlPredicateField
-          id="pipeline-filter"
-          label={t(AnalyticsPipelinesI18nKey.Filter)}
-          description={t(AnalyticsPipelinesI18nKey.FilterCaption)}
-          value={draft.filter}
-          sourceName={sourceName}
-          onChange={(value) => onChange({ filter: value })}
-        />
-      )}
+      <SqlPredicateField
+        id="pipeline-filter"
+        label={t(AnalyticsPipelinesI18nKey.Filter)}
+        description={t(AnalyticsPipelinesI18nKey.FilterCaption)}
+        value={draft.filter}
+        sourceName={sourceName}
+        onChange={(value) => onChange({ filter: value })}
+      />
     </PipelineSection>
   );
 };

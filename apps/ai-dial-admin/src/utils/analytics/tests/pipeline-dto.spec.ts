@@ -120,10 +120,24 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
     expect(dto.trigger).toEqual({ kind: TriggerKind.OnIngest });
   });
 
+  // Registration collects no trigger, so a pipeline can reach a save before one is chosen. An object
+  // carrying no kind is read as a declared trigger and refused; an absent one is an unwritten member.
+  test('sends no trigger at all when the kind is unset', () => {
+    const dto = buildPipelineDto({ ...draft, trigger: undefined });
+
+    expect(dto).not.toHaveProperty('trigger');
+  });
+
+  test('sends a schedule for an aggregate whatever its draft says, its kind being no choice', () => {
+    const dto = buildPipelineDto({ kind: PipelineKind.Aggregate, name: 'rollup', target: 'usage_daily' });
+
+    expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule });
+  });
+
   test('sends the cron of a scheduled trigger', () => {
     const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' } });
 
-    expect(dto.trigger.cron).toBe('0 0 * * * *');
+    expect(dto.trigger?.cron).toBe('0 0 * * * *');
   });
 
   test('sends the grouping key from the resolved grain key, not from the draft', () => {
@@ -132,7 +146,7 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.group_by).toBe('response_id');
+    expect(dto.trigger?.group_by).toBe('response_id');
   });
 
   test('omits ready_when when every condition is blank', () => {
@@ -169,7 +183,7 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.member_select).toEqual({ limit: 5 });
+    expect(dto.trigger?.member_select).toEqual({ limit: 5 });
   });
 });
 

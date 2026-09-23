@@ -213,7 +213,8 @@ export interface CreatePipelineDto {
   target: string;
   inputs?: string[];
   filter?: string;
-  trigger: PipelineTrigger;
+  /** Absent until the author picks a kind: the service stores a pipeline that declares no trigger yet. */
+  trigger?: PipelineTrigger;
   enabled?: boolean;
   transform?: PipelineTransform;
   advanced?: PipelineAdvanced;
@@ -244,7 +245,7 @@ export interface PipelineListItem {
   kind: PipelineKind;
   target: string;
   inputs?: string[];
-  trigger: PipelineTrigger;
+  trigger?: PipelineTrigger;
   enabled: boolean;
   generation: number;
   updated_at: string;

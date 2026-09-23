@@ -33,18 +33,16 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { PipelineKind, PipelineListItem } from '@/src/models/analytics/pipeline';
-import { QueryFunction } from '@/src/models/analytics/query-function';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   initialPipelines: PipelineListItem[];
-  functions?: QueryFunction[];
   loadFailure?: ReadFailure | null;
 }
 
-const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailure }) => {
+const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -233,7 +231,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
 
       {isCreateOpen && (
         <CreatePipelinePopup
-          functions={functions}
           takenTargets={pipelines.map((pipeline) => pipeline.target)}
           onClose={() => setIsCreateOpen(false)}
           onCreated={() => void reload()}
