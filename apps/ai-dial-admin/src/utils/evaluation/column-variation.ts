@@ -3,23 +3,22 @@ import { ColDef } from 'ag-grid-community';
 import { ResultDto } from '@/src/models/evaluation/run';
 
 /**
- * The run-position columns of the `Execution` group. `HTTP` and `Duration` are deliberately absent:
- * an all-`200` run is a reading worth showing, not a column with nothing to say.
+ * The `Execution` columns whose default visibility follows the data. Three deliberate absences:
+ * `Total requests` and `Total turns` start hidden whatever they hold — a denominator is context for a
+ * position, not a reading of its own — and `HTTP` and `Duration` stay visible whatever they hold, since
+ * an all-`200` run is still worth seeing.
  */
 export enum ExecutionIndexField {
   RunIndex = 'runIndex',
   RequestIndex = 'requestIndex',
-  TotalRequests = 'totalRequests',
   TurnIndex = 'turnIndex',
-  TotalTurns = 'totalTurns',
 }
 
 const EXECUTION_INDEX_FIELDS: ExecutionIndexField[] = Object.values(ExecutionIndexField);
 
 /**
  * `undefined` is normalised to `null` so that a field absent from every result collapses to a single
- * distinct value — which is what makes a single-turn run hide `Turn` and `Total turns` rather than
- * showing two empty columns.
+ * distinct value — which is what makes a single-turn run hide `Turn` rather than showing an empty column.
  */
 const isUniformField = (results: ResultDto[], field: ExecutionIndexField): boolean =>
   new Set(results.map((result) => result[field] ?? null)).size <= 1;
@@ -35,6 +34,4 @@ export const getUniformExecutionFields = (results: ResultDto[]): Set<string> =>
 
 /** Only ever hides: a column a builder already hid stays hidden, whatever its values do. */
 export const hideUniformColumns = (columns: ColDef[], uniformFields: Set<string>): ColDef[] =>
-  columns.map((column) =>
-    uniformFields.has((column.colId ?? column.field) as string) ? { ...column, hide: true } : column,
-  );
+  columns.map((column) => (uniformFields.has(column.colId ?? column.field ?? '') ? { ...column, hide: true } : column));

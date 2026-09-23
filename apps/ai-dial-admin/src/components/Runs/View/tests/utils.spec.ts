@@ -1303,7 +1303,7 @@ describe('Runs View :: getAnalyticsColumns default column visibility', () => {
     expect(visible).toEqual(['http', 'duration']);
   });
 
-  test('keeps the turn columns when the run spans several turns', () => {
+  test('keeps the turn column, but not its total, when the run spans several turns', () => {
     const visible = visibleExecutionColIds([
       makeResult({ turnIndex: 0, totalTurns: 2 }),
       makeResult({ turnIndex: 1, totalTurns: 2 }),
@@ -1313,19 +1313,27 @@ describe('Runs View :: getAnalyticsColumns default column visibility', () => {
     expect(visible).not.toContain('totalTurns');
   });
 
-  test('keeps the request columns when the run spans several requests', () => {
+  test('keeps the request column, but not its total, when the run spans several requests', () => {
     const visible = visibleExecutionColIds([
       makeResult({ requestIndex: 0, totalRequests: 2 }),
       makeResult({ requestIndex: 1, totalRequests: 2 }),
     ]);
 
     expect(visible).toContain('requestIndex');
+    expect(visible).not.toContain('totalRequests');
   });
 
   test('keeps the run-number column when a test case was run more than once', () => {
     const visible = visibleExecutionColIds([makeResult({ runIndex: 0 }), makeResult({ runIndex: 1 })]);
 
     expect(visible).toContain('runIndex');
+  });
+
+  test('hides the total columns even when their values differ between results', () => {
+    const visible = visibleExecutionColIds([makeResult({ totalTurns: 2 }), makeResult({ totalTurns: 5 })]);
+
+    expect(visible).not.toContain('totalTurns');
+    expect(visible).not.toContain('totalRequests');
   });
 
   test('keeps HTTP and Duration visible even when every result carries the same status', () => {
@@ -1338,18 +1346,10 @@ describe('Runs View :: getAnalyticsColumns default column visibility', () => {
     expect(visible).toContain('duration');
   });
 
-  test('hides no execution column before any result has loaded', () => {
+  test('hides the totals but no index column before any result has loaded', () => {
     const visible = visibleExecutionColIds([]);
 
-    expect(visible).toEqual([
-      'runIndex',
-      'requestIndex',
-      'totalRequests',
-      'turnIndex',
-      'totalTurns',
-      'http',
-      'duration',
-    ]);
+    expect(visible).toEqual(['runIndex', 'requestIndex', 'turnIndex', 'http', 'duration']);
   });
 
   test('leaves the other groups’ defaults untouched', () => {

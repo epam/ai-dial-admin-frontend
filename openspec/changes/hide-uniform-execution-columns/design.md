@@ -19,7 +19,7 @@ See `proposal.md` — Why. The code this change moves through, and what each pie
   checked when `node.hide !== true` and a group as checked / indeterminate / unchecked from
   `getGroupCheckState`. An unchecked leaf under an indeterminate `Execution` group — the issue's second
   screenshot — needs no panel change.
-- Execution index colIds are their field names exactly: `runIndex`, `requestIndex`, `totalRequests`,
+- Execution column colIds are their field names exactly: `runIndex`, `requestIndex`, `totalRequests`,
   `turnIndex`, `totalTurns` (`utils.ts:150-181`), and all five are declared on `ResultDto`
   (`models/evaluation/run.ts:11-15`). No colId-to-field mapping is needed.
 - On the Compare side, `getComparedExecutionColumns` (`Compare/ExecutionResults/utils/columns.ts:322`)
@@ -46,6 +46,12 @@ See `proposal.md` — Why. The code this change moves through, and what each pie
 - No generalisation into `components/Grid/utils.ts`. The rule is about evaluation results, not about
   grids; the shared grid helpers stay about colDef shape.
 - No change to which columns exist, their order, widths, sorting, or filtering.
+- **No browser-verification task.** Asked and declined: unit tests only. The two panel-side scenarios —
+  the group rendering indeterminate, and selecting a hidden column bringing it back — are existing
+  `TreeColumnsPanel` behaviour driven by `colDef.hide`, unchanged here and already exercised by that
+  component's own tests; what this change actually decides is the `hide` flag the builder emits, which
+  is what the unit tests pin. The residual risk is that `hide: true` reaches the panel by some path
+  other than the builder's output, which `ExtractionResult.tsx:54-59` rules out by construction.
 
 ## Decisions
 
@@ -68,15 +74,13 @@ issue asks to avoid.
 ### Uniformity is `new Set(values).size <= 1` over `value ?? null`, and an empty result set is never uniform
 
 Normalising `undefined` to `null` before the set collapses "absent on every row" into one distinct
-value, which makes a single-turn run — where no result carries `turnIndex` at all — hide `Turn` and
-`Total turns`. That is the issue's main case, and treating absent and present-but-equal differently
-would leave it unfixed.
+value, which makes a single-turn run — where no result carries `turnIndex` at all — hide `Turn`. That is
+the issue's main case, and treating absent and present-but-equal differently would leave it unfixed.
 
 The `results.length > 0` guard is what keeps `getAnalyticsColumns([])` — called once before the fetch
-resolves, at `use-run-view-tab-state.ts:15` — returning today's column set. Without it every index
-column would be "uniform" over zero rows, and the grid would mount narrow and then widen as data
-arrived. A run that genuinely returns no results renders the empty state anyway, so nothing is lost by
-hiding nothing there.
+resolves, at `use-run-view-tab-state.ts:15` — returning the position columns. Without it all three would
+be "uniform" over zero rows, and the grid would mount narrow and then widen as data arrived. A run that
+genuinely returns no results renders the empty state anyway, so nothing is lost by hiding nothing there.
 
 *Alternative considered:* a `hasVariation` predicate per column in the style of
 `hasHeatMapMultiSubRuns` / `hasHeatMapMultiTurns`
@@ -98,19 +102,43 @@ construction rather than by a reviewer noticing.
 
 The honest consequence: for Compare the call is currently a no-op. Its value is that the rule lives in
 one function with one test, so if Compare's defaults are ever loosened the variation behaviour comes
-with them instead of being reinvented.
+with them instead of being reinvented. Its Compare-side test is a characterisation test of the
+hidden-by-default state, not of the new wiring — it would pass with the wiring removed — and is kept
+deliberately, as the thing that fails if someone loosens those defaults without deciding to.
 
 *Alternative considered:* leaving Compare alone entirely. That keeps the diff smaller, but it leaves
 two grids with the same Execution columns and no shared statement of when one of them is worth showing.
+
+### The totals are hidden outright; only the three position columns follow the data
+
+`Total requests` and `Total turns` carry `hide: true` in `executionColumns`, the way `INPUT BINDINGS`
+already does. The variation rule governs `# Run number`, `Request` and `Turn` only, and
+`ExecutionIndexField` names exactly those three.
+
+A total is not a reading the operator scans rows for — it is the denominator of the position beside it,
+and a run reports the same one on every row of a test case. Deciding it by variation gets the awkward
+cases either way round: hide-when-uniform strips the denominator from every multi-turn run, while
+pairing it to its index shows a column of identical `4`s whenever `Turn` is on screen. A fixed default
+says the thing directly and stays one click from being wrong.
+
+*Alternative considered:* the pairing rule — a total hidden only when its index is. It keeps `Turn 1..4`
+legible without a click, at the cost of a fixed-width column of repeated values in exactly the runs
+whose Execution group is already busiest. Rejected in favour of the operator asking for the denominator
+when they want it.
+
+*Alternative considered:* deciding the totals by variation like everything else. That reads the issue
+literally but hides `Total turns` in every multi-turn run and shows it in the rare run whose test cases
+disagree on the count — variation in a total says something about the test suite, not about the row.
 
 ### The util lives in `src/utils/evaluation/`
 
 Both call sites are evaluation column builders in different feature trees
 (`Runs/View/` and `Runs/Compare/ExecutionResults/`), so per `.claude/rules/utils.md` the helper is
 cross-cutting and belongs in `src/utils/evaluation/`, alongside `request-chain.ts` and
-`test-case-grouping.ts`. It is pure, takes `AnalyticsResult[]`, and exports named functions.
+`test-case-grouping.ts`. It is pure, takes `ResultDto[]` — the narrowest type declaring the index
+fields, which `AnalyticsResult` extends — and exports named functions.
 
-The five field names become an `enum` rather than a string-literal union, per
+The three field names become an `enum` rather than a string-literal union, per
 `.claude/rules/code-standards.md` — the set is fixed and needs a runtime value to iterate.
 
 ### The `Execution` group becomes a function; the Details group stays a const

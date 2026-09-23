@@ -167,6 +167,7 @@ const executionColumns: ColDef[] = [
     headerName: 'Total requests',
     headerComponent: EllipsisHeader,
     colId: 'totalRequests',
+    hide: true,
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalRequests ?? null,
@@ -176,6 +177,7 @@ const executionColumns: ColDef[] = [
     field: 'totalTurns',
     headerName: 'Total turns',
     colId: 'totalTurns',
+    hide: true,
     ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalTurns ?? null,
@@ -226,8 +228,10 @@ const detailsColumns = {
 };
 
 /**
- * An index column that reads the same on every row distinguishes no result from another, so it starts
- * hidden and the operator re-enables it from the columns panel.
+ * `Total requests` and `Total turns` ship hidden from `executionColumns`: a denominator is context for a
+ * position rather than a reading of its own. Of what is left, an index column that reads the same on
+ * every row distinguishes no result from another, so it too starts hidden and the operator re-enables it
+ * from the columns panel.
  */
 const getExecutionGroup = (results: AnalyticsResult[]) => ({
   headerName: EXECUTION_GROUP_HEADER,

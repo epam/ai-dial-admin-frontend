@@ -9,9 +9,12 @@ exists for off-screen.
 
 ## What Changes
 
-- The Extraction Result grid's default column visibility becomes a function of the loaded results: an
-  Execution index column whose values do not vary across those results starts hidden — that is,
-  unchecked in the Columns panel — rather than occupying grid width.
+- `Total requests` and `Total turns` start hidden outright. A total is context for a position, not a
+  reading of its own, and it repeats on every row of a test case by construction.
+- The Extraction Result grid's default visibility for the remaining position columns — `# Run number`,
+  `Request`, `Turn` — becomes a function of the loaded results: one whose values do not vary across
+  those results starts hidden, that is, unchecked in the Columns panel, rather than occupying grid
+  width.
 - Nothing is removed from the grid's schema. A hidden column keeps its entry in the Columns panel and
   the operator re-enables it with one click, exactly as with the already-hidden `INPUT BINDINGS` group.
 - The rule only ever hides. It never makes visible a column a builder already chose to hide, so the run
@@ -42,10 +45,12 @@ None.
 ### Modified Capabilities
 
 - `run-results-turn-columns`: adds a requirement governing the **default visibility** of the Extraction
-  Result grid's Execution index columns. The existing requirements — that Turn and Total turns render
-  the result's position, that rows stay flat, that Request and Turn are sortable — are unchanged; they
-  describe what a column shows and how it sorts, and continue to hold whether or not the column starts
-  hidden.
+  Result grid's Execution position columns, and modifies "Run results show the turn number and total
+  turn count" so its `SHALL display` reads as `SHALL provide` — the two columns still exist and still
+  render a 1-based position against a supplied total, but whether they are on screen when the grid opens
+  is now the new requirement's business, and `Total turns` in particular starts hidden. The remaining
+  requirements — that rows stay flat, that Request and Turn are sortable — are unchanged; they describe
+  how a column behaves once shown.
 
 ## Impact
 

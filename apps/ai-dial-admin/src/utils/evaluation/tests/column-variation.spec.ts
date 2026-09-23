@@ -28,16 +28,16 @@ describe('getUniformExecutionFields', () => {
   });
 
   test('reports a field carrying the same value on every result', () => {
-    const fields = getUniformExecutionFields([result({ totalTurns: 4 }), result({ totalTurns: 4 })]);
+    const fields = getUniformExecutionFields([result({ turnIndex: 3 }), result({ turnIndex: 3 })]);
 
-    expect(fields.has(ExecutionIndexField.TotalTurns)).toBe(true);
+    expect(fields.has(ExecutionIndexField.TurnIndex)).toBe(true);
   });
 
   test('reports a field absent from every result, treating undefined as one value', () => {
     const fields = getUniformExecutionFields([result(), result()]);
 
     expect(fields.has(ExecutionIndexField.TurnIndex)).toBe(true);
-    expect(fields.has(ExecutionIndexField.TotalTurns)).toBe(true);
+    expect(fields.has(ExecutionIndexField.RequestIndex)).toBe(true);
   });
 
   test('does not report a field present on one result and absent on another', () => {
@@ -46,15 +46,20 @@ describe('getUniformExecutionFields', () => {
     expect(fields.has(ExecutionIndexField.RequestIndex)).toBe(false);
   });
 
+  test('never reports the total columns, which the builders hide outright', () => {
+    const fields = getUniformExecutionFields([result({ totalTurns: 4 }), result({ totalTurns: 4 })]);
+
+    expect(fields.has('totalTurns')).toBe(false);
+    expect(fields.has('totalRequests')).toBe(false);
+  });
+
   test('judges each index field independently', () => {
     const fields = getUniformExecutionFields([
       result({ runIndex: 0, turnIndex: 0, totalTurns: 2 }),
       result({ runIndex: 1, turnIndex: 1, totalTurns: 2 }),
     ]);
 
-    expect(fields).toEqual(
-      new Set([ExecutionIndexField.TotalTurns, ExecutionIndexField.RequestIndex, ExecutionIndexField.TotalRequests]),
-    );
+    expect(fields).toEqual(new Set([ExecutionIndexField.RequestIndex]));
   });
 });
 
