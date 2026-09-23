@@ -66,6 +66,8 @@ export const contentTypes: Record<string, string> = {
   '.ogg': 'audio/ogg',
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
+  // archive
+  '.zip': 'application/zip',
 };
 
 export const MAX_FILE_SIZE_MB = 100;
