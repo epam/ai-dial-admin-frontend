@@ -8,6 +8,8 @@ export enum UsageView {
 export enum ComparePeriod {
   Off = 'off',
   PreviousPeriod = 'previous-period',
+  PreviousMonth = 'previous-month',
+  PreviousYear = 'previous-year',
 }
 
 export enum BreakdownTab {

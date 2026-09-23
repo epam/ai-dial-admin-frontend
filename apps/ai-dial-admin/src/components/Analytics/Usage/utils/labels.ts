@@ -1,4 +1,4 @@
-import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 const TOOLSET_PREFIX = 'toolsets/';
@@ -91,4 +91,15 @@ export const BREAKDOWN_TAB_DESCRIPTION_KEY: Record<BreakdownTab, AnalyticsUsageI
   [BreakdownTab.Projects]: AnalyticsUsageI18nKey.BreakdownDescriptionProjects,
   [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.BreakdownDescriptionMcpServers,
   [BreakdownTab.Tools]: AnalyticsUsageI18nKey.BreakdownDescriptionTools,
+};
+
+/**
+ * What the compared window is called inside a sentence, as against the capitalized option in the
+ * selector. `Off` carries one so the record is total; nothing renders it.
+ */
+export const COMPARE_NAME_KEY: Record<ComparePeriod, AnalyticsUsageI18nKey> = {
+  [ComparePeriod.Off]: AnalyticsUsageI18nKey.CompareNamePreviousPeriod,
+  [ComparePeriod.PreviousPeriod]: AnalyticsUsageI18nKey.CompareNamePreviousPeriod,
+  [ComparePeriod.PreviousMonth]: AnalyticsUsageI18nKey.CompareNamePreviousMonth,
+  [ComparePeriod.PreviousYear]: AnalyticsUsageI18nKey.CompareNamePreviousYear,
 };
