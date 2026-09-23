@@ -1676,11 +1676,22 @@ The console SHALL therefore name the compiled view only where it is served:
 - A failed compiled read SHALL be reported as the failure it is, and SHALL NOT be answered with the
   declaration in its place. The detail page presents an absent grain key or version column as "not
   set", which for an enrichment pipeline states something false rather than something missing.
+- **The one exception is a declaration the service cannot compile at all**, which it refuses as a
+  validation failure naming the members it lacks. That is an ordinary state — a pipeline is registered
+  before it is declared — and the authored projection is the whole of what such a pipeline has, so the
+  read SHALL serve it. Reporting the refusal would make the page the author has to finish the
+  declaration on unreachable, which is the page the console sends them to.
 
 The compiled projection remains a superset of the authored one and is still what seeds an edit of an
 enrichment pipeline. The one fact it does not preserve is whether a read source was declared or
 inherited from the target's parent: both appear as a resolved input. That distinction SHALL continue to
 be recovered from the target table rather than from the projection.
+
+#### Scenario: An incomplete declaration is served as authored
+
+- **WHEN** an enrichment pipeline whose declaration the service cannot compile is opened
+- **THEN** the authored projection is presented rather than a failed read
+- **AND** the members the compiled projection would have resolved read as not set
 
 #### Scenario: The listing names no projection
 

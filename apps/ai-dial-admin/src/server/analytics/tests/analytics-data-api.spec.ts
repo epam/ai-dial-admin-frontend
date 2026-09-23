@@ -636,13 +636,26 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     // `version_column` as "not set" — a false statement about an enrich pipeline, not a missing one.
     test('getPipeline reports a failed compiled read rather than falling back to the declaration', async () => {
       fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
-      fetch.mockResponseOnce('', { status: 422 });
+      fetch.mockResponseOnce('', { status: 500 });
 
       const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
 
-      expect(res).toEqual(expect.objectContaining({ success: false, status: 422 }));
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
       expect(res.response).toBeUndefined();
       // Both reads were issued, so it is the compiled one that failed — not the declaration.
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A pipeline registered before it was declared has nothing to compile, and the service says so with
+    // 422. Reporting that would make the page the author finishes the declaration on a 404.
+    test('getPipeline serves the declaration when the compiled projection refuses an incomplete one', async () => {
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined, trigger: undefined };
+      fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify({ error: 'pipeline_validation_failed' }), { status: 422 });
+
+      const res = await instance.getPipeline('half-written', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: declaration }));
       expect(fetch).toHaveBeenCalledTimes(2);
     });
 
