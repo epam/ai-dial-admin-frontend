@@ -162,13 +162,7 @@ const UsageDashboard: FC = () => {
         onRefresh={onRefresh}
       />
 
-      <KpiRow
-        view={view}
-        totals={totals}
-        previousTotals={previousTotals}
-        buckets={buckets}
-        isComparisonOn={!!windows.previous}
-      />
+      <KpiRow view={view} totals={totals} previousTotals={previousTotals} buckets={buckets} compare={compare} />
 
       <div className="flex shrink-0 flex-wrap items-stretch gap-3">
         <TimeSeries
