@@ -228,18 +228,17 @@ describe('CreatePipelinePopup', () => {
     ).toEqual([]);
   });
 
-  // readOnly rather than disabled: a disabled input leaves the accessibility tree, so the grain key the
-  // spec requires be presented would be unreadable to a screen reader and uncopyable by keyboard.
-  test('derives a read-only group-by from the target grain key', async () => {
+  // A labelled value rather than a field: the service assigns it, and a disabled input would leave the
+  // accessibility tree, taking the value with it.
+  test('derives the group-by from the target grain key and presents it as a value', async () => {
     const user = userEvent.setup();
     renderEnrichPopup();
 
     await selectTarget(user);
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerGroup));
 
-    await waitFor(() => expect(screen.getByDisplayValue('response_id')).toBeTruthy());
-    expect(screen.getByDisplayValue('response_id')).toHaveAttribute('readonly');
-    expect(screen.getByDisplayValue('response_id')).toBeEnabled();
+    await waitFor(() => expect(screen.getByText('response_id')).toBeTruthy());
+    expect(screen.queryByDisplayValue('response_id')).toBeNull();
   });
 
   test('requires a readiness condition for a group rule', async () => {
@@ -257,7 +256,7 @@ describe('CreatePipelinePopup', () => {
 
     await selectTarget(user);
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionVariables)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionInputs)).toBeNull();
   });
 
   test('submits the assembled rule and closes on success', async () => {

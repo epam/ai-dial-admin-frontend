@@ -4,10 +4,32 @@ import { describe, expect, test, vi } from 'vitest';
 
 import SourceField from '@/src/components/Analytics/Pipelines/Common/SourceField';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
+import { FOLLOW_TARGET_SOURCE } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 import { getSourceMode } from '@/src/utils/analytics/pipeline-dto';
 import { SourceMode } from '@/src/models/analytics/pipeline-ui';
+
+// Swapped for a native select so the choice can be made the way a user makes it.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+  return {
+    ...actual,
+    DialSelectField: ({ id, label, caption, options, value, onChange }: any) => (
+      <label>
+        <span>{label}</span>
+        <select id={id} aria-label={label} value={value} onChange={(e: any) => onChange(e.target.value)}>
+          {options.map((o: any) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {caption && <span>{caption}</span>}
+      </label>
+    ),
+  };
+});
 
 const tables: AnalyticsTable[] = [
   { name: 'dial_usage_log', type: AnalyticsTableType.Source },
@@ -19,34 +41,38 @@ describe('SourceField', () => {
   const renderField = (props?: Partial<Parameters<typeof SourceField>[0]>) =>
     render(<SourceField tables={tables} sourceTable="dial_usage_log" onChange={vi.fn()} {...props} />);
 
+  const select = () => screen.getByRole('combobox');
+  const optionLabels = () => Array.from(select().querySelectorAll('option')).map((option) => option.textContent);
+
   test('reads a rule with no declared source as following', () => {
     renderField();
 
-    expect(screen.getByRole('radio', { name: /SourceFollow/ })).toBeChecked();
+    expect((select() as HTMLSelectElement).value).toBe(FOLLOW_TARGET_SOURCE);
   });
 
-  test('reads a source equal to the enrichment default as following', () => {
+  // The compiled read resolves the input either way, so this is what a following pipeline arrives as.
+  test('reads a resolved input equal to the target source as following', () => {
     renderField({ input: 'dial_usage_log' });
 
-    expect(screen.getByRole('radio', { name: /SourceFollow/ })).toBeChecked();
+    expect((select() as HTMLSelectElement).value).toBe(FOLLOW_TARGET_SOURCE);
   });
 
-  test('reads a source differing from the enrichment default as pinned', () => {
+  test('reads a declared source as pinned to it', () => {
     renderField({ input: 'legacy_log' });
 
-    expect(screen.getByRole('radio', { name: /SourcePin/ })).toBeChecked();
+    expect((select() as HTMLSelectElement).value).toBe('legacy_log');
   });
 
   test('names the table currently being followed', () => {
     renderField();
 
-    expect(screen.getByText(/dial_usage_log/)).toBeTruthy();
+    expect(optionLabels().some((label) => label?.includes('dial_usage_log'))).toBe(true);
   });
 
   test('says the source is unresolved before the target lands', () => {
     renderField({ sourceTable: undefined });
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.SourceFollowUnresolved)).toBeTruthy();
+    expect(optionLabels()).toContain(AnalyticsPipelinesI18nKey.SourceFollowUnresolved);
   });
 
   test('clears the source when following is chosen', async () => {
@@ -54,34 +80,32 @@ describe('SourceField', () => {
     const user = userEvent.setup();
     renderField({ input: 'legacy_log', onChange });
 
-    await user.click(screen.getByRole('radio', { name: /SourceFollow/ }));
+    await user.selectOptions(select(), FOLLOW_TARGET_SOURCE);
 
     expect(onChange).toHaveBeenCalledWith(undefined);
   });
 
-  test('switches to pin and stays there', async () => {
+  test('pins a table that differs from the one being followed', async () => {
+    const onChange = vi.fn();
     const user = userEvent.setup();
-    renderField();
+    renderField({ onChange });
 
-    await user.click(screen.getByRole('radio', { name: /SourcePin/ }));
+    await user.selectOptions(select(), 'legacy_log');
 
-    // Regression: seeding the value with the followed table made getSourceMode read it back as "follow",
-    // so the radio snapped back and pinning was unreachable.
-    expect(screen.getByRole('radio', { name: /SourcePin/ })).toBeChecked();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.SourceTable)).toBeTruthy();
+    expect(onChange).toHaveBeenCalledWith('legacy_log');
   });
 
-  test('offers only source tables to pin', () => {
-    renderField({ input: 'legacy_log' });
+  test('keeps a pinned table the listing does not carry', () => {
+    renderField({ input: 'retired_log' });
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.SourceTable)).toBeTruthy();
-    expect(screen.queryByText('turn_feedback')).toBeNull();
+    expect((select() as HTMLSelectElement).value).toBe('retired_log');
   });
 
-  test('hides the table select while following', () => {
+  test('offers only source tables beside the following entry', () => {
     renderField();
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SourceTable)).toBeNull();
+    expect(optionLabels()).toContain('legacy_log');
+    expect(optionLabels()).not.toContain('turn_feedback');
   });
 });
 

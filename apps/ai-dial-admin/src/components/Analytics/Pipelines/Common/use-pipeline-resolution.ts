@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
+import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 interface Params {
@@ -68,9 +70,11 @@ const useCachedResolution = <T>(key: string | undefined, resolve: (key: string) 
  * The read source is the declared input or the target enrichment's `source_table`, so it cannot be
  * resolved until the target has been.
  *
- * The transform's inputs and every SQL predicate are read against the **source's** columns; a measure's
- * name and an output's target column are written against the **target's**. Conflating the two is the
- * likeliest way to get this wrong.
+ * Three reads, easy to conflate. The transform's inputs, every SQL predicate and the member ranking are
+ * scoped to the source's **entity** — the source with its enrichments flattened in, which is what the
+ * service accepts and where `<enrichment>.<column>` comes from. An aggregate's group keys and measure
+ * inputs are scoped to the source **table**, which the entity would wrongly widen. A measure's name and
+ * an output's target column are written against the **target table's** columns.
  */
 export const usePipelineResolution = ({ target: targetName, input }: Params) => {
   const [tables, setTables] = useState<AnalyticsTable[]>([]);
@@ -99,10 +103,16 @@ export const usePipelineResolution = ({ target: targetName, input }: Params) => 
 
   const resolveTable = useCallback((name: string): Promise<AnalyticsTable | null> => getTable(name), []);
 
+  const resolveEntity = useCallback(async (name: string): Promise<AnalyticsEntityField[] | null> => {
+    const read = await getEntitySchema(name);
+    return read.response?.fields ?? null;
+  }, []);
+
   const target = useCachedResolution(targetName, resolveTable);
 
   const sourceName = input || target.value?.source_table;
   const readSource = useCachedResolution(sourceName, resolveTable);
+  const sourceEntity = useCachedResolution(sourceName, resolveEntity);
 
   const enrichmentTables = useMemo(
     () => tables.filter((table) => table.type === AnalyticsTableType.Enrichment),
@@ -123,5 +133,8 @@ export const usePipelineResolution = ({ target: targetName, input }: Params) => 
     grainKey: target.value?.grain?.grain_key ?? '',
     targetColumns: target.value?.columns ?? [],
     sourceColumns: readSource.value?.columns ?? [],
+    sourceFields: sourceEntity.value ?? [],
+    isSourceEntityPending: sourceEntity.isPending,
+    hasSourceEntityError: sourceEntity.hasError,
   };
 };

@@ -402,8 +402,11 @@ The choice of section SHALL be the page's only branch on kind. A control that be
 inside that kind's section rather than being conditionally rendered among the shared ones, so the shared
 frame stays kind-independent.
 
-The enrichment section SHALL present the transform — its type, model, params, request template, inputs and
-outputs — and the execution knobs. The aggregate section SHALL present the group keys, the measures and the
+The enrichment section SHALL present the transform as **one block** — type, model, params, request
+template, inputs, outputs, in that order, which is the order of the wire's own members — and the execution
+knobs beside it. The inputs SHALL NOT be a section of their own outside that block: they are
+`transform.inputs`, and the placeholder correspondence that matches them against the template belongs with
+both. The aggregate section SHALL present the group keys, the measures and the
 freshness mode.
 
 The **trigger** SHALL be stated above the collapsible sections rather than filed inside one. It belongs to
@@ -418,6 +421,7 @@ be the same controls here, differing only in width and layout.
 
 - **WHEN** an enrichment pipeline is opened
 - **THEN** its transform, inputs, outputs and execution knobs are presented
+- **AND** the inputs are presented inside the transform block, between the request template and the outputs
 - **AND** no group keys, measures or freshness control is presented
 
 #### Scenario: An aggregate pipeline presents the aggregate section
@@ -473,15 +477,22 @@ accepts it restated.
 
 A pipeline carries members the service derives and the API refuses to accept: `generation`, `created_at`,
 `updated_at`, the runtime `state`, and — for an enrichment pipeline — `grain_key`, `version_column`, the
-derived `outputs` mapping and the composed `response_schema`. The detail page SHALL present these as
-read-only, visually separated from the editable form, so it is unambiguous which values an operator can
-change. `version_column` SHALL render as an em dash when the read source declares no scan metadata.
+derived `outputs` mapping and the composed `response_schema`. The detail page SHALL present the one-line
+ones as read-only facts, visually separated from the editable form, so it is unambiguous which values an
+operator can change. `version_column` SHALL render as an em dash when the read source declares no scan
+metadata.
+
+The composed **`response_schema` SHALL NOT be among them**. It is a document rather than a value — a dozen
+field names on a live pipeline, against neighbours that are one word each — and what it lists, the outputs
+editor states below in the form the operator authors them. It stays readable in the JSON editor, which is
+also where the one case it spoke to is read: a declaration storing its own schema, which the service serves
+verbatim rather than composing.
 
 The name SHALL be presented among the identity rather than among these facts, because it addresses the page.
 Because quoting it elsewhere is a common need, it SHALL carry a copy control.
 
-The **target** and the resolved **read source** SHALL be presented among these facts as well, each linking to
-that table's own page. Both sit inside collapsible sections of the form, so without this the page could not
+The resolved **read source** and the **target** SHALL be presented among these facts as well, the source
+first as the read scope presents them, each linking to that table's own page. Both sit inside collapsible sections of the form, so without this the page could not
 answer "which tables is this bound to" without a trip back to the listing; and an operator who asks that
 question is usually on their way to the table itself.
 
@@ -489,6 +500,11 @@ No evaluator fact SHALL be presented and no link to an evaluator page SHALL be o
 authored on this page, and the composed `response_schema` is where "what the model is held to" is read.
 
 These members SHALL NOT be sent when the pipeline is saved.
+
+#### Scenario: The facts name the source before the target
+
+- **WHEN** a pipeline's read-only facts are presented
+- **THEN** the source is named before the target, as the read scope below it presents them
 
 #### Scenario: Derived facts are shown but not editable
 
@@ -498,7 +514,13 @@ These members SHALL NOT be sent when the pipeline is saved.
 #### Scenario: An enrichment pipeline adds its resolved facts
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** its `grain_key` and its composed `response_schema` are presented as read-only values
+- **THEN** its `grain_key` and `version_column` are presented as read-only values
+
+#### Scenario: The composed schema is not among the facts
+
+- **WHEN** an enrichment pipeline whose compiled read carries a `response_schema` is opened
+- **THEN** the read-only facts carry no response schema
+- **AND** the document remains readable in the JSON editor
 
 #### Scenario: An absent version column reads as an em dash
 
@@ -650,12 +672,28 @@ whether or not the control is presented. The console SHALL therefore infer the s
 target enrichment's `source_table` SHALL be treated as following and omitted from the request; any other
 value SHALL be treated as pinned and sent.
 
-The inference SHALL be presented rather than applied invisibly — the control SHALL offer an explicit choice
-between following the target enrichment and pinning a named table, seeded from the inference, so an operator
-can see and correct it. When following is selected, the table currently being followed SHALL be named.
+The inference SHALL be presented rather than applied invisibly, and SHALL be presented as **one control**: a
+single selection whose first entry is following the target enrichment — naming the table that resolves to —
+and whose remaining entries are the source tables a pipeline may pin. A radio pair plus a conditional select
+asked the operator to answer twice; the entries are alternatives, so one list states them.
+
+Following SHALL be a **sentinel entry** rather than the followed table's own name, because the list
+otherwise holds only table names and "omit the input" is not one.
+
+It SHALL NOT be read as a way to tell following from pinning the same table: the compiled projection the
+detail page reads resolves `inputs` either way, so that distinction is not representable on the way in and
+the console SHALL NOT pretend otherwise. The select's value SHALL be inferred exactly as the request
+builder infers it — an input equal to the target's `source_table` reads as following and is omitted on
+save — so the control and the request agree by construction. Choosing that same table from the list
+therefore leaves the pipeline following, and pinning it is unreachable; a pipeline that must pin its
+target's own source is declared through the JSON editor.
+
+The read scope SHALL present the **source before the target**, for either kind. The source is the one an
+operator reads first when asking what a pipeline consumes, and the target is already resolved wherever the
+control appears.
 
 An aggregate pipeline declares its input outright and SHALL present it as a plain selection with no
-follow-or-pin choice.
+follow-or-pin choice — ordered the same way, above the target.
 
 #### Scenario: A following pipeline keeps following after an unrelated edit
 
@@ -671,14 +709,36 @@ follow-or-pin choice.
 #### Scenario: The inference is visible and correctable
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** the read-source control shows whether it is following or pinned
-- **AND** the followed table is named when following is shown
-- **AND** the operator can switch between the two
+- **THEN** one read-source selection shows whether it is following or pinned
+- **AND** the followed table is named on the following entry
+- **AND** choosing a table from the same list pins it
+
+#### Scenario: Following sends no input, whichever table it resolves to
+
+- **WHEN** the following entry is selected and the pipeline is saved
+- **THEN** the request omits the input, rather than sending the followed table's name
+
+#### Scenario: A resolved input equal to the target's source reads as following
+
+- **WHEN** a pipeline that declared no input is opened, and the compiled read resolves that input to the
+  target's own `source_table`
+- **THEN** the selection shows the following entry rather than that table
+
+#### Scenario: A pinned table the listing does not carry stays selected
+
+- **WHEN** a pipeline pins a table the tables listing does not return
+- **THEN** that table remains the selection rather than reading as the following entry
+
+#### Scenario: The source is presented before the target
+
+- **WHEN** an enrichment pipeline's read scope is presented
+- **THEN** the source selection appears above the target selection
 
 #### Scenario: An aggregate pipeline declares its input plainly
 
 - **WHEN** an aggregate pipeline is opened
 - **THEN** its input is presented as a selection with no follow-or-pin choice
+- **AND** that selection appears above the target selection
 
 ### Requirement: Unsaved pipeline edits are tracked and discardable
 
@@ -882,9 +942,10 @@ physical — an enrichment is keyed on its grain and collapses by it, so groupin
 pile many groups onto a single row.
 
 The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
-`grain.grain_key` and present it read-only, captioned as the target table's grain key. It SHALL NOT be
-offered as a free-text input, which could only produce a value the service rejects. The derived value SHALL
-be re-read whenever the target changes.
+`grain.grain_key` and present it as a **labelled read-only value** — not as a text input, which reads as a
+field someone forgot to enable, and not as a disabled one, which would leave the accessibility tree and stop
+the value being readable at all. It SHALL be captioned as the target table's grain key, and re-derived
+whenever the target changes.
 
 This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
 its rows are grouped by. The two SHALL NOT share a control.
@@ -892,12 +953,13 @@ its rows are grouped by. The two SHALL NOT share a control.
 #### Scenario: The grouping key is filled from the target's grain key
 
 - **WHEN** the trigger kind is `group` and a target is selected
-- **THEN** the grouping-key field shows that table's grain key and is not editable
+- **THEN** that table's grain key is presented as a labelled value, with no editable control for it
+- **AND** the value is readable rather than removed from the accessibility tree
 
 #### Scenario: Changing the target re-derives the grouping key
 
 - **WHEN** the user changes the target to one with a different grain key
-- **THEN** the grouping-key field shows the new table's grain key
+- **THEN** the presented grouping key is the new table's grain key
 
 ### Requirement: Member selection for a group trigger
 
@@ -917,6 +979,9 @@ instead.
 The ranking SHALL state that the read source's own order is appended last as a tiebreak, so re-assembling an
 unchanged group selects the same members. Where the columns carrying that order are known from the resolved
 source they MAY be named; where the source has not resolved they SHALL be omitted rather than guessed.
+
+The columns the ranking offers SHALL be the read source's **entity** fields, the same set the inputs editor
+binds, so a column of an enrichment on that source can be ranked by.
 
 The maximum SHALL be stated as the service's configured ceiling rather than as a fixed number: it is a
 deployment setting, and a deployment configured lower refuses a larger value.
@@ -962,7 +1027,8 @@ Member selection SHALL be presentable only for a group trigger.
 
 A pipeline admits four SQL predicates: the membership `filter`, the readiness `signal` of a group trigger,
 the `prefer_sql` of its member selection, and the `where` of an individual aggregate measure. Each is a
-boolean expression over the read source's columns in the same bounded grammar, and none admits a join, a
+boolean expression in the same bounded grammar over the read source's **entity** — the source with its
+enrichments flattened in, which is what the service resolves a predicate against — and none admits a join, a
 subquery, or a CTE.
 
 Each SHALL be presented as a multi-line expression input, in a monospaced face, captioned with the source its
@@ -1946,10 +2012,17 @@ The selection SHALL offer the transform and the value list and nothing else. An 
 legal on the service and is in fact the common form, but it is reached by leaving the transform empty
 rather than by a third choice.
 
-A transform expression that repeats the output's own target column SHALL be **marked invalid** on the row:
-the service refuses the identity expression, because an absent transform already means a direct lookup by
-that name. It SHALL NOT block the save — the service is the authority — but the field sits directly under
-the column selection, so the mistake is worth naming where it is made.
+A transform expression that repeats the output's own target column is the **identity** expression, which the
+service refuses because an absent transform already means a direct lookup by that name. The console SHALL
+handle it in two places, differently:
+
+- **On read, it SHALL be dropped.** A declaration folded from an evaluator that predates `outputs` carries
+  one per output — `title → title`, `summary → summary` — so presenting them would mark every output of an
+  untouched declaration invalid, and the first save would be refused for a value nobody authored. Dropping
+  it changes nothing: its absence means the same lookup.
+- **Typed into the field, it SHALL be marked invalid** on the row, without blocking the save — the service
+  is the authority, but the field sits directly under the column selection, so the mistake is worth naming
+  where it is made.
 
 An output that reaches the form carrying **both** refinements — which only the JSON editor can author,
 since the section offers one at a time — SHALL be sent **as written** rather than resolved to one of them.
@@ -1966,6 +2039,25 @@ outputs as an object keyed by name, so a duplicate is silently collapsed by the 
 ever validates it.
 
 An entry SHALL be addable and removable, and at least one SHALL be required.
+
+An output declaring neither prose nor a refinement is sent as an empty body and is stored by the service as
+`null`, so it is the shape a declaration authored through this form comes back in. Reading one SHALL yield
+an output carrying its name alone.
+
+#### Scenario: A folded legacy declaration's identity transforms are not presented
+
+- **WHEN** a declaration whose folded `output_vars` bind each output to a transform equal to its own name is
+  opened
+- **THEN** no output's transform field carries that expression, and none is marked invalid
+- **AND** saving it unedited is not refused for an identity transform
+
+#### Scenario: An output stored with no refinement is read back
+
+- **WHEN** a declaration whose `outputs` bind a name to `null` — what the service stores for an output
+  declared with no prose and no refinement — is opened
+- **THEN** the page presents that output with its target column selected and its prose, value list and
+  transform empty
+- **AND** the page renders rather than failing on the declaration
 
 #### Scenario: A sql output carries only its expression
 
@@ -2225,10 +2317,23 @@ as unaffected — the service leaves them in place.
 ### Requirement: The pipeline form resolves the target table and the read source on demand
 
 `GET /v1/tables` returns neither `grain` nor `columns`, and every control the enrichment section offers is
-scoped to a table: the inputs editor to the **read source**'s columns, the outputs editor to the
-**target**'s. Pipeline editing — in the create modal and on the detail page alike — SHALL therefore read
-the full target via `GET /v1/tables/{name}` whenever the target changes, and the read source — the declared
-input, or the target enrichment's `source_table` — once the target has resolved.
+scoped to a table: the inputs editor to the **read source**, the outputs editor to the **target**. Pipeline
+editing — in the create modal and on the detail page alike — SHALL therefore read the full target via
+`GET /v1/tables/{name}` whenever the target changes, and the read source — the declared input, or the target
+enrichment's `source_table` — once the target has resolved.
+
+**What the read source offers is its entity, not its table.** A table read answers with that table's own
+columns; the service addresses the **entity** — the source with every enrichment flattened in — and accepts
+a column of it, qualified as `<enrichment>.<column>`. Both live enrichments bind such a column, so a form
+scoped to the table both hides them and marks a declared one invalid. The console SHALL therefore also read
+`GET /v1/queries/entities/schema/{name}` for the resolved read source, and every control scoped to that
+source — the inputs editor, the SQL predicates, the member-selection ranking — SHALL offer and accept its
+fields.
+
+A field the entity schema marks `sensitive` SHALL be offered like any other: the service filters that schema
+by the caller's own role, so what it returns is already what this operator may read. A failed entity read
+SHALL be reported like a failed table read, and SHALL NOT silently narrow the list back to the table's own
+columns — a shorter list that looks complete is how a valid binding comes to read as invalid.
 
 Resolved values SHALL be cached by their key for as long as the surface is open, so re-selecting a
 previously chosen table issues no second request.
@@ -2248,7 +2353,20 @@ silently unpopulated.
 #### Scenario: Input bindings offer the read source's columns
 
 - **WHEN** the read source resolves
-- **THEN** the inputs editor offers that source's columns, not the target's
+- **THEN** the inputs editor offers that source's entity fields, not the target's
+
+#### Scenario: The enrichment columns of the source are offered and accepted
+
+- **WHEN** the read source's entity carries a column of an enrichment on it, such as
+  `<enrichment>.<column>`
+- **THEN** that field is among the options the inputs editor offers
+- **AND** a declaration already binding it is not marked invalid
+
+#### Scenario: A failed entity read is reported rather than narrowed away
+
+- **WHEN** the entity schema read fails while the table read succeeds
+- **THEN** the failure is reported
+- **AND** the controls scoped to the source do not fall back to the table's own columns as though complete
 
 #### Scenario: Changing the target re-resolves the followed source
 
@@ -2274,9 +2392,13 @@ silently unpopulated.
 ### Requirement: An enrichment pipeline declares its transform's inputs and nothing else
 
 An enrichment pipeline declares what its transform receives as **`transform.inputs`**: a set of names, each
-bound either to a column of the read source or to a jsonata expression over it. The console SHALL present
-them as one section, as rows of a name, a **binding selection**, and the field that selection names — a
-column selector or an expression field. The two SHALL NOT be offered side by side: the service refuses an
+bound either to a field of the read source's entity or to a jsonata expression over it. The console SHALL
+present them **inside the transform block**, between the request template and the outputs, which is where
+the member sits on the wire and next to the template its names are matched against. The section SHALL be
+headed **Inputs**, as its neighbour is headed Outputs: the block it sits in already names the transform, so
+repeating that in the heading reads as a member of something else. They SHALL be rows of a
+name, a **binding selection**, and the field that selection names — a column selector or an expression
+field. The two SHALL NOT be offered side by side: the service refuses an
 input declaring both, and the unselected member SHALL be kept on the row and left out of the request rather
 than erased.
 
