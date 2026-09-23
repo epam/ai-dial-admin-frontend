@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { BucketPoint } from '@/src/components/Analytics/Usage/models';
+import { BucketPoint, HeatmapMetric } from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import {
   HEATMAP_DAYS,
@@ -62,6 +62,21 @@ describe('buildHeatmapMatrix', () => {
 
     expect(matrix.maxValue).toBe(0);
     expect(matrix.rows.every((row) => Object.values(row.values ?? {}).every((value) => value === 0))).toBe(true);
+  });
+
+  test('paints the cost of an hour when that is the metric asked for', () => {
+    const at = local(2026, 9, 15, 3);
+    const priced: BucketPoint = { bucketMs: at.getTime(), measures: { ...EMPTY_MEASURES, calls: 4, spend: 2.5 } };
+    const matrix = buildHeatmapMatrix([priced], WEEK, () => 'day', HeatmapMetric.Cost);
+
+    expect(matrix.maxValue).toBe(2.5);
+  });
+
+  test('reads an unpriced hour as nothing rather than as its call count', () => {
+    const at = local(2026, 9, 15, 3);
+    const unpriced: BucketPoint = { bucketMs: at.getTime(), measures: { ...EMPTY_MEASURES, calls: 4, spend: null } };
+
+    expect(buildHeatmapMatrix([unpriced], WEEK, () => 'day', HeatmapMetric.Cost).maxValue).toBe(0);
   });
 });
 

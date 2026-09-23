@@ -17,9 +17,22 @@ interface Props {
   centerCaption: string;
   size: number;
   legendClassName?: string;
+  /** Called once the legend has been scrolled near its end, so its owner can read the next rows. */
+  onLegendEndReached?: () => void;
 }
 
-const DonutFigure: FC<Props> = ({ slices, legendSlices, centerValue, centerCaption, size, legendClassName }) => {
+/** How close to the end counts as reaching it, so the next rows are asked for before the gap shows. */
+const LEGEND_END_THRESHOLD_PX = 48;
+
+const DonutFigure: FC<Props> = ({
+  slices,
+  legendSlices,
+  centerValue,
+  centerCaption,
+  size,
+  legendClassName,
+  onLegendEndReached,
+}) => {
   const options = useMemo(
     () =>
       buildDonutOptions(
@@ -60,7 +73,20 @@ const DonutFigure: FC<Props> = ({ slices, legendSlices, centerValue, centerCapti
        * minimum, and without this the list refuses to go narrower than its longest label and spills
        * past the card on both sides.
        */}
-      <ul className={classNames('flex min-w-0 flex-[1_1_400px] flex-col gap-4', legendClassName)}>
+      <ul
+        className={classNames('flex min-w-0 flex-[1_1_400px] flex-col gap-4', legendClassName)}
+        onScroll={(event) => {
+          if (!onLegendEndReached) {
+            return;
+          }
+
+          const list = event.currentTarget;
+
+          if (list.scrollHeight - list.scrollTop - list.clientHeight <= LEGEND_END_THRESHOLD_PX) {
+            onLegendEndReached();
+          }
+        }}
+      >
         {legend.map((slice) => (
           <li key={slice.id} className="flex min-w-0 items-center gap-3 dial-small-text">
             <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: slice.color }} />

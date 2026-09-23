@@ -82,7 +82,7 @@ windows. Each shape is therefore asked once per window, and the client pairs the
 | Leading dimension | `group_by` the view's first dimension | always |
 | Breakdown tab | `group_by` the active tab's dimension | always, ×2 with comparison |
 | Split series | `group_by` bucket × dimension | only while the split plot is showing |
-| Spend periods | `date_trunc` to a calendar unit | only while the spend plot is showing |
+| Spend bars | `date_bin` over the page window, at its own step | only while the spend plot is showing |
 | Heatmap week | hourly bins over one week | always, on its own window |
 
 Eight on mount with comparison on. The two conditional shapes are the expensive ones, and neither
@@ -101,16 +101,18 @@ two widgets holding different pages would disagree about the same entity.
 The donut's residual follows from this: `Others` is `windowTotal` minus the named slices, not the
 sum of the rows that did not make the cut. That is what makes the slices add to the window.
 
-### D5. Top-N, ordering and search are pushed into the query
+### D5. Top-N and ordering are pushed into the query; sifting belongs to the dialog
 
-The breakdown table asks for a ranked, limited, optionally filtered aggregate; it does not sort or
-sift what arrived. The grid therefore offers no column sort and, on the card, no column filters:
-both would only reorder or sieve one page while hiding that the rest of the dimension was never
-fetched. The full-list dialog does offer them, because there the page is the whole list.
+The breakdown table asks for a ranked, limited aggregate; it does not sort or sift what arrived.
+Neither surface offers column sort or column filters: the card holds one ranked page, so both would
+reorder or sieve that page while hiding the rest of the dimension, and the dialog reads block by
+block, so a filter there would sift the blocks in hand and silently miss the rest.
 
-The search field is a filter on the aggregate (`Ico` on the dimension column), so a term reaches
-rows the page never held. It is debounced, because the field is live and every term it reports is a
-request.
+The card first carried a search field that filtered the aggregate (`Ico` on the dimension column),
+debounced, so a term reached rows the page never held. That is why it went: the card states a
+ranked head, and a field that re-ranks the whole window answers with rows the reader cannot place
+against what was shown. The card now states ten rows and `View all`; the dialog carries that search
+instead, where re-reading the dimension from the first block is what the reader asked for.
 
 ### D6. Every bucketed request states its row limit
 
@@ -155,15 +157,51 @@ light palette — so a 2.0 control rendered dark-on-dark came out white. `src/sc
 declares dark values for the 22 names that are otherwise undefined. It is a stopgap with its removal
 condition written at the top of the file: delete it once the themes service serves the set.
 
-### D10. Spend is read on a calendar scale of its own
+### D10. Spend follows the page window, at a bin of its own
 
-Every other widget follows the page window. Spend does not: at the page's own bucket, a three-hour
-window turns a month's budget into eighteen bars of pocket change, which answers nothing about
-whether spending is unusual. The plot reads 14 days when the page window is a week or less, and 12
-months when it is longer, with the period the window ends in picked out and the rest its history.
+Spend first read a calendar scale of its own — 14 days, or 12 months for a window past a week — on
+the theory that a short window says nothing about whether spending is unusual. In use that was the
+wrong trade: the plot answered a period nobody had selected, so its bars could not be read against
+any other figure on the page, and the picked-out "current period" was a third notion of *now*
+beside the window and the clock.
 
-Those periods are UTC calendar periods, because `date_trunc` produces them, and the axis is labelled
-in UTC so the label matches the bucket.
+It now reads the page window like everything else. Only the bin differs: the page's resolution
+targets up to 200 points, which reads as a line but not as a row of bars, so spend takes the
+smallest recognizable step — a quarter hour, two hours, a day, a week — that cuts the window into
+roughly a dozen and a half bars. Measured across the periods the page offers, that lands between 12
+and 16 bars everywhere from an hour to a year.
+
+The bars are all one colour. The calendar version picked out its last period as the one still
+filling up, which was true of a scale that always ended at today; on the page's own window it holds
+only when that window ends now, and on a range in the past it said something false about a finished
+bin. Toning one bar also made it read as the answer while the rest read as context, which is not
+what a row of bars is for.
+
+### D11. The dialog pages the dimension; the card stays a ranked head
+
+The card and the dialog answer different questions, so they read differently. The card states the
+ranked head — ten rows — in one request, which is also what lets it compare both windows in one
+pass. The dialog states the dimension, which can be longer than the query surface will answer at
+once, so it reads blocks of 25 through AG Grid's infinite row model, the pattern the sessions
+listing already uses.
+
+Two consequences follow, and both are why the card's search field went:
+
+- **Ordering and filtering belong to the reads.** A filter over loaded blocks would sift a fraction
+  of the dimension while looking like it sifted the whole; pushed into the query, the dimension's
+  own column narrows the grouping and a measure is compared in `having`, because a measure does not
+  exist until the rows are grouped.
+- **The delta becomes per block.** A block is a position in *this* window's ranking, which the
+  previous window does not share, so each block asks the previous window for its own values by name.
+  A fallback bucket is not asked for at all: its value is an absence, and `in` matches no absence.
+
+The donut's dialog pages the same way, but its ring does not: it stays the card's five slices and
+their residual, because a ring redrawn per block changes shape under the cursor and restates a
+different residual each time.
+
+A bin of a day or more is epoch-aligned, so it begins at 00:00 UTC and its label is read in UTC.
+Naming it in the browser's zone renamed it: west of Greenwich the bin's own midnight falls on the
+previous local date, and a day-wide bin prints no clock to show the shift.
 
 ### D11. No polling, and the lag is not hidden
 

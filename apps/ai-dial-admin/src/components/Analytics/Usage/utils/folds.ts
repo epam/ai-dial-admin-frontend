@@ -18,6 +18,9 @@ import {
   SPEND_ALIAS,
   TOOL_CALLS_ALIAS,
   CALLERS_ALIAS,
+  GROUP_COUNT_ALIAS,
+  GROUP_NAMES_ALIAS,
+  GROUP_NAMES_SEPARATOR,
 } from '@/src/components/Analytics/Usage/queries';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 
@@ -96,10 +99,22 @@ export const foldBreakdownRows = (result: StructuredQueryResult | null | undefin
     const raw = row[column];
     const isMissing = isMissingValue(raw);
 
+    const groupNames = row[GROUP_NAMES_ALIAS];
+
     return {
       id: isMissing ? `${column}:missing` : String(raw),
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),
+      // Present only where the tab asked for them. A row of a single deployment carries it too:
+      // "which one" is the question even when the answer is one name.
+      ...(isMissingValue(groupNames)
+        ? {}
+        : {
+            // Split on the separator the query joined with, not on a bare comma: a deployment name
+            // may carry one, and splitting there would report two servers where there is one.
+            groupNames: String(groupNames).split(GROUP_NAMES_SEPARATOR).filter(Boolean),
+            groupCount: toNumber(row[GROUP_COUNT_ALIAS]),
+          }),
     };
   });

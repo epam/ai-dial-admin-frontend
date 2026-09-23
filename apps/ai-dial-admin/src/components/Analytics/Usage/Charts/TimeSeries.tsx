@@ -19,8 +19,7 @@ import {
   BucketPoint,
   DimensionBucketPoint,
   RequestState,
-  SpendPeriod,
-  SpendScaleUnit,
+  SpendBucket,
   TimeSeriesView,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
@@ -33,11 +32,11 @@ import {
   buildTimeSeriesOptions,
   getSliceColor,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
+import { formatBucketRange, getWindowBounds } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
-import { padBucketPoints } from '@/src/components/Analytics/Usage/utils/buckets';
+import { getBucketStepMs, padBucketPoints } from '@/src/components/Analytics/Usage/utils/buckets';
 import { buildStackedMatrix } from '@/src/components/Analytics/Usage/utils/stack';
-import { getSpendScale } from '@/src/components/Analytics/Usage/utils/spend-periods';
+import { getSpendResolution } from '@/src/components/Analytics/Usage/utils/spend-resolution';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -48,7 +47,7 @@ interface Props {
   window: TimeRange;
   buckets: RequestState<BucketPoint[]>;
   dimensionBuckets: RequestState<DimensionBucketPoint[]>;
-  spendPeriods: RequestState<SpendPeriod[]>;
+  spendBuckets: RequestState<SpendBucket[]>;
   donutRows: RequestState<BreakdownRow[]>;
   view: UsageView;
   dimensionTab: BreakdownTab;
@@ -81,20 +80,25 @@ const SUBTITLE_KEY: Record<TimeSeriesView, AnalyticsUsageI18nKey> = {
 const formatBucketLabel = (bucketMs: number): string =>
   new Date(bucketMs).toLocaleString(void 0, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-/** The periods are UTC calendar periods, so they are named in UTC rather than shifted into a day of their own. */
-const formatPeriodLabel = (period: SpendPeriod, unit: SpendScaleUnit): string =>
-  new Date(period.startMs).toLocaleDateString(
+/**
+ * A spend bar is named by its bin's own width: a bin of a day or more has no hour worth stating,
+ * and a shorter one is ambiguous without it.
+ */
+const formatSpendLabel = (bucketMs: number, resolution: ChartResolution): string =>
+  new Date(bucketMs).toLocaleString(
     void 0,
-    unit === SpendScaleUnit.Month
-      ? { month: 'short', year: 'numeric', timeZone: 'UTC' }
-      : { month: 'short', day: 'numeric', timeZone: 'UTC' },
+    // A day-wide bin starts at 00:00 UTC and is named in UTC, or west of Greenwich it reads as the
+    // previous date with no clock on the axis to show the shift.
+    resolution.unit === 'd'
+      ? { month: 'short', day: 'numeric', timeZone: 'UTC' }
+      : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
   );
 
 const TimeSeries: FC<Props> = ({
   window,
   buckets,
   dimensionBuckets,
-  spendPeriods,
+  spendBuckets,
   donutRows,
   view,
   dimensionTab,
@@ -169,8 +173,13 @@ const TimeSeries: FC<Props> = ({
     [buckets.data, window, resolution],
   );
   const labels = useMemo(() => points.map((point) => formatBucketLabel(point.bucketMs)), [points]);
+  const periods = useMemo(
+    () => points.map((point) => formatBucketRange(point.bucketMs, getBucketStepMs(resolution))),
+    [points, resolution],
+  );
   const bucketLabel = `${resolution.value}${resolution.unit}`;
-  const spendScale = useMemo(() => getSpendScale(window), [window]);
+  const spendResolution = useMemo(() => getSpendResolution(window), [window]);
+  const spendBucketLabel = `${spendResolution.value}${spendResolution.unit}`;
   const { from: windowFrom, to: windowTo } = getWindowBounds(window);
   const isEmptyWindow = !buckets.isLoading && (buckets.hasFailed || (buckets.data?.length ?? 0) === 0);
   // Verbatim, never lowercased: a dimension's name can be an acronym, and "MCP name" folded to
@@ -227,7 +236,7 @@ const TimeSeries: FC<Props> = ({
       ];
 
       return {
-        options: buildStackedAreaOptions(labels, series),
+        options: buildStackedAreaOptions(labels, series, periods),
         // Names and colours only: the share of each band is the share chart's own figure, and a
         // second copy of it under the plot is one more thing to keep in agreement.
         legend: series.map<ChartLegendEntry>((entry, index) => ({
@@ -241,17 +250,16 @@ const TimeSeries: FC<Props> = ({
     }
 
     if (timeSeriesView === TimeSeriesView.Cost) {
-      const periods = spendPeriods.data ?? [];
+      const bars = spendBuckets.data ?? [];
 
       return {
         options: buildBarOptions(
-          periods.map((period) => formatPeriodLabel(period, spendScale.unit)),
-          periods.map((period) => period.spend),
-          periods.findIndex((period) => period.isCurrent),
+          bars.map((bucket) => formatSpendLabel(bucket.bucketMs, spendResolution)),
+          bars.map((bucket) => bucket.spend),
+          bars.map((bucket) => formatBucketRange(bucket.bucketMs, getBucketStepMs(spendResolution))),
         ),
-        // The bars say it: the picked-out one is the current period, the rest are its history.
         legend: [],
-        isLoading: spendPeriods.isLoading,
+        isLoading: spendBuckets.isLoading,
       };
     }
 
@@ -260,7 +268,7 @@ const TimeSeries: FC<Props> = ({
       const p95 = points.map((point) => point.measures.p95LatencyMs);
 
       return {
-        options: buildLatencyOptions(labels, p50, p95),
+        options: buildLatencyOptions(labels, p50, p95, periods),
         legend: [
           { id: 'p50', label: t(AnalyticsUsageI18nKey.TimeSeriesLatencyP50), color: LATENCY_P50_COLOR, seriesIndex: 0 },
           { id: 'p95', label: t(AnalyticsUsageI18nKey.TimeSeriesLatencyP95), color: LATENCY_P95_COLOR, seriesIndex: 1 },
@@ -272,7 +280,7 @@ const TimeSeries: FC<Props> = ({
     // One band, and the figure it would print is already the Requests card's — a second copy of it
     // computed from the plotted buckets is what made the two disagree.
     return {
-      options: buildTimeSeriesOptions(points, formatBucketLabel),
+      options: buildTimeSeriesOptions(points, formatBucketLabel, periods),
       legend: [],
       isLoading: buckets.isLoading,
     };
@@ -280,12 +288,13 @@ const TimeSeries: FC<Props> = ({
     timeSeriesView,
     points,
     labels,
+    periods,
     stack,
     namedRows,
-    spendScale,
+    spendResolution,
     buckets,
     dimensionBuckets,
-    spendPeriods,
+    spendBuckets,
     donutRows,
     t,
   ]);
@@ -351,9 +360,9 @@ const TimeSeries: FC<Props> = ({
         isEmptyWindow
           ? t(AnalyticsUsageI18nKey.TimeSeriesEmptySubtitle, { range: `${windowFrom} – ${windowTo}` })
           : t(SUBTITLE_KEY[timeSeriesView], {
-              bucket: bucketLabel,
-              count: String(timeSeriesView === TimeSeriesView.Cost ? spendScale.count : DONUT_SLICE_COUNT),
-              window: spendScale.unit,
+              // Spend reads its own, coarser bin; every other tab reads the page's.
+              bucket: timeSeriesView === TimeSeriesView.Cost ? spendBucketLabel : bucketLabel,
+              count: String(DONUT_SLICE_COUNT),
             })
       }
       headerActions={

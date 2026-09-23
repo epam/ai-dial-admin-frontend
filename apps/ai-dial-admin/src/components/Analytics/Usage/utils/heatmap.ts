@@ -1,5 +1,5 @@
 import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
-import { BucketPoint } from '@/src/components/Analytics/Usage/models';
+import { BucketPoint, HeatmapMetric } from '@/src/components/Analytics/Usage/models';
 import { TimeRange } from '@/src/models/time-range';
 
 export const HEATMAP_HOURS = 24;
@@ -28,15 +28,19 @@ export const buildHeatmapMatrix = (
   points: BucketPoint[],
   week: TimeRange,
   formatDayLabel: (dayStartMs: number) => string,
+  metric: HeatmapMetric = HeatmapMetric.Calls,
 ): HeatmapMatrix => {
   const byCell = new Map<string, number>();
+  // Both figures ride the same hourly response, so switching what the grid paints reads nothing.
+  const readMetric = (point: BucketPoint) =>
+    metric === HeatmapMetric.Cost ? (point.measures.spend ?? 0) : point.measures.calls;
 
   for (const point of points) {
     const date = new Date(point.bucketMs);
     const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
     const key = `${dayStart}|${date.getHours()}`;
 
-    byCell.set(key, (byCell.get(key) ?? 0) + point.measures.calls);
+    byCell.set(key, (byCell.get(key) ?? 0) + readMetric(point));
   }
 
   // Read off the built grid rather than the response: a bucket outside the week paints no cell, so

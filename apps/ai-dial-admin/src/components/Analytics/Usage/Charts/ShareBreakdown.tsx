@@ -11,7 +11,7 @@ import { DONUT_MODAL_SIZE, DONUT_SIZE, DONUT_SLICE_COUNT } from '@/src/component
 import { BreakdownRow, BreakdownTab, DonutSliceView, RequestState } from '@/src/components/Analytics/Usage/models';
 import { getSliceColor } from '@/src/components/Analytics/Usage/utils/chart-options';
 import { buildDonutSlices, getSliceShare } from '@/src/components/Analytics/Usage/utils/donut';
-import { formatCompactNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { formatGroupedNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY, getFallbackLabelKey } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -22,17 +22,28 @@ interface Props {
   windowTotal: number | null;
   /** The dialog is owned above, because opening it is what widens the request behind this card. */
   isFullOpen: boolean;
+  /** Whether the window holds rows beyond the ones loaded, which is what the legend scrolls for. */
+  hasMoreRows: boolean;
+  isReadingMore: boolean;
+  onLoadMoreRows: () => void;
   onShowAll: () => void;
   onHideAll: () => void;
 }
 
-const formatCalls = (value: number): string => {
-  const compact = formatCompactNumber(value);
+/** Smaller than the card's own loader: it sits under a list, not in place of a figure. */
+const LEGEND_LOADER_SIZE = 20;
 
-  return `${compact.value}${compact.unit ?? ''}`;
-};
-
-const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowAll, onHideAll }) => {
+const ShareBreakdown: FC<Props> = ({
+  rows,
+  tab,
+  windowTotal,
+  isFullOpen,
+  hasMoreRows,
+  isReadingMore,
+  onLoadMoreRows,
+  onShowAll,
+  onHideAll,
+}) => {
   const t = useI18n();
   const [legendFilter, setLegendFilter] = useState('');
 
@@ -51,7 +62,7 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
           label: slice.isFallbackLabel && fallbackKey ? t(fallbackKey) : slice.label,
           value: slice.value,
           isOther: slice.isOther,
-          valueLabel: formatCalls(slice.value),
+          valueLabel: formatGroupedNumber(slice.value),
           shareLabel: share == null ? null : formatPercent(share, 0),
           color: getSliceColor(index, slice.isOther),
         };
@@ -71,8 +82,8 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
   }, [fullSlices, legendFilter]);
 
   const isEmptyWindow = !rows.isLoading && (rows.hasFailed || cardSlices.length === 0);
-  const total = windowTotal == null ? null : formatCompactNumber(windowTotal);
-  const centerValue = total ? `${total.value}${total.unit ?? ''}` : null;
+  const total = windowTotal == null ? null : formatGroupedNumber(windowTotal);
+  const centerValue = total;
   const centerCaption = t(AnalyticsUsageI18nKey.DonutTotal);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, {
     dimension: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),
@@ -138,6 +149,9 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
         onClose={onCloseFull}
       >
         <div className="px-6 pb-4">
+          {/* The ring draws every row read so far, not the card's five: the dialog is where the
+              long tail is being read, and a ring that kept folding it into one slice answered the
+              question the card had already answered. Its residual shrinks as the legend reads on. */}
           <DonutFigure
             slices={fullSlices}
             legendSlices={filteredSlices}
@@ -145,7 +159,17 @@ const ShareBreakdown: FC<Props> = ({ rows, tab, windowTotal, isFullOpen, onShowA
             centerCaption={centerCaption}
             size={DONUT_MODAL_SIZE}
             legendClassName="max-h-[320px] overflow-y-auto pr-1"
+            // Not while a block is in flight: a scroll fires an event per frame, and each one
+            // stepped the limit again, so one flick sent a request per step.
+            onLegendEndReached={hasMoreRows && !isReadingMore ? onLoadMoreRows : void 0}
           />
+          {/* Under the list rather than over it: the rows already read stay where the reader left
+              them, and the spinner says the next ones are on their way. */}
+          {isReadingMore && (
+            <div className="flex justify-center pt-3">
+              <DialLoader size={LEGEND_LOADER_SIZE} />
+            </div>
+          )}
         </div>
       </Popup>
     </DashboardCard>

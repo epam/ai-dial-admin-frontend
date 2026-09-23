@@ -1,9 +1,45 @@
+# dashboard-activity-heatmap Specification
+
 ## Purpose
 
 Defines the dashboard's activity heatmap: a day-by-hour grid of call volume that shows when traffic
 arrives, which a time series at the page's own resolution flattens away.
 
-## ADDED Requirements
+## Requirements
+
+### Requirement: The heatmap paints the figure the reader picks
+
+The heatmap SHALL offer a switch between the figures it can paint per hour — requests and cost —
+placed with the week pager, since both decide what the grid shows: one which week, the other which
+figure.
+
+Both figures SHALL be read from the heatmap's own hourly response rather than a second request, so
+switching paints what is already in hand. The shading ceiling SHALL follow the active figure: an
+hour's cost has nothing to do with the busiest hour's call count.
+
+Cost SHALL be offered in the LLM view only. An MCP row carries no price, so the grid there would be
+a week of empty cells. An hour with no price SHALL read as nothing rather than as its call count.
+
+A cell SHALL state the active figure in its own words — a count of requests, or an amount spent —
+in both its tooltip and the label a screen reader reads.
+
+#### Scenario: Switching the figure repaints the grid
+
+- **GIVEN** the LLM view's heatmap on requests
+- **WHEN** the reader switches to cost
+- **THEN** the cells shade by the cost of each hour
+- **AND** no further request is issued
+
+#### Scenario: The MCP view offers no cost
+
+- **WHEN** the MCP view's heatmap renders
+- **THEN** it offers requests alone
+
+#### Scenario: A cell names the figure it carries
+
+- **GIVEN** the grid is painting cost
+- **WHEN** the reader hovers an hour
+- **THEN** the tooltip states that hour and the amount, with no word between them
 
 ### Requirement: The heatmap is a day-by-hour grid over the current window
 
