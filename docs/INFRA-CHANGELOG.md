@@ -2,6 +2,20 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
+## 0.22.0
+
+### Added
+
+#### Analytics
+
+- `ANALYTICS_USAGE_ENABLED` [Preview] — serves the analytics Dashboards page, over the usage log, at `/dashboards`, and moves the `Dashboards` menu item from the `Audit` group to the top of the `Analytics` group. Takes effect only when `ANALYTICS_ENABLED` is `true`; otherwise `/dashboards` serves the telemetry dashboard, as `/dashboard` did, while `DIAL_ADMIN_API_URL` is set (default: `false`)
+
+### Changed
+
+#### Navigation
+
+- The telemetry dashboard moves from `/dashboard` to `/dashboards`, and its menu item is renamed `Dashboards`; `/dashboard` redirects to the new path. The `dashboard` token of `DISABLE_MENU_ITEMS` still hides the item, in whichever group it sits
+
 ## 0.21.0
 
 ### Added

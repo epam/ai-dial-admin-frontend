@@ -1,4 +1,5 @@
 import { HELP_DOCUMENTATION_LINKS } from '@/src/constants/help-documentation-links';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const getBaseRouteFromPathname = (pathname: string): string | null => {
@@ -18,8 +19,17 @@ const getBaseRouteFromPathname = (pathname: string): string | null => {
   return validRoutes.includes(baseRoute) ? baseRoute : null;
 };
 
-export const getHelpUrl = (pathname: string) => {
+export const getHelpUrl = (pathname: string, featureFlags?: FeatureFlags) => {
   const baseRoute = getBaseRouteFromPathname(pathname);
+  // `/dashboards` serves the analytics page while both flags are on, and the only documentation
+  // keyed by it describes the telemetry dashboard.
+  if (
+    baseRoute === ApplicationRoute.Dashboard &&
+    featureFlags?.analyticsEnabled &&
+    featureFlags.analyticsUsageEnabled
+  ) {
+    return undefined;
+  }
   return HELP_DOCUMENTATION_LINKS[baseRoute as ApplicationRoute];
 };
 
