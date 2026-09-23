@@ -10,11 +10,10 @@ import TimeSeries from '@/src/components/Analytics/Usage/Charts/TimeSeries';
 import UsageControls from '@/src/components/Analytics/Usage/Controls/UsageControls';
 import KpiRow from '@/src/components/Analytics/Usage/Kpi/KpiRow';
 import {
-  BREAKDOWN_FULL_PAGE_SIZE,
   BREAKDOWN_PAGE_SIZE,
   DONUT_CARD_ROW_LIMIT,
-  DONUT_FULL_ROW_LIMIT,
-  SEARCH_DEBOUNCE_MS,
+  QUERY_ROW_LIMIT,
+  DIALOG_BLOCK_SIZE,
   VIEW_BREAKDOWN_TABS,
   VIEW_TIME_SERIES_VIEWS,
 } from '@/src/components/Analytics/Usage/constants';
@@ -25,7 +24,6 @@ import {
   TimeSeriesView,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
-import { useDebouncedValue } from '@/src/components/Analytics/Usage/use-debounced-value';
 import { useHeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
 import { useLoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
@@ -43,8 +41,10 @@ const UsageDashboard: FC = () => {
   const [tab, setTab] = useState<BreakdownTab>(VIEW_BREAKDOWN_TABS[UsageView.Llm][0]);
   const [refreshToken, setRefreshToken] = useState(0);
   const [isShowingAll, setIsShowingAll] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDonutFullOpen, setIsDonutFullOpen] = useState(false);
+  // Blocks of the donut's dimension read so far. The dialog starts at one and grows as its legend
+  // is scrolled; the card never reads more than its five slices.
+  const [donutBlocks, setDonutBlocks] = useState(1);
   const [timeSeriesView, setTimeSeriesView] = useState<TimeSeriesView>(TimeSeriesView.Requests);
   const [selectedRow, setSelectedRow] = useState<BreakdownRowModel | null>(null);
 
@@ -82,9 +82,11 @@ const UsageDashboard: FC = () => {
 
   const resolution = useMemo(() => getChartResolution(windows.current), [windows]);
 
-  const rowLimit = isShowingAll ? BREAKDOWN_FULL_PAGE_SIZE : BREAKDOWN_PAGE_SIZE;
+  const rowLimit = BREAKDOWN_PAGE_SIZE;
 
-  const debouncedSearchTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
+  const donutLimit = isDonutFullOpen
+    ? Math.min(donutBlocks * DIALOG_BLOCK_SIZE, QUERY_ROW_LIMIT)
+    : DONUT_CARD_ROW_LIMIT;
 
   const {
     totals,
@@ -92,9 +94,10 @@ const UsageDashboard: FC = () => {
     buckets,
     donutRows,
     dimensionBuckets,
-    spendPeriods,
+    spendBuckets,
     tabRows,
     previousTabRows,
+    isDonutReadingMore,
     isRefreshing,
   } = useUsageDashboardData({
     view,
@@ -102,8 +105,7 @@ const UsageDashboard: FC = () => {
     resolution,
     tab,
     tabLimit: rowLimit,
-    tabSearch: debouncedSearchTerm || void 0,
-    donutLimit: isDonutFullOpen ? DONUT_FULL_ROW_LIMIT : DONUT_CARD_ROW_LIMIT,
+    donutLimit,
     timeSeriesView,
     refreshToken,
     notice,
@@ -120,19 +122,24 @@ const UsageDashboard: FC = () => {
     setTimeSeriesView((current) =>
       VIEW_TIME_SERIES_VIEWS[next].includes(current) ? current : VIEW_TIME_SERIES_VIEWS[next][0],
     );
-    setSearchTerm('');
     setIsShowingAll(false);
     setSelectedRow(null);
   }, []);
 
   const onTabChange = useCallback((next: BreakdownTab) => {
     setTab(next);
-    setSearchTerm('');
     setIsShowingAll(false);
     setSelectedRow(null);
   }, []);
 
   const onRefresh = useCallback(() => setRefreshToken((token) => token + 1), []);
+
+  const onShowDonutAll = useCallback(() => {
+    setDonutBlocks(1);
+    setIsDonutFullOpen(true);
+  }, []);
+
+  const onLoadMoreDonutRows = useCallback(() => setDonutBlocks((blocks) => blocks + 1), []);
 
   const onHideAll = useCallback(() => setIsShowingAll(false), []);
 
@@ -169,7 +176,7 @@ const UsageDashboard: FC = () => {
           window={windows.current}
           buckets={buckets}
           dimensionBuckets={dimensionBuckets}
-          spendPeriods={spendPeriods}
+          spendBuckets={spendBuckets}
           donutRows={donutRows}
           dimensionTab={donutTab}
           resolution={resolution}
@@ -181,12 +188,18 @@ const UsageDashboard: FC = () => {
           tab={donutTab}
           windowTotal={windowTotalCalls}
           isFullOpen={isDonutFullOpen}
-          onShowAll={() => setIsDonutFullOpen(true)}
+          // A response filled to the limit is the signal that the window holds further rows — but
+          // only while the limit can still grow: at the query surface's own ceiling it never will,
+          // and offering to read on would scroll against a wall.
+          hasMoreRows={donutLimit < QUERY_ROW_LIMIT && (donutRows.data?.length ?? 0) >= donutLimit}
+          isReadingMore={isDonutReadingMore}
+          onLoadMoreRows={onLoadMoreDonutRows}
+          onShowAll={onShowDonutAll}
           onHideAll={() => setIsDonutFullOpen(false)}
         />
       </div>
 
-      <ActivityHeatmap heatmap={heatmap} />
+      <ActivityHeatmap heatmap={heatmap} view={view} />
 
       <BreakdownTable
         view={view}
@@ -195,15 +208,13 @@ const UsageDashboard: FC = () => {
         rows={tabRows}
         previousRows={previousTabRows}
         windowTotal={windowTotalCalls}
-        hasComparison={!!windows.previous}
-        window={windows.current}
+        windows={windows}
         rowLimit={rowLimit}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         isShowingAll={isShowingAll}
         onShowAll={() => setIsShowingAll(true)}
         onHideAll={onHideAll}
         onOpenRow={setSelectedRow}
+        notice={notice}
       />
 
       <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />

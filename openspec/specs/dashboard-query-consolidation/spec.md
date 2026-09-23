@@ -1,10 +1,12 @@
+# dashboard-query-consolidation Specification
+
 ## Purpose
 
 Defines how many requests the usage page is allowed to issue and what each one answers, replacing
 the per-widget fetch-and-poll model of the existing dashboard with one request per data shape per
 window, and a manual refresh.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: A view issues one request per data shape, per window
 
@@ -20,13 +22,24 @@ A view SHALL obtain everything it renders from these shapes, each covering exact
    server-side, feeding the breakdown table;
 5. a **split-series** request grouped by time bucket and the leading dimension, issued only while
    the split plot is the one showing;
-6. a **spend-periods** request truncated to a calendar unit, issued only while the spend plot is
-   the one showing;
+6. a **spend** request bucketed over the page's own window at a bin of its own, issued only while
+   the spend plot is the one showing;
 7. a **heatmap** request bucketed hourly over the heatmap's own week, independent of the page
-   period.
+   period;
+8. a **dialog block** request, the tab shape asked for one page of rows at an offset, issued only
+   while the full-list dialog is open and once per block the reader scrolls to, with a second
+   request per block naming that block's dimension values in the previous window.
 
 Shapes 1, 2 and 4 SHALL be issued once per window, so comparison adds one request each. The others
-SHALL be issued once regardless of comparison.
+SHALL be issued once regardless of comparison, except shape 8, whose comparison request is per
+block rather than per window.
+
+The spend request SHALL read the page's window like every other plot. It differs only in its bin:
+the page's resolution targets up to 200 points, which reads as a line and not as a row of bars, so
+spend takes the smallest recognizable step that cuts the window into roughly a dozen and a half
+bars. An earlier draft read spend on a calendar scale of its own — the last 14 days, or 12 months
+for a longer window — which answered a question the page was not asking and disagreed with every
+other figure on it.
 
 Totals is a shape of its own because distinct users cannot be summed out of the bucketed response:
 a user active in several buckets is one user, and no fold over per-bucket counts can know that.
@@ -174,3 +187,36 @@ be reused unchanged.
 - **GIVEN** a custom date range is selected
 - **WHEN** the user activates `Refresh`
 - **THEN** the original start and end dates are requested again unchanged
+
+### Requirement: A plot's tooltip names the period its bucket covers
+
+Every bucketed plot — the calls line, the split plot, the latency percentiles and the spend bars —
+SHALL head its tooltip with the period the hovered bucket covers, from its start to the start of the
+next one, which is the bound the query itself used. The axis SHALL keep naming only the start, since
+it has one line per tick.
+
+A bucket's own timestamp names only where it begins, so a tooltip stating it alone left the reader to
+work out how much traffic the figure covered — an hour's worth or a week's. A step of a day or more
+SHALL state no clock, and a shorter one SHALL name the day once unless the period crosses midnight.
+
+A series' colour SHALL be stated on the series itself, not only on the line it paints: the tooltip's
+marker and the legend read the series, so a colour given to `lineStyle` alone left them on the
+charting library's own palette and disagreeing with the plot.
+
+#### Scenario: A tooltip marker matches its line
+
+- **GIVEN** a plot of more than one series
+- **WHEN** the reader hovers it
+- **THEN** each marker in the tooltip carries the colour of the line it names
+
+#### Scenario: The tooltip states both ends of the bucket
+
+- **GIVEN** a plot bucketed at two hours
+- **WHEN** the reader hovers a bucket
+- **THEN** the tooltip heads with that bucket's start and the start of the next one
+
+#### Scenario: A daily bucket states no clock
+
+- **GIVEN** a plot bucketed at a day or more
+- **WHEN** the reader hovers a bucket
+- **THEN** the period is stated as dates alone

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -27,11 +27,21 @@ const renderCard = (props: Partial<Props> = {}) =>
       tab={BreakdownTab.Models}
       windowTotal={100}
       isFullOpen={false}
+      hasMoreRows={false}
+      isReadingMore={false}
+      onLoadMoreRows={vi.fn()}
       onShowAll={vi.fn()}
       onHideAll={vi.fn()}
       {...props}
     />,
   );
+
+const scrollLegendToEnd = (list: HTMLElement) => {
+  Object.defineProperty(list, 'scrollHeight', { configurable: true, value: 800 });
+  Object.defineProperty(list, 'clientHeight', { configurable: true, value: 320 });
+  Object.defineProperty(list, 'scrollTop', { configurable: true, value: 480 });
+  fireEvent.scroll(list);
+};
 
 describe('ShareBreakdown', () => {
   test('names every slice of the ring in its legend', () => {
@@ -83,5 +93,35 @@ describe('ShareBreakdown', () => {
     renderCard({ rows: { data: null, isLoading: false, hasFailed: true } });
 
     expect(screen.getByText(AnalyticsUsageI18nKey.DonutEmptyCenter)).toBeTruthy();
+  });
+
+  test('reads the next rows once the dialog legend is scrolled to its end', () => {
+    const onLoadMoreRows = vi.fn();
+    renderCard({ isFullOpen: true, hasMoreRows: true, onLoadMoreRows });
+
+    scrollLegendToEnd(within(screen.getByRole('dialog')).getByRole('list'));
+
+    expect(onLoadMoreRows).toHaveBeenCalledOnce();
+  });
+
+  test('reads nothing further once the window has no rows left', () => {
+    const onLoadMoreRows = vi.fn();
+    renderCard({ isFullOpen: true, hasMoreRows: false, onLoadMoreRows });
+
+    scrollLegendToEnd(within(screen.getByRole('dialog')).getByRole('list'));
+
+    expect(onLoadMoreRows).not.toHaveBeenCalled();
+  });
+
+  test('says it is reading the next rows while a block is in flight', () => {
+    renderCard({ isFullOpen: true, isReadingMore: true });
+
+    expect(within(screen.getByRole('dialog')).getByRole('status')).toBeTruthy();
+  });
+
+  test('says nothing of the sort once the block has arrived', () => {
+    renderCard({ isFullOpen: true, isReadingMore: false });
+
+    expect(within(screen.getByRole('dialog')).queryByRole('status')).toBeNull();
   });
 });

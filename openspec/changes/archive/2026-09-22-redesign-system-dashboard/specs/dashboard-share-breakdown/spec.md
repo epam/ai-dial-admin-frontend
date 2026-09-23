@@ -1,7 +1,8 @@
 ## Purpose
 
 Defines the dashboard's share donut: how call volume splits across the top few entities of the
-active view, with the remainder folded into a single residual slice.
+active view, with the remainder folded into a single residual slice, and how its dialog lists the
+rest of the dimension.
 
 ## ADDED Requirements
 
@@ -42,6 +43,49 @@ entity. When five or fewer entities exist, no `Other` slice SHALL be rendered.
 - **WHEN** the donut renders
 - **THEN** its centre states the window's total call count
 
+### Requirement: The dialog lists the whole dimension, a block at a time
+
+`View all` SHALL open a dialog listing the dimension beyond the ring's five slices, reading it in
+blocks as the list is scrolled rather than in one page.
+
+The ring in that dialog SHALL draw every row read so far, not the card's five. The dialog is where
+the long tail is being read, and a ring that kept folding it into one slice would answer the
+question the card already answered. Its residual is therefore the window's total minus the rows
+read, and SHALL shrink as the legend reads further.
+
+The dialog's own filter SHALL narrow the list and never the ring, and SHALL apply to the rows read so
+far: it is a way to find an entity in a list that is already open, not a second reading of the
+window.
+
+While a block is in flight the dialog SHALL say so with a spinner under the list, so the rows
+already read stay where the reader left them.
+
+#### Scenario: A block in flight is stated under the list
+
+- **GIVEN** the dialog is reading the next block
+- **WHEN** it renders
+- **THEN** a spinner is shown under the list
+- **AND** it is gone once the block has arrived
+
+#### Scenario: Scrolling the list reads further into the dimension
+
+- **GIVEN** the dialog is open on a dimension holding more entities than one block
+- **WHEN** the reader scrolls the list to its end
+- **THEN** the next block of entities is read and listed
+
+#### Scenario: The ring draws what the list has read
+
+- **GIVEN** the dialog has read several blocks
+- **WHEN** the ring renders
+- **THEN** every row read so far is a slice of it
+- **AND** its residual is the window's total minus those rows
+
+#### Scenario: Nothing further is read once the dimension ends
+
+- **GIVEN** the dialog has read every entity of the dimension
+- **WHEN** the reader scrolls the list to its end again
+- **THEN** no further request is issued
+
 ### Requirement: Shares are computed against the window total, and ties are ordered stably
 
 A slice's share SHALL be its calls divided by the sum of all the window's calls, including the
@@ -78,6 +122,18 @@ dimension, never the literal text `undefined`.
 - **WHEN** the donut renders
 - **THEN** the slice carries the dimension's fallback label
 - **AND** the literal text `undefined` is not shown
+
+### Requirement: Hovering a slice answers which slice it is
+
+Hovering a slice SHALL keep that slice's colour and fade the others, so the ring answers which slice
+the cursor is on. The hovered slice SHALL NOT grow: scaling it moves the ring's edge under the
+cursor, which reads as the pointer having left the slice it is on.
+
+#### Scenario: The hovered slice is the only one at full strength
+
+- **WHEN** the cursor rests on a slice
+- **THEN** that slice keeps its colour and the others fade
+- **AND** the ring's geometry does not change
 
 ### Requirement: The donut follows the view's primary dimension
 

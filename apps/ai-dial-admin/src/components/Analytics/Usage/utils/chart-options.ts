@@ -2,6 +2,7 @@ import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { CHART_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { BucketPoint } from '@/src/components/Analytics/Usage/models';
+import { GROUPING_LOCALE } from '@/src/components/Analytics/Usage/utils/format';
 
 const GRID_LINE_COLOR = 'rgba(238, 241, 247, .07)';
 
@@ -23,7 +24,7 @@ const NO_FIGURE = '—';
  * them verbatim otherwise.
  */
 export const formatChartNumber = (value: number, maximumFractionDigits = 2): string =>
-  value.toLocaleString(void 0, { maximumFractionDigits });
+  value.toLocaleString(GROUPING_LOCALE, { maximumFractionDigits });
 
 /**
  * A tooltip prints one figure large, where a third decimal is noise rather than precision, so it
@@ -56,8 +57,46 @@ const TOOLTIP_STYLE = {
 
 interface AxisTooltipParam {
   axisValue: string;
-  data: number;
+  dataIndex: number;
+  /**
+   * What the series holds for this bucket, which is not always the figure: a series may carry an
+   * object per point rather than a number. `value` is the figure in both shapes, so it is read
+   * first, and `data` is the fallback.
+   */
+  value?: number | null;
+  data: number | null | { value: number | null };
+  /** ECharts' own colour dot for the series, as an HTML fragment. */
+  marker?: string;
+  seriesName?: string;
 }
+
+const readFigure = (param: AxisTooltipParam): unknown => {
+  if (param.value != null) {
+    return param.value;
+  }
+
+  return typeof param.data === 'object' && param.data !== null ? param.data.value : param.data;
+};
+
+/**
+ * A tooltip's heading: the period the hovered bucket covers, where the caller states one, and the
+ * axis label otherwise. The axis itself carries only the start — it has one line per tick — so the
+ * period lives here, where there is room to name both ends.
+ */
+const tooltipHeading = (params: AxisTooltipParam[], periods?: string[]): string =>
+  periods?.[params[0].dataIndex] ?? params[0].axisValue;
+
+const axisTooltip =
+  (periods?: string[], isNamingSeries = false) =>
+  (params: AxisTooltipParam[]): string =>
+    [
+      tooltipHeading(params, periods),
+      ...params.map((param) => {
+        const name = isNamingSeries ? `${param.marker ?? ''}${param.seriesName ?? ''} ` : '';
+
+        return `${name}<b>${tooltipValueFormatter(readFigure(param))}</b>`;
+      }),
+    ].join('<br/>');
 
 interface ItemTooltipParam {
   /** ECharts' own colour dot for the hovered slice, as an HTML fragment. */
@@ -71,14 +110,13 @@ const formatTooltipValue = (value: number): string => `<b>${formatChartNumber(va
 
 const axisPointerStyle = { color: CHART_COLOR.neutral, width: 1, type: 'dashed' as const };
 
-/** A spend bar is context; only the period still filling up is picked out. */
-const BAR_MUTED_COLOR = '#3E4C73';
 export const LATENCY_P50_COLOR = '#7FCFC4';
 export const LATENCY_P95_COLOR = '#B49BE8';
 
 export const buildTimeSeriesOptions = (
   points: BucketPoint[],
   formatBucket: (bucketMs: number) => string,
+  periods?: string[],
 ): EChartsOption => ({
   grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
@@ -95,12 +133,13 @@ export const buildTimeSeriesOptions = (
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle },
     // A single series needs no colour marker to say which one it is.
-    formatter: (params: AxisTooltipParam[]) => `${params[0].axisValue}<br/>${formatTooltipValue(params[0].data)}`,
+    formatter: axisTooltip(periods),
   },
   animation: false,
   series: [
     {
       type: 'line',
+      color: CHART_COLOR.accent,
       data: points.map((point) => point.measures.calls),
       showSymbol: false,
       sampling: LINE_SAMPLING,
@@ -117,70 +156,10 @@ export interface NamedSeries {
   values: number[];
 }
 
-export const buildStackedAreaOptions = (labels: string[], series: NamedSeries[]): EChartsOption => ({
-  grid: { left: 58, right: 8, top: 16, bottom: 32 },
-  xAxis: {
-    type: 'category',
-    data: labels,
-    boundaryGap: false,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
-    axisTick: { show: false },
-  },
-  yAxis: valueAxis,
-  tooltip: {
-    ...TOOLTIP_STYLE,
-    trigger: 'axis',
-    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
-    valueFormatter: tooltipValueFormatter,
-  },
-  animation: false,
-  series: series.map((entry) => ({
-    type: 'line',
-    name: entry.label,
-    stack: 'calls',
-    data: entry.values,
-    showSymbol: false,
-    sampling: LINE_SAMPLING,
-    lineStyle: { width: 1, color: entry.color },
-    areaStyle: { color: entry.color, opacity: 0.45 },
-    emphasis: { focus: 'series' },
-    blur: { lineStyle: { opacity: 0.2 }, areaStyle: { opacity: 0.06 } },
-  })),
-});
-
-export const buildBarOptions = (labels: string[], values: number[], accentIndex: number | null): EChartsOption => ({
-  grid: { left: 58, right: 8, top: 16, bottom: 32 },
-  xAxis: {
-    type: 'category',
-    data: labels,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
-    axisTick: { show: false },
-  },
-  yAxis: valueAxis,
-  tooltip: {
-    ...TOOLTIP_STYLE,
-    trigger: 'axis',
-    axisPointer: { type: 'shadow' },
-    valueFormatter: tooltipValueFormatter,
-  },
-  animation: false,
-  series: [
-    {
-      type: 'bar',
-      data: values.map((value, index) => ({
-        value,
-        itemStyle: { color: index === accentIndex ? CHART_COLOR.accent : BAR_MUTED_COLOR },
-      })),
-    },
-  ],
-});
-
-export const buildLatencyOptions = (
+export const buildStackedAreaOptions = (
   labels: string[],
-  p50: (number | null)[],
-  p95: (number | null)[],
+  series: NamedSeries[],
+  periods?: string[],
 ): EChartsOption => ({
   grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
@@ -196,13 +175,82 @@ export const buildLatencyOptions = (
     ...TOOLTIP_STYLE,
     trigger: 'axis',
     axisPointer: { type: 'line', lineStyle: axisPointerStyle },
-    valueFormatter: tooltipValueFormatter,
+    formatter: axisTooltip(periods, true),
+  },
+  animation: false,
+  series: series.map((entry) => ({
+    type: 'line',
+    name: entry.label,
+    color: entry.color,
+    stack: 'calls',
+    data: entry.values,
+    showSymbol: false,
+    sampling: LINE_SAMPLING,
+    lineStyle: { width: 1, color: entry.color },
+    areaStyle: { color: entry.color, opacity: 0.45 },
+    emphasis: { focus: 'series' },
+    blur: { lineStyle: { opacity: 0.2 }, areaStyle: { opacity: 0.06 } },
+  })),
+});
+
+export const buildBarOptions = (labels: string[], values: number[], periods?: string[]): EChartsOption => ({
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
+  xAxis: {
+    type: 'category',
+    data: labels,
+    axisLabel: { ...axisLabelStyle, hideOverlap: true },
+    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisTick: { show: false },
+  },
+  yAxis: valueAxis,
+  tooltip: {
+    ...TOOLTIP_STYLE,
+    trigger: 'axis',
+    axisPointer: { type: 'shadow' },
+    formatter: axisTooltip(periods),
+  },
+  animation: false,
+  series: [
+    {
+      type: 'bar',
+      // Every bar the same: they answer one question, and toning one of them made it read as the
+      // answer while the rest read as context.
+      itemStyle: { color: CHART_COLOR.accent },
+      data: values,
+    },
+  ],
+});
+
+export const buildLatencyOptions = (
+  labels: string[],
+  p50: (number | null)[],
+  p95: (number | null)[],
+  periods?: string[],
+): EChartsOption => ({
+  grid: { left: 58, right: 8, top: 16, bottom: 32 },
+  xAxis: {
+    type: 'category',
+    data: labels,
+    boundaryGap: false,
+    axisLabel: { ...axisLabelStyle, hideOverlap: true },
+    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisTick: { show: false },
+  },
+  yAxis: valueAxis,
+  tooltip: {
+    ...TOOLTIP_STYLE,
+    trigger: 'axis',
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    formatter: axisTooltip(periods, true),
   },
   animation: false,
   series: [
     {
       type: 'line',
       name: 'p50',
+      // The tooltip's marker and the legend read the series' own colour; `lineStyle` paints the
+      // line and nothing else, so stating it there alone left the markers on ECharts' palette.
+      color: LATENCY_P50_COLOR,
       data: p50,
       showSymbol: false,
       sampling: LINE_SAMPLING,
@@ -214,6 +262,7 @@ export const buildLatencyOptions = (
     {
       type: 'line',
       name: 'p95',
+      color: LATENCY_P95_COLOR,
       data: p95,
       showSymbol: false,
       sampling: LINE_SAMPLING,
@@ -267,6 +316,9 @@ export const OTHER_SLICE_COLOR = CHART_COLOR.neutral;
 export const getSliceColor = (index: number, isOther: boolean): string =>
   isOther ? OTHER_SLICE_COLOR : SLICE_COLORS[index % SLICE_COLORS.length];
 
+/** How far the slices the cursor is not on fade, so the one it is on reads as the answer. */
+const DONUT_BLUR_OPACITY = 0.25;
+
 /**
  * The donut fills its own square box and draws nothing but the ring: the total in the hole and the
  * legend under it are HTML, centred by layout. ECharts' own `title` is anchored by a corner, so
@@ -292,6 +344,11 @@ export const buildDonutOptions = (slices: DonutSlice[]): EChartsOption => ({
       center: ['50%', '50%'],
       label: { show: false },
       labelLine: { show: false },
+      // Hovering answers "which slice is this", so the slice under the cursor keeps its colour and
+      // the rest fade. Scaling it as well moved the ring's edge under the cursor, which reads as
+      // the pointer having hit something else.
+      emphasis: { focus: 'self', scale: false },
+      blur: { itemStyle: { opacity: DONUT_BLUR_OPACITY } },
       data: slices,
     },
   ],

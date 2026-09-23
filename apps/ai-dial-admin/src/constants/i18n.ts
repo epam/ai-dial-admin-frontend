@@ -3273,7 +3273,6 @@ export enum AnalyticsUsageI18nKey {
   BreakdownTabTools = 'AnalyticsUsage.BreakdownTabTools',
   ColumnShareOfCalls = 'AnalyticsUsage.ColumnShareOfCalls',
   ColumnCalls = 'AnalyticsUsage.ColumnCalls',
-  ColumnDeltaVsPrev = 'AnalyticsUsage.ColumnDeltaVsPrev',
   ColumnModel = 'AnalyticsUsage.ColumnModel',
   ColumnApplication = 'AnalyticsUsage.ColumnApplication',
   ColumnErrorRate = 'AnalyticsUsage.ColumnErrorRate',
@@ -3289,7 +3288,6 @@ export enum AnalyticsUsageI18nKey {
   BreakdownDescriptionTools = 'AnalyticsUsage.BreakdownDescriptionTools',
   ViewAll = 'AnalyticsUsage.ViewAll',
   SearchPlaceholder = 'AnalyticsUsage.SearchPlaceholder',
-  SearchNoMatches = 'AnalyticsUsage.SearchNoMatches',
   RowIsNew = 'AnalyticsUsage.RowIsNew',
 
   PanelCalls = 'AnalyticsUsage.PanelCalls',
@@ -3300,6 +3298,13 @@ export enum AnalyticsUsageI18nKey {
   DirectCall = 'AnalyticsUsage.DirectCall',
   DirectCallMcpTooltip = 'AnalyticsUsage.DirectCallMcpTooltip',
   DirectCallRouteTooltip = 'AnalyticsUsage.DirectCallRouteTooltip',
+  ToolServerCount = 'AnalyticsUsage.ToolServerCount',
+  ExactErrorRate = 'AnalyticsUsage.ExactErrorRate',
+  HeatmapMetricCalls = 'AnalyticsUsage.HeatmapMetricCalls',
+  HeatmapMetricCost = 'AnalyticsUsage.HeatmapMetricCost',
+  HeatmapCellCostLabel = 'AnalyticsUsage.HeatmapCellCostLabel',
+  OtherMethods = 'AnalyticsUsage.OtherMethods',
+  OtherMethodsTooltip = 'AnalyticsUsage.OtherMethodsTooltip',
 }
 
 export enum SystemPropertiesI18nKey {
