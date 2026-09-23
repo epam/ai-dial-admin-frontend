@@ -299,7 +299,9 @@ describe('Runs Summary :: Analytics', () => {
       render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
 
       await screen.findByText('Runs.TestCasesPassed');
-      expect(screen.getAllByText('—')).toHaveLength(5);
+      // The two cost cards settle after the query cards, so the count is awaited rather than read once:
+      // read immediately, it catches them still loading whenever the suite runs slowly enough.
+      await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(5));
       expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
     },
   );
