@@ -13,6 +13,7 @@ import {
   DialToolsetResource,
   DialTranslatorResource,
 } from '@/src/models/dial/resource';
+import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -74,6 +75,8 @@ export interface ResourceInfo {
    * their delete has no content GET to source an etag from (see `skill-resources-core-api`).
    */
   etag?: string;
+  /** Mapped straight from the metadata node's own `bucket` — see `asset-list-item.ts`. */
+  bucket: BucketType;
 }
 
 /** Core's two schema resource kinds: stored under a percent-encoded JSON-Schema `$id`, body kept verbatim. */
@@ -92,11 +95,11 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
   let parts: VersionedPathParts;
   if (isVersioned(type)) {
     parts = parseEncodedVersionedPath(metadata.url, prefix);
-  } else if (isFolderNestedVersionless(type)) {
-    // Prompt/conversation: folder + plain name, never a `__` split. A genuine FOLDER row re-adds
-    // the trailing slash `parsePath` strips, matching the skill list mapper and every versioned
-    // type's folder rows — generic path-matching code downstream (`mergeFiles`, per-path fetches)
-    // relies on that convention.
+  } else if (isFolderNestedVersionless(type) || type === ResourceType.SKILL) {
+    // Prompt/conversation/skill: folder + plain name, never a `__` split. A genuine FOLDER row
+    // re-adds the trailing slash `parsePath` strips — the one implementation of that convention,
+    // matching every versioned type's folder rows — since generic path-matching code downstream
+    // (`mergeFiles`, per-path fetches) relies on it.
     const folderParts = parseEncodedFolderPath(metadata.url, prefix);
     parts = {
       ...folderParts,
@@ -117,6 +120,7 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
     nodeType: metadata.nodeType.toLowerCase() as DialFileNodeType,
     etag: metadata.etag,
+    bucket: metadata.bucket as BucketType,
   };
 };
 
@@ -274,10 +278,12 @@ export const mergeApplicationResource = (
   metadata: CoreResourceMetadataNode,
 ): DialApplicationResource => {
   const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION], content);
   return {
     ...rest,
+    name: correctMetadata.name,
     _metadata: {
-      ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION], content),
+      ...correctMetadata,
       ...validity,
     },
   } as DialApplicationResource;
@@ -288,10 +294,13 @@ export const mergeToolsetResource = (
   metadata: CoreResourceMetadataNode,
 ): DialToolsetResource => {
   const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET], content);
+
   return {
     ...rest,
+    name: correctMetadata.name,
     _metadata: {
-      ...dualBucketMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET], content),
+      ...correctMetadata,
       ...validity,
     },
   } as DialToolsetResource;
@@ -302,32 +311,34 @@ export const mergeConversation = (
   metadata: CoreResourceMetadataNode,
 ): DialConversation => {
   const { content: rest, validity } = splitValidityFields(content);
-  // `DialConversation` keeps declaring flat `path`/`folderId`/`author` for the shared row/tree
-  // shape, but this merge no longer grafts them — they live in `_metadata` (see the
-  // `core-resource-entity-metadata` capability) — hence the widened cast.
   return {
     ...rest,
     _metadata: {
       ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION], content),
       ...validity,
     },
-  } as unknown as DialConversation;
+  } as DialConversation;
 };
 
 export const mergePrompt = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode): DialPrompt => {
   const { content: rest, validity } = splitValidityFields(content);
-  // Same widened cast as `mergeConversation` — flat `path`/`folderId`/`author` stay declared on
-  // `DialPrompt` for the shared row/tree shape but are no longer grafted here.
+  const correctMetadata = folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT], content);
   return {
     ...rest,
+    // `DialFile.path` is required, and prompt content never carries `path`/`folderId` of its own —
+    // this fills a type-required gap, not an overwrite of a served content field (contrast the
+    // dual-bucket application/toolset `name` exception in `mergeApplicationResource`/
+    // `mergeToolsetResource`, where a content field genuinely gets overridden).
+    path: correctMetadata.path,
+    folderId: correctMetadata.folderId,
     _metadata: {
-      ...folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROMPT], content),
+      ...correctMetadata,
       // The prompt detail entity's own row-marker identity — Core serves prompts through the
       // folder-tree shape, where `ITEM` vs `FOLDER` drives the tree/list distinction.
       nodeType: DialFileNodeType.ITEM,
       ...validity,
     },
-  } as unknown as DialPrompt;
+  } as DialPrompt;
 };
 
 /**

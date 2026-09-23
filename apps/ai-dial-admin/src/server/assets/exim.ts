@@ -123,6 +123,22 @@ export const stripMetadata = <T extends { _metadata?: unknown }>(entity: T): Omi
   return rest;
 };
 
+/**
+ * Strips a platform-bucket asset's identity/provenance fields before it's spread into a flat-bucket
+ * create/update payload: `_metadata` (via `stripMetadata`) plus `reference`/`createdAt`/`updatedAt`,
+ * none of which round-trip on a platform-bucket write (Core's `ConfigResourceController` rejects
+ * unknown properties). Shared by `assets-applications/actions.ts`'s and `assets-toolsets/actions.ts`'s
+ * platform create/update actions, which used to carry identical, independently-written strippers.
+ */
+export const stripPlatformAssetFields = <
+  T extends { _metadata?: unknown; reference?: string; createdAt?: string; updatedAt?: string },
+>(
+  entity: T,
+): Omit<T, '_metadata' | 'reference' | 'createdAt' | 'updatedAt'> => {
+  const { reference: __reference, createdAt: __createdAt, updatedAt: __updatedAt, ...payload } = stripMetadata(entity);
+  return payload as Omit<T, '_metadata' | 'reference' | 'createdAt' | 'updatedAt'>;
+};
+
 export interface ImportAssetsOptions {
   path: string;
   conflictResolutionStrategy: string;

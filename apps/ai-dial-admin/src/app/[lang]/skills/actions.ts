@@ -5,6 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { assetApi, skillsCoreApi } from '@/src/app/api/api';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { toSkillList } from '@/src/server/core/skill-metadata';
+import { fetchAllPages } from '@/src/server/core/pagination';
 import { moveAssets } from '@/src/server/assets/move';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -20,14 +21,7 @@ import { addTrailingSlash } from '@/src/utils/url';
  */
 export async function getSkills(path: string): Promise<ResourceInfo[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const items: ResourceInfo[] = [];
-  let nextToken: string | undefined;
-  do {
-    const node = await skillsCoreApi.listSkillMetadata(token, path, { nextToken });
-    items.push(...toSkillList(node));
-    nextToken = node?.nextToken;
-  } while (nextToken);
-  return items;
+  return fetchAllPages((nextToken) => skillsCoreApi.listSkillMetadata(token, path, { nextToken }), toSkillList);
 }
 
 /**

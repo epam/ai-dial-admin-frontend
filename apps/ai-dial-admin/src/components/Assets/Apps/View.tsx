@@ -151,7 +151,7 @@ const AppView: FC<Props> = ({
       let updateFunction = updateApp;
 
       if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updatedEntity = addNewVersion(updatedEntity, newVersion) as AssetApp;
         updateFunction = createApp;
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
@@ -193,7 +193,7 @@ const AppView: FC<Props> = ({
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
           }
           router.refresh();

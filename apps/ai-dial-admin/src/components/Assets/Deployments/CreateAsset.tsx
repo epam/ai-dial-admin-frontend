@@ -10,8 +10,9 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +39,7 @@ interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   initialValues?: Partial<AssetWithVersion>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
 }
 

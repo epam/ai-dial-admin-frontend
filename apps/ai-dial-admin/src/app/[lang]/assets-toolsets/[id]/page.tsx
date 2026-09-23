@@ -15,7 +15,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
 import { getConfigFileToolset, getPlatformToolset, getToolset, getToolsets } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -34,13 +34,12 @@ export default async function Page(params: {
   let roles: DialRole[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
 
-  // A `path` query param means this is a public-bucket (versioned, folder-nested) toolset; its
-  // absence means a platform-bucket one — flat, identified by name alone (design.md D3/D5).
+  // See `isPlatformBucketDetailRoute` for the `?path=` URL contract this reads.
   const searchParams = await params.searchParams;
   oAuthCode = searchParams.code;
   const rawPath = searchParams.path;
   const isConfigFileMode = searchParams.configFile === 'true';
-  const isPlatformBucket = !rawPath;
+  const isPlatformBucket = isPlatformBucketDetailRoute(rawPath);
   const name = decodeURIComponent((await params.params).id);
 
   try {

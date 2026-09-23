@@ -23,7 +23,7 @@ import { buildApplicationsZip, extractApplicationsFromZip } from '@/src/server/a
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
-import { stripMetadata } from '@/src/server/assets/exim';
+import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exim';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
 import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -156,31 +156,14 @@ export async function getPlatformApplications(path: string) {
   return getApps(path);
 }
 
-/**
- * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
- * (the platform bucket's write path) deserializes the request body straight into `Application` via
- * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
- * `toKeyPayload` strips extras for `Key.class`. The merge layer's grafts (identity, audit, and the
- * `status`/`validationWarnings` validity projections) nest under `_metadata`, which `stripMetadata`
- * drops wholesale (see the `core-resource-entity-metadata` capability). `reference` is stripped on
- * top of it — a client-only tracking id (see `handleDuplicate`/`addNewVersion`, which already strip
- * it before any write) — as are `createdAt`/`updatedAt`, which `ModifiedEntity` types but the
- * platform bucket's reads never serve inline.
- */
-function toPlatformApplicationPayload(app: DialPlatformApplicationResource) {
-  const {
-    reference: __reference,
-    createdAt: __createdAt,
-    updatedAt: __updatedAt,
-    ...payload
-  } = stripMetadata(app) as Omit<DialPlatformApplicationResource, '_metadata'> & { reference?: string };
-
-  return payload;
-}
-
+// Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+// (the platform bucket's write path) deserializes the request body straight into `Application` via
+// Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+// `toKeyPayload` strips extras for `Key.class`. See `stripPlatformAssetFields` for what it strips and
+// why.
 export async function createPlatformApplication(app: DialPlatformApplicationResource) {
   return createApp({
-    ...toPlatformApplicationPayload(app),
+    ...stripPlatformAssetFields(app),
     folderId: `${PLATFORM_ROOT_FOLDER}/`,
     version: undefined,
   } as unknown as DialApplicationResource);
@@ -194,7 +177,7 @@ export async function getPlatformApplication(path: string, etag: string) {
 export async function updatePlatformApplication(app: DialPlatformApplicationResource, etag: string) {
   return updateApp(
     {
-      ...toPlatformApplicationPayload(app),
+      ...stripPlatformAssetFields(app),
       folderId: `${PLATFORM_ROOT_FOLDER}/`,
       version: undefined,
     } as unknown as DialApplicationResource,

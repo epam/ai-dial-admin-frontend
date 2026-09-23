@@ -36,6 +36,10 @@ describe('Server :: Core :: asset-metadata', () => {
       endpoint: 'https://app',
       viewerUrl: 'https://view',
       maxInputAttachments: 3,
+      // Public-bucket `name` is a flat pass-through here: `content` carries no `name` of its own, so
+      // this only shows the field is always present, not that it overrides anything (see the
+      // dual-bucket override test below for the actual exception to D3).
+      name: 'My App',
       _metadata: {
         name: 'My App',
         folderId: 'folder/',
@@ -53,6 +57,7 @@ describe('Server :: Core :: asset-metadata', () => {
 
     expect(mergeApplicationResource(content, meta)).toEqual({
       endpoint: 'https://app',
+      name: 'my-app',
       _metadata: {
         name: 'my-app',
         path: 'platform/my-app',
@@ -62,6 +67,20 @@ describe('Server :: Core :: asset-metadata', () => {
         updatedAt: '111',
       },
     });
+  });
+
+  // D3 amendment (design.md): dual-bucket applications/toolsets are the one documented exception to
+  // "grafts never overwrite content" — the URL-parsed identity from `dualBucketMetadataFields` is
+  // authoritative over whatever `content.name` happens to hold, because a platform-bucket resource's
+  // served `name` can go stale relative to its Core resource path (see platform-applications spec).
+  test('mergeApplicationResource overrides a divergent content.name with the dual-bucket corrected identity (documented exception to D3)', () => {
+    const content = { endpoint: 'https://app', name: 'Stale Name' };
+    const meta = metadata({ url: 'applications/platform/my-app', author: 'alice', updatedAt: 111 });
+
+    const result = mergeApplicationResource(content, meta);
+
+    expect(result.name).toEqual('my-app');
+    expect(result._metadata?.name).toEqual('my-app');
   });
 
   test('mergeApplicationResource keeps inline content audit fields flat and prefers the metadata node over them inside _metadata', () => {
@@ -103,6 +122,7 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(mergeToolsetResource(content, meta)).toEqual({
       endpoint: 'https://ts',
       maxRetryAttempts: 2,
+      name: 'My Toolset',
       _metadata: {
         name: 'My Toolset',
         folderId: 'folder/',
@@ -120,6 +140,7 @@ describe('Server :: Core :: asset-metadata', () => {
 
     expect(mergeToolsetResource(content, meta)).toEqual({
       endpoint: 'https://ts',
+      name: 'my-toolset',
       _metadata: {
         name: 'my-toolset',
         path: 'platform/my-toolset',
@@ -129,6 +150,17 @@ describe('Server :: Core :: asset-metadata', () => {
         updatedAt: '222',
       },
     });
+  });
+
+  // See the analogous mergeApplicationResource test above for why this overrides content.name.
+  test('mergeToolsetResource overrides a divergent content.name with the dual-bucket corrected identity (documented exception to D3)', () => {
+    const content = { endpoint: 'https://ts', name: 'Stale Name' };
+    const meta = metadata({ url: 'toolsets/platform/my-toolset', author: 'bob', updatedAt: 222 });
+
+    const result = mergeToolsetResource(content, meta);
+
+    expect(result.name).toEqual('my-toolset');
+    expect(result._metadata?.name).toEqual('my-toolset');
   });
 
   test('mergeConversation grafts name/folderId/author/updatedAt under _metadata, rest from content', () => {
@@ -156,6 +188,11 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(mergePrompt(content, meta)).toEqual({
       content: 'prompt body',
       description: 'desc',
+      // `DialFile.path` is required and prompt content never carries `path`/`folderId` of its own —
+      // these fill a type-required gap, not an overwrite of a served content field (contrast the
+      // dual-bucket application/toolset `name` exception above, where content.name is overridden).
+      path: 'folder/My Prompt__1.0',
+      folderId: 'folder/',
       _metadata: {
         name: 'My Prompt__1.0',
         folderId: 'folder/',
@@ -264,9 +301,9 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result).toHaveLength(2);
     // Prompts are versionless: the `__1` in the url's last segment is the name verbatim, and no
     // `version` is grafted onto the row.
-    expect(result[0]).toMatchObject({ name: 'a__1', nodeType: 'item' });
+    expect(result[0]).toMatchObject({ name: 'a__1', nodeType: 'item', bucket: 'bucket' });
     expect(result[0].version).toBeUndefined();
-    expect(result[1]).toMatchObject({ nodeType: 'folder' });
+    expect(result[1]).toMatchObject({ nodeType: 'folder', bucket: 'bucket' });
     // Rows are the metadata-only grid projection — they stay flat, never carrying `_metadata`.
     expect(result[0]).not.toHaveProperty('_metadata');
     expect(result[1]).not.toHaveProperty('_metadata');
@@ -275,6 +312,21 @@ describe('Server :: Core :: asset-metadata', () => {
   test('toResourceInfoList returns an empty array for a node with no items', () => {
     expect(toResourceInfoList(null, ResourceType.PROMPT)).toEqual([]);
     expect(toResourceInfoList(metadata({ items: undefined }), ResourceType.PROMPT)).toEqual([]);
+  });
+
+  test("toResourceInfoList carries each item's own bucket value through untouched, public and platform alike", () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [
+        metadata({ name: 'a', nodeType: 'ITEM', url: 'prompts/folder/a__1', bucket: 'public' }),
+        metadata({ name: 'b', nodeType: 'ITEM', url: 'prompts/folder/b__1', bucket: 'platform' }),
+      ],
+    });
+
+    const result = toResourceInfoList(node, ResourceType.PROMPT);
+
+    expect(result[0].bucket).toBe('public');
+    expect(result[1].bucket).toBe('platform');
   });
   test('mergeAppRunnerResource decodes the resource name back into $id and flattens Core routes', () => {
     const content = {

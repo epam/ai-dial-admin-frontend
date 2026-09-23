@@ -1,6 +1,16 @@
-# core-resource-entity-metadata — `_metadata` object on Core resource detail entities
+# core-resource-entity-metadata Specification
 
-## ADDED Requirements
+## Purpose
+A single, predictable place for Core-resource entity metadata. Merged detail reads of the twelve
+`ASSET_MERGERS` types and the single-skill read graft metadata-endpoint data (`author`,
+`createdAt`, `updatedAt`) and derived helpers (`name`, `path`, `folderId`, `version`, `nodeType`,
+`status`, `validationWarnings`) onto the entity; this capability collects everything grafted that
+is not resource content into one `_metadata` object, frontend-constructed and never sent to or
+persisted by Core, so consumers stop needing to know each type's own sourcing rules and write
+paths stop re-enumerating fields to strip. Created by archiving change
+`core-resource-entity-metadata`.
+
+## Requirements
 
 ### Requirement: Merged Core-resource detail entities carry a `_metadata` object
 
@@ -56,7 +66,7 @@ Fields the original resource response carries SHALL remain on the merged entity 
 served — including the editable maintainer (`author` on `Deployment`-based types: model,
 application, interceptor, toolset), inline `created_at`/`updated_at` where Core serves them, and
 every type-specific content field. The merge layer SHALL NOT overwrite, rename, or remove any
-content field.
+content field, **except** for the dual-bucket application/toolset `name` correction below.
 
 #### Scenario: An editable maintainer value survives a merge
 
@@ -70,6 +80,15 @@ content field.
 - **WHEN** a public-bucket toolset is merged
 - **THEN** the entity still carries the served `updated_at`/`created_at` content fields with their
   original values, alongside `_metadata.updatedAt`/`_metadata.createdAt`
+
+#### Scenario: A platform-bucket application or toolset's `name` is corrected, not left as served
+
+- **WHEN** a platform-bucket application or toolset is merged and its content response's `name`
+  diverges from the name the Core resource URL encodes
+- **THEN** the merged entity's flat `name` and `_metadata.name` both hold the URL-derived name from
+  `dualBucketMetadataFields`, not the served `content.name` — the one documented exception to this
+  requirement (see design.md D3 amendment and the analogous `folderId` carve-out in
+  `platform-applications`/`platform-toolsets`)
 
 ### Requirement: UI consumers read entity metadata from `_metadata` only
 

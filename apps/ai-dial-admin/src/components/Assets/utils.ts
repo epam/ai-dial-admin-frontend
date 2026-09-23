@@ -8,7 +8,7 @@ import {
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView, isPlatformBucketPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformBucketRow, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -90,8 +90,11 @@ export const addNewVersion = (entity: AssetWithVersion, version: string) => {
   delete (entity as AssetApp).reference;
   return {
     ...entity,
-    path,
-    version,
+    _metadata: {
+      ...entity._metadata,
+      path,
+      version,
+    },
   };
 };
 
@@ -412,7 +415,7 @@ export const getDeleteNotificationContent = (
       // A platform-bucket row has no version to select or append — `isMultipleVersionsDelete`
       // never applies there, and the description shows the bare name rather than a
       // `folderId+name__version` path that carries no meaning for a flat, unversioned resource.
-      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
         const title = isDeleteSeveralFiles
           ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
           : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
@@ -452,7 +455,7 @@ export const getDeleteNotificationContent = (
     }
     case ApplicationRoute.AssetsToolsets: {
       // Same platform-bucket carve-out as AssetsApplications above.
-      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
         const title = isDeleteSeveralFiles
           ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
           : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });

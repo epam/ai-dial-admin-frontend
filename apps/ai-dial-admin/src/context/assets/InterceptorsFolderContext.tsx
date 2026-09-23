@@ -1,10 +1,8 @@
 'use client';
 
 import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { PlatformAssetListItem } from '@/src/models/dial/asset-list-item';
 
-export const { Provider: InterceptorsFolderProvider, useFolderContext: useInterceptorsFolder } = createFolderContext(
-  getInterceptors as (path: string) => Promise<Asset[] | null | undefined>,
-  'useInterceptorsFolder',
-);
+export const { Provider: InterceptorsFolderProvider, useFolderContext: useInterceptorsFolder } =
+  createFolderContext<PlatformAssetListItem>(getInterceptors, 'useInterceptorsFolder');

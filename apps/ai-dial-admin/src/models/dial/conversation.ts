@@ -3,9 +3,14 @@ import { CoreResourceEntityMetadata } from './resource';
 
 export interface DialConversation extends BaseEntity {
   descriptionKeywords: string[];
-  path: string;
-  folderId: string;
-  author: string;
+  /**
+   * A merged detail entity (`mergeConversation`) grafts these three under `_metadata` instead of
+   * setting them here — narrowed to optional (mirroring `DialFile.folderId`, see task 2.2) so that
+   * merge no longer needs an `as unknown as` cast to bypass the structural check.
+   */
+  path?: string;
+  folderId?: string;
+  author?: string;
   endpoint: string;
   iconUrl: string;
   temperature: number;

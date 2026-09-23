@@ -30,6 +30,7 @@ import {
   ResourceInfo,
   toResourceInfoList,
 } from './asset-metadata';
+import { fetchAllPages } from './pagination';
 
 export interface GetMetadataOptions {
   recursive?: boolean;
@@ -76,18 +77,11 @@ export class AssetApi extends CoreApi {
   }
 
   /** Lists the items directly under a folder as lightweight rows (metadata only, no content fetch). */
-  async list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
-    const items: ResourceInfo[] = [];
-    let nextToken: string | undefined;
-    while (true) {
-      const node = await this.getMetadata(token, type, path, { recursive: false, nextToken });
-      items.push(...toResourceInfoList(node, type));
-      nextToken = node?.nextToken;
-      if (!nextToken) {
-        break;
-      }
-    }
-    return items;
+  list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
+    return fetchAllPages(
+      (nextToken) => this.getMetadata(token, type, path, { recursive: false, nextToken }),
+      (node) => toResourceInfoList(node, type),
+    );
   }
 
   /** Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`. */

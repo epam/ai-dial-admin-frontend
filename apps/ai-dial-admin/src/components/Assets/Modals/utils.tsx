@@ -4,7 +4,7 @@ import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/Se
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 
 export const getGridColumns = (
@@ -66,9 +66,9 @@ export const getGridColumns = (
     // Name+Author instead, matching the flat column set the row's own list view already uses.
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
+      const firstItemToDelete = itemsToDelete?.[0] as { bucket?: string; folderId?: string } | undefined;
       const isPlatformBucketDelete =
-        !hasFoldersToDelete &&
-        isPlatformBucketPath((itemsToDelete?.[0] as { folderId?: string } | undefined)?.folderId);
+        !hasFoldersToDelete && isPlatformBucketRow(firstItemToDelete?.bucket, firstItemToDelete?.folderId);
       if (isPlatformBucketDelete) {
         return [GRID_NAME_COLUMN, AUTHOR_COLUMN];
       }

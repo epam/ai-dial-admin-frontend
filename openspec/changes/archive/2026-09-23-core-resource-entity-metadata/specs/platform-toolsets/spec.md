@@ -28,3 +28,14 @@ current session.
   session
 - **THEN** the fetched resource's `_metadata.folderId` is `'platform/'`, and
   `isPlatformBucketPath` on that value returns `true`
+
+### Requirement: Platform toolset name reflects the corrected dual-bucket identity
+The system SHALL set both the flat `name` and `_metadata.name` on a platform-bucket toolset to the
+name its Core resource URL encodes, overriding a divergent `content.name`, when the resource is
+read from DIAL Core — the one documented exception to `core-resource-entity-metadata`'s "content is
+never mutated by the merge" requirement.
+
+#### Scenario: A platform toolset's stale content name is corrected on read
+- **WHEN** a platform-bucket toolset's content response carries a `name` that no longer matches
+  the name encoded in its Core resource URL
+- **THEN** the merged entity's flat `name` and `_metadata.name` both hold the URL-derived name

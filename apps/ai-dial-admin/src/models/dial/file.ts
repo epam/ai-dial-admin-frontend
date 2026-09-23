@@ -7,12 +7,16 @@ export interface DialFile extends ModifiedEntity {
   contentType?: string;
   nodeType?: DialFileNodeType;
   parentPath?: string | null;
-  resourceType?: DialFileResourceType;
   url?: string;
   items?: DialFile[];
   path: string;
   name?: string;
-  folderId: string;
+  /**
+   * Required on every list row (`MovableAssetListItem`'s contract) but genuinely absent on a
+   * freshly-read detail DTO before a folder is resolved for it — narrowed from blanket-required so
+   * `DialFile` still serves both roles; row construction always supplies it (see `file-metadata.ts`).
+   */
+  folderId?: string;
   author?: string;
   nextToken?: string;
   extension?: string;
@@ -26,10 +30,6 @@ export interface DialFile extends ModifiedEntity {
 export enum DialFileNodeType {
   ITEM = 'item',
   FOLDER = 'folder',
-}
-
-export enum DialFileResourceType {
-  FILE = 'FILE',
 }
 
 export interface CustomFile {

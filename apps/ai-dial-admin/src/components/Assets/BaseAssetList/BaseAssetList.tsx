@@ -43,6 +43,7 @@ import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import {
   getRootFolder,
   isFlatPlatformView,
+  isPlatformBucketPath,
   isPlatformDualBucketView,
   PLATFORM_ROOT_FOLDER,
 } from '@/src/utils/files/root-folder';
@@ -309,7 +310,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             } else if (isVersionlessAssetView(view)) {
               entityLabel = asset.name || '';
             } else {
-              entityLabel = `${asset.name}__${asset.version}`;
+              entityLabel = `${asset.name}__${asset._metadata?.version}`;
             }
             showNotification(
               getSuccessNotification(
@@ -329,7 +330,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             } else if (isVersionlessAssetView(view)) {
               redirectEntity = { name: asset.name, folderId: folderPath };
             } else {
-              redirectEntity = { name: asset.name, version: asset.version, folderId: folderPath };
+              redirectEntity = { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
             }
             router.push(getUrnForEntity(view, redirectEntity));
           }
@@ -373,14 +374,16 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       if (isVersionlessAssetView(view)) {
         newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
       } else {
-        const versionedAsset = asset as AssetWithVersion;
         newAsset = {
-          ...versionedAsset,
-          path: `${versionedAsset.folderId}${versionedAsset.name}__${versionedAsset.version}`,
-        };
+          ...asset,
+          _metadata: {
+            ...asset._metadata,
+            path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
+          },
+        } as AssetWithVersion;
       }
       delete (newAsset as AssetApp).reference;
-      handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
+      handleCreateAsset(newAsset as AssetApp, asset._metadata?.folderId, true);
       handleModalClose();
     },
     [handleCreateAsset, handleModalClose, view],
@@ -411,7 +414,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             ? [file.sourceUrl]
             : getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
-          if (moveAsset) {
+          // A platform-bucket row (AssetsApplications/AssetsToolsets browsed under `platform/`) has
+          // no folder concept — Core has no move route for it. `DialCopiedItem` never carries
+          // `bucket` (it's a ui-kit drag-event payload, not a row model), so this reads the path
+          // directly rather than through `isPlatformBucketRow`.
+          if (moveAsset && !isPlatformBucketPath(file.sourceUrl)) {
             promises.push(
               moveAsset(filePaths, newPath, file?.overwrite, duplicateName).then((res) => {
                 setMovedItems((prev) => prev + filePaths.length);

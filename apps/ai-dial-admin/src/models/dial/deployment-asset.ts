@@ -10,6 +10,7 @@ export interface AssetApp extends DialFile, DialApplication, EntityValidityState
   versions?: string[];
   reference?: string;
   display_name?: string;
+  display_version?: string;
   displayVersion?: string;
   selectedVersions?: string[];
   /**
@@ -26,6 +27,7 @@ export interface AssetToolset extends DialFile, Toolset {
   items?: AssetToolset[];
   versions?: string[];
   display_name?: string;
+  display_version?: string;
   displayVersion?: string;
   selectedVersions?: string[];
   /** See `AssetApp._metadata`. */

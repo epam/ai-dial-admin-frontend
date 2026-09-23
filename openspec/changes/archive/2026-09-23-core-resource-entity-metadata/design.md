@@ -100,6 +100,16 @@ two visible effects worth stating:
   reload as a flat field; previously the merger's graft overwrote it with the metadata author.
   `_metadata.author` carries the metadata-sourced value for display.
 
+**Amendment — dual-bucket application/toolset `name` is a documented exception.** For a
+platform-bucket application/toolset, `mergeApplicationResource`/`mergeToolsetResource` set the flat
+top-level `name` (in addition to `_metadata.name`) from `dualBucketMetadataFields`'s URL-parsed
+identity, overwriting whatever `content.name` holds. This is narrower than it sounds: it is scoped
+to these two mergers' dual-bucket path only, not a general reopening of rule-3. The rationale
+mirrors the existing `folderId` dual-bucket carve-out (`platform-applications`/`platform-toolsets`
+specs) — a platform-bucket resource's served `content.name` can go stale relative to its Core
+resource path, so the URL-parsed name is authoritative. See the "Platform application/toolset name
+reflects the corrected dual-bucket identity" requirements in those specs.
+
 ### D4 — One shared strip helper; payload builders keep only genuine quirks
 
 `stripMetadata<T extends { _metadata?: unknown }>(entity: T): Omit<T, '_metadata'>` (placed in

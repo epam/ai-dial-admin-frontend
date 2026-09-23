@@ -1,6 +1,15 @@
 import { ApiRoute } from '@/src/constants/api-routes';
 
 export const ROOT_FOLDER = 'public';
+
+/**
+ * Placeholder permission set for folder nodes synthesized client-side (root nodes, and any
+ * intermediate folder Core's listing didn't itself return). Core's file-listing endpoint is called
+ * with `permissions=false` (see `files-core-api.ts`) — real per-folder permissions aren't fetched
+ * today — so every such node gets this same assumed set instead of a bare array duplicated at each
+ * call site. Replace with the real fetched value once Core is asked for it.
+ */
+export const DEFAULT_ROOT_FOLDER_PERMISSIONS = ['WRITE', 'READ'];
 export const TEMP_FOLDER = '.dial_folder';
 export const FILE_DOWNLOAD = ApiRoute.FilesDownload;
 export const FILE_PREVIEW = ApiRoute.FilesPreview;

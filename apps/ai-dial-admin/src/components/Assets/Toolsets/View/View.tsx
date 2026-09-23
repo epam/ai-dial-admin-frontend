@@ -133,7 +133,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, ca
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
           }
           router.refresh();

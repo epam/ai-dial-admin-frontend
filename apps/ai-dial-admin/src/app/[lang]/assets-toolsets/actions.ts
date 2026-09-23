@@ -23,7 +23,7 @@ import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
-import { stripMetadata } from '@/src/server/assets/exim';
+import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exim';
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
 import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
@@ -112,31 +112,14 @@ export async function getPlatformToolsets(path: string) {
   return getToolsets(path);
 }
 
-/**
- * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
- * (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
- * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
- * `toKeyPayload` strips extras for `Key.class`. The merge layer's grafts (identity, audit, and the
- * `status`/`validationWarnings` validity projections) nest under `_metadata`, which `stripMetadata`
- * drops wholesale (see the `core-resource-entity-metadata` capability). `reference` is stripped on
- * top of it — a client-only tracking id (see `handleDuplicate`/`addNewVersion`, which already strip
- * it before any write) — as are `createdAt`/`updatedAt`, which `ModifiedEntity` types but the
- * platform bucket's reads never serve inline.
- */
-function toPlatformToolsetPayload(toolset: DialPlatformToolsetResource) {
-  const {
-    reference: __reference,
-    createdAt: __createdAt,
-    updatedAt: __updatedAt,
-    ...payload
-  } = stripMetadata(toolset) as Omit<DialPlatformToolsetResource, '_metadata'> & { reference?: string };
-
-  return payload;
-}
-
+// Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+// (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
+// Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+// `toKeyPayload` strips extras for `Key.class`. See `stripPlatformAssetFields` for what it strips and
+// why.
 export async function createPlatformToolset(toolset: DialPlatformToolsetResource) {
   return createToolset({
-    ...toPlatformToolsetPayload(toolset),
+    ...stripPlatformAssetFields(toolset),
     folderId: `${PLATFORM_ROOT_FOLDER}/`,
     version: undefined,
   } as unknown as DialToolsetResource);
@@ -150,7 +133,7 @@ export async function getPlatformToolset(path: string, etag: string) {
 export async function updatePlatformToolset(toolset: DialPlatformToolsetResource, etag: string) {
   return updateToolset(
     {
-      ...toPlatformToolsetPayload(toolset),
+      ...stripPlatformAssetFields(toolset),
       folderId: `${PLATFORM_ROOT_FOLDER}/`,
       version: undefined,
     } as unknown as AssetToolset,

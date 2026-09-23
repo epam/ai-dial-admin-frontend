@@ -6,7 +6,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { isPlatformBucketRow, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
@@ -79,7 +79,11 @@ export const getEntityPath = (
       const name = entity.name || entity._metadata?.name || '';
       const entityVersion = entity.version || entity._metadata?.version;
 
-      if (isPlatformBucketPath(path || folderId)) {
+      if (isPlatformBucketRow(entity.bucket, path || folderId)) {
+        // `entity.bucket` is set on every grid/list row (the server row mapper — see
+        // `asset-list-item.ts`) but not on a merged detail entity, which carries bucket only
+        // implicitly through `_metadata`'s `folderId`/`path` — `isPlatformBucketRow` falls back to
+        // that resolved `path`/`folderId` in that case.
         // `forRemove` must still resolve to the resource's storage path (`platform/{name}`) — Core
         // has no route for a bare name — unlike the URL-segment case just below, where the bucket
         // prefix is deliberately dropped for a readable URL (design.md D5).

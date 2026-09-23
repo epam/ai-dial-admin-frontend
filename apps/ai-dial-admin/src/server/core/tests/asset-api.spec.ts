@@ -51,14 +51,14 @@ describe('Server :: Core :: AssetApi', () => {
     expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/gpt-4');
   });
 
-  test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType', async () => {
+  test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType and bucket', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         name: 'folder',
         nodeType: 'FOLDER',
         items: [
-          { name: 'a', nodeType: 'ITEM', url: 'prompts/folder/a__1.0', author: 'me', updatedAt: 123 },
-          { name: 'sub', nodeType: 'FOLDER', url: 'prompts/folder/sub/' },
+          { name: 'a', nodeType: 'ITEM', url: 'prompts/folder/a__1.0', author: 'me', updatedAt: 123, bucket: 'public' },
+          { name: 'sub', nodeType: 'FOLDER', url: 'prompts/folder/sub/', bucket: 'platform' },
         ],
       }),
       { headers: { 'content-type': 'application/json' } },
@@ -75,6 +75,7 @@ describe('Server :: Core :: AssetApi', () => {
         author: 'me',
         updatedAt: '123',
         nodeType: 'item',
+        bucket: 'public',
       },
       {
         name: 'sub',
@@ -84,6 +85,7 @@ describe('Server :: Core :: AssetApi', () => {
         author: undefined,
         updatedAt: undefined,
         nodeType: 'folder',
+        bucket: 'platform',
       },
     ]);
   });

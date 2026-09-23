@@ -86,6 +86,31 @@ describe('getTreeActionLabels', () => {
   );
 });
 
+// Regression (4.4): conversation rows have no folder concept, so neither the grid row menu nor the
+// folder tree may offer a move action for them.
+describe('Conversations offers no move action', () => {
+  test('getGridActionLabels excludes move for Conversations', () => {
+    const keys = getGridActionLabels(ApplicationRoute.Conversations, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('move');
+  });
+
+  test('getGridActionLabels returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.Conversations, true)).toEqual([]);
+  });
+
+  test('getTreeActionLabels excludes move for Conversations, keeping only delete', () => {
+    const keys = getTreeActionLabels(false, ApplicationRoute.Conversations).map((item) => item.key);
+
+    expect(keys).toEqual(['delete']);
+  });
+
+  test('getTreeActionLabels returns no options for a read-only admin', () => {
+    expect(getTreeActionLabels(true, ApplicationRoute.Conversations)).toEqual([]);
+  });
+});
+
 describe('getToolbarOptionLabels — dual-bucket views', () => {
   test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
     const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
@@ -226,8 +251,11 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__1.2.3',
-      version: '1.2.3',
+      path: 'somePath__0.0.1',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 
@@ -237,8 +265,24 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__newVersion',
-      version: 'newVersion',
+      path: 'somePath__oldVersion',
+      _metadata: {
+        path: 'somePath__newVersion',
+        version: 'newVersion',
+      },
+    });
+  });
+
+  test('reads the source path from an existing _metadata graft when the flat path is absent', () => {
+    const entity = { folderId: '2', name: 'Prompt', _metadata: { path: 'somePath__0.0.1' } } as any;
+    const result = addNewVersion(entity, '1.2.3');
+    expect(result).toEqual({
+      folderId: '2',
+      name: 'Prompt',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 });
