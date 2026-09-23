@@ -3210,6 +3210,11 @@ export enum AnalyticsUsageI18nKey {
   ViewLlm = 'AnalyticsUsage.ViewLlm',
   CompareLabel = 'AnalyticsUsage.CompareLabel',
   ComparePreviousPeriod = 'AnalyticsUsage.ComparePreviousPeriod',
+  ComparePreviousMonth = 'AnalyticsUsage.ComparePreviousMonth',
+  ComparePreviousYear = 'AnalyticsUsage.ComparePreviousYear',
+  CompareNamePreviousPeriod = 'AnalyticsUsage.CompareNamePreviousPeriod',
+  CompareNamePreviousMonth = 'AnalyticsUsage.CompareNamePreviousMonth',
+  CompareNamePreviousYear = 'AnalyticsUsage.CompareNamePreviousYear',
   CompareOff = 'AnalyticsUsage.CompareOff',
 
   KpiTotalSpend = 'AnalyticsUsage.KpiTotalSpend',
@@ -3220,7 +3225,7 @@ export enum AnalyticsUsageI18nKey {
   KpiErrorRate = 'AnalyticsUsage.KpiErrorRate',
   KpiAvgLatency = 'AnalyticsUsage.KpiAvgLatency',
   KpiTotalToolCalls = 'AnalyticsUsage.KpiTotalToolCalls',
-  KpiPreviousPeriodFoot = 'AnalyticsUsage.KpiPreviousPeriodFoot',
+  KpiComparisonFoot = 'AnalyticsUsage.KpiComparisonFoot',
   KpiDeltaIncrease = 'AnalyticsUsage.KpiDeltaIncrease',
   KpiDeltaDecrease = 'AnalyticsUsage.KpiDeltaDecrease',
 

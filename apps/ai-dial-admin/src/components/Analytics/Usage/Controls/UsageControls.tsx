@@ -61,6 +61,8 @@ const UsageControls: FC<Props> = ({
     () => [
       { value: ComparePeriod.Off, label: t(AnalyticsUsageI18nKey.CompareOff) },
       { value: ComparePeriod.PreviousPeriod, label: t(AnalyticsUsageI18nKey.ComparePreviousPeriod) },
+      { value: ComparePeriod.PreviousMonth, label: t(AnalyticsUsageI18nKey.ComparePreviousMonth) },
+      { value: ComparePeriod.PreviousYear, label: t(AnalyticsUsageI18nKey.ComparePreviousYear) },
     ],
     [t],
   );
