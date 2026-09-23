@@ -155,9 +155,9 @@ This documentation describes the structure and contents of the menu items array 
 
 - **Description**: A section for accessing telemetry data, logs, and audit information.
 - **Items**:
-  - **Dashboard**
+  - **Dashboards**
     - **Key**: `Dashboard`
-    - **Description**: Navigate to the telemetry dashboard to view system metrics, performance, and usage statistics.
+    - **Description**: Navigate to `/dashboards`, which serves the telemetry dashboard with system metrics, performance, and usage statistics. Present here only while the analytics Dashboards page is off; while `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` are both on, the same item is the first entry of the Analytics section and `/dashboards` serves the analytics page instead (see `openspec/specs/analytics/dashboards/`). Hidden by the `dashboard` token of `DISABLE_MENU_ITEMS` in either section.
   - **Activity Audit**
     - **Key**: `ActivityAudit`
     - **Description**: Navigate to the activity audit page to track system activities and user actions.

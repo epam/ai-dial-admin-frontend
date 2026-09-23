@@ -10,39 +10,61 @@ and row panel.
 
 ## Requirements
 
-### Requirement: An environment flag admits the usage page and its menu item together
+### Requirement: An environment flag decides which page Dashboards renders
 
 The system SHALL expose an environment variable that, when truthy per the existing flag helper and
-combined with the Analytics group's own flag, is surfaced on the runtime feature-flags object. When
-both resolve truthy the `/usage` route SHALL render the page and the Analytics menu group SHALL
-offer its item; when either is absent or falsy the route SHALL answer as not found and the menu
-SHALL omit the item.
-
-The flag SHALL be read where the other feature flags are initialized and SHALL be added to the
+combined with the Analytics group's own flag, is surfaced on the runtime feature-flags object. The
+flag SHALL be read where the other feature flags are initialized and SHALL be added to the
 feature-flags model alongside them, so no surface learns about it through a separate mechanism. It
 SHALL be declared in the environment template as a commented entry.
 
-The route and the menu SHALL agree on the same pair of flags, so a reachable item never leads to a
-missing page and a reachable page is never absent from the menu.
+The `/dashboards` route SHALL render:
 
-#### Scenario: Both flags on admit the page and its menu item
+| Configuration | `/dashboards` renders |
+| --- | --- |
+| both flags truthy | the analytics page, or the forbidden page for a user without analytics access |
+| either flag falsy, admin API configured, dashboard not disabled | the existing telemetry dashboard, with its own controls and its refresh-interval selector |
+| otherwise | not found |
+
+The usage flag without the analytics flag is a misconfiguration: it SHALL serve no analytics at all,
+exactly as if the usage flag were off. "Dashboard not disabled" is the existing dashboard flag,
+which `DISABLE_MENU_ITEMS` containing `dashboard` switches off.
+
+The route and the menu SHALL decide from the same inputs, so a reachable item never leads to a
+missing page and a reachable page is never absent from the menu. The one exception is the
+`dashboard` token of `DISABLE_MENU_ITEMS` while the analytics page is on: it hides the item and
+leaves the page reachable by URL, as the token does for every other menu item.
+
+#### Scenario: Both flags on render the analytics page
 
 - **GIVEN** the analytics flag and the usage flag both resolve truthy
-- **WHEN** the user opens the application
-- **THEN** the Analytics group offers a Usage item
-- **AND** opening `/usage` renders the page
+- **WHEN** the user opens `/dashboards`
+- **THEN** the analytics page renders
 
-#### Scenario: The usage flag off hides both
+#### Scenario: The usage flag off falls back to the telemetry dashboard
 
-- **GIVEN** the usage flag is unset
-- **WHEN** the user opens the application
-- **THEN** the Analytics group offers no Usage item
-- **AND** opening `/usage` directly answers as not found
+- **GIVEN** the usage flag is unset and the admin API is configured
+- **WHEN** the user opens `/dashboards`
+- **THEN** the existing telemetry dashboard renders, with its refresh-interval selector
 
-#### Scenario: The analytics flag off hides both
+#### Scenario: The analytics flag off falls back too
 
-- **GIVEN** the usage flag resolves truthy but the analytics flag does not
-- **WHEN** the user opens `/usage`
+- **GIVEN** the usage flag resolves truthy but the analytics flag does not, and the admin API is
+  configured
+- **WHEN** the user opens `/dashboards`
+- **THEN** the existing telemetry dashboard renders
+
+#### Scenario: A disabled telemetry dashboard is not served
+
+- **GIVEN** either flag is falsy, the admin API is configured, and `DISABLE_MENU_ITEMS` contains
+  `dashboard`
+- **WHEN** the user opens `/dashboards`
+- **THEN** the route answers as not found
+
+#### Scenario: Neither page can render
+
+- **GIVEN** either flag is falsy and the admin API is not configured
+- **WHEN** the user opens `/dashboards`
 - **THEN** the route answers as not found
 
 #### Scenario: Flag is falsy for the usual falsy spellings
@@ -50,42 +72,116 @@ missing page and a reachable page is never absent from the menu.
 - **GIVEN** the variable is set to `false`, an empty string, `0`, or any value the flag helper
   treats as falsy
 - **WHEN** the feature flags are initialized
-- **THEN** the flag is false and neither surface admits the page
+- **THEN** the flag is false and `/dashboards` does not render the analytics page
 
 #### Scenario: Access control still applies behind the flag
 
 - **GIVEN** both flags resolve truthy
-- **WHEN** a user without analytics access opens `/usage`
-- **THEN** the forbidden page renders rather than the dashboard
+- **WHEN** a user without analytics access opens `/dashboards`
+- **THEN** the forbidden page renders rather than either dashboard
 
-### Requirement: The existing dashboard is untouched by this page
+### Requirement: The sidebar offers exactly one Dashboards item
 
-The usage page SHALL be a surface of its own. The `/dashboard` route, its menu item and the entity
-Audit tab SHALL continue to render the existing dashboard whatever the usage flag's value, with
-their own controls and their refresh-interval selector.
+The sidebar SHALL offer at most one item named `Dashboards`, pointing at `/dashboards`, placed by
+the configuration:
 
-The two pages answer different questions from different datasets, and both are reachable at once
-on purpose: an operator comparing them sees both, rather than whichever a flag selected. Retiring
-the existing dashboard is a separate change.
+| Configuration | Item |
+| --- | --- |
+| both flags truthy | first item of the Analytics group |
+| either flag falsy, admin API configured, dashboard not disabled | in the Audit group, where the telemetry dashboard's item stood |
+| otherwise | absent |
 
-#### Scenario: The dashboard route is unaffected by the flag
+The Analytics group SHALL NOT be shown only to host the item: while its own flag is off it stays
+hidden, and the item lives in the Audit group.
 
-- **GIVEN** the usage flag resolves truthy
+The item SHALL answer to the `dashboard` token of `DISABLE_MENU_ITEMS` in either group, as the
+telemetry dashboard's item did.
+
+#### Scenario: Analytics on puts the item first in Analytics
+
+- **GIVEN** both flags resolve truthy and the admin API is configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Analytics group's first item is `Dashboards`
+- **AND** the Audit group offers no `Dashboards` item
+
+#### Scenario: Analytics off keeps the item in Audit
+
+- **GIVEN** the usage flag is unset and the admin API is configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Audit group offers a `Dashboards` item
+- **AND** no other group offers one
+
+#### Scenario: The usage flag without Analytics is treated as off
+
+- **GIVEN** the usage flag resolves truthy, the analytics flag does not, and the admin API is
+  configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Audit group offers a `Dashboards` item
+- **AND** no Analytics group is shown
+
+#### Scenario: Analytics on without the admin API
+
+- **GIVEN** both flags resolve truthy and the admin API is not configured
+- **WHEN** the sidebar menu renders
+- **THEN** the Analytics group's first item is `Dashboards`
+
+#### Scenario: The disable token hides the item wherever it is
+
+- **GIVEN** `DISABLE_MENU_ITEMS` contains `dashboard`
+- **WHEN** the sidebar menu renders, with the analytics flags on or off
+- **THEN** no group offers a `Dashboards` item
+
+### Requirement: The old paths redirect to Dashboards
+
+Opening `/dashboard` or `/usage` SHALL redirect to `/dashboards`, whatever the configuration, so a
+bookmark or a link to either old page lands on the page the configuration admits.
+
+#### Scenario: The telemetry dashboard's old path redirects
+
 - **WHEN** the user opens `/dashboard`
-- **THEN** the existing dashboard renders, with its refresh-interval selector
+- **THEN** the browser lands on `/dashboards`
 
-#### Scenario: Entity Audit tab is unaffected by the flag
+#### Scenario: The usage page's old path redirects
 
-- **GIVEN** the usage flag resolves truthy
-- **WHEN** the user opens an entity's Audit tab
-- **THEN** the existing dashboard renders
+- **WHEN** the user opens `/usage`
+- **THEN** the browser lands on `/dashboards`
 
-#### Scenario: The menu offers both, in their own groups
+### Requirement: The entity Audit tab keeps the telemetry dashboard
+
+Every entity's Audit tab SHALL keep rendering the existing telemetry dashboard, with its own
+controls and its refresh-interval selector, whatever the analytics flags' values. The unified route
+decides only what the standalone page shows.
+
+#### Scenario: Entity Audit tab is unaffected by the flags
 
 - **GIVEN** both flags resolve truthy
-- **WHEN** the sidebar menu renders
-- **THEN** the Audit group offers its Dashboard item pointing at `/dashboard`
-- **AND** the Analytics group offers a Usage item pointing at `/usage`
+- **WHEN** the user opens an entity's Audit tab
+- **THEN** the existing telemetry dashboard renders
+
+### Requirement: The analytics page is headed Dashboards and offers no telemetry help
+
+While `/dashboards` serves the analytics page, the page SHALL be headed `Dashboards`, the same name
+as its menu item, and the header's help control SHALL offer no documentation link: the only link
+keyed by the route documents the telemetry dashboard. While the route serves the telemetry
+dashboard, the help control SHALL keep offering that link.
+
+#### Scenario: The analytics page names itself after the section
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** the page heading reads `Dashboards`
+
+#### Scenario: No telemetry help over the analytics page
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** the header offers no help link
+
+#### Scenario: Telemetry help stays with the telemetry dashboard
+
+- **GIVEN** either flag is falsy and `/dashboards` serves the telemetry dashboard
+- **WHEN** the user opens `/dashboards`
+- **THEN** the header's help link opens the telemetry dashboard documentation
 
 ### Requirement: The two pages share no mutable state
 
@@ -104,11 +200,12 @@ wrapper can express it, and otherwise behind a parameter whose default is the ex
 - **WHEN** an existing caller renders it without naming the new parameter
 - **THEN** it renders exactly as it did before the usage page existed
 
-#### Scenario: Removing the page leaves the existing dashboard intact
+#### Scenario: The telemetry dashboard depends on nothing in the usage page's module
 
-- **GIVEN** the usage page's own module is deleted
-- **WHEN** the existing dashboard is opened
-- **THEN** it renders and behaves exactly as before the usage page was added
+- **GIVEN** the telemetry dashboard's modules
+- **WHEN** their imports are followed
+- **THEN** none reaches the usage page's own module; only the route that chooses between the two
+  pages imports both
 
 ### Requirement: A view issues one request per data shape, per window
 
@@ -304,6 +401,18 @@ SHALL state no clock, and a shorter one SHALL name the day once unless the perio
 A series' colour SHALL be stated on the series itself, not only on the line it paints: the tooltip's
 marker and the legend read the series, so a colour given to `lineStyle` alone left them on the
 charting library's own palette and disagreeing with the plot.
+
+A latency line SHALL break where a bucket has no percentile to state. A bucket with no calls has no
+response time, and joining across it drew a flat line through hours the platform was idle — a
+reading the window never took. Such a line SHALL also go unsampled: a sampler drops points to fit
+the pixels, gaps included, and bridges them again. A calls or spend plot needs neither, because an
+empty bucket there is a real zero.
+
+#### Scenario: A latency line breaks over an idle stretch
+
+- **GIVEN** a window whose middle buckets recorded no calls
+- **WHEN** the latency plot renders
+- **THEN** the lines break over those buckets rather than joining across them
 
 #### Scenario: A tooltip marker matches its line
 
