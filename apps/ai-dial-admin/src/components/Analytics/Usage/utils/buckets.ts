@@ -1,4 +1,4 @@
-import { BucketPoint } from '@/src/components/Analytics/Usage/models';
+import { BucketPoint, SpendBucket } from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { TimeRange } from '@/src/models/time-range';
 import { ChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
@@ -41,6 +41,30 @@ export const padBucketPoints = (
 
   for (let bucketMs = firstMs; bucketMs < endMs; bucketMs += stepMs) {
     padded.push(byBucket.get(bucketMs) ?? { bucketMs, measures: EMPTY_MEASURES });
+  }
+
+  return padded;
+};
+
+/** The same filling for the spend row, whose bars are a bin of their own. */
+export const padSpendBuckets = (
+  buckets: SpendBucket[],
+  window: TimeRange,
+  resolution: ChartResolution,
+): SpendBucket[] => {
+  const stepMs = getBucketStepMs(resolution);
+
+  if (stepMs <= 0) {
+    return buckets;
+  }
+
+  const byBucket = new Map(buckets.map((bucket) => [bucket.bucketMs, bucket]));
+  const firstMs = Math.floor(window.startDate.getTime() / stepMs) * stepMs;
+  const endMs = window.endDate.getTime();
+  const padded: SpendBucket[] = [];
+
+  for (let bucketMs = firstMs; bucketMs < endMs; bucketMs += stepMs) {
+    padded.push(byBucket.get(bucketMs) ?? { bucketMs, spend: 0 });
   }
 
   return padded;
