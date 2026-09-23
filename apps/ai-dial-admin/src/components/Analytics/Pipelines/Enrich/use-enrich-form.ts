@@ -56,8 +56,7 @@ export const useEnrichForm = (params: Params = {}) => {
     onTransformChange,
     isValid,
     isSampleFractionValid,
-    // Different tables: the inputs are scoped to the read source, the outputs to the target.
-    isVariablesReady: Boolean(base.readSource),
+    isVariablesReady: Boolean(base.readSource) && !base.isSourceEntityPending && !base.hasSourceEntityError,
     isTransformReady: base.isTargetResolved,
   };
 };

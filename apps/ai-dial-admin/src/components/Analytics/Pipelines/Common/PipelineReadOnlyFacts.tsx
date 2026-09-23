@@ -24,21 +24,13 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, readSource }) => {
 
   const notSet = t(AnalyticsPipelinesI18nKey.NotSet);
 
-  // The field list rather than the document: the document is already in the JSON editor, and the names
-  // are what an operator compares against the target's columns.
   const isEnrich = pipeline.kind === PipelineKind.Enrich;
-  const schemaFields = Object.keys((pipeline.response_schema?.properties as Record<string, unknown> | undefined) ?? {});
 
   return (
     <section
       aria-label={t(AnalyticsPipelinesI18nKey.ReadOnlyFacts)}
       className="flex flex-row flex-wrap gap-8 pb-8 border-b border-primary"
     >
-      <LabelledText label={t(AnalyticsPipelinesI18nKey.Target)}>
-        <Link href={tableDetailHref(pipeline.target)} className="text-accent-primary hover:underline">
-          {pipeline.target}
-        </Link>
-      </LabelledText>
       <LabelledText label={t(AnalyticsPipelinesI18nKey.Source)}>
         {readSource ? (
           <Link href={tableDetailHref(readSource)} className="text-accent-primary hover:underline">
@@ -48,14 +40,15 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, readSource }) => {
           notSet
         )}
       </LabelledText>
+      <LabelledText label={t(AnalyticsPipelinesI18nKey.Target)}>
+        <Link href={tableDetailHref(pipeline.target)} className="text-accent-primary hover:underline">
+          {pipeline.target}
+        </Link>
+      </LabelledText>
       {isEnrich && (
         <>
           <LabelledText label={t(AnalyticsPipelinesI18nKey.GrainKey)} text={pipeline.grain_key || notSet} />
           <LabelledText label={t(AnalyticsPipelinesI18nKey.VersionColumn)} text={pipeline.version_column || notSet} />
-          <LabelledText
-            label={t(AnalyticsPipelinesI18nKey.ResponseSchema)}
-            text={schemaFields.length ? schemaFields.join(', ') : notSet}
-          />
         </>
       )}
       <LabelledText label={t(AnalyticsPipelinesI18nKey.Generation)} text={String(pipeline.generation)} />

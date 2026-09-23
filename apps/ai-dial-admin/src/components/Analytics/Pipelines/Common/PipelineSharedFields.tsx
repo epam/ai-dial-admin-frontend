@@ -34,14 +34,14 @@ const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
 
   return (
     <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionReadScope)} isModal={isModal}>
-      <DialSelectField
-        id="pipeline-target"
-        required
-        label={t(AnalyticsPipelinesI18nKey.Target)}
-        options={targetOptions}
-        value={draft.target ?? ''}
-        onChange={(v) => onChange({ target: v as string })}
-      />
+      {!isModal && !isAggregate && (
+        <SourceField
+          input={getPipelineInput(draft.inputs)}
+          sourceTable={target?.source_table}
+          tables={form.tables}
+          onChange={onChangeInput}
+        />
+      )}
 
       {isAggregate && (
         <DialSelectField
@@ -54,14 +54,14 @@ const PipelineSharedFields: FC<Props> = ({ form, isModal }) => {
         />
       )}
 
-      {!isModal && !isAggregate && (
-        <SourceField
-          input={getPipelineInput(draft.inputs)}
-          sourceTable={target?.source_table}
-          tables={form.tables}
-          onChange={onChangeInput}
-        />
-      )}
+      <DialSelectField
+        id="pipeline-target"
+        required
+        label={t(AnalyticsPipelinesI18nKey.Target)}
+        options={targetOptions}
+        value={draft.target ?? ''}
+        onChange={(v) => onChange({ target: v as string })}
+      />
 
       {!isModal && (
         <SqlPredicateField

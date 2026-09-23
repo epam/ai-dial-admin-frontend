@@ -135,12 +135,12 @@ describe('PipelineDetailView', () => {
     expect(screen.getByText('7')).toBeTruthy();
   });
 
-  test('presents the composed response schema, which is what the model is held to', () => {
+  // A document among one-word values, repeating what the outputs editor states below; the JSON editor
+  // keeps it.
+  test('leaves the composed response schema out of the facts', () => {
     renderView({ response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } } });
 
-    const schema = within(facts()).getByText(AnalyticsPipelinesI18nKey.ResponseSchema).parentElement;
-
-    expect(within(schema as HTMLElement).getByText('rate_event_count')).toBeTruthy();
+    expect(within(facts()).queryByText(/rate_event_count/)).toBeNull();
   });
 
   test('offers no evaluator fact and no link to one', () => {
@@ -279,6 +279,63 @@ describe('PipelineDetailView', () => {
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(screen.getByDisplayValue('PT2H')).toBeTruthy();
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  // A sql transform renders neither a template nor inputs, hence the llm fixture.
+  test('presents the inputs inside the transform block, after the template and before the outputs', () => {
+    renderView({ transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title.' } } });
+
+    const rendered = document.body.textContent ?? '';
+    const template = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionRequestTemplate);
+    const inputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionInputs);
+    const outputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionOutputs);
+
+    expect(template).toBeGreaterThan(-1);
+    expect(inputs).toBeGreaterThan(template);
+    expect(outputs).toBeGreaterThan(inputs);
+  });
+
+  // The facts row and the scope below it name the same two tables, so they are measured separately: a
+  // reader who meets them in opposite orders reads the second as a different pair.
+  test('presents the source before the target in the facts row and in the read scope', () => {
+    renderView();
+
+    const rendered = document.body.textContent ?? '';
+    const scopeAt = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope);
+    const facts = rendered.slice(0, scopeAt);
+    const scope = rendered.slice(scopeAt);
+
+    expect(facts.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      facts.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+  });
+
+  // An aggregate names its input with a plain select rather than the follow-or-pin control, and it is
+  // ordered the same way.
+  test('presents the input before the target for an aggregate pipeline', async () => {
+    const rollup: AnalyticsTable = { name: 'usage_rollup', type: AnalyticsTableType.Source, columns: [] };
+    vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable, rollup]);
+
+    renderView({
+      kind: PipelineKind.Aggregate,
+      target: 'usage_rollup',
+      inputs: ['dial_usage_log'],
+      transform: undefined,
+      trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
+      measures: [{ name: 'requests', fn: 'count' }],
+    });
+
+    await waitFor(() => expect(getTables).toHaveBeenCalled());
+
+    const rendered = document.body.textContent ?? '';
+    const scope = rendered.slice(rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope));
+
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Inputs)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
   });
 
   test('groups the members into collapsible sections', () => {

@@ -8,7 +8,7 @@ import { MemberSelect } from '@/src/models/analytics/pipeline';
 
 const Host = ({ seed }: { seed?: MemberSelect }) => {
   const [memberSelect, setMemberSelect] = useState<MemberSelect | undefined>(seed);
-  return <MemberSelectEditor memberSelect={memberSelect} columns={[]} isLimitValid onChange={setMemberSelect} />;
+  return <MemberSelectEditor memberSelect={memberSelect} fields={[]} isLimitValid onChange={setMemberSelect} />;
 };
 
 const scopeRadio = (name: string) => screen.getByRole('radio', { name });
@@ -30,7 +30,7 @@ describe('MemberSelectEditor', () => {
 
   test('sends no policy at all when every member is taken', () => {
     const onChange = vi.fn();
-    render(<MemberSelectEditor memberSelect={{ limit: 3 }} columns={[]} isLimitValid onChange={onChange} />);
+    render(<MemberSelectEditor memberSelect={{ limit: 3 }} fields={[]} isLimitValid onChange={onChange} />);
 
     fireEvent.click(scopeRadio(AnalyticsPipelinesI18nKey.MemberScopeAll));
 
