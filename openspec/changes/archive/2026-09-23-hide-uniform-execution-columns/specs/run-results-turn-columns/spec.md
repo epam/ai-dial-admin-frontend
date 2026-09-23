@@ -1,41 +1,4 @@
-# run-results-turn-columns Specification
-
-## Purpose
-
-Defines how the run Extraction Result grid presents request and turn positions for single-request,
-chained-request, and multi-turn test cases — which of those columns it opens with, and how each renders
-once shown — while preserving flat-row navigation and sorting behavior.
-
-## Requirements
-
-### Requirement: Run results show the turn number and total turn count
-
-The run results grid SHALL provide two columns in the `EXECUTION` column group, positioned immediately
-after `# Run number`, and SHALL render them as follows whenever they are shown:
-
-- **Turn** — the result's `turnIndex` rendered 1-based, matching how `# Run number` renders `runIndex`.
-- **Total turns** — the result's `totalTurns` as supplied.
-
-Both SHALL render empty when the underlying field is absent.
-
-Whether either column is shown on opening the grid is governed by "Execution position columns start
-hidden unless they distinguish a row"; a column hidden there remains provided, listed in the columns
-panel, and renders exactly as specified here once selected.
-
-#### Scenario: A turn result shows its position
-
-- **WHEN** a result row has `turnIndex` 2 within a 4-turn conversation
-- **THEN** the Turn column shows `3` and the Total turns column shows `4`
-
-#### Scenario: The first turn is shown as turn one
-
-- **WHEN** a result row has `turnIndex` 0
-- **THEN** the Turn column shows `1`, not `0`
-
-#### Scenario: A single-turn result leaves both cells empty
-
-- **WHEN** a result row carries neither `turnIndex` nor `totalTurns`
-- **THEN** both columns render empty
+## ADDED Requirements
 
 ### Requirement: Execution position columns start hidden unless they distinguish a row
 
@@ -134,44 +97,34 @@ deliberate default rather than remove noise from it.
 - **WHEN** the Compare Execution results grid is shown for two runs whose results span several turns
 - **THEN** the Execution index columns are still hidden by default
 
-### Requirement: Multi-turn results are not grouped
+## MODIFIED Requirements
 
-The results grid SHALL continue to render one flat row per result. It SHALL NOT group rows by test case, add an expander column, synthesize summary rows, alter the default sort, or disable sorting on any column, whether or not the run contains multi-turn cases.
+### Requirement: Run results show the turn number and total turn count
 
-This is a deliberate scope boundary: turn grouping in results is deferred so that concurrent comparison and heatmap work does not conflict with it.
+The run results grid SHALL provide two columns in the `EXECUTION` column group, positioned immediately
+after `# Run number`, and SHALL render them as follows whenever they are shown:
 
-#### Scenario: A multi-turn run renders flat
+- **Turn** — the result's `turnIndex` rendered 1-based, matching how `# Run number` renders `runIndex`.
+- **Total turns** — the result's `totalTurns` as supplied.
 
-- **WHEN** a run containing 4-turn conversations is opened
-- **THEN** each turn is its own row, with no expander column and no summary rows
+Both SHALL render empty when the underlying field is absent.
 
-#### Scenario: Column sorting still works on a multi-turn run
+Whether either column is shown on opening the grid is governed by the default-visibility requirement
+above; a column hidden there remains provided, listed in the columns panel, and renders exactly as
+specified here once selected.
 
-- **WHEN** a column header is used to sort a run containing multi-turn cases
-- **THEN** the sort applies, exactly as it does for a single-turn run
+#### Scenario: A turn result shows its position
 
-#### Scenario: Per-turn metric scores need no special handling
+- **WHEN** a result row has `turnIndex` 2 within a 4-turn conversation
+- **THEN** the Turn column shows `3` and the Total turns column shows `4`
 
-- **WHEN** a metric is scored for each turn of a conversation
-- **THEN** each turn's row shows its own score in the existing metric columns
+#### Scenario: The first turn is shown as turn one
 
-### Requirement: Request and Turn columns are sortable
+- **WHEN** a result row has `turnIndex` 0
+- **THEN** the Turn column shows `1`, not `0`
 
-The Extraction Result grid SHALL allow users to sort rows numerically by the displayed Request and
-Turn values. Sorting either column SHALL remain available and SHALL apply to the currently visible
-rows while the Test Case name filter is active.
+#### Scenario: A single-turn result leaves both cells empty
 
-#### Scenario: Results are sorted by request number
+- **WHEN** a result row carries neither `turnIndex` nor `totalTurns`
+- **THEN** both columns render empty
 
-- **WHEN** a user sorts the Request column
-- **THEN** the result rows are ordered numerically by request number in the selected direction
-
-#### Scenario: Results are sorted by turn number
-
-- **WHEN** a user sorts the Turn column
-- **THEN** the result rows are ordered numerically by turn number in the selected direction
-
-#### Scenario: Filtered results remain sortable
-
-- **WHEN** a user filters results by Test Case name and then sorts the Request or Turn column
-- **THEN** the visible matching rows are ordered numerically by the selected column in the selected direction
