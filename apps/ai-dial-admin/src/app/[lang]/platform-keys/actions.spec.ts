@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { assetApi } from '@/src/app/api/api';
-import { DialKeyResource } from '@/src/models/dial/resource';
+import { DialKeyResource, DialModelResourceStatus } from '@/src/models/dial/resource';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -13,12 +13,12 @@ vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 
 // `description` is deliberately among the overrides in two cases: the point of those tests is that the
-// action does not forward a member the resource type does not declare.
+// action does not forward a member the resource type does not declare. A fetched key carries its
+// identity (`path`/`folderId`) only under `_metadata` — Core's `Key` declares no `name` field.
 const key = (overrides: Partial<DialKeyResource> & Record<string, unknown> = {}): DialKeyResource =>
   ({
     name: 'my-key',
-    path: 'platform/my-key',
-    folderId: 'platform/',
+    _metadata: { name: 'my-key', path: 'platform/my-key', folderId: 'platform/' },
     ...overrides,
   }) as DialKeyResource;
 
@@ -67,14 +67,19 @@ describe('Assets key :: server actions', () => {
   test('Should call createKey action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // `status`/`author` graft under `_metadata` only; the flat `description` is the create form's
+    // seed, which `Key.class` has no field for — the exact-body assertion proves neither reaches Core.
     await createKey(
       key({
         key: 'generated-secret',
-        status: 'VALID' as any,
-        path: 'platform/my-key',
-        folderId: 'platform/',
-        author: 'someone',
         description: 'should be stripped',
+        _metadata: {
+          name: 'my-key',
+          path: 'platform/my-key',
+          folderId: 'platform/',
+          status: DialModelResourceStatus.Valid,
+          author: 'someone',
+        },
       }),
     );
 
@@ -110,13 +115,21 @@ describe('Assets key :: server actions', () => {
   test('Should call updateKey action, stripping author/createdAt/updatedAt metadata fields', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // `author` grafts under `_metadata` only; `createdAt`/`updatedAt` are `ModifiedEntity`-typed and
+    // may sit flat as well — the payload builder strips both spellings, and the exact-body assertion
+    // below proves neither reaches Core.
     await updateKey(
       key({
-        author: 'someone',
         createdAt: '1787660728755',
         updatedAt: '1787660728755',
         secured: true,
         description: 'should be stripped',
+        _metadata: {
+          name: 'my-key',
+          path: 'platform/my-key',
+          folderId: 'platform/',
+          author: 'someone',
+        },
       }),
       'etag',
     );

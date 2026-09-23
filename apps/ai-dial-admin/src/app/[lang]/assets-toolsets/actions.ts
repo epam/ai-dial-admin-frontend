@@ -7,6 +7,7 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
 import {
+  CoreResourceEntityMetadata,
   DialPlatformToolsetResource,
   DialToolsetResource,
   ToolsetAuthCredentialLevel,
@@ -22,6 +23,7 @@ import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
+import { stripMetadata, stripPlatformAssetFields } from '@/src/server/assets/exim';
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
 import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
@@ -34,16 +36,17 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: DialToolsetResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const folderId = toolset.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
+  // Same flat-vs-`_metadata` resolution as `createApp` in `assets-applications/actions.ts`.
+  const folderId = toolset.folderId || toolset._metadata?.folderId || ROOT_FOLDER;
+  const version = toolset.version ?? toolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(token, ResourceType.TOOLSET, path, {
-    ...toolset,
+    ...stripMetadata(toolset),
     allowedTools: getAllowTools(toolset),
     transport: getTransport(toolset),
-    displayVersion: toolset.version,
+    displayVersion: version,
     folderId: undefined,
     version: undefined,
-    path: undefined,
   });
 }
 
@@ -63,13 +66,24 @@ export async function getToolset(path: string, etag: string) {
 
 export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const folderId = toolset.folderId || ROOT_FOLDER;
-  const path = `${folderId}${getVersionedName(toolset.name || '', toolset.version)}`;
+  // The View hands this action a merged detail entity cast to the row shape — its identity grafts
+  // nest under `_metadata`, absent from `AssetToolset`'s type — while create/duplicate flows seed
+  // flat `folderId`/`version`, so both spellings are resolved here (same as `updateApp`).
+  const castToolset = toolset as AssetToolset & { _metadata?: CoreResourceEntityMetadata };
+  const folderId = castToolset.folderId || castToolset._metadata?.folderId || ROOT_FOLDER;
+  const version = castToolset.version ?? castToolset._metadata?.version;
+  const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(
     token,
     ResourceType.TOOLSET,
     path,
-    { ...toolset, displayVersion: toolset.version, folderId: undefined, version: undefined, path: undefined },
+    {
+      ...stripMetadata(castToolset),
+      displayVersion: version,
+      folderId: undefined,
+      version: undefined,
+      path: undefined,
+    },
     { etag },
   );
 }
@@ -98,33 +112,14 @@ export async function getPlatformToolsets(path: string) {
   return getToolsets(path);
 }
 
-/**
- * Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
- * (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
- * Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
- * `toKeyPayload` strips extras for `Key.class`. `status`/`validationWarnings` are read-only
- * projections Core computes, not part of the entity; `author`/`createdAt`/`updatedAt` come from the
- * metadata node, not `ToolSet` itself; `reference` is a client-only tracking id (see `handleDuplicate`/
- * `addNewVersion`, which already strip it before any write). None of these round-trip through the
- * merge readers as content fields, so they must not be sent back on write.
- */
-function toPlatformToolsetPayload(toolset: DialPlatformToolsetResource) {
-  const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    author: __author,
-    createdAt: __createdAt,
-    updatedAt: __updatedAt,
-    reference: __reference,
-    ...payload
-  } = toolset as DialPlatformToolsetResource & { reference?: string };
-
-  return payload;
-}
-
+// Unlike the generic `ResourceController` public-bucket writes go through, `ConfigResourceController`
+// (the platform bucket's write path) deserializes the request body straight into `ToolSet` via
+// Jackson with the default `FAIL_ON_UNKNOWN_PROPERTIES` — the same reason `platform-keys/actions.ts`'s
+// `toKeyPayload` strips extras for `Key.class`. See `stripPlatformAssetFields` for what it strips and
+// why.
 export async function createPlatformToolset(toolset: DialPlatformToolsetResource) {
   return createToolset({
-    ...toPlatformToolsetPayload(toolset),
+    ...stripPlatformAssetFields(toolset),
     folderId: `${PLATFORM_ROOT_FOLDER}/`,
     version: undefined,
   } as unknown as DialToolsetResource);
@@ -138,7 +133,7 @@ export async function getPlatformToolset(path: string, etag: string) {
 export async function updatePlatformToolset(toolset: DialPlatformToolsetResource, etag: string) {
   return updateToolset(
     {
-      ...toPlatformToolsetPayload(toolset),
+      ...stripPlatformAssetFields(toolset),
       folderId: `${PLATFORM_ROOT_FOLDER}/`,
       version: undefined,
     } as unknown as AssetToolset,

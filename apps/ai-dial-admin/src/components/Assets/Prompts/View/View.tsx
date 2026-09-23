@@ -81,17 +81,18 @@ const PromptView: FC<Props> = ({ originalPrompt, etag }) => {
         if (isNeedToMove) {
           // A prompt is a single stored resource — move just its own path (no same-name
           // sibling versions to carry along).
-          movePrompts([updatedEntity.path], removeTrailingSlash(selectedPrompt.folderId)).then(() => {
+          const path = updatedEntity?._metadata?.path || '';
+          movePrompts([path], removeTrailingSlash(selectedPrompt.folderId)).then(() => {
             fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
             router.push(
               getUrnForEntity(ApplicationRoute.Prompts, {
                 name: updatedEntity.name,
-                path: changePath(updatedEntity.path, removeTrailingSlash(selectedPrompt.folderId)),
+                path: changePath(path, removeTrailingSlash(selectedPrompt.folderId)),
               }),
             );
           });
         } else {
-          fetchFiles(updatedEntity.folderId);
+          fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
           router.push(getUrnForEntity(ApplicationRoute.Prompts, updatedEntity));
         }
         router.refresh();

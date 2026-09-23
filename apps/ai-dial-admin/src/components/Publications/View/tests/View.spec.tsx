@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ActionType, ToolsetPublication } from '@/src/models/dial/publications';
-import { ToolsetAuthType } from '@/src/models/dial/resource';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationView from '../View';
 
@@ -77,6 +77,9 @@ const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublica
       targetUrl: 'test-target',
       reviewUrl: 'test-review',
       action: ActionType.ADD,
+      // A publication's review copy is a BE-stored payload copy with identity (`path`/`folderId`)
+      // attached flat — not a merged Core read, whose identity lives under `_metadata` — hence the
+      // double cast against `DialToolsetResource`.
       toolSetResource: {
         created_at: 0,
         updated_at: 0,
@@ -101,7 +104,7 @@ const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublica
               authentication_type: authType,
             }
           : undefined,
-      },
+      } as unknown as DialToolsetResource,
     },
   ],
 });

@@ -51,12 +51,17 @@ describe('Assets role :: server actions', () => {
   test('Should call createRole action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The read-only projections (identity, `status`) graft under `_metadata`; the exact-body
+    // assertion below proves the payload builder drops the whole object.
     const result = await createRole({
       name: 'my-role',
-      path: 'platform/my-role',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
       costLimit: { minute: 10 },
+      _metadata: {
+        name: 'my-role',
+        path: 'platform/my-role',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROLE, 'my-role', {
@@ -71,8 +76,6 @@ describe('Assets role :: server actions', () => {
 
     await createRole({
       name: 'my-role',
-      path: 'platform/my-role',
-      folderId: 'platform/',
       description: '',
     } as any);
 
@@ -83,7 +86,7 @@ describe('Assets role :: server actions', () => {
     const rejection = { success: false, errorHeader: 'Bad Request', errorMessage: 'invalid role' };
     (assetApi.put as any).mockResolvedValue(rejection);
 
-    const result = await createRole({ name: 'my-role', path: 'platform/my-role', folderId: 'platform/' });
+    const result = await createRole({ name: 'my-role' });
 
     expect(result).toBe(rejection);
   });
@@ -91,7 +94,7 @@ describe('Assets role :: server actions', () => {
   test('Should call updateRole action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateRole({ name: 'my-role', path: 'platform/my-role', folderId: 'platform/' }, 'etag');
+    const result = await updateRole({ name: 'my-role' }, 'etag');
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -103,19 +106,27 @@ describe('Assets role :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call updateRole action, stripping author/createdAt/updatedAt — Core metadata fields the read merges in, not `Role.class` fields', async () => {
+  test("Should call updateRole action, stripping the merged read's audit grafts — Core metadata fields, not `Role.class` fields", async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // `author` grafts under `_metadata` only; `createdAt`/`updatedAt` are `ModifiedEntity`-typed and
+    // may sit flat as well — the payload builder strips both spellings, and the exact-body assertion
+    // below proves neither reaches Core.
     await updateRole(
       {
         name: 'qwe',
-        path: 'platform/qwe',
-        folderId: 'platform/',
         costLimit: { minute: 10, day: 100, week: 500, month: 1000 },
         share: { conversation: { invitation_ttl: 24, max_accepted_users: 5 } },
-        author: 'Yauheni Osipau',
         createdAt: '1787660728755',
         updatedAt: '1787660728755',
+        _metadata: {
+          name: 'qwe',
+          path: 'platform/qwe',
+          folderId: 'platform/',
+          author: 'Yauheni Osipau',
+          createdAt: '1787660728755',
+          updatedAt: '1787660728755',
+        },
       },
       'etag',
     );
@@ -139,8 +150,6 @@ describe('Assets role :: server actions', () => {
     await updateRole(
       {
         name: 'qwe',
-        path: 'platform/qwe',
-        folderId: 'platform/',
         // `minute` is already absent here — `mergeRoleResource` dropped it on read (see
         // `normalizeRoleLimits`'s doc comment); Core defaults a missing token to `Long.MAX_VALUE`
         // itself, so there is nothing left for the write path to convert or preserve.

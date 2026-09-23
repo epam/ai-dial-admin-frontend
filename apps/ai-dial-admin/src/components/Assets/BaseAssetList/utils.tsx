@@ -65,8 +65,10 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import {
+  CoreValidationWarning,
   DialAppRunnerResource,
   DialModelResource,
+  DialModelResourceStatus,
   DialPlatformApplicationResource,
   DialPlatformToolsetResource,
   PlatformAsset,
@@ -332,6 +334,9 @@ export const getEmptyStateContent = (
 };
 
 export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: PlatformAsset): PlatformAsset => {
+  // The caller passes a listing row, whose identity is flat (`path`/`folderId`) and whose
+  // `status`/`validationWarnings` appear only where Core's projection serves them — fields the
+  // resource types no longer declare flat, so the strip cast spells them out explicitly.
   const {
     path: __path,
     folderId: __folderId,
@@ -343,7 +348,13 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     reference: __reference,
     name,
     ...duplicate
-  } = asset as DialModelResource & DialAppRunnerResource;
+  } = asset as DialModelResource &
+    DialAppRunnerResource & {
+      path?: string;
+      folderId?: string;
+      status?: DialModelResourceStatus;
+      validationWarnings?: CoreValidationWarning[];
+    };
 
   return view === ApplicationRoute.PlatformAppRunners
     ? (duplicate as PlatformAsset)
@@ -421,10 +432,12 @@ export const CreateAssetActionMap: Record<
   (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
 > = {
   [ApplicationRoute.Prompts]: createPrompt,
-  [ApplicationRoute.AssetsApplications]: createApp as (
+  // `createApp`/`createToolset` take the `Dial*Resource` shapes, which no longer overlap the
+  // `AssetWithVersion` create-payload surface (its flat `path` identity) — hence the double casts.
+  [ApplicationRoute.AssetsApplications]: createApp as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsToolsets]: createToolset as (
+  [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.PlatformModels]: createModel as (

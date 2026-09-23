@@ -87,16 +87,25 @@ describe('Catalog schemas :: server actions', () => {
   ])('Should strip the fields Core injects on read before a %s', async (_label, action) => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // A merged read carries `path`/`folderId`/`status`/`validationWarnings`/`author` only under
+    // `_metadata` (dropped wholesale by `stripMetadata`); `name` also sits flat because the
+    // create-flow seeds it and Core re-injects it on every read, and `createdAt`/`updatedAt`
+    // because `ModifiedEntity` types the pair — the payload builder destructures those spellings out.
     await action({
       ...catalogSchema,
       name: ENCODED,
-      path: ENCODED,
-      folderId: '',
-      author: 'ivy',
-      status: DialModelResourceStatus.Valid,
-      validationWarnings: [{ field: 'x', message: 'y' }],
       createdAt: '100',
       updatedAt: '200',
+      _metadata: {
+        name: ENCODED,
+        path: ENCODED,
+        folderId: '',
+        author: 'ivy',
+        status: DialModelResourceStatus.Valid,
+        validationWarnings: [{ field: 'x', message: 'y' }],
+        createdAt: '100',
+        updatedAt: '200',
+      },
     } as DialCatalogSchemaResource);
 
     const payload = (assetApi.put as any).mock.calls[0][3];

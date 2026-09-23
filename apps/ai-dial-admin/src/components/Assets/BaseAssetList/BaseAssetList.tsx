@@ -31,7 +31,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialAppRunnerResource, DialResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
@@ -43,6 +43,7 @@ import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import {
   getRootFolder,
   isFlatPlatformView,
+  isPlatformBucketPath,
   isPlatformDualBucketView,
   PLATFORM_ROOT_FOLDER,
 } from '@/src/utils/files/root-folder';
@@ -309,7 +310,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             } else if (isVersionlessAssetView(view)) {
               entityLabel = asset.name || '';
             } else {
-              entityLabel = `${asset.name}__${asset.version}`;
+              entityLabel = `${asset.name}__${asset._metadata?.version}`;
             }
             showNotification(
               getSuccessNotification(
@@ -329,7 +330,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             } else if (isVersionlessAssetView(view)) {
               redirectEntity = { name: asset.name, folderId: folderPath };
             } else {
-              redirectEntity = { name: asset.name, version: asset.version, folderId: folderPath };
+              redirectEntity = { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
             }
             router.push(getUrnForEntity(view, redirectEntity));
           }
@@ -355,7 +356,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       // needed here and was the cause of Issue #4420's `Modals.tsx` counterpart — `.path` never
       // carries the bucket prefix, so it always won the `||` and made this check false for a
       // platform-bucket row).
-      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, platformAsset.folderId);
+      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, asset.folderId);
       if (isFlatPlatformView(view) || isPlatformDualBucketDuplicate) {
         const duplicate = getPlatformAssetDuplicate(view, platformAsset);
         // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
@@ -373,14 +374,16 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       if (isVersionlessAssetView(view)) {
         newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
       } else {
-        const versionedAsset = asset as AssetWithVersion;
         newAsset = {
-          ...versionedAsset,
-          path: `${versionedAsset.folderId}${versionedAsset.name}__${versionedAsset.version}`,
-        };
+          ...asset,
+          _metadata: {
+            ...asset._metadata,
+            path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
+          },
+        } as AssetWithVersion;
       }
       delete (newAsset as AssetApp).reference;
-      handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
+      handleCreateAsset(newAsset as AssetApp, asset._metadata?.folderId, true);
       handleModalClose();
     },
     [handleCreateAsset, handleModalClose, view],
@@ -411,7 +414,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
             ? [file.sourceUrl]
             : getAllSelectedItemsPaths(file.sourceUrl, selectedVersionsMap);
           filePaths.push(...paths.map((path: string) => path.replaceAll('//', '/')));
-          if (moveAsset) {
+          // A platform-bucket row (AssetsApplications/AssetsToolsets browsed under `platform/`) has
+          // no folder concept — Core has no move route for it. `DialCopiedItem` never carries
+          // `bucket` (it's a ui-kit drag-event payload, not a row model), so this reads the path
+          // directly rather than through `isPlatformBucketRow`.
+          if (moveAsset && !isPlatformBucketPath(file.sourceUrl)) {
             promises.push(
               moveAsset(filePaths, newPath, file?.overwrite, duplicateName).then((res) => {
                 setMovedItems((prev) => prev + filePaths.length);
@@ -572,7 +579,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const onMultipleRemove = useCallback(async () => {
     if (deletedItems) {
-      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialResource[];
+      // Grid rows carry their identity flat (`path`/`folderId` straight off the listing, never inside
+      // `_metadata`); `etag` rides along only where a listing serves it (skills), which `DialFile`
+      // doesn't declare — hence the widened cast instead of the old `DialResource` one.
+      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as (DialFile & {
+        etag?: string;
+      })[];
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
       // Selection is already scoped to one folder (confirmed in design.md), so a batch is always
       // single-bucket — resolving by the first asset's path is enough, no mixed-bucket case exists.

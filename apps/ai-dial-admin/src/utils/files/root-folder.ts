@@ -1,4 +1,5 @@
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { BucketType } from '@/src/models/dial/asset-list-item';
 import { ApplicationRoute } from '@/src/types/routes';
 
 /** Core's fixed bucket for `ConfigResourceController`-backed resource types. */
@@ -56,6 +57,17 @@ export const isPlatformBucketPath = (path?: string | null): boolean =>
   !!path && path.startsWith(`${PLATFORM_ROOT_FOLDER}/`);
 
 /**
+ * True when a *row* belongs to the platform bucket. Prefers the row's own `bucket` (set once, by the
+ * server row mapper — see `asset-list-item.ts`) over parsing a path, per design.md D3. Falls back to
+ * `isPlatformBucketPath(fallbackPath)` only for rows that predate that field: client-synthesized
+ * folder nodes (the dual-bucket tree roots, `mergeFiles`'s synthesized root, `setTempFolder`
+ * placeholders — see `AssetsFolderContext.tsx`) and merged detail entities, which carry bucket only
+ * implicitly in `_metadata.folderId`/`path`.
+ */
+export const isPlatformBucketRow = (bucket?: string, fallbackPath?: string | null): boolean =>
+  bucket ? bucket === BucketType.Platform : isPlatformBucketPath(fallbackPath);
+
+/**
  * True when `view` is one of `DUAL_BUCKET_VIEWS` *and* the current path is inside its `platform`
  * bucket. The dual-bucket grid never shows platform rows and public rows at the same time — browsing
  * into `platform/` renders only the flat platform row set, browsing into `public/...` renders the
@@ -64,3 +76,12 @@ export const isPlatformBucketPath = (path?: string | null): boolean =>
  */
 export const isPlatformDualBucketView = (view: ApplicationRoute, currentPath?: string): boolean =>
   DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(currentPath);
+
+/**
+ * The `AssetsApplications`/`AssetsToolsets` detail routes' URL contract: a `?path=` query param means
+ * the resource is public-bucket (versioned, folder-nested); its absence means platform-bucket (flat,
+ * identified by the `[id]` segment alone) — design.md D3/D5 of `platform-applications`/
+ * `platform-toolsets`. Stated once here so both detail pages read the same inversion instead of each
+ * repeating `!rawPath`.
+ */
+export const isPlatformBucketDetailRoute = (rawPath?: string): boolean => !rawPath;

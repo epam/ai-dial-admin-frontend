@@ -167,7 +167,7 @@ const AppRunnerAssetView: FC<Props> = ({
             getUpdateNotificationDescription(ApplicationRoute.PlatformAppRunners, selectedRunner.$id, t),
           ),
         );
-        fetchFiles(selectedRunner.folderId);
+        fetchFiles(selectedRunner._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

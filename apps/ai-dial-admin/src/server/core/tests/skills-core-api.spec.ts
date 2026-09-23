@@ -58,10 +58,14 @@ describe('Server :: Core :: SkillsCoreApi :: getSkillMetadata', () => {
       name: 'my-skill',
       path: 'public/my-skill',
       folderId: 'public/',
+      // The listing-sourced trio nests under `_metadata` (epoch milliseconds stringified); `etag`
+      // stays a separate value, outside `_metadata`.
       etag: 'etag-1',
-      author: 'author-1',
-      createdAt: 1000,
-      updatedAt: 2000,
+      _metadata: {
+        author: 'author-1',
+        createdAt: '1000',
+        updatedAt: '2000',
+      },
       files: [{ name: 'SKILL.md' }],
     });
   });

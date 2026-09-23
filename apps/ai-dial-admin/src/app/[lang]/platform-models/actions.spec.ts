@@ -55,11 +55,16 @@ describe('Assets model :: server actions', () => {
   test('Should call createModel action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The merge layer's grafts (identity, `status`) nest under `_metadata`; the exact-body assertion
+    // below proves the payload builder drops the whole object.
     const result = await createModel({
       name: 'model-name',
-      path: 'platform/model-name',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
+      _metadata: {
+        name: 'model-name',
+        path: 'platform/model-name',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.MODEL, 'model-name', {
@@ -77,12 +82,7 @@ describe('Assets model :: server actions', () => {
     };
     (assetApi.put as any).mockResolvedValue(conflict);
 
-    const result = await createModel({
-      name: 'model-name',
-      path: 'platform/model-name',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
-    });
+    const result = await createModel({ name: 'model-name' });
 
     expect(result).toBe(conflict);
   });
@@ -96,12 +96,7 @@ describe('Assets model :: server actions', () => {
     };
     (assetApi.put as any).mockResolvedValue(validationFailure);
 
-    const result = await createModel({
-      name: 'model-name',
-      path: 'platform/model-name',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
-    });
+    const result = await createModel({ name: 'model-name' });
 
     expect(result).toBe(validationFailure);
   });
@@ -109,15 +104,7 @@ describe('Assets model :: server actions', () => {
   test('Should call updateModel action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateModel(
-      {
-        name: 'model-name',
-        path: 'platform/model-name',
-        folderId: 'platform/',
-        status: DialModelResourceStatus.Valid,
-      },
-      'etag',
-    );
+    const result = await updateModel({ name: 'model-name' }, 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -138,15 +125,7 @@ describe('Assets model :: server actions', () => {
     };
     (assetApi.put as any).mockResolvedValue(etagMismatch);
 
-    const result = await updateModel(
-      {
-        name: 'model-name',
-        path: 'platform/model-name',
-        folderId: 'platform/',
-        status: DialModelResourceStatus.Valid,
-      },
-      'stale-etag',
-    );
+    const result = await updateModel({ name: 'model-name' }, 'stale-etag');
 
     expect(result).toBe(etagMismatch);
   });
@@ -262,17 +241,25 @@ describe('Assets model :: upstream secrets are never written as empty strings', 
   });
 
   test('Should strip the read-only status and validationWarnings Core rejects on write', async () => {
+    // The validity projections graft under `_metadata` — `stripMetadata` drops the whole object,
+    // so neither they nor the graft object itself may reach the write payload.
     await updateModel(
       {
         name: 'm',
-        status: DialModelResourceStatus.Invalid,
-        validationWarnings: [{ field: 'interceptors[0]', message: 'not found' }],
+        _metadata: {
+          name: 'm',
+          path: 'platform/m',
+          folderId: 'platform/',
+          status: DialModelResourceStatus.Invalid,
+          validationWarnings: [{ field: 'interceptors[0]', message: 'not found' }],
+        },
       } as any,
       'etag',
     );
 
     const payload = payloadOf((assetApi.put as any).mock.calls[0]);
 
+    expect(payload).not.toHaveProperty('_metadata');
     expect(payload).not.toHaveProperty('status');
     expect(payload).not.toHaveProperty('validationWarnings');
   });

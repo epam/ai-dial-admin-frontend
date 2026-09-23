@@ -22,15 +22,21 @@ describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
   test('fetches each selected application and sets a prefixed id', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'applications/public/folder/name__1.0', nodeType: 'ITEM' }),
-      getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0' }),
+      getMerged: vi.fn().mockResolvedValue({
+        name: 'name',
+        version: '1.0',
+        _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', version: '1.0' },
+      }),
     } as any;
 
     const result = await buildApplicationsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.APPLICATION, 'public/folder/name__1.0');
+    // The export document carries the merged entity's `_metadata` verbatim — import strips it.
     expect((result.applications ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
+      _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', version: '1.0' },
       id: 'applications/public/folder/name__1.0',
     });
   });
@@ -79,7 +85,7 @@ describe('Server :: Applications :: exim :: importApplicationsExport', () => {
     ]);
   });
 
-  test('strips folderId/path/version/id before writing to Core', async () => {
+  test('strips folderId/path/version/id and the `_metadata` graft before writing to Core', async () => {
     const assetApi = {
       list: vi.fn().mockResolvedValue([]),
       put: vi.fn().mockResolvedValue({ success: true }),
@@ -97,6 +103,7 @@ describe('Server :: Applications :: exim :: importApplicationsExport', () => {
             folderId: 'public/source/',
             path: 'public/source/name__1.0',
             endpoint: 'http://123',
+            _metadata: { name: 'name', folderId: 'public/source/', path: 'public/source/name__1.0' },
           } as any,
         ],
       },

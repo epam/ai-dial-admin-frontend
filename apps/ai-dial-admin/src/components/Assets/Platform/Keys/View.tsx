@@ -77,10 +77,14 @@ const KeyAssetView: FC<Props> = ({ etag, originalKey, roles }) => {
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.PlatformKeys, t),
-            getUpdateNotificationDescription(ApplicationRoute.PlatformKeys, selectedKey.name, t),
+            getUpdateNotificationDescription(
+              ApplicationRoute.PlatformKeys,
+              selectedKey.name ?? selectedKey._metadata?.name,
+              t,
+            ),
           ),
         );
-        fetchFiles(selectedKey.folderId);
+        fetchFiles(selectedKey._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -92,7 +96,7 @@ const KeyAssetView: FC<Props> = ({ etag, originalKey, roles }) => {
     async (keyWithSecret: DialKeyResource, currentEtag: string) => {
       const res = await rotateKey(keyWithSecret, currentEtag);
       if (res.success) {
-        fetchFiles(keyWithSecret.folderId);
+        fetchFiles(keyWithSecret._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

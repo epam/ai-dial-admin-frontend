@@ -53,8 +53,14 @@ const assetApp = (overrides: Partial<AssetApp> = {}): AssetApp => ({
 
 const platformApp = (overrides: Partial<DialPlatformApplicationResource> = {}): DialPlatformApplicationResource => ({
   name: 'my-app',
-  path: 'applications/platform/my-app',
   folderId: 'platform',
+  // A merged platform-bucket read carries its identity under `_metadata` (the merge layer's graft),
+  // never flat — see `DialPlatformApplicationResource`.
+  _metadata: {
+    name: 'my-app',
+    path: 'platform/my-app',
+    folderId: 'platform',
+  },
   description_keywords: [],
   dependencies: [],
   interceptors: [],
