@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
+import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -10,6 +11,7 @@ import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-u
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
 const sqlTransform: TransformDraft = {
   type: TransformType.Sql,
@@ -54,6 +56,11 @@ const otherSource: AnalyticsTable = {
 
 const allTables = [enrichment, otherEnrichment, sourceTable, otherSource];
 
+const sourceEntityFields = [
+  { name: 'chat_id', source: 'chat_id', type: AnalyticsFieldType.String },
+  { name: 'dial_usage_log_payload.request_body', source: 'request_body', type: AnalyticsFieldType.String },
+];
+
 const renderForm = (params?: Parameters<typeof useEnrichForm>[0]) => renderHook(() => useEnrichForm(params));
 
 type Form = { current: ReturnType<typeof useEnrichForm> };
@@ -76,6 +83,7 @@ const mockAll = () => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue(allTables);
   vi.mocked(getTable).mockImplementation(async (name) => allTables.find((table) => table.name === name) ?? null);
+  vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: sourceEntityFields } });
 };
 
 describe('useEnrichForm — resolution', () => {
@@ -177,6 +185,41 @@ describe('useEnrichForm — resolution', () => {
 
 describe('useEnrichForm — the read source leg', () => {
   beforeEach(mockAll);
+
+  test('reads the source as an entity, so its enrichments’ columns are bindable', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+
+    await waitFor(() => expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log'));
+    expect(result.current.sourceFields.map((field) => field.name)).toContain('dial_usage_log_payload.request_body');
+  });
+
+  test('caches the entity so re-selecting the same source issues no second read', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+    await waitFor(() => expect(result.current.sourceFields).toHaveLength(2));
+
+    act(() => result.current.onChange({ inputs: ['legacy_log'] }));
+    await waitFor(() => expect(result.current.sourceName).toBe('legacy_log'));
+
+    act(() => result.current.onChange({ inputs: undefined }));
+    await waitFor(() => expect(result.current.sourceName).toBe('dial_usage_log'));
+
+    expect(vi.mocked(getEntitySchema).mock.calls.filter(([name]) => name === 'dial_usage_log')).toHaveLength(1);
+  });
+
+  test('reports a failed entity read rather than binding against nothing', async () => {
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: false, status: 500 });
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+
+    await waitFor(() => expect(result.current.hasSourceEntityError).toBe(true));
+    expect(result.current.sourceFields).toEqual([]);
+    expect(result.current.isVariablesReady).toBe(false);
+  });
 
   test('follows the target enrichment when the rule declares no source', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });

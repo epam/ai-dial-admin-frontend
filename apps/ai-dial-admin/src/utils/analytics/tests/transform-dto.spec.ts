@@ -46,6 +46,12 @@ describe('Utils :: analytics :: toTransformOutputs', () => {
     ]);
   });
 
+  test('reads an output stored with no refinement, which the service serves as null', () => {
+    const transform: PipelineTransform = { type: TransformType.Llm, outputs: { title: null, sentiment: null } };
+
+    expect(toTransformOutputs(transform)).toEqual([{ name: 'title' }, { name: 'sentiment' }]);
+  });
+
   test('reads a bare string on a sql transform as the expression', () => {
     const transform: PipelineTransform = { type: TransformType.Sql, outputs: { total: 'count(*)' } };
 
@@ -58,6 +64,41 @@ describe('Utils :: analytics :: toTransformOutputs', () => {
       { name: 'title', prose: 'Title of the session.', values: undefined, jsonata: undefined },
       { name: 'risk_level', prose: 'Severity.', values: ['low', 'high'], jsonata: 'level' },
     ]);
+  });
+
+  test('drops an identity transform, which means the same as declaring none', () => {
+    const identity: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      output_vars: [{ name: 'title', type: 'string', jsonata: 'title' }],
+      response_schema: { type: 'object', properties: { title: { description: 'Title.' } } },
+    };
+
+    expect(toTransformOutputs(identity)).toEqual([
+      { name: 'title', prose: 'Title.', values: undefined, jsonata: undefined },
+    ]);
+  });
+
+  test('drops an identity transform authored in the current shape too', () => {
+    const identity: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      outputs: { topic: { prose: 'Topic.', jsonata: 'topic' } },
+    };
+
+    expect(toTransformOutputs(identity)).toEqual([
+      { name: 'topic', prose: 'Topic.', values: undefined, jsonata: undefined },
+    ]);
+  });
+
+  test('keeps a transform that reads the field under another name', () => {
+    const renamed: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      outputs: { topic: { prose: 'Topic.', jsonata: 'topic_raw' } },
+    };
+
+    expect(toTransformOutputs(renamed)[0].jsonata).toBe('topic_raw');
   });
 
   test('reports which declarations still carry the superseded shape', () => {

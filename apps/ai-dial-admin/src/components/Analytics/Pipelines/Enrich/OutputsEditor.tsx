@@ -149,7 +149,7 @@ const OutputsEditor: FC<Props> = ({
       )}
 
       <DndProvider backend={HTML5Backend}>
-        <div className={isSql ? 'flex flex-col gap-1' : 'flex flex-col gap-3'}>
+        <div className={isSql ? 'flex flex-col gap-1' : 'flex flex-col gap-6'}>
           {rows.map((row, index) => {
             const isDuplicate = Boolean(row.name) && takenNames(row.id).has(row.name);
             const column = columnByName.get(row.name);
@@ -220,7 +220,7 @@ const OutputsEditor: FC<Props> = ({
 
             return (
               <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
-                <div className="flex w-full flex-col gap-3 border-b border-secondary pb-4 last:border-b-0 last:pb-0">
+                <div className="flex w-full flex-col gap-3 border-b border-primary pb-6 last:border-b-0 last:pb-0">
                   <div className="flex flex-row items-end gap-3">
                     {nameField}
                     {deleteButton(row)}

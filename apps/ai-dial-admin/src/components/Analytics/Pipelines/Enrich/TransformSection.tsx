@@ -7,6 +7,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
 import TransformParamsEditor from '@/src/components/Analytics/Pipelines/Enrich/TransformParamsEditor';
+import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/VariablesEditor';
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
@@ -75,6 +76,24 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
   // template names no `{{members}}`, and the trigger is on the same draft.
   const isGroupGrain = form.draft.trigger?.kind === TriggerKind.Group;
   const isMembersMissing = isGroupGrain && !referenced.includes(MEMBERS_PLACEHOLDER);
+
+  // At group grain the render supplies the service's own built-ins and an input becomes a field of each
+  // member object, so the correspondence does not hold there.
+  const placeholderTokens = useMemo<PlaceholderToken[]>(() => {
+    if (isGroupGrain) return [];
+
+    const inputNames = Object.keys(transform?.inputs ?? {});
+
+    return [
+      ...referenced.map((name) => ({
+        name,
+        state: inputNames.includes(name) ? PlaceholderState.Covered : PlaceholderState.Uncovered,
+      })),
+      ...inputNames
+        .filter((name) => !referenced.includes(name))
+        .map((name) => ({ name, state: PlaceholderState.Unused })),
+    ];
+  }, [isGroupGrain, referenced, transform?.inputs]);
 
   const memberTokens: PlaceholderToken[] = MEMBER_BUILT_IN_PLACEHOLDERS.map((name) => ({
     name,
@@ -172,6 +191,28 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
             )}
           </section>
         </>
+      )}
+
+      {/* `transform.inputs` on the wire, between the template its names are matched against and the
+          outputs — one block in the order the service reads it. */}
+      {!isModal && !isSql && (
+        <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionInputs)}>
+          <div className="flex flex-col gap-3">
+            <VariablesEditor
+              vars={transform?.inputs}
+              fields={form.sourceFields}
+              isReady={form.isVariablesReady}
+              hasError={form.hasSourceEntityError}
+              onChange={(inputs) => onTransformChange({ inputs })}
+            />
+            {placeholderTokens.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)}</span>
+                <PlaceholderTokens tokens={placeholderTokens} label={t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)} />
+              </div>
+            )}
+          </div>
+        </PipelineSection>
       )}
 
       <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionOutputs)}>

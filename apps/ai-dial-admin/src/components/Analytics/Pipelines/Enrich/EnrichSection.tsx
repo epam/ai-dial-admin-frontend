@@ -1,25 +1,22 @@
 'use client';
 
-import { FC, ReactNode, useMemo } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import PipelineSharedFields from '@/src/components/Analytics/Pipelines/Common/PipelineSharedFields';
-import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
 import MemberSelectEditor from '@/src/components/Analytics/Pipelines/Enrich/MemberSelectEditor';
 import ReadyWhenEditor from '@/src/components/Analytics/Pipelines/Enrich/ReadyWhenEditor';
 import TransformSection from '@/src/components/Analytics/Pipelines/Enrich/TransformSection';
-import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/VariablesEditor';
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { NUMBER_INPUT_WIDTH } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PipelineAdvanced, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
-import { PlaceholderState, PlaceholderToken } from '@/src/models/analytics/pipeline-ui';
-import { extractPlaceholders } from '@/src/utils/analytics/template-placeholders';
+import { PipelineAdvanced, TriggerKind } from '@/src/models/analytics/pipeline';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 // The service validates none of these beyond type, so the console imposes nothing either — except the
@@ -42,6 +39,7 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
 
   const { draft, onChange, onTriggerChange } = form;
   const trigger = draft.trigger;
+  const notSet = t(AnalyticsPipelinesI18nKey.NotSet);
 
   // A control alone on its line is width-capped on the detail page and full-width in the modal, matching
   // the convention in QueryProperties.
@@ -55,30 +53,6 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
 
   const onAdvancedChange = (patch: Partial<PipelineAdvanced>) =>
     onChange({ advanced: { ...draft.advanced, ...patch } });
-
-  // At group grain the render supplies the service's own member built-ins and a variable becomes a field
-  // of each member object, so the correspondence below does not hold there.
-  const isRowGrain = trigger?.kind !== TriggerKind.Group;
-
-  // A sql transform renders no request, so there is nothing for a variable to bind into.
-  const isSqlTransform = draft.transform?.type === TransformType.Sql;
-
-  const placeholderTokens = useMemo<PlaceholderToken[]>(() => {
-    if (!isRowGrain) return [];
-
-    const placeholders = extractPlaceholders(draft.transform?.request_template);
-    const inputNames = Object.keys(draft.transform?.inputs ?? {});
-
-    return [
-      ...placeholders.map((name) => ({
-        name,
-        state: inputNames.includes(name) ? PlaceholderState.Covered : PlaceholderState.Uncovered,
-      })),
-      ...inputNames
-        .filter((name) => !placeholders.includes(name))
-        .map((name) => ({ name, state: PlaceholderState.Unused })),
-    ];
-  }, [draft.transform?.inputs, draft.transform?.request_template, isRowGrain]);
 
   const triggerBlock = (
     <>
@@ -95,14 +69,10 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
       )}
       {trigger?.kind === TriggerKind.Group && (
         <div className="flex flex-col gap-y-6">
-          <DialInput
-            id="pipeline-group-by"
-            containerClassName={controlClassName}
-            labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupBy) }}
-            value={form.grainKey}
-            caption={t(AnalyticsPipelinesI18nKey.GroupByCaption)}
-            readOnly
-          />
+          <div className={controlClassName}>
+            <LabelledText label={t(AnalyticsPipelinesI18nKey.GroupBy)} text={form.grainKey || notSet} />
+            <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.GroupByCaption)}</span>
+          </div>
 
           <ReadyWhenEditor
             readyWhen={trigger.ready_when}
@@ -117,7 +87,7 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
             <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMemberSelect)}>
               <MemberSelectEditor
                 memberSelect={trigger.member_select}
-                columns={form.sourceColumns}
+                fields={form.sourceFields}
                 sourceName={form.sourceName}
                 readSource={form.readSource}
                 isLimitValid={form.isMemberSelectValid}
@@ -153,33 +123,6 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
           {triggerBlock}
           {scopeAndTransformBlock}
         </>
-      )}
-      {!isModal && !isSqlTransform && (
-        <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionVariables)}>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-3">
-              <VariablesEditor
-                vars={draft.transform?.inputs}
-                columns={form.sourceColumns}
-                isReady={form.isVariablesReady}
-                onChange={(inputs) => form.onTransformChange({ inputs })}
-              />
-              {/* Nothing to correspond with when the transform has no template at all — a sql one never
-                  does — so the heading goes with the chips rather than standing over an empty row. */}
-              {isRowGrain && placeholderTokens.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <span className="text-secondary dial-tiny-text">
-                    {t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)}
-                  </span>
-                  <PlaceholderTokens
-                    tokens={placeholderTokens}
-                    label={t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </PipelineSection>
       )}
       {!isModal && stateSection}
       {!isModal && (
