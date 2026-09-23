@@ -26,12 +26,24 @@ const schemaProperty = (schema: unknown, name: string): Record<string, unknown> 
 const asStringList = (value: unknown): string[] | undefined =>
   Array.isArray(value) && value.length ? value.map(String) : undefined;
 
+/**
+ * The service refuses an identity expression — an absent transform already means a direct lookup by that
+ * name — and a declaration folded from a pre-`outputs` evaluator carries one per output, so keeping them
+ * would mark every row of an untouched declaration invalid and have the first save refused for a value
+ * nobody authored.
+ */
+const withoutIdentity = (name: string, jsonata?: string): string | undefined =>
+  trimmedString(jsonata) === trimmedString(name) ? undefined : jsonata;
+
 const fromOutputSpec = (name: string, spec: TransformOutputSpec, type: TransformType): TransformOutput => {
   if (typeof spec === 'string') {
     return type === TransformType.Sql ? { name, sql: spec } : { name, prose: spec };
   }
 
-  return { name, prose: spec.prose, values: spec.values, jsonata: spec.jsonata };
+  // An output the console sent as `{}` comes back as `null`, so reading one has to survive it.
+  if (!spec) return { name };
+
+  return { name, prose: spec.prose, values: spec.values, jsonata: withoutIdentity(name, spec.jsonata) };
 };
 
 /**
@@ -50,7 +62,7 @@ const fromLegacyVars = (transform: PipelineTransform): TransformOutput[] =>
       name: item.name,
       prose: property.description as string | undefined,
       values: asStringList(property.enum),
-      jsonata: item.jsonata,
+      jsonata: withoutIdentity(item.name, item.jsonata),
     };
   });
 
