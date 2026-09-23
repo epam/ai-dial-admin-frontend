@@ -64,7 +64,7 @@ const InterfacesField = <V extends InterfaceValue>({
   const isReadonly = disabled || isReadOnlyAdmin;
   const isEndpointVariant = variant === InterfaceFieldVariant.Endpoint;
   const baseUrlKey = isAsset ? 'base_url' : 'baseUrl';
-  const defaultHeadersKey = isAsset ? 'default_headers' : 'defaultHeaders';
+  const defaultHeadersKey = 'defaultHeaders';
 
   const [isSelectingType, setIsSelectingType] = useState(false);
 
