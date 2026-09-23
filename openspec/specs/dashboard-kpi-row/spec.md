@@ -1,10 +1,12 @@
+# dashboard-kpi-row Specification
+
 ## Purpose
 
 Defines the dashboard's headline row of five KPI cards — what each one measures, how its
 previous-period delta and sparkline read, and which of the view's requests each figure comes from,
 including the rows the spend and token figures share and the principal the caller count is over.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Five KPI cards head the dashboard
 
@@ -13,12 +15,40 @@ The dashboard SHALL render a KPI row above the charts, carrying five cards in th
 title, its current value, a delta against the previous period when comparison is on, and a
 sparkline over the current window. A card MAY carry a one-line caption beneath the value.
 
-Values SHALL be abbreviated for reading (thousands, millions, billions) and money SHALL carry its
-currency marker. A card whose request failed SHALL render the existing no-data state rather than a
-zero, because zero spend and unknown spend are different answers.
+A card's value SHALL be abbreviated for reading (thousands, millions, billions), with money carrying
+its currency marker: a card holds one figure in a fixed width, and that is what an abbreviation is
+for.
+
+Every figure read as part of a set SHALL be stated in full instead, with its thousands grouped —
+`1,000,000`, not `1000000` and not `1.0M` — in one locale for the whole page. That covers the
+breakdown's columns, the donut's legend and centre, the row panel, every plot's tooltip and its
+axes. An abbreviation compares badly where the comparison is the point: `1.0M` against `1.2M` hides
+the difference a reader came for. One locale, rather than the reader's own, keeps two widgets from
+separating thousands differently side by side.
+
+Where a column's rounding can hide what the change beside it measures — an error rate printing
+`0.0%` that still rose by half again, a price rounded past its cents — the figure SHALL offer its
+exact reading on hover, stating the counts it was derived from.
+
+A card whose request failed SHALL render the existing no-data state rather than a zero, because zero
+spend and unknown spend are different answers.
 
 This row replaces the four single-value cards of the current Chat view and the three of the MCP
 view. Each view SHALL render the KPI row with the cards its data supports.
+
+#### Scenario: A card abbreviates and a column does not
+
+- **GIVEN** a window of a million calls
+- **WHEN** the KPI row renders
+- **THEN** its card reads `1.0M`
+- **WHEN** the breakdown renders a row of a million calls
+- **THEN** that figure reads `1,000,000`
+
+#### Scenario: A rounded figure offers its exact reading
+
+- **GIVEN** a row whose error rate rounds to `0.0%` while its change reads a rise
+- **WHEN** the reader hovers the figure
+- **THEN** the exact rate is stated, with the failures and calls behind it
 
 #### Scenario: KPI row renders five cards in order
 
@@ -40,18 +70,26 @@ view. Each view SHALL render the KPI row with the cards its data supports.
 - **THEN** no card shows a delta
 - **AND** every card still shows its sparkline
 
-### Requirement: Spend and tokens are summed over the same rows
+### Requirement: Tokens are counted once per call, on the row that was priced for it
 
-`Tokens` SHALL be the sum of prompt and completion tokens over every row the view covers — the same
-rows `Total spend` sums — so `Cost per 1M tokens` divides two figures resting on one basis. The
-summation is expressed in the query, so no fold can disagree with the card about which rows count.
+`Tokens` SHALL be the sum of prompt and completion tokens over the rows that carry a price of their
+own. An application calling a model gets a row of its own carrying the tokens of the call it made,
+so summing every row counts those tokens twice — once on the application and once on the model.
+Spend does not double the same way: only the row that reached a model carries a price. The presence
+of a price is therefore what separates a call from a record of a call, and the test SHALL be for a
+price being present rather than for any particular amount.
 
-An earlier draft guarded the token sum with a non-empty upstream URI, reading a row without one as
-an orchestrating application repeating its children's tokens. Measured on the live dataset, that
-reading is wrong twice over: the rows carrying no upstream URI are ordinary model calls holding
-about half of all spend and two fifths of all prompt tokens, while an application's own row carries
-no price at all and a fifth of a percent of the tokens. The guard therefore took real model tokens
-out of a denominator whose numerator kept their money, roughly doubling `Cost per 1M tokens`.
+The summation is expressed in the query, so no fold can disagree with the card about which rows
+count, and `Cost per 1M tokens` divides two figures resting on one basis.
+
+A model configured with no price loses its tokens from the total by the same rule. Measured on the
+live dataset that is under a hundredth of a percent of them, against roughly two percent lost to
+double counting, so the trade is taken knowingly.
+
+An earlier draft guarded the sum with a non-empty upstream URI instead, reading a row without one as
+an orchestrating application. Measured, that reading was wrong twice over: the column is empty on
+whole adapters, so the guard dropped two fifths of all tokens — ordinary model calls holding about
+half of all spend — while keeping the orchestrator rows it was meant to drop, which fill it.
 
 `Cost per 1M tokens` SHALL divide `Total spend` by that token total, scaled to one million tokens.
 A window whose token total is zero SHALL state no figure rather than a division result.
@@ -59,12 +97,18 @@ A window whose token total is zero SHALL state no figure rather than a division 
 Because both figures are window sums rather than per-bucket ones, they SHALL be derived from
 the consumption response, and their deltas from its previous-window measures.
 
-#### Scenario: Spend and tokens cover the same rows
+#### Scenario: An application's row does not repeat its model's tokens
 
-- **GIVEN** the window holds rows both with and without an upstream URI
+- **GIVEN** an application called a model for a thousand tokens
+- **AND** the window therefore holds the application's row and the model's row
 - **WHEN** the KPI row renders
-- **THEN** `Tokens` counts the tokens of every one of them
-- **AND** `Total spend` sums the price of those same rows
+- **THEN** `Tokens` counts that thousand once
+- **AND** `Total spend` sums the price of the model's row, which the application's row does not carry
+
+#### Scenario: Tokens and spend rest on one basis
+
+- **WHEN** `Cost per 1M tokens` renders
+- **THEN** the rows behind its numerator are the rows behind its denominator
 
 #### Scenario: Multi-project rows for one deployment collapse first
 

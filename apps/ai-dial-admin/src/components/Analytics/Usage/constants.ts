@@ -2,9 +2,21 @@ import { BreakdownTab, TimeSeriesView, UsageView } from '@/src/components/Analyt
 
 export const USAGE_ENTITY = 'dial_usage_log';
 
-export const BREAKDOWN_PAGE_SIZE = 7;
+/**
+ * Rows the card's breakdown states. Ten is the ranked head a reader can take in without scrolling
+ * the card, and it is the whole of the card's story: the full list lives in the dialog.
+ */
+export const BREAKDOWN_PAGE_SIZE = 10;
 
-export const BREAKDOWN_FULL_PAGE_SIZE = 200;
+/**
+ * Rows the dialog reads per block as it is scrolled. The full list is not one request: a dimension
+ * can hold more rows than the service will answer in one page, and a reader who opened the dialog
+ * to look at the head should not wait for the tail.
+ */
+export const DIALOG_BLOCK_SIZE = 25;
+
+/** The dialog's search is a live field, and every term it reports is a request. */
+export const SEARCH_DEBOUNCE_MS = 350;
 
 export const DONUT_SLICE_COUNT = 5;
 
@@ -18,12 +30,10 @@ export const DONUT_MODAL_SIZE = 260;
 export const DONUT_CARD_ROW_LIMIT = DONUT_SLICE_COUNT;
 
 /**
- * Rows it fetches once the full-list dialog is open. "Every entity" is not something the query
- * surface can be asked for — it refuses a limit above 1000 rather than clamping it — so this is
- * that ceiling, and a residual in the dialog now means the dimension genuinely has more than a
- * thousand entities. For scale: MCP servers, the widest dimension here, came to 84 over two days.
+ * The ceiling the query surface itself imposes: it refuses a limit above this rather than clamping
+ * it, so a dialog that pages its way down stops here.
  */
-export const DONUT_FULL_ROW_LIMIT = 1000;
+export const QUERY_ROW_LIMIT = 1000;
 
 /** A KPI card narrower than this stops being readable, and is what decides how many fit a row. */
 export const KPI_CARD_MIN_WIDTH = 196;
@@ -42,12 +52,6 @@ export const TIME_SERIES_MIN_HEIGHT = 300;
  * resolution's own cap of 200 buckets, and the split one to that times its series.
  */
 export const BUCKET_ROW_LIMIT = 1000;
-
-export const SPEND_SCALE_THRESHOLD_DAYS = 7;
-export const SPEND_DAY_COUNT = 14;
-export const SPEND_MONTH_COUNT = 12;
-
-export const SEARCH_DEBOUNCE_MS = 350;
 
 /**
  * Height held for the heatmap while a week loads. The matrix is always seven rows of 20px plus a

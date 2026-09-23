@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
+import { RunCosts } from '@/src/models/evaluation/run';
 import {
   ComparisonOp,
   ExprType,
@@ -32,6 +33,7 @@ import {
   getMetricOutputFields,
   getMetricStatCards,
   hasOverallScoreThreshold,
+  hasRunCostFigure,
   parseAvgRunTimeMs,
   parseComparisonMetricScores,
   parseHistogramValues,
@@ -675,5 +677,19 @@ describe('Runs Summary :: result parsers', () => {
     expect(formatElapsedMmSs(-1)).toBe('00:00');
     expect(formatElapsedMmSs(Number.NaN)).toBe('00:00');
     expect(formatElapsedMmSs(Number.POSITIVE_INFINITY)).toBe('00:00');
+  });
+
+  test('hasRunCostFigure is true when either average is a number, including zero', () => {
+    expect(hasRunCostFigure({ avgTestCaseCost: 0.1, avgMetricEvalCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: 0.2 })).toBe(true);
+    expect(hasRunCostFigure({ avgTestCaseCost: 0, avgMetricEvalCost: null })).toBe(true);
+  });
+
+  test('hasRunCostFigure is false for the shapes a not-yet-aggregated run returns', () => {
+    expect(hasRunCostFigure({ avgTestCaseCost: null, avgMetricEvalCost: null })).toBe(false);
+    expect(hasRunCostFigure({} as RunCosts)).toBe(false);
+    expect(hasRunCostFigure('' as unknown as RunCosts)).toBe(false);
+    expect(hasRunCostFigure(null)).toBe(false);
+    expect(hasRunCostFigure(undefined)).toBe(false);
   });
 });

@@ -157,6 +157,94 @@ unarchived.
       price.
 - [x] 10.6 Unit tests for 10.1–10.5.
 
+## 11. MCP breakdown legibility
+
+- [x] 11.1 Label the `Tools` tab's empty bucket `Other methods` with a tooltip naming the protocol
+      methods it holds and pointing at `View all`, through the existing fallback-label seam, and pin
+      that row below the ranked tools on this tab alone — it outranks every tool without being what
+      the tab is about. Unit tests for the seam and the ordering.
+- [x] 11.2 Drop the card's search field and the aggregate term behind it: the card states a ranked
+      head of ten rows, and a term that re-ranks the whole window answered with rows the card never
+      loaded. Raise the card's page from 7 to 10, leave finding a row to the dialog's column filters,
+      and remove the now-dead debounce helper. Update the specs the search requirement describes.
+
+## 12. The dialog pages the dimension; spend follows the page window
+
+- [x] 12.1 Move the breakdown's tab switch into the header beside `View all`, centred against the
+      title block, and state each tab's grouping in one short line — the description had grown into
+      a third control on the title's own row and pushed the tabs' label out of it.
+- [x] 12.2 Read the full-list dialog in blocks of 25 through the infinite row model, with the grid's
+      order and column filters pushed into the query: the dimension narrows the grouping, a measure
+      is compared in `having`, and the ranking carries the dimension as its last key so a block is a
+      stable slice. Add the error rate as a select alias, which a sort or filter on it needs.
+- [x] 12.3 Read each block's delta by asking the previous window for that block's own values by
+      name, and state no comparison for a row it does not answer for. Unit tests for the grid-to-
+      query translation and the row mapping both surfaces now share.
+- [x] 12.4 Page the donut's dialog the same way — blocks of 25 as its legend is scrolled — with its
+      ring drawing every row read so far and its residual shrinking as the legend reads on.
+- [x] 12.5 Let the paged dialog state its own emptiness: an empty result there is a filter that
+      matched nothing, and the card's idle-window message both said otherwise and covered the grid's
+      own overlay.
+- [x] 12.6 State each measure's own change in its own cell, in the pill the KPI cards use, and drop
+      the `Δ vs prev` column: one column could compare only calls, and beside `Cost` it read as a
+      change in money. Lay the figure and its change on fixed tracks so a column of figures ends on
+      one line — the change first, the figure on the cell's right edge — and give the dialog's
+      filters their real kinds — a measure compared as text reached
+      the query as an unparseable bound.
+- [x] 12.7 Drop the share bar and state the share as a figure on the cell's right edge like every
+      other number, and give every column an equal width: the bar restated the ranking the rows
+      already arrive in, and took a column's width to do it.
+- [x] 12.8 Focus the donut's hovered slice and fade the rest, without scaling it.
+- [x] 12.9 Replace the dialog's column filters with one server-side search over the dimension, the
+      way the share dialog searches its legend: a per-column filter could only sift the blocks
+      already read, and a measure filter needed a `having` clause and an alias for a figure the
+      table computes itself. Drops the grid-to-query translation with them.
+- [x] 12.10 Keep the donut's rows on screen while its limit widens, and say a block is in flight with
+      a spinner in both dialogs — over the grid's rows and under the donut's list. Opening and
+      closing the donut dialog had been putting the ring and the split plot back on their skeletons.
+- [x] 12.11 Head every bucketed plot's tooltip with the period its bucket covers — start to the
+      start of the next one — keeping the axis on the start alone, and align the breakdown's change
+      pills in a track of their own beside the figures.
+- [x] 12.12 Count tokens once per call, on rows carrying a price of their own: an application's row
+      repeats the tokens of the model it called, and summing every row counted them twice — about
+      two percent of the total. A price is what tells a call from a record of one; the cost of the
+      rule is a model with no price configured, under a hundredth of a percent.
+- [x] 12.13 Name the MCP server under a tool's own name on the `Tools` tab — one outright, several
+      counted with the names in a tooltip — read in the tab's own request through a capped
+      `group_uniq_array` plus a separate distinct count. A tool name alone was not addressable:
+      `get_me` lives on 32 toolsets.
+- [x] 12.14 Read a bar's figure from the series `value` rather than its `data`, which a toned bar
+      holds as an object — the tooltip had been stating a dash — and tone every spend bar alike: the
+      picked-out last bin was only true of a scale that always ended today.
+- [x] 12.15 State every figure read as part of a set in full, with grouped thousands and one locale —
+      breakdown, donut, row panel, plot tooltips, the heatmap's tooltip and the axes. The KPI cards
+      keep their abbreviation: a card holds one figure in a fixed width.
+- [x] 12.16 Offer the exact reading on hover where a column's rounding hides what the change beside
+      it measures: an error rate printing `0.0%` states its failures and calls, a latency its
+      milliseconds, a price its four decimals.
+- [x] 12.17 State each series' colour on the series and not only on its `lineStyle`: the latency
+      tooltip's markers had been reading ECharts' palette while the lines and legend read ours.
+- [x] 12.18 Offer requests or cost on the activity heatmap, switched beside the week pager: both
+      figures already ride its hourly response, the shading ceiling follows the active one, and cost
+      is offered in the LLM view alone since an MCP row carries no price.
+- [x] 12.19 Let the breakdown grid state its own emptiness with a fixed line, dropping the window
+      arithmetic and the three props the card threaded through for it: the period is already stated
+      in the page's time filter.
+- [x] 12.20 Act on the review of §12: name a day-wide bin in UTC again (it is epoch-aligned, and
+      west of Greenwich the axis read a day early); keep the dialog's datasource identity off the
+      window total, which arrives late and was resetting the grid; stop pinning the fallback row in
+      the dialog, where it only reached the end of its own block; guard the donut's read against a
+      scroll burst and against the query ceiling; size the dialog's block cache for its own block
+      size; settle the in-flight counter in `finally`; split server names on the separator the query
+      joined with; clear the donut's reading flag when its scope changes; and reach the exact
+      readings and the server list without a pointer.
+- [x] 12.21 Cover `use-breakdown-dialog-rows` with its own spec — offsets, end-of-list, the search
+      clause, the per-block comparison, the in-flight flag and datasource identity — and replace the
+      two placeholder assertions that could not fail.
+- [x] 12.22 Bind spend to the page window, binned at the smallest recognizable step that fills the
+      row with bars, and drop the calendar scale with its periods, range and fold. Unit tests for
+      the step choice across every period the page offers.
+
 ## Out of scope
 
 Planned while this change was first written, not built, and deliberately left out rather than
