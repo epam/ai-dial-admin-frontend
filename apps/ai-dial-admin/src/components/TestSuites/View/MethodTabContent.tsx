@@ -193,7 +193,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
                   }
                   onClick={onOpenEditRequestWizard}
                 />
-                {selectedRequestIndex === 0 && <TryOutButton testSuite={testSuite} />}
+                <TryOutButton testSuite={testSuite} />
               </div>
             </div>
           </div>
