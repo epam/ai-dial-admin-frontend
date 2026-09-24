@@ -236,6 +236,12 @@ export interface TabQueryShape {
   offset?: number;
   /** Row-level clauses: they narrow which rows are grouped, not which groups are kept. */
   rowClauses?: QueryFilterNode[];
+  /**
+   * Which measure the top-N is taken on. The cut happens on the backend, so ranking by one measure
+   * and reading another returns the wrong rows outright: the five busiest models are not the five
+   * costliest, and re-sorting a page by spend only reorders what the call ranking already kept.
+   */
+  orderBy?: string;
 }
 
 /**
@@ -292,7 +298,7 @@ export const buildTabQuery = (
     ],
     group_by: [column],
     sort: [
-      { field: CALLS_ALIAS, dir: QuerySortDirection.Desc },
+      { field: shape.orderBy ?? CALLS_ALIAS, dir: QuerySortDirection.Desc },
       { field: column, dir: QuerySortDirection.Asc },
     ],
     page: {

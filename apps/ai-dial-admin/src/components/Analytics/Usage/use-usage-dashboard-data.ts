@@ -14,6 +14,7 @@ import {
   BucketPoint,
   ComparedWindows,
   DimensionBucketPoint,
+  DonutMetric,
   RequestState,
   SpendBucket,
   TimeSeriesView,
@@ -21,7 +22,9 @@ import {
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import {
+  CALLS_ALIAS,
   QueryScope,
+  SPEND_ALIAS,
   buildBucketedQuery,
   buildDimensionBucketedQuery,
   buildSpendBucketedQuery,
@@ -57,6 +60,8 @@ interface Params {
   tab: BreakdownTab;
   tabLimit: number;
   donutLimit: number;
+  /** Ranking the donut on spend is a different top-N, so it is a different request. */
+  donutMetric: DonutMetric;
   timeSeriesView: TimeSeriesView;
   /** Changing this re-issues every request; the manual refresh control increments it. */
   refreshToken: number;
@@ -70,6 +75,8 @@ export interface UsageDashboardData {
   buckets: RequestState<BucketPoint[]>;
   previousBuckets: RequestState<BucketPoint[]>;
   donutRows: RequestState<BreakdownRow[]>;
+  /** Which measure `donutRows` was ranked by; it lags the selection while a re-ranking is read. */
+  donutRowsMetric: DonutMetric;
   dimensionBuckets: RequestState<DimensionBucketPoint[]>;
   spendBuckets: RequestState<SpendBucket[]>;
   tabRows: RequestState<BreakdownRow[]>;
@@ -86,6 +93,7 @@ export const useUsageDashboardData = ({
   tab,
   tabLimit,
   donutLimit,
+  donutMetric,
   timeSeriesView,
   refreshToken,
   notice,
@@ -97,6 +105,13 @@ export const useUsageDashboardData = ({
   const [buckets, setBuckets] = useState<RequestState<BucketPoint[]>>(pending);
   const [previousBuckets, setPreviousBuckets] = useState<RequestState<BucketPoint[]>>(loaded([]));
   const [donutRows, setDonutRows] = useState<RequestState<BreakdownRow[]>>(pending);
+  /**
+   * The measure the rows on screen were ranked by, which lags the selected one while a re-ranking
+   * is in flight. The card reads by this rather than by the selection, so switching the measure
+   * neither empties the ring — which collapsed the card and moved every widget below it — nor
+   * states the old rows' figures under the new measure's name.
+   */
+  const [donutRowsMetric, setDonutRowsMetric] = useState<DonutMetric>(donutMetric);
   const [isDonutReadingMore, setIsDonutReadingMore] = useState(false);
   const [dimensionBuckets, setDimensionBuckets] = useState<RequestState<DimensionBucketPoint[]>>(loaded([]));
   const [spendBuckets, setSpendBuckets] = useState<RequestState<SpendBucket[]>>(loaded([]));
@@ -245,18 +260,19 @@ export const useUsageDashboardData = ({
       setDonutRows(pending);
     }
 
-    void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit)).then(
-      ({ result, error }) => {
-        if (generation !== donutGeneration.current) return;
-        setIsDonutReadingMore(false);
-        setDonutRows(
-          result ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab])) : reportFailed(error),
-        );
-      },
-    );
+    void runQuery(
+      buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit, {
+        orderBy: donutMetric === DonutMetric.Cost ? SPEND_ALIAS : CALLS_ALIAS,
+      }),
+    ).then(({ result, error }) => {
+      if (generation !== donutGeneration.current) return;
+      setIsDonutReadingMore(false);
+      setDonutRowsMetric(donutMetric);
+      setDonutRows(result ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab])) : reportFailed(error));
+    });
     // `donutScope` is read through a ref, so it is not a dependency of its own effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseScope, view, windows, donutLimit, refreshToken, runQuery, reportFailed]);
+  }, [baseScope, view, donutMetric, windows, donutLimit, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     spendGeneration.current += 1;
@@ -329,6 +345,7 @@ export const useUsageDashboardData = ({
     buckets,
     previousBuckets,
     donutRows,
+    donutRowsMetric,
     dimensionBuckets,
     spendBuckets,
     tabRows,

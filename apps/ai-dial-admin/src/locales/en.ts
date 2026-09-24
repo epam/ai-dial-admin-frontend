@@ -3122,6 +3122,10 @@ export default {
     DonutSubtitle: 'Share of calls, top {count}',
     DonutOther: 'Others',
     DonutTotal: 'calls',
+    DonutTotalCost: 'spent',
+    DonutSubtitleCost: 'Share of cost, top {count}',
+    DonutMetricCalls: 'Calls',
+    DonutMetricCost: 'Cost',
 
     BreakdownTitle: 'Breakdown',
     BreakdownTabModels: 'Models',

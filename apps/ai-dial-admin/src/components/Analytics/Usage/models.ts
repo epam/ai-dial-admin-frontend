@@ -12,6 +12,12 @@ export enum ComparePeriod {
   PreviousYear = 'previous-year',
 }
 
+/** Which measure the share chart splits the window by. */
+export enum DonutMetric {
+  Calls = 'calls',
+  Cost = 'cost',
+}
+
 export enum BreakdownTab {
   Models = 'models',
   Applications = 'applications',
@@ -110,7 +116,14 @@ export interface DonutSliceView {
   label: string;
   value: number;
   isOther: boolean;
+  /** The figure of the measure the ring is split by. */
   valueLabel: string;
+  /**
+   * The other measure, stated beside it where there is room for both. The dialog fills these; the
+   * card leaves them out and states `valueLabel` alone.
+   */
+  callsLabel?: string;
+  costLabel?: string;
   shareLabel: string | null;
   color: string;
 }

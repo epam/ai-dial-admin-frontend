@@ -183,6 +183,13 @@ describe('buildTabQuery', () => {
     expect(query.page).toMatchObject({ limit: 10 });
   });
 
+  test('ranks on the measure the caller asked for, since the backend takes the cut', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 5, { orderBy: SPEND_ALIAS });
+
+    expect(query.sort?.[0]).toMatchObject({ field: SPEND_ALIAS, dir: 'desc' });
+    expect(query.sort?.[1]).toMatchObject({ field: 'deployment', dir: 'asc' });
+  });
+
   test('groups an application breakdown by the calling deployment', () => {
     expect(buildTabQuery(scope(), BreakdownTab.Applications, 10).group_by).toEqual(['parent_deployment']);
   });

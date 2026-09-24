@@ -3260,6 +3260,10 @@ export enum AnalyticsUsageI18nKey {
   DonutSubtitle = 'AnalyticsUsage.DonutSubtitle',
   DonutOther = 'AnalyticsUsage.DonutOther',
   DonutTotal = 'AnalyticsUsage.DonutTotal',
+  DonutTotalCost = 'AnalyticsUsage.DonutTotalCost',
+  DonutSubtitleCost = 'AnalyticsUsage.DonutSubtitleCost',
+  DonutMetricCalls = 'AnalyticsUsage.DonutMetricCalls',
+  DonutMetricCost = 'AnalyticsUsage.DonutMetricCost',
 
   BreakdownTitle = 'AnalyticsUsage.BreakdownTitle',
   BreakdownTabModels = 'AnalyticsUsage.BreakdownTabModels',
