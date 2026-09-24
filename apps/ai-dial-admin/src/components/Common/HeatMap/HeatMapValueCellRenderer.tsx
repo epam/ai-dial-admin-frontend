@@ -36,7 +36,7 @@ const HeatMapValueCellRenderer: FC<Props> = ({ data, column, formatMode = HeatMa
   const isSecondaryText = isMissing || (isDeltaMode && rawValue === 0);
 
   return (
-    <div className="flex items-center justify-center size-full overflow-hidden px-1">
+    <div className="flex items-center justify-end size-full overflow-hidden px-1">
       <span
         className={
           isSecondaryText ? 'dial-small-text text-secondary truncate' : 'dial-small-text text-primary truncate'

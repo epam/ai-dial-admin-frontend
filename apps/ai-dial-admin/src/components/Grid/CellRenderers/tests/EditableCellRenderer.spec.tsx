@@ -122,4 +122,24 @@ describe('EditableCellRenderer', () => {
     fireEvent(input, event);
     expect(spy).not.toHaveBeenCalled();
   });
+
+  test('right-aligns the input when isRightAligned is set', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isRightAligned />);
+    expect(screen.getByRole('textbox')).toHaveClass('text-right');
+  });
+
+  test('does not right-align the input by default', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} />);
+    expect(screen.getByRole('textbox')).not.toHaveClass('text-right');
+  });
+
+  test('right-aligns the read-only value when isRightAligned is set', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly isRightAligned />);
+    expect(screen.getByText('42')).toHaveClass('text-right');
+  });
+
+  test('does not right-align the read-only value by default', () => {
+    render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly />);
+    expect(screen.getByText('42')).not.toHaveClass('text-right');
+  });
 });

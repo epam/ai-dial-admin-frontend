@@ -1,4 +1,5 @@
 import { ColDef, ColGroupDef } from 'ag-grid-community';
+import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
@@ -25,6 +26,7 @@ import {
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
+import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
@@ -156,6 +158,7 @@ const buildIndexColumn = (field: IndexColumnField, headerName: string, width: nu
   sortable: true,
   ...lockedWidthColDef(width),
   ...NO_FILTER_COL_DEF,
+  ...rightAlignedColumn,
   valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),
 });
 
@@ -170,6 +173,7 @@ const executionColumns: ColDef[] = [
     hide: true,
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    ...rightAlignedColumn,
     valueGetter: (params) => params.data?.totalRequests ?? null,
   },
   buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
@@ -180,6 +184,7 @@ const executionColumns: ColDef[] = [
     hide: true,
     ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    ...rightAlignedColumn,
     valueGetter: (params) => params.data?.totalTurns ?? null,
   },
   {
@@ -188,7 +193,8 @@ const executionColumns: ColDef[] = [
     colId: 'http',
     ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
-    cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
+    headerClass: 'align-right',
+    cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
   {
     field: 'durationMs',
@@ -196,11 +202,12 @@ const executionColumns: ColDef[] = [
     colId: 'duration',
     ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
+    headerClass: 'align-right',
     valueGetter: (params) => {
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
       return getFormattedDuration(duration);
     },
-    cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
+    cellClass: (params) => classNames('align-right', getTestCaseStatusClass(params.data?.responseStatusCode)),
   },
 ];
 

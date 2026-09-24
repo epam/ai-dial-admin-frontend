@@ -118,7 +118,7 @@ import {
   VALIDITY_STATUS_COLUMN,
   VERSION_COLUMN,
 } from './base-columns';
-import { dateTimeColumn, numericColumn, priceColumn } from './configs';
+import { dateTimeColumn, numericColumn, priceColumn, rightAlignedColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/SessionCellRenderer';
 import TopicsCellRenderer from '@/src/components/Analytics/SessionsTrace/List/TopicsCellRenderer';
@@ -1316,6 +1316,7 @@ export const RUNS_COLUMN: ColDef[] = [
     filter: false,
     sortable: false,
     hide: false,
+    ...rightAlignedColumn,
   },
   {
     field: 'numberOfTestCases',
@@ -1324,6 +1325,7 @@ export const RUNS_COLUMN: ColDef[] = [
     filter: false,
     sortable: false,
     hide: false,
+    ...rightAlignedColumn,
   },
   { field: 'createdAt', headerName: 'Created date', ...dateTimeColumn, ...dateFilter, hide: true },
   { field: 'startedAt', headerName: 'Start date', ...dateTimeColumn, ...dateFilter, hide: false },

@@ -7,6 +7,7 @@ import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -42,6 +43,7 @@ const PivotValueCell: FC<Props> = ({
   const raw = rawProp !== undefined ? rawProp : field.primaryRaw;
   const isFailed = isFailedProp !== undefined ? isFailedProp : (field.primaryFailed ?? false);
   const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
+  const isRightAligned = isRightAlignedRowDetailField(field);
 
   const onOpen = useCallback(() => {
     if (onOpenFullscreen) {
@@ -59,7 +61,12 @@ const PivotValueCell: FC<Props> = ({
         onClick={onOpen}
         data-field-key={field.fieldKey}
         {...(dataCompareDiff ? { 'data-compare-diff': dataCompareDiff } : {})}
-        className={mergeClasses(VALUE_CELL_BASE, 'relative group text-left hover:bg-layer-4 bg-layer-3', className)}
+        className={mergeClasses(
+          VALUE_CELL_BASE,
+          'relative group hover:bg-layer-4 bg-layer-3',
+          isRightAligned ? 'justify-end text-right' : 'text-left',
+          className,
+        )}
       >
         {isStatusRow ? (
           <StatusValue raw={raw} />

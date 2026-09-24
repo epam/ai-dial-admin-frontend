@@ -217,6 +217,30 @@ describe('getGroupedSchemaColumn', () => {
     expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.SINGLE }))?.component).toBe(expected);
   });
 
+  test.each([TestCaseItemType.NUMBER, TestCaseItemType.INTEGER])(
+    'should right-align the column and pass isRightAligned for %s',
+    (type) => {
+      const column = getGroupedSchemaColumn({ name: 'field', type }, vi.fn(), ctx);
+      const selected = column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.SINGLE }));
+
+      expect(column).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+      expect(selected?.params).toEqual(expect.objectContaining({ isRightAligned: true }));
+    },
+  );
+
+  test.each([
+    TestCaseItemType.STRING,
+    TestCaseItemType.BOOLEAN,
+    TestCaseItemType.OBJECT,
+    TestCaseItemType.ARRAY,
+    TestCaseItemType.FILE,
+  ])('should leave %s columns left-aligned', (type) => {
+    const column = getGroupedSchemaColumn({ name: 'field', type }, vi.fn(), ctx);
+
+    expect(column.cellClass).toBeUndefined();
+    expect(column.headerClass).toBeUndefined();
+  });
+
   test('should stay editable via the type-driven renderer for a row with no rowType at all', () => {
     const column = getGroupedSchemaColumn(
       { name: 'field', type: TestCaseItemType.STRING, perTurn: true },

@@ -897,6 +897,30 @@ describe('Runs View :: executionColumns Total turns valueGetter', () => {
   });
 });
 
+describe('Runs View :: executionColumns are right-aligned', () => {
+  test.each(['runIndex', 'requestIndex', 'totalRequests', 'turnIndex', 'totalTurns'])(
+    '%s carries the align-right cell and header classes',
+    (colId) => {
+      const col = getExecutionColumn(colId);
+      expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right', headerClass: 'align-right' }));
+    },
+  );
+
+  test('HTTP column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('http');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 404 } })).toBe('align-right text-warning');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
+  });
+
+  test('Duration column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('duration');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 500 } })).toBe('align-right text-error');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
+  });
+});
+
 describe('Runs View :: createEmptyComparePrimaryRow', () => {
   test('carries request/turn identity fields from the source row', () => {
     const row = createEmptyComparePrimaryRow(

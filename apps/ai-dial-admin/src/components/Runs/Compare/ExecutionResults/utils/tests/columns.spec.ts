@@ -137,6 +137,29 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(runPrimary?.cellClassRules).toBeUndefined();
   });
 
+  test('execution index, HTTP, and Duration columns are right-aligned', () => {
+    type ExecCol = { colId?: string; cellClass?: string };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecCol[] };
+    const executionColIds = [
+      'runIndex',
+      'cmp_runIndex',
+      'requestIndex',
+      'cmp_requestIndex',
+      'turnIndex',
+      'cmp_turnIndex',
+      'http',
+      'cmp_http',
+      'duration',
+      'cmp_duration',
+    ];
+
+    executionColIds.forEach((colId) => {
+      const col = exec.children.find((child) => child.colId === colId);
+      expect(col?.cellClass).toBe('align-right');
+    });
+  });
+
   test('execution columns are hidden by default', () => {
     type ExecCol = { colId?: string; hide?: boolean };
     const cols = getCompareColumnsCompare([makeRow()]);

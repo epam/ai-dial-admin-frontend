@@ -1,7 +1,7 @@
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
-import { numericColumn, priceColumn, dateTimeColumn } from '../configs';
+import { numericColumn, priceColumn, dateTimeColumn, rightAlignedColumn } from '../configs';
 
 const callFilterValueGetter = (
   col: Partial<ColDef>,
@@ -47,6 +47,19 @@ describe('priceColumn.filterValueGetter (inherited from numericColumn)', () => {
   test('keeps the numericColumn behavior for missing and empty values', () => {
     expect(callFilterValueGetter(col, {}, 'price')).toBeNull();
     expect(callFilterValueGetter(col, { price: '' }, 'price')).toBeNull();
+  });
+});
+
+describe('rightAlignedColumn', () => {
+  test('only carries the alignment classes', () => {
+    expect(rightAlignedColumn).toEqual({ cellClass: 'align-right', headerClass: 'align-right' });
+  });
+});
+
+describe('numericColumn alignment', () => {
+  test('spreads rightAlignedColumn so the two stay in sync', () => {
+    expect(numericColumn.cellClass).toBe(rightAlignedColumn.cellClass);
+    expect(numericColumn.headerClass).toBe(rightAlignedColumn.headerClass);
   });
 });
 

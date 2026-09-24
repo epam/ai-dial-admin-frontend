@@ -46,6 +46,7 @@ import {
   MetricDeltaKind,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
@@ -306,6 +307,7 @@ const buildCompareIndexColumnPair = (
     hide: true,
     ...NO_FILTER_COL_DEF,
     ...fixedWidthColDef(width),
+    ...rightAlignedColumn,
     valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
       params.data?.[field] != null ? params.data[field]! + 1 : null,
   },
@@ -315,6 +317,7 @@ const buildCompareIndexColumnPair = (
     hide: true,
     ...NO_FILTER_COL_DEF,
     ...fixedWidthColDef(width),
+    ...rightAlignedColumn,
     valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
       params.data?._compared?.[field] != null ? params.data._compared[field]! + 1 : '—',
   },
@@ -349,6 +352,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params) => params.data?.responseStatusCode ?? '—',
         ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
       },
@@ -358,6 +362,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
         ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'secondary'),
       },
@@ -368,6 +373,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
           getFormattedDuration(params.data ? (getCompareRowDurationMs(params.data) ?? undefined) : undefined),
         ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'primary'),
@@ -378,6 +384,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
           if (!params.data?._compared) return '—';
           return getFormattedDuration(getCompareRowDurationMs(params.data._compared) ?? undefined);
