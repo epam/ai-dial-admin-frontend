@@ -36,7 +36,6 @@ describe('Catalog schema asset :: URI-shaped names', () => {
     expect(getForbiddenSymbolsRegExp(VIEW)?.test('https://a\u0007b')).toBe(true);
   });
 
-
   test('Should list metadata-only columns, with no version column', () => {
     const columns = getGridColumns(VIEW, () => void 0, {}, false);
 
