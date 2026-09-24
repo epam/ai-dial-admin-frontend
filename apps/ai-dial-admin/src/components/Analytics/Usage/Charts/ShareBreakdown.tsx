@@ -176,6 +176,9 @@ const ShareBreakdown: FC<Props> = ({
   const isEmptyWindow = !rows.isLoading && (rows.hasFailed || cardSlices.length === 0);
   const centerValue = windowTotal == null ? null : formatMetricValue(windowTotal, renderedMetric);
   const centerCaption = t(isCostMetric ? AnalyticsUsageI18nKey.DonutTotalCost : AnalyticsUsageI18nKey.DonutTotal);
+  // Every row of the MCP view is a tool call, so its ring says so rather than saying "calls".
+  const callsSubtitleKey = hasCostMetric ? AnalyticsUsageI18nKey.DonutSubtitle : AnalyticsUsageI18nKey.DonutSubtitleMcp;
+  const callSubtitleKey = isCostMetric ? AnalyticsUsageI18nKey.DonutSubtitleCost : callsSubtitleKey;
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, {
     dimension: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),
   });
@@ -220,9 +223,7 @@ const ShareBreakdown: FC<Props> = ({
       subtitle={
         isEmptyWindow
           ? t(AnalyticsUsageI18nKey.DonutEmptySubtitle)
-          : t(isCostMetric ? AnalyticsUsageI18nKey.DonutSubtitleCost : AnalyticsUsageI18nKey.DonutSubtitle, {
-              count: String(DONUT_SLICE_COUNT),
-            })
+          : t(callSubtitleKey, { count: String(DONUT_SLICE_COUNT) })
       }
       headerActions={
         <div className="flex items-center gap-3">

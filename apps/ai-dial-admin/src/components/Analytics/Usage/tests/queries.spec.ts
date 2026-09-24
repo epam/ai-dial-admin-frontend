@@ -12,7 +12,6 @@ import {
   P95_LATENCY_ALIAS,
   QueryScope,
   SPEND_ALIAS,
-  TOOL_CALLS_ALIAS,
   buildBucketedQuery,
   buildDimensionBucketedQuery,
   buildDimensionSearchClause,
@@ -86,12 +85,11 @@ describe('buildTotalsQuery', () => {
   test('counts callers by the principal reference, which an API-key call also carries', () => {
     const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
 
-    expect(entry?.expr).toEqual({
-      type: QueryExprType.Fn,
-      name: 'count',
-      args: [{ type: QueryExprType.Field, name: 'usage_client_identity.user_ref' }],
-      distinct: true,
-    });
+    expect(entry?.expr).toMatchObject({ name: 'count', distinct: true });
+    // The hash is the fallback for an environment whose client-identity enrichment is not
+    // provisioned: there the reference is null on every row and a bare count read zero.
+    expect(JSON.stringify(entry?.expr)).toContain('usage_client_identity.user_ref');
+    expect(JSON.stringify(entry?.expr)).toContain('user_hash');
   });
 
   test('counts tokens once per call, on the row that carries the price for it', () => {
@@ -138,11 +136,26 @@ describe('buildTotalsQuery', () => {
     });
   });
 
-  test('carries tool calls instead in the MCP view, which records no price', () => {
-    const aliases = aliasesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
+  test('carries no price in the MCP view, which records none', () => {
+    expect(aliasesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })))).not.toContain(SPEND_ALIAS);
+  });
 
-    expect(aliases).toContain(TOOL_CALLS_ALIAS);
-    expect(aliases).not.toContain(SPEND_ALIAS);
+  test('narrows the MCP view to tool calls, so its figures describe work and not connections', () => {
+    const clauses = clausesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
+
+    expect(clauses).toContainEqual({
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'mcp_method' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'tools/call' },
+      ],
+    });
+  });
+
+  test('adds no method clause in the LLM view', () => {
+    const clauses = clausesOf(buildTotalsQuery(scope()));
+
+    expect(clauses.some((clause) => JSON.stringify(clause).includes('mcp_method'))).toBe(false);
   });
 });
 

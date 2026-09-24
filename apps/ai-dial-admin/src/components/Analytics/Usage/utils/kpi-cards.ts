@@ -19,13 +19,7 @@ export const VIEW_KPI_METRICS: Record<UsageView, KpiMetric[]> = {
     KpiMetric.ErrorRate,
     KpiMetric.AvgLatency,
   ],
-  [UsageView.Mcp]: [
-    KpiMetric.Requests,
-    KpiMetric.ToolCalls,
-    KpiMetric.UniqueCallers,
-    KpiMetric.ErrorRate,
-    KpiMetric.AvgLatency,
-  ],
+  [UsageView.Mcp]: [KpiMetric.Requests, KpiMetric.UniqueCallers, KpiMetric.ErrorRate, KpiMetric.AvgLatency],
 };
 
 const tokensOf = (measures: UsageMeasures | null): number | null => {
@@ -59,7 +53,6 @@ const METRIC_VALUE: Record<KpiMetric, (measures: UsageMeasures | null) => number
   [KpiMetric.UniqueCallers]: (m) => m?.callers ?? null,
   [KpiMetric.ErrorRate]: errorRateOf,
   [KpiMetric.AvgLatency]: (m) => m?.avgLatencyMs ?? null,
-  [KpiMetric.ToolCalls]: (m) => m?.toolCalls ?? null,
 };
 
 /**
@@ -75,7 +68,6 @@ const METRIC_SPARKLINE: Partial<Record<KpiMetric, (point: BucketPoint) => number
   [KpiMetric.UniqueCallers]: (point) => point.measures.callers,
   [KpiMetric.ErrorRate]: (point) => errorRateOf(point.measures) ?? 0,
   [KpiMetric.AvgLatency]: (point) => point.measures.avgLatencyMs,
-  [KpiMetric.ToolCalls]: (point) => point.measures.toolCalls ?? 0,
 };
 
 interface FigureInput {

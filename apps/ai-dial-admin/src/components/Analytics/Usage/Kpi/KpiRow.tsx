@@ -42,7 +42,6 @@ const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
   [KpiMetric.UniqueCallers]: AnalyticsUsageI18nKey.KpiUniqueCallers,
   [KpiMetric.ErrorRate]: AnalyticsUsageI18nKey.KpiErrorRate,
   [KpiMetric.AvgLatency]: AnalyticsUsageI18nKey.KpiAvgLatency,
-  [KpiMetric.ToolCalls]: AnalyticsUsageI18nKey.KpiTotalToolCalls,
 };
 
 /**
@@ -125,7 +124,12 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
 
     return {
       metric: figure.metric,
-      titleKey: TITLE_KEY[figure.metric],
+      // The MCP view holds nothing but tool calls, so its count card says so rather than saying
+      // "requests" for a figure that no longer counts them.
+      titleKey:
+        view === UsageView.Mcp && figure.metric === KpiMetric.Requests
+          ? AnalyticsUsageI18nKey.KpiTotalToolCalls
+          : TITLE_KEY[figure.metric],
       value: formatted?.value ?? null,
       unit: formatted?.unit,
       deltaRatio: getDeltaRatio(current, previous),

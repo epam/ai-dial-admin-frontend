@@ -79,6 +79,15 @@ export const UNDEFINED_VALUE = 'undefined';
  * Which rows each view is about. The empty kind is the Anthropic messages API and the OpenAI
  * responses API — LLM traffic that carries no classified kind, and about a fifth of all rows.
  */
+/**
+ * The MCP view is about tool execution, and `tools/call` is the only method that executes anything.
+ * Measured on the live dataset, it is 13% of `mcp` rows: the rest is the handshake and discovery a
+ * client fires per connection — `initialize`, `notifications/initialized`, `tools/list`,
+ * `resources/list`. Counting those as calls made the view rank servers by how often clients
+ * connected to them, and made its error rate and latency describe handshakes rather than work.
+ */
+export const MCP_TOOL_CALL_METHOD = 'tools/call';
+
 export const USAGE_VIEW_EVENT_KINDS: Record<UsageView, string[]> = {
   [UsageView.Llm]: ['llm_call', 'embedding', ''],
   [UsageView.Mcp]: ['mcp'],

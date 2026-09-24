@@ -355,15 +355,27 @@ const TimeSeries: FC<Props> = ({
 
   return (
     <DashboardCard
-      title={t(TITLE_KEY[timeSeriesView], { dimension: dimensionLabel })}
+      // The MCP view holds nothing but tool calls, so the plain plot is named for them rather than
+      // for requests it no longer counts. The other tabs name their own measure already.
+      title={t(
+        view === UsageView.Mcp && timeSeriesView === TimeSeriesView.Requests
+          ? AnalyticsUsageI18nKey.TimeSeriesTitleMcp
+          : TITLE_KEY[timeSeriesView],
+        { dimension: dimensionLabel },
+      )}
       subtitle={
         isEmptyWindow
           ? t(AnalyticsUsageI18nKey.TimeSeriesEmptySubtitle, { range: `${windowFrom} – ${windowTo}` })
-          : t(SUBTITLE_KEY[timeSeriesView], {
-              // Spend reads its own, coarser bin; every other tab reads the page's.
-              bucket: timeSeriesView === TimeSeriesView.Cost ? spendBucketLabel : bucketLabel,
-              count: String(DONUT_SLICE_COUNT),
-            })
+          : t(
+              view === UsageView.Mcp && timeSeriesView === TimeSeriesView.Requests
+                ? AnalyticsUsageI18nKey.TimeSeriesSubtitleMcp
+                : SUBTITLE_KEY[timeSeriesView],
+              {
+                // Spend reads its own, coarser bin; every other tab reads the page's.
+                bucket: timeSeriesView === TimeSeriesView.Cost ? spendBucketLabel : bucketLabel,
+                count: String(DONUT_SLICE_COUNT),
+              },
+            )
       }
       headerActions={
         <TabSelector

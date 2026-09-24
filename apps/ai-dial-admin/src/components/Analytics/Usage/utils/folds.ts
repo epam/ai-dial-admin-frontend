@@ -16,7 +16,6 @@ import {
   P95_LATENCY_ALIAS,
   PROMPT_TOKENS_ALIAS,
   SPEND_ALIAS,
-  TOOL_CALLS_ALIAS,
   CALLERS_ALIAS,
   GROUP_COUNT_ALIAS,
   GROUP_NAMES_ALIAS,
@@ -47,7 +46,6 @@ export const readMeasures = (row: Record<string, unknown>): UsageMeasures => ({
   spend: toNumber(row[SPEND_ALIAS]),
   promptTokens: toNumber(row[PROMPT_TOKENS_ALIAS]),
   completionTokens: toNumber(row[COMPLETION_TOKENS_ALIAS]),
-  toolCalls: toNumber(row[TOOL_CALLS_ALIAS]),
   p50LatencyMs: toNumber(row[P50_LATENCY_ALIAS]),
   p95LatencyMs: toNumber(row[P95_LATENCY_ALIAS]),
 });
@@ -60,7 +58,6 @@ export const EMPTY_MEASURES: UsageMeasures = {
   spend: null,
   promptTokens: null,
   completionTokens: null,
-  toolCalls: null,
   p50LatencyMs: null,
   p95LatencyMs: null,
 };

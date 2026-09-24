@@ -1,6 +1,7 @@
 import {
   BREAKDOWN_TAB_COLUMN,
   BREAKDOWN_TAB_QUALIFIER,
+  MCP_TOOL_CALL_METHOD,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
   USAGE_VIEW_EVENT_KINDS,
@@ -68,6 +69,11 @@ const timestampValue = (date: Date): QueryExpr => ({
 export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): QueryFilterNode => {
   const clauses: QueryFilterNode[] = [
     eventKindFilter(scope.view),
+    // Every row the MCP view counts is a tool call, so `Requests` and the rankings describe work
+    // rather than connections, and the error rate and the latency describe tool execution.
+    ...(scope.view === UsageView.Mcp
+      ? [{ op: QueryOperator.Eq, args: [field('mcp_method'), value(MCP_TOOL_CALL_METHOD)] } as QueryFilterNode]
+      : []),
     { op: QueryOperator.Ge, args: [field('request_time'), timestampValue(scope.window.startDate)] },
     { op: QueryOperator.Lt, args: [field('request_time'), timestampValue(scope.window.endDate)] },
     ...extra,
@@ -103,7 +109,6 @@ const NAMES_GROUPED_DEPLOYMENTS: BreakdownTab[] = [BreakdownTab.Tools];
 
 export const GROUP_NAMES_ALIAS = 'group_names';
 export const GROUP_COUNT_ALIAS = 'group_count';
-export const TOOL_CALLS_ALIAS = 'tool_calls';
 export const P50_LATENCY_ALIAS = 'p50_latency';
 export const P95_LATENCY_ALIAS = 'p95_latency';
 
@@ -130,9 +135,23 @@ const pricedOnly = (column: string): QueryExpr =>
 const commonMeasures = (view: UsageView) => {
   const measures = [
     { expr: fn('count', []), as: CALLS_ALIAS },
-    // `user_hash` is set only on token calls and empty on every API-key one, so counting it folds
-    // all key traffic into a single bucket.
-    { expr: fn('count', [field(USER_REF_FIELD)], true), as: CALLERS_ALIAS },
+    /*
+     * The principal, falling back to the anonymized hash.
+     *
+     * `user_hash` alone is set only on token calls and empty on every API-key one, so counting it
+     * folds all key traffic into a single bucket. `user_ref` covers both branches — but it comes
+     * from an enrichment that is provisioned per environment rather than shipped with the service,
+     * and where that enrichment is absent the column is null on every row and the card read zero.
+     * The fallback costs nothing where the enrichment is there: the two agree row by row.
+     */
+    {
+      expr: fn(
+        'count',
+        [fn('if', [fn('not_empty', [field(USER_REF_FIELD)]), field(USER_REF_FIELD), field('user_hash')])],
+        true,
+      ),
+      as: CALLERS_ALIAS,
+    },
     {
       expr: fn('sum', [
         fn('if', [field('success'), value('0', QueryValueType.Integer), value('1', QueryValueType.Integer)]),
@@ -159,19 +178,9 @@ const commonMeasures = (view: UsageView) => {
     ];
   }
 
-  return [
-    ...measures,
-    {
-      expr: fn('sum', [
-        fn('if', [
-          fn('equals', [field('mcp_method'), value('tools/call')]),
-          value('1', QueryValueType.Integer),
-          value('0', QueryValueType.Integer),
-        ]),
-      ]),
-      as: TOOL_CALLS_ALIAS,
-    },
-  ];
+  // No separate tool-call count: the MCP view holds nothing but tool calls, so it would restate
+  // `calls` in a second column.
+  return measures;
 };
 
 /**

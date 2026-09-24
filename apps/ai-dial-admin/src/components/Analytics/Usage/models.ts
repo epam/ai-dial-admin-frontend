@@ -39,7 +39,6 @@ export enum KpiMetric {
   UniqueCallers = 'unique-callers',
   ErrorRate = 'error-rate',
   AvgLatency = 'avg-latency',
-  ToolCalls = 'tool-calls',
 }
 
 export interface RequestState<T> {
@@ -67,7 +66,6 @@ export interface UsageMeasures {
   spend: number | null;
   promptTokens: number | null;
   completionTokens: number | null;
-  toolCalls: number | null;
   /** Only the bucketed request carries these; every other aggregate leaves them null. */
   p50LatencyMs: number | null;
   p95LatencyMs: number | null;

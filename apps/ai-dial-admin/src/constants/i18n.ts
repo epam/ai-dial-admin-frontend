@@ -3221,6 +3221,9 @@ export enum AnalyticsUsageI18nKey {
   KpiDeltaDecrease = 'AnalyticsUsage.KpiDeltaDecrease',
 
   TimeSeriesTitle = 'AnalyticsUsage.TimeSeriesTitle',
+  TimeSeriesTitleMcp = 'AnalyticsUsage.TimeSeriesTitleMcp',
+  TimeSeriesSubtitleMcp = 'AnalyticsUsage.TimeSeriesSubtitleMcp',
+  DonutSubtitleMcp = 'AnalyticsUsage.DonutSubtitleMcp',
   TimeSeriesSubtitle = 'AnalyticsUsage.TimeSeriesSubtitle',
   LoadFailed = 'AnalyticsUsage.LoadFailed',
   TimeSeriesEmptySubtitle = 'AnalyticsUsage.TimeSeriesEmptySubtitle',
