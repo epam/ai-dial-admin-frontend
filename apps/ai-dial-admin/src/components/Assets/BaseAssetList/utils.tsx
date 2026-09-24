@@ -427,10 +427,23 @@ export const PlatformGetAssetActionMap: Partial<
   [ApplicationRoute.AssetsToolsets]: getPlatformToolset,
 };
 
-export const CreateAssetActionMap: Record<
-  CreateAssetRoute,
-  (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
-> = {
+type CreateAssetAction = (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>;
+
+// A flat platform view uses `folderId` only to identify the selected root in the shared list flow;
+// Core config-resource bodies cannot carry it. `_metadata` is likewise a merged-read graft, not
+// resource content. Individual server actions still remove their own DTO-specific fields.
+const sanitizePlatformCreateAsset =
+  (createAsset: CreateAssetAction): CreateAssetAction =>
+  (asset) => {
+    const {
+      folderId: __folderId,
+      _metadata: __metadata,
+      ...payload
+    } = asset as AssetWithVersion & { _metadata?: unknown };
+    return createAsset(payload as AssetWithVersion);
+  };
+
+export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> = {
   [ApplicationRoute.Prompts]: createPrompt,
   // `createApp`/`createToolset` take the `Dial*Resource` shapes, which no longer overlap the
   // `AssetWithVersion` create-payload surface (its flat `path` identity) — hence the double casts.
@@ -440,30 +453,30 @@ export const CreateAssetActionMap: Record<
   [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformModels]: createModel as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformAppRunners]: createRunner as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformCatalogSchemas]: createCatalogSchema as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformInterceptors]: createInterceptor as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformTranslators]: createTranslator as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformRoutes]: createRoute as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformRoles]: createRole as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformKeys]: createKey as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
+    createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformAppRunners]: sanitizePlatformCreateAsset(
+    createRunner as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformCatalogSchemas]: sanitizePlatformCreateAsset(
+    createCatalogSchema as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformInterceptors]: sanitizePlatformCreateAsset(
+    createInterceptor as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
+    createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoutes]: sanitizePlatformCreateAsset(
+    createRoute as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoles]: sanitizePlatformCreateAsset(
+    createRole as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformKeys]: sanitizePlatformCreateAsset(
+    createKey as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
 };
 
 export const PlatformCreateAssetActionMap: Partial<
