@@ -26,7 +26,6 @@ interface Props {
   columns: AnalyticsTableColumn[];
   targetColumns: AnalyticsTableColumn[];
   functions: QueryFunction[];
-  sourceName?: string;
   onChange: (measures: Measure[]) => void;
 }
 
@@ -42,7 +41,7 @@ const toFunctionOption = (name: string, signature: string, description?: string)
   ) : undefined,
 });
 
-const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions, sourceName, onChange }) => {
+const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions, onChange }) => {
   const t = useI18n();
   const [rows, setRows] = useState<MeasureRow[]>(() => toMeasureRows(measures));
   const emittedRef = useRef<Measure[] | undefined>(measures);
@@ -71,8 +70,10 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
   return (
     <div className="flex flex-col gap-2">
       {/* One grid for the header and every row, not a grid per row: a per-row grid sizes its own columns,
-          so a row whose function takes no column — or offers no distinct — lands out of line with the rest. */}
-      <div className="grid grid-cols-[minmax(140px,1.2fr)_minmax(140px,1.2fr)_minmax(140px,1.2fr)_minmax(180px,2fr)_2rem_2rem] items-center gap-x-3 gap-y-2 overflow-x-auto">
+          so a row whose function takes no column — or offers no distinct — lands out of line with the rest.
+          The minimums are what the row costs before it starts scrolling sideways, so they stay near the
+          shortest useful select rather than at a comfortable width. */}
+      <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_2rem_2rem] items-center gap-x-2 gap-y-2 overflow-x-auto">
         {rows.length > 0 && (
           <>
             <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureName)} />
@@ -148,7 +149,7 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
 
               <DialGhostIconButton
                 className="shrink-0"
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />
@@ -167,10 +168,6 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
           );
         })}
       </div>
-
-      <span className="text-secondary dial-tiny-text">
-        {`${t(AnalyticsPipelinesI18nKey.MeasuresColumnsNote)} ${sourceName ?? ''}`.trim()}
-      </span>
 
       <DialGhostButton
         className="self-start"

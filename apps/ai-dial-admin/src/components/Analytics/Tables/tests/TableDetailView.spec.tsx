@@ -341,6 +341,25 @@ describe('TableDetailView header', () => {
     expect(screen.getByText('Raw usage events ingested from blob storage.')).toBeInTheDocument();
   });
 
+  // A description is written to be read, so it clamps with a Show more rather than hiding its tail in a
+  // tooltip no keyboard reaches.
+  test('offers Show more on a description longer than the clamp', () => {
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(200);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(40);
+
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ description: 'Raw usage events ingested from blob storage, hour by hour.' })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(screen.getByText(ButtonsI18nKey.ShowMore)).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
   test('shows the description of a draft table too', () => {
     render(
       <TableDetailView

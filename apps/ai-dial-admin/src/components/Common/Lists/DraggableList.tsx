@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import NewItem from '@/src/components/Common/Multiselect/Modal/NewItem';
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
@@ -105,7 +105,10 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
 
   return (
     <>
-      <ul className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
+      {/* No scroll container of its own: the popup body above already caps its height and scrolls, and a
+          second one clipped each row's focus ring — which is what drew a scrollbar over a single row and
+          cut the top border off the list. */}
+      <ul className="flex flex-col gap-y-2" ref={newItemsContainer}>
         {visibleRows.map((row) => (
           // Keyed by authored position, as the checkbox list's rows are: the items are plain strings with no
           // id, they are edited in place, and two of them may hold the same text while the user is typing —
@@ -128,7 +131,7 @@ const DraggableList: FC<Props> = ({ items, setItems, filter, addTitle, addPlaceh
       </ul>
       {addTitle && (
         <div>
-          <DialNeutralButton
+          <DialGhostButton
             className="self-start"
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             label={addTitle}

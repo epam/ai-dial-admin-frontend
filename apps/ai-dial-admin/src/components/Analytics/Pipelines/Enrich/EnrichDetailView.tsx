@@ -3,7 +3,6 @@
 import { FC } from 'react';
 
 import PipelineDetailFrame from '@/src/components/Analytics/Pipelines/Common/PipelineDetailFrame';
-import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
 import EnrichSection from '@/src/components/Analytics/Pipelines/Enrich/EnrichSection';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { Pipeline } from '@/src/models/analytics/pipeline';
@@ -18,7 +17,7 @@ const EnrichDetailView: FC<Props> = ({ pipeline, takenTargets }) => {
 
   return (
     <PipelineDetailFrame pipeline={pipeline} form={form}>
-      <EnrichSection form={form} stateSection={<PipelineStateSection state={pipeline.state} />} />
+      <EnrichSection form={form} />
     </PipelineDetailFrame>
   );
 };
