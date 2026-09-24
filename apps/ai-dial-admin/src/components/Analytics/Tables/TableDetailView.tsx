@@ -264,9 +264,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
     setIsEditorEnabled((prev) => !prev);
   };
 
-  // The dispatch has to precede the two resets — as in EvaluatorDetailView.onDiscard: EntityJsonEditor
-  // keeps its editor id across the remount, so a stale marker would otherwise hold the changed header up
-  // on its own. The active surface does not change: discarding while the editor is open leaves the
+  // The dispatch has to precede the two resets: EntityJsonEditor keeps its editor id across the remount,
+  // so a stale marker would otherwise hold the changed header up on its own. The active surface does not change: discarding while the editor is open leaves the
   // author in the editor, looking at the restored document.
   const onDiscard = () => {
     dispatch({ type: ValidationActionType.Reset });

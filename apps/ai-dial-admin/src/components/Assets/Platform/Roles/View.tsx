@@ -91,7 +91,7 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole, isConfigFileSource }) =>
             getUpdateNotificationDescription(ApplicationRoute.PlatformRoles, selectedRole.name, t),
           ),
         );
-        fetchFiles(selectedRole.folderId);
+        fetchFiles(selectedRole._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

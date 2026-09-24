@@ -13,9 +13,10 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData } from '@/src/models/import-asset';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -34,7 +35,7 @@ interface Props {
   duplicateItem?: AssetWithVersion | null;
   deletedItems?: DialFile[] | null;
   hasSelectedItems: boolean;
-  getContext: () => AssetsFolderContext;
+  getContext: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onImport?: (
     fileType: ImportFileType,
@@ -116,7 +117,7 @@ const Modals: FC<Props> = ({
         // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to
         // be needed here and was the cause of Issue #4420 — `.path` never carries the bucket prefix,
         // so it always won the `||` and made this check false for a platform-bucket row).
-        (isFlatPlatformView(view) || isPlatformDualBucketView(view, duplicateItem?.folderId) ? (
+        (isFlatPlatformView(view) || isPlatformDualBucketView(view, duplicateItem?._metadata?.folderId) ? (
           <DuplicatePlatformAsset
             view={view}
             isModalOpen={isModalOpen}

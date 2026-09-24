@@ -56,15 +56,24 @@ const resourceBase = {
 
 // `DialApplicationResource` requires the whole Core payload; the tests care about a handful of members,
 // so the factory carries the rest and the payload assertions match on what each case is about.
+// A fetched entity carries its identity grafts under `_metadata` (the merge layer's contract) while
+// the update flow resolves `folderId`/`version` flat via `getEntityForUpdate` — the factory sets both
+// spellings so either resolution path is exercised.
 const appResource = (overrides: Partial<DialApplicationResource> = {}): DialApplicationResource => ({
   ...resourceBase,
   // No `name` default: these cases assert the resource path the action builds, and `getVersionedName`
   // folds the name into it — a fixture name would change every expected path.
-  path: 'applications/public/my-app',
   folderId: 'public',
   version: '1.0',
   input_attachment_types: [],
   application_properties: {},
+  _metadata: {
+    name: '',
+    path: 'applications/public/my-app__1.0',
+    folderId: 'public',
+    version: '1.0',
+    nodeType: DialFileNodeType.ITEM,
+  },
   ...overrides,
 });
 
@@ -166,8 +175,6 @@ describe('Assets application :: server actions', () => {
         folderId: 'public',
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
       }),
       'etag',
@@ -179,14 +186,22 @@ describe('Assets application :: server actions', () => {
       'public__1.0',
       expect.objectContaining({
         folderId: undefined,
-        nodeType: DialFileNodeType.FOLDER,
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
-        path: undefined,
         version: undefined,
         source: undefined,
         display_version: '1.0',
       }),
+      { etag: 'etag' },
+    );
+    // The whole `_metadata` graft — identity and `nodeType` alike — is deleted before Core sees the
+    // body. `objectContaining` treats an absent key as unequal to `undefined`, so absence is asserted
+    // with the negative matcher instead.
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
@@ -198,7 +213,6 @@ describe('Assets application :: server actions', () => {
     await updateApp(
       appResource({
         folderId: 'public',
-        path: 'test',
         version: '1.0',
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       }),
@@ -222,8 +236,6 @@ describe('Assets application :: server actions', () => {
     const result = await updateApp(
       appResource({
         folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
         max_input_attachments: 2000,
       }),
@@ -240,8 +252,6 @@ describe('Assets application :: server actions', () => {
     const result = await createApp(
       appResource({
         folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
       }),
     );
@@ -252,13 +262,18 @@ describe('Assets application :: server actions', () => {
       'public__1.0',
       expect.objectContaining({
         folderId: undefined,
-        nodeType: DialFileNodeType.FOLDER,
-        path: undefined,
         version: undefined,
         source: undefined,
         displayVersion: '1.0',
         application_type_schema_id: undefined,
       }),
+    );
+    // See the `updateApp` case for why absence of the `_metadata` graft needs the negative matcher.
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
     );
     expect(result).toBe(RESPONSE_MOCK);
   });
@@ -269,7 +284,6 @@ describe('Assets application :: server actions', () => {
     await createApp(
       appResource({
         folderId: 'public',
-        path: 'test',
         version: '1.0',
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       }),
@@ -291,8 +305,6 @@ describe('Assets application :: server actions', () => {
     const result = await createApp(
       appResource({
         folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
         viewer_url: 'https://exa mple.com',
       }),
@@ -312,8 +324,6 @@ describe('Assets application :: server actions', () => {
     const result = await createApp(
       appResource({
         folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
       }),
     );

@@ -454,4 +454,27 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(primaryPrecision.cellClassRules).toBeUndefined();
     expect(secondaryPrecision.cellClassRules).toBeUndefined();
   });
+
+  test('keeps the execution index pairs hidden even when their positions vary across both runs', () => {
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        runIndex: 0,
+        requestIndex: 0,
+        turnIndex: 0,
+        _compared: makeResult({ runIndex: 0, requestIndex: 0, turnIndex: 0 }),
+      }),
+      makeRow({
+        runIndex: 1,
+        requestIndex: 1,
+        turnIndex: 1,
+        _compared: makeResult({ runIndex: 1, requestIndex: 1, turnIndex: 1 }),
+      }),
+    ]);
+
+    const execution = cols.find((col) => (col as ColGroupDef).headerName === EXECUTION_GROUP_HEADER) as ColGroupDef;
+    const indexPairs = ['runIndex', 'cmp_runIndex', 'requestIndex', 'cmp_requestIndex', 'turnIndex', 'cmp_turnIndex'];
+    const hiddenColIds = (execution.children as ColDef[]).filter((col) => col.hide).map((col) => col.colId);
+
+    expect(hiddenColIds).toEqual(expect.arrayContaining(indexPairs));
+  });
 });

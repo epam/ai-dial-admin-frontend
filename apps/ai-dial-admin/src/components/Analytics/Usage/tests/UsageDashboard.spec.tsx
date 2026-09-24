@@ -32,7 +32,7 @@ const ANY_ROW = {
   parent_deployment: 'app',
   project_id: 'project',
   calls: 10,
-  users: 2,
+  callers: 2,
   failed: 1,
   spend: 4,
 };
@@ -47,7 +47,7 @@ describe('UsageDashboard', () => {
   test('renders the page and its widgets', async () => {
     render(<UsageDashboard />);
 
-    expect(screen.getByRole('heading', { name: MenuI18nKey.AnalyticsUsage })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.DonutTitle })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.HeatmapTitle })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.BreakdownTitle })).toBeTruthy();
@@ -109,6 +109,6 @@ describe('UsageDashboard', () => {
     await waitFor(() => expect(showNotificationMock).toHaveBeenCalledOnce());
     expect(showNotificationMock).toHaveBeenCalledWith(expect.objectContaining({ description: 'upstream refused' }));
     expect(screen.queryByText('upstream refused')).toBeNull();
-    expect(screen.getByRole('heading', { name: MenuI18nKey.AnalyticsUsage })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
   });
 });

@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { BUCKET_ROW_LIMIT, USAGE_ENTITY, USAGE_VIEW_EVENT_KINDS } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, SpendScaleUnit, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   BUCKET_ALIAS,
+  CALLERS_ALIAS,
   CALLS_ALIAS,
+  COMPLETION_TOKENS_ALIAS,
+  PROMPT_TOKENS_ALIAS,
   P50_LATENCY_ALIAS,
   P95_LATENCY_ALIAS,
   QueryScope,
@@ -12,12 +15,20 @@ import {
   TOOL_CALLS_ALIAS,
   buildBucketedQuery,
   buildDimensionBucketedQuery,
+  buildDimensionSearchClause,
   buildFilter,
   buildSpendBucketedQuery,
+  buildTabKeysQuery,
   buildTabQuery,
   buildTotalsQuery,
 } from '@/src/components/Analytics/Usage/queries';
-import { QueryExprType, QueryOperator, QueryValueType, StructuredQuery } from '@/src/models/analytics/query';
+import {
+  QueryExprType,
+  QueryOperator,
+  QuerySortDirection,
+  QueryValueType,
+  StructuredQuery,
+} from '@/src/models/analytics/query';
 
 const WINDOW = {
   startDate: new Date('2026-09-17T12:00:00.000Z'),
@@ -72,6 +83,61 @@ describe('buildTotalsQuery', () => {
     expect(aliasesOf(buildTotalsQuery(scope()))).toContain(SPEND_ALIAS);
   });
 
+  test('counts callers by the principal reference, which an API-key call also carries', () => {
+    const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
+
+    expect(entry?.expr).toEqual({
+      type: QueryExprType.Fn,
+      name: 'count',
+      args: [{ type: QueryExprType.Field, name: 'usage_client_identity.user_ref' }],
+      distinct: true,
+    });
+  });
+
+  test('counts tokens once per call, on the row that carries the price for it', () => {
+    const select = buildTotalsQuery(scope()).select ?? [];
+
+    for (const alias of [PROMPT_TOKENS_ALIAS, COMPLETION_TOKENS_ALIAS]) {
+      const entry = select.find((item) => item.as === alias);
+
+      expect(entry?.expr).toEqual({
+        type: QueryExprType.Fn,
+        name: 'sum',
+        args: [
+          {
+            type: QueryExprType.Fn,
+            name: 'if',
+            args: [
+              {
+                type: QueryExprType.Fn,
+                name: 'not_empty',
+                args: [
+                  {
+                    type: QueryExprType.Fn,
+                    name: 'to_string',
+                    args: [{ type: QueryExprType.Field, name: 'deployment_price' }],
+                  },
+                ],
+              },
+              { type: QueryExprType.Field, name: alias },
+              { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
+            ],
+          },
+        ],
+      });
+    }
+  });
+
+  test('sums spend over every row, since an application row carries no price of its own', () => {
+    const entry = (buildTotalsQuery(scope()).select ?? []).find((item) => item.as === SPEND_ALIAS);
+
+    expect(entry?.expr).toEqual({
+      type: QueryExprType.Fn,
+      name: 'sum',
+      args: [{ type: QueryExprType.Field, name: 'deployment_price' }],
+    });
+  });
+
   test('carries tool calls instead in the MCP view, which records no price', () => {
     const aliases = aliasesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
 
@@ -121,15 +187,48 @@ describe('buildTabQuery', () => {
     expect(buildTabQuery(scope(), BreakdownTab.Applications, 10).group_by).toEqual(['parent_deployment']);
   });
 
-  test('adds no search clause when no term was typed', () => {
-    expect(clausesOf(buildTabQuery(scope(), BreakdownTab.Models, 10))).toHaveLength(3);
+  test('carries the window clauses alone, so the ranked head is not re-ranked by a term', () => {
+    const clauses = clausesOf(buildTabQuery(scope(), BreakdownTab.Models, 10));
+
+    expect(clauses).toHaveLength(3);
+    expect(clauses.some((clause) => clause.op === QueryOperator.Ico)).toBe(false);
   });
 
-  test('filters the aggregate by the term, so it reaches rows no page held', () => {
-    const clauses = clausesOf(buildTabQuery(scope(), BreakdownTab.Models, 10, 'gpt'));
+  test('reads a later block by its offset, keeping the ranking stable', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 25, { offset: 50 });
+
+    expect(query.page).toMatchObject({ offset: 50, limit: 25 });
+    expect(query.sort).toEqual([
+      { field: CALLS_ALIAS, dir: 'desc' },
+      { field: 'deployment', dir: 'asc' },
+    ]);
+  });
+
+  test('narrows the rows by a search term, case-insensitively', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 25, {
+      rowClauses: [buildDimensionSearchClause(BreakdownTab.Models, 'gpt')],
+    });
+    const clauses = clausesOf(query);
 
     expect(clauses).toHaveLength(4);
     expect(clauses[3]).toMatchObject({ op: QueryOperator.Ico });
+    expect(query.having).toBeUndefined();
+  });
+
+  test('names the tab own dimension in that term', () => {
+    expect(buildDimensionSearchClause(BreakdownTab.Applications, 'rag')).toMatchObject({
+      op: QueryOperator.Ico,
+      args: [{ name: 'parent_deployment' }, { value: 'rag' }],
+    });
+  });
+
+  test('asks the previous window for the block values by name', () => {
+    const query = buildTabKeysQuery(scope(), BreakdownTab.Models, ['gpt-4o', 'claude-sonnet']);
+    const clauses = clausesOf(query);
+
+    expect(clauses).toHaveLength(4);
+    expect(clauses[3]).toMatchObject({ op: QueryOperator.In });
+    expect(query.page).toMatchObject({ limit: 2 });
   });
 });
 
@@ -153,16 +252,16 @@ describe('buildDimensionBucketedQuery', () => {
 });
 
 describe('buildSpendBucketedQuery', () => {
-  test('truncates to the calendar unit the spend scale reads on', () => {
-    const query = buildSpendBucketedQuery(scope(), SpendScaleUnit.Month);
+  test('bins the page window at the resolution it is given', () => {
+    const query = buildSpendBucketedQuery(scope(), { value: 6, unit: 'h' });
 
-    expect(query.select?.[0].expr).toMatchObject({ name: 'date_trunc' });
+    expect(query.select?.[0].expr).toMatchObject({ name: 'date_bin' });
     expect(query.select?.[0].expr).toMatchObject({
-      args: [{ value: 'month' }, { name: 'request_time' }],
+      args: [{ value: '6' }, { value: 'hour' }, { name: 'request_time' }],
     });
   });
 
   test('carries spend alone, since the view reads no other figure', () => {
-    expect(aliasesOf(buildSpendBucketedQuery(scope(), SpendScaleUnit.Day))).toEqual([BUCKET_ALIAS, SPEND_ALIAS]);
+    expect(aliasesOf(buildSpendBucketedQuery(scope(), { value: 1, unit: 'd' }))).toEqual([BUCKET_ALIAS, SPEND_ALIAS]);
   });
 });

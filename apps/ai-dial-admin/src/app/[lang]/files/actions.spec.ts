@@ -30,8 +30,35 @@ describe('Files :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'test', false, undefined);
     expect(result).toEqual([
-      { name: 'file.txt', url: 'files/public/file.txt', path: 'public/file.txt', etag: 'etag-1', nodeType: 'item' },
+      {
+        name: 'file.txt',
+        url: 'files/public/file.txt',
+        path: 'public/file.txt',
+        etag: 'etag-1',
+        // The fixture sets neither parentPath nor bucket, so folderId falls back to '/'.
+        folderId: '/',
+        nodeType: 'item',
+      },
     ]);
+  });
+
+  test("getFiles derives folderId from parentPath/bucket, matching Core's own bucket-qualified convention", async () => {
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue({
+      name: 'folder1',
+      items: [
+        {
+          name: 'file.txt',
+          url: 'files/public/folder1/file.txt',
+          bucket: 'public',
+          parentPath: 'public/folder1/',
+          nodeType: 'ITEM',
+        },
+      ],
+    });
+
+    const result = await getFiles('folder1');
+
+    expect(result).toEqual([expect.objectContaining({ name: 'file.txt', folderId: 'public/folder1/' })]);
   });
 
   test('getFiles returns an empty array when the folder has no metadata', async () => {

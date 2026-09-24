@@ -55,7 +55,13 @@ const Endpoint: FC<Props> = ({
   const isInterfacesHidden =
     view === ApplicationRoute.Models || view === ApplicationRoute.Routes || view === ApplicationRoute.PlatformRoutes;
   const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
-
+  const isIncludeWss =
+    view === ApplicationRoute.Routes ||
+    view === ApplicationRoute.PlatformRoutes ||
+    view === ApplicationRoute.AssetsApplications ||
+    view === ApplicationRoute.Applications ||
+    view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.PlatformAppRunners;
   const idValidationField = `upstream-id-${index}`;
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
@@ -199,6 +205,7 @@ const Endpoint: FC<Props> = ({
               onChange={onChangeEndPointUrl}
               iconAfter={<WarningIcon warningText={endpointWarning} />}
               required={required}
+              isIncludeWss={isIncludeWss}
             />
           </div>
 

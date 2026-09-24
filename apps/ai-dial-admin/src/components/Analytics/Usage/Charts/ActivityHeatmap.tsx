@@ -1,11 +1,10 @@
 'use client';
 
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import { DialGhostButton, DialLoader, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import classNames from 'classnames';
 
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import {
@@ -14,8 +13,10 @@ import {
   HEATMAP_FLAT_COLUMN_WIDTH,
   HEATMAP_NARROW_ROW_HEIGHT,
 } from '@/src/components/Analytics/Usage/constants';
+import { HeatmapMetric, UsageView } from '@/src/components/Analytics/Usage/models';
 import { HeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-week';
 import HeatmapScale from '@/src/components/Analytics/Usage/Charts/HeatmapScale';
+import { formatGroupedMoney, formatGroupedNumber } from '@/src/components/Analytics/Usage/utils/format';
 import {
   HEATMAP_COL_PREFIX,
   HEATMAP_DAYS,
@@ -37,11 +38,14 @@ import {
 import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
 import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
 import HeatMapLabelCellRenderer from '@/src/components/Common/HeatMap/HeatMapLabelCellRenderer';
+import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   heatmap: HeatmapWeek;
+  /** An MCP row carries no price, so there is nothing to paint in that view. */
+  view: UsageView;
 }
 
 const PAGER_ICON_PROPS = { size: 16, stroke: 2 };
@@ -57,8 +61,9 @@ const formatHourLabel = (hour: number): string => String(hour).padStart(2, '0');
  */
 const DAY_LABEL_COL_WIDTH = 88;
 
-const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
+const ActivityHeatmap: FC<Props> = ({ heatmap, view }) => {
   const t = useI18n();
+  const [metric, setMetric] = useState<HeatmapMetric>(HeatmapMetric.Calls);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [bodyWidth, setBodyWidth] = useState(0);
 
@@ -81,7 +86,29 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
-  const matrix = useMemo(() => buildHeatmapMatrix(buckets.data ?? [], week, formatDayLabel), [buckets.data, week]);
+  const isCostOffered = view === UsageView.Llm;
+  const activeMetric = isCostOffered ? metric : HeatmapMetric.Calls;
+
+  const matrix = useMemo(
+    () => buildHeatmapMatrix(buckets.data ?? [], week, formatDayLabel, activeMetric),
+    [buckets.data, week, activeMetric],
+  );
+
+  const metricTabs = useMemo(
+    () => [
+      { id: HeatmapMetric.Calls, label: t(AnalyticsUsageI18nKey.HeatmapMetricCalls) },
+      { id: HeatmapMetric.Cost, label: t(AnalyticsUsageI18nKey.HeatmapMetricCost) },
+    ],
+    [t],
+  );
+
+  const readCellLabel = useCallback(
+    (day: string, hour: string, value: number) =>
+      activeMetric === HeatmapMetric.Cost
+        ? t(AnalyticsUsageI18nKey.HeatmapCellCostLabel, { day, hour, cost: formatGroupedMoney(value) })
+        : t(AnalyticsUsageI18nKey.HeatmapCellLabel, { day, hour, calls: formatGroupedNumber(value) }),
+    [activeMetric, t],
+  );
 
   // The grid always draws its seven days, so an empty week is stated in the subtitle rather than by
   // replacing the grid with a message.
@@ -129,11 +156,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
 
           return (
             <span className="sr-only">
-              {t(AnalyticsUsageI18nKey.HeatmapCellLabel, {
-                day: params.data.label ?? '',
-                hour: headerLabel,
-                calls: String(params.data.values?.[colId] ?? 0),
-              })}
+              {readCellLabel(params.data.label ?? '', headerLabel, params.data.values?.[colId] ?? 0)}
             </span>
           );
         },
@@ -142,11 +165,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
             return void 0;
           }
 
-          return t(AnalyticsUsageI18nKey.HeatmapCellLabel, {
-            day: params.data.label,
-            hour: headerLabel,
-            calls: String(params.data.values?.[colId] ?? 0),
-          });
+          return readCellLabel(params.data.label ?? '', headerLabel, params.data.values?.[colId] ?? 0);
         },
         cellStyle: (params) => {
           if (!params.data || isFutureCell(params.data.dayStartMs, hour)) {
@@ -161,7 +180,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
     });
 
     return [labelColumn, ...hourColumns];
-  }, [matrix.maxValue, t]);
+  }, [matrix.maxValue, readCellLabel, t]);
 
   const renderGrid = () => {
     if (buckets.isLoading) {
@@ -195,14 +214,21 @@ const ActivityHeatmap: FC<Props> = ({ heatmap }) => {
           : t(AnalyticsUsageI18nKey.HeatmapSubtitle, { timezone })
       }
       headerActions={
-        <div className="flex items-center gap-1">
-          <div className={classNames(weekOffset === 0 && 'invisible')} inert={weekOffset === 0}>
+        <div className="flex items-center gap-3">
+          {/* Beside the pager: both control what the grid shows, one the week and one the figure. */}
+          {isCostOffered && (
+            <TabSelector tabs={metricTabs} activeTab={metric} onChange={(next) => setMetric(next as HeatmapMetric)} />
+          )}
+          {/* Rendered only when it does something. The group is pinned to the header's right edge,
+              so the button appears to its left without moving the pager under the cursor — the
+              reserved gap it used to sit in read as a control that had gone missing. */}
+          {weekOffset !== 0 && (
             <DialGhostButton
               size={ElementSize.Small}
               label={t(AnalyticsUsageI18nKey.HeatmapCurrentWeek)}
               onClick={onCurrentWeek}
             />
-          </div>
+          )}
           <DialGhostButton
             size={ElementSize.Small}
             className="px-1"

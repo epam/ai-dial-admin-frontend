@@ -6,6 +6,7 @@ import KpiCard from '@/src/components/Analytics/Usage/Kpi/KpiCard';
 import { KPI_CARD_MIN_WIDTH } from '@/src/components/Analytics/Usage/constants';
 import {
   BucketPoint,
+  ComparePeriod,
   KpiCardModel,
   KpiFigure,
   KpiMetric,
@@ -21,6 +22,7 @@ import {
   getDeltaRatio,
 } from '@/src/components/Analytics/Usage/utils/format';
 import { buildKpiFigures } from '@/src/components/Analytics/Usage/utils/kpi-cards';
+import { COMPARE_NAME_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -29,7 +31,7 @@ interface Props {
   totals: RequestState<UsageMeasures | null>;
   previousTotals: RequestState<UsageMeasures | null>;
   buckets: RequestState<BucketPoint[]>;
-  isComparisonOn: boolean;
+  compare: ComparePeriod;
 }
 
 const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
@@ -37,7 +39,7 @@ const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
   [KpiMetric.Requests]: AnalyticsUsageI18nKey.KpiRequests,
   [KpiMetric.Tokens]: AnalyticsUsageI18nKey.KpiTokens,
   [KpiMetric.CostPerMillionTokens]: AnalyticsUsageI18nKey.KpiCostPerMillionTokens,
-  [KpiMetric.UniqueUsers]: AnalyticsUsageI18nKey.KpiUniqueUsers,
+  [KpiMetric.UniqueCallers]: AnalyticsUsageI18nKey.KpiUniqueCallers,
   [KpiMetric.ErrorRate]: AnalyticsUsageI18nKey.KpiErrorRate,
   [KpiMetric.AvgLatency]: AnalyticsUsageI18nKey.KpiAvgLatency,
   [KpiMetric.ToolCalls]: AnalyticsUsageI18nKey.KpiTotalToolCalls,
@@ -85,7 +87,8 @@ const formatFootnoteValue = (metric: KpiMetric, value: number): string => {
   return `${formatted.value}${formatted.unit ?? ''}`;
 };
 
-const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, isComparisonOn }) => {
+const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) => {
+  const isComparisonOn = compare !== ComparePeriod.Off;
   const t = useI18n();
   const rowRef = useRef<HTMLDivElement>(null);
   const [rowWidth, setRowWidth] = useState(0);
@@ -130,8 +133,9 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, isComparison
       // previous window reported nothing — silence there reads as a missing feature.
       footnote: !isComparisonOn
         ? void 0
-        : t(AnalyticsUsageI18nKey.KpiPreviousPeriodFoot, {
+        : t(AnalyticsUsageI18nKey.KpiComparisonFoot, {
             value: previous == null ? '—' : formatFootnoteValue(figure.metric, previous),
+            period: t(COMPARE_NAME_KEY[compare]),
           }),
       sparkline: figure.sparkline,
     };

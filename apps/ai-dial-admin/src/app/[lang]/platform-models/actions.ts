@@ -7,6 +7,7 @@ import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialModel } from '@/src/models/dial/model';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -14,15 +15,12 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { stripEmptyUpstreamSecrets } from '@/src/utils/models/upstream-secrets';
 
 function toModelPayload(model: DialModelResource) {
-  // `name` is deliberately kept: Core's `Model` carries it via `RoleBasedEntity`, so it is a real field
-  // rather than an injected one, and the existing action tests pin it.
-  const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    path: __path,
-    folderId: __folderId,
-    ...payload
-  } = model;
+  // `name`/`author`/`createdAt`/`updatedAt` are deliberately kept: Core's `Model` carries them via
+  // `RoleBasedEntity`/`Deployment`, so they are real content fields rather than injected ones, and
+  // the existing action tests pin them. Everything the merge layer grafts (identity, audit, and the
+  // `status`/`validationWarnings` validity projections) nests under `_metadata`, which `stripMetadata`
+  // drops wholesale (see the `core-resource-entity-metadata` capability).
+  const payload = stripMetadata(model);
 
   return { ...payload, ...(payload.upstreams && { upstreams: stripEmptyUpstreamSecrets(payload.upstreams) }) };
 }

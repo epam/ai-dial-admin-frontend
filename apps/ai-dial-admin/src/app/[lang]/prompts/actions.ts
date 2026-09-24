@@ -9,6 +9,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
 import { buildPromptsExport, importPromptsExport } from '@/src/server/prompts/exim';
@@ -17,12 +18,14 @@ import { buildPromptsZip, extractPromptsFromZip } from '@/src/server/prompts/zip
 export async function createPrompt(prompt: DialPrompt) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const path = `${prompt.folderId}${prompt.name || ''}`;
-  return assetApi.put(token, ResourceType.PROMPT, path, { ...prompt, content: prompt.content || '' });
+  // Core stores the prompt body verbatim, so an unstripped `_metadata` would persist in the stored
+  // file and echo back on every future read — the DTO's ignoreUnknown makes the leak silent.
+  return assetApi.put(token, ResourceType.PROMPT, path, { ...stripMetadata(prompt), content: prompt.content || '' });
 }
 
 export async function updatePrompt(prompt: DialPrompt, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(token, ResourceType.PROMPT, prompt.path, prompt, { etag });
+  return assetApi.put(token, ResourceType.PROMPT, prompt.path, stripMetadata(prompt), { etag });
 }
 
 export async function getPrompts(path: string) {

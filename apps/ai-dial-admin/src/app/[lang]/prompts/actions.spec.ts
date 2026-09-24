@@ -61,8 +61,10 @@ describe('Assets Prompt :: server actions', () => {
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
       content: 'test',
+      _metadata: { name: 'test', folderId: 'public/', path: 'test', author: 'me', updatedAt: '1' },
     });
     expect(getUserToken).toHaveBeenCalled();
+    // `_metadata` (the merged read's grafts) never reaches Core — it stores the body verbatim.
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/test', {
       name: 'test',
       folderId: 'public/',
@@ -215,6 +217,29 @@ describe('Assets Prompt :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'test', prompt, { etag: 'etag' });
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test("updatePrompt strips the merged read's `_metadata` and nothing else", async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updatePrompt(
+      {
+        folderId: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        content: 'content',
+        _metadata: { name: 'test', folderId: 'public/', path: 'test', author: 'me', updatedAt: '1' },
+      } as any,
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.PROMPT,
+      'test',
+      { folderId: 'public/', nodeType: DialFileNodeType.FOLDER, path: 'test', content: 'content' },
+      { etag: 'etag' },
+    );
   });
 
   test('Should call movePrompts action', async () => {

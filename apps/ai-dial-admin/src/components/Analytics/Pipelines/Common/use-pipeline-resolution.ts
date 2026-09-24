@@ -3,15 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator, getEvaluatorVersion } from '@/src/app/[lang]/evaluators/actions';
-import { LATEST_VERSION } from '@/src/constants/analytics/pipelines';
-import { Evaluator } from '@/src/models/analytics/evaluator';
+import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 interface Params {
-  evaluatorName?: string;
-  // Absent means "latest"; the sentinel stays inside this hook.
-  evaluatorVersion?: number;
   target?: string;
   input?: string;
 }
@@ -71,13 +67,16 @@ const useCachedResolution = <T>(key: string | undefined, resolve: (key: string) 
 };
 
 /**
- * enrichment's `source_table`, so it cannot be resolved until the target has been.
+ * The read source is the declared input or the target enrichment's `source_table`, so it cannot be
+ * resolved until the target has been.
  *
- * Variables and every SQL predicate are read against the **source's** columns; a measure's name and the
- * derived output mapping are written against the **target's**. Conflating the two is the likeliest way to
- * get this wrong.
+ * Three reads, easy to conflate. The transform's inputs, every SQL predicate and the member ranking are
+ * scoped to the source's **entity** — the source with its enrichments flattened in, which is what the
+ * service accepts and where `<enrichment>.<column>` comes from. An aggregate's group keys and measure
+ * inputs are scoped to the source **table**, which the entity would wrongly widen. A measure's name and
+ * an output's target column are written against the **target table's** columns.
  */
-export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target: targetName, input }: Params) => {
+export const usePipelineResolution = ({ target: targetName, input }: Params) => {
   const [tables, setTables] = useState<AnalyticsTable[]>([]);
   const [isTablesLoading, setIsTablesLoading] = useState(true);
 
@@ -102,21 +101,18 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
     };
   }, []);
 
-  const evaluatorKey = evaluatorName ? `${evaluatorName}@${evaluatorVersion ?? LATEST_VERSION}` : undefined;
-
-  const resolveEvaluator = useCallback(async (key: string): Promise<Evaluator | null> => {
-    const [name, version] = key.split('@');
-    const read = await (version === LATEST_VERSION ? getEvaluator(name) : getEvaluatorVersion(name, Number(version)));
-    return read.response ?? null;
-  }, []);
-
   const resolveTable = useCallback((name: string): Promise<AnalyticsTable | null> => getTable(name), []);
 
-  const evaluator = useCachedResolution(evaluatorKey, resolveEvaluator);
+  const resolveEntity = useCallback(async (name: string): Promise<AnalyticsEntityField[] | null> => {
+    const read = await getEntitySchema(name);
+    return read.response?.fields ?? null;
+  }, []);
+
   const target = useCachedResolution(targetName, resolveTable);
 
   const sourceName = input || target.value?.source_table;
   const readSource = useCachedResolution(sourceName, resolveTable);
+  const sourceEntity = useCachedResolution(sourceName, resolveEntity);
 
   const enrichmentTables = useMemo(
     () => tables.filter((table) => table.type === AnalyticsTableType.Enrichment),
@@ -127,9 +123,6 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
     tables,
     enrichmentTables,
     isTablesLoading,
-    evaluator: evaluator.value,
-    isEvaluatorPending: evaluator.isPending,
-    hasEvaluatorError: evaluator.hasError,
     target: target.value,
     isTargetPending: target.isPending,
     hasTargetError: target.hasError,
@@ -140,5 +133,8 @@ export const usePipelineResolution = ({ evaluatorName, evaluatorVersion, target:
     grainKey: target.value?.grain?.grain_key ?? '',
     targetColumns: target.value?.columns ?? [],
     sourceColumns: readSource.value?.columns ?? [],
+    sourceFields: sourceEntity.value ?? [],
+    isSourceEntityPending: sourceEntity.isPending,
+    hasSourceEntityError: sourceEntity.hasError,
   };
 };

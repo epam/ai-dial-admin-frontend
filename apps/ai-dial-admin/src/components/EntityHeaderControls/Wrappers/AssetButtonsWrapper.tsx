@@ -19,13 +19,14 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
@@ -37,7 +38,7 @@ export interface AssetButtonsWrapperProps extends Omit<
   'onSave'
 > {
   assets?: AssetWithVersion[] | null;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   addedVersions?: string[];
   onChangeAsset?: (asset: AssetWithVersion) => void;
   onSave?: (version?: string) => void;
@@ -69,7 +70,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   // Prompts are versionless: no version dropdown, no save-as-new-version, no all-versions
   // delete. Apps/toolsets keep the full versioned header.
   const isVersionlessView = isVersionlessAssetView(view);
-  const entityVersion = 'version' in entity ? entity.version : undefined;
+  const entityVersion = entity._metadata?.version;
   // A versionless entity has no `version` to look up — `includes` also requires a string.
   const isAddedVersion = !!entityVersion && !!addedVersions?.includes(entityVersion);
 

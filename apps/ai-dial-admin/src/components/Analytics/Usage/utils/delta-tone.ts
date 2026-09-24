@@ -18,7 +18,7 @@ const RISE_IS_GOOD: Partial<Record<KpiMetric, boolean>> = {
   [KpiMetric.AvgLatency]: false,
   [KpiMetric.Requests]: true,
   [KpiMetric.Tokens]: true,
-  [KpiMetric.UniqueUsers]: true,
+  [KpiMetric.UniqueCallers]: true,
   [KpiMetric.ToolCalls]: true,
 };
 

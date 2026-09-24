@@ -93,7 +93,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, ca
       let updateFunction = updateToolset;
       if (newVersion) {
         updatedEntity = { ...addNewVersion(updatedEntity, newVersion), auth_settings: {} } as unknown as AssetToolset;
-        updateFunction = createToolset as (
+        updateFunction = createToolset as unknown as (
           asset: AssetToolset,
         ) => Promise<ServerActionResponse<Record<string, unknown>>>;
       }
@@ -106,8 +106,16 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, ca
                 ? getCreateNotificationTitle(ApplicationRoute.AssetsToolsets, t)
                 : getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
               newVersion
-                ? getCreateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t)
-                : getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+                ? getCreateNotificationDescription(
+                    ApplicationRoute.AssetsToolsets,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  )
+                : getUpdateNotificationDescription(
+                    ApplicationRoute.AssetsToolsets,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  ),
             ),
           );
           if (isNeedToMove) {
@@ -118,14 +126,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, ca
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 router.push(
                   getUrnForEntity(ApplicationRoute.AssetsToolsets, {
-                    name: updatedEntity.name,
-                    path: changePath(updatedEntity.path, newPath),
+                    name: updatedEntity.name || updatedEntity._metadata?.name || '',
+                    path: changePath(updatedEntity.path || updatedEntity._metadata?.path || '', newPath),
                   }),
                 );
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
           }
           router.refresh();
@@ -159,7 +167,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, ca
       >
         <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
-          selectedToolset={selectedToolset as DialToolsetResource}
+          selectedToolset={selectedToolset as unknown as DialToolsetResource}
           signInToolset={signInToolset}
           signOutToolset={signOutToolset}
           oAuthCode={oAuthCode}

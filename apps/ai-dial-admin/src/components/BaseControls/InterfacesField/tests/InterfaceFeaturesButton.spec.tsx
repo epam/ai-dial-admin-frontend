@@ -2,8 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+import { modelResourceFeatureLabelMap } from '@/src/components/Assets/Platform/Models/constants';
 import { resourceFeatureLabelMap } from '@/src/components/Assets/Resources/constants';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
 import InterfaceFeaturesButton from '../InterfaceFeaturesButton';
 
 // DialSwitch's real markup doesn't associate its label with the checkbox accessibly in jsdom — same
@@ -42,6 +44,23 @@ describe('InterfaceFeaturesButton', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(resourceFeatureLabelMap.tools_supported)).toBeInTheDocument();
+  });
+
+  test('shows model-specific feature controls for platform models', async () => {
+    const user = userEvent.setup();
+    render(
+      <InterfaceFeaturesButton
+        fieldId="row-1"
+        features={{}}
+        view={ApplicationRoute.PlatformModels}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Features }));
+
+    expect(screen.getByRole('switch', { name: modelResourceFeatureLabelMap.cache_supported })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: resourceFeatureLabelMap.consent_required })).toBeNull();
   });
 
   test('reflects the current feature values as switch state', async () => {

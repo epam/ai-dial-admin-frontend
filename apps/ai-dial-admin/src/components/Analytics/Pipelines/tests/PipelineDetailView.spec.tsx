@@ -3,17 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
@@ -22,13 +19,6 @@ const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
 }));
-
-const evaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
-};
 
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
@@ -43,8 +33,7 @@ const sourceTable: AnalyticsTable = { name: 'dial_usage_log', type: AnalyticsTab
 const rule: Pipeline = {
   name: 'feedback-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator,
+  transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -56,13 +45,7 @@ const rule: Pipeline = {
 };
 
 const renderView = (override?: Partial<Pipeline>) =>
-  render(
-    <PipelineDetailView
-      pipeline={{ ...rule, ...override }}
-      evaluators={[{ name: 'feedback-rollup', latest_version: 2 }]}
-      takenTargets={['turn_feedback']}
-    />,
-  );
+  render(<PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} />);
 
 // Looked up by label, not by current value, so the same helper works when an edit restores the original.
 const editSampleFraction = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
@@ -84,7 +67,6 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockImplementation(
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
-    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
   });
 
@@ -150,17 +132,22 @@ describe('PipelineDetailView', () => {
     expect(facts).toBeTruthy();
     expect(screen.getByText('response_id')).toBeTruthy();
     expect(screen.getByText('ingested_at')).toBeTruthy();
-    expect(screen.getByText('feedback-rollup@2')).toBeTruthy();
     expect(screen.getByText('7')).toBeTruthy();
   });
 
-  test('links the resolved evaluator to its page at the version the rule resolved to', () => {
+  // A document among one-word values, repeating what the outputs editor states below; the JSON editor
+  // keeps it.
+  test('leaves the composed response schema out of the facts', () => {
+    renderView({ response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } } });
+
+    expect(within(facts()).queryByText(/rate_event_count/)).toBeNull();
+  });
+
+  test('offers no evaluator fact and no link to one', () => {
     renderView();
 
-    expect(screen.getByRole('link', { name: 'feedback-rollup@2' })).toHaveAttribute(
-      'href',
-      '/evaluators/feedback-rollup?version=2',
-    );
+    expect(screen.queryByRole('link', { name: /feedback-rollup/ })).toBeNull();
+    expect(screen.queryByText('feedback-rollup@2')).toBeNull();
   });
 
   test('renders an em dash for an absent version column', () => {
@@ -173,7 +160,7 @@ describe('PipelineDetailView', () => {
   test('offers nothing to save until something is edited', async () => {
     renderView();
 
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();
@@ -182,7 +169,7 @@ describe('PipelineDetailView', () => {
   test('offers save and discard once a value changes', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
 
@@ -193,7 +180,7 @@ describe('PipelineDetailView', () => {
   test('withdraws save when the value is edited back to what it was', async () => {
     const user = userEvent.setup();
     renderView({ advanced: { scan_every: 'PT1H' } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
@@ -206,7 +193,7 @@ describe('PipelineDetailView', () => {
   test('discard restores the loaded value after confirmation', async () => {
     const user = userEvent.setup();
     renderView({ advanced: { scan_every: 'PT1H' } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
@@ -218,7 +205,7 @@ describe('PipelineDetailView', () => {
   test('saves the whole rule and re-reads it', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -230,10 +217,56 @@ describe('PipelineDetailView', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  // The service gates the declaration when the pipeline is armed, so what is merely unwritten reaches
+  // the save; only a value that was authored and cannot be stored as authored holds it back.
+  test('saves a declaration carrying neither trigger nor transform', async () => {
+    const user = userEvent.setup();
+    renderView({ trigger: undefined, transform: undefined });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto).not.toHaveProperty('trigger');
+    expect(dto).not.toHaveProperty('transform');
+  });
+
+  test('saves an llm transform carrying neither model nor request template', async () => {
+    const user = userEvent.setup();
+    renderView({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto.transform?.type).toBe(TransformType.Llm);
+  });
+
+  test('the enable control is offered whatever the declaration holds', async () => {
+    renderView({ trigger: undefined, transform: undefined, enabled: false });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.EnablePipeline })).toBeEnabled();
+  });
+
+  test('a sample fraction of zero still holds the save back', async () => {
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editSampleFraction(user, '0');
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -248,7 +281,7 @@ describe('PipelineDetailView', () => {
   test('never sends a member the API refuses', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -264,7 +297,7 @@ describe('PipelineDetailView', () => {
     vi.mocked(updatePipeline).mockResolvedValue({ success: false, status: 403, errorMessage: 'not entitled' });
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -283,7 +316,7 @@ describe('PipelineDetailView', () => {
     });
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -294,12 +327,78 @@ describe('PipelineDetailView', () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  // The default fixture is a sql transform, which renders no request and whose inputs the service
+  // refuses — so the section is absent rather than empty, and anything typed there would be dropped.
+  test('presents no inputs section for a sql transform', () => {
+    renderView();
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionInputs)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionRequestTemplate)).toBeNull();
+  });
+
+  // A sql transform renders neither a template nor inputs, hence the llm fixture.
+  test('presents the inputs inside the transform block, after the template and before the outputs', () => {
+    renderView({ transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title.' } } });
+
+    const rendered = document.body.textContent ?? '';
+    const template = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionRequestTemplate);
+    const inputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionInputs);
+    const outputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionOutputs);
+
+    expect(template).toBeGreaterThan(-1);
+    expect(inputs).toBeGreaterThan(template);
+    expect(outputs).toBeGreaterThan(inputs);
+  });
+
+  // The facts row and the scope below it name the same two tables, so they are measured separately: a
+  // reader who meets them in opposite orders reads the second as a different pair.
+  test('presents the source before the target in the facts row and in the read scope', () => {
+    renderView();
+
+    const rendered = document.body.textContent ?? '';
+    const scopeAt = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope);
+    const facts = rendered.slice(0, scopeAt);
+    const scope = rendered.slice(scopeAt);
+
+    expect(facts.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      facts.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+  });
+
+  // An aggregate names its input with a plain select rather than the follow-or-pin control, and it is
+  // ordered the same way.
+  test('presents the input before the target for an aggregate pipeline', async () => {
+    const rollup: AnalyticsTable = { name: 'usage_rollup', type: AnalyticsTableType.Source, columns: [] };
+    vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable, rollup]);
+
+    renderView({
+      kind: PipelineKind.Aggregate,
+      target: 'usage_rollup',
+      inputs: ['dial_usage_log'],
+      transform: undefined,
+      trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
+      measures: [{ name: 'requests', fn: 'count' }],
+    });
+
+    await waitFor(() => expect(getTables).toHaveBeenCalled());
+
+    const rendered = document.body.textContent ?? '';
+    const scope = rendered.slice(rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope));
+
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Inputs)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+  });
+
   test('groups the members into collapsible sections', () => {
     renderView();
 
     [
       AnalyticsPipelinesI18nKey.SectionReadScope,
-      AnalyticsPipelinesI18nKey.SectionVariables,
+      AnalyticsPipelinesI18nKey.SectionTransform,
       AnalyticsPipelinesI18nKey.SectionAdvanced,
     ].forEach((section) => expect(screen.getByRole('button', { name: section })).toBeTruthy());
   });
@@ -335,7 +434,7 @@ describe('PipelineDetailView', () => {
   test('confirms before disabling a rule', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
 
@@ -346,7 +445,7 @@ describe('PipelineDetailView', () => {
   test('flips enabled on its own rather than re-declaring the pipeline', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5' });
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
     // The popup takes over the query scope, so this now uniquely matches its confirm button.
@@ -363,7 +462,7 @@ describe('PipelineDetailView', () => {
   test('withholds the toggle while edits are pending, because it would refresh them away', async () => {
     const user = userEvent.setup();
     renderView();
-    await waitFor(() => expect(getEvaluator).toHaveBeenCalled());
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
 

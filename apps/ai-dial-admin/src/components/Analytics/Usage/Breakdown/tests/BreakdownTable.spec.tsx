@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -14,9 +14,14 @@ import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 interface CapturedGrid {
-  rowData: BreakdownRowModel[];
-  columnDefs: { colId?: string; filter?: boolean }[];
+  /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
+  rowData?: BreakdownRowModel[];
+  columnDefs: { colId?: string; filter?: boolean | string }[];
 }
+
+vi.mock('@/src/app/[lang]/queries/actions', () => ({
+  executeQuery: vi.fn(async () => ({ success: true, response: { rows: [] } })),
+}));
 
 const grids: CapturedGrid[] = [];
 
@@ -25,7 +30,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: (props: CapturedGrid) => {
     grids.push(props);
 
-    return <div role="grid" aria-rowcount={props.rowData.length} />;
+    return <div role="grid" aria-rowcount={props.rowData?.length ?? 0} />;
   },
 }));
 
@@ -38,12 +43,26 @@ const row = (id: string, calls: number, failed = 0): BreakdownRow => ({
   measures: { ...EMPTY_MEASURES, calls, failed },
 });
 
+const fallbackRow = (calls: number, column = 'mcp_tool_call_name'): BreakdownRow => ({
+  id: `${column}:missing`,
+  label: '',
+  isFallbackLabel: true,
+  measures: { ...EMPTY_MEASURES, calls },
+});
+
 const ROWS = [row('gpt-4o', 60), row('claude-sonnet', 40)];
 
 const WINDOW = {
   startDate: new Date('2026-09-16T00:00:00.000Z'),
   endDate: new Date('2026-09-17T00:00:00.000Z'),
 };
+
+const PREVIOUS_WINDOW = {
+  startDate: new Date('2026-09-15T00:00:00.000Z'),
+  endDate: new Date('2026-09-16T00:00:00.000Z'),
+};
+
+const NOTICE = { report: vi.fn(), reset: vi.fn() };
 
 type Props = Parameters<typeof BreakdownTable>[0];
 
@@ -56,20 +75,18 @@ const renderTable = (props: Partial<Props> = {}) =>
       rows={loaded<BreakdownRow[]>(ROWS)}
       previousRows={loaded<BreakdownRow[]>([])}
       windowTotal={200}
-      hasComparison={false}
-      window={WINDOW}
+      windows={{ current: WINDOW }}
       rowLimit={10}
-      searchTerm=""
-      onSearchChange={vi.fn()}
       isShowingAll={false}
       onShowAll={vi.fn()}
       onHideAll={vi.fn()}
       onOpenRow={vi.fn()}
+      notice={NOTICE}
       {...props}
     />,
   );
 
-const cardGrid = () => grids[0];
+const cardGrid = () => grids[0] as CapturedGrid & { rowData: BreakdownRowModel[] };
 
 describe('BreakdownTable', () => {
   beforeEach(() => {
@@ -105,27 +122,25 @@ describe('BreakdownTable', () => {
     expect(cardGrid().rowData[0].errorRate).toBe(0.1);
   });
 
-  test('adds no delta column while comparison is off', () => {
-    renderTable();
+  test('states a change inside each measure cell rather than in a column of its own', () => {
+    renderTable({ windows: { current: WINDOW, previous: PREVIOUS_WINDOW } });
 
     expect(cardGrid().columnDefs.some((column) => column.colId === 'delta')).toBe(false);
-  });
-
-  test('adds the delta column once comparison is on', () => {
-    renderTable({ hasComparison: true, previousRows: loaded<BreakdownRow[]>([row('gpt-4o', 30)]) });
-
-    expect(cardGrid().columnDefs.some((column) => column.colId === 'delta')).toBe(true);
+    expect(cardGrid().columnDefs.map((column) => column.colId)).toContain('cost');
   });
 
   test('states the change for a row both windows carried', () => {
-    renderTable({ hasComparison: true, previousRows: loaded<BreakdownRow[]>([row('gpt-4o', 30)]) });
+    renderTable({
+      windows: { current: WINDOW, previous: PREVIOUS_WINDOW },
+      previousRows: loaded<BreakdownRow[]>([row('gpt-4o', 30)]),
+    });
 
-    expect(cardGrid().rowData[0].deltaRatio).toBe(1);
+    expect(cardGrid().rowData[0].deltas.calls).toBe(1);
   });
 
   test('calls a row new only when the previous window listed the whole dimension', () => {
     renderTable({
-      hasComparison: true,
+      windows: { current: WINDOW, previous: PREVIOUS_WINDOW },
       rowLimit: 10,
       previousRows: loaded<BreakdownRow[]>([row('claude-sonnet', 10)]),
     });
@@ -134,36 +149,41 @@ describe('BreakdownTable', () => {
   });
 
   test('calls nothing new when the previous window recorded nothing to compare against', () => {
-    renderTable({ hasComparison: true, previousRows: loaded<BreakdownRow[]>([]) });
+    renderTable({ windows: { current: WINDOW, previous: PREVIOUS_WINDOW }, previousRows: loaded<BreakdownRow[]>([]) });
 
     expect(cardGrid().rowData.every((model) => !model.isNewRow)).toBe(true);
   });
 
   test('calls nothing new when the previous response was cut at the page size', () => {
     renderTable({
-      hasComparison: true,
+      windows: { current: WINDOW, previous: PREVIOUS_WINDOW },
       rowLimit: 1,
       previousRows: loaded<BreakdownRow[]>([row('claude-sonnet', 10)]),
     });
 
     expect(cardGrid().rowData[0].isNewRow).toBe(false);
-    expect(cardGrid().rowData[0].deltaRatio).toBeNull();
+    expect(cardGrid().rowData[0].deltas.calls).toBeNull();
   });
 
-  test('reports a typed term so the request can reach rows the page never held', async () => {
-    const user = userEvent.setup();
-    const onSearchChange = vi.fn();
-    renderTable({ onSearchChange });
+  test('ranks the Tools fallback bucket last, whatever its calls', () => {
+    renderTable({
+      view: UsageView.Mcp,
+      tab: BreakdownTab.Tools,
+      rows: loaded<BreakdownRow[]>([fallbackRow(4706), row('execute_python', 142)]),
+    });
 
-    await user.type(screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder }), 'g');
-
-    expect(onSearchChange).toHaveBeenCalledWith('g');
+    expect(cardGrid().rowData.map((model) => model.id)).toEqual(['execute_python', 'mcp_tool_call_name:missing']);
+    expect(cardGrid().rowData[1].displayLabel).toBe(AnalyticsUsageI18nKey.OtherMethods);
+    expect(cardGrid().rowData[1].fallbackTooltip).toBe(AnalyticsUsageI18nKey.OtherMethodsTooltip);
   });
 
-  test('names the term when nothing matched it', () => {
-    renderTable({ rows: loaded<BreakdownRow[]>([]), searchTerm: 'zzz' });
+  test('leaves a fallback bucket in its ranked place on the other tabs', () => {
+    renderTable({
+      tab: BreakdownTab.Applications,
+      rows: loaded<BreakdownRow[]>([fallbackRow(900, 'parent_deployment'), row('gpt-4o', 10)]),
+    });
 
-    expect(screen.getByText(AnalyticsUsageI18nKey.SearchNoMatches)).toBeTruthy();
+    expect(cardGrid().rowData[0].id).toBe('parent_deployment:missing');
   });
 
   test('states that the window held nothing, keeping the grid and its headers', () => {
@@ -183,12 +203,75 @@ describe('BreakdownTable', () => {
     expect(onShowAll).toHaveBeenCalledOnce();
   });
 
-  test('sifts the full list with its own column filters, which the card does not offer', () => {
+  test('offers no column filters on either surface, and searches the dimension instead', () => {
     renderTable({ isShowingAll: true });
 
     const [card, dialog] = grids;
 
     expect(card.columnDefs.every((column) => column.filter === false)).toBe(true);
-    expect(dialog.columnDefs.some((column) => column.filter === true)).toBe(true);
+    expect(dialog.columnDefs.every((column) => column.filter === false)).toBe(true);
+    expect(screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder })).toBeTruthy();
+  });
+
+  test('holds the term the reader typed, which the dialog reads the dimension again with', () => {
+    renderTable({ isShowingAll: true });
+
+    const field = screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder });
+    fireEvent.change(field, { target: { value: 'gpt' } });
+
+    expect(field).toHaveValue('gpt');
+  });
+});
+
+describe('BreakdownTable cost column and tab description', () => {
+  beforeEach(() => {
+    grids.length = 0;
+  });
+
+  test('states the cost of each row in the LLM view', () => {
+    renderTable();
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).toContain('cost');
+  });
+
+  test('omits the cost column in the MCP view, where a row carries no price', () => {
+    renderTable({ view: UsageView.Mcp, tab: BreakdownTab.McpServers });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
+  });
+
+  test('describes what the active tab counts, so a reader knows what one row aggregates', () => {
+    const { rerender } = renderTable();
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownDescriptionModels)).toBeInTheDocument();
+
+    rerender(
+      <BreakdownTable
+        view={UsageView.Llm}
+        tab={BreakdownTab.Projects}
+        onTabChange={vi.fn()}
+        rows={loaded<BreakdownRow[]>(ROWS)}
+        previousRows={loaded<BreakdownRow[]>([])}
+        windowTotal={200}
+        windows={{ current: WINDOW }}
+        rowLimit={10}
+        isShowingAll={false}
+        onShowAll={vi.fn()}
+        onHideAll={vi.fn()}
+        onOpenRow={vi.fn()}
+        notice={NOTICE}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownDescriptionProjects)).toBeInTheDocument();
+  });
+
+  test('hands the dialog a paged datasource rather than the card rows', () => {
+    renderTable({ isShowingAll: true });
+
+    const [card, dialog] = grids;
+
+    expect(card.rowData).toBeTruthy();
+    expect(dialog.rowData).toBeUndefined();
   });
 });

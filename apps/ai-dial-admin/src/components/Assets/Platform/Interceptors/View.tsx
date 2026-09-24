@@ -86,7 +86,7 @@ const InterceptorAssetView: FC<Props> = ({ etag, originalInterceptor, catalogSch
             getUpdateNotificationDescription(ApplicationRoute.PlatformInterceptors, selectedInterceptor.name, t),
           ),
         );
-        fetchFiles(selectedInterceptor.folderId);
+        fetchFiles(selectedInterceptor._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

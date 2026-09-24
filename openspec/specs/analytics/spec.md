@@ -24,7 +24,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/session-trace-listing` | One session's page — route and guard, header, side panels, the trace listing |
 | `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
 | `analytics/pipelines` | The pipelines console — listing, registration, detail page, bindings and triggers, JSON editing |
-| `analytics/evaluators` | The evaluators console — listing, version-addressed detail, tabs, the append-only version model |
+| `analytics/dashboards` | The Dashboards page over the usage log — how it is reached, its requests, Compare, KPI row, heatmap, share donut, breakdown table |
 
 ## Requirements
 
@@ -49,9 +49,9 @@ The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value 
 
 ### Requirement: Analytics menu group with Query Builder and Tables sub-items
 
-The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Pipelines" (linking to the Pipelines route), "Evaluators" (linking to the Evaluators route), "Queries" (linking to the Queries route), and "Sessions" (linking to the Sessions route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/pipelines`, `/evaluators`, and `/sessions` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Pipelines", "Evaluators", "Sessions"). The Sessions label MUST be a distinct `MenuI18nKey` member from the one the existing DIAL Core `/conversations` item uses, so the two read as separate destinations.
+The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Pipelines" (linking to the Pipelines route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/pipelines`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Pipelines", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
 
-"Evaluators" SHALL sit directly after "Pipelines" rather than before it. An evaluator cannot be registered from this console, so a position ahead of Pipelines would read as the first step of a workflow that does not start here; the evaluators page is a reference surface an operator reaches from a pipeline, and placing it next to Pipelines keeps the pair adjacent.
+There SHALL be no "Evaluators" item and no `/evaluators` route. The transform an evaluator used to carry is declared on the enrichment pipeline itself, so the pair the menu kept adjacent is one object; a second item would name a surface that authors nothing. `/evaluators` SHALL NOT be redirected — the pipelines listing answers a different question, and sending an old link there would misreport what was asked for.
 
 The Pipelines route SHALL be spelled `/pipelines`, not `/rules`: `src/components/Rules/` and the `RuleFolderProvider` in the app's provider stack already denote entity **access rules**, an unrelated capability, and a `/rules` route would shadow that meaning in the menu, in breadcrumbs, and in the codebase.
 
@@ -63,10 +63,15 @@ The standalone `/query-builder` route SHALL NOT be present in the menu or in the
 - **THEN** an "Analytics" group is present
 - **AND** expanding it shows a "Tables" sub-item linking to `/tables`
 - **AND** it shows a "Pipelines" sub-item linking to `/pipelines`
-- **AND** it shows an "Evaluators" sub-item linking to `/evaluators`, ordered after "Pipelines"
 - **AND** it shows a "Queries" sub-item linking to `/queries`
-- **AND** it shows a "Sessions" sub-item linking to `/sessions`
+- **AND** it shows a "Conversations" sub-item linking to `/conversations-trace`
 - **AND** no "Query Builder" sub-item is present
+- **AND** no "Evaluators" sub-item is present
+
+#### Scenario: The retired evaluators route is not offered and does not redirect
+
+- **WHEN** the user navigates to `/evaluators`
+- **THEN** the request resolves to the not-found page rather than to the pipelines listing
 
 #### Scenario: The retired route redirects
 
@@ -142,15 +147,15 @@ Tables endpoints (base path `/v1/tables`):
 - `POST /v1/tables/{name}/rows` — insert rows into a table
 
 Pipeline endpoints (base path `/v1/pipelines`), covering both kinds — `enrich` and `aggregate` — in one registry:
-- `GET /v1/pipelines` — list pipelines. Deployed builds of the service answer with either a bare array or a `{ pipelines: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }` and from the evaluators listing's `{ items }`.** The listing accepts three optional filters — `kind`, `enabled`, and `updated_since` — which combine rather than replace one another. The client SHALL support all three on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `name` breaking ties)
-- `POST /v1/pipelines` — register a pipeline. A pipeline is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. Exposed as an `*Action` returning a `ServerActionResponse`
+- `GET /v1/pipelines` — list pipelines. Deployed builds of the service answer with either a bare array or a `{ pipelines: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }`.** The listing accepts three optional filters — `kind`, `enabled`, and `updated_since` — which combine rather than replace one another. The client SHALL support all three on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `name` breaking ties)
+- `POST /v1/pipelines` — register a pipeline. A pipeline is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. An `enrich` body carries its whole transform as the nested `transform` block (`type`, `model`, `preset`, `params`, `request_template`, `inputs`, `outputs`); `evaluator_name`, `evaluator_version` and a top-level `vars` are refused at the binding with HTTP 400 on either kind. Exposed as an `*Action` returning a `ServerActionResponse`
 - `GET /v1/pipelines/{name}` — read one pipeline by name
 - `PATCH /v1/pipelines/{name}` — apply the members the request carries: an omitted member is left alone, a presented one is replaced. Exposed as an `*Action` returning a `ServerActionResponse`
 - `DELETE /v1/pipelines/{name}` — delete a pipeline by name; exposed as an `*Action` returning a `ServerActionResponse`
 
 A pipeline is addressed by its `name`, which is its identity and is never reassigned; there is no separate id.
 
-Resolution is **kind-scoped**. A listing narrowed to one `kind` carries each pipeline's resolved members — for an enrichment pipeline its pinned evaluator version inlined as `evaluator`, the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A listing across both kinds omits all three, so a cross-kind grid SHALL render only the flat members every pipeline carries. A disabled pipeline is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
+Resolution is **kind-scoped**. A listing narrowed to one `kind` carries each pipeline's resolved members — for an enrichment pipeline the composed `response_schema`, the derived `outputs` mapping, the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. No `evaluator` object is inlined in any projection; the service no longer serves one. A listing across both kinds omits every resolved member, so a cross-kind grid SHALL render only the flat members every pipeline carries — the authored `transform` among them, since it is declared rather than derived. A disabled pipeline is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
 
 Both pipeline reads SHALL keep a refusal distinct from a failure, and SHALL carry that distinction through the
 read envelope's `status` rather than through a dedicated result type. A caller SHALL read a refusal as
@@ -158,14 +163,14 @@ read envelope's `status` rather than through a dedicated result type. A caller S
 message. A separate `{ data, isForbidden }` shape is not kept alongside the envelope: it answers one question
 the envelope already answers and discards the message the envelope carries.
 
-Evaluator endpoints (base path `/v1/evaluators`). Reads are open to any authenticated caller; the single write is `FULL_ADMIN`-only:
-- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the pipelines listing the response may be a bare array or a wrapper and the client SHALL accept both. Version definitions are **not** included
-- `GET /v1/evaluators/{name}` — read that evaluator's latest version in full, including `type` (`llm` or `sql`), `input_vars`, and `output_vars`
-- `GET /v1/evaluators/{name}/versions/{version}` — read one pinned version in full
-- `POST /v1/evaluators` — register an evaluator or **append a version to an existing one**; the only evaluator mutation the service offers, and the only one it marks `@FullAdminOnly`. The body carries no version: an unknown `name` creates version 1, and a known `name` creates `latest_version + 1`, so there is no way to address which version is produced. Exposed as an `*Action` returning a `ServerActionResponse`
-- `PUT /v1/evaluators/{name}/versions/{version}` and `DELETE /v1/evaluators/{name}/versions/{version}` exist only to reject: both answer HTTP 409 with error code `evaluator_immutable`. There is **no** endpoint that deletes an evaluator by name. The client SHALL NOT surface either, because a registered version can never be changed and a registered evaluator can never be removed
+**No evaluator endpoint SHALL be exposed on the client.** `POST /v1/evaluators` is removed from the
+service; `GET /v1/evaluators` and `GET /v1/evaluators/{name}/versions/{version}` survive as a read-only
+archive of definitions as they stood before the fold, and `PUT`/`DELETE` on a version still answer HTTP 409
+`evaluator_immutable`. The console calls none of them, so `AnalyticsDataApi` SHALL carry no evaluator
+method and no evaluator URL builder at all. A client method for a surface that authors nothing is a way to
+reintroduce one by accident.
 
-The accepted body shape depends on `type` and is enforced imperatively by the service rather than by schema validation: `llm` requires `preset` and `model`; `sql` forbids `preset`, `model`, `params`, `request_template`, `input_vars`, and `response_schema`, and requires every output variable to carry a `sql` expression. A member belonging to the other branch is rejected, not ignored.
+The accepted transform shape depends on `transform.type` and is enforced imperatively by the service rather than by schema validation: `llm` requires `model` and gives every output prose or nothing at all; `sql` forbids `preset`, `model`, `params`, `request_template` and `inputs`, and requires every output to carry an expression. A member belonging to the other branch is rejected, not ignored.
 
 #### Scenario: Client targets the Analytics data-access host
 
@@ -191,14 +196,13 @@ The accepted body shape depends on `type` and is enforced imperatively by the se
 
 - **WHEN** `analyticsDataApi` is used
 - **THEN** it can issue `GET /v1/pipelines` (unwrapping `{ pipelines }`), `POST /v1/pipelines`, `GET /v1/pipelines/{name}`, `PATCH /v1/pipelines/{name}`, and `DELETE /v1/pipelines/{name}`
-- **AND** it can issue `GET /v1/evaluators` (unwrapping `{ items }`), `GET /v1/evaluators/{name}`, and `GET /v1/evaluators/{name}/versions/{version}`
-- **AND** it can issue `POST /v1/evaluators` to register an evaluator or append a version
+- **AND** it offers no evaluator call: an enrichment pipeline's whole transform travels on the pipeline request
 
 #### Scenario: The client exposes no way to change or delete a registered version
 
 - **WHEN** `analyticsDataApi` is used
-- **THEN** it offers no call against `PUT /v1/evaluators/{name}/versions/{version}` or `DELETE /v1/evaluators/{name}/versions/{version}`
-- **AND** the only evaluator write available is the registration POST
+- **THEN** it offers no call against any `/v1/evaluators` path, the archive reads included
+- **AND** no evaluator write exists to expose
 
 #### Scenario: The pipelines listing omits an unset enabled filter
 
@@ -229,7 +233,6 @@ The accepted body shape depends on `type` and is enforced imperatively by the se
 - **WHEN** any Analytics read succeeds
 - **THEN** the envelope reports success and carries the value as `response`
 - **AND** it carries no `errorHeader` and no `errorMessage`
-
 ### Requirement: Analytics pages fetch initial data server-side
 
 The Analytics pages SHALL be `async` server components (`export const dynamic = 'force-dynamic'`) that fetch their initial data on the server via server actions delegating to `analyticsDataApi`, and pass that data to a client view as props; the client view SHALL own all subsequent interactive state and re-fetching. Fetch failures SHALL be logged (`errorObjLog`); a page whose required single entity is missing SHALL call `notFound()`. Pages SHALL NOT fetch their initial data from a client-side effect.

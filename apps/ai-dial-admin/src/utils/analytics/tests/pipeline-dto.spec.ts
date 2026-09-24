@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, SourceMode } from '@/src/models/analytics/pipeline-ui';
 import {
   buildPipelineDto,
@@ -14,8 +13,8 @@ import {
 const pipeline: Pipeline = {
   name: 'existing',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform: { type: TransformType.Sql, outputs: { rating: 'max(rating)' } },
+  response_schema: { type: 'object' },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -93,8 +92,10 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
     expect(buildPipelineDto({ ...draft, inputs: [] })).not.toHaveProperty('inputs');
   });
 
-  test('drops an emptied variables map rather than sending it', () => {
-    expect(buildPipelineDto({ ...draft, vars: {} })).not.toHaveProperty('vars');
+  test('drops an emptied inputs map rather than sending it', () => {
+    const dto = buildPipelineDto({ ...draft, transform: { type: TransformType.Llm, model: 'gpt-4o', inputs: {} } });
+
+    expect(dto.transform).not.toHaveProperty('inputs');
   });
 
   test('drops an emptied advanced block, which means the runner defaults', () => {
@@ -119,10 +120,24 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
     expect(dto.trigger).toEqual({ kind: TriggerKind.OnIngest });
   });
 
+  // Registration collects no trigger, so a pipeline can reach a save before one is chosen. An object
+  // carrying no kind is read as a declared trigger and refused; an absent one is an unwritten member.
+  test('sends no trigger at all when the kind is unset', () => {
+    const dto = buildPipelineDto({ ...draft, trigger: undefined });
+
+    expect(dto).not.toHaveProperty('trigger');
+  });
+
+  test('sends a schedule for an aggregate whatever its draft says, its kind being no choice', () => {
+    const dto = buildPipelineDto({ kind: PipelineKind.Aggregate, name: 'rollup', target: 'usage_daily' });
+
+    expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule });
+  });
+
   test('sends the cron of a scheduled trigger', () => {
     const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' } });
 
-    expect(dto.trigger.cron).toBe('0 0 * * * *');
+    expect(dto.trigger?.cron).toBe('0 0 * * * *');
   });
 
   test('sends the grouping key from the resolved grain key, not from the draft', () => {
@@ -131,7 +146,7 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.group_by).toBe('response_id');
+    expect(dto.trigger?.group_by).toBe('response_id');
   });
 
   test('omits ready_when when every condition is blank', () => {
@@ -168,7 +183,7 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.member_select).toEqual({ limit: 5 });
+    expect(dto.trigger?.member_select).toEqual({ limit: 5 });
   });
 });
 
@@ -217,12 +232,10 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       target: 'sessions',
       inputs: ['log'],
       trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
-      evaluator_name: 'feedback-rollup',
-      evaluator_version: 2,
-      vars: { request: { column: 'request_body' } },
+      transform: { type: TransformType.Llm, model: 'gpt-4o' },
       advanced: { scan_every: '60s' },
     });
 
-    ['evaluator_name', 'evaluator_version', 'vars', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
+    ['transform', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 });

@@ -7,10 +7,11 @@ import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community'
 
 import ListView from '@/src/components/ListView/ListView';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -33,7 +34,7 @@ interface Props<T> {
   showColumnsButton?: boolean;
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   /** Rendered alongside the header buttons — the `config-file-entity-views` toggle. */
   headerExtra?: ReactNode;
   /** True when `data` came from Core's config-file population rather than the admin backend. */

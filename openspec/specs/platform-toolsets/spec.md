@@ -84,9 +84,14 @@ rows, instead of the `public` bucket's Name/Version/Author/Updated time set.
 - **THEN** the grid keeps its existing Name, Version, Author, and Updated time columns
 
 ### Requirement: Creating a platform toolset has no version field
-The system SHALL NOT display or require a version field when creating a new toolset while browsing
-the `platform` bucket, since the bucket has no versioning concept. Creating into the `public` bucket
-is unaffected and keeps requiring a version.
+The system SHALL NOT display or require a version field on any create form whose destination is
+the `platform` bucket — the list-page create form while browsing the `platform` bucket in the
+Toolsets view, and the container-seeded create-asset modal opened from an MCP container detail
+view with the `platform` folder selected — since the bucket has no versioning concept. Creating
+into the `public` bucket is unaffected and keeps requiring a version. A create submitted with the
+`platform` bucket as its destination SHALL write the flat, unversioned `platform/{name}` resource
+through the platform-bucket create action, and the resulting toolset SHALL open from the
+post-create navigation and from the Assets Toolsets grid's platform bucket without a 404.
 
 #### Scenario: No version field when creating into the platform bucket
 - **WHEN** the user opens the create form while browsing the `platform` bucket in the Toolsets view
@@ -95,6 +100,25 @@ is unaffected and keeps requiring a version.
 #### Scenario: Version field unchanged when creating into the public bucket
 - **WHEN** the user opens the create form while browsing the `public` bucket in the Toolsets view
 - **THEN** the version field is shown and required, unchanged from current behavior
+
+#### Scenario: The container-seeded create modal hides the version field for a platform destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
+  selects the `platform` folder
+- **THEN** no version field is shown, the form can be submitted without one, and no version suffix
+  is written into the created resource's path
+
+#### Scenario: The container-seeded create modal keeps the version field for a public destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
+  selects a `public` folder
+- **THEN** the version field is shown and required, and the created resource keeps its
+  `{folderId}{name}__{version}` path, unchanged from current behavior
+
+#### Scenario: A platform-bucket toolset created from a container opens without a 404
+- **WHEN** a user creates a toolset from an MCP container detail view with the `platform` folder
+  selected
+- **THEN** the post-create navigation opens the new toolset's platform-bucket detail view, and
+  clicking the toolset's row in the Assets Toolsets grid's `platform` bucket opens the same detail
+  view — neither resolves to a 404 page
 
 ### Requirement: Platform toolset server actions
 The system SHALL provide server actions to list, get, create, update, delete, and bulk-delete
@@ -119,15 +143,18 @@ toolsets route.
   the caller's etag when supplied
 
 ### Requirement: Platform toolset writes strip read-only and derived fields
-The system SHALL strip fields the merge reader adds but that are not part of Core's `ToolSet` entity
-— `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, and `reference` — before sending
-a create or update write for a platform-bucket toolset. Unlike the `public` bucket's generic write
-path, the `platform` bucket's write path deserializes strictly and rejects any unrecognized field.
+The system SHALL strip the merge layer's `_metadata` object — which holds the read-only and
+derived fields `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, `name`,
+`path`, `folderId`, `version`, and `nodeType` (see the `core-resource-entity-metadata`
+capability) — plus the client-only tracking field `reference`, before sending a create or update
+write for a platform-bucket toolset. Unlike the `public` bucket's generic write path, the
+`platform` bucket's write path deserializes strictly and rejects any unrecognized field.
 
 #### Scenario: A platform toolset save round-trips without a parse failure
-- **WHEN** the user edits and saves a platform-bucket toolset whose fetched entity carries `status`,
-  `author`, `createdAt`, `updatedAt`, and `reference`
-- **THEN** the write succeeds, with none of those fields present in the request body sent to Core
+- **WHEN** the user edits and saves a platform-bucket toolset whose fetched entity carries
+  `_metadata` and `reference`
+- **THEN** the write succeeds, with neither `_metadata` nor `reference` present in the request
+  body sent to Core
 
 ### Requirement: A rejected platform toolset name surfaces through the existing error path
 The system SHALL NOT pre-validate a toolset name against Core's stricter platform-bucket key pattern
@@ -141,16 +168,35 @@ than failing silently.
 - **THEN** the write fails, and an error notification carrying Core's rejection message is shown
 
 ### Requirement: Platform toolset folderId identifies the platform bucket
-The system SHALL return `'platform/'` as `folderId` when reading a platform-bucket toolset from DIAL
-Core, matching the value the write path already sets on create and update, so that any check of
-`isPlatformBucketPath(asset.folderId)` correctly identifies a platform-bucket toolset on a
-freshly-fetched resource, not only on one just created or updated in the current session.
+The system SHALL identify a platform-bucket toolset's bucket explicitly on every shape that carries
+one: listing rows carry `bucket: 'platform'` and no `folderId`, and a merged detail read carries
+`'platform/'` as `_metadata.folderId` for write-path identity, matching what the write path sets on
+create and update. No code path SHALL infer the bucket by applying a `platform/`-prefix check to a
+`folderId`; the folderId-prefix check remains only as a path-level helper for the browsed current
+path, not as a row or entity discriminator.
 
-#### Scenario: A freshly-fetched platform toolset's folderId identifies its bucket
+#### Scenario: A freshly-fetched platform toolset's bucket is identified explicitly
 - **WHEN** the user opens a platform-bucket toolset that was not created or updated in the current
   session
-- **THEN** the fetched resource's `folderId` is `'platform/'`, and `isPlatformBucketPath` on that value
-  returns `true`
+- **THEN** the fetched resource identifies its bucket through its metadata shape, and every
+  consumer answers "which bucket" from that explicit field — no `isPlatformBucketPath(asset.folderId)`
+  check is performed on a freshly-fetched resource
+
+#### Scenario: A platform listing row carries no folderId
+- **WHEN** platform-bucket toolsets are listed into the folder tree
+- **THEN** each row carries `bucket: 'platform'` and no `folderId`, and row-action handling (delete
+  shaping, open-in-new-tab) selects the platform treatment from the row's bucket
+
+### Requirement: Platform toolset name reflects the corrected dual-bucket identity
+The system SHALL set both the flat `name` and `_metadata.name` on a platform-bucket toolset to the
+name its Core resource URL encodes, overriding a divergent `content.name`, when the resource is
+read from DIAL Core — the one documented exception to `core-resource-entity-metadata`'s "content is
+never mutated by the merge" requirement.
+
+#### Scenario: A platform toolset's stale content name is corrected on read
+- **WHEN** a platform-bucket toolset's content response carries a `name` that no longer matches
+  the name encoded in its Core resource URL
+- **THEN** the merged entity's flat `name` and `_metadata.name` both hold the URL-derived name
 
 ### Requirement: Platform toolset header shows the platform bucket with no link
 The system SHALL show `platform` as the value of the header's Folder Storage field for a

@@ -44,9 +44,12 @@ export class SkillsCoreApi extends CoreApi {
    * `SKILL.md` editing). So `author`/`createdAt`/`updatedAt`/`etag` all come from a single read of
    * the skill's *parent* folder listing, matching this skill's own row — there is no "get one
    * resource's own listing metadata" call, and no separate manifest fetch is needed since the
-   * listing row already carries the same aggregate etag a `SKILL.md` content read would. The only
-   * fetch beyond that single listing read is {@link getSkillFiles}, since a skill's own path
-   * resolves to an item node Core never populates with file contents.
+   * listing row already carries the same aggregate etag a `SKILL.md` content read would. The
+   * listing-sourced trio nests under `_metadata` (epoch milliseconds stringified, matching the
+   * asset merge formatters' convention and the skill list rows' `ResourceInfo` shape); `etag`
+   * stays a separate value, outside `_metadata`. The only fetch beyond that single listing read is
+   * {@link getSkillFiles}, since a skill's own path resolves to an item node Core never populates
+   * with file contents.
    */
   async getSkillMetadata(token: Token, path: string): Promise<DialSkillResource | null> {
     const [files, listingEntry] = await Promise.all([
@@ -67,9 +70,11 @@ export class SkillsCoreApi extends CoreApi {
       path,
       folderId,
       etag: listingEntry.etag,
-      author: listingEntry.author,
-      createdAt: listingEntry.createdAt,
-      updatedAt: listingEntry.updatedAt,
+      _metadata: {
+        author: listingEntry.author,
+        createdAt: listingEntry.createdAt !== undefined ? String(listingEntry.createdAt) : undefined,
+        updatedAt: listingEntry.updatedAt !== undefined ? String(listingEntry.updatedAt) : undefined,
+      },
       files,
     };
   }

@@ -1,6 +1,7 @@
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { FnArgValue, FunctionOption } from '@/src/models/analytics/query-builder';
+import { RELATIVE_TIME_NOW_FN, RELATIVE_TIME_SUBTRACT_FN } from '@/src/constants/analytics/query-builder';
+import { FnArgValue, FnCallValue, FunctionOption, RelativeTimeFunctions } from '@/src/models/analytics/query-builder';
 import {
   QueryFunction,
   QueryFunctionArg,
@@ -76,6 +77,44 @@ export const scalarFunctionOptions = (functions: QueryFunction[]): FunctionOptio
 export const operandFunctionOptions = (functions: QueryFunction[]): FunctionOption[] =>
   toFunctionOptions(scalarFunctions(functions).filter((fn) => fn.returns !== QueryFunctionReturnType.Array));
 
+// The Functions group offered for an `expression` argument of a call being built. Deliberately the
+// projected set, not the operand one: an argument may legitimately take an array (`array_length`,
+// `array_to_string`), and the catalog declares no expected type for an `expression` argument, so
+// there is nothing here to withhold on.
+export const argumentFunctionOptions = scalarFunctionOptions;
+
+// Whether the served catalog can express a bound of `amount` × `unit` back from the current
+// instant. Arguments are matched by their declared kind, not by position, so a catalog that
+// reorders them still resolves.
+export const relativeTimeFunctions = (
+  functions: QueryFunction[],
+  unit: string,
+  amount: number,
+): RelativeTimeFunctions | null => {
+  const subtract = functionByName(functions, RELATIVE_TIME_SUBTRACT_FN);
+  const now = functionByName(functions, RELATIVE_TIME_NOW_FN);
+  if (!subtract || !now || !now.args.every((arg) => arg.optional)) return null;
+
+  const unitArg = argsOfKind(subtract, QueryFunctionArgKind.StringLiteral);
+  const amountArg = argsOfKind(subtract, QueryFunctionArgKind.IntegerLiteral);
+  const timestampArg = argsOfKind(subtract, QueryFunctionArgKind.Expression);
+  if (subtract.args.length !== 3 || !unitArg || !amountArg || !timestampArg) return null;
+
+  const allowed = unitArg.constraints?.allowed_values;
+  if (allowed && !allowed.includes(unit)) return null;
+  const { min, max } = amountArg.constraints ?? {};
+  if ((min != null && amount < min) || (max != null && amount > max)) return null;
+
+  return { subtract, now };
+};
+
+// The function's only argument of that kind, or undefined when it declares none or several — the
+// role is then ambiguous and the caller cannot fill it.
+const argsOfKind = (fn: QueryFunction, kind: QueryFunctionArgKind): QueryFunctionArg | undefined => {
+  const matches = fn.args.filter((arg) => arg.kind === kind);
+  return matches.length === 1 ? matches[0] : undefined;
+};
+
 // The implicit aggregate measure added when the user defines no explicit aggregate: the first
 // aggregate-group function whose arguments are all optional — which is `count` by its metadata,
 // chosen from the catalog rather than named in code. Undefined when the catalog has no such function.
@@ -98,6 +137,17 @@ export const valueTypeForArgKind = (kind: QueryFunctionArgKind): QueryValueType 
 // A fresh, empty arg-value slot per catalog argument, in order.
 export const emptyArgs = (fn: QueryFunction): FnArgValue[] => fn.args.map(() => ({}));
 
+// One argument value as it reads in a collapsed chip. A nested call reads as the call it is, so a
+// relative bound summarises as `date_sub(minute, 30, now())` rather than as a blank slot.
+const argValueSummary = (value: FnArgValue, displayName: (fieldName: string) => string): string => {
+  if (value.call) {
+    const inner = value.call.args.map((arg) => argValueSummary(arg ?? {}, displayName)).join(', ');
+    return `${value.call.fn}(${inner})`;
+  }
+  if (value.field) return displayName(value.field);
+  return value.literal || '…';
+};
+
 // A human-readable summary of a function row's arguments (e.g. "5, minute, request_time"), used in
 // the collapsed row chip. `displayName` resolves an expression arg's field to its display label; a
 // placeholder marks an unfilled argument. Kept resolver-based so it needn't depend on fields.ts.
@@ -105,24 +155,30 @@ export const functionArgSummary = (
   fn: QueryFunction,
   args: FnArgValue[],
   displayName: (fieldName: string) => string,
-): string =>
-  fn.args
-    .map((argDef, i) => {
-      const value = args[i] ?? {};
-      if (isExpressionArg(argDef)) return value.field ? displayName(value.field) : '…';
-      return value.literal || '…';
-    })
-    .join(', ');
+): string => fn.args.map((_, i) => argValueSummary(args[i] ?? {}, displayName)).join(', ');
 
 export const isExpressionArg = (arg: QueryFunctionArg): boolean => arg.kind === QueryFunctionArgKind.Expression;
 
-// One argument slot is filled when its expression carries a field, or its literal is non-blank.
-export const isArgFilled = (arg: QueryFunctionArg, value: FnArgValue | undefined): boolean =>
-  isExpressionArg(arg) ? !!value?.field : !!(value?.literal && value.literal.trim() !== '');
+export const isCallFilled = (call: FnCallValue | undefined, functions: QueryFunction[]): boolean => {
+  if (!call) return false;
+  const fn = functionByName(functions, call.fn);
+  return !!fn && requiredArgsFilled(fn, call.args, functions);
+};
 
-// A function row is complete when every required (non-optional) argument is filled.
-export const requiredArgsFilled = (fn: QueryFunction, args: FnArgValue[]): boolean =>
-  fn.args.every((arg, i) => arg.optional || isArgFilled(arg, args[i]));
+// One argument slot is filled when its expression carries a field or a filled call, or its literal
+// is non-blank.
+export const isArgFilled = (
+  arg: QueryFunctionArg,
+  value: FnArgValue | undefined,
+  functions: QueryFunction[],
+): boolean =>
+  isExpressionArg(arg)
+    ? !!value?.field || isCallFilled(value?.call, functions)
+    : !!(value?.literal && value.literal.trim() !== '');
+
+// A function row is complete when every required (non-optional) argument is filled, at any depth.
+export const requiredArgsFilled = (fn: QueryFunction, args: FnArgValue[], functions: QueryFunction[]): boolean =>
+  fn.args.every((arg, i) => arg.optional || isArgFilled(arg, args[i], functions));
 
 const RETURN_TYPE_MAP: Partial<Record<QueryFunctionReturnType, AnalyticsFieldType>> = {
   [QueryFunctionReturnType.String]: AnalyticsFieldType.String,

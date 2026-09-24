@@ -39,3 +39,11 @@ export const DURATION_CUSTOM_PRESET = 'custom';
 export const IDLE_PRESETS = ['10m', '30m', '2h'];
 
 export const MAX_STALENESS_PRESETS = ['6h', '24h', '7d'];
+
+// The provenance columns the service stamps itself, which it tags rather than names in one list: an
+// output writing one is refused, so they are not offered as a target column.
+export const SYSTEM_COLUMN_TAG = 'system';
+
+// The read-scope select's first entry. A reserved value rather than the followed table's name: following
+// omits `inputs` from the request and pinning sends it, and the service validates the two differently.
+export const FOLLOW_TARGET_SOURCE = '__follow_target__';

@@ -47,7 +47,7 @@ export enum ApplicationRoute {
   Keys = '/keys',
 
   // Activity
-  Dashboard = '/dashboard',
+  Dashboard = '/dashboards',
   UsageLog = '/usage-log',
   ActivityAudit = '/activity-audit',
 
@@ -69,9 +69,7 @@ export enum ApplicationRoute {
 
   // Analytics
   AnalyticsQueries = '/queries',
-  AnalyticsUsage = '/usage',
   AnalyticsTables = '/tables',
   AnalyticsPipelines = '/pipelines',
-  AnalyticsEvaluators = '/evaluators',
   SessionsTrace = '/sessions',
 }

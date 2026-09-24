@@ -1,5 +1,6 @@
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
+import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { findFolderChildren, getFolderName } from './folder';
 import { addTrailingSlash } from '@/src/utils/url';
@@ -62,15 +63,19 @@ export const replacePathPrefix = (fullPath: string, oldPrefix: string, newPrefix
 };
 
 export const getListOfPathsToMove = (
-  file: DialFile,
+  file: DialFile & { _metadata?: Pick<CoreResourceEntityMetadata, 'folderId' | 'name'> },
   allFilesMap: Record<string, DialFile[]> | null,
   files: DialFile[] | null,
   withExtension?: boolean,
 ) => {
-  const currentFolderData = files || allFilesMap?.[addTrailingSlash(file.folderId)];
+  // A merged detail entity's identity lives in `_metadata` (flat fields are create-flow-only), so
+  // both reads resolve flat-first — see `CoreResourceEntityMetadata`.
+  const folderId = file.folderId ?? file._metadata?.folderId;
+  const name = file.name ?? file._metadata?.name;
+  const currentFolderData = files || allFilesMap?.[addTrailingSlash(folderId)];
   return (
     currentFolderData
-      ?.filter((p) => p.name === (withExtension ? `${file.name}${file.extension}` : file.name))
+      ?.filter((p) => p.name === (withExtension ? `${name}${file.extension}` : name))
       .map((p) => p.path) || []
   );
 };

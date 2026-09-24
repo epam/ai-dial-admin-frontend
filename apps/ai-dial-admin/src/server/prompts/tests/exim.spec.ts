@@ -49,18 +49,30 @@ describe('Server :: Prompts :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Prompts :: exim :: buildPromptsExport', () => {
-  test('fetches each selected prompt and sets a prefixed id', async () => {
+  test('fetches each selected prompt and sets a prefixed id, keeping its `_metadata` as exported', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'prompts/public/folder/name__1.0', nodeType: 'ITEM' }),
-      getMerged: vi.fn().mockResolvedValue({ name: 'name__1.0', content: 'hi' }),
+      getMerged: vi.fn().mockResolvedValue({
+        name: 'name__1.0',
+        content: 'hi',
+        _metadata: { name: 'name__1.0', folderId: 'public/folder/', path: 'public/folder/name__1.0', author: 'me' },
+      }),
     } as any;
 
     const result = await buildPromptsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.PROMPT, 'public/folder/name__1.0');
-    // A `__` in the fetched name survives into the export document verbatim — no version split.
+    // A `__` in the fetched name survives into the export document verbatim — no version split —
+    // and the merged entity's `_metadata` rides along as provenance; only import strips it.
     expect(result).toEqual({
-      prompts: [{ name: 'name__1.0', content: 'hi', id: 'prompts/public/folder/name__1.0' }],
+      prompts: [
+        {
+          name: 'name__1.0',
+          content: 'hi',
+          _metadata: { name: 'name__1.0', folderId: 'public/folder/', path: 'public/folder/name__1.0', author: 'me' },
+          id: 'prompts/public/folder/name__1.0',
+        },
+      ],
     });
   });
 
@@ -86,11 +98,20 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
     } as any;
 
     // An old exported id with `__1.0` in it: the whole last segment is the name — nothing is
-    // split off as a version, and no `version` field rides along on the body.
+    // split off as a version, no `version` field rides along on the body, and the `_metadata`
+    // provenance the export carries is stripped before the write.
     const result = await importPromptsExport(
       assetApi,
       {} as any,
-      { prompts: [{ id: 'prompts/public/source/name__1.0', name: 'name__1.0' } as any] },
+      {
+        prompts: [
+          {
+            id: 'prompts/public/source/name__1.0',
+            name: 'name__1.0',
+            _metadata: { name: 'name__1.0', folderId: 'public/source/', path: 'public/source/name__1.0' },
+          } as any,
+        ],
+      },
       baseOptions,
     );
 
@@ -105,7 +126,7 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
       {},
       ResourceType.PROMPT,
       'public/target/name__1.0',
-      expect.not.objectContaining({ version: expect.anything() }),
+      expect.not.objectContaining({ version: expect.anything(), _metadata: expect.anything() }),
       { allowOverride: true },
     );
     expect(result.importResults).toEqual([

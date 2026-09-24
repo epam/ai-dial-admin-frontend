@@ -17,7 +17,10 @@ import {
   PROMPT_TOKENS_ALIAS,
   SPEND_ALIAS,
   TOOL_CALLS_ALIAS,
-  USERS_ALIAS,
+  CALLERS_ALIAS,
+  GROUP_COUNT_ALIAS,
+  GROUP_NAMES_ALIAS,
+  GROUP_NAMES_SEPARATOR,
 } from '@/src/components/Analytics/Usage/queries';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 
@@ -38,7 +41,7 @@ export const toNumber = (value: unknown): number | null => {
 
 export const readMeasures = (row: Record<string, unknown>): UsageMeasures => ({
   calls: toNumber(row[CALLS_ALIAS]) ?? 0,
-  users: toNumber(row[USERS_ALIAS]) ?? 0,
+  callers: toNumber(row[CALLERS_ALIAS]) ?? 0,
   failed: toNumber(row[FAILED_ALIAS]) ?? 0,
   avgLatencyMs: toNumber(row[AVG_LATENCY_ALIAS]),
   spend: toNumber(row[SPEND_ALIAS]),
@@ -51,7 +54,7 @@ export const readMeasures = (row: Record<string, unknown>): UsageMeasures => ({
 
 export const EMPTY_MEASURES: UsageMeasures = {
   calls: 0,
-  users: 0,
+  callers: 0,
   failed: 0,
   avgLatencyMs: null,
   spend: null,
@@ -96,10 +99,22 @@ export const foldBreakdownRows = (result: StructuredQueryResult | null | undefin
     const raw = row[column];
     const isMissing = isMissingValue(raw);
 
+    const groupNames = row[GROUP_NAMES_ALIAS];
+
     return {
       id: isMissing ? `${column}:missing` : String(raw),
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),
+      // Present only where the tab asked for them. A row of a single deployment carries it too:
+      // "which one" is the question even when the answer is one name.
+      ...(isMissingValue(groupNames)
+        ? {}
+        : {
+            // Split on the separator the query joined with, not on a bare comma: a deployment name
+            // may carry one, and splitting there would report two servers where there is one.
+            groupNames: String(groupNames).split(GROUP_NAMES_SEPARATOR).filter(Boolean),
+            groupCount: toNumber(row[GROUP_COUNT_ALIAS]),
+          }),
     };
   });

@@ -1,6 +1,11 @@
-import { CreatePipelineDto, TruncUnit } from '@/src/models/analytics/pipeline';
+import { CreatePipelineDto, PipelineTransform, TransformOutput, TruncUnit } from '@/src/models/analytics/pipeline';
 
-export type PipelineDraft = Partial<CreatePipelineDto>;
+/** `outputs` is a list here and a map on the wire: only a list carries the order through an editor that reorders rows. */
+export interface TransformDraft extends Omit<PipelineTransform, 'outputs'> {
+  outputs?: TransformOutput[];
+}
+
+export type PipelineDraft = Partial<Omit<CreatePipelineDto, 'transform'>> & { transform?: TransformDraft };
 
 export enum SourceMode {
   Follow = 'follow',
@@ -70,4 +75,34 @@ export interface MeasureRow {
   column?: string;
   where?: string;
   distinct?: boolean;
+}
+
+/**
+ * Which refinement an llm output declares. The service refuses the two together and accepts neither, so
+ * there is no "none" here: a selection with an empty field is what sends nothing.
+ */
+export enum OutputRefinementKind {
+  Values = 'values',
+  Jsonata = 'jsonata',
+}
+
+/**
+ * The wire shape keys outputs by target column, which a draft cannot do: two rows may share a name — a
+ * collision the editor reports — or carry none at all while being filled in.
+ */
+export interface OutputRow {
+  id: string;
+  name: string;
+  /** Prose for an `llm` transform, the expression for a `sql` one; the type decides which is sent. */
+  text: string;
+  refinement: OutputRefinementKind;
+  values: string[];
+  jsonata: string;
+}
+
+/** Two rows may share a key, or be blank, which the object sent on the wire cannot hold. */
+export interface TransformParamRow {
+  id: string;
+  key: string;
+  value: string;
 }

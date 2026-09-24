@@ -52,8 +52,9 @@ export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 l
 
 export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1';
 
-/** Client-side soft timeout for `getRunCosts` before cost cards show Error (does not abort the fetch). */
-export const COST_FETCH_TIMEOUT_MS = 180_000;
+export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
+
+export const COST_ELAPSED_TICK_MS = 1_000;
 
 export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 

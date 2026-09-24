@@ -6,12 +6,12 @@ const ENDPOINT_REGEX =
 
 const WARNING_ENDPOINT_REGEX = /^http:\/\//;
 
-export const isValidHttpUrl = (value: string) => {
+export const isValidHttpUrl = (value: string, isIncludeWss = false) => {
   if (/\s/.test(value)) {
     return false;
   }
 
-  let url: URL | null = null;
+  let url: URL;
 
   try {
     url = new URL(value);
@@ -24,9 +24,10 @@ export const isValidHttpUrl = (value: string) => {
   }
 
   return (
-    url &&
-    ((url.protocol === 'http:' && value.startsWith('http://')) ||
-      (url.protocol === 'https:' && value.startsWith('https://')))
+    (url.protocol === 'http:' && value.startsWith('http://')) ||
+    (url.protocol === 'https:' && value.startsWith('https://')) ||
+    (isIncludeWss && url.protocol === 'ws:' && value.startsWith('ws://')) ||
+    (isIncludeWss && url.protocol === 'wss:' && value.startsWith('wss://'))
   );
 };
 
@@ -38,7 +39,12 @@ export const isDangerEndpoint = (value?: string) => {
   return WARNING_ENDPOINT_REGEX.test(value || '');
 };
 
-export const getUrlError = (url?: string | null, t?: (str: string) => string, required?: boolean) => {
+export const getUrlError = (
+  url?: string | null,
+  t?: (str: string) => string,
+  required?: boolean,
+  isIncludeWss?: boolean,
+) => {
   if (!url && required) {
     return {
       type: ErrorType.EMPTY,
@@ -46,10 +52,10 @@ export const getUrlError = (url?: string | null, t?: (str: string) => string, re
     };
   }
 
-  if (url && !isValidHttpUrl(url)) {
+  if (url && !isValidHttpUrl(url, isIncludeWss)) {
     return {
       type: ErrorType.INVALID,
-      text: t ? t(ErrorI18nKey.UrlField) : '',
+      text: t ? t(isIncludeWss ? ErrorI18nKey.UrlFieldWithWebSocket : ErrorI18nKey.UrlField) : '',
     };
   }
 

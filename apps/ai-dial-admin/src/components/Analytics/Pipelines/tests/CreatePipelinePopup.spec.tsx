@@ -3,16 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createPipeline, getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -24,29 +21,24 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
       options,
       value,
       onChange,
-      error,
     }: {
       id: string;
       label?: string;
       options: { value: string; label: string }[];
       value?: string;
       onChange?: (next: string) => void;
-      error?: string;
     }) => (
-      <div>
-        <label>
-          {label ?? id}
-          <select value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
-            <option value="">--</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {error && <span>{error}</span>}
-      </div>
+      <label>
+        {label ?? id}
+        <select value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
+          <option value="">--</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
     ),
   };
 });
@@ -56,13 +48,6 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification }),
 }));
 
-const evaluator: Evaluator = {
-  name: 'feedback-rollup',
-  version: 2,
-  type: EvaluatorType.Sql,
-  output_vars: [{ name: 'rate_event_count', type: 'long' }],
-};
-
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
   type: AnalyticsTableType.Enrichment,
@@ -70,61 +55,43 @@ const enrichment: AnalyticsTable = {
   columns: [{ source_name: 'rate_event_count', name: 'rate_event_count', type: AnalyticsFieldType.Long }],
 };
 
+const source: AnalyticsTable = {
+  name: 'usage_daily',
+  type: AnalyticsTableType.Source,
+  columns: [{ source_name: 'calls', name: 'calls', type: AnalyticsFieldType.Long }],
+};
+
 describe('CreatePipelinePopup', () => {
   const onClose = vi.fn();
   const onCreated = vi.fn();
 
-  const renderPopup = (takenTargets: string[] = [], props?: Partial<Parameters<typeof CreatePipelinePopup>[0]>) =>
-    render(
-      <CreatePipelinePopup
-        evaluators={[{ name: 'feedback-rollup', latest_version: 2 }]}
-        functions={[]}
-        takenTargets={takenTargets}
-        onClose={onClose}
-        onCreated={onCreated}
-        {...props}
-      />,
-    );
+  const renderPopup = (takenTargets: string[] = []) =>
+    render(<CreatePipelinePopup takenTargets={takenTargets} onClose={onClose} onCreated={onCreated} />);
 
-  const renderEnrichPopup = renderPopup;
+  const typeName = (name: string) => fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: name } });
 
-  const fillSubmittableRule = async (user: ReturnType<typeof userEvent.setup>) => {
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
-    await selectTarget(user);
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
-  };
-
-  const selectEvaluator = async (user: ReturnType<typeof userEvent.setup>) =>
-    user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.Evaluator), 'feedback-rollup');
-
-  const selectTarget = async (user: ReturnType<typeof userEvent.setup>) => {
+  const selectTarget = async (user: ReturnType<typeof userEvent.setup>, name = enrichment.name) => {
     await waitFor(() =>
       expect(
-        screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelector('option[value="turn_feedback"]'),
+        screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelector(`option[value="${name}"]`),
       ).toBeTruthy(),
     );
-    return user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.Target), 'turn_feedback');
+    return user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.Target), name);
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getTables).mockResolvedValue([enrichment]);
-    vi.mocked(getTable).mockResolvedValue(enrichment);
-    vi.mocked(getEvaluator).mockResolvedValue({ success: true, response: evaluator });
+    vi.mocked(getTables).mockResolvedValue([enrichment, source]);
+    vi.mocked(getTable).mockImplementation(
+      async (name) => [enrichment, source].find((table) => table.name === name) ?? null,
+    );
     vi.mocked(createPipeline).mockResolvedValue({ success: true });
   });
 
-  test('renders the fields in the order the form specifies', () => {
-    renderEnrichPopup();
+  test('collects the name, the kind and the target, in that order', () => {
+    renderPopup();
 
-    const order = [
-      AnalyticsPipelinesI18nKey.Name,
-      AnalyticsPipelinesI18nKey.Kind,
-      AnalyticsPipelinesI18nKey.Evaluator,
-      AnalyticsPipelinesI18nKey.TriggerKind,
-      AnalyticsPipelinesI18nKey.Target,
-    ];
+    const order = [AnalyticsPipelinesI18nKey.Name, AnalyticsPipelinesI18nKey.Kind, AnalyticsPipelinesI18nKey.Target];
     const rendered = document.body.textContent ?? '';
     const positions = order.map((key) => rendered.indexOf(key));
 
@@ -132,206 +99,128 @@ describe('CreatePipelinePopup', () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
   });
 
-  test('leaves the optional evaluator version to the detail page', () => {
-    renderEnrichPopup();
+  test('leaves the declaration to the detail page', () => {
+    renderPopup();
 
-    expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.EvaluatorVersion)).toBeNull();
+    [
+      AnalyticsPipelinesI18nKey.SectionTransform,
+      AnalyticsPipelinesI18nKey.TriggerKind,
+      AnalyticsPipelinesI18nKey.SectionMeasures,
+      AnalyticsPipelinesI18nKey.SectionInputs,
+      AnalyticsPipelinesI18nKey.SectionAdvanced,
+      AnalyticsPipelinesI18nKey.SectionReadScope,
+    ].forEach((key) => expect(screen.queryByText(key)).toBeNull());
   });
 
-  test('discards its state when closed and reopened', async () => {
+  test('offers the targets of the selected kind', async () => {
     const user = userEvent.setup();
-    const { unmount } = renderEnrichPopup();
+    renderPopup();
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
-    expect(screen.getByDisplayValue('my-rule')).toBeTruthy();
+    const targetSelect = () => screen.getByLabelText(AnalyticsPipelinesI18nKey.Target);
+    await waitFor(() => expect(targetSelect().querySelector(`option[value="${enrichment.name}"]`)).toBeTruthy());
+    expect(targetSelect().querySelector(`option[value="${source.name}"]`)).toBeNull();
 
-    unmount();
-    renderEnrichPopup();
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.KindAggregate));
 
-    expect(screen.queryByDisplayValue('my-rule')).toBeNull();
+    await waitFor(() => expect(targetSelect().querySelector(`option[value="${source.name}"]`)).toBeTruthy());
+    expect(targetSelect().querySelector(`option[value="${enrichment.name}"]`)).toBeNull();
   });
 
-  test('registers a pipeline not running rather than asking', async () => {
+  test('blocks submission until all three are set', async () => {
     const user = userEvent.setup();
-    renderEnrichPopup();
+    renderPopup();
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.EnabledYes)).toBeNull();
+    const submit = () => screen.getByRole('button', { name: ButtonsI18nKey.Create });
+    expect(submit()).toBeDisabled();
 
-    await fillSubmittableRule(user);
+    typeName('my-pipeline');
+    expect(submit()).toBeDisabled();
+
+    await selectTarget(user);
+    await waitFor(() => expect(submit()).toBeEnabled());
+  });
+
+  test('refuses a name outside the identity grammar', async () => {
+    const user = userEvent.setup();
+    renderPopup();
+
+    typeName('My-Pipeline');
+    await selectTarget(user);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
+  });
+
+  test('does not offer a target another pipeline already writes', async () => {
+    renderPopup([enrichment.name]);
+
+    await waitFor(() => expect(getTables).toHaveBeenCalled());
+    expect(
+      screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelector(`option[value="${enrichment.name}"]`),
+    ).toBeNull();
+  });
+
+  test('registers either kind not running, sending no enabled member', async () => {
+    const user = userEvent.setup();
+    renderPopup();
+
+    typeName('my-pipeline');
+    await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
     await waitFor(() => expect(createPipeline).toHaveBeenCalled());
-    expect(vi.mocked(createPipeline).mock.calls[0][0].enabled).toBe(false);
+    const dto = vi.mocked(createPipeline).mock.calls[0][0];
+    expect(dto).toEqual({ name: 'my-pipeline', kind: PipelineKind.Enrich, target: enrichment.name });
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.Enabled)).toBeNull();
   });
 
-  test('offers no output mapping, which the service derives rather than accepts', async () => {
+  test('sends no trigger for a pipeline registered before one is chosen', async () => {
     const user = userEvent.setup();
-    renderEnrichPopup();
+    renderPopup();
 
-    await selectEvaluator(user);
+    typeName('my-pipeline');
     await selectTarget(user);
-
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionOutputs)).toBeNull();
-  });
-
-  // The operator can always open the modal; it is here that a missing evaluator is explained and
-  // submission is blocked.
-  test('states that no evaluator is registered and blocks submission', () => {
-    renderEnrichPopup([], { evaluators: [] });
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeTruthy();
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
-  });
-
-  test('marks the evaluator field rather than claiming none are registered', () => {
-    renderEnrichPopup([], { evaluators: [], hasEvaluatorsError: true });
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toBeTruthy();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoEvaluatorsNote)).toBeNull();
-    expect(screen.queryAllByText(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed)).toHaveLength(1);
-  });
-
-  test('blocks submission until the form is complete', () => {
-    renderEnrichPopup();
-
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
-  });
-
-  test('offers no target when every candidate table already has a pipeline', async () => {
-    renderEnrichPopup(['turn_feedback']);
-
-    await waitFor(() => expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.Target)).toBeTruthy());
-    const options = screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelectorAll('option');
-    expect(
-      Array.from(options)
-        .map((option) => option.value)
-        .filter(Boolean),
-    ).toEqual([]);
-  });
-
-  // readOnly rather than disabled: a disabled input leaves the accessibility tree, so the grain key the
-  // spec requires be presented would be unreadable to a screen reader and uncopyable by keyboard.
-  test('derives a read-only group-by from the target grain key', async () => {
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await selectTarget(user);
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerGroup));
-
-    await waitFor(() => expect(screen.getByDisplayValue('response_id')).toBeTruthy());
-    expect(screen.getByDisplayValue('response_id')).toHaveAttribute('readonly');
-    expect(screen.getByDisplayValue('response_id')).toBeEnabled();
-  });
-
-  test('requires a readiness condition for a group rule', async () => {
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerGroup));
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.ReadyWhenRequired)).toBeTruthy();
-  });
-
-  test('offers no variables editor, which belongs to the detail page', async () => {
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await selectEvaluator(user);
-    await selectTarget(user);
-
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionVariables)).toBeNull();
-  });
-
-  test('submits the assembled rule and closes on success', async () => {
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await fillSubmittableRule(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() =>
-      expect(createPipeline).toHaveBeenCalledWith({
-        name: 'my-rule',
-        kind: PipelineKind.Enrich,
-        evaluator_name: 'feedback-rollup',
-        target: 'turn_feedback',
-        trigger: { kind: TriggerKind.OnIngest },
-        enabled: false,
-      }),
-    );
-    expect(onCreated).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: AnalyticsPipelinesI18nKey.Created }),
-    );
-    expect(onClose).toHaveBeenCalledOnce();
+    await waitFor(() => expect(createPipeline).toHaveBeenCalled());
+    expect(vi.mocked(createPipeline).mock.calls[0][0]).not.toHaveProperty('trigger');
   });
 
-  test('keeps the popup open and shows the service message when creation is rejected', async () => {
-    vi.mocked(createPipeline).mockResolvedValue({
-      success: false,
-      errorHeader: 'rule_validation_failed',
-      errorMessage: 'group_by must equal the grain key',
-    });
+  test('closes, notifies and refreshes the listing on success', async () => {
     const user = userEvent.setup();
-    renderEnrichPopup();
+    renderPopup();
 
-    await fillSubmittableRule(user);
+    typeName('my-pipeline');
+    await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() =>
-      expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'rule_validation_failed',
-          description: 'group_by must equal the grain key',
-        }),
-      ),
-    );
-    expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByDisplayValue('my-rule')).toBeTruthy();
+    await waitFor(() => expect(onCreated).toHaveBeenCalled());
+    expect(onClose).toHaveBeenCalled();
+    expect(showNotification).toHaveBeenCalled();
   });
 
-  // The exclusion set is computed from a listing that can be stale by submit time, so the 409 path has
-  // to work even though a bound target is never offered.
-  test('surfaces a racing 409 without discarding the entered values', async () => {
-    vi.mocked(createPipeline).mockResolvedValue({
-      success: false,
-      status: 409,
-      errorHeader: 'rule_validation_failed',
-      errorMessage: 'an enrichment admits at most one rule',
-    });
+  test('reports the service failure and stays open', async () => {
+    vi.mocked(createPipeline).mockResolvedValue({ success: false, errorMessage: 'target already bound' });
     const user = userEvent.setup();
-    renderEnrichPopup();
+    renderPopup();
 
-    await fillSubmittableRule(user);
+    typeName('my-pipeline');
+    await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
-    expect(screen.getByDisplayValue('my-rule')).toBeTruthy();
-    expect(onCreated).not.toHaveBeenCalled();
+    expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
-  test('does not submit while an evaluator resolution has failed', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
+  test('discards its state when closed', async () => {
     const user = userEvent.setup();
-    renderEnrichPopup();
+    const { unmount } = renderPopup();
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'my-rule' } });
-    await selectEvaluator(user);
+    typeName('my-pipeline');
     await selectTarget(user);
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest));
+    unmount();
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed)).toBeTruthy());
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
-  });
-
-  test('reports a failed evaluator resolution in the form', async () => {
-    vi.mocked(getEvaluator).mockResolvedValue({ success: false, status: 500 });
-    const user = userEvent.setup();
-    renderEnrichPopup();
-
-    await selectEvaluator(user);
-
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.EvaluatorLoadFailed)).toBeTruthy());
+    renderPopup();
+    expect(screen.getAllByRole('textbox')[0]).toHaveValue('');
   });
 });

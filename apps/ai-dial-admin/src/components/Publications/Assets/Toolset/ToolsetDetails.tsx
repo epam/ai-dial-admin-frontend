@@ -13,11 +13,18 @@ interface Props {
 const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
   const onChangeToolset = useCallback(
     (updatedToolset: DialToolsetResource) => {
-      const path = updatePathWithNameAndVersion(updatedToolset.path, updatedToolset.name || '', updatedToolset.version);
+      // Same as `ApplicationDetails`: a publication review copy attaches its path flat — it is not
+      // a merged Core read, so the path never lives in `_metadata`.
+      const { path } = updatedToolset as DialToolsetResource & { path?: string };
+      const updatedPath = updatePathWithNameAndVersion(
+        path ?? '',
+        updatedToolset.name || '',
+        updatedToolset.version ?? '',
+      );
       const updatedToolsets = [...(publication.toolSetResources || [])];
       updatedToolsets[0] = {
         ...updatedToolsets[0],
-        toolSetResource: { ...updatedToolset, path },
+        toolSetResource: { ...updatedToolset, path: updatedPath } as unknown as DialToolsetResource,
       };
       onChange?.({ ...publication, toolSetResources: updatedToolsets });
     },

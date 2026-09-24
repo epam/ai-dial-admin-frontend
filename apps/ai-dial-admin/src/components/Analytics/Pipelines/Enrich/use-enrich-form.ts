@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline } from '@/src/models/analytics/pipeline';
-import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
+import { Pipeline, TransformType } from '@/src/models/analytics/pipeline';
+import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-ui';
+import { hasDuplicateOutputName } from '@/src/utils/analytics/transform-dto';
 
 interface Params {
   pipeline?: Pipeline;
@@ -15,43 +15,48 @@ interface Params {
 
 export const useEnrichForm = (params: Params = {}) => {
   const base = usePipelineForm(params);
-  const { draft, evaluator, target, replaceDraft } = base;
+  const { draft, replaceDraft } = base;
+  const transform = draft.transform;
 
-  // A sql evaluator renders no request, so the service refuses a pipeline that declares vars at all. Which
-  // type was picked is known only once the evaluator resolves, so the declaration goes then rather than
-  // when the name is chosen — otherwise what the hidden editor left behind would reach the service as a 422.
+  // The transform is a member of the one pipeline draft, so editing it is a patch of that draft rather
+  // than a second draft with a dirty flag of its own.
+  const onTransformChange = useCallback(
+    (patch: Partial<TransformDraft>) =>
+      replaceDraft((prev) => ({
+        ...prev,
+        transform: { ...(prev.transform ?? { type: TransformType.Llm }), ...patch },
+      })),
+    [replaceDraft],
+  );
+
+  // The service refuses a sql transform that declares inputs at all. The type is on the declaration, so
+  // the drop happens as soon as it changes rather than after a resolution.
   useEffect(() => {
-    if (evaluator?.type !== EvaluatorType.Sql) return;
+    if (transform?.type !== TransformType.Sql) return;
 
     replaceDraft((prev) => {
-      if (!prev.vars) return prev;
-      const next = { ...prev };
-      delete next.vars;
+      if (!prev.transform?.inputs) return prev;
+      const next = { ...prev, transform: { ...prev.transform } };
+      delete next.transform.inputs;
       return next;
     });
-  }, [evaluator?.type, replaceDraft]);
+  }, [transform?.type, replaceDraft]);
 
-  // The one knob the console validates: the service refuses zero outright, naming `enabled: false` as how
-  // a pipeline that evaluates nothing is declared, and refuses a value above 1 rather than reading it as a
-  // percentage.
+  // The service refuses zero outright, naming `enabled: false` as how a pipeline that evaluates nothing
+  // is declared, and refuses a value above 1 rather than reading it as a percentage.
   const sampleFraction = draft.advanced?.sample_fraction;
   const isSampleFractionValid = sampleFraction == null || (sampleFraction > 0 && sampleFraction <= 1);
-
-  const isEvaluatorResolved =
-    Boolean(evaluator) && !base.isEvaluatorPending && !base.hasEvaluatorError && Boolean(target);
-
-  const isValid =
-    base.isSharedValid &&
-    Boolean(draft.evaluator_name) &&
-    draft.enabled != null &&
-    isEvaluatorResolved &&
-    isSampleFractionValid;
+  const hasDuplicateOutput = hasDuplicateOutputName(transform);
 
   return {
     ...base,
-    isValid,
+    transform,
+    onTransformChange,
     isSampleFractionValid,
-    isVariablesReady: Boolean(evaluator && base.readSource),
+    hasDuplicateOutputName: hasDuplicateOutput,
+    hasFieldErrors: base.hasSharedFieldErrors || !isSampleFractionValid || hasDuplicateOutput,
+    isVariablesReady: Boolean(base.readSource) && !base.isSourceEntityPending && !base.hasSourceEntityError,
+    isTransformReady: base.isTargetResolved,
   };
 };
 

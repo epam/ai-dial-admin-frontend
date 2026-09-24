@@ -8,12 +8,13 @@ import {
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView, isPlatformBucketPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isFlatPlatformView, isPlatformBucketRow, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
 const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
   '$type' in deployment && typeof deployment.$type === 'string';
@@ -61,27 +62,39 @@ export const getVersionsPerName = (data: AssetWithVersion[] | ImageVersion[]) =>
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: { folderId?: string }, initialEntity?: { folderId?: string }) => {
-  return entity.folderId !== initialEntity?.folderId;
+// A merged detail entity carries its folder identity in `_metadata` (see `CoreResourceEntityMetadata`);
+// a create/new-version flow seeds it flat. Every identity read resolves flat-first to serve both.
+export const getIsNeedToMove = (
+  entity: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+) => {
+  return (
+    (entity.folderId ?? entity._metadata?.folderId) !== (initialEntity?.folderId ?? initialEntity?._metadata?.folderId)
+  );
 };
 
-export const getEntityForUpdate = <T extends { folderId?: string }>(
+export const getEntityForUpdate = <
+  T extends { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
+>(
   entity: T,
-  initialEntity?: { folderId?: string },
+  initialEntity?: { folderId?: string; _metadata?: Pick<CoreResourceEntityMetadata, 'folderId'> },
 ): T => {
   return {
     ...entity,
-    folderId: initialEntity?.folderId,
+    folderId: initialEntity?.folderId ?? initialEntity?._metadata?.folderId,
   };
 };
 
 export const addNewVersion = (entity: AssetWithVersion, version: string) => {
-  const path = modifyNameVersionInAsset(entity.path, void 0, version);
+  const path = modifyNameVersionInAsset((entity.path || entity._metadata?.path) as string, void 0, version);
   delete (entity as AssetApp).reference;
   return {
     ...entity,
-    path,
-    version,
+    _metadata: {
+      ...entity._metadata,
+      path,
+      version,
+    },
   };
 };
 
@@ -402,7 +415,7 @@ export const getDeleteNotificationContent = (
       // A platform-bucket row has no version to select or append — `isMultipleVersionsDelete`
       // never applies there, and the description shows the bare name rather than a
       // `folderId+name__version` path that carries no meaning for a flat, unversioned resource.
-      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
         const title = isDeleteSeveralFiles
           ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
           : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
@@ -442,7 +455,7 @@ export const getDeleteNotificationContent = (
     }
     case ApplicationRoute.AssetsToolsets: {
       // Same platform-bucket carve-out as AssetsApplications above.
-      if (isPlatformBucketPath((fileNodes as DialFile[])?.[0]?.folderId)) {
+      if (isPlatformBucketRow((fileNodes as DialFile[])?.[0]?.bucket, (fileNodes as DialFile[])?.[0]?.folderId)) {
         const title = isDeleteSeveralFiles
           ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
           : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });

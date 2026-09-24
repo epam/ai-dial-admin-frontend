@@ -12,26 +12,24 @@ import { QueryFunction } from '@/src/models/analytics/query-function';
 interface Props {
   form: AggregateFormState;
   functions: QueryFunction[];
-  isModal?: boolean;
 }
-const AggregateSection: FC<Props> = ({ form, functions, isModal }) => {
+const AggregateSection: FC<Props> = ({ form, functions }) => {
   const t = useI18n();
   const { draft, onChange, onTriggerChange, sourceColumns, targetColumns, sourceName } = form;
   return (
     <>
       <CronField value={draft.trigger?.cron ?? ''} onChange={(cron) => onTriggerChange({ cron })} />
-      <PipelineSharedFields form={form} isModal={isModal} />
-      {!isModal && (
-        <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionGroupKeys)}>
-          <GroupKeysEditor
-            groupKeys={draft.group_by}
-            columns={sourceColumns}
-            onChange={(groupKeys) => onChange({ group_by: groupKeys })}
-          />
-          <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.GroupKeysDerived)}</span>
-        </PipelineSection>
-      )}
-      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMeasures)} isModal={isModal}>
+      <PipelineSharedFields form={form} />
+      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionGroupKeys)}>
+        <GroupKeysEditor
+          groupKeys={draft.group_by}
+          columns={sourceColumns}
+          onChange={(groupKeys) => onChange({ group_by: groupKeys })}
+        />
+        <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.GroupKeysDerived)}</span>
+      </PipelineSection>
+
+      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMeasures)}>
         <MeasuresEditor
           measures={draft.measures}
           columns={sourceColumns}

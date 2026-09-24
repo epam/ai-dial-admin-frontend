@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import KpiRow from '@/src/components/Analytics/Usage/Kpi/KpiRow';
-import { BucketPoint, RequestState, UsageMeasures, UsageView } from '@/src/components/Analytics/Usage/models';
+import {
+  BucketPoint,
+  ComparePeriod,
+  RequestState,
+  UsageMeasures,
+  UsageView,
+} from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
@@ -12,7 +18,7 @@ const measures = (overrides: Partial<UsageMeasures> = {}): UsageMeasures => ({ .
 
 const FULL = measures({
   calls: 52_400,
-  users: 57,
+  callers: 57,
   failed: 524,
   avgLatencyMs: 7480,
   spend: 630.88,
@@ -24,7 +30,7 @@ const renderRow = (props?: {
   totals?: RequestState<UsageMeasures | null>;
   previousTotals?: RequestState<UsageMeasures | null>;
   buckets?: RequestState<BucketPoint[]>;
-  isComparisonOn?: boolean;
+  compare?: ComparePeriod;
   view?: UsageView;
 }) =>
   render(
@@ -33,7 +39,7 @@ const renderRow = (props?: {
       totals={props?.totals ?? loaded<UsageMeasures | null>(FULL)}
       previousTotals={props?.previousTotals ?? loaded<UsageMeasures | null>(null)}
       buckets={props?.buckets ?? loaded<BucketPoint[]>([])}
-      isComparisonOn={props?.isComparisonOn ?? false}
+      compare={props?.compare ?? ComparePeriod.Off}
     />,
   );
 
@@ -74,22 +80,22 @@ describe('KpiRow', () => {
 
   test('names what each card is compared against once comparison is on', () => {
     renderRow({
-      isComparisonOn: true,
+      compare: ComparePeriod.PreviousPeriod,
       previousTotals: loaded<UsageMeasures | null>(measures({ calls: 40_000 })),
     });
 
-    expect(screen.getAllByText(AnalyticsUsageI18nKey.KpiPreviousPeriodFoot).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(AnalyticsUsageI18nKey.KpiComparisonFoot).length).toBeGreaterThan(0);
   });
 
   test('adds no footnote while comparison is off', () => {
     renderRow();
 
-    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiPreviousPeriodFoot)).toBeNull();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiComparisonFoot)).toBeNull();
   });
 
   test('states the change as a direction rather than a signed number', () => {
     renderRow({
-      isComparisonOn: true,
+      compare: ComparePeriod.PreviousPeriod,
       previousTotals: loaded<UsageMeasures | null>(measures({ calls: 40_000, spend: 500 })),
     });
 

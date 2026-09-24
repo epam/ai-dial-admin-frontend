@@ -4,11 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 // The suite-wide SaveValidationContext mock pins `jsonErrors` empty and hands out a fresh
@@ -63,8 +61,7 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
 const rule: Pipeline = {
   name: 'insights-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'conversation-insights',
-  evaluator: { name: 'conversation-insights', version: 2, type: EvaluatorType.Llm },
+  transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title of the session.' } },
   target: 'conversation_insights',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
@@ -74,7 +71,7 @@ const rule: Pipeline = {
   updated_at: '2026-02-01T00:00:00Z',
 };
 
-const renderView = () => render(<PipelineDetailView pipeline={rule} evaluators={[]} takenTargets={[]} />);
+const renderView = () => render(<PipelineDetailView pipeline={rule} takenTargets={[]} />);
 
 const queryToggleRow = () => screen.queryByRole('switch');
 const toggle = () => within(screen.getByRole('switch')).getByRole('checkbox');
@@ -225,7 +222,7 @@ describe('PipelineDetailView — saving from the JSON editor', () => {
     await enableEditor(user);
     await user.click(screen.getByRole('button', { name: 'edit-json' }));
 
-    // The form reports invalid until its evaluator and target resolve, which they never do here because the
+    // The form reports invalid until its target resolves, which it never does here because the
     // actions are mocked.
     expect(saveButton()).toBeEnabled();
   });

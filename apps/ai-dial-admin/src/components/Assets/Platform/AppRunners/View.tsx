@@ -7,7 +7,6 @@ import { createPortal } from 'react-dom';
 import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -23,7 +22,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialApplicationResource, DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
@@ -149,7 +148,6 @@ const AppRunnerAssetView: FC<Props> = ({
     setSelectedRunner(runner);
     setIsSkipRefresh(!!skipRefresh);
   }, []);
-
   const onSave = useCallback(() => {
     const errors = validateAppRunner(selectedRunner);
     if (errors.length) {
@@ -169,15 +167,13 @@ const AppRunnerAssetView: FC<Props> = ({
             getUpdateNotificationDescription(ApplicationRoute.PlatformAppRunners, selectedRunner.$id, t),
           ),
         );
-        fetchFiles(selectedRunner.folderId);
+        fetchFiles(selectedRunner._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedRunner, etag, showNotification, t, router, fetchFiles]);
-
-  const onCreate = (entity: DialResource) => createApp(entity as DialApplicationResource);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -229,7 +225,6 @@ const AppRunnerAssetView: FC<Props> = ({
               view={ApplicationRoute.AssetsApplications}
               isModalOpen={isCreateAssetAppModalOpen}
               onClose={onCloseCreateAssetAppModal}
-              onCreate={onCreate}
               context={useAppsFolder}
               initialValues={{
                 source: originalRunner.$id ? createSchemaSource(originalRunner.$id) : undefined,

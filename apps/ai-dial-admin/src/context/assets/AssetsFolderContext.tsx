@@ -1,12 +1,13 @@
 'use client';
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { Asset } from '@/src/models/dial/deployment-asset';
-import { DialFileNodeType } from '@/src/models/dial/file';
+import { DEFAULT_ROOT_FOLDER_PERMISSIONS } from '@/src/constants/file';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { fillChildren, getFolderName, mergeFiles } from '@/src/utils/files/folder';
 import { isFolder } from '@/src/utils/files/path';
 
-export interface AssetsFolderContext {
+export interface AssetsFolderContext<T extends AssetListItem> {
   isFetchingFiles: boolean;
   /**
    * `path` is a single folder for every view but Applications (see `getRootFolders`), which fetches
@@ -17,38 +18,50 @@ export interface AssetsFolderContext {
    */
   fetchFiles: (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
-  files: Asset[];
+  files: T[];
   expandedFolders: Set<string>;
   setExpandedFolders: Dispatch<SetStateAction<Set<string>>>;
   filePath: string;
   setFilePath: Dispatch<SetStateAction<string>>;
-  toggleFolder: (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => void;
-  data: Asset[] | null;
-  fetchedFoldersData: Record<string, Asset[]>;
+  toggleFolder: (folder: T, skipFetch?: boolean, collapseAll?: boolean) => void;
+  data: T[] | null;
+  fetchedFoldersData: Record<string, T[]>;
 }
 
-export function createFolderContext(
-  getFilesFunc: (path: string) => Promise<Asset[] | null | undefined>,
+/**
+ * Every member but `toggleFolder` is covariant in `T` (they only ever produce `T`, never consume
+ * it), so a consumer that never calls `toggleFolder` can safely accept any concrete
+ * `AssetsFolderContext<SomeEntitySpecificItem>` through this narrower, read-oriented view. The
+ * default lets most consumers (Modals, FileManager, wrapper buttons, …) write the type once, with no
+ * `AssetListItem` import needed at the call site.
+ */
+export type AssetsFolderContextReader<T extends AssetListItem = AssetListItem> = Omit<
+  AssetsFolderContext<T>,
+  'toggleFolder'
+>;
+
+export function createFolderContext<T extends AssetListItem>(
+  getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
   contextName: string,
 ) {
-  const Context = createContext<AssetsFolderContext | undefined>(undefined);
+  const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
   const Provider = ({ children }: { children: ReactNode }) => {
-    const [files, setFiles] = useState<Asset[]>([]);
+    const [files, setFiles] = useState<T[]>([]);
     const [filePath, setFilePath] = useState('');
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-    const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, Asset[]>>({});
+    const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, T[]>>({});
     const [isFetchingFiles, setIsFetchingFiles] = useState(false);
 
-    const [data, setData] = useState<Asset[] | null>(null);
+    const [data, setData] = useState<T[] | null>(null);
 
     const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
       if (!fullPath?.includes('/')) return;
 
       const pathParts = fullPath.split('/').filter(Boolean);
-      const tempFetchedFoldersData: Record<string, Asset[]> = {};
+      const tempFetchedFoldersData: Record<string, T[]> = {};
       const tempExpandedFolders = new Set<string>();
-      let tempFiles: Asset[] = [];
+      let tempFiles: T[] = [];
       let currentPath = '';
 
       const setTempFolder = (name: string, childPath?: string) => {
@@ -57,8 +70,8 @@ export function createFolderContext(
           name,
           path: childPath,
           nodeType: DialFileNodeType.FOLDER,
-        } as unknown as Asset;
-        tempFiles = mergeFiles(tempFiles, [newFile], currentPath) as Asset[];
+        } as unknown as T;
+        tempFiles = mergeFiles<T>(tempFiles as DialFile[], [newFile] as DialFile[], currentPath);
       };
 
       setIsFetchingFiles(true);
@@ -79,16 +92,16 @@ export function createFolderContext(
 
             const list = fetched ?? [];
 
-            const folderItems = list.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
+            const folderItems = list.filter((f) => f.nodeType === DialFileNodeType.ITEM);
             tempFetchedFoldersData[currentPath] = folderItems;
 
             if (list.length) {
               const nextFolder = list.find((f) => f.path === nextFolderPath && isFolder(f.nodeType));
               if (nextFolder && !fullTree) {
-                const newFile = { ...nextFolder, nodeType: DialFileNodeType.FOLDER } as Asset;
-                tempFiles = mergeFiles(tempFiles, [newFile], currentPath) as Asset[];
+                const newFile = { ...nextFolder, nodeType: DialFileNodeType.FOLDER } as T;
+                tempFiles = mergeFiles<T>(tempFiles as DialFile[], [newFile] as DialFile[], currentPath);
               } else if (fullTree) {
-                tempFiles = mergeFiles(tempFiles, list, currentPath) as Asset[];
+                tempFiles = mergeFiles<T>(tempFiles as DialFile[], list as DialFile[], currentPath);
               } else if (nextFolderPath) {
                 setTempFolder(pathParts[index], nextFolderPath);
               }
@@ -117,22 +130,23 @@ export function createFolderContext(
             return;
           }
 
-          const newFetchedFoldersData: Record<string, Asset[]> = {};
+          const newFetchedFoldersData: Record<string, T[]> = {};
           paths.forEach((rootPath, index) => {
-            newFetchedFoldersData[rootPath] = (results[index]?.filter((f) => f.nodeType === DialFileNodeType.ITEM) ??
-              []) as Asset[];
+            newFetchedFoldersData[rootPath] = results[index]?.filter((f) => f.nodeType === DialFileNodeType.ITEM) ?? [];
           });
-
           const rootNodes = paths.map(
             (rootPath, index) =>
               ({
                 name: getFolderName(rootPath),
                 path: rootPath,
                 nodeType: DialFileNodeType.FOLDER,
-                // TODO: Remove When we get real permissions
-                permissions: ['WRITE', 'READ'],
-                items: fillChildren((results[index] ?? []) as Asset[]),
-              }) as Asset,
+                // Root-level nodes are synthesized client-side (Core never returns a permissions-bearing
+                // node for a bucket root), so the placeholder permission set has one named source rather
+                // than a bare array repeated at each call site — see `DEFAULT_ROOT_FOLDER_PERMISSIONS`'s
+                // own comment for why it's not yet read from a real backend permission.
+                permissions: DEFAULT_ROOT_FOLDER_PERMISSIONS,
+                items: fillChildren((results[index] ?? []) as DialFile[]),
+              }) as unknown as T,
           );
 
           setFiles(rootNodes);
@@ -168,7 +182,7 @@ export function createFolderContext(
           }
 
           setFiles((prevFiles) => {
-            const newFiles = mergeFiles(prevFiles, fetched, path) as Asset[];
+            const newFiles = mergeFiles<T>(prevFiles as DialFile[], (fetched ?? []) as DialFile[], path);
             if (prevFiles.length === 0 || refreshData) {
               toggleFolder(newFiles[0], true, refreshData);
             }
@@ -176,7 +190,7 @@ export function createFolderContext(
             return newFiles;
           });
 
-          const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as Asset[];
+          const folderItems = (fetched ?? []).filter((f) => f.nodeType === DialFileNodeType.ITEM);
           setData(folderItems);
           setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
 
@@ -187,7 +201,7 @@ export function createFolderContext(
         .finally(() => setIsFetchingFiles(false));
     };
 
-    const toggleFolder = (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => {
+    const toggleFolder = (folder: T, skipFetch?: boolean, collapseAll?: boolean) => {
       const folderPath = folder.path;
       const newExpanded = new Set(collapseAll ? [] : expandedFolders);
 
@@ -208,7 +222,7 @@ export function createFolderContext(
       setExpandedFolders(newExpanded);
     };
 
-    const value: AssetsFolderContext = {
+    const value: AssetsFolderContext<T> = {
       isFetchingFiles,
       fetchFiles,
       fetchFolderHierarchy,
@@ -225,7 +239,7 @@ export function createFolderContext(
     return <Context.Provider value={value}>{children}</Context.Provider>;
   };
 
-  const useFolderContext = (): AssetsFolderContext => {
+  const useFolderContext = (): AssetsFolderContext<T> => {
     const context = useContext(Context);
     if (!context) {
       throw new Error(`${contextName} must be used within its Provider`);
