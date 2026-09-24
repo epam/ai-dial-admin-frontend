@@ -2,11 +2,11 @@ import { DialModelLimit } from '@/src/models/dial/model';
 import { LimitType } from './constants';
 
 export const getActiveLimitType = (limits?: DialModelLimit) => {
-  if (limits && ('maxCompletionTokens' in limits || 'maxPromptTokens' in limits)) {
+  if (limits && (limits.maxCompletionTokens != null || limits.maxPromptTokens != null)) {
     return LimitType.SeparateTokenAndCompletions;
   }
 
-  if (limits && 'maxTotalTokens' in limits) {
+  if (limits && limits.maxTotalTokens != null) {
     return LimitType.Total;
   }
 
