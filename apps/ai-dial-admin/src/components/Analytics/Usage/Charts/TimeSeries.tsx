@@ -28,7 +28,7 @@ import {
   LATENCY_P95_COLOR,
   buildBarOptions,
   buildLatencyOptions,
-  buildStackedAreaOptions,
+  buildSplitSeriesOptions,
   buildTimeSeriesOptions,
   getSliceColor,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
@@ -236,7 +236,7 @@ const TimeSeries: FC<Props> = ({
       ];
 
       return {
-        options: buildStackedAreaOptions(labels, series, periods),
+        options: buildSplitSeriesOptions(labels, series, periods),
         // Names and colours only: the share of each band is the share chart's own figure, and a
         // second copy of it under the plot is one more thing to keep in agreement.
         legend: series.map<ChartLegendEntry>((entry, index) => ({

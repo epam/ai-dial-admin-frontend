@@ -157,7 +157,7 @@ export interface NamedSeries {
   values: number[];
 }
 
-export const buildStackedAreaOptions = (
+export const buildSplitSeriesOptions = (
   labels: string[],
   series: NamedSeries[],
   periods?: string[],
@@ -179,18 +179,25 @@ export const buildStackedAreaOptions = (
     formatter: axisTooltip(periods, true),
   },
   animation: false,
+  /*
+   * Not stacked. A stack draws every series at its cumulative height, so the topmost line traces
+   * the bucket total and is read as that series' own figure — a model credited with the whole
+   * window's spike while the donut beside it states a fraction of that. Each series now draws
+   * itself from a shared zero: the value comes off the axis, the spike belongs to whoever caused
+   * it, and the total is still a tab away on `Requests`.
+   */
   series: series.map((entry) => ({
     type: 'line',
     name: entry.label,
     color: entry.color,
-    stack: 'calls',
     data: entry.values,
     showSymbol: false,
     sampling: LINE_SAMPLING,
-    lineStyle: { width: 1, color: entry.color },
-    areaStyle: { color: entry.color, opacity: 0.45 },
+    lineStyle: { width: 1.5, color: entry.color },
+    // Faint, because unstacked areas overlap where a stack's never did.
+    areaStyle: { color: entry.color, opacity: 0.1 },
     emphasis: { focus: 'series' },
-    blur: { lineStyle: { opacity: 0.2 }, areaStyle: { opacity: 0.06 } },
+    blur: { lineStyle: { opacity: 0.2 }, areaStyle: { opacity: 0.03 } },
   })),
 });
 
