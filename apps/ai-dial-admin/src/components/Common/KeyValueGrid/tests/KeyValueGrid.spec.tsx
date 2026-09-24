@@ -27,6 +27,17 @@ describe('KeyValueGrid', () => {
     expect(screen.getByDisplayValue('cache-priority')).toBeInTheDocument();
   });
 
+  test('updates input rows when the value changes externally', () => {
+    const { rerender } = render(<KeyValueGrid value={{ initial: 'value' }} onChange={mockOnChange} />);
+
+    rerender(<KeyValueGrid value={{ updated: 'next value' }} onChange={mockOnChange} />);
+
+    expect(screen.queryByDisplayValue('initial')).toBeNull();
+    expect(screen.queryByDisplayValue('value')).toBeNull();
+    expect(screen.getByDisplayValue('updated')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('next value')).toBeInTheDocument();
+  });
+
   test('renders an Add button that is not present when disabled', () => {
     const { rerender } = render(<KeyValueGrid value={{}} onChange={mockOnChange} />);
     expect(screen.getByRole('button', { name: 'Buttons.Add' })).toBeInTheDocument();

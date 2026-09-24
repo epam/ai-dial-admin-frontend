@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceFieldVariant } from '@/src/models/dial/interfaces';
 import { DialUpstreamInterface } from '@/src/models/dial/model';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
 import InterfaceEndpointRow from './InterfaceEndpointRow';
 import InterfaceRow from './InterfaceRow';
 import { BaseUrlInterfaceValue } from './models';
@@ -27,6 +28,7 @@ interface Props<V extends InterfaceValue> {
   isAsset?: boolean;
   disabled?: boolean;
   className?: string;
+  view?: ApplicationRoute;
   // Available platform Translator assets for the translator-mode picker — isAsset surfaces only.
   // Metadata-only (list, not content) — the picker only needs each translator's name.
   translators?: ResourceInfo[];
@@ -58,13 +60,14 @@ const InterfacesField = <V extends InterfaceValue>({
   className,
   translators,
   entityBaseUrl,
+  view,
 }: Props<V>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
   const isEndpointVariant = variant === InterfaceFieldVariant.Endpoint;
   const baseUrlKey = isAsset ? 'base_url' : 'baseUrl';
-  const defaultHeadersKey = isAsset ? 'default_headers' : 'defaultHeaders';
+  const defaultHeadersKey = 'defaultHeaders';
 
   const [isSelectingType, setIsSelectingType] = useState(false);
 
@@ -160,6 +163,7 @@ const InterfacesField = <V extends InterfaceValue>({
               isAsset={isAsset}
               translators={translators}
               entityBaseUrl={entityBaseUrl}
+              view={view}
             />
           ),
         )}
