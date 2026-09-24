@@ -355,8 +355,6 @@ const TimeSeries: FC<Props> = ({
 
   return (
     <DashboardCard
-      // The MCP view holds nothing but tool calls, so the plain plot is named for them rather than
-      // for requests it no longer counts. The other tabs name their own measure already.
       title={t(
         view === UsageView.Mcp && timeSeriesView === TimeSeriesView.Requests
           ? AnalyticsUsageI18nKey.TimeSeriesTitleMcp

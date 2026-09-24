@@ -124,8 +124,6 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
 
     return {
       metric: figure.metric,
-      // The MCP view holds nothing but tool calls, so its count card says so rather than saying
-      // "requests" for a figure that no longer counts them.
       titleKey:
         view === UsageView.Mcp && figure.metric === KpiMetric.Requests
           ? AnalyticsUsageI18nKey.KpiTotalToolCalls
@@ -133,6 +131,7 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
       value: formatted?.value ?? null,
       unit: formatted?.unit,
       deltaRatio: getDeltaRatio(current, previous),
+      isNew: isComparisonOn && previous === 0 && (current ?? 0) > 0,
       // With comparison on the card always says what it is compared against, including when the
       // previous window reported nothing — silence there reads as a missing feature.
       footnote: !isComparisonOn

@@ -138,6 +138,8 @@ export interface KpiCardModel {
   value: string | null;
   unit?: string;
   deltaRatio: number | null;
+  /** The previous window held nothing and this one does: a change with nothing to divide by. */
+  isNew: boolean;
   footnote?: string;
   sparkline: number[];
 }

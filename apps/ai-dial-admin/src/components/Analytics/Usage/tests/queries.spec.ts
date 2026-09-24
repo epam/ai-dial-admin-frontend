@@ -23,6 +23,7 @@ import {
 } from '@/src/components/Analytics/Usage/queries';
 import {
   QueryExprType,
+  QueryLogicalOperator,
   QueryOperator,
   QuerySortDirection,
   QueryValueType,
@@ -86,8 +87,6 @@ describe('buildTotalsQuery', () => {
     const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
 
     expect(entry?.expr).toMatchObject({ name: 'count', distinct: true });
-    // The hash is the fallback for an environment whose client-identity enrichment is not
-    // provisioned: there the reference is null on every row and a bare count read zero.
     expect(JSON.stringify(entry?.expr)).toContain('usage_client_identity.user_ref');
     expect(JSON.stringify(entry?.expr)).toContain('user_hash');
   });
@@ -293,5 +292,49 @@ describe('buildSpendBucketedQuery', () => {
 
   test('carries spend alone, since the view reads no other figure', () => {
     expect(aliasesOf(buildSpendBucketedQuery(scope(), { value: 1, unit: 'd' }))).toEqual([BUCKET_ALIAS, SPEND_ALIAS]);
+  });
+});
+
+describe('buildTabKeysQuery on a qualified tab', () => {
+  const KEYS = ['server-a\u0000execute_python', 'server-b\u0000execute_python'];
+
+  test("asks by both of a key's parts, so a composite id can match at all", () => {
+    const query = buildTabKeysQuery(scope({ view: UsageView.Mcp }), BreakdownTab.Tools, KEYS);
+    const clauses = clausesOf(query);
+
+    expect(query.group_by).toEqual(['deployment', 'mcp_tool_call_name']);
+    expect(clauses).toContainEqual({
+      op: QueryOperator.In,
+      args: [
+        { type: QueryExprType.Field, name: 'deployment' },
+        {
+          type: QueryExprType.Array,
+          items: [
+            { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'server-a' },
+            { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'server-b' },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('asks the dimension alone where the tab has no qualifier', () => {
+    const query = buildTabKeysQuery(scope(), BreakdownTab.Models, ['gpt-4o']);
+
+    expect(query.group_by).toEqual(['deployment']);
+  });
+});
+
+describe('buildDimensionSearchClause', () => {
+  test('searches a qualified tab by its server as well as its tool', () => {
+    const clause = buildDimensionSearchClause(BreakdownTab.Tools, 'aws') as { op: string; args: unknown[] };
+
+    expect(clause.op).toBe(QueryLogicalOperator.Or);
+    expect(JSON.stringify(clause)).toContain('deployment');
+    expect(JSON.stringify(clause)).toContain('mcp_tool_call_name');
+  });
+
+  test('searches the dimension alone elsewhere', () => {
+    expect(buildDimensionSearchClause(BreakdownTab.Models, 'gpt')).toMatchObject({ op: QueryOperator.Ico });
   });
 });

@@ -96,7 +96,6 @@ describe('UsageDashboard', () => {
     await user.click(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost));
 
     await waitFor(() => expect(queriesSent().some((query) => query.sort?.[0]?.field === 'spend')).toBe(true));
-    // The ring is still drawn: emptying it collapsed the card and moved every widget below it.
     expect(screen.getByText(AnalyticsUsageI18nKey.DonutTitle)).toBeTruthy();
     expect(screen.queryByText(AnalyticsUsageI18nKey.DonutEmptyCenter)).toBeNull();
   });

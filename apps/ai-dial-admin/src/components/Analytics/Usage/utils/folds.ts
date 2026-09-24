@@ -5,7 +5,7 @@ import {
   SpendBucket,
   UsageMeasures,
 } from '@/src/components/Analytics/Usage/models';
-import { UNDEFINED_VALUE } from '@/src/components/Analytics/Usage/constants';
+import { ROW_KEY_SEPARATOR, UNDEFINED_VALUE } from '@/src/components/Analytics/Usage/constants';
 import {
   AVG_LATENCY_ALIAS,
   BUCKET_ALIAS,
@@ -92,9 +92,8 @@ export const foldDimensionBuckets = (
     .filter((point) => !Number.isNaN(point.bucketMs));
 
 /**
- * `qualifier` names the column a tab groups by alongside its own dimension. It only reaches the id:
- * two servers' `execute_python` are two rows, and an id taken from the tool name alone would make
- * them one — colliding in the previous-window map and in the grid's row keys alike.
+ * The qualifier only reaches the id: without it two rows that share a dimension value fold into
+ * one, colliding in the previous-window map and in the grid's row keys alike.
  */
 export const foldBreakdownRows = (
   result: StructuredQueryResult | null | undefined,
@@ -110,7 +109,7 @@ export const foldBreakdownRows = (
     const ownId = isMissing ? `${column}:missing` : String(raw);
 
     return {
-      id: qualifierValue == null ? ownId : `${qualifierValue}\u0000${ownId}`,
+      id: qualifierValue == null ? ownId : `${qualifierValue}${ROW_KEY_SEPARATOR}${ownId}`,
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),

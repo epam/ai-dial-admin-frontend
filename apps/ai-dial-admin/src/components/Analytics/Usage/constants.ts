@@ -79,15 +79,6 @@ export const UNDEFINED_VALUE = 'undefined';
  * Which rows each view is about. The empty kind is the Anthropic messages API and the OpenAI
  * responses API — LLM traffic that carries no classified kind, and about a fifth of all rows.
  */
-/**
- * The MCP view is about tool execution, and `tools/call` is the only method that executes anything.
- * Measured on the live dataset, it is 13% of `mcp` rows: the rest is the handshake and discovery a
- * client fires per connection — `initialize`, `notifications/initialized`, `tools/list`,
- * `resources/list`. Counting those as calls made the view rank servers by how often clients
- * connected to them, and made its error rate and latency describe handshakes rather than work.
- */
-export const MCP_TOOL_CALL_METHOD = 'tools/call';
-
 export const USAGE_VIEW_EVENT_KINDS: Record<UsageView, string[]> = {
   [UsageView.Llm]: ['llm_call', 'embedding', ''],
   [UsageView.Mcp]: ['mcp'],
@@ -97,6 +88,14 @@ export const USAGE_VIEW_EVENT_KINDS: Record<UsageView, string[]> = {
  * On an LLM row the model is the `deployment` and the application that called it is
  * `parent_deployment`; there is no separate model column.
  */
+export const BREAKDOWN_TAB_COLUMN: Record<BreakdownTab, string> = {
+  [BreakdownTab.Models]: 'deployment',
+  [BreakdownTab.Applications]: 'parent_deployment',
+  [BreakdownTab.Projects]: 'project_id',
+  [BreakdownTab.McpServers]: 'deployment',
+  [BreakdownTab.Tools]: 'mcp_tool_call_name',
+};
+
 /**
  * The column a tab's rows are qualified by, where its own dimension does not identify a row on its
  * own. A tool name is not unique: `execute_python` exists on several MCP servers and they are
@@ -106,13 +105,21 @@ export const BREAKDOWN_TAB_QUALIFIER: Partial<Record<BreakdownTab, string>> = {
   [BreakdownTab.Tools]: 'deployment',
 };
 
-export const BREAKDOWN_TAB_COLUMN: Record<BreakdownTab, string> = {
-  [BreakdownTab.Models]: 'deployment',
-  [BreakdownTab.Applications]: 'parent_deployment',
-  [BreakdownTab.Projects]: 'project_id',
-  [BreakdownTab.McpServers]: 'deployment',
-  [BreakdownTab.Tools]: 'mcp_tool_call_name',
-};
+/**
+ * What joins a qualified row's group values into its id. A control character, because a row's parts
+ * are free text: a deployment name carries slashes, dots and commas, and any of those as a
+ * separator would split an id in the wrong place when it is read back.
+ */
+export const ROW_KEY_SEPARATOR = '\u0000';
+
+/**
+ * The MCP view is about tool execution, and `tools/call` is the only method that executes anything.
+ * The other methods on an `mcp` row are the handshake and discovery a client fires per connection —
+ * `initialize`, `notifications/initialized`, `tools/list`, `resources/list` — and they outnumber the
+ * calls. Counting them made the view rank servers by how often clients connected to them, and made
+ * its error rate and latency describe handshakes rather than work.
+ */
+export const MCP_TOOL_CALL_METHOD = 'tools/call';
 
 /**
  * Which plots a view offers. The MCP view has no spend: an `mcp` row carries no `deployment_price`

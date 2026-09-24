@@ -24,7 +24,7 @@ import {
   getSliceShare,
   getSliceSpend,
 } from '@/src/components/Analytics/Usage/utils/donut';
-import { formatGroupedNumber, formatMoney, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { formatGroupedMoney, formatGroupedNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY, getFallbackLabelKey } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -35,12 +35,8 @@ interface Props {
   view: UsageView;
   /** What the switch reads: the measure the reader selected. */
   metric: DonutMetric;
-  /**
-   * What the figures state: the measure the rows on screen were ranked by. It lags `metric` while
-   * the re-ranking is read, which is what keeps the card from emptying and moving the page.
-   */
+  /** What the figures state: the measure the rows on screen were ranked by. */
   renderedMetric: DonutMetric;
-  /** Held above: the ranking is taken on the measure, so a change here re-issues the request. */
   onMetricChange: (metric: DonutMetric) => void;
   windowTotalCalls: number | null;
   windowTotalSpend: number | null;
@@ -57,16 +53,13 @@ interface Props {
 /** Smaller than the card's own loader: it sits under a list, not in place of a figure. */
 const LEGEND_LOADER_SIZE = 20;
 
-/** A figure this chart states, as text: money carries its marker, a count its thousands. */
-const formatMetricValue = (value: number, metric: DonutMetric): string => {
-  if (metric !== DonutMetric.Cost) {
-    return formatGroupedNumber(value);
-  }
-
-  const money = formatMoney(value);
-
-  return `${money.value}${money.unit ?? ''}`;
-};
+/**
+ * A figure this chart states, as text. Both measures are stated in full with their thousands
+ * grouped, never abbreviated: the legend puts them in a column to be compared against each other,
+ * and `$1.5K` beside `1,234,567` compares nothing.
+ */
+const formatMetricValue = (value: number, metric: DonutMetric): string =>
+  metric === DonutMetric.Cost ? formatGroupedMoney(value) : formatGroupedNumber(value);
 
 const ShareBreakdown: FC<Props> = ({
   rows,
@@ -117,8 +110,6 @@ const ShareBreakdown: FC<Props> = ({
       const namedCalls = named.reduce((acc, slice) => acc + (measuresById.get(slice.id)?.calls ?? 0), 0);
       const namedSpend = named.reduce((acc, slice) => acc + (measuresById.get(slice.id)?.spend ?? 0), 0);
 
-      // Both columns only where both measures exist; the MCP view prices nothing, so there the
-      // legend states its single figure as the card does.
       const statesBoth = withBothMeasures && hasCostMetric;
 
       const residual = (total: number | null, named: number): number | null =>
@@ -176,9 +167,8 @@ const ShareBreakdown: FC<Props> = ({
   const isEmptyWindow = !rows.isLoading && (rows.hasFailed || cardSlices.length === 0);
   const centerValue = windowTotal == null ? null : formatMetricValue(windowTotal, renderedMetric);
   const centerCaption = t(isCostMetric ? AnalyticsUsageI18nKey.DonutTotalCost : AnalyticsUsageI18nKey.DonutTotal);
-  // Every row of the MCP view is a tool call, so its ring says so rather than saying "calls".
-  const callsSubtitleKey = hasCostMetric ? AnalyticsUsageI18nKey.DonutSubtitle : AnalyticsUsageI18nKey.DonutSubtitleMcp;
-  const callSubtitleKey = isCostMetric ? AnalyticsUsageI18nKey.DonutSubtitleCost : callsSubtitleKey;
+  const countSubtitleKey = hasCostMetric ? AnalyticsUsageI18nKey.DonutSubtitle : AnalyticsUsageI18nKey.DonutSubtitleMcp;
+  const subtitleKey = isCostMetric ? AnalyticsUsageI18nKey.DonutSubtitleCost : countSubtitleKey;
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, {
     dimension: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),
   });
@@ -223,12 +213,10 @@ const ShareBreakdown: FC<Props> = ({
       subtitle={
         isEmptyWindow
           ? t(AnalyticsUsageI18nKey.DonutEmptySubtitle)
-          : t(callSubtitleKey, { count: String(DONUT_SLICE_COUNT) })
+          : t(subtitleKey, { count: String(DONUT_SLICE_COUNT) })
       }
       headerActions={
         <div className="flex items-center gap-3">
-          {/* Absent in the MCP view, where no row carries a price and a cost ring would be empty
-              whatever the window. */}
           {hasCostMetric && (
             <TabSelector
               tabs={metricTabs}

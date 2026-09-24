@@ -2,6 +2,8 @@ import {
   BREAKDOWN_TAB_COLUMN,
   BREAKDOWN_TAB_QUALIFIER,
   MCP_TOOL_CALL_METHOD,
+  QUERY_ROW_LIMIT,
+  ROW_KEY_SEPARATOR,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
   USAGE_VIEW_EVENT_KINDS,
@@ -69,8 +71,6 @@ const timestampValue = (date: Date): QueryExpr => ({
 export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): QueryFilterNode => {
   const clauses: QueryFilterNode[] = [
     eventKindFilter(scope.view),
-    // Every row the MCP view counts is a tool call, so `Requests` and the rankings describe work
-    // rather than connections, and the error rate and the latency describe tool execution.
     ...(scope.view === UsageView.Mcp
       ? [{ op: QueryOperator.Eq, args: [field('mcp_method'), value(MCP_TOOL_CALL_METHOD)] } as QueryFilterNode]
       : []),
@@ -276,11 +276,19 @@ const groupNameMeasures = () => [
   { expr: fn('count', [field('deployment')], true), as: GROUP_COUNT_ALIAS },
 ];
 
-/** A search term narrowing a breakdown to the dimension values containing it, case-insensitively. */
-export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => ({
-  op: QueryOperator.Ico,
-  args: [field(BREAKDOWN_TAB_COLUMN[tab]), value(term)],
-});
+/**
+ * A search term narrowing a breakdown to the rows containing it, case-insensitively.
+ *
+ * A qualified tab searches both of its columns: a row there is a tool on a server, and a reader
+ * typing a server name means the tools it serves, not nothing at all.
+ */
+export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => {
+  const column = BREAKDOWN_TAB_COLUMN[tab];
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  const match = (name: string): QueryFilterNode => ({ op: QueryOperator.Ico, args: [field(name), value(term)] });
+
+  return qualifier ? { op: QueryLogicalOperator.Or, args: [match(column), match(qualifier)] } : match(column);
+};
 
 /**
  * The active breakdown tab, ranked, narrowed and limited by the backend.
@@ -331,30 +339,57 @@ export const buildTabQuery = (
  * A fallback bucket is not asked for: its value is absent rather than a name, and `in` matches no
  * absence. The dialog therefore states no comparison for that row, which is what it already states
  * for any row the previous window did not answer for.
+ *
+ * A key is a row's id, which on a qualified tab carries both of its group values — the row is a
+ * tool *on a server*. The clause is therefore built per column from the keys' own parts, and the
+ * response groups by both, so the ids it folds back match the ids that were asked for. Matching on
+ * the dimension alone returned nothing at all, and every row's change read as absent.
  */
 export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: string[]): StructuredQuery => {
   const column = BREAKDOWN_TAB_COLUMN[tab];
-  const keyClause: QueryFilterNode = {
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  const columns = qualifier ? [qualifier, column] : [column];
+
+  const inClause = (name: string, values: string[]): QueryFilterNode => ({
     op: QueryOperator.In,
     args: [
-      field(column),
+      field(name),
       {
         type: QueryExprType.Array,
-        items: keys.map(
-          (key) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value: key }) as const,
+        items: [...new Set(values)].map(
+          (value) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value }) as const,
         ),
       },
     ],
-  };
+  });
+
+  /*
+   * One clause per column rather than a set of pairs: the grammar has no tuple comparison, so the
+   * filter is the cross product of the two sets. It can admit a pair nobody asked for — a tool that
+   * also exists on another named server — and that is harmless: the extra group folds to an id the
+   * caller never looks up.
+   */
+  const keyParts = keys.map((key) => key.split(ROW_KEY_SEPARATOR));
+  const keyClauses = columns.map((name, index) =>
+    inClause(
+      name,
+      keyParts.map((parts) => (parts.length > index ? parts[index] : '')),
+    ),
+  );
 
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
-    filter: buildFilter(scope, [keyClause]),
-    select: [{ expr: field(column) }, ...commonMeasures(scope.view)],
-    group_by: [column],
-    sort: [{ field: column, dir: QuerySortDirection.Asc }],
-    page: { type: 'offset', offset: 0, limit: keys.length, include_total: false } as StructuredQuery['page'],
+    filter: buildFilter(scope, keyClauses),
+    select: [...columns.map((name) => ({ expr: field(name) })), ...commonMeasures(scope.view)],
+    group_by: columns,
+    sort: columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
+    page: {
+      type: 'offset',
+      offset: 0,
+      limit: Math.min(keys.length * columns.length, QUERY_ROW_LIMIT),
+      include_total: false,
+    } as StructuredQuery['page'],
   };
 };
 

@@ -61,7 +61,6 @@ interface Params {
   tab: BreakdownTab;
   tabLimit: number;
   donutLimit: number;
-  /** Ranking the donut on spend is a different top-N, so it is a different request. */
   donutMetric: DonutMetric;
   timeSeriesView: TimeSeriesView;
   /** Changing this re-issues every request; the manual refresh control increments it. */
@@ -76,7 +75,6 @@ export interface UsageDashboardData {
   buckets: RequestState<BucketPoint[]>;
   previousBuckets: RequestState<BucketPoint[]>;
   donutRows: RequestState<BreakdownRow[]>;
-  /** Which measure `donutRows` was ranked by; it lags the selection while a re-ranking is read. */
   donutRowsMetric: DonutMetric;
   dimensionBuckets: RequestState<DimensionBucketPoint[]>;
   spendBuckets: RequestState<SpendBucket[]>;
