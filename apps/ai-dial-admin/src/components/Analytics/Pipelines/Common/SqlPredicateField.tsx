@@ -45,11 +45,12 @@ const SqlPredicateField: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const columnsFrom = sourceName
-    ? `${t(AnalyticsPipelinesI18nKey.PredicateColumnsFrom)} ${sourceName}`
-    : t(AnalyticsPipelinesI18nKey.PredicateSourceUnresolved);
-
-  const caption = description ? `${description} ${columnsFrom}` : columnsFrom;
+  // Which table the columns come from is not worth a sentence — a pipeline reads its source and nothing
+  // else. Only its absence is worth saying, because then the field can offer no columns at all, and it is
+  // said beside the field's own description rather than instead of it.
+  const caption = sourceName
+    ? description
+    : [description, t(AnalyticsPipelinesI18nKey.PredicateSourceUnresolved)].filter(Boolean).join(' ');
 
   // A readiness signal is one comparison — the live ones run to a few dozen characters — so it gets an
   // input. The textarea is for the predicates that do run long: a pipeline's filter, and a member
