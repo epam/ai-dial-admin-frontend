@@ -8,7 +8,12 @@ import {
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isFlatPlatformView, isPlatformBucketRow, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import {
+  isFileRootPath,
+  isFlatPlatformView,
+  isPlatformBucketRow,
+  isPlatformDualBucketView,
+} from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -107,6 +112,10 @@ export const getParentPathByFullPath = (fullPath: string) => {
 };
 
 export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
+  if (isFileRootPath(currentPath)) {
+    return allActionLabels.filter((item) => item.key === 'openInNewTab');
+  }
+
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
@@ -152,6 +161,10 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
+  if (isFileRootPath(currentPath)) {
+    return [];
+  }
+
   if (isFlatPlatformView(view) || isPlatformDualBucketView(view, currentPath)) {
     return [];
   }
@@ -176,7 +189,7 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
 };
 
 export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
-  if (isReadOnlyAdmin) return [];
+  if (isReadOnlyAdmin || isFileRootPath(currentPath)) return [];
 
   if (isPlatformDualBucketView(view, currentPath)) {
     const label =

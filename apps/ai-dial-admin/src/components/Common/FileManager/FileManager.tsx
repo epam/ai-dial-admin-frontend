@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -34,7 +34,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getRootFolder, getRootFolders, isFlatPlatformView } from '@/src/utils/files/root-folder';
+import { getRootFolder, getRootFolders, isFileRootPath, isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -52,8 +52,6 @@ import {
 interface Props {
   view: ApplicationRoute;
   label: string;
-  /** Rendered alongside `label` in the manager's header — the `config-file-entity-views` toggle. */
-  headerExtra?: ReactNode;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContextReader<AssetListItem>;
   onCreateFolder?: (
@@ -90,7 +88,6 @@ interface Props {
 
 const FileManager: FC<Props> = ({
   label,
-  headerExtra,
   columnDefs,
   view,
   getContext,
@@ -151,13 +148,8 @@ const FileManager: FC<Props> = ({
   }, [files]);
 
   const managerLabel = useMemo(
-    () => (
-      <div className="flex flex-row items-center gap-3">
-        <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>
-        {headerExtra}
-      </div>
-    ),
-    [label, headerExtra],
+    () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
+    [label],
   );
 
   // Applications is the one view with two top-level buckets (`platform`/`public` — see
@@ -170,6 +162,7 @@ const FileManager: FC<Props> = ({
   // menus, so it must be withheld here too rather than left to resolve as a silent no-op with a
   // false success toast (`handleMoveToFiles` reports success on an empty promise list).
   const isMoveSupported = !isFlatPlatformView(view) && view !== ApplicationRoute.Conversations;
+  const isFileRootActive = isFileRootPath(filePath);
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -446,16 +439,17 @@ const FileManager: FC<Props> = ({
         onGridApiChange={handleGridApiChange}
         onPathChange={handleOnPathChange}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
-        onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
-        onDownloadFiles={handleDownloadFiles}
+        {...props}
+        onCreateFolder={isReadOnlyAdmin || isFileRootActive ? undefined : handleCreateFolder}
+        onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
-        onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
-        onMoveToFiles={isReadOnlyAdmin || !isMoveSupported ? undefined : handleMoveToFiles}
+        onDeleteFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDeleteFileNodes}
+        onMoveToFiles={isReadOnlyAdmin || isFileRootActive || !isMoveSupported ? undefined : handleMoveToFiles}
         onFolderPopupPathChange={handleFolderPopupPathChange}
-        onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
-        onPreview={handlePreviewFile}
-        onUploadFiles={isReadOnlyAdmin ? undefined : handleDragAndDropFiles}
+        onManagePermissions={isReadOnlyAdmin || isFileRootActive ? undefined : handleManagePermissions}
+        onPreview={isFileRootActive ? undefined : handlePreviewFile}
+        onUploadFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDragAndDropFiles}
         folderCreationValidationMessages={getValidationMessages(t)}
         renameValidationMessages={getValidationMessages(t)}
         destinationFolderPopupOptions={getDestinationFolderPopupOptions(view, t, handleFolderNestingDepthExceeded)}
@@ -465,7 +459,6 @@ const FileManager: FC<Props> = ({
         customUploadFileAction={customUploadFileAction}
         maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH + 1}
         onNewFolderDepthExceeded={handleFolderNestingDepthExceeded}
-        {...props}
       />
       <MoveItemsModal
         isModalOpen={isMoveModalOpen}

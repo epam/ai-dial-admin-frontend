@@ -12,6 +12,12 @@ export enum BucketType {
   Platform = 'platform',
 }
 
+/** The source that supplied a FileManager row; unlike `BucketType`, file is not a Core storage bucket. */
+export enum EntitySource {
+  Resource = 'resource',
+  File = 'file',
+}
+
 /**
  * The client-side counterpart of the server's `ResourceInfo` (`asset-metadata.ts`) — every asset
  * folder tree row (prompts, conversations, files, skills, apps/toolsets in both buckets, the eight
@@ -28,6 +34,7 @@ export interface AssetListItem {
   updatedAt?: string;
   etag?: string;
   bucket: BucketType;
+  entitySource?: EntitySource;
 }
 
 /**

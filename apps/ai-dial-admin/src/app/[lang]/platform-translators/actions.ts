@@ -2,10 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { stripMetadata } from '@/src/server/assets/exim';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -48,6 +49,16 @@ export async function createTranslator(translator: DialTranslatorResource) {
 export async function getTranslator(path: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetApi.getMergedWithEtag<DialTranslatorResource>(token, ResourceType.TRANSLATOR, path, etag);
+}
+
+export async function getConfigFileTranslators() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Translators);
+}
+
+export async function getConfigFileTranslator(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialTranslatorResource>(token, ConfigFileEntityType.Translators, name);
 }
 
 export async function updateTranslator(translator: DialTranslatorResource, etag: string) {

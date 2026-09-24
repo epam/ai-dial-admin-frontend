@@ -115,6 +115,11 @@ export async function getCatalogSchemaById(id: string): Promise<ServerActionResp
   return catalogSchemasApi.schema(token, id);
 }
 
+export async function getConfigFileCatalogSchemas() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.CatalogSchemas);
+}
+
 /** Reads the schema Core's configuration file declares under this `$id`, keyed as Core keys it. */
 export async function getConfigFileCatalogSchema(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

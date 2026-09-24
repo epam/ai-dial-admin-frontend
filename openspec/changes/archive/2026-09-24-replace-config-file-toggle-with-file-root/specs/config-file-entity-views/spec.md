@@ -1,13 +1,6 @@
-# config-file-entity-views Specification
-
-## Purpose
-
-The shared FileManager surface for entities DIAL Core reads from configuration files. File-defined entities are exposed as an explicit, synthetic `file` source beside physical Core resource roots; they are names-only and immutable, but open through existing read-only detail routes.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Config-file entity population is exposed through file roots
-
 The system SHALL expose DIAL Core configuration-file entities through a synthetic, flat, read-only `file` root in the shared FileManager rather than through a global `showConfigFiles` toggle or a swapped list component. The root SHALL be available for Models, Interceptors, Translators, Routes, Roles, App Runners, Catalog Schemas, Applications, and Toolsets, regardless of whether the admin API is configured. Keys and every unsupported route SHALL NOT expose a `file` root.
 
 #### Scenario: Platform Models shows a file root
@@ -27,7 +20,6 @@ The system SHALL expose DIAL Core configuration-file entities through a syntheti
 - **THEN** the FileManager shows `file` and `public` roots, does not show `platform`, and does not request platform resources
 
 ### Requirement: File-root names load with the initial root batch and without resource-body fan-out
-
 The system SHALL request `GET /v1/admin/config/file/{type}` once when a supported listing mounts, alongside its physical-root reads. It SHALL use the names response directly and SHALL NOT make a per-name detail read to populate the list. Selecting the already-loaded `file` root SHALL reuse the mounted-listing cache without another names request. A failed names read SHALL leave successful physical roots available, shall not be represented as a successful empty root, and SHALL follow the listing's established request-error notification behavior.
 
 #### Scenario: Initial listing reads file names once
@@ -43,7 +35,6 @@ The system SHALL request `GET /v1/admin/config/file/{type}` once when a supporte
 - **THEN** the user receives the established error notification and the system does not represent the failed request as a successful empty result
 
 ### Requirement: File-root entries are name-only and immutable
-
 The system SHALL render file-root entries with only a name data column and an open-in-new-tab row action. While the file root is active, it SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
 
 #### Scenario: File root has no metadata columns
@@ -55,7 +46,6 @@ The system SHALL render file-root entries with only a name data column and an op
 - **THEN** open-in-new-tab is available and no mutating action is available
 
 ### Requirement: File-root rows preserve existing detail source behavior
-
 The system SHALL open a file-root row through its existing platform or asset detail route. Except for Catalog Schemas, the route SHALL append `configFile=true`, using `&` if a query string already exists. Applications and Toolsets SHALL use the bare `{id}` detail path with the flag and SHALL NOT carry a public-bucket `path` parameter. Catalog Schema file rows SHALL navigate to the ordinary encoded `$id` detail route without `configFile=true`, preserving its API-first/file-fallback resolver.
 
 #### Scenario: A file-backed application opens the platform-shaped detail URL
@@ -71,7 +61,6 @@ The system SHALL open a file-root row through its existing platform or asset det
 - **THEN** the system navigates to `/platform-catalog-schemas/{encoded-id}` without `configFile=true`
 
 ### Requirement: Config-file detail views remain read-only
-
 When a non-Catalog file-root row opens a supported platform or asset detail route with `configFile=true`, the system SHALL retain the existing `configFileApi` body read, read-only fields and actions, and hidden ADMIN|CORE JSON format selector. Leaving that route SHALL restore ordinary editability on subsequent views.
 
 #### Scenario: A file-root model detail is read-only
@@ -82,10 +71,36 @@ When a non-Catalog file-root row opens a supported platform or asset detail rout
 - **WHEN** a user leaves a config-file-sourced detail view
 - **THEN** a subsequently opened ordinary resource detail view remains editable according to its normal permissions
 
-### Requirement: App Runners map to Core application-type schemas
+## REMOVED Requirements
 
-The system SHALL map Platform App Runners' file root to Core's `schemas` config-file type, representing application-type schemas rather than a standalone app-runner configuration collection.
+### Requirement: `showConfigFiles` toggle exists in `AppContext`
+**Reason**: Config-file population is represented by the per-view `file` root instead of global persisted display state.
+**Migration**: Remove the context field, toggle function, and local-storage key; use the FileManager root selection.
 
-#### Scenario: App Runner names come from schemas
-- **WHEN** a user opens Platform App Runners' file root
-- **THEN** the system requests Core's `schemas` config-file type
+### Requirement: The toggle control is rendered only where it applies
+**Reason**: The `file` root replaces the title-adjacent toggle.
+**Migration**: Use the supported-route source registry to determine whether a FileManager includes `file`.
+
+### Requirement: Toggling swaps the list component in place
+**Reason**: FileManager renders all sources in one hierarchy.
+**Migration**: Remove `ConfigFileListSwap`, `ConfigFileEntityList`, and view wrappers that only compose the swapped list.
+
+### Requirement: Config-file entity data is fetched lazily, only when the toggle is on
+**Reason**: Lazy access is now associated with opening `file/`, not toggling a global mode.
+**Migration**: Use source-aware lazy root loading.
+
+### Requirement: The config-file-backed list shows only entity names
+**Reason**: The name-only behavior is now a FileManager file-root requirement.
+**Migration**: Use the source-aware file-root column/action configuration.
+
+### Requirement: A config-file entity row links to its platform/asset detail route
+**Reason**: Navigation is now defined for source-aware FileManager rows, including Catalog Schema's fallback route.
+**Migration**: Use file-row navigation instead of the retired standalone grid link handler.
+
+### Requirement: A detail page opened with `configFile=true` renders read-only, sourced from Core's config file
+**Reason**: The behavior remains but is restated for file-root navigation and expanded to Translators.
+**Migration**: Preserve existing detail handling and add Translator support.
+
+### Requirement: App Runners is a covered config-file entity type
+**Reason**: App Runner file-root coverage is included in the supported source registry.
+**Migration**: Keep the `schemas` mapping, representing Core application-type schemas.

@@ -6,8 +6,11 @@ import { AssetsFolderContext, createFolderContext } from '../AssetsFolderContext
 
 vi.unmock('@/src/context/assets/AssetsFolderContext');
 
-const renderProviderWithCapture = (getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>) => {
-  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder');
+const renderProviderWithCapture = (
+  getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>,
+  getConfigFileNames?: () => Promise<string[] | null | undefined>,
+) => {
+  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder', getConfigFileNames);
 
   let captured: AssetsFolderContext<AssetListItem> | null = null;
 
@@ -95,12 +98,71 @@ describe('createFolderContext fetchFiles with multiple root paths', () => {
     expect(get().fetchedFoldersData['public/']).toEqual(publicItems);
   });
 
-  test('opens the last given root by default, keeping single-root views unaffected', async () => {
-    const getFiles = vi.fn().mockResolvedValue([]);
-    const get = renderProviderWithCapture(getFiles);
+  test('loads file names with physical roots and reuses the cached file list', async () => {
+    const platformItems: AssetListItem[] = [
+      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+    ];
+    const publicItems: AssetListItem[] = [
+      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+    ];
+    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
+    const getConfigFileNames = vi.fn().mockResolvedValue(['file-app']);
+    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
 
     await act(async () => {
-      get().fetchFiles(['platform/', 'public/']);
+      get().fetchFiles(['file/', 'platform/', 'public/']);
+    });
+
+    expect(getConfigFileNames).toHaveBeenCalledOnce();
+    expect(getFiles).toHaveBeenCalledWith('platform/');
+    expect(getFiles).toHaveBeenCalledWith('public/');
+    expect(getFiles).not.toHaveBeenCalledWith('file/');
+    expect(get().fetchedFoldersData['file/']).toMatchObject([
+      { name: 'file-app', path: 'file-app', nodeType: DialFileNodeType.ITEM, entitySource: 'file' },
+    ]);
+    expect(get().filePath).toBe('public/');
+
+    await act(async () => {
+      get().toggleFolder(get().files[0]);
+    });
+
+    expect(getConfigFileNames).toHaveBeenCalledOnce();
+    expect(get().data).toEqual(get().fetchedFoldersData['file/']);
+  });
+
+  test('keeps physical roots available when the file names request fails', async () => {
+    const platformItems: AssetListItem[] = [
+      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+    ];
+    const publicItems: AssetListItem[] = [
+      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+    ];
+    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
+    const getConfigFileNames = vi.fn().mockResolvedValue(undefined);
+    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
+
+    await act(async () => {
+      get().fetchFiles(['file/', 'platform/', 'public/']);
+    });
+
+    expect(get().files.map((file) => file.path)).toEqual(['file/', 'platform/', 'public/']);
+    expect(get().fetchedFoldersData['platform/']).toEqual(platformItems);
+    expect(get().fetchedFoldersData['public/']).toEqual(publicItems);
+    expect(get().data).toEqual(publicItems);
+
+    await act(async () => {
+      get().toggleFolder(get().files[0]);
+    });
+
+    expect(getConfigFileNames).toHaveBeenCalledOnce();
+  });
+  test('opens the last physical root by default, keeping file-first views on the existing resource view', async () => {
+    const getFiles = vi.fn().mockResolvedValue([]);
+    const getConfigFileNames = vi.fn().mockResolvedValue([]);
+    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
+
+    await act(async () => {
+      get().fetchFiles(['file/', 'platform/', 'public/']);
     });
 
     expect(get().filePath).toBe('public/');

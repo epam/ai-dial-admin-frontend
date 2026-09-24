@@ -3,6 +3,7 @@ import { CoreResourceEntityMetadata } from './resource';
 
 export interface DialFile extends ModifiedEntity {
   bucket?: string;
+  entitySource?: string;
   contentLength?: number;
   contentType?: string;
   nodeType?: DialFileNodeType;

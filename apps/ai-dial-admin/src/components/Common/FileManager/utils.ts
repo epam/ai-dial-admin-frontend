@@ -19,7 +19,7 @@ import {
   MAX_FOLDER_NESTING_DEPTH,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -158,7 +158,12 @@ export const getGridOptions = (
   ({
     alternateOddRowColors: false,
     columnDefs,
-    selectionMode: isReadOnlyAdmin ? void 0 : isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
+    selectionMode:
+      isReadOnlyAdmin || isFileRootPath(currentPath)
+        ? void 0
+        : isSingleSelection
+          ? GridSelectionMode.SINGLE
+          : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
       rowHeight: ROW_HEIGHT,
@@ -215,6 +220,13 @@ export const getBulkActionsToolbarOptions = (
   t: (key: string) => string,
   currentPath?: string,
 ) => {
+  if (isFileRootPath(currentPath)) {
+    return {
+      getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+      actionLabels: {},
+    };
+  }
+
   const isFlatBulkView =
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
