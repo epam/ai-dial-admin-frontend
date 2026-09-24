@@ -62,6 +62,10 @@ const ApplicationAssetProperties: FC<Props> = ({
   const assetApp = asset as DialApplicationResource;
   const schemaSourceId = assetApp.application_type_schema_id;
 
+  // A merged read carries the folder only in `_metadata`; the create flow seeds it flat. Resolved
+  // once here for every folder read below (storage label, bucket check, the Move field).
+  const folderId = asset.folderId ?? asset._metadata?.folderId ?? '';
+
   const appRunner = useMemo(
     () => getAppRunner(assetApp, runners ?? [], ApplicationRoute.AssetsApplications),
     [assetApp, runners],
@@ -74,10 +78,10 @@ const ApplicationAssetProperties: FC<Props> = ({
   const headerPostfix = useMemo(() => {
     return (
       <>
-        <FoldersStorageLabel asset={asset} />
+        <FoldersStorageLabel asset={{ folderId }} />
       </>
     );
-  }, [asset]);
+  }, [folderId]);
 
   return (
     <div className="flex flex-col">
@@ -108,9 +112,9 @@ const ApplicationAssetProperties: FC<Props> = ({
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsApplications} />
 
         {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-applications` capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
-        {!isPublication && !isPlatformBucketPath(asset.folderId) && (
+        {!isPublication && !isPlatformBucketPath(folderId) && (
           <FilePath
-            value={asset.folderId}
+            value={folderId}
             label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}

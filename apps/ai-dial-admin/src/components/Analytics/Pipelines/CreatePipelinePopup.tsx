@@ -1,57 +1,63 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
-import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialRadioGroup, DialSelectField, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
-import CreateAggregatePopup from '@/src/components/Analytics/Pipelines/Aggregate/CreateAggregatePopup';
-import CreateEnrichPopup from '@/src/components/Analytics/Pipelines/Enrich/CreateEnrichPopup';
+import CreatePipelineShell from '@/src/components/Analytics/Pipelines/Common/CreatePipelineShell';
+import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
-import { QueryFunction } from '@/src/models/analytics/query-function';
 
 interface Props {
-  functions: QueryFunction[];
   takenTargets: string[];
   onClose: () => void;
   onCreated: () => void;
 }
 
-const CreatePipelinePopup: FC<Props> = ({ functions, takenTargets, onClose, onCreated }) => {
+/** Registration takes the identity and the target; the declaration is authored on the pipeline's page. */
+const CreatePipelinePopup: FC<Props> = ({ takenTargets, onClose, onCreated }) => {
   const t = useI18n();
-  const [kind, setKind] = useState<PipelineKind>(PipelineKind.Enrich);
+
+  const form = usePipelineForm({ takenTargets, initialDraft: { kind: PipelineKind.Enrich } });
+  const { draft, onChange, availableTargets, isRegistrationValid, buildDto } = form;
 
   const kindRadios: RadioButtonWithContent[] = [
     { id: PipelineKind.Enrich, name: t(AnalyticsPipelinesI18nKey.KindEnrich) },
     { id: PipelineKind.Aggregate, name: t(AnalyticsPipelinesI18nKey.KindAggregate) },
   ];
 
-  const kindControl = (
-    <DialRadioGroup
-      elementId="pipeline-kind"
-      fieldTitle={t(AnalyticsPipelinesI18nKey.Kind)}
-      orientation={RadioGroupOrientation.Column}
-      radioButtons={kindRadios}
-      activeRadioButton={kind}
-      onChange={(id) => setKind(id as PipelineKind)}
-    />
-  );
-
-  if (kind === PipelineKind.Aggregate) {
-    return (
-      <CreateAggregatePopup
-        kindControl={kindControl}
-        functions={functions}
-        takenTargets={takenTargets}
-        onClose={onClose}
-        onCreated={onCreated}
-      />
-    );
-  }
+  // The target belongs to the kind, so switching kind leaves a selection the new list does not carry.
+  const onChangeKind = (kind: PipelineKind) => onChange({ kind, target: undefined });
 
   return (
-    <CreateEnrichPopup kindControl={kindControl} takenTargets={takenTargets} onClose={onClose} onCreated={onCreated} />
+    <CreatePipelineShell
+      name={draft.name}
+      onChangeName={(name) => onChange({ name })}
+      isValid={isRegistrationValid}
+      buildDto={buildDto}
+      onClose={onClose}
+      onCreated={onCreated}
+    >
+      <DialRadioGroup
+        elementId="pipeline-kind"
+        fieldTitle={t(AnalyticsPipelinesI18nKey.Kind)}
+        orientation={RadioGroupOrientation.Column}
+        radioButtons={kindRadios}
+        activeRadioButton={draft.kind ?? ''}
+        onChange={(id) => onChangeKind(id as PipelineKind)}
+      />
+
+      <DialSelectField
+        id="pipeline-target"
+        required
+        label={t(AnalyticsPipelinesI18nKey.Target)}
+        options={availableTargets.map((table) => ({ value: table.name, label: table.name }))}
+        value={draft.target ?? ''}
+        onChange={(value) => onChange({ target: value as string })}
+      />
+    </CreatePipelineShell>
   );
 };
 

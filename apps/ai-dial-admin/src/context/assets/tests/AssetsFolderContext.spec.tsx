@@ -1,4 +1,4 @@
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { act, render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
@@ -6,10 +6,10 @@ import { AssetsFolderContext, createFolderContext } from '../AssetsFolderContext
 
 vi.unmock('@/src/context/assets/AssetsFolderContext');
 
-const renderProviderWithCapture = (getFiles: (path: string) => Promise<Asset[] | null | undefined>) => {
+const renderProviderWithCapture = (getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>) => {
   const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder');
 
-  let captured: AssetsFolderContext | null = null;
+  let captured: AssetsFolderContext<AssetListItem> | null = null;
 
   const Capture = () => {
     captured = useFolderContext();
@@ -22,7 +22,7 @@ const renderProviderWithCapture = (getFiles: (path: string) => Promise<Asset[] |
     </Provider>,
   );
 
-  return () => captured as AssetsFolderContext;
+  return () => captured as AssetsFolderContext<AssetListItem>;
 };
 
 describe('createFolderContext data initial state', () => {
@@ -45,9 +45,9 @@ describe('createFolderContext data initial state', () => {
   });
 
   test('data holds folder items after fetching a populated folder', async () => {
-    const items: Asset[] = [
-      { name: 'asset-1', path: '/folder/asset-1', nodeType: DialFileNodeType.ITEM } as Asset,
-      { name: 'asset-2', path: '/folder/asset-2', nodeType: DialFileNodeType.ITEM } as Asset,
+    const items: AssetListItem[] = [
+      { name: 'asset-1', path: '/folder/asset-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+      { name: 'asset-2', path: '/folder/asset-2', nodeType: DialFileNodeType.ITEM } as AssetListItem,
     ];
     const getFiles = vi.fn().mockResolvedValue(items);
     const get = renderProviderWithCapture(getFiles);
@@ -73,10 +73,12 @@ describe('createFolderContext data initial state', () => {
 
 describe('createFolderContext fetchFiles with multiple root paths', () => {
   test('fetches every given root and orders them as given in files', async () => {
-    const platformItems: Asset[] = [
-      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as Asset,
+    const platformItems: AssetListItem[] = [
+      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
     ];
-    const publicItems: Asset[] = [{ name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as Asset];
+    const publicItems: AssetListItem[] = [
+      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
+    ];
     const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
     const get = renderProviderWithCapture(getFiles);
 
@@ -117,10 +119,10 @@ describe('createFolderContext fetchFiles with multiple root paths', () => {
   });
 
   test('isFetchingFiles reflects the combined multi-root fetch, not just one root', async () => {
-    let resolvePlatform: (value: Asset[]) => void = () => {};
+    let resolvePlatform: (value: AssetListItem[]) => void = () => {};
     const getFiles = vi.fn((path: string) =>
       path === 'platform/'
-        ? new Promise<Asset[]>((resolve) => {
+        ? new Promise<AssetListItem[]>((resolve) => {
             resolvePlatform = resolve;
           })
         : Promise.resolve([]),

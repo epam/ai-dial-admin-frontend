@@ -120,7 +120,11 @@ export interface TransformOutputBody {
   jsonata?: string;
 }
 
-export type TransformOutputSpec = string | TransformOutputBody;
+/**
+ * `null` is what the service stores for an output declared with no refinement at all — the column already
+ * carries the description, so the empty object the console sends is normalised away on write.
+ */
+export type TransformOutputSpec = string | TransformOutputBody | null;
 
 /**
  * What a transform produces for one target column. The column owns the type, the enum domain and the
@@ -209,7 +213,8 @@ export interface CreatePipelineDto {
   target: string;
   inputs?: string[];
   filter?: string;
-  trigger: PipelineTrigger;
+  /** Absent until the author picks a kind: the service stores a pipeline that declares no trigger yet. */
+  trigger?: PipelineTrigger;
   enabled?: boolean;
   transform?: PipelineTransform;
   advanced?: PipelineAdvanced;
@@ -240,7 +245,7 @@ export interface PipelineListItem {
   kind: PipelineKind;
   target: string;
   inputs?: string[];
-  trigger: PipelineTrigger;
+  trigger?: PipelineTrigger;
   enabled: boolean;
   generation: number;
   updated_at: string;

@@ -142,10 +142,14 @@ const PlatformToolsetView: FC<Props> = ({
           showNotification(
             getSuccessNotification(
               getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
-              getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, selectedToolset.name, t),
+              getUpdateNotificationDescription(
+                ApplicationRoute.AssetsToolsets,
+                selectedToolset.name || selectedToolset._metadata?.name || '',
+                t,
+              ),
             ),
           );
-          fetchFiles(selectedToolset.folderId);
+          fetchFiles(selectedToolset._metadata?.folderId ?? '');
           router.refresh();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -171,7 +175,7 @@ const PlatformToolsetView: FC<Props> = ({
       >
         <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
-          selectedToolset={selectedToolset as DialToolsetResource}
+          selectedToolset={selectedToolset as unknown as DialToolsetResource}
           signInToolset={signInToolset}
           signOutToolset={signOutToolset}
           oAuthCode={oAuthCode}

@@ -16,12 +16,13 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,7 +33,7 @@ export interface SkillButtonsWrapperProps {
   etag?: string;
   isChanged: boolean;
   children?: ReactNode;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   onDiscard: () => void;
   onSave: () => void;
   onRemove: (entity: string) => Promise<ServerActionResponse>;

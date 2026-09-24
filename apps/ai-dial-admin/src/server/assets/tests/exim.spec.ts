@@ -2,12 +2,31 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { AssetEximConfig, buildAssetsExport, importAssetsExport } from '../exim';
+import { AssetEximConfig, buildAssetsExport, importAssetsExport, stripMetadata } from '../exim';
 
 interface Widget {
   id?: string;
   name: string;
 }
+
+describe('Server :: Assets :: exim :: stripMetadata', () => {
+  test('removes `_metadata` and nothing else', () => {
+    const entity = {
+      name: 'name',
+      content: 'body',
+      nested: { keep: true },
+      _metadata: { name: 'name', path: 'public/name', folderId: 'public/', author: 'a', updatedAt: '1' },
+    };
+
+    expect(stripMetadata(entity)).toEqual({ name: 'name', content: 'body', nested: { keep: true } });
+  });
+
+  test('passes an entity without `_metadata` through unchanged', () => {
+    const entity: { name: string; content: string; _metadata?: unknown } = { name: 'name', content: 'body' };
+
+    expect(stripMetadata(entity)).toEqual({ name: 'name', content: 'body' });
+  });
+});
 
 // PROMPT is the versionless representative here (folder-nested, no `__` split on import); the
 // versioned application/toolset fork of the engine gets its own test in the import describe.
@@ -21,17 +40,23 @@ const itemNode = (url: string) => ({ url, nodeType: 'ITEM' });
 const folderNode = (url: string, items: unknown[] = []) => ({ url, nodeType: 'FOLDER', items });
 
 describe('Server :: Assets :: exim :: buildAssetsExport', () => {
-  test('fetches each selected entity and sets a prefixed id', async () => {
+  test('fetches each selected entity and sets a prefixed id, keeping its `_metadata` as exported', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue(itemNode('prompts/public/folder/name__1.0')),
-      getMerged: vi.fn().mockResolvedValue({ name: 'name' }),
+      getMerged: vi.fn().mockResolvedValue({
+        name: 'name',
+        _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', author: 'me' },
+      }),
     } as any;
 
     const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.PROMPT, 'public/folder/name__1.0');
+    // The export document carries the merged entity's `_metadata` verbatim — provenance for
+    // consumers of the export; only the import side strips it.
     expect((result as any).widgets[0]).toEqual({
       name: 'name',
+      _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', author: 'me' },
       id: 'prompts/public/folder/name__1.0',
     });
   });
@@ -231,7 +256,7 @@ describe('Server :: Assets :: exim :: importAssetsExport', () => {
     expect(result.importResults[0].status).toBe(ImportStatus.FAILED);
   });
 
-  test('applies transformForPut before writing', async () => {
+  test('applies transformForPut before writing, and strips `_metadata` around it', async () => {
     const config: AssetEximConfig<Widget> = {
       ...CONFIG,
       transformForPut: (widget) => ({ ...widget, name: `${widget.name}-transformed` }),
@@ -245,7 +270,7 @@ describe('Server :: Assets :: exim :: importAssetsExport', () => {
       config,
       assetApi,
       {} as any,
-      { widgets: [{ id: 'prompts/public/name__1.0', name: 'name' }] } as any,
+      { widgets: [{ id: 'prompts/public/name__1.0', name: 'name', _metadata: { name: 'name', author: 'me' } }] } as any,
       baseOptions,
     );
 
@@ -254,6 +279,33 @@ describe('Server :: Assets :: exim :: importAssetsExport', () => {
       ResourceType.PROMPT,
       'public/target/name__1.0',
       expect.objectContaining({ name: 'name-transformed' }),
+      { allowOverride: true },
+    );
+    const body = (assetApi.put as any).mock.calls[0][3];
+    expect(body).not.toHaveProperty('_metadata');
+  });
+
+  test('strips `_metadata` from the written body even with no transformForPut', async () => {
+    const assetApi = {
+      list: vi.fn().mockResolvedValue([]),
+      put: vi.fn().mockResolvedValue({ success: true }),
+    } as any;
+
+    await importAssetsExport(
+      CONFIG,
+      assetApi,
+      {} as any,
+      { widgets: [{ id: 'prompts/public/name__1.0', name: 'name', _metadata: { name: 'name', author: 'me' } }] } as any,
+      baseOptions,
+    );
+
+    // Exact body: `_metadata` gone, nothing else removed (the document-stamped `id` survives —
+    // a type without a `transformForPut` identity strip; `AssetApi.put` recomputes prompt ids).
+    expect(assetApi.put).toHaveBeenCalledWith(
+      {},
+      ResourceType.PROMPT,
+      'public/target/name__1.0',
+      { id: 'prompts/public/name__1.0', name: 'name' },
       { allowOverride: true },
     );
   });

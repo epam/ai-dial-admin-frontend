@@ -17,12 +17,13 @@ import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersBut
 import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ImportResult } from '@/src/models/import';
@@ -44,7 +45,7 @@ interface Props<T> {
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   isReadOnlyAdmin?: boolean;
 }
 

@@ -59,6 +59,9 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
   return Array.isArray(wrapped) ? (wrapped as T[]) : null;
 };
 
+/** What the service answers when a declaration is too incomplete to compile. */
+const UNPROCESSABLE = 422;
+
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
@@ -246,6 +249,11 @@ export class AnalyticsDataApi extends BaseApi {
    * from the first answer rather than guessed. A failed second read is reported rather than downgraded to
    * the first: the detail view renders `grain_key` and `version_column` as "not set" when they are
    * absent, which for an enrich pipeline would be a false statement rather than a missing one.
+   *
+   * The exception is a declaration the service cannot compile at all, which it answers 422 for. That is
+   * an ordinary state now that a pipeline is registered before it is declared, and the authored
+   * projection is the whole of what such a pipeline has — reporting the refusal instead would leave the
+   * page the author has to finish the declaration on unreachable.
    */
   async getPipeline(name: string, token: Token): Promise<ServerActionResponse<Pipeline>> {
     const source = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Source), token);
@@ -255,6 +263,7 @@ export class AnalyticsDataApi extends BaseApi {
     if ((source.response as Pipeline).kind !== PipelineKind.Enrich) return source;
 
     const compiled = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Compiled), token);
+    if (compiled.status === UNPROCESSABLE) return source;
     if (!compiled.success) return compiled;
 
     return compiled.response ? compiled : unreadableBody(compiled);

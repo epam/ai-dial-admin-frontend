@@ -26,8 +26,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -41,7 +42,7 @@ export interface SimpleButtonsWrapperProps<T> {
   adaptiveActions?: AdaptiveHeaderActionsConfig;
   entity: T;
   etag?: string;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 
   onDiscard: () => void;
   onSave: () => void;

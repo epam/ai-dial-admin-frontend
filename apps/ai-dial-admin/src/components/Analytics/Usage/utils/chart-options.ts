@@ -9,7 +9,8 @@ const GRID_LINE_COLOR = 'rgba(238, 241, 247, .07)';
 const axisLabelStyle = { color: CHART_COLOR.neutral, fontSize: 13 };
 
 /**
- * Every line downsamples for drawing rather than for fetching. The window decides how many buckets
+ * The calls and split lines downsample for drawing rather than for fetching; the latency lines do
+ * not, because sampling bridges the gaps they must keep. The window decides how many buckets
  * are asked for; how many of them a plot can separate is its own width's business, and resolving
  * that in the request meant a browser resize re-issued the page's data.
  */
@@ -253,8 +254,10 @@ export const buildLatencyOptions = (
       color: LATENCY_P50_COLOR,
       data: p50,
       showSymbol: false,
-      sampling: LINE_SAMPLING,
-      connectNulls: true,
+      // Neither sampled nor bridged: a bucket with no calls has no percentile, and joining across
+      // it drew a flat line through hours the platform was idle — a reading the window never took.
+      // `lttb` removes points to fit the pixels, gaps included, so it would bridge them too.
+      connectNulls: false,
       lineStyle: { width: 1.5, color: LATENCY_P50_COLOR },
       emphasis: { focus: 'series' },
       blur: { lineStyle: { opacity: 0.2 } },
@@ -265,8 +268,7 @@ export const buildLatencyOptions = (
       color: LATENCY_P95_COLOR,
       data: p95,
       showSymbol: false,
-      sampling: LINE_SAMPLING,
-      connectNulls: true,
+      connectNulls: false,
       lineStyle: { width: 1.5, color: LATENCY_P95_COLOR },
       emphasis: { focus: 'series' },
       blur: { lineStyle: { opacity: 0.2 } },

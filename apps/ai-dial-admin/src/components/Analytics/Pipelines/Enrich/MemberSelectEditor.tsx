@@ -12,11 +12,12 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MemberSelect } from '@/src/models/analytics/pipeline';
 import { MemberScope } from '@/src/models/analytics/pipeline-ui';
-import { AnalyticsTable, AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { AnalyticsTable } from '@/src/models/analytics/table';
 
 interface Props {
   memberSelect?: MemberSelect;
-  columns: AnalyticsTableColumn[];
+  fields: AnalyticsEntityField[];
   sourceName?: string;
   readSource?: AnalyticsTable | null;
   isLimitValid: boolean;
@@ -28,7 +29,7 @@ interface Props {
  * assembly's own default policy in place — and an empty block reads as an unfinished one. Switching back to
  * every member keeps what was entered, so the choice is not destructive.
  */
-const MemberSelectEditor: FC<Props> = ({ memberSelect, columns, sourceName, readSource, isLimitValid, onChange }) => {
+const MemberSelectEditor: FC<Props> = ({ memberSelect, fields, sourceName, readSource, isLimitValid, onChange }) => {
   const t = useI18n();
 
   const [scope, setScope] = useState<MemberScope>(() => (memberSelect ? MemberScope.Selected : MemberScope.All));
@@ -101,7 +102,7 @@ const MemberSelectEditor: FC<Props> = ({ memberSelect, columns, sourceName, read
 
           <div className="flex flex-col gap-2">
             <span className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.OrderBy)}</span>
-            <OrderByEditor orderBy={kept?.order_by} columns={columns} onChange={(order_by) => update({ order_by })} />
+            <OrderByEditor orderBy={kept?.order_by} fields={fields} onChange={(order_by) => update({ order_by })} />
             <span className="text-secondary dial-tiny-text">
               {orderColumns
                 ? `${orderColumns} · ${t(AnalyticsPipelinesI18nKey.MemberTiebreak)}`

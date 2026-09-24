@@ -7,6 +7,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
 import TransformParamsEditor from '@/src/components/Analytics/Pipelines/Enrich/TransformParamsEditor';
+import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/VariablesEditor';
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
@@ -22,7 +23,6 @@ import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   form: EnrichFormState;
-  isModal?: boolean;
   isDisabled?: boolean;
 }
 
@@ -53,11 +53,11 @@ const PLACEHOLDER_DESCRIPTION: Record<string, AnalyticsPipelinesI18nKey> = {
  * What this presents follows `transform.type`: a `sql` transform is refused for declaring a model, params,
  * a template or inputs, so none of them is offered for it.
  */
-const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
+const TransformSection: FC<Props> = ({ form, isDisabled }) => {
   const t = useI18n();
 
   const { transform, onTransformChange, isTransformReady, targetColumns } = form;
-  const controlClassName = getControlClassName(isModal);
+  const controlClassName = getControlClassName();
 
   // Keyed on sql rather than on llm, so a type the service adds later still shows what is declared.
   const isSql = transform?.type === TransformType.Sql;
@@ -75,6 +75,24 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
   // template names no `{{members}}`, and the trigger is on the same draft.
   const isGroupGrain = form.draft.trigger?.kind === TriggerKind.Group;
   const isMembersMissing = isGroupGrain && !referenced.includes(MEMBERS_PLACEHOLDER);
+
+  // At group grain the render supplies the service's own built-ins and an input becomes a field of each
+  // member object, so the correspondence does not hold there.
+  const placeholderTokens = useMemo<PlaceholderToken[]>(() => {
+    if (isGroupGrain) return [];
+
+    const inputNames = Object.keys(transform?.inputs ?? {});
+
+    return [
+      ...referenced.map((name) => ({
+        name,
+        state: inputNames.includes(name) ? PlaceholderState.Covered : PlaceholderState.Uncovered,
+      })),
+      ...inputNames
+        .filter((name) => !referenced.includes(name))
+        .map((name) => ({ name, state: PlaceholderState.Unused })),
+    ];
+  }, [isGroupGrain, referenced, transform?.inputs]);
 
   const memberTokens: PlaceholderToken[] = MEMBER_BUILT_IN_PLACEHOLDERS.map((name) => ({
     name,
@@ -99,29 +117,26 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
         <>
           <DialInput
             id="transform-model"
-            labelProps={{ label: t(AnalyticsPipelinesI18nKey.Model), required: true }}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.Model) }}
             value={transform?.model ?? ''}
             disabled={isDisabled}
             containerClassName={controlClassName}
             onChange={(v) => onTransformChange({ model: v ?? '' })}
           />
 
-          {!isModal && (
-            <section aria-label={t(AnalyticsPipelinesI18nKey.SectionParams)} className="flex flex-col gap-2">
-              <h2 className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.SectionParams)}</h2>
-              <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.ParamsHint)}</span>
-              <TransformParamsEditor
-                params={transform?.params ?? {}}
-                isDisabled={isDisabled}
-                onChange={(params) => onTransformChange({ params })}
-              />
-            </section>
-          )}
+          <section aria-label={t(AnalyticsPipelinesI18nKey.SectionParams)} className="flex flex-col gap-2">
+            <h2 className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.SectionParams)}</h2>
+            <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.ParamsHint)}</span>
+            <TransformParamsEditor
+              params={transform?.params ?? {}}
+              isDisabled={isDisabled}
+              onChange={(params) => onTransformChange({ params })}
+            />
+          </section>
 
           <section aria-label={t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)} className="flex flex-col gap-2">
             <DialLabel
               htmlFor="transform-request-template"
-              required
               label={
                 <span className="flex flex-row items-center gap-1">
                   {t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)}
@@ -133,9 +148,7 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
               }
             />
 
-            {!isModal && (
-              <PlaceholderTokens tokens={memberTokens} label={t(AnalyticsPipelinesI18nKey.TemplatePlaceholders)} />
-            )}
+            <PlaceholderTokens tokens={memberTokens} label={t(AnalyticsPipelinesI18nKey.TemplatePlaceholders)} />
 
             {templateObject ? (
               <JsonEditorInput
@@ -152,7 +165,7 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
                 disabled={isDisabled}
                 caption={t(AnalyticsPipelinesI18nKey.TemplateNotJson)}
                 className="font-mono"
-                rows={isModal ? 5 : 8}
+                rows={8}
                 spellCheck={false}
                 onChange={(value) => onTransformChange({ request_template: value })}
               />
@@ -165,13 +178,36 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
               </span>
             )}
 
-            {!isGroupGrain && !isModal && (
+            {!isGroupGrain && (
               <span className="text-secondary dial-tiny-text">
                 {t(AnalyticsPipelinesI18nKey.TemplatePlaceholdersCaption)}
               </span>
             )}
           </section>
         </>
+      )}
+
+      {/* `transform.inputs` on the wire, between the template its names are matched against and the
+          outputs — one block in the order the service reads it. A sql transform renders no request, and
+          the service refuses one declaring inputs, so the section is absent rather than empty. */}
+      {!isSql && (
+        <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionInputs)}>
+          <div className="flex flex-col gap-3">
+            <VariablesEditor
+              vars={transform?.inputs}
+              fields={form.sourceFields}
+              isReady={form.isVariablesReady}
+              hasError={form.hasSourceEntityError}
+              onChange={(inputs) => onTransformChange({ inputs })}
+            />
+            {placeholderTokens.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)}</span>
+                <PlaceholderTokens tokens={placeholderTokens} label={t(AnalyticsPipelinesI18nKey.PlaceholdersTitle)} />
+              </div>
+            )}
+          </div>
+        </PipelineSection>
       )}
 
       <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionOutputs)}>
@@ -181,8 +217,8 @@ const TransformSection: FC<Props> = ({ form, isModal, isDisabled }) => {
           columns={targetColumns}
           isReady={isTransformReady}
           isDisabled={isDisabled}
-          hasEmptyState={!isModal}
-          hasRefinement={!isModal}
+          hasEmptyState
+          hasRefinement
           onChange={(outputs) => onTransformChange({ outputs })}
         />
       </PipelineSection>

@@ -135,12 +135,12 @@ describe('PipelineDetailView', () => {
     expect(screen.getByText('7')).toBeTruthy();
   });
 
-  test('presents the composed response schema, which is what the model is held to', () => {
+  // A document among one-word values, repeating what the outputs editor states below; the JSON editor
+  // keeps it.
+  test('leaves the composed response schema out of the facts', () => {
     renderView({ response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } } });
 
-    const schema = within(facts()).getByText(AnalyticsPipelinesI18nKey.ResponseSchema).parentElement;
-
-    expect(within(schema as HTMLElement).getByText('rate_event_count')).toBeTruthy();
+    expect(within(facts()).queryByText(/rate_event_count/)).toBeNull();
   });
 
   test('offers no evaluator fact and no link to one', () => {
@@ -217,6 +217,52 @@ describe('PipelineDetailView', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  // The service gates the declaration when the pipeline is armed, so what is merely unwritten reaches
+  // the save; only a value that was authored and cannot be stored as authored holds it back.
+  test('saves a declaration carrying neither trigger nor transform', async () => {
+    const user = userEvent.setup();
+    renderView({ trigger: undefined, transform: undefined });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto).not.toHaveProperty('trigger');
+    expect(dto).not.toHaveProperty('transform');
+  });
+
+  test('saves an llm transform carrying neither model nor request template', async () => {
+    const user = userEvent.setup();
+    renderView({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto.transform?.type).toBe(TransformType.Llm);
+  });
+
+  test('the enable control is offered whatever the declaration holds', async () => {
+    renderView({ trigger: undefined, transform: undefined, enabled: false });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.EnablePipeline })).toBeEnabled();
+  });
+
+  test('a sample fraction of zero still holds the save back', async () => {
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editSampleFraction(user, '0');
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
@@ -279,6 +325,72 @@ describe('PipelineDetailView', () => {
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(screen.getByDisplayValue('PT2H')).toBeTruthy();
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  // The default fixture is a sql transform, which renders no request and whose inputs the service
+  // refuses — so the section is absent rather than empty, and anything typed there would be dropped.
+  test('presents no inputs section for a sql transform', () => {
+    renderView();
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionInputs)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.SectionRequestTemplate)).toBeNull();
+  });
+
+  // A sql transform renders neither a template nor inputs, hence the llm fixture.
+  test('presents the inputs inside the transform block, after the template and before the outputs', () => {
+    renderView({ transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title.' } } });
+
+    const rendered = document.body.textContent ?? '';
+    const template = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionRequestTemplate);
+    const inputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionInputs);
+    const outputs = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionOutputs);
+
+    expect(template).toBeGreaterThan(-1);
+    expect(inputs).toBeGreaterThan(template);
+    expect(outputs).toBeGreaterThan(inputs);
+  });
+
+  // The facts row and the scope below it name the same two tables, so they are measured separately: a
+  // reader who meets them in opposite orders reads the second as a different pair.
+  test('presents the source before the target in the facts row and in the read scope', () => {
+    renderView();
+
+    const rendered = document.body.textContent ?? '';
+    const scopeAt = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope);
+    const facts = rendered.slice(0, scopeAt);
+    const scope = rendered.slice(scopeAt);
+
+    expect(facts.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      facts.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
+  });
+
+  // An aggregate names its input with a plain select rather than the follow-or-pin control, and it is
+  // ordered the same way.
+  test('presents the input before the target for an aggregate pipeline', async () => {
+    const rollup: AnalyticsTable = { name: 'usage_rollup', type: AnalyticsTableType.Source, columns: [] };
+    vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable, rollup]);
+
+    renderView({
+      kind: PipelineKind.Aggregate,
+      target: 'usage_rollup',
+      inputs: ['dial_usage_log'],
+      transform: undefined,
+      trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
+      measures: [{ name: 'requests', fn: 'count' }],
+    });
+
+    await waitFor(() => expect(getTables).toHaveBeenCalled());
+
+    const rendered = document.body.textContent ?? '';
+    const scope = rendered.slice(rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope));
+
+    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Inputs)).toBeLessThan(
+      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
+    );
   });
 
   test('groups the members into collapsible sections', () => {

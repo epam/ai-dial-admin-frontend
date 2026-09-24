@@ -2,14 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables } from '@/src/app/[lang]/pipelines/actions';
+import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
 import { useEnrichForm } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { Pipeline, TransformType, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { MemberSelect, Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
 const sqlTransform: TransformDraft = {
   type: TransformType.Sql,
@@ -54,6 +56,11 @@ const otherSource: AnalyticsTable = {
 
 const allTables = [enrichment, otherEnrichment, sourceTable, otherSource];
 
+const sourceEntityFields = [
+  { name: 'chat_id', source: 'chat_id', type: AnalyticsFieldType.String },
+  { name: 'dial_usage_log_payload.request_body', source: 'request_body', type: AnalyticsFieldType.String },
+];
+
 const renderForm = (params?: Parameters<typeof useEnrichForm>[0]) => renderHook(() => useEnrichForm(params));
 
 type Form = { current: ReturnType<typeof useEnrichForm> };
@@ -76,6 +83,7 @@ const mockAll = () => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue(allTables);
   vi.mocked(getTable).mockImplementation(async (name) => allTables.find((table) => table.name === name) ?? null);
+  vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: sourceEntityFields } });
 };
 
 describe('useEnrichForm — resolution', () => {
@@ -178,6 +186,41 @@ describe('useEnrichForm — resolution', () => {
 describe('useEnrichForm — the read source leg', () => {
   beforeEach(mockAll);
 
+  test('reads the source as an entity, so its enrichments’ columns are bindable', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+
+    await waitFor(() => expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log'));
+    expect(result.current.sourceFields.map((field) => field.name)).toContain('dial_usage_log_payload.request_body');
+  });
+
+  test('caches the entity so re-selecting the same source issues no second read', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+    await waitFor(() => expect(result.current.sourceFields).toHaveLength(2));
+
+    act(() => result.current.onChange({ inputs: ['legacy_log'] }));
+    await waitFor(() => expect(result.current.sourceName).toBe('legacy_log'));
+
+    act(() => result.current.onChange({ inputs: undefined }));
+    await waitFor(() => expect(result.current.sourceName).toBe('dial_usage_log'));
+
+    expect(vi.mocked(getEntitySchema).mock.calls.filter(([name]) => name === 'dial_usage_log')).toHaveLength(1);
+  });
+
+  test('reports a failed entity read rather than binding against nothing', async () => {
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: false, status: 500 });
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ target: 'turn_feedback' }));
+
+    await waitFor(() => expect(result.current.hasSourceEntityError).toBe(true));
+    expect(result.current.sourceFields).toEqual([]);
+    expect(result.current.isVariablesReady).toBe(false);
+  });
+
   test('follows the target enrichment when the rule declares no source', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
 
@@ -232,154 +275,95 @@ describe('useEnrichForm — the read source leg', () => {
   });
 });
 
-describe('useEnrichForm — isValid', () => {
+describe('useEnrichForm — what the console still judges', () => {
   beforeEach(mockAll);
 
-  test('blocks until every required value is present', async () => {
+  test('registration takes the identity and the target, and asks for no declaration', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.isRegistrationValid).toBe(false);
 
-    await fillRequired(result);
+    act(() => result.current.onChange({ name: 'my-rule', target: 'turn_feedback' }));
 
-    await waitFor(() => expect(result.current.isValid).toBe(true));
+    await waitFor(() => expect(result.current.isRegistrationValid).toBe(true));
   });
 
-  test('blocks while enabled is unchosen', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    await waitFor(() => expect(result.current.isValid).toBe(true));
+  test('a declaration with no trigger and no transform is not withheld', async () => {
+    const { result } = renderForm({
+      initialDraft: { kind: PipelineKind.Enrich, name: 'my-rule', target: 'turn_feedback' },
+    });
+    await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
 
-    act(() => result.current.onChange({ enabled: undefined }));
-
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.hasInvalidCron).toBe(false);
+    expect(result.current.hasDuplicateOutputName).toBe(false);
+    expect(result.current.isSampleFractionValid).toBe(true);
   });
 
-  test('accepts a pipeline declaring no variables, whose output mapping the service derives', async () => {
+  test('a cron that was typed and does not parse is refused by the console alone', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a schedule rule without a valid cron expression', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
 
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Schedule }));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.hasInvalidCron).toBe(false);
 
     act(() => result.current.onTriggerChange({ cron: '0 * * * *' }));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.hasInvalidCron).toBe(true);
 
     act(() => result.current.onTriggerChange({ cron: '0 0 * * * *' }));
-    expect(result.current.isValid).toBe(true);
+    expect(result.current.hasInvalidCron).toBe(false);
   });
 
-  test('blocks a group rule with no readiness condition', async () => {
+  test('a member selection declared without a limit is reported', () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
 
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
-    expect(result.current.isValid).toBe(false);
-
-    act(() => result.current.onTriggerChange({ ready_when: { idle: '30m' } }));
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('accepts a readiness signal on its own', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
-    act(() => result.current.onTriggerChange({ ready_when: { signal: 'turns >= 2' } }));
-
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a group rule whose cost ceiling is not a positive integer', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group }));
-
-    act(() => result.current.onTriggerChange({ ready_when: { idle: '30m', cost_ceiling: 0 } }));
-    expect(result.current.isValid).toBe(false);
-
-    act(() => result.current.onTriggerChange({ ready_when: { idle: '30m', cost_ceiling: 100 } }));
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a transform that declares no output, which the service refuses', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    await waitFor(() => expect(result.current.isValid).toBe(true));
-
-    act(() => result.current.onTransformChange({ outputs: [] }));
-
-    expect(result.current.isValid).toBe(false);
-  });
-
-  test('blocks an llm transform with no model', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-
-    act(() => result.current.onChange({ transform: { ...llmTransform, model: undefined } }));
-    expect(result.current.isValid).toBe(false);
-
-    act(() => result.current.onTransformChange({ model: 'gpt-4o' }));
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a sample fraction outside the open interval the service accepts', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    await waitFor(() => expect(result.current.isValid).toBe(true));
-
-    act(() => result.current.onChange({ advanced: { sample_fraction: 1.5 } }));
-    expect(result.current.isValid).toBe(false);
-
-    // Zero is refused too: the service names `enabled: false` as how a pipeline that evaluates nothing
-    // is declared.
-    act(() => result.current.onChange({ advanced: { sample_fraction: 0 } }));
-    expect(result.current.isValid).toBe(false);
-
-    act(() => result.current.onChange({ advanced: { sample_fraction: 0.25 } }));
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a group rule whose member selection has no limit', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
     act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
-    await waitFor(() => expect(result.current.isValid).toBe(true));
+    expect(result.current.isMemberSelectValid).toBe(true);
 
-    act(() => result.current.onTriggerChange({ member_select: { limit: 0, prefer_sql: 'x > 1' } }));
+    act(() => result.current.onTriggerChange({ member_select: { prefer_sql: 'score > 0.5' } as MemberSelect }));
+    expect(result.current.isMemberSelectValid).toBe(false);
 
-    expect(result.current.isValid).toBe(false);
+    act(() => result.current.onTriggerChange({ member_select: { limit: 5, prefer_sql: 'score > 0.5' } }));
+    expect(result.current.isMemberSelectValid).toBe(true);
   });
 
-  test('ignores a stale member selection once the trigger is no longer group', async () => {
+  test('a member limit above the service ceiling is reported', () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
-    act(() => result.current.onTriggerChange({ member_select: { limit: 0, prefer_sql: 'x > 1' } }));
-    expect(result.current.isValid).toBe(false);
 
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.OnIngest }));
-
-    // The control is unmounted and the member is dropped from the DTO, so it must not block the save.
-    expect(result.current.isValid).toBe(true);
-  });
-
-  test('blocks a member limit above the service ceiling', async () => {
-    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
-    await fillRequired(result);
-    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
-
-    act(() => result.current.onTriggerChange({ member_select: { limit: GROUP_FETCH_MAX_ROWS + 1 } }));
-    expect(result.current.isValid).toBe(false);
+    act(() =>
+      result.current.onTriggerChange({
+        kind: TriggerKind.Group,
+        ready_when: { idle: '30m' },
+        member_select: { limit: GROUP_FETCH_MAX_ROWS + 1 },
+      }),
+    );
+    expect(result.current.isMemberSelectValid).toBe(false);
 
     act(() => result.current.onTriggerChange({ member_select: { limit: GROUP_FETCH_MAX_ROWS } }));
-    expect(result.current.isValid).toBe(true);
+    expect(result.current.isMemberSelectValid).toBe(true);
+  });
+
+  test('a cost ceiling that is not a positive integer is reported', () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
+    expect(result.current.isCostCeilingValid).toBe(true);
+
+    act(() => result.current.onTriggerChange({ ready_when: { idle: '30m', cost_ceiling: 0.5 } }));
+    expect(result.current.isCostCeilingValid).toBe(false);
+
+    act(() => result.current.onTriggerChange({ ready_when: { idle: '30m', cost_ceiling: 500 } }));
+    expect(result.current.isCostCeilingValid).toBe(true);
+  });
+
+  test('two outputs bound to one column are reported, which the wire shape would hide', async () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() =>
+      result.current.onTransformChange({
+        type: TransformType.Llm,
+        outputs: [{ name: 'title' }, { name: 'title' }],
+      }),
+    );
+
+    expect(result.current.hasDuplicateOutputName).toBe(true);
   });
 });
 
@@ -503,7 +487,7 @@ describe('useEnrichForm — buildDto', () => {
 
     const dto = result.current.buildDto();
 
-    expect(dto.trigger.cron).toBe('0 0 * * * *');
+    expect(dto.trigger?.cron).toBe('0 0 * * * *');
     expect(dto.trigger).not.toHaveProperty('group_by');
     expect(dto.trigger).not.toHaveProperty('ready_when');
   });
@@ -517,8 +501,8 @@ describe('useEnrichForm — buildDto', () => {
 
     const dto = result.current.buildDto();
 
-    expect(dto.trigger.group_by).toBe('response_id');
-    expect(dto.trigger.ready_when).toEqual({ idle: '30m', cost_ceiling: 500 });
+    expect(dto.trigger?.group_by).toBe('response_id');
+    expect(dto.trigger?.ready_when).toEqual({ idle: '30m', cost_ceiling: 500 });
     expect(dto.trigger).not.toHaveProperty('cron');
   });
 
@@ -532,7 +516,7 @@ describe('useEnrichForm — buildDto', () => {
     const dto = result.current.buildDto();
 
     expect(dto.trigger).not.toHaveProperty('cron');
-    expect(dto.trigger.group_by).toBe('response_id');
+    expect(dto.trigger?.group_by).toBe('response_id');
     // The abandoned value stays on the draft so switching back does not lose it.
     expect(result.current.draft.trigger?.cron).toBe('0 0 * * * *');
   });
@@ -640,12 +624,13 @@ describe('useEnrichForm — a draft that came from the JSON editor', () => {
 
     expect(() => {
       act(() => result.current.replaceDraft({ ...result.current.draft, ...patch } as PipelineDraft));
-      void result.current.isValid;
+      void result.current.isRegistrationValid;
       void result.current.buildDto();
     }).not.toThrow();
   });
 
-  test('a wrongly typed cron does not read as a valid schedule', () => {
+  // The document may name the cron anywhere; only `trigger.cron` is the schedule.
+  test('a cron typed outside the trigger is not read as the schedule', () => {
     const { result } = renderForm({ pipeline: baseRule });
 
     act(() =>
@@ -656,7 +641,8 @@ describe('useEnrichForm — a draft that came from the JSON editor', () => {
       } as never),
     );
 
-    expect(result.current.isCronValid).toBe(false);
+    expect(result.current.draft.trigger?.cron).toBeUndefined();
+    expect(result.current.hasInvalidCron).toBe(false);
   });
 
   test('replaceDraft replaces rather than merging, so a deleted member is gone', () => {

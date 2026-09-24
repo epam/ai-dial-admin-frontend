@@ -50,6 +50,7 @@ import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 
 type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
 
@@ -319,55 +320,73 @@ const buildCompareIndexColumnPair = (
   },
 ];
 
-const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => ({
+/**
+ * An index column is a primary/secondary pair here, so a field the merged rows never vary is expanded
+ * to both colIds — the pair is one reading and is shown or hidden as one.
+ */
+const getUniformComparePairFields = (results: AnalyticsResult[]): Set<string> => {
+  const uniform = getUniformExecutionFields(results);
+  return new Set([...uniform, ...[...uniform].map((field) => `cmp_${field}`)]);
+};
+
+/**
+ * Shares the Extraction Result grid's variation rule so the two cannot drift on what "varies" means.
+ * `hideUniformColumns` only ever hides, and every child here already ships `hide: true` — a comparison
+ * opens on the metrics being compared — so this is a no-op today and stays one until those defaults
+ * are deliberately loosened.
+ */
+const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?: boolean): ColGroupDef => ({
   headerName: EXECUTION_GROUP_HEADER,
-  children: [
-    ...buildCompareIndexColumnPair('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
-    ...buildCompareIndexColumnPair('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
-    ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
-    {
-      field: 'responseStatusCode',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
-      colId: 'http',
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
-      valueGetter: (params) => params.data?.responseStatusCode ?? '—',
-      ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
-    },
-    {
-      colId: 'cmp_http',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
-      valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
-      ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'secondary'),
-    },
-    {
-      field: 'durationMs',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
-      colId: 'duration',
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-        getFormattedDuration(params.data ? (getCompareRowDurationMs(params.data) ?? undefined) : undefined),
-      ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'primary'),
-    },
-    {
-      colId: 'cmp_duration',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
-        if (!params.data?._compared) return '—';
-        return getFormattedDuration(getCompareRowDurationMs(params.data._compared) ?? undefined);
+  children: hideUniformColumns(
+    [
+      ...buildCompareIndexColumnPair('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
+      ...buildCompareIndexColumnPair('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
+      ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
+      {
+        field: 'responseStatusCode',
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
+        colId: 'http',
+        hide: true,
+        ...NO_FILTER_COL_DEF,
+        ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        valueGetter: (params) => params.data?.responseStatusCode ?? '—',
+        ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
       },
-      ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'secondary'),
-    },
-  ],
+      {
+        colId: 'cmp_http',
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+        hide: true,
+        ...NO_FILTER_COL_DEF,
+        ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
+        ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'secondary'),
+      },
+      {
+        field: 'durationMs',
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
+        colId: 'duration',
+        hide: true,
+        ...NO_FILTER_COL_DEF,
+        ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+          getFormattedDuration(params.data ? (getCompareRowDurationMs(params.data) ?? undefined) : undefined),
+        ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'primary'),
+      },
+      {
+        colId: 'cmp_duration',
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+        hide: true,
+        ...NO_FILTER_COL_DEF,
+        ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+          if (!params.data?._compared) return '—';
+          return getFormattedDuration(getCompareRowDurationMs(params.data._compared) ?? undefined);
+        },
+        ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'secondary'),
+      },
+    ],
+    getUniformComparePairFields(results),
+  ),
 });
 
 const getComparedMetricGroupColumns = (
@@ -454,7 +473,7 @@ export const getCompareColumnsCompare = (
       ...TEXT_FILTER_COL_DEF,
       suppressSpanHeaderHeight: true,
     },
-    getComparedExecutionColumns(hideHighlights),
+    getComparedExecutionColumns(allResults, hideHighlights),
     ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights, options?.theme),
     ...(extractedGroup ? [extractedGroup] : []),
   ];

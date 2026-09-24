@@ -26,12 +26,24 @@ const schemaProperty = (schema: unknown, name: string): Record<string, unknown> 
 const asStringList = (value: unknown): string[] | undefined =>
   Array.isArray(value) && value.length ? value.map(String) : undefined;
 
+/**
+ * The service refuses an identity expression — an absent transform already means a direct lookup by that
+ * name — and a declaration folded from a pre-`outputs` evaluator carries one per output, so keeping them
+ * would mark every row of an untouched declaration invalid and have the first save refused for a value
+ * nobody authored.
+ */
+const withoutIdentity = (name: string, jsonata?: string): string | undefined =>
+  trimmedString(jsonata) === trimmedString(name) ? undefined : jsonata;
+
 const fromOutputSpec = (name: string, spec: TransformOutputSpec, type: TransformType): TransformOutput => {
   if (typeof spec === 'string') {
     return type === TransformType.Sql ? { name, sql: spec } : { name, prose: spec };
   }
 
-  return { name, prose: spec.prose, values: spec.values, jsonata: spec.jsonata };
+  // An output the console sent as `{}` comes back as `null`, so reading one has to survive it.
+  if (!spec) return { name };
+
+  return { name, prose: spec.prose, values: spec.values, jsonata: withoutIdentity(name, spec.jsonata) };
 };
 
 /**
@@ -50,7 +62,7 @@ const fromLegacyVars = (transform: PipelineTransform): TransformOutput[] =>
       name: item.name,
       prose: property.description as string | undefined,
       values: asStringList(property.enum),
-      jsonata: item.jsonata,
+      jsonata: withoutIdentity(item.name, item.jsonata),
     };
   });
 
@@ -167,25 +179,21 @@ export const buildTransformDto = (draft: TransformDraft, stored?: PipelineTransf
   return dto;
 };
 
-const hasDuplicateName = (outputs: TransformOutput[]): boolean =>
-  new Set(outputs.map((output) => trimmedString(output.name))).size !== outputs.length;
-
-/** What the console can tell before the service does: a shape that could not be stored at all. */
-export const isTransformValid = (draft?: TransformDraft): boolean => {
+/**
+ * The one authored mistake the service never reports: `outputs` is keyed by name on the wire, so a
+ * duplicate is collapsed by the parser and the second row is silently lost. Everything else an
+ * unfinished transform lacks is refused when the pipeline is armed, named.
+ */
+export const hasDuplicateOutputName = (draft?: TransformDraft): boolean => {
   if (!draft?.type) return false;
 
-  const outputs = asOutputList(draft.outputs, draft.type);
-  if (!outputs.length || hasDuplicateName(outputs)) return false;
+  // Blank rows are dropped from the request, so two of them collide with nothing; counting them would
+  // withhold the save for a row the author has not filled in yet.
+  const names = asOutputList(draft.outputs, draft.type)
+    .map((output) => trimmedString(output.name))
+    .filter(Boolean);
 
-  // Only a sql output's text is required — an llm output's prose defaults to the column's description.
-  if (outputs.some((output) => !trimmedString(output.name))) return false;
-  if (draft.type === TransformType.Sql) {
-    return outputs.every((output) => trimmedString(getOutputText(output, draft.type)));
-  }
-
-  // The template is a shape check the service runs on every write, unlike the placeholder
-  // correspondence it defers to enable: a blank prompt is refused, not stored as a draft.
-  return Boolean(trimmedString(draft.model)) && Boolean(trimmedString(draft.request_template));
+  return new Set(names).size !== names.length;
 };
 
 export const toParamRows = (params: Record<string, unknown> = {}): TransformParamRow[] =>

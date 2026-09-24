@@ -6,7 +6,7 @@ import {
   buildTransformDto,
   getOutputText,
   hasLegacyOutputs,
-  isTransformValid,
+  hasDuplicateOutputName,
   toParamRows,
   toParams,
   toTransformDraft,
@@ -46,6 +46,12 @@ describe('Utils :: analytics :: toTransformOutputs', () => {
     ]);
   });
 
+  test('reads an output stored with no refinement, which the service serves as null', () => {
+    const transform: PipelineTransform = { type: TransformType.Llm, outputs: { title: null, sentiment: null } };
+
+    expect(toTransformOutputs(transform)).toEqual([{ name: 'title' }, { name: 'sentiment' }]);
+  });
+
   test('reads a bare string on a sql transform as the expression', () => {
     const transform: PipelineTransform = { type: TransformType.Sql, outputs: { total: 'count(*)' } };
 
@@ -58,6 +64,41 @@ describe('Utils :: analytics :: toTransformOutputs', () => {
       { name: 'title', prose: 'Title of the session.', values: undefined, jsonata: undefined },
       { name: 'risk_level', prose: 'Severity.', values: ['low', 'high'], jsonata: 'level' },
     ]);
+  });
+
+  test('drops an identity transform, which means the same as declaring none', () => {
+    const identity: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      output_vars: [{ name: 'title', type: 'string', jsonata: 'title' }],
+      response_schema: { type: 'object', properties: { title: { description: 'Title.' } } },
+    };
+
+    expect(toTransformOutputs(identity)).toEqual([
+      { name: 'title', prose: 'Title.', values: undefined, jsonata: undefined },
+    ]);
+  });
+
+  test('drops an identity transform authored in the current shape too', () => {
+    const identity: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      outputs: { topic: { prose: 'Topic.', jsonata: 'topic' } },
+    };
+
+    expect(toTransformOutputs(identity)).toEqual([
+      { name: 'topic', prose: 'Topic.', values: undefined, jsonata: undefined },
+    ]);
+  });
+
+  test('keeps a transform that reads the field under another name', () => {
+    const renamed: PipelineTransform = {
+      type: TransformType.Llm,
+      model: 'gpt-4o',
+      outputs: { topic: { prose: 'Topic.', jsonata: 'topic_raw' } },
+    };
+
+    expect(toTransformOutputs(renamed)[0].jsonata).toBe('topic_raw');
   });
 
   test('reports which declarations still carry the superseded shape', () => {
@@ -165,7 +206,7 @@ describe('Utils :: analytics :: buildTransformDto', () => {
   });
 });
 
-describe('Utils :: analytics :: isTransformValid', () => {
+describe('Utils :: analytics :: hasDuplicateOutputName', () => {
   const llm: TransformDraft = {
     type: TransformType.Llm,
     model: 'gpt-4o',
@@ -173,36 +214,22 @@ describe('Utils :: analytics :: isTransformValid', () => {
     outputs: [{ name: 'title' }],
   };
 
-  test('accepts an llm transform whose output declares no prose', () => {
-    expect(isTransformValid(llm)).toBe(true);
+  test('reports two outputs bound to one column, which the wire shape collapses', () => {
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: 'title' }, { name: 'title' }] })).toBe(true);
   });
 
-  test('refuses a transform with no type, no output, or a duplicate column', () => {
-    expect(isTransformValid(undefined)).toBe(false);
-    expect(isTransformValid({ ...llm, outputs: [] })).toBe(false);
-    expect(isTransformValid({ ...llm, outputs: [{ name: 'title' }, { name: 'title' }] })).toBe(false);
+  // Two freshly added rows both carry a blank name, and a blank name reaches no request: counting them
+  // as a collision would withhold the save for rows the author has not filled in.
+  test('reports nothing for rows whose name is not yet chosen', () => {
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: '' }, { name: '' }] })).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, outputs: [{ name: '  ' }, { name: 'title' }] })).toBe(false);
   });
 
-  test('refuses an llm transform with no model', () => {
-    expect(isTransformValid({ ...llm, model: undefined })).toBe(false);
-  });
-
-  // The service runs this as a shape check on every write; only the placeholder correspondence is
-  // deferred to enable.
-  test('refuses an llm transform with no request template', () => {
-    expect(isTransformValid({ ...llm, request_template: undefined })).toBe(false);
-    expect(isTransformValid({ ...llm, request_template: '   ' })).toBe(false);
-  });
-
-  test('requires no template of a sql transform, which renders no request', () => {
-    expect(isTransformValid({ type: TransformType.Sql, outputs: [{ name: 'total', sql: 'count(*)' }] })).toBe(true);
-  });
-
-  test('requires every sql output to carry an expression, and no model', () => {
-    const sql: TransformDraft = { type: TransformType.Sql, outputs: [{ name: 'total', sql: 'count(*)' }] };
-
-    expect(isTransformValid(sql)).toBe(true);
-    expect(isTransformValid({ ...sql, outputs: [{ name: 'total' }] })).toBe(false);
+  test('reports nothing for a transform that is merely unfinished', () => {
+    expect(hasDuplicateOutputName(undefined)).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, outputs: [] })).toBe(false);
+    expect(hasDuplicateOutputName({ ...llm, model: undefined, request_template: undefined })).toBe(false);
+    expect(hasDuplicateOutputName({ type: TransformType.Sql, outputs: [{ name: 'total' }] })).toBe(false);
   });
 });
 

@@ -67,10 +67,14 @@ const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator }) => {
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.PlatformTranslators, t),
-            getUpdateNotificationDescription(ApplicationRoute.PlatformTranslators, selectedTranslator.name, t),
+            getUpdateNotificationDescription(
+              ApplicationRoute.PlatformTranslators,
+              selectedTranslator.name ?? selectedTranslator._metadata?.name,
+              t,
+            ),
           ),
         );
-        fetchFiles(selectedTranslator.folderId);
+        fetchFiles(selectedTranslator._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

@@ -13,8 +13,9 @@ import {
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
-import type { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import type { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
@@ -32,13 +33,13 @@ const MAX_TOTAL_FILE_SIZE_BYTES = MAX_MULTI_FILES_SIZE_MB * 1024 * 1024;
 interface Props {
   isModalOpen: boolean;
   route?: ApplicationRoute;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
   preselectedItems?: File[];
 }
 
-const getExistingFolderItems = (folderContext?: AssetsFolderContext) => {
+const getExistingFolderItems = (folderContext?: AssetsFolderContextReader<AssetListItem>) => {
   if (!folderContext) {
     return [];
   }

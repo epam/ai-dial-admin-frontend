@@ -1,15 +1,17 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
-import { DialRadioGroup, DialSelectField, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
+import { FOLLOW_TARGET_SOURCE } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { SourceMode } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 import { getSourceMode } from '@/src/utils/analytics/pipeline-dto';
+import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 
 interface Props {
   className?: string;
@@ -20,67 +22,39 @@ interface Props {
 }
 
 /**
- * Follow-vs-pin is inferred, not stored (see `getSourceMode`). The inference is rendered rather than applied
- * silently, so an operator can see it and correct it.
+ * Following versus pinning is **inferred**, not stored: the compiled read the detail page asks for
+ * resolves `inputs` either way, so a pipeline that follows is indistinguishable from one pinned to the
+ * same table. An input equal to the target's `source_table` therefore reads as following, and the request
+ * builder omits it on the same test — one rule, both directions.
  */
 const SourceField: FC<Props> = ({ className, input, sourceTable, tables, onChange }) => {
   const t = useI18n();
 
-  // Seeded from the inference, then owned by the operator. Deriving it from the value on every render made
-  // "pin" unreachable: any table they picked that equalled the followed one read back as "follow", so the
-  // radio snapped back. The value cannot express the choice, so the choice is held here.
-  const [mode, setMode] = useState(() => getSourceMode(input ? [input] : undefined, sourceTable));
+  const followLabel = sourceTable
+    ? `${t(AnalyticsPipelinesI18nKey.SourceFollow)} · ${sourceTable}`
+    : t(AnalyticsPipelinesI18nKey.SourceFollowUnresolved);
 
-  const options = tables
-    .filter((table) => table.type === AnalyticsTableType.Source)
-    .map((table) => ({ value: table.name, label: table.name }));
+  const isFollowing = getSourceMode(input ? [input] : undefined, sourceTable) === SourceMode.Follow;
 
-  const radios: RadioButtonWithContent[] = [
-    {
-      id: SourceMode.Follow,
-      name: t(AnalyticsPipelinesI18nKey.SourceFollow),
-      content: (
-        <span className="text-secondary dial-tiny-text">
-          {sourceTable
-            ? `${t(AnalyticsPipelinesI18nKey.SourceFollowCaption)} ${sourceTable}`
-            : t(AnalyticsPipelinesI18nKey.SourceFollowUnresolved)}
-        </span>
-      ),
-    },
-    {
-      id: SourceMode.Pin,
-      name: t(AnalyticsPipelinesI18nKey.SourcePin),
-      content: <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.SourcePinCaption)}</span>,
-    },
+  const options = [
+    { value: FOLLOW_TARGET_SOURCE, label: followLabel },
+    ...tables
+      .filter((table) => table.type === AnalyticsTableType.Source)
+      .map((table) => ({ value: table.name, label: table.name })),
   ];
 
-  const onChangeMode = (next: string) => {
-    setMode(next as SourceMode);
-    if (next === SourceMode.Follow) {
-      onChange(undefined);
-    }
-  };
+  const value = isFollowing ? FOLLOW_TARGET_SOURCE : (input ?? '');
 
   return (
-    <div className={classNames('flex flex-col gap-3', className)}>
-      <DialRadioGroup
-        elementId="pipeline-source-mode"
-        fieldTitle={t(AnalyticsPipelinesI18nKey.Source)}
-        orientation={RadioGroupOrientation.Column}
-        radioButtons={radios}
-        activeRadioButton={mode}
-        onChange={onChangeMode}
+    <div className={classNames('flex flex-col gap-1', className)}>
+      <DialSelectField
+        id="pipeline-input"
+        label={t(AnalyticsPipelinesI18nKey.Source)}
+        options={withStrandedOption(options, value)}
+        value={value}
+        onChange={(next) => onChange(next === FOLLOW_TARGET_SOURCE ? undefined : (next as string))}
       />
-
-      {mode === SourceMode.Pin && (
-        <DialSelectField
-          id="pipeline-input"
-          label={t(AnalyticsPipelinesI18nKey.SourceTable)}
-          options={options}
-          value={input ?? ''}
-          onChange={(v) => onChange(v as string)}
-        />
-      )}
+      <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.SourceFollowCaption)}</span>
     </div>
   );
 };

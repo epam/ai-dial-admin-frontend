@@ -147,7 +147,7 @@ const UsageDashboard: FC = () => {
     // The widgets scroll inside this panel, so the cards keep a gutter the scrollbar can sit in
     // instead of being drawn over their right edge.
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-auto px-3">
-      <h1>{t(MenuI18nKey.AnalyticsUsage)}</h1>
+      <h1>{t(MenuI18nKey.Dashboard)}</h1>
 
       <UsageControls
         view={view}
@@ -162,13 +162,7 @@ const UsageDashboard: FC = () => {
         onRefresh={onRefresh}
       />
 
-      <KpiRow
-        view={view}
-        totals={totals}
-        previousTotals={previousTotals}
-        buckets={buckets}
-        isComparisonOn={!!windows.previous}
-      />
+      <KpiRow view={view} totals={totals} previousTotals={previousTotals} buckets={buckets} compare={compare} />
 
       <div className="flex shrink-0 flex-wrap items-stretch gap-3">
         <TimeSeries

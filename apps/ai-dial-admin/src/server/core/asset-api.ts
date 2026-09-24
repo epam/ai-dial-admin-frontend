@@ -30,6 +30,7 @@ import {
   ResourceInfo,
   toResourceInfoList,
 } from './asset-metadata';
+import { fetchAllPages } from './pagination';
 
 export interface GetMetadataOptions {
   recursive?: boolean;
@@ -76,18 +77,11 @@ export class AssetApi extends CoreApi {
   }
 
   /** Lists the items directly under a folder as lightweight rows (metadata only, no content fetch). */
-  async list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
-    const items: ResourceInfo[] = [];
-    let nextToken: string | undefined;
-    while (true) {
-      const node = await this.getMetadata(token, type, path, { recursive: false, nextToken });
-      items.push(...toResourceInfoList(node, type));
-      nextToken = node?.nextToken;
-      if (!nextToken) {
-        break;
-      }
-    }
-    return items;
+  list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
+    return fetchAllPages(
+      (nextToken) => this.getMetadata(token, type, path, { recursive: false, nextToken }),
+      (node) => toResourceInfoList(node, type),
+    );
   }
 
   /** Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`. */
@@ -157,8 +151,10 @@ export class AssetApi extends CoreApi {
    * Core's PUT reply is a metadata node in Core format (`name`/`url`/`bucket`/…), but post-write consumers
    * (e.g. the create-asset redirect via `getEntityPath`) expect the admin-format identity split
    * (`path`/`folderId`/`name`/`version`) the BE proxy used to return. On success we derive those from the
-   * written `path` — authoritative for where the resource now lives — and merge them onto the response,
-   * keeping writes consistent with the merge readers (`getMerged*`).
+   * written `path` — authoritative for where the resource now lives — and graft them into the response's
+   * `_metadata` object, the same shape the merge readers (`getMerged*`) return, so writes and reads agree.
+   * A path that cannot be parsed (see `parsePathFields`) leaves the successful response unchanged rather
+   * than failing an otherwise-successful write.
    */
   async put<T extends object>(
     token: Token,
@@ -173,8 +169,12 @@ export class AssetApi extends CoreApi {
     if (!result.success) {
       return result;
     }
+    const pathFields = this.parsePathFields(type, path);
+    if (!pathFields) {
+      return result;
+    }
     const base = result.response && typeof result.response === 'object' ? result.response : {};
-    return { ...result, response: { ...base, ...this.parsePathFields(type, path) } };
+    return { ...result, response: { ...base, _metadata: pathFields } };
   }
 
   /**
@@ -182,16 +182,16 @@ export class AssetApi extends CoreApi {
    * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Folder-nested
    * versionless types (prompt, conversation) split into folder + plain name with no version.
    * Versioned types are guarded: a path with no `/` separator (e.g. an empty `folderId` falling
-   * back to the bare `ROOT_FOLDER` = `'public'`) makes the parse throw — in that case we skip
-   * enrichment rather than fail an otherwise-successful write.
+   * back to the bare `ROOT_FOLDER` = `'public'`) makes the parse throw — in that case `null` is
+   * returned so the caller skips enrichment rather than failing an otherwise-successful write.
    */
-  private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> {
+  private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> | null {
     if (FOLDER_NESTED_VERSIONLESS_TYPES.has(type)) {
       try {
         const { path: parsedPath, folderId, name } = parsePath(path);
         return { path: parsedPath, folderId, name };
       } catch {
-        return {};
+        return null;
       }
     }
     if (!isVersioned(type)) {
@@ -201,7 +201,7 @@ export class AssetApi extends CoreApi {
       const { path: parsedPath, folderId, name, version } = parseVersionedPath(path);
       return { path: parsedPath, folderId, name, version };
     } catch {
-      return {};
+      return null;
     }
   }
 

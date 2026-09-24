@@ -87,4 +87,18 @@ describe('UsageControls', () => {
 
     expect(onCompareChange).toHaveBeenCalledWith(ComparePeriod.Off);
   });
+
+  test('offers the calendar comparisons beside the adjacent-span one', async () => {
+    const user = userEvent.setup();
+    const onCompareChange = vi.fn();
+    renderControls({ onCompareChange });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }));
+
+    expect(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ComparePreviousMonth })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ComparePreviousYear }));
+
+    expect(onCompareChange).toHaveBeenCalledWith(ComparePeriod.PreviousYear);
+  });
 });

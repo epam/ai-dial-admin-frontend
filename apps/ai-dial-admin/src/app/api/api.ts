@@ -1,7 +1,7 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
-import { stripAssetIdentityFields } from '@/src/server/assets/exim';
+import { stripAssetIdentityFields, stripMetadata } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { CatalogSchemasApi } from '@/src/server/core/catalog-schemas-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
@@ -281,9 +281,14 @@ const publicationEnrichmentClients: EnrichmentClients = {
       token,
       type,
       (asset as { path: string }).path,
-      RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
-        ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
-        : asset,
+      // `_metadata` rides the enriched review copies — stripped for every type (the config DTOs
+      // 400 on it, the prompt/conversation DTOs would store it verbatim); the flat identity strip
+      // stays application/toolset-only per the DTO contract above.
+      stripMetadata(
+        RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+          ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
+          : asset,
+      ),
       { etag },
     ),
   getBucket: (token) => bucketApi.getBucket(token),

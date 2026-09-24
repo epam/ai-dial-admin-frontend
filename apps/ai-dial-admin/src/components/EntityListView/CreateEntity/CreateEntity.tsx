@@ -7,11 +7,12 @@ import Properties from '@/src/components/EntityMainProperties/Properties/Propert
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
@@ -45,7 +46,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   initialValues?: Partial<T>;
   isModal?: boolean;

@@ -64,15 +64,17 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
 
     expect(result.resourceIssues).toEqual([]);
     const prompts = result.prompts as { prompt: Record<string, unknown> }[];
-    // The name is the last URL segment verbatim — a `__` in it is part of the name, and no
-    // `version` is grafted from anywhere.
+    // Identity grafts nest under `_metadata` (the merged Core read); the name is the last URL
+    // segment verbatim — a `__` in it is part of the name, and no `version` is grafted from anywhere.
     expect(prompts[0].prompt).toMatchObject({
       content: 'prompt body',
-      name: 'P__1.0',
-      author: 'me',
-      folderId: 'review/',
+      _metadata: {
+        name: 'P__1.0',
+        folderId: 'review/',
+        author: 'me',
+      },
     });
-    expect(prompts[0].prompt).not.toHaveProperty('version');
+    expect((prompts[0].prompt as { _metadata?: Record<string, unknown> })._metadata).not.toHaveProperty('version');
   });
 
   test('getPublication enriches a pending conversation whose name contains `__` verbatim, like prompts', async () => {
@@ -119,14 +121,19 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
 
     expect(result.resourceIssues).toEqual([]);
     const conversations = result.conversations ?? [];
-    // Same versionless contract as prompts: the `__` in the name is part of the name, no version.
+    // Same versionless contract as prompts: identity grafts nest under `_metadata`, the `__` in
+    // the name is part of the name, no version.
     expect(conversations[0].conversation).toMatchObject({
       content: 'conversation body',
-      name: 'C__2.0',
-      author: 'me',
-      folderId: 'review/',
+      _metadata: {
+        name: 'C__2.0',
+        folderId: 'review/',
+        author: 'me',
+      },
     });
-    expect(conversations[0].conversation).not.toHaveProperty('version');
+    expect(
+      (conversations[0].conversation as unknown as { _metadata?: Record<string, unknown> })._metadata,
+    ).not.toHaveProperty('version');
   });
 
   test('updatePublication persists a prompt resource body (identity fields intact, no version) to Core with no conditional header', async () => {
@@ -146,7 +153,13 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
           sourceUrl: 'prompts/src/P__1',
           targetUrl: 'prompts/old/P__1',
           reviewUrl: 'prompts/review/P__1',
-          prompt: { name: 'P__1', content: 'body', path: 'old/P__1' },
+          // Carries `_metadata` the way an enriched review copy now does — the write strips it.
+          prompt: {
+            name: 'P__1',
+            content: 'body',
+            path: 'old/P__1',
+            _metadata: { name: 'P__1', folderId: 'old/', path: 'old/P__1', author: 'me' },
+          },
         },
       ],
     };
@@ -172,6 +185,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     const body = JSON.parse((putCall[1] as RequestInit).body as string);
     expect(body).toMatchObject({ name: 'P__1', content: 'body', path: 'old/P__1' });
     expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
   });
 
   test('updatePublication strips folderId/path/version/id from an application-resource body before PUT', async () => {
@@ -190,7 +204,13 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
           sourceUrl: 'applications/src/App__1',
           targetUrl: 'applications/old/App__1',
           reviewUrl: 'applications/review/App__1',
-          applicationResource: { name: 'App', version: '1', endpoint: 'https://app', path: 'old/App__1' },
+          applicationResource: {
+            name: 'App',
+            version: '1',
+            endpoint: 'https://app',
+            path: 'old/App__1',
+            _metadata: { name: 'App', folderId: 'old/', path: 'old/App__1', version: '1' },
+          },
         },
       ],
     };
@@ -209,6 +229,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(body).not.toHaveProperty('folderId');
     expect(body).not.toHaveProperty('path');
     expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
     expect(body).toMatchObject({ name: 'App', endpoint: 'https://app' });
   });
 });

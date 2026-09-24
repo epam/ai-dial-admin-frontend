@@ -75,8 +75,15 @@ export const buildPipelineDto = (
   return dto;
 };
 
-const buildTrigger = (draft: PipelineDraft, grainKey?: string): PipelineTrigger => {
+/**
+ * An aggregate's trigger kind is not a choice, so it is always named. An enrichment's is, and until it is
+ * made there is no trigger to declare: an object carrying no kind is read as a declared trigger and
+ * refused, where an absent one is simply a member the author has not written yet.
+ */
+const buildTrigger = (draft: PipelineDraft, grainKey?: string): PipelineTrigger | undefined => {
   const kind = draft.kind === PipelineKind.Aggregate ? TriggerKind.Schedule : (draft.trigger?.kind as TriggerKind);
+  if (!kind) return undefined;
+
   const trigger: PipelineTrigger = { kind };
 
   if (kind === TriggerKind.Schedule) {
