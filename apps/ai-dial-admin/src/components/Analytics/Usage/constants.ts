@@ -88,6 +88,15 @@ export const USAGE_VIEW_EVENT_KINDS: Record<UsageView, string[]> = {
  * On an LLM row the model is the `deployment` and the application that called it is
  * `parent_deployment`; there is no separate model column.
  */
+/**
+ * The column a tab's rows are qualified by, where its own dimension does not identify a row on its
+ * own. A tool name is not unique: `execute_python` exists on several MCP servers and they are
+ * different tools, so the tab groups by the server as well and states it under the name.
+ */
+export const BREAKDOWN_TAB_QUALIFIER: Partial<Record<BreakdownTab, string>> = {
+  [BreakdownTab.Tools]: 'deployment',
+};
+
 export const BREAKDOWN_TAB_COLUMN: Record<BreakdownTab, string> = {
   [BreakdownTab.Models]: 'deployment',
   [BreakdownTab.Applications]: 'parent_deployment',

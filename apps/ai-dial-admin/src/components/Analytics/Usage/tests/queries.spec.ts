@@ -190,6 +190,16 @@ describe('buildTabQuery', () => {
     expect(query.sort?.[1]).toMatchObject({ field: 'deployment', dir: 'asc' });
   });
 
+  test('groups the tools breakdown by the server as well, since a tool name is not unique', () => {
+    const query = buildTabQuery(scope({ view: UsageView.Mcp }), BreakdownTab.Tools, 10);
+
+    expect(query.group_by).toEqual(['deployment', 'mcp_tool_call_name']);
+    expect(query.sort?.slice(1)).toEqual([
+      { field: 'deployment', dir: 'asc' },
+      { field: 'mcp_tool_call_name', dir: 'asc' },
+    ]);
+  });
+
   test('groups an application breakdown by the calling deployment', () => {
     expect(buildTabQuery(scope(), BreakdownTab.Applications, 10).group_by).toEqual(['parent_deployment']);
   });

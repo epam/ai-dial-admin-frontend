@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { executeQuery } from '@/src/app/[lang]/queries/actions';
 import {
   BREAKDOWN_TAB_COLUMN,
+  BREAKDOWN_TAB_QUALIFIER,
   DONUT_SLICE_COUNT,
   VIEW_BREAKDOWN_TABS,
 } from '@/src/components/Analytics/Usage/constants';
@@ -268,7 +269,11 @@ export const useUsageDashboardData = ({
       if (generation !== donutGeneration.current) return;
       setIsDonutReadingMore(false);
       setDonutRowsMetric(donutMetric);
-      setDonutRows(result ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab])) : reportFailed(error));
+      setDonutRows(
+        result
+          ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab], BREAKDOWN_TAB_QUALIFIER[leadingTab]))
+          : reportFailed(error),
+      );
     });
     // `donutScope` is read through a ref, so it is not a dependency of its own effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -304,11 +309,12 @@ export const useUsageDashboardData = ({
     const generation = tabGeneration.current;
     const isCurrent = () => generation === tabGeneration.current;
     const column = BREAKDOWN_TAB_COLUMN[tab];
+    const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
 
     setTabRows(pending);
     void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(({ result, error }) => {
       if (!isCurrent()) return;
-      setTabRows(result ? loaded(foldBreakdownRows(result, column)) : reportFailed(error));
+      setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
     });
 
     if (!windows.previous) {
@@ -320,7 +326,7 @@ export const useUsageDashboardData = ({
     void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit)).then(
       ({ result, error }) => {
         if (!isCurrent()) return;
-        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column)) : reportFailed(error));
+        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
       },
     );
   }, [baseScope, windows, tab, tabLimit, refreshToken, runQuery, reportFailed]);

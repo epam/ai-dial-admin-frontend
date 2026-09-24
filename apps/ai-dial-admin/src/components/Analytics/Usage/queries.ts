@@ -1,5 +1,6 @@
 import {
   BREAKDOWN_TAB_COLUMN,
+  BREAKDOWN_TAB_QUALIFIER,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
   USAGE_VIEW_EVENT_KINDS,
@@ -286,20 +287,23 @@ export const buildTabQuery = (
   shape: TabQueryShape = {},
 ): StructuredQuery => {
   const column = BREAKDOWN_TAB_COLUMN[tab];
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  // The qualifier leads, so rows of one server sit together where the ranking allows it.
+  const columns = qualifier ? [qualifier, column] : [column];
 
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, shape.rowClauses ?? []),
     select: [
-      { expr: field(column) },
+      ...columns.map((name) => ({ expr: field(name) })),
       ...commonMeasures(scope.view),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
     ],
-    group_by: [column],
+    group_by: columns,
     sort: [
       { field: shape.orderBy ?? CALLS_ALIAS, dir: QuerySortDirection.Desc },
-      { field: column, dir: QuerySortDirection.Asc },
+      ...columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
     ],
     page: {
       type: 'offset',

@@ -94,15 +94,26 @@ export const foldDimensionBuckets = (
     }))
     .filter((point) => !Number.isNaN(point.bucketMs));
 
-export const foldBreakdownRows = (result: StructuredQueryResult | null | undefined, column: string): BreakdownRow[] =>
+/**
+ * `qualifier` names the column a tab groups by alongside its own dimension. It only reaches the id:
+ * two servers' `execute_python` are two rows, and an id taken from the tool name alone would make
+ * them one — colliding in the previous-window map and in the grid's row keys alike.
+ */
+export const foldBreakdownRows = (
+  result: StructuredQueryResult | null | undefined,
+  column: string,
+  qualifier?: string,
+): BreakdownRow[] =>
   (result?.rows ?? []).map((row) => {
     const raw = row[column];
     const isMissing = isMissingValue(raw);
+    const qualifierValue = qualifier == null ? null : String(row[qualifier] ?? '');
 
     const groupNames = row[GROUP_NAMES_ALIAS];
+    const ownId = isMissing ? `${column}:missing` : String(raw);
 
     return {
-      id: isMissing ? `${column}:missing` : String(raw),
+      id: qualifierValue == null ? ownId : `${qualifierValue}\u0000${ownId}`,
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),

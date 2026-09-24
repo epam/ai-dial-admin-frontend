@@ -3,7 +3,7 @@
 import { IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { useMemo, useRef, useState } from 'react';
 
-import { BREAKDOWN_TAB_COLUMN } from '@/src/components/Analytics/Usage/constants';
+import { BREAKDOWN_TAB_COLUMN, BREAKDOWN_TAB_QUALIFIER } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -89,6 +89,7 @@ export const useBreakdownDialogRows = ({
 
   const datasource = useMemo<IDatasource>(() => {
     const column = BREAKDOWN_TAB_COLUMN[tab];
+    const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
     const baseScope = { view, window: windows.current } as QueryScope;
 
     const readPreviousMeasures = async (rows: BreakdownRow[]): Promise<Map<string, UsageMeasures>> => {
@@ -100,7 +101,7 @@ export const useBreakdownDialogRows = ({
 
       const { result } = await runUsageQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
 
-      return toPreviousMeasures(foldBreakdownRows(result, column));
+      return toPreviousMeasures(foldBreakdownRows(result, column, qualifier));
     };
 
     return {
@@ -125,7 +126,7 @@ export const useBreakdownDialogRows = ({
             return;
           }
 
-          const rows = foldBreakdownRows(result, column);
+          const rows = foldBreakdownRows(result, column, qualifier);
           const previousMeasures = await readPreviousMeasures(rows);
           const models: BreakdownRowModel[] = toRowModels(rows, {
             windowTotal: presentation.current.windowTotal,
