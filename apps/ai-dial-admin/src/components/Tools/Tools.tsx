@@ -183,7 +183,7 @@ const Tools: FC<Props> = ({
       } else {
         getFunction = isAsset ? getAssetToolsetTools : getToolsetTools;
       }
-      const path = isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name;
+      const path = (isAsset ? (selectedEntity as AssetToolset)._metadata?.path : selectedEntity?.name) as string;
       setLoading(true);
       getFunction(path).then((res) => {
         if (res.success) {
