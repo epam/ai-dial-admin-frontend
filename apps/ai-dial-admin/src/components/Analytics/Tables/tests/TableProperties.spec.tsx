@@ -101,6 +101,14 @@ describe('TableProperties columns grid', () => {
     expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.Description);
   });
 
+  // The label had no translation and rendered as its own key on four surfaces; the value is what the
+  // pipeline pages call the same relation.
+  test('labels an enrichment source table Source', () => {
+    renderProperties(table({ name: 'order_flags', type: AnalyticsTableType.Enrichment, source_table: 'orders' }));
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
+  });
+
   test('pins the grain-key row it is given atop the grid', () => {
     renderProperties(table({ name: 'order_flags', type: AnalyticsTableType.Enrichment, source_table: 'orders' }), {
       grainKeyRow: { source_name: 'order_id', name: 'order_id', type: AnalyticsFieldType.Uuid },

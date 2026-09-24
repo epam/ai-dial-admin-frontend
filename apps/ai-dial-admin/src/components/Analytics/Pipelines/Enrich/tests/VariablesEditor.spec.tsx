@@ -68,13 +68,20 @@ describe('VariablesEditor', () => {
     render(<VariablesEditor fields={[]} isReady={false} hasError onChange={vi.fn()} />);
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.SourceFieldsLoadFailed)).toBeTruthy();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.VariablesEmpty)).toBeNull();
   });
 
-  test('states that nothing can be bound until the read source resolves', () => {
-    render(<VariablesEditor fields={columns} isReady={false} onChange={vi.fn()} />);
+  // A source that has not resolved yet is not a failure, and saying so where the rows will go is noise.
+  test('says nothing while the read source is merely unresolved', () => {
+    const { container } = render(<VariablesEditor fields={columns} isReady={false} onChange={vi.fn()} />);
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.VariablesEmpty)).toBeTruthy();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  test('offers the add control alone while nothing is bound', () => {
+    render(<VariablesEditor fields={columns} isReady onChange={vi.fn()} />);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.AddVariable)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.VarName)).toBeNull();
   });
 
   test('seeds a row per declared variable', () => {

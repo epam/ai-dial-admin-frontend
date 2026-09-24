@@ -3,7 +3,6 @@
 import { FC } from 'react';
 
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 
 import { FOLLOW_TARGET_SOURCE } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
@@ -46,16 +45,14 @@ const SourceField: FC<Props> = ({ className, input, sourceTable, tables, onChang
   const value = isFollowing ? FOLLOW_TARGET_SOURCE : (input ?? '');
 
   return (
-    <div className={classNames('flex flex-col gap-1', className)}>
-      <DialSelectField
-        id="pipeline-input"
-        label={t(AnalyticsPipelinesI18nKey.Source)}
-        options={withStrandedOption(options, value)}
-        value={value}
-        onChange={(next) => onChange(next === FOLLOW_TARGET_SOURCE ? undefined : (next as string))}
-      />
-      <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.SourceFollowCaption)}</span>
-    </div>
+    <DialSelectField
+      id="pipeline-input"
+      label={t(AnalyticsPipelinesI18nKey.Source)}
+      options={withStrandedOption(options, value)}
+      value={value}
+      containerClassName={className}
+      onChange={(next) => onChange(next === FOLLOW_TARGET_SOURCE ? undefined : (next as string))}
+    />
   );
 };
 

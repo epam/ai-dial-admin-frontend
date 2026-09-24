@@ -127,10 +127,12 @@ describe('SqlPredicateField', () => {
   const renderField = (props?: Partial<Parameters<typeof SqlPredicateField>[0]>) =>
     render(<SqlPredicateField id="p" label="Filter" onChange={vi.fn()} {...props} />);
 
-  test('names the table its columns come from', () => {
-    renderField({ sourceName: 'dial_usage_log' });
+  // Which table the columns come from is not stated: a pipeline reads its source and nothing else. Only
+  // an unresolved source is worth saying, because then the field can offer no columns at all.
+  test('says nothing about columns once the source resolves', () => {
+    render(<SqlPredicateField id="filter" label="Filter" sourceName="dial_usage_log" onChange={vi.fn()} />);
 
-    expect(screen.getByText(/dial_usage_log/)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.PredicateSourceUnresolved)).toBeNull();
   });
 
   test('says so when the read source has not resolved', () => {
