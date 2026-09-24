@@ -1522,6 +1522,7 @@ export default {
       'Invalid route path. Path must be a valid plain path (starting with /) or a valid regular expression pattern (starting with / or ^/)',
     InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
+    UrlFieldWithWebSocket: 'This field must be a valid URL starting with http://, https://, ws://, or wss://',
     LocaleField: 'This field must be a BCP-47 tag such as "en" or "en-US"',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',

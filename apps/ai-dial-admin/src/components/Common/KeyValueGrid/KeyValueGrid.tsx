@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DialGhostButton, DialInput, DialLabel, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -27,6 +27,19 @@ const createRow = (key: string, value: string): KeyValueRow => ({
 // never an empty list gated behind clicking "Add" first.
 const ensureAtLeastOneRow = (rows: KeyValueRow[]): KeyValueRow[] => (rows.length ? rows : [createRow('', '')]);
 
+const getRowsValue = (rows: KeyValueRow[]): Record<string, string> =>
+  Object.fromEntries(rows.filter((row) => row.key !== '').map((row) => [row.key, row.value]));
+
+const areRowsEqualToValue = (rows: KeyValueRow[], value?: Record<string, string>): boolean => {
+  const rowsValue = getRowsValue(rows);
+  const valueEntries = Object.entries(value || {});
+
+  return (
+    Object.keys(rowsValue).length === valueEntries.length &&
+    valueEntries.every(([key, rowValue]) => rowsValue[key] === rowValue)
+  );
+};
+
 interface Props {
   value?: Record<string, string>;
   onChange: (value: Record<string, string>) => void;
@@ -48,9 +61,19 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
     ensureAtLeastOneRow(Object.entries(value || {}).map(([key, rowValue]) => createRow(key, rowValue))),
   );
 
+  useEffect(() => {
+    setRows((currentRows) => {
+      if (areRowsEqualToValue(currentRows, value)) {
+        return currentRows;
+      }
+
+      return ensureAtLeastOneRow(Object.entries(value || {}).map(([key, rowValue]) => createRow(key, rowValue)));
+    });
+  }, [value]);
+
   const emitChange = (updatedRows: KeyValueRow[]) => {
     setRows(updatedRows);
-    onChange(Object.fromEntries(updatedRows.filter((row) => row.key !== '').map((row) => [row.key, row.value])));
+    onChange(getRowsValue(updatedRows));
   };
 
   const onAddRow = () => emitChange([...rows, createRow('', '')]);
