@@ -678,7 +678,7 @@ SHALL only reinforce it.
 
 A delta SHALL be coloured by whether the change is the welcome one **for that metric**, which the
 page declares per metric rather than inferring from the sign: spend, cost per token, error rate and
-latency are better falling; requests, tokens, users and tool calls are read as better rising. A
+latency are better falling; requests, tokens and users are read as better rising. A
 metric with no declared direction SHALL render its delta without a judgement. Colour is therefore
 never the only carrier of meaning, and a rise is not uniformly green.
 
@@ -858,13 +858,14 @@ view's bucketed request without leaving the previous view's cells in place.
 
 ### Requirement: The donut shows the top five plus a residual slice
 
-The dashboard SHALL render a donut splitting the current window's calls across the five highest
-entities of the active view's primary dimension, with every remaining entity folded into one
-`Other` slice. Slices SHALL be ordered by value, descending, and `Other` SHALL always render last
-regardless of its size.
+The dashboard SHALL render a donut splitting the current window across the five highest entities of
+the active view's primary dimension, with every remaining entity folded into one `Other` slice.
+Slices SHALL be ordered by value, descending, and `Other` SHALL always render last regardless of its
+size.
 
-Each slice SHALL state its entity and its share of the window's total calls. The donut's centre
-SHALL state the window's total, so the shares have a denominator on screen.
+The measure it splits by SHALL be the one the reader selects — see the requirement below. Each slice
+SHALL state its entity and its share of the window's total **of that measure**. The donut's centre
+SHALL state that same total, so the shares have a denominator on screen.
 
 `Other` SHALL state how many entities it folds, so a reader can tell a long tail from a sixth
 entity. When five or fewer entities exist, no `Other` slice SHALL be rendered.
@@ -891,7 +892,7 @@ entity. When five or fewer entities exist, no `Other` slice SHALL be rendered.
 #### Scenario: Centre states the denominator
 
 - **WHEN** the donut renders
-- **THEN** its centre states the window's total call count
+- **THEN** its centre states the window's total of the selected measure
 
 ### Requirement: The dialog lists the whole dimension, a block at a time
 
@@ -1384,55 +1385,235 @@ position unchanged.
 - **WHEN** the panel is dismissed
 - **THEN** the tab is unchanged
 
-### Requirement: A tool row names the MCP servers it aggregates
+### Requirement: The split plot draws each series from zero
 
-A tool name is not unique across servers — the same `get_me` lives on dozens of toolsets — so a row
-on the `Tools` tab SHALL state which server its calls were made on, under the tool's own name. One
-server SHALL be named outright; several SHALL be counted, with the names the response carried
-available in a tooltip.
+The plot that splits the window across the view's leading dimension SHALL draw every series from a
+shared zero baseline, not stacked. A stack draws each series at its cumulative height, so the
+topmost series' line traces the bucket total and is read as that series' own figure — a model
+credited with the whole window's spike while the share chart beside it states a fraction of that.
 
-The names SHALL be read as part of the tab's own request rather than a second one, and SHALL be
-capped, with the total taken separately: a capped list cannot say how many it left out.
+Each series' value SHALL therefore be readable against the axis, and a spike SHALL belong to the
+series that caused it. Series areas SHALL be drawn faintly enough to read where they overlap, which
+a stack's never did.
+
+The window total SHALL NOT be stated by this plot. It is not lost from the page: the plain plot
+states the total and the share chart states composition, so the three surfaces answer three
+questions rather than two of them answering composition.
+
+#### Scenario: A spike belongs to one series
+
+- **GIVEN** one entity accounts for most of a bucket's calls
+- **WHEN** the split plot renders
+- **THEN** that entity's line reaches its own figure
+- **AND** no other series' line is raised by it
+
+#### Scenario: A value is read off the axis
+
+- **WHEN** a reader follows a series to the axis
+- **THEN** the value they read is that series' own
+
+### Requirement: A breakdown row's label has one tooltip
+
+A dimension cell SHALL truncate its label in exactly one element, and that element SHALL own the
+tooltip revealing the full name. Where the cell and its inner element both clipped the text, each
+believed it was the one truncated and the pointer drew two tooltips carrying the same name, beside
+a third from the row's info icon.
+
+The info icon's own tooltip SHALL remain its own: it explains what the row is, which is a different
+question from what the row is called.
+
+#### Scenario: A truncated label reveals itself once
+
+- **GIVEN** a row whose name does not fit its column
+- **WHEN** the reader hovers the name
+- **THEN** one tooltip states the full name
+
+#### Scenario: The icon keeps its own explanation
+
+- **GIVEN** a fallback row carrying an info icon
+- **WHEN** the reader hovers the icon
+- **THEN** the explanation is shown
+
+### Requirement: The share chart splits by calls or by cost, and the backend ranks on the choice
+
+The share chart SHALL offer the measure it splits by: `Calls` and `Cost`. `Calls` SHALL be listed
+first and SHALL be the selection the card opens with, so the default reading is unchanged.
+
+The MCP view SHALL offer no such choice and SHALL split by calls alone: no `mcp` row carries a
+price, so a cost ring there would be empty whatever the window. Switching the view SHALL return the
+selection to `Calls`.
+
+Choosing a measure SHALL re-issue the chart's ranking request **ordered by that measure**. The top-N
+cut is taken by the backend, so a ring ranked on calls and rendered on spend would show the five
+busiest entities' money rather than the five costliest entities — re-sorting the returned page
+cannot recover the rows the cut already dropped. This adds no new request shape: it is the same
+ranking request the page already issues, as a breakdown tab switch is.
+
+The ring's values, its denominator, its centre figure and the card's legend SHALL all follow the
+selected measure, and a money figure SHALL carry its currency marker wherever it is stated.
+
+The full-list dialog SHALL state **both** measures on every row, whichever one the reader opened it
+with, because the list has room for two figures where the card has room for one — and a reader deep
+in the long tail should not have to close the dialog to learn what a row costs. The rows SHALL keep
+the order the ring was ranked by, which is the measure the reader arrived with. Where a view prices
+nothing, the dialog SHALL state its single figure as the card does.
+
+While the re-ranking is being read, the chart SHALL keep the figures it already has rather than
+emptying: a ring replaced by a loader collapses the card to a fraction of its height and moves every
+widget below it. The figures SHALL state the measure they were **ranked by**, not the one just
+selected, so the interim reading is a correct picture of the old measure rather than a wrong one of
+the new. The selection flips the figures when its rows arrive.
+
+#### Scenario: Cost is offered in the LLM view
+
+- **WHEN** the share chart renders in the LLM view
+- **THEN** it offers both `Calls` and `Cost`
+- **AND** `Calls` is the selected measure
+
+#### Scenario: The MCP view offers no cost split
+
+- **WHEN** the share chart renders in the MCP view
+- **THEN** it offers no cost measure
+
+#### Scenario: Choosing cost re-ranks on the backend
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader selects `Cost`
+- **THEN** the ranking request is re-issued ordered by spend
+- **AND** the ring names the costliest entities rather than the busiest ones
+
+#### Scenario: The board does not move while the re-ranking is read
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader selects `Cost` and the request is still in flight
+- **THEN** the ring still states its call figures
+- **AND** the card keeps its height
+
+#### Scenario: A cost ring states money
+
+- **GIVEN** the share chart is split by cost
+- **WHEN** it renders
+- **THEN** its centre and each legend row state a money figure with its currency marker
+
+#### Scenario: The dialog states both measures at once
+
+- **GIVEN** the share chart is split by calls
+- **WHEN** the reader opens the full list
+- **THEN** each row states both its call count and its cost
+- **AND** the list keeps the order the ring was ranked by
+
+#### Scenario: Switching view returns the measure to calls
+
+- **GIVEN** the share chart is split by cost in the LLM view
+- **WHEN** the reader switches to the MCP view
+- **THEN** the chart splits by calls
+
+### Requirement: A tool row is one tool on one server
+
+A tool name is not unique across servers — the same `get_me` lives on dozens of toolsets — so the
+`Tools` tab SHALL group by the MCP server as well as the tool name. Each row SHALL be one tool on
+one server and SHALL state that server under the tool's own name.
+
+A row's identity SHALL carry both group values, so two servers' same-named tools are two rows
+wherever rows are matched by id. A request for the previous window's figures SHALL therefore ask by
+both parts of a key: matching on the dimension alone returns nothing, and every row's change reads
+as absent.
+
+The tab's search SHALL match the server as well as the tool, since a row is a tool on a server and a
+reader typing a server name means the tools it serves.
 
 A name SHALL be shown as a reader can take it in — without the `toolsets/` prefix, which the column
 already implies, and with Core's own percent-escapes decoded. A name that is not valid encoding SHALL
 be shown as it stands rather than dropped.
 
-#### Scenario: One server is named
+#### Scenario: One tool name on two servers is two rows
 
-- **GIVEN** a tool was called on a single MCP server
-- **WHEN** the row renders
-- **THEN** that server's name is stated under the tool's
+- **GIVEN** two MCP servers each expose a tool called `execute_python`
+- **WHEN** the `Tools` tab renders
+- **THEN** it shows two rows
+- **AND** each names its own server under the tool's name
 
-#### Scenario: Several servers are counted
+#### Scenario: The previous window is asked by both parts
 
-- **GIVEN** a tool was called on more than one server
-- **WHEN** the row renders
-- **THEN** the count of servers is stated under the tool's name
-- **AND** the names the response carried are available in a tooltip
+- **GIVEN** the `Tools` tab's full list is open with comparison on
+- **WHEN** the previous window's figures are requested
+- **THEN** the request groups by the server and the tool
+- **AND** each row states its change rather than an absent one
 
-#### Scenario: Other tabs state no server
+#### Scenario: Searching by server finds its tools
 
-- **GIVEN** the `MCP Servers` tab, whose dimension is the server itself
-- **WHEN** a row renders
-- **THEN** it states no second name
+- **GIVEN** the `Tools` tab
+- **WHEN** the reader searches for a server's name
+- **THEN** the tools that server serves are listed
 
-### Requirement: Missing dimension values carry the shared fallback labels
+#### Scenario: A tab without a qualifier is unchanged
+
+- **WHEN** the `Models` tab renders
+- **THEN** its rows are grouped by the deployment alone
+
+### Requirement: The MCP view counts tool calls, not protocol traffic
+
+Every request the MCP view issues SHALL be narrowed to the `tools/call` method, alongside its
+event-kind clause. Each figure in that view — the count card, the share chart, the time series, the
+breakdown rows, the error rate and the average latency — SHALL therefore rest on the same rows, and
+those rows SHALL be tool executions.
+
+An MCP client fires a handshake and a discovery exchange per connection: `initialize`,
+`notifications/initialized`, `tools/list`, `resources/list`. Measured on the live dataset those are
+the large majority of `mcp` rows and `tools/call` is a small minority of them. Counting them as
+calls made the view rank servers by how often clients connected rather than by what they did, and
+made its error rate and latency describe handshakes — which are fast and rarely fail — instead of
+tool execution.
+
+The view SHALL NOT offer a separate tool-call card, since every row it counts is a tool call and the
+card would restate the count beside it. The count card SHALL be named for tool calls in this view,
+so the figure that card carried is still stated.
+
+The view's surfaces SHALL be named for what they now count: its count card, its plain time-series
+plot and its share chart SHALL say tool calls rather than requests or calls.
+
+The LLM view SHALL carry no method clause: the method is an MCP concept and the column is empty on
+its rows.
+
+#### Scenario: Every MCP request is narrowed to the method
+
+- **WHEN** the MCP view issues any of its requests
+- **THEN** each carries a clause restricting the method to `tools/call`
+
+#### Scenario: The LLM view is unchanged
+
+- **WHEN** the LLM view issues its requests
+- **THEN** none of them carries a method clause
+
+#### Scenario: One count card, named for what it counts
+
+- **WHEN** the KPI row renders in the MCP view
+- **THEN** it offers no separate tool-call card
+- **AND** its count card is named for tool calls
+
+#### Scenario: The surfaces are named for tool calls
+
+- **WHEN** the MCP view renders
+- **THEN** its time-series plot and its share chart are named for tool calls
+
+#### Scenario: A ranking describes use rather than connections
+
+- **GIVEN** a server a client connects to often and calls rarely
+- **WHEN** the share chart and the breakdown rank the view's servers
+- **THEN** that server is ranked by the calls it served, not by the connections it received
+
+### Requirement: A missing dimension value carries its tab's fallback label
 
 A row whose dimension value is missing — falsy or the literal string `undefined` — SHALL render its
 dimension's fallback label: `No Project` on the `Projects` tab, for a call made outside any project,
-`Direct call` on the `Applications` tab, for a call with no calling deployment, and `Other methods`
-on the `Tools` tab, for an MCP call that names no tool. Each SHALL carry a tooltip stating the
+`Direct call` on the `Applications` tab, for a call with no calling deployment. Each SHALL carry a tooltip stating the
 cause, and the `Direct call` tooltip SHALL be specific to the active view, because an LLM call with
 no parent was made against the model directly while an MCP call with no parent came from a try-out.
 
-The `Tools` fallback is not a rare row: the MCP transport logs a protocol method — `initialize`,
-`tools/list`, a notification — the same way it logs `tools/call`, and those outnumber the tool calls
-by roughly three to one. It is labelled rather than filtered out, because the tab's share is
-normalized against the window total and dropping the rows from the tab alone would leave the
-percentages summing to a fraction of the window. It SHALL instead be pinned below the ranked rows,
-so the bucket nobody came for does not take the head of the page, and its tooltip SHALL point at
-`View all` for the full list. On every other tab a fallback row SHALL keep its ranked place.
+The `Tools` tab SHALL carry no fallback bucket. It existed for the protocol methods —
+`initialize`, `tools/list`, a notification — and the MCP view no longer reads those rows at all, so
+no row reaching the tab can be without a tool name. No tab SHALL pin a fallback row below the ranked
+ones; every fallback row keeps its ranked place.
 
 Both labels SHALL be localized, SHALL be presentational — the underlying value is unchanged — and
 SHALL be what a copied cell carries. The literal text `undefined` SHALL never be rendered, on any
@@ -1448,13 +1629,12 @@ tab, in the side panel, or in a copied cell.
 - **WHEN** a row on the `Applications` tab has no calling deployment value
 - **THEN** the cell renders `Direct call` with the tooltip its view defines
 
-#### Scenario: An MCP call naming no tool renders Other methods, last
+#### Scenario: The Tools tab has no fallback bucket
 
 - **GIVEN** the MCP view's `Tools` tab
-- **WHEN** a row has no tool-call name, because its calls are protocol methods
-- **THEN** the cell renders `Other methods` with a tooltip naming those methods and pointing at
-  `View all`
-- **AND** the row sits below every ranked tool, whatever its calls
+- **WHEN** the table renders
+- **THEN** no `Other methods` row is shown
+- **AND** every row keeps its ranked place
 
 #### Scenario: A fallback row on another tab keeps its rank
 

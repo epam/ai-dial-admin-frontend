@@ -25,7 +25,7 @@ describe('VIEW_KPI_METRICS', () => {
   test('offers no price or token cards in the MCP view, which records neither', () => {
     expect(VIEW_KPI_METRICS[UsageView.Mcp]).not.toContain(KpiMetric.TotalSpend);
     expect(VIEW_KPI_METRICS[UsageView.Mcp]).not.toContain(KpiMetric.Tokens);
-    expect(VIEW_KPI_METRICS[UsageView.Mcp]).toContain(KpiMetric.ToolCalls);
+    expect(VIEW_KPI_METRICS[UsageView.Mcp]).toContain(KpiMetric.Requests);
   });
 });
 

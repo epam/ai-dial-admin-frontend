@@ -4,7 +4,7 @@ import {
   buildBarOptions,
   buildDonutOptions,
   buildLatencyOptions,
-  buildStackedAreaOptions,
+  buildSplitSeriesOptions,
   formatChartNumber,
 } from '@/src/components/Analytics/Usage/utils/chart-options';
 
@@ -102,9 +102,23 @@ describe('series colours', () => {
   });
 
   test('states a split series colour on the series, not only on its line', () => {
-    const options = buildStackedAreaOptions(['12:00'], [{ id: 'a', label: 'a', color: '#7DA4FF', values: [1] }]);
+    const options = buildSplitSeriesOptions(['12:00'], [{ id: 'a', label: 'a', color: '#7DA4FF', values: [1] }]);
 
     expect(colorsOf(options)).toEqual(['#7DA4FF']);
+  });
+
+  test('draws each series from zero rather than on a stack, so a line states its own figure', () => {
+    const options = buildSplitSeriesOptions(
+      ['12:00'],
+      [
+        { id: 'a', label: 'a', color: '#7DA4FF', values: [1] },
+        { id: 'b', label: 'b', color: '#FF8A7A', values: [2] },
+      ],
+    );
+
+    const stacks = (options.series as { stack?: string }[]).map((entry) => entry.stack);
+
+    expect(stacks).toEqual([void 0, void 0]);
   });
 });
 

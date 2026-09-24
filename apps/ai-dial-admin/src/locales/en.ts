@@ -3015,6 +3015,9 @@ export default {
     KpiDeltaDecrease: 'down {value} vs the compared period',
 
     TimeSeriesTitle: 'Requests over time',
+    TimeSeriesTitleMcp: 'Tool calls over time',
+    TimeSeriesSubtitleMcp: 'Tool calls per {bucket}',
+    DonutSubtitleMcp: 'Share of tool calls, top {count}',
     TimeSeriesSubtitle: 'Calls per {bucket}',
     LoadFailed: 'Could not load usage data',
     TimeSeriesEmptySubtitle: 'No calls recorded · {range}',
@@ -3054,6 +3057,10 @@ export default {
     DonutSubtitle: 'Share of calls, top {count}',
     DonutOther: 'Others',
     DonutTotal: 'calls',
+    DonutTotalCost: 'spent',
+    DonutSubtitleCost: 'Share of cost, top {count}',
+    DonutMetricCalls: 'Calls',
+    DonutMetricCost: 'Cost',
 
     BreakdownTitle: 'Breakdown',
     BreakdownTabModels: 'Models',
