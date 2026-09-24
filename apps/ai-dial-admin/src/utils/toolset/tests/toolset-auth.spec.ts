@@ -28,7 +28,9 @@ describe('toolset-auth utils', () => {
 
   test('getToolsetSignInBody returns APIKEY body with apiKeyHeader', () => {
     const toolset = {
-      path: 'public/toolset1',
+      _metadata: {
+        path: 'public/toolset1',
+      },
       authSettings: { authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'X-API-KEY' },
     } as any;
     const result = getToolsetSignInBody(toolset, ToolsetAuthCredentialLevel.USER, 'value');
@@ -41,7 +43,12 @@ describe('toolset-auth utils', () => {
   });
 
   test('getToolsetBasicBody returns basic body', () => {
-    const toolset = { path: 'public/toolset1', authSettings: { authenticationType: ToolsetAuthType.API_KEY } } as any;
+    const toolset = {
+      _metadata: {
+        path: 'public/toolset1',
+      },
+      authSettings: { authenticationType: ToolsetAuthType.API_KEY },
+    } as any;
     const result = getToolsetBasicBody(toolset, ToolsetAuthCredentialLevel.USER);
     expect(result).toMatchObject({
       url: 'toolsets/public/toolset1',
