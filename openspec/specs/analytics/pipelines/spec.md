@@ -508,6 +508,13 @@ ones as read-only facts, visually separated from the editable form, so it is una
 operator can change. `version_column` SHALL render as an em dash when the read source declares no scan
 metadata.
 
+The **grain key** SHALL be the resolved target's where the page has resolved one, falling back to the
+pipeline's stored `grain_key` and then to an em dash. It is the one fact read from the draft's resolution
+rather than from the pipeline, because since the group trigger stopped repeating it this row is the only
+place it appears, and a grouping key has to re-derive with a target the caller has changed but not yet
+saved. Where the value comes from SHALL be stated on an **info affordance on its label** — reachable by
+keyboard and carrying the sentence as its own accessible name — rather than as a caption under the value.
+
 The composed **`response_schema` SHALL NOT be among them**. It is a document rather than a value — a dozen
 field names on a live pipeline, against neighbours that are one word each — and what it lists, the outputs
 editor states below in the form the operator authors them. It stays readable in the JSON editor, which is
@@ -563,7 +570,9 @@ These members SHALL NOT be sent when the pipeline is saved.
 #### Scenario: An enrichment pipeline adds its resolved facts
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** its `grain_key` and `version_column` are presented as read-only values
+- **THEN** its grain key and `version_column` are presented as read-only values
+- **AND** the grain key is the resolved target's, with its provenance on an info affordance beside the label
+  rather than in a caption
 
 #### Scenario: The composed schema is not among the facts
 
@@ -1018,10 +1027,14 @@ physical — an enrichment is keyed on its grain and collapses by it, so groupin
 pile many groups onto a single row.
 
 The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
-`grain.grain_key` and present it as a **labelled read-only value** — not as a text input, which reads as a
-field someone forgot to enable, and not as a disabled one, which would leave the accessibility tree and stop
-the value being readable at all. It SHALL be captioned as the target table's grain key, and re-derived
-whenever the target changes.
+`grain.grain_key` and present it as a **labelled read-only value among the read-only facts** — not as a text
+input, which reads as a field someone forgot to enable, and not as a disabled one, which would leave the
+accessibility tree and stop the value being readable at all. A labelled value in a column of inputs reads as
+that same forgotten field, which is why it sits with the facts and not in the trigger block; the facts row
+already presents the pipeline's own `grain_key`, derived by the service from the same target, so a copy in
+the trigger stated one column twice with nothing to say the two were the same.
+
+The presented value SHALL be re-derived whenever the target changes, before the change is saved.
 
 This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
 its rows are grouped by. The two SHALL NOT share a control.
@@ -1029,13 +1042,15 @@ its rows are grouped by. The two SHALL NOT share a control.
 #### Scenario: The grouping key is filled from the target's grain key
 
 - **WHEN** the trigger kind is `group` and a target is selected
-- **THEN** that table's grain key is presented as a labelled value, with no editable control for it
+- **THEN** that table's grain key is presented as a labelled value among the read-only facts, with no
+  editable control for it
 - **AND** the value is readable rather than removed from the accessibility tree
+- **AND** the trigger block states no copy of it
 
 #### Scenario: Changing the target re-derives the grouping key
 
 - **WHEN** the user changes the target to one with a different grain key
-- **THEN** the presented grouping key is the new table's grain key
+- **THEN** the grain key presented among the facts is the new table's, before the change is saved
 
 ### Requirement: Member selection for a group trigger
 

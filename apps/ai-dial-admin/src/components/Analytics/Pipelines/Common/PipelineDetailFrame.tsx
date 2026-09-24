@@ -227,7 +227,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   const properties = (
     <>
-      <PipelineReadOnlyFacts pipeline={pipeline} />
+      <PipelineReadOnlyFacts pipeline={pipeline} grainKey={form.grainKey} />
       <div className="flex flex-col gap-y-6 pt-6">{children}</div>
     </>
   );
