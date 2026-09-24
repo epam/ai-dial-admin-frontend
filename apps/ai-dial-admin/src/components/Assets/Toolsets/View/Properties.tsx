@@ -43,14 +43,18 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
+  // A merged read carries folder and name only in `_metadata`; the create flow seeds them flat.
+  const folderId = selectedToolset.folderId ?? selectedToolset._metadata?.folderId ?? '';
+  const resourceName = selectedToolset.name || selectedToolset._metadata?.name || '';
+
   const headerPostfix = useMemo(() => {
     return (
       <>
         <ResourceAuthHeader toolset={selectedToolset} />
-        <FoldersStorageLabel asset={selectedToolset} />
+        <FoldersStorageLabel asset={{ folderId }} />
       </>
     );
-  }, [selectedToolset]);
+  }, [selectedToolset, folderId]);
 
   return (
     <div className="flex flex-col">
@@ -101,9 +105,9 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
 
         {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-toolsets`
             capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
-        {!isPublication && !isPlatformBucketPath(selectedToolset.folderId) && (
+        {!isPublication && !isPlatformBucketPath(folderId) && (
           <FilePath
-            value={selectedToolset.folderId}
+            value={folderId}
             label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
@@ -120,7 +124,7 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
           isAsset
         />
         <ResourceAuthentication
-          name={selectedToolset.name || ''}
+          name={resourceName}
           authSettings={selectedToolset.auth_settings}
           redirectUrl={TOOLSET_AUTH_REDIRECT_URL}
           onChange={(auth_settings, forward_per_request_key) =>

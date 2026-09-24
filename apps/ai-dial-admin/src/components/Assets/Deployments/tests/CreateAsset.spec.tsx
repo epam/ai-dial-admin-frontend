@@ -1,6 +1,6 @@
 import { createApp, createPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -48,7 +48,7 @@ vi.mock('@/src/components/Common/FolderList/FolderList', () => ({
 
 // A mutable `filePath` behind a getter, so a test can flip the destination bucket between renders
 // exactly the way selecting another folder in the sidebar does.
-const makeContext = (data: AssetsFolderContext['data'] = []) => {
+const makeContext = (data: AssetsFolderContextReader['data'] = []) => {
   let currentPath = '';
   const ctx = {
     files: [],
@@ -66,12 +66,12 @@ const makeContext = (data: AssetsFolderContext['data'] = []) => {
     toggleFolder: vi.fn(),
     isFetchingFiles: false,
     data,
-  } as AssetsFolderContext;
+  } as AssetsFolderContextReader;
 
   return { ctx, setFilePath: (path: string) => (currentPath = path) };
 };
 
-const renderCreateAsset = (ctx: AssetsFolderContext, initialValues?: Partial<AssetWithVersion>) =>
+const renderCreateAsset = (ctx: AssetsFolderContextReader, initialValues?: Partial<AssetWithVersion>) =>
   render(
     <CreateAsset
       view={ApplicationRoute.AssetsApplications}
@@ -104,7 +104,9 @@ describe('CreateAsset', () => {
   });
 
   test('renders AssetProperties once folder data has loaded (populated folder)', () => {
-    renderCreateAsset(makeContext([{ name: 'existing', version: '1.0.0' }] as AssetsFolderContext['data']).ctx);
+    renderCreateAsset(
+      makeContext([{ name: 'existing', version: '1.0.0' }] as unknown as AssetsFolderContextReader['data']).ctx,
+    );
 
     expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
   });

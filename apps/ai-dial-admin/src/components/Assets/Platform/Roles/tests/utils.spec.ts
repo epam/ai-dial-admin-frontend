@@ -11,11 +11,11 @@ import {
 } from '../utils';
 
 // `DialRoleResource` also requires the identity fields; the tests only care about `share`, so the
-// factory supplies the rest once instead of a cast per fixture.
+// factory supplies the rest once instead of a cast per fixture. A merged read carries its identity
+// under `_metadata` (the merge layer's graft), never flat.
 const roleWith = (share?: DialRoleResource['share']): DialRoleResource => ({
   name: 'role',
-  path: 'public/role',
-  folderId: 'public',
+  _metadata: { name: 'role', path: 'public/role', folderId: 'public' },
   share,
 });
 

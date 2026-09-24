@@ -10,8 +10,9 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +39,7 @@ interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   initialValues?: Partial<AssetWithVersion>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
 }
 
@@ -76,13 +77,16 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
     // `getRootFolder` (singular) is the right fallback: a dual-bucket view's own root is `public`,
     // unlike `getRootFolders`' platform-first ordering.
     const folderPath = (currentEntity.folderId as string) || `${getRootFolder(view)}/`;
+    // `DialResource` no longer declares the flat `AssetWithVersion` identity (`path` moved to the
+    // merged read's `_metadata`, which a freshly created entity never has) — hence the double cast.
     const createAsset = isPlatformDualBucketView(view, folderPath)
-      ? () => PlatformCreateAssetActionMap[view]!({ ...currentEntity, folderId: folderPath } as AssetWithVersion)
+      ? () =>
+          PlatformCreateAssetActionMap[view]!({ ...currentEntity, folderId: folderPath } as unknown as AssetWithVersion)
       : () =>
           CreateAssetActionMap[view as CreateAssetRoute]({
             ...currentEntity,
             folderId: folderPath,
-          } as AssetWithVersion);
+          } as unknown as AssetWithVersion);
 
     createAsset().then((res) => {
       if (res.success) {
@@ -176,7 +180,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             ) : (
               <AssetProperties
                 view={view}
-                entity={currentEntity as AssetWithVersion}
+                entity={currentEntity as unknown as AssetWithVersion}
                 onChangeEntity={onChangeEntity}
                 names={names}
                 versionsMap={versionsMap}

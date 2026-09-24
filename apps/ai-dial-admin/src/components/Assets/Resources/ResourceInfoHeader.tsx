@@ -4,13 +4,10 @@ import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
+import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
 interface ResourceHeaderEntity {
-  author?: string;
-  updated_at?: number;
-  created_at?: number;
-  updatedAt?: string | number;
-  createdAt?: string | number;
+  _metadata?: Pick<CoreResourceEntityMetadata, 'author' | 'createdAt' | 'updatedAt'>;
 }
 
 interface Props<T> {
@@ -22,11 +19,13 @@ interface Props<T> {
 
 const ResourceInfoHeader = <T extends ResourceHeaderEntity>({ entity, prefix, postfix }: Props<T>) => {
   const t = useI18n();
-  const updatedAtValue = entity?.updated_at ?? entity?.updatedAt;
-  const createdAtValue = entity?.created_at ?? entity?.createdAt;
+  // Every caller passes a merged Core-resource detail read, whose audit fields live in `_metadata`
+  // (see `CoreResourceEntityMetadata`) — there is no flat spelling to fall back to.
+  const updatedAtValue = entity?._metadata?.updatedAt;
+  const createdAtValue = entity?._metadata?.createdAt;
   const updatedAt = useLocalDateTimeString(updatedAtValue);
   const createdAt = useLocalDateTimeString(createdAtValue);
-  const author = entity?.author;
+  const author = entity?._metadata?.author;
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">

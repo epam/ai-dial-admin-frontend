@@ -6,25 +6,21 @@ import { assetApi, configFileApi, deploymentConfigurationApi } from '@/src/app/a
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 /**
- * Core rejects `status`/`validationWarnings` on write — they are read-only projections it adds on a
- * rejected read (see `DialModelResourceStatus`/`CoreValidationWarning`) — and never round-trips
- * `path`/`folderId`, which are derived from the resource name rather than stored.
+ * Core rejects the merge layer's `_metadata` graft object on write — `Interceptor.class` declares
+ * none of its fields — so `stripMetadata` drops it wholesale (see the
+ * `core-resource-entity-metadata` capability). Everything else round-trips untouched:
+ * `author`/`createdAt`/`updatedAt` are real `Deployment` fields Core serves inline in the content
+ * body, so they stay flat on a merged read and are written back unchanged.
  */
 function toInterceptorPayload(interceptor: DialInterceptorResource) {
-  const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    path: __path,
-    folderId: __folderId,
-    ...payload
-  } = interceptor;
-  return payload;
+  return stripMetadata(interceptor);
 }
 
 export async function getInterceptors(path: string) {

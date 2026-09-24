@@ -51,14 +51,14 @@ describe('Server :: Core :: AssetApi', () => {
     expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/gpt-4');
   });
 
-  test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType', async () => {
+  test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType and bucket', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         name: 'folder',
         nodeType: 'FOLDER',
         items: [
-          { name: 'a', nodeType: 'ITEM', url: 'prompts/folder/a__1.0', author: 'me', updatedAt: 123 },
-          { name: 'sub', nodeType: 'FOLDER', url: 'prompts/folder/sub/' },
+          { name: 'a', nodeType: 'ITEM', url: 'prompts/folder/a__1.0', author: 'me', updatedAt: 123, bucket: 'public' },
+          { name: 'sub', nodeType: 'FOLDER', url: 'prompts/folder/sub/', bucket: 'platform' },
         ],
       }),
       { headers: { 'content-type': 'application/json' } },
@@ -75,6 +75,7 @@ describe('Server :: Core :: AssetApi', () => {
         author: 'me',
         updatedAt: '123',
         nodeType: 'item',
+        bucket: 'public',
       },
       {
         name: 'sub',
@@ -84,6 +85,7 @@ describe('Server :: Core :: AssetApi', () => {
         author: undefined,
         updatedAt: undefined,
         nodeType: 'folder',
+        bucket: 'platform',
       },
     ]);
   });
@@ -108,12 +110,15 @@ describe('Server :: Core :: AssetApi', () => {
 
     expect(result).toMatchObject({
       content: 'hello',
-      name: 'a__1.0',
-      folderId: 'folder/',
-      path: 'folder/a__1.0',
-      author: 'me',
+      _metadata: {
+        name: 'a__1.0',
+        folderId: 'folder/',
+        path: 'folder/a__1.0',
+        author: 'me',
+        updatedAt: '5',
+      },
     });
-    expect((result as { version?: string }).version).toBeUndefined();
+    expect((result as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
   test('getMergedWithEtag returns the merged resource plus the content resource etag', async () => {
@@ -129,8 +134,8 @@ describe('Server :: Core :: AssetApi', () => {
 
     expect(result.success).toBe(true);
     expect(result.etag).toBe('etag-9');
-    expect(result.response).toMatchObject({ content: 'hello', name: 'a__1.0' });
-    expect((result.response as { version?: string }).version).toBeUndefined();
+    expect(result.response).toMatchObject({ content: 'hello', _metadata: { name: 'a__1.0' } });
+    expect((result.response as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
   test('getMergedWithEtag reads the etag from metadata for an unversioned type (Model), not the content response', async () => {
@@ -146,7 +151,10 @@ describe('Server :: Core :: AssetApi', () => {
 
     expect(result.success).toBe(true);
     expect(result.etag).toBe('meta-etag-1');
-    expect(result.response).toMatchObject({ type: 'chat', name: 'gpt-4', path: 'gpt-4', folderId: '' });
+    expect(result.response).toMatchObject({
+      type: 'chat',
+      _metadata: { name: 'gpt-4', path: 'gpt-4', folderId: '' },
+    });
   });
 
   test('getMergedWithEtag propagates a failed content fetch without calling metadata', async () => {
@@ -219,11 +227,13 @@ describe('Server :: Core :: AssetApi', () => {
       // Core-format fields preserved
       url: 'toolsets/folder/t__1.0',
       bucket: 'b',
-      // admin-format identity fields added, derived from the written path
-      path: 'folder/t__1.0',
-      folderId: 'folder/',
-      name: 't',
-      version: '1.0',
+      // admin-format identity fields grafted under `_metadata`, derived from the written path
+      _metadata: {
+        path: 'folder/t__1.0',
+        folderId: 'folder/',
+        name: 't',
+        version: '1.0',
+      },
     });
   });
 
@@ -234,8 +244,8 @@ describe('Server :: Core :: AssetApi', () => {
 
     const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'folder/t', { name: 't' });
 
-    expect(result.response).toMatchObject({ path: 'folder/t', folderId: 'folder/', name: 't' });
-    expect((result.response as { version?: string }).version).toBeUndefined();
+    expect(result.response).toMatchObject({ _metadata: { path: 'folder/t', folderId: 'folder/', name: 't' } });
+    expect((result.response as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
   test('put merges folder-nested path fields onto a prompt response — the `__` name stays verbatim, no version', async () => {
@@ -251,12 +261,14 @@ describe('Server :: Core :: AssetApi', () => {
     expect(result.success).toBe(true);
     expect(result.response).toMatchObject({
       url: 'prompts/folder/p__1.0',
-      path: 'folder/p__1.0',
-      folderId: 'folder/',
-      // The whole last segment is the name — `__1.0` is not split off as a version.
-      name: 'p__1.0',
+      _metadata: {
+        path: 'folder/p__1.0',
+        folderId: 'folder/',
+        // The whole last segment is the name — `__1.0` is not split off as a version.
+        name: 'p__1.0',
+      },
     });
-    expect((result.response as { version?: string }).version).toBeUndefined();
+    expect((result.response as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
   test('put does not throw on a slashless path and returns the response unchanged', async () => {

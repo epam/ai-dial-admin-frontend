@@ -151,7 +151,7 @@ const AppView: FC<Props> = ({
       let updateFunction = updateApp;
 
       if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updatedEntity = addNewVersion(updatedEntity, newVersion) as AssetApp;
         updateFunction = createApp;
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
@@ -166,8 +166,16 @@ const AppView: FC<Props> = ({
                 ? getCreateNotificationTitle(ApplicationRoute.AssetsApplications, t)
                 : getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
               newVersion
-                ? getCreateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t)
-                : getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t),
+                ? getCreateNotificationDescription(
+                    ApplicationRoute.AssetsApplications,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  )
+                : getUpdateNotificationDescription(
+                    ApplicationRoute.AssetsApplications,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  ),
             ),
           );
           if (isNeedToMove) {
@@ -178,14 +186,14 @@ const AppView: FC<Props> = ({
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 router.push(
                   getUrnForEntity(ApplicationRoute.AssetsApplications, {
-                    name: updatedEntity.name,
-                    path: changePath(updatedEntity.path, newPath),
+                    name: updatedEntity.name || updatedEntity._metadata?.name || '',
+                    path: changePath(updatedEntity.path || updatedEntity._metadata?.path || '', newPath),
                   }),
                 );
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
           }
           router.refresh();

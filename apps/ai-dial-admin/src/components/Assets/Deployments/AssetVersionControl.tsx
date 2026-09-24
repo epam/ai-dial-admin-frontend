@@ -57,17 +57,20 @@ const AssetVersionControl: FC<Props> = ({
   const changeAssetForNewVersion = useCallback(
     (version: string, newAsset?: AssetWithVersion | null) => {
       if (newAsset) {
-        const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset.path)}`;
+        const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset._metadata?.path || '')}`;
         router.push(`${view}/${path}`);
       } else {
-        const path = modifyNameVersionInAsset(asset.path, void 0, version);
+        const path = modifyNameVersionInAsset(asset._metadata?.path || '', void 0, version);
         const newAsset = {
           ...asset,
-          version,
-          displayVersion: version,
-          path,
+          display_version: version,
+          _metadata: {
+            ...asset._metadata,
+            version,
+            path,
+          },
         };
-        onChangeAsset?.(newAsset);
+        onChangeAsset?.(newAsset as AssetWithVersion);
       }
     },
     [asset, onChangeAsset, router, view],
@@ -75,18 +78,20 @@ const AssetVersionControl: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     async (version: string) => {
-      if (version === asset.version) return;
+      if (version === asset._metadata?.version) return;
       const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
       setIsVersionLoading(true);
-      getReqRef.current(getAsset, `${asset.folderId}${asset.name}__${version}`, DEFAULT_ETAG).then((res) => {
-        if (res.success) {
-          const newVersionAsset = res.response as DeploymentAsset;
-          changeAssetForNewVersion(version, newVersionAsset);
-        } else {
-          setIsVersionLoading(false);
-          changeAssetForNewVersion(version);
-        }
-      });
+      getReqRef
+        .current(getAsset, `${asset._metadata?.folderId}${asset._metadata?.name}__${version}`, DEFAULT_ETAG)
+        .then((res) => {
+          if (res.success) {
+            const newVersionAsset = res.response as DeploymentAsset;
+            changeAssetForNewVersion(version, newVersionAsset);
+          } else {
+            setIsVersionLoading(false);
+            changeAssetForNewVersion(version);
+          }
+        });
     },
     [asset, view, changeAssetForNewVersion],
   );
@@ -119,7 +124,7 @@ const AssetVersionControl: FC<Props> = ({
             size={SelectSize.Sm}
             variant={SelectVariant.Secondary}
             options={items}
-            value={asset.version}
+            value={asset._metadata?.version}
             disabled={isVersionLoading}
             onChange={(v) => onChangeVersion(v as string)}
             footer={

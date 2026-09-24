@@ -31,13 +31,14 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -50,7 +51,7 @@ export interface PublicationsButtonsWrapperProps<T> {
   jsonConfiguration?: JsonConfiguration;
   entity: T;
   isOnlyDeleteAvailable?: boolean;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 
   onDiscard: () => void;
   onSave: () => void;

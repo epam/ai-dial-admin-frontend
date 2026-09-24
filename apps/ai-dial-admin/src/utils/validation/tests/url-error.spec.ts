@@ -10,14 +10,29 @@ describe('isValidHttpUrl', () => {
     expect(isValidHttpUrl('https://sub.domain.com/path?query=1')).toBe(true);
   });
 
-  test('returns false for invalid URLs', () => {
+  test('returns false for unsupported URLs by default', () => {
     expect(isValidHttpUrl('https:/sub.domain.com/path?query=1')).toBe(false);
     expect(isValidHttpUrl('https:sub.domain.com/path?query=1')).toBe(false);
     expect(isValidHttpUrl('http:/example.com')).toBe(false);
     expect(isValidHttpUrl('http:example.com')).toBe(false);
     expect(isValidHttpUrl('ftp://example.com')).toBe(false);
+    expect(isValidHttpUrl('ws://example.com')).toBe(false);
+    expect(isValidHttpUrl('wss://example.com')).toBe(false);
     expect(isValidHttpUrl('not-a-url')).toBe(false);
     expect(isValidHttpUrl('')).toBe(false);
+  });
+
+  test('returns true for valid HTTP and WebSocket URLs when WebSocket support is enabled', () => {
+    expect(isValidHttpUrl('http://example.com', true)).toBe(true);
+    expect(isValidHttpUrl('https://example.com', true)).toBe(true);
+    expect(isValidHttpUrl('ws://example.com/chat', true)).toBe(true);
+    expect(isValidHttpUrl('wss://example.com/chat', true)).toBe(true);
+  });
+
+  test('returns false for unsupported URLs when WebSocket support is enabled', () => {
+    expect(isValidHttpUrl('ftp://example.com', true)).toBe(false);
+    expect(isValidHttpUrl('https://example.com//chat/completions', true)).toBe(false);
+    expect(isValidHttpUrl('wss://example.com/\tchat', true)).toBe(false);
   });
 
   test('returns false for URLs with empty path segments', () => {
@@ -103,6 +118,25 @@ describe('getUrlError', () => {
 
     expect(error?.type).toEqual(ErrorType.INVALID);
     expect(error?.text).toEqual('');
+  });
+
+  test('returns an error for invalid WebSocket-enabled url', () => {
+    const error = getUrlError('invalid-url', t, false, true);
+
+    expect(error?.type).toEqual(ErrorType.INVALID);
+    expect(error?.text).toEqual(ErrorI18nKey.UrlFieldWithWebSocket);
+  });
+
+  test('returns null for valid WebSocket URLs when enabled', () => {
+    expect(getUrlError('ws://example.com', t, false, true)).toBeNull();
+    expect(getUrlError('wss://example.com', t, false, true)).toBeNull();
+  });
+
+  test('returns an error for WebSocket URLs when disabled', () => {
+    const error = getUrlError('wss://example.com', t);
+
+    expect(error?.type).toEqual(ErrorType.INVALID);
+    expect(error?.text).toEqual(ErrorI18nKey.UrlField);
   });
 
   test('returns null for valid url', () => {

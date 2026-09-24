@@ -25,15 +25,16 @@ import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getRootFolder, getRootFolders } from '@/src/utils/files/root-folder';
+import { getRootFolder, getRootFolders, isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -54,7 +55,7 @@ interface Props {
   /** Rendered alongside `label` in the manager's header — the `config-file-entity-views` toggle. */
   headerExtra?: ReactNode;
   columnDefs: ColDef[];
-  getContext: () => AssetsFolderContext;
+  getContext: () => AssetsFolderContextReader<AssetListItem>;
   onCreateFolder?: (
     file: DialUploadFileItem | undefined,
     folderPath: string,
@@ -163,6 +164,12 @@ const FileManager: FC<Props> = ({
   // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
   // wrapper instead of reusing one bucket's own node as the tree's virtual root.
   const isMultiRootView = getRootFolders(view, featureFlags.catalogEnabled).length > 1;
+  // Conversations and the flat platform views have no folder concept for their rows — the row
+  // context menu and bulk toolbar already hide "Move to" for them (`Assets/utils.ts`,
+  // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those
+  // menus, so it must be withheld here too rather than left to resolve as a silent no-op with a
+  // false success toast (`handleMoveToFiles` reports success on an empty promise list).
+  const isMoveSupported = !isFlatPlatformView(view) && view !== ApplicationRoute.Conversations;
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -444,7 +451,7 @@ const FileManager: FC<Props> = ({
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
         onDeleteFiles={isReadOnlyAdmin ? undefined : handleDeleteFileNodes}
-        onMoveToFiles={isReadOnlyAdmin ? undefined : handleMoveToFiles}
+        onMoveToFiles={isReadOnlyAdmin || !isMoveSupported ? undefined : handleMoveToFiles}
         onFolderPopupPathChange={handleFolderPopupPathChange}
         onManagePermissions={isReadOnlyAdmin ? undefined : handleManagePermissions}
         onPreview={handlePreviewFile}

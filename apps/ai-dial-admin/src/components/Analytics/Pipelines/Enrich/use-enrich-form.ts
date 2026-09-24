@@ -5,7 +5,7 @@ import { useCallback, useEffect } from 'react';
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import { Pipeline, TransformType } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-ui';
-import { isTransformValid } from '@/src/utils/analytics/transform-dto';
+import { hasDuplicateOutputName } from '@/src/utils/analytics/transform-dto';
 
 interface Params {
   pipeline?: Pipeline;
@@ -42,20 +42,19 @@ export const useEnrichForm = (params: Params = {}) => {
     });
   }, [transform?.type, replaceDraft]);
 
-  // The one knob the console validates: the service refuses zero outright, naming `enabled: false` as how
-  // a pipeline that evaluates nothing is declared, and refuses a value above 1 rather than reading it as a
-  // percentage.
+  // The service refuses zero outright, naming `enabled: false` as how a pipeline that evaluates nothing
+  // is declared, and refuses a value above 1 rather than reading it as a percentage.
   const sampleFraction = draft.advanced?.sample_fraction;
   const isSampleFractionValid = sampleFraction == null || (sampleFraction > 0 && sampleFraction <= 1);
-
-  const isValid = base.isSharedValid && isTransformValid(transform) && draft.enabled != null && isSampleFractionValid;
+  const hasDuplicateOutput = hasDuplicateOutputName(transform);
 
   return {
     ...base,
     transform,
     onTransformChange,
-    isValid,
     isSampleFractionValid,
+    hasDuplicateOutputName: hasDuplicateOutput,
+    hasFieldErrors: base.hasSharedFieldErrors || !isSampleFractionValid || hasDuplicateOutput,
     isVariablesReady: Boolean(base.readSource) && !base.isSourceEntityPending && !base.hasSourceEntityError,
     isTransformReady: base.isTargetResolved,
   };

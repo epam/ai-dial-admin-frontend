@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import FilePath from '../FilePath';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -57,7 +57,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
   const fetchFiles = vi.fn();
-  const context = () => ({ files, fetchFiles }) as unknown as AssetsFolderContext;
+  const context = () => ({ files, fetchFiles }) as unknown as AssetsFolderContextReader;
 
   render(
     <FilePath

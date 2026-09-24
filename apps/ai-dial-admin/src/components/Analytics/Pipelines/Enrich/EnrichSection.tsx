@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 
 import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
@@ -29,21 +29,16 @@ const NUMERIC_KNOBS = [
 
 interface Props {
   form: EnrichFormState;
-  isModal?: boolean;
-  /** Read-only, and placed here rather than by the frame so it lands just before the runner knobs. */
-  stateSection?: ReactNode;
 }
 
-const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
+const EnrichSection: FC<Props> = ({ form }) => {
   const t = useI18n();
 
   const { draft, onChange, onTriggerChange } = form;
   const trigger = draft.trigger;
   const notSet = t(AnalyticsPipelinesI18nKey.NotSet);
 
-  // A control alone on its line is width-capped on the detail page and full-width in the modal, matching
-  // the convention in QueryProperties.
-  const controlClassName = getControlClassName(isModal);
+  const controlClassName = getControlClassName();
 
   const triggerRadios: RadioButtonWithContent[] = [
     { id: TriggerKind.OnIngest, name: t(AnalyticsPipelinesI18nKey.TriggerOnIngest) },
@@ -79,97 +74,80 @@ const EnrichSection: FC<Props> = ({ form, isModal, stateSection }) => {
             sourceName={form.sourceName}
             isCostCeilingValid={form.isCostCeilingValid}
             hasCondition={form.hasReadyWhen}
-            isModal={isModal}
             onChange={(ready_when) => onTriggerChange({ ready_when })}
           />
 
-          {!isModal && (
-            <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMemberSelect)}>
-              <MemberSelectEditor
-                memberSelect={trigger.member_select}
-                fields={form.sourceFields}
-                sourceName={form.sourceName}
-                readSource={form.readSource}
-                isLimitValid={form.isMemberSelectValid}
-                onChange={(member_select) => onTriggerChange({ member_select })}
-              />
-            </PipelineSection>
-          )}
+          <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionMemberSelect)}>
+            <MemberSelectEditor
+              memberSelect={trigger.member_select}
+              fields={form.sourceFields}
+              sourceName={form.sourceName}
+              readSource={form.readSource}
+              isLimitValid={form.isMemberSelectValid}
+              onChange={(member_select) => onTriggerChange({ member_select })}
+            />
+          </PipelineSection>
         </div>
       )}
     </>
   );
 
-  const scopeAndTransformBlock = (
-    <>
-      <PipelineSharedFields form={form} isModal={isModal} />
-      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionTransform)}>
-        <TransformSection form={form} isModal={isModal} isDisabled={!form.isTransformReady} />
-      </PipelineSection>
-    </>
+  const transformBlock = (
+    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionTransform)}>
+      <TransformSection form={form} isDisabled={!form.isTransformReady} />
+    </PipelineSection>
   );
 
   return (
     <div className="flex flex-col gap-y-6">
-      {/* The modal asks for the target before the transform, whose outputs are its columns. The detail
-          page keeps the trigger above the sections, belonging as it does to neither kind. */}
-      {isModal ? (
-        <>
-          {scopeAndTransformBlock}
-          {triggerBlock}
-        </>
-      ) : (
-        <>
-          {triggerBlock}
-          {scopeAndTransformBlock}
-        </>
-      )}
-      {!isModal && stateSection}
-      {!isModal && (
-        <Accordion title={t(AnalyticsPipelinesI18nKey.SectionAdvanced)}>
-          <div className="flex flex-col gap-y-6">
-            <DialInput
-              id="pipeline-scan-every"
-              containerClassName={controlClassName}
-              wrapperClassName={NUMBER_INPUT_WIDTH}
-              labelProps={{ label: t(AnalyticsPipelinesI18nKey.ScanEvery) }}
-              value={draft.advanced?.scan_every ?? ''}
-              caption={t(AnalyticsPipelinesI18nKey.ScanEveryCaption)}
-              onChange={(v) => onAdvancedChange({ scan_every: v || undefined })}
-            />
+      {/* The scope comes first because the trigger's own controls read from it: a group trigger's member
+          selection ranks by the source's columns, which are not known until the source is. */}
+      <PipelineSharedFields form={form} />
+      {triggerBlock}
+      {transformBlock}
+      <Accordion title={t(AnalyticsPipelinesI18nKey.SectionAdvanced)}>
+        <div className="flex flex-col gap-y-6">
+          <DialInput
+            id="pipeline-scan-every"
+            containerClassName={controlClassName}
+            wrapperClassName={NUMBER_INPUT_WIDTH}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.ScanEvery) }}
+            value={draft.advanced?.scan_every ?? ''}
+            caption={t(AnalyticsPipelinesI18nKey.ScanEveryCaption)}
+            onChange={(v) => onAdvancedChange({ scan_every: v || undefined })}
+          />
 
-            {NUMERIC_KNOBS.map(({ key, labelKey }) => (
-              <DialInput
-                key={key}
-                id={`pipeline-${key}`}
-                containerClassName={controlClassName}
-                wrapperClassName={NUMBER_INPUT_WIDTH}
-                type="number"
-                min={0}
-                labelProps={{ label: t(labelKey) }}
-                value={draft.advanced?.[key] == null ? '' : String(draft.advanced[key])}
-                onChange={(v) => onAdvancedChange({ [key]: v ? Number(v) : undefined })}
-              />
-            ))}
-
+          {NUMERIC_KNOBS.map(({ key, labelKey }) => (
             <DialInput
-              id="pipeline-sample-fraction"
+              key={key}
+              id={`pipeline-${key}`}
               containerClassName={controlClassName}
               wrapperClassName={NUMBER_INPUT_WIDTH}
               type="number"
               min={0}
-              max={1}
-              step={0.05}
-              labelProps={{ label: t(AnalyticsPipelinesI18nKey.SampleFraction) }}
-              value={draft.advanced?.sample_fraction == null ? '' : String(draft.advanced.sample_fraction)}
-              caption={t(AnalyticsPipelinesI18nKey.SampleFractionCaption)}
-              error={form.isSampleFractionValid ? undefined : t(AnalyticsPipelinesI18nKey.SampleFractionInvalid)}
-              invalid={!form.isSampleFractionValid}
-              onChange={(v) => onAdvancedChange({ sample_fraction: v ? Number(v) : undefined })}
+              labelProps={{ label: t(labelKey) }}
+              value={draft.advanced?.[key] == null ? '' : String(draft.advanced[key])}
+              onChange={(v) => onAdvancedChange({ [key]: v ? Number(v) : undefined })}
             />
-          </div>
-        </Accordion>
-      )}
+          ))}
+
+          <DialInput
+            id="pipeline-sample-fraction"
+            containerClassName={controlClassName}
+            wrapperClassName={NUMBER_INPUT_WIDTH}
+            type="number"
+            min={0}
+            max={1}
+            step={0.05}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.SampleFraction) }}
+            value={draft.advanced?.sample_fraction == null ? '' : String(draft.advanced.sample_fraction)}
+            caption={t(AnalyticsPipelinesI18nKey.SampleFractionCaption)}
+            error={form.isSampleFractionValid ? undefined : t(AnalyticsPipelinesI18nKey.SampleFractionInvalid)}
+            invalid={!form.isSampleFractionValid}
+            onChange={(v) => onAdvancedChange({ sample_fraction: v ? Number(v) : undefined })}
+          />
+        </div>
+      </Accordion>
     </div>
   );
 };

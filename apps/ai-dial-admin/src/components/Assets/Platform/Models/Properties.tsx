@@ -102,6 +102,7 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
           allowedTypes={MODEL_INTERFACE_TYPES}
           translators={translators}
           entityBaseUrl={asset.baseUrl}
+          view={ApplicationRoute.PlatformModels}
           isAsset
         />
         <EndpointControl

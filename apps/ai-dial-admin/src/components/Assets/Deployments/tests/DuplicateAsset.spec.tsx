@@ -32,7 +32,7 @@ describe('DuplicateAsset', () => {
     const user = userEvent.setup();
     const entity = {
       name: 'app',
-      folderId: 'public/',
+      _metadata: { folderId: 'public/' },
       external_services: {
         svc: {
           display_name: 'Service',
@@ -47,7 +47,8 @@ describe('DuplicateAsset', () => {
 
     expect(onDuplicate).toHaveBeenCalledWith({
       ...entity,
-      version: '1.0.0',
+      display_name: undefined,
+      _metadata: { folderId: 'public/', version: '1.0.0' },
       external_services: {
         svc: {
           display_name: 'Service',
@@ -62,7 +63,7 @@ describe('DuplicateAsset', () => {
     const user = userEvent.setup();
     const entity = {
       name: 'app',
-      folderId: 'public/',
+      _metadata: { folderId: 'public/' },
       external_services: {
         svc: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
       },
@@ -71,14 +72,18 @@ describe('DuplicateAsset', () => {
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    expect(onDuplicate).toHaveBeenCalledWith({ ...entity, version: '1.0.0' });
+    expect(onDuplicate).toHaveBeenCalledWith({
+      ...entity,
+      display_name: undefined,
+      _metadata: { folderId: 'public/', version: '1.0.0' },
+    });
   });
 
   test('resets only the OAuth entry in a mix of OAuth and non-OAuth external services', async () => {
     const user = userEvent.setup();
     const entity = {
       name: 'app',
-      folderId: 'public/',
+      _metadata: { folderId: 'public/' },
       external_services: {
         oauthSvc: { auth_settings: { authentication_type: ToolsetAuthType.OAUTH } },
         apiKeySvc: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
@@ -90,7 +95,8 @@ describe('DuplicateAsset', () => {
 
     expect(onDuplicate).toHaveBeenCalledWith({
       ...entity,
-      version: '1.0.0',
+      display_name: undefined,
+      _metadata: { folderId: 'public/', version: '1.0.0' },
       external_services: {
         oauthSvc: { auth_settings: { authentication_type: ToolsetAuthType.NONE } },
         apiKeySvc: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
@@ -100,19 +106,23 @@ describe('DuplicateAsset', () => {
 
   test('is unaffected when the application has no external services', async () => {
     const user = userEvent.setup();
-    const entity = { name: 'app', folderId: 'public/' } as unknown as AssetWithVersion;
+    const entity = { name: 'app', _metadata: { folderId: 'public/' } } as unknown as AssetWithVersion;
     const { onDuplicate } = renderModal(entity);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    expect(onDuplicate).toHaveBeenCalledWith({ ...entity, version: '1.0.0' });
+    expect(onDuplicate).toHaveBeenCalledWith({
+      ...entity,
+      display_name: undefined,
+      _metadata: { folderId: 'public/', version: '1.0.0' },
+    });
   });
 
   test('still resets a toolset auth_settings OAuth entry to NONE, unaffected by the external-services walk', async () => {
     const user = userEvent.setup();
     const entity = {
       name: 'toolset',
-      folderId: 'public/',
+      _metadata: { folderId: 'public/' },
       auth_settings: { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' },
     } as unknown as AssetWithVersion;
     const { onDuplicate } = renderModal(entity);
@@ -121,7 +131,8 @@ describe('DuplicateAsset', () => {
 
     expect(onDuplicate).toHaveBeenCalledWith({
       ...entity,
-      version: '1.0.0',
+      display_name: undefined,
+      _metadata: { folderId: 'public/', version: '1.0.0' },
       auth_settings: { authentication_type: ToolsetAuthType.NONE },
     });
   });

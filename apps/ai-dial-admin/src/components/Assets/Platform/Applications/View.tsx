@@ -190,7 +190,7 @@ const PlatformApplicationView: FC<Props> = ({
               getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, selectedApp.name, t),
             ),
           );
-          fetchFiles(selectedApp.folderId);
+          fetchFiles(selectedApp.folderId || selectedApp._metadata?.folderId || '');
           router.refresh();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

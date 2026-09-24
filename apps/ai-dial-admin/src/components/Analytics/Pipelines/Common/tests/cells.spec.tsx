@@ -42,10 +42,11 @@ describe('Pipelines :: TriggerCell', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupedBy)).not.toBeInTheDocument();
   });
 
-  test('renders nothing without a rule', () => {
+  test('states an absent trigger rather than leaving the cell blank', () => {
     const { container } = render(<TriggerCell />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(container).not.toBeEmptyDOMElement();
+    expect(container.textContent).toBe(UNAVAILABLE_VALUE);
   });
 });
 

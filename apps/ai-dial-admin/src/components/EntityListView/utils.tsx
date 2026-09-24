@@ -10,7 +10,8 @@ import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import DuplicateToolset from '@/src/components/Toolsets/Modals/DuplicateToolset';
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -34,7 +35,7 @@ export const getDuplicateModal = async <T extends object>(
   isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
-  context?: () => AssetsFolderContext,
+  context?: () => AssetsFolderContextReader<AssetListItem>,
 ) => {
   if (!currentEntity) return null;
   const preparedEntity = (await prepareEntityForDuplicate(route, currentEntity, entityRef)) as T;

@@ -239,22 +239,12 @@ describe('OutputsEditor — editing', () => {
     expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.OutputColumn, { exact: false })).toBeNull();
   });
 
-  test('states nothing about an empty list unless the caller asks for it', () => {
-    const { rerender } = render(<Host type={TransformType.Llm} />);
+  // An empty list states nothing: the add control is the whole of what there is to do, and the column
+  // headings have no row to label.
+  test('offers the add control alone while the list is empty', () => {
+    render(<OutputsEditor outputs={[]} type={TransformType.Sql} columns={COLUMNS} isReady onChange={vi.fn()} />);
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.NoOutputs)).toBeNull();
-
-    rerender(
-      <OutputsEditor
-        outputs={[]}
-        type={TransformType.Llm}
-        columns={COLUMNS}
-        isReady
-        hasEmptyState
-        onChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.NoOutputs)).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.AddOutput)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.OutputColumn)).toBeNull();
   });
 });

@@ -104,7 +104,7 @@ const CatalogSchemaView: FC<Props> = ({ etag, originalSchema, isConfigFileSource
             getUpdateNotificationDescription(ApplicationRoute.PlatformCatalogSchemas, selectedSchema.$id, t),
           ),
         );
-        fetchFiles(selectedSchema.folderId);
+        fetchFiles(selectedSchema._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

@@ -1,22 +1,28 @@
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import FolderList from './FolderList';
 
-const fakeContext = (files: Asset[] = []) => ({
-  isFetchingFiles: false,
-  files,
-  expandedFolders: new Set<string>(),
-  setExpandedFolders: vi.fn(),
-  filePath: '',
-  setFilePath: vi.fn(),
-  fetchedFoldersData: {},
-  fetchFiles: vi.fn(),
-  toggleFolder: () => void 0,
-  data: [],
-});
+// `Asset` (the shape every real caller's context actually holds) doesn't structurally satisfy
+// `AssetListItem` — its inherited `DialFile.name` is optional, `AssetListItem.name` is required — so
+// the fixture is cast the same way `FolderList` itself treats a concrete per-entity context.
+const fakeContext = (files: Asset[] = []) =>
+  ({
+    isFetchingFiles: false,
+    files,
+    expandedFolders: new Set<string>(),
+    setExpandedFolders: vi.fn(),
+    filePath: '',
+    setFilePath: vi.fn(),
+    fetchedFoldersData: {},
+    fetchFiles: vi.fn(),
+    toggleFolder: () => void 0,
+    data: [],
+  }) as unknown as AssetsFolderContextReader<AssetListItem>;
 
 describe('FolderList', () => {
   test('renders no data message when files are empty', () => {

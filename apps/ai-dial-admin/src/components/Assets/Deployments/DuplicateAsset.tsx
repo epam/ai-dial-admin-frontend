@@ -21,9 +21,10 @@ import {
   EntityPlaceholdersI18nKey,
   ToolsetI18nKey,
 } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -40,7 +41,7 @@ interface Props {
   isModalOpen: boolean;
   entity: AssetWithVersion | DialPrompt;
   versionsMap?: Record<string, string[]>;
-  context?: () => AssetsFolderContext;
+  context?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
@@ -62,7 +63,7 @@ const DuplicateAsset: FC<Props> = ({
   // radio, no version field, name seeded with the "copy" suffix.
   const isVersionless = isVersionlessAssetView(view);
   const initialName = entity.name;
-  const initialFolder = entity.folderId;
+  const initialFolder = entity._metadata?.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(
     isVersionless ? DuplicationTypes.ENTITY : DuplicationTypes.VERSION,
   );
@@ -75,17 +76,23 @@ const DuplicateAsset: FC<Props> = ({
   const [clonedAsset, setClonedAsset] = useState<AssetWithVersion | DialPrompt>(() =>
     isVersionless
       ? { ...entity, name: getClonedEntityName(entity.name) }
-      : {
+      : ({
           ...entity,
           name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
           display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
-          version: getInitialVersion(versionsMap, entity?.name),
-        },
+          _metadata: {
+            ...entity._metadata,
+            version: getInitialVersion(versionsMap, entity?.name),
+          },
+        } as AssetWithVersion),
   );
   const [isInnerValid, setIsInnerValid] = useState(false);
 
+  // `entity` is the row-shaped duplicate source; the `Dial*Resource` reads below only touch real
+  // content fields (`auth_settings`, `external_services`), which that shape also carries — hence the
+  // double casts once its flat identity stopped overlapping `DialResource`.
   const isToolsetWithAuth = useMemo(() => {
-    const assetToolset = entity as DialToolsetResource;
+    const assetToolset = entity as unknown as DialToolsetResource;
     return (
       assetToolset.auth_settings?.authentication_type &&
       assetToolset.auth_settings.authentication_type !== ToolsetAuthType.NONE
@@ -94,28 +101,30 @@ const DuplicateAsset: FC<Props> = ({
 
   const authType = useMemo(() => {
     if (!isToolsetWithAuth) return null;
-    return (entity as DialToolsetResource).auth_settings?.authentication_type || null;
+    return (entity as unknown as DialToolsetResource).auth_settings?.authentication_type || null;
   }, [isToolsetWithAuth, entity]);
 
   useEffect(() => {
+    const name = clonedAsset.name;
+    const version = clonedAsset?._metadata?.version;
     setIsInnerValid(
       isVersionless
-        ? !!clonedAsset.name
-        : !!clonedAsset.name &&
-            !!(clonedAsset as AssetWithVersion).version &&
-            semver.valid((clonedAsset as AssetWithVersion).version) !== null &&
-            !checkNameVersionCombination(versionsMap, clonedAsset.name, (clonedAsset as AssetWithVersion).version),
+        ? !!name
+        : !!name &&
+            !!version &&
+            semver.valid(version) !== null &&
+            !checkNameVersionCombination(versionsMap, name, version),
     );
   }, [clonedAsset, versionsMap, isVersionless]);
 
   // Initial validation for auth fields
   useEffect(() => {
     if (authType === ToolsetAuthType.OAUTH) {
-      (clonedAsset as DialToolsetResource).auth_settings = {
+      (clonedAsset as unknown as DialToolsetResource).auth_settings = {
         authentication_type: ToolsetAuthType.NONE,
       };
     } else if (authType === ToolsetAuthType.API_KEY) {
-      const toolset = entity as DialToolsetResource;
+      const toolset = entity as unknown as DialToolsetResource;
       dispatch({
         type: ValidationActionType.SetField,
         field: 'authSettings.apiKeyHeader',
@@ -125,9 +134,9 @@ const DuplicateAsset: FC<Props> = ({
 
     // Core never returns a real client_secret on read, so an OAuth external service copied
     // verbatim fails Core's write-time validation with a missing-CLIENT_SECRET error.
-    const externalServices = (entity as DialApplicationResource).external_services;
+    const externalServices = (entity as unknown as DialApplicationResource).external_services;
     if (externalServices) {
-      (clonedAsset as DialApplicationResource).external_services = Object.fromEntries(
+      (clonedAsset as unknown as DialApplicationResource).external_services = Object.fromEntries(
         Object.entries(externalServices).map(([key, service]) => [
           key,
           service.auth_settings?.authentication_type === ToolsetAuthType.OAUTH
@@ -148,14 +157,27 @@ const DuplicateAsset: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      setClonedAsset({ ...clonedAsset, version: version || '' } as AssetWithVersion);
+      setClonedAsset({
+        ...clonedAsset,
+        display_version: version,
+        _metadata: {
+          ...clonedAsset._metadata,
+          version,
+        },
+      } as AssetWithVersion);
     },
     [setClonedAsset, clonedAsset],
   );
 
   const onChangePath = useCallback(
     (folderId: string) => {
-      setClonedAsset({ ...clonedAsset, folderId });
+      setClonedAsset({
+        ...clonedAsset,
+        _metadata: {
+          ...clonedAsset._metadata,
+          folderId,
+        },
+      } as AssetWithVersion);
     },
     [setClonedAsset, clonedAsset],
   );
@@ -167,14 +189,19 @@ const DuplicateAsset: FC<Props> = ({
         setClonedAsset({
           ...clonedAsset,
           name: initialName,
-          version: getInitialVersion(versionsMap, initialName),
+          _metadata: {
+            ...clonedAsset._metadata,
+            version: getInitialVersion(versionsMap, initialName),
+          },
         } as AssetWithVersion);
       } else {
         setClonedAsset({
           ...clonedAsset,
-          folderId: initialFolder,
           name: entity.name === initialName ? getClonedEntityName(entity.name) : entity.name,
-          version: DEFAULT_NEW_ENTITY_VERSION,
+          _metadata: {
+            folderId: initialFolder,
+            version: DEFAULT_NEW_ENTITY_VERSION,
+          },
         } as AssetWithVersion);
       }
     },
@@ -183,11 +210,11 @@ const DuplicateAsset: FC<Props> = ({
 
   const onChangeApiKeyHeader = useCallback(
     (api_key_header: string) => {
-      const toolset = clonedAsset as DialToolsetResource;
+      const toolset = clonedAsset as unknown as DialToolsetResource;
       setClonedAsset({
         ...toolset,
         auth_settings: { ...toolset.auth_settings!, api_key_header },
-      } as AssetWithVersion);
+      } as unknown as AssetWithVersion);
     },
     [clonedAsset],
   );
@@ -198,7 +225,15 @@ const DuplicateAsset: FC<Props> = ({
       header={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
-      onSubmit={() => onDuplicate?.({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
+      onSubmit={() =>
+        onDuplicate?.({
+          ...clonedAsset,
+          _metadata: {
+            ...clonedAsset._metadata,
+            folderId: addTrailingSlash(clonedAsset._metadata?.folderId),
+          },
+        } as AssetWithVersion)
+      }
       onCancel={onClose}
       disableSubmitButton={!isInnerValid || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
@@ -229,21 +264,21 @@ const DuplicateAsset: FC<Props> = ({
           />
         )}
         {!isVersionless && (
-          <VersionControl version={(clonedAsset as AssetWithVersion).version} onChange={onChangeVersion} />
+          <VersionControl version={(clonedAsset as AssetWithVersion)._metadata?.version} onChange={onChangeVersion} />
         )}
 
         {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
 
         {authType === ToolsetAuthType.API_KEY && (
           <ApiKeyHeaderControl
-            apiKeyHeader={(clonedAsset as DialToolsetResource).auth_settings?.api_key_header}
+            apiKeyHeader={(clonedAsset as unknown as DialToolsetResource).auth_settings?.api_key_header}
             onChange={onChangeApiKeyHeader}
           />
         )}
 
         {duplicationType === DuplicationTypes.ENTITY && (
           <FilePath
-            value={clonedAsset.folderId}
+            value={clonedAsset._metadata?.folderId}
             label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}

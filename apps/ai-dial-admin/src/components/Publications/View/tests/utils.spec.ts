@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 
 import { getCorrectPublication, getFormDataForPublication } from '../utils';
 
@@ -130,6 +131,9 @@ describe('getCorrectPublication', () => {
         targetUrl: '',
         reviewUrl: '',
         action: ActionType.ADD,
+        // A publication's review copy is a BE-stored payload copy with identity (`path`/`folderId`)
+        // attached flat — not a merged Core read, whose identity lives under `_metadata` — hence the
+        // double cast against `DialApplicationResource`.
         applicationResource: {
           application_properties: {},
           created_at: 0,
@@ -151,7 +155,7 @@ describe('getCorrectPublication', () => {
           input_attachment_types: [],
           dependencies: [],
           interceptors: [],
-        },
+        } as unknown as DialApplicationResource,
       },
     ],
   });

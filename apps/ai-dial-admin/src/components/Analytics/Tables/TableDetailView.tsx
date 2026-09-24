@@ -28,6 +28,7 @@ import {
   updateTable,
   updateTableSchema,
 } from '@/src/app/[lang]/tables/actions';
+import ClampedDescription from '@/src/components/Analytics/Tables/ClampedDescription';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
@@ -540,10 +541,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
             </div>
           )}
         </div>
-        {/* Its own row rather than a share of the title row, so the single line spans the full header
-            width instead of whatever the actions leave over — the same ellipsis, several times the text,
-            and the rest still in the tooltip. */}
-        {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
+        {/* Its own row rather than a share of the title row, so it spans the full header width instead of
+            whatever the actions leave over. Clamped rather than ellipsised: a description is written to be
+            read, and a tooltip asks for a hover no keyboard can give. */}
+        {table.description && <ClampedDescription text={table.description} className="text-primary dial-small" />}
       </div>
 
       {isActive ? activeSurface : draftSurface}

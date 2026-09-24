@@ -5,12 +5,7 @@ import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import {
-  ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
@@ -19,6 +14,7 @@ import { TransformCellRenderer } from '@/src/components/Analytics/Pipelines/Comm
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import { PipelineKindCellRenderer } from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
 import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
+import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -32,19 +28,17 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { PipelineKind, PipelineListItem } from '@/src/models/analytics/pipeline';
-import { QueryFunction } from '@/src/models/analytics/query-function';
+import { PipelineListItem } from '@/src/models/analytics/pipeline';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   initialPipelines: PipelineListItem[];
-  functions?: QueryFunction[];
   loadFailure?: ReadFailure | null;
 }
 
-const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailure }) => {
+const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -206,26 +200,9 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
       </div>
 
       {deleteTarget && (
-        <DialConfirmationPopup
-          open={!!deleteTarget}
-          variant={ConfirmationPopupVariant.Danger}
-          header={t(AnalyticsPipelinesI18nKey.DeleteConfirmTitle)}
-          description={
-            <div className="flex flex-col gap-y-2">
-              <span>
-                {t(
-                  deleteTarget.kind === PipelineKind.Enrich
-                    ? AnalyticsPipelinesI18nKey.DeleteConfirmDescriptionEnrich
-                    : AnalyticsPipelinesI18nKey.DeleteConfirmDescription,
-                )}
-              </span>
-              <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
-                <span className="shrink-0 text-secondary">{t(AnalyticsPipelinesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={deleteTarget.name} />
-              </div>
-            </div>
-          }
-          confirmLabel={t(AnalyticsPipelinesI18nKey.DeletePipeline)}
+        <DeletePipelinePopup
+          name={deleteTarget.name}
+          kind={deleteTarget.kind}
           onConfirm={() => void onConfirmDelete()}
           onClose={() => setDeleteTarget(null)}
         />
@@ -233,7 +210,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
 
       {isCreateOpen && (
         <CreatePipelinePopup
-          functions={functions}
           takenTargets={pipelines.map((pipeline) => pipeline.target)}
           onClose={() => setIsCreateOpen(false)}
           onCreated={() => void reload()}

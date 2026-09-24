@@ -132,7 +132,7 @@ const ModelView: FC<Props> = ({
             getUpdateNotificationDescription(ApplicationRoute.PlatformModels, selectedModel.name, t),
           ),
         );
-        fetchFiles(selectedModel.folderId);
+        fetchFiles(selectedModel.folderId || selectedModel._metadata?.folderId || '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

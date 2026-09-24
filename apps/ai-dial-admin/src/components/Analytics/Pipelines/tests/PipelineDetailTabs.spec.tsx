@@ -65,8 +65,8 @@ const rule: Pipeline = {
   generation: 7,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
-  // Carried so the runtime-state section renders: without a `state` it returns null, and the
-  // Properties body would then be indistinguishable from one missing a section.
+  // Carried so the facts row reports a running pipeline. Neither member raises an alert, which keeps the
+  // alerts out of the way of the tests here that count what the page presents.
   state: { lag_seconds: 12, has_more: false },
 };
 
@@ -97,14 +97,13 @@ beforeEach(() => {
 });
 
 describe('PipelineDetailFrame — the Properties and Audit tabs', () => {
-  test('opens on Properties, with the read-only facts and the runtime state beneath it', () => {
+  test('opens on Properties, with the read-only facts above the form', () => {
     renderView();
 
     expect(propertiesTab()).toBeInTheDocument();
     expect(auditTab()).toBeInTheDocument();
     expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(TabsI18nKey.Properties);
     expect(facts()).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.SectionRuntimeState)).toBeInTheDocument();
     expect(screen.queryByText('pipeline-audit')).not.toBeInTheDocument();
   });
 
@@ -134,6 +133,36 @@ describe('PipelineDetailFrame — the Properties and Audit tabs', () => {
     // `DOCUMENT_POSITION_FOLLOWING` on the strip means the identity row precedes it in the document.
     expect(heading.compareDocumentPosition(auditTab()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(disableControl.compareDocumentPosition(auditTab()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('keeps a runtime alert above the strip and in view on the Audit tab', async () => {
+    const user = userEvent.setup();
+    renderView({
+      state: { rebuild_required: { enrichment: 'usage_client_identity', rederived_at: '2026-02-02T00:00:00Z' } },
+    });
+
+    const alert = screen.getByRole('status');
+    expect(alert.compareDocumentPosition(auditTab()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(auditTab());
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RebuildRequiredTitle)).toBeInTheDocument();
+  });
+
+  // The editor takes everything below the identity row, the alerts included: they describe the pipeline
+  // the document is being edited against, and left up they would sit over a draft that contradicts them.
+  test('withdraws the runtime alert while the JSON editor holds the view', async () => {
+    const user = userEvent.setup();
+    renderView({
+      state: { rebuild_required: { enrichment: 'usage_client_identity', rederived_at: '2026-02-02T00:00:00Z' } },
+    });
+
+    await user.click(jsonToggle());
+    expect(screen.queryByRole('status')).toBeNull();
+
+    await user.click(jsonToggle());
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   test('offers the strip and a selectable Audit tab on a disabled pipeline', async () => {
@@ -206,6 +235,5 @@ describe('PipelineDetailFrame — the Properties and Audit tabs', () => {
     expect(screen.queryByText('pipeline-audit')).not.toBeInTheDocument();
     expect(auditPropsSpy).not.toHaveBeenCalled();
     expect(facts()).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.SectionRuntimeState)).toBeInTheDocument();
   });
 });

@@ -63,7 +63,7 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
             onChange={(v) => updateRow(index, { direction: v as SortDirection })}
           />
           <DialGhostIconButton
-            icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
             aria-label={`${t(ButtonsI18nKey.Delete)} ${t(AnalyticsPipelinesI18nKey.OrderBy)} ${index + 1}`}
             onClick={() => onChange(rows.filter((_, i) => i !== index))}
           />

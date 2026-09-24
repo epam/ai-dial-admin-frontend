@@ -18,7 +18,8 @@ import {
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -27,7 +28,7 @@ export interface ConversationButtonsWrapperProps<T> {
   children?: ReactNode;
   entity: T;
   etag?: string;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
