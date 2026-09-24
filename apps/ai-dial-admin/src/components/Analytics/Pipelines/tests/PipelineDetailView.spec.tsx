@@ -133,6 +133,67 @@ describe('PipelineDetailView', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
+  // The grain key is stated once, among the values the caller cannot change, and its provenance hangs on
+  // the label rather than on a caption under a second copy in the trigger.
+  test('presents the grain key among the facts, with its provenance on the label', async () => {
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+    expect(screen.getByRole('img', { name: AnalyticsPipelinesI18nKey.GrainKeyHint })).toBeTruthy();
+  });
+
+  test('states no grouping key of its own inside a group trigger', async () => {
+    renderView({ trigger: { kind: TriggerKind.Group } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(screen.getAllByText('response_id')).toHaveLength(1);
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+  });
+
+  // The presented value follows the target the caller has chosen, which is what the trigger's own copy did:
+  // a grouping key that waited for the save would state the old target's grain key in the meantime.
+  test('re-derives the presented grain key when the target changes', async () => {
+    const other: AnalyticsTable = {
+      name: 'session_summary',
+      type: AnalyticsTableType.Enrichment,
+      source_table: 'dial_usage_log',
+      grain: { grain_key: 'chat_id' },
+      columns: [],
+    };
+    const tables = [enrichment, sourceTable, other];
+    vi.mocked(getTables).mockResolvedValue(tables);
+    vi.mocked(getTable).mockImplementation(async (name) => tables.find((table) => table.name === name) ?? null);
+
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    // The ui-kit select is a custom listbox, not a native one: its options exist only while it is open.
+    await user.click(within(boundField('turn_feedback')).getByRole('button', { name: /turn_feedback/ }));
+    await user.click(await screen.findByRole('option', { name: 'session_summary' }));
+
+    await waitFor(() => expect(within(facts()).getByText('chat_id')).toBeTruthy());
+    expect(updatePipeline).not.toHaveBeenCalled();
+  });
+
+  test('falls back to the stored grain key while the target is unresolved', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+  });
+
+  test('renders an em dash for a grain key that is neither resolved nor stored', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    renderView({ grain_key: undefined });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(within(facts()).queryByText('response_id')).toBeNull();
+    expect(within(facts()).getAllByText(AnalyticsPipelinesI18nKey.NotSet).length).toBeGreaterThan(0);
+  });
+
   test('names neither bound table among the facts', () => {
     renderView();
 
