@@ -151,6 +151,7 @@ const ApplicationAssetProperties: FC<Props> = ({
           allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
           translators={translators}
           entityBaseUrl={asset.base_url}
+          view={ApplicationRoute.AssetsApplications}
           isAsset
         />
         <ResourceMultiAuth asset={asset} onChange={onChange} />

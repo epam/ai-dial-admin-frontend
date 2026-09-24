@@ -5,6 +5,12 @@ import { useCallback, useState } from 'react';
 import { DialFormPopup, DialLabel, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import {
+  modelResourceFeatureLabelMap,
+  modelResourceFeaturePlaceholderMap,
+  modelResourceSwitchGroups,
+  modelResourceTextFeatures,
+} from '@/src/components/Assets/Platform/Models/constants';
+import {
   resourceFeatureLabelMap,
   resourceFeaturePlaceholderMap,
   resourceSwitchGroups,
@@ -12,15 +18,16 @@ import {
 } from '@/src/components/Assets/Resources/constants';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationResourceFeatures } from '@/src/models/dial/resource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   fieldId: string;
   features?: Record<string, unknown>;
   disabled?: boolean;
+  view?: ApplicationRoute;
   onChange: (features: Record<string, unknown>) => void;
 }
 
@@ -28,14 +35,21 @@ interface Props {
 // Features editors (ModelResourceFeatures/ResourceFeatures) render — DialResourceFeatures is the shape
 // common to both, so this popup works for either surface rather than importing one of those two
 // resource-specific components.
-const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange }: Props) => {
+const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange, view }: Props) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isOpen, setIsOpen] = useState(false);
-  const [draft, setDraft] = useState<DialApplicationResourceFeatures>({} as DialApplicationResourceFeatures);
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const isPlatformModel = view === ApplicationRoute.PlatformModels;
+  const textFeatures = isPlatformModel ? modelResourceTextFeatures : resourceTextFeatures;
+  const switchGroups = isPlatformModel ? modelResourceSwitchGroups : resourceSwitchGroups;
+  const featureLabelMap: Record<string, FeaturesI18nKey> = isPlatformModel
+    ? modelResourceFeatureLabelMap
+    : resourceFeatureLabelMap;
+  const featurePlaceholderMap = isPlatformModel ? modelResourceFeaturePlaceholderMap : resourceFeaturePlaceholderMap;
 
   const onOpen = useCallback(() => {
-    setDraft((features || {}) as unknown as DialApplicationResourceFeatures);
+    setDraft(features || {});
     setIsOpen(true);
   }, [features]);
 
@@ -60,28 +74,28 @@ const InterfaceFeaturesButton = ({ fieldId, features, disabled, onChange }: Prop
         onCancel={onCancel}
       >
         <div className="px-6 py-4 flex flex-col gap-y-8 max-h-[60vh] overflow-auto">
-          {resourceTextFeatures.map((key) => (
+          {textFeatures.map((key) => (
             <EndpointControl
               key={key}
               id={`${fieldId}-${key}`}
-              label={t(resourceFeatureLabelMap[key])}
-              placeholder={t(resourceFeaturePlaceholderMap[key])}
+              label={t(featureLabelMap[key])}
+              placeholder={t(featurePlaceholderMap[key])}
               endpoint={draft[key] as string}
               onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
             />
           ))}
           <ReasoningEffortsInput
-            values={draft.reasoning_efforts}
+            values={draft.reasoning_efforts as string[] | undefined}
             onChange={(values) => setDraft((prev) => ({ ...prev, reasoning_efforts: values }))}
           />
-          {resourceSwitchGroups.map(({ title, keys }) => (
+          {switchGroups.map(({ title, keys }) => (
             <div key={title} className="flex flex-col gap-y-3">
               <DialLabel label={t(title)} />
               {keys.map((key) => (
                 <DialSwitch
                   key={key}
                   isOn={!!draft[key]}
-                  label={t(resourceFeatureLabelMap[key])}
+                  label={t(featureLabelMap[key])}
                   switchId={`${fieldId}-${key}`}
                   onChange={(value) => setDraft((prev) => ({ ...prev, [key]: value }))}
                 />

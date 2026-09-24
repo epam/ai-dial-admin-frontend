@@ -19,6 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
 import { FieldError } from '@/src/models/error';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 interface Props<V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue> {
@@ -31,6 +32,7 @@ interface Props<V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue> {
   disabled?: boolean;
   onChange: (value: V) => void;
   onDelete: () => void;
+  view?: ApplicationRoute;
   // isAsset gates the mode/translator/headers/Defaults/Features richness this change adds — scoped to
   // Assets → Models and Assets → Applications only (see deployment-interfaces-config's "Interface mode
   // selector" requirement). Other InterfacesField consumers (entity Models/Applications, Interceptors)
@@ -57,6 +59,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   isAsset,
   translators,
   entityBaseUrl,
+  view,
 }: Props<V>) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
@@ -172,12 +175,15 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             disabled={disabled}
             onChange={onChangeDefaults}
           />
-          <InterfaceFeaturesButton
-            fieldId={fieldId}
-            features={value.features}
-            disabled={disabled}
-            onChange={onChangeFeatures}
-          />
+          {view !== ApplicationRoute.PlatformInterceptors && (
+            <InterfaceFeaturesButton
+              fieldId={fieldId}
+              features={value.features}
+              disabled={disabled}
+              onChange={onChangeFeatures}
+              view={view}
+            />
+          )}
         </div>
         {!disabled && <DialRemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />}
       </div>
