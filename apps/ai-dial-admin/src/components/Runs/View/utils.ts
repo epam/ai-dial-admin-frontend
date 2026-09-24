@@ -154,7 +154,7 @@ type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
-  headerComponentParams: { innerHeaderComponent: EllipsisHeader },
+  headerComponentParams: { innerHeaderComponent: EllipsisHeader, innerHeaderComponentParams: { isRightAligned: true } },
   colId: field,
   sortable: true,
   ...lockedWidthColDef(width),
@@ -170,6 +170,7 @@ const executionColumns: ColDef[] = [
     field: 'totalRequests',
     headerName: 'Total requests',
     headerComponent: EllipsisHeader,
+    headerComponentParams: { isRightAligned: true },
     colId: 'totalRequests',
     hide: true,
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),

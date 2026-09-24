@@ -138,7 +138,11 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
   });
 
   test('execution index, HTTP, and Duration columns are right-aligned', () => {
-    type ExecCol = { colId?: string; cellClass?: string };
+    type ExecCol = {
+      colId?: string;
+      cellClass?: string;
+      headerComponentParams?: { isRightAligned?: boolean };
+    };
     const cols = getCompareColumnsCompare([makeRow()]);
     const exec = cols[2] as { children: ExecCol[] };
     const executionColIds = [
@@ -157,6 +161,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     executionColIds.forEach((colId) => {
       const col = exec.children.find((child) => child.colId === colId);
       expect(col?.cellClass).toBe('align-right');
+      expect(col?.headerComponentParams?.isRightAligned).toBe(true);
     });
   });
 
@@ -312,7 +317,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(metricGroup.children[2].floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
   });
 
-  test('primary and secondary metric columns are right-aligned', () => {
+  test('primary, secondary, and delta metric columns are right-aligned', () => {
     const rows = [
       makeRow({
         metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
@@ -320,12 +325,23 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       }),
     ];
     const cols = getCompareColumnsCompare(rows);
-    const metricGroup = cols[3] as { children: { colId?: string; cellClass?: string; headerClass?: string }[] };
+    const metricGroup = cols[3] as {
+      children: {
+        colId?: string;
+        cellClass?: string;
+        headerClass?: string;
+        headerComponentParams?: { isRightAligned?: boolean };
+      }[];
+    };
     const primaryPrecision = metricGroup.children[0];
     const secondaryPrecision = metricGroup.children[1];
+    const deltaPrecision = metricGroup.children[2];
 
     expect(primaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
     expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(deltaPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(primaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
+    expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
   });
 
   test('metric columns highlight added, changed, and removed pairs', () => {

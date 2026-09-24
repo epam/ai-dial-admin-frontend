@@ -107,7 +107,14 @@ const DetailRow: FC<Props> = ({
           <span className="text-secondary dial-small-text">{noMatchLabel}</span>
         )}
       </div>
-      <div className={mergeClasses(ROW_DETAIL_CELL_BASE, deltaProps.className)} {...diffCellDataAttr(deltaProps)}>
+      <div
+        className={mergeClasses(
+          ROW_DETAIL_CELL_BASE,
+          row.isNumeric && row.isMetric && 'text-right',
+          deltaProps.className,
+        )}
+        {...diffCellDataAttr(deltaProps)}
+      >
         {hasComparedMatch && row.isNumeric && row.isMetric ? (
           <CompareMetricDeltaValue primaryRaw={row.primaryRaw} secondaryRaw={row.secondaryRaw} />
         ) : null}

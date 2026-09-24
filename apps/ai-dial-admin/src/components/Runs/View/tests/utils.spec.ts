@@ -732,7 +732,10 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
     expect(col).toEqual(
       expect.objectContaining({
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
@@ -772,7 +775,10 @@ describe('Runs View :: executionColumns Request valueGetter', () => {
         headerName: 'Request',
         colId: 'requestIndex',
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
@@ -841,7 +847,10 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
         headerName: 'Turn',
         colId: 'turnIndex',
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();

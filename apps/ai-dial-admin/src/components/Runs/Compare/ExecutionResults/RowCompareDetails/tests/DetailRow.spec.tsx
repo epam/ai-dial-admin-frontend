@@ -33,6 +33,9 @@ const renderDetailRow = (fieldRow: RowDetailField) =>
 const getValueCells = (container: HTMLElement, fieldKey: string) =>
   Array.from(container.querySelectorAll(`[data-field-key="${fieldKey}"] ~ div`)).slice(0, 2);
 
+const getDeltaCell = (container: HTMLElement, fieldKey: string) =>
+  Array.from(container.querySelectorAll(`[data-field-key="${fieldKey}"] ~ div`))[2];
+
 describe('DetailRow alignment', () => {
   test('right-aligns the HTTP field value cells', () => {
     const { container } = renderDetailRow(row('httpStatusCode'));
@@ -71,5 +74,19 @@ describe('DetailRow alignment', () => {
     const [primary] = getValueCells(container, 'score');
 
     expect(primary).not.toHaveClass('text-right');
+  });
+
+  test('right-aligns the delta cell for a numeric metric field', () => {
+    const { container } = renderDetailRow(
+      row('Accuracy_precision', { isNumeric: true, isMetric: true, primaryRaw: '0.8', secondaryRaw: '0.6' }),
+    );
+
+    expect(getDeltaCell(container, 'Accuracy_precision')).toHaveClass('text-right');
+  });
+
+  test('does not right-align the delta cell for a non-metric field', () => {
+    const { container } = renderDetailRow(row('httpStatusCode', { isNumeric: true, isMetric: false }));
+
+    expect(getDeltaCell(container, 'httpStatusCode')).not.toHaveClass('text-right');
   });
 });
