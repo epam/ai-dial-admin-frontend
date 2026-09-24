@@ -18,6 +18,7 @@ export interface EndpointControlProps {
   isFullWidth?: boolean;
   isModal?: boolean;
   onChange?: (endpoint?: string) => void;
+  isIncludeWss?: boolean;
 }
 
 export interface Props extends EndpointControlProps {
@@ -39,6 +40,8 @@ const EndpointControl: FC<Props> = ({
   isFullWidth = false,
   isModal = false,
   disabled,
+  isIncludeWss,
+
   ...props
 }) => {
   const t = useI18n();
@@ -54,13 +57,13 @@ const EndpointControl: FC<Props> = ({
 
   const validateEndpoint = useCallback(
     (value?: string | null, shouldShownError = true) => {
-      const error = getUrlError(prefix ? `${prefix}${value}` : value, t, required);
+      const error = getUrlError(prefix ? `${prefix}${value}` : value, t, required, isIncludeWss);
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
       if (shouldShownError) {
         setEndpointError(error);
       }
     },
-    [dispatch, id, required, t, prefix],
+    [prefix, t, required, isIncludeWss, dispatch, id],
   );
 
   const onChangeEndpoint = useCallback(

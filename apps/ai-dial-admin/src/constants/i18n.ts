@@ -1147,6 +1147,7 @@ export enum ErrorI18nKey {
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
   UrlField = 'Error.UrlField',
+  UrlFieldWithWebSocket = 'Error.UrlFieldWithWebSocket',
   LocaleField = 'Error.LocaleField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
