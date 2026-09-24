@@ -76,6 +76,7 @@ const PivotValueCell: FC<Props> = ({
             isFailed={isFailed}
             isScoreIndicator={field.isScoreIndicator}
             failedLabel={failedLabel}
+            isRightAligned={isRightAligned}
             fill
           />
         )}

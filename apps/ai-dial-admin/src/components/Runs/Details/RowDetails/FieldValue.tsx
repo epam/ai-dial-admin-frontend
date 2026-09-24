@@ -18,6 +18,10 @@ interface Props {
   singleLine?: boolean;
   /** Wrap within the cell without line-clamp (e.g. stretched pivot value cells). */
   fill?: boolean;
+  /** Pushes a score indicator's bar+value pair to the cell's right edge. Text branches are aligned by
+   * the caller's own layout instead — this prop only matters for the score-indicator flex row, which
+   * would otherwise fill its container left-aligned regardless of the caller's alignment. */
+  isRightAligned?: boolean;
 }
 
 const parseNumericRaw = (raw: string | null): number | null => {
@@ -34,6 +38,7 @@ const FieldValue: FC<Props> = ({
   onOverflowChange,
   singleLine,
   fill,
+  isRightAligned,
 }) => {
   const textRef = useRef<HTMLSpanElement>(null);
 
@@ -60,7 +65,7 @@ const FieldValue: FC<Props> = ({
 
   if (isScoreIndicator && numericValue != null) {
     return (
-      <div className="flex items-center gap-2">
+      <div className={classNames('flex items-center gap-2', isRightAligned && 'justify-end')}>
         <ScoreBar value={numericValue} width={SCORE_INDICATOR_COMPARE_WIDTH} />
         <span className="text-primary dial-small-text shrink-0">{numericValue.toFixed(3)}</span>
       </div>

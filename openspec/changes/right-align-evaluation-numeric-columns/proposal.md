@@ -41,20 +41,30 @@ in.
   `Common/HeatMap/HeatMapValueCellRenderer` from `justify-center` to `justify-end`. Its only two
   current consumers — Run Comparison Heat Map and Test Suite Trends' Test Case Stability — both want
   this, and no other feature renders through it today.
+- Right-align every cell rendered through `Common/ScoreBar/ScoreBar` (a metric's bar-plus-value
+  indicator): the Extraction Result and Run Comparison Execution Results grids' metric columns
+  (`MetricScoreCellRenderer`, via the same `rightAlignedColumn` ColDef fragment), and the Run
+  Comparison expanded row panel's score-indicator fields (`FieldValue`'s score branch, via a new
+  `isRightAligned` prop and the same fieldKey-based predicate extended to also match
+  `isScoreIndicator`).
 - Text, boolean, object, array, and file columns are untouched — none of the above changes reaches a
   non-numeric column.
 
 ## Non-goals
 
-- Metric/score columns and other numeric grid columns outside the areas listed above (for example the
-  Extraction Result grid's per-metric score columns, which already render through a dedicated score
-  renderer). This change does not do a codebase-wide numeric-column audit.
+- Numeric fields outside the areas listed above — a plain number/integer, an HTTP status, a duration,
+  or a `ScoreBar`-rendered metric. `MetricScoreCellRenderer`'s alignment is per-column, not
+  per-value: since a metric column mixes score-indicator cells with plain-text ones (a non-fraction
+  value, or a missing-data dash), right-aligning the column right-aligns both kinds of cell in it —
+  that's a deliberate consequence of aligning at the column level, not a gap. This change does not do
+  a codebase-wide numeric-column audit beyond what the ticket named.
 - Backfilling spec coverage for grids that have none today. `RUNS_COLUMN` (Runs tab / Compare Against
-  modal) and the Run Comparison Execution Results grid's own column set are not documented in any
-  `openspec/specs/` capability — the one spec whose content shape matches the latter,
-  `runs-analytics-run-compare`, actually describes a superseded inline "Compare with" dropdown that no
-  longer exists in source. This change records its alignment behavior here and in `tasks.md`, but does
-  not attempt to write the missing spec from scratch.
+  modal), the Run Comparison Execution Results grid's own column set, and the Extraction
+  Result/Compare grids' metric columns are not documented in any `openspec/specs/` capability — the
+  one spec whose content shape matches the Compare grid, `runs-analytics-run-compare`, actually
+  describes a superseded inline "Compare with" dropdown that no longer exists in source. This change
+  records their alignment behavior here and in `tasks.md`, but does not attempt to write the missing
+  specs from scratch.
 - No change to column widths, sort/filter behavior, which columns are hidden by default, or any
   non-visual behavior.
 
@@ -66,6 +76,7 @@ in.
   `components/Runs/View/utils.ts`, `components/Runs/Compare/ExecutionResults/utils/columns.ts`,
   `components/Runs/View/RowDetails/PivotValueCell.tsx`,
   `components/Runs/Compare/ExecutionResults/RowCompareDetails/DetailRow.tsx`,
+  `components/Runs/Details/RowDetails/FieldValue.tsx`,
   `components/Runs/Details/RowDetails/` (new alignment predicate),
   `components/Grid/columns/turn-columns.tsx`, `components/Grid/CellRenderers/EditableCellRenderer.tsx`,
   `components/Common/HeatMap/HeatMapValueCellRenderer.tsx`

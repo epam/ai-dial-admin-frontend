@@ -81,6 +81,7 @@ const DetailRow: FC<Props> = ({
             isFailed={row.primaryFailed}
             isScoreIndicator={row.isScoreIndicator}
             failedLabel={failedLabel}
+            isRightAligned={isRightAligned}
             onOverflowChange={setPrimaryOverflow}
           />
         )}
@@ -98,6 +99,7 @@ const DetailRow: FC<Props> = ({
               isFailed={row.secondaryFailed}
               isScoreIndicator={row.isScoreIndicator}
               failedLabel={failedLabel}
+              isRightAligned={isRightAligned}
               onOverflowChange={setSecondaryOverflow}
             />
           )

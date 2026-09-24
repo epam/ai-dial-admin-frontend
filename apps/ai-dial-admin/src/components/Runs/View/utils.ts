@@ -114,6 +114,7 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           cellRenderer: MetricScoreCellRenderer,
           ...NUMBER_FILTER_COL_DEF,
           ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+          ...rightAlignedColumn,
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';

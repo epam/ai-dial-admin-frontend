@@ -56,6 +56,16 @@ describe('DetailRow alignment', () => {
     expect(primary).toHaveClass('text-right');
   });
 
+  test('right-aligns a metric field rendered as a ScoreBar', () => {
+    const { container } = renderDetailRow(
+      row('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8', secondaryRaw: '0.6' }),
+    );
+    const [primary, secondary] = getValueCells(container, 'Accuracy_precision');
+
+    expect(primary.querySelector('.justify-end')).toBeTruthy();
+    expect(secondary.querySelector('.justify-end')).toBeTruthy();
+  });
+
   test('leaves an unrelated field left-aligned, even a numeric one', () => {
     const { container } = renderDetailRow(row('score'));
     const [primary] = getValueCells(container, 'score');

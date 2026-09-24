@@ -36,6 +36,12 @@ describe('PivotValueCell', () => {
     expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
   });
 
+  test('right-aligns a metric field rendered as a ScoreBar', () => {
+    render(<PivotValueCell field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })} />);
+
+    expect(screen.getByRole('button')).toHaveClass('justify-end', 'text-right');
+  });
+
   test('leaves an unrelated field left-aligned, even a numeric one', () => {
     render(<PivotValueCell field={field('score')} />);
 

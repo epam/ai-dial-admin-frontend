@@ -109,6 +109,8 @@ describe('Runs View :: getAnalyticsColumns', () => {
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
+        cellClass: 'align-right',
+        headerClass: 'align-right',
       }),
     );
     expect(accuracyChildren[0].cellStyle).toBeUndefined();

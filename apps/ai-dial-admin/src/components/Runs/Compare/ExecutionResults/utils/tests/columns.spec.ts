@@ -312,6 +312,22 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(metricGroup.children[2].floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
   });
 
+  test('primary and secondary metric columns are right-aligned', () => {
+    const rows = [
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+        _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5 } } }),
+      }),
+    ];
+    const cols = getCompareColumnsCompare(rows);
+    const metricGroup = cols[3] as { children: { colId?: string; cellClass?: string; headerClass?: string }[] };
+    const primaryPrecision = metricGroup.children[0];
+    const secondaryPrecision = metricGroup.children[1];
+
+    expect(primaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+  });
+
   test('metric columns highlight added, changed, and removed pairs', () => {
     type MetricCol = {
       cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;

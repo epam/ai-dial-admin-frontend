@@ -97,6 +97,32 @@ the shared renderer's className directly (`justify-center` → `justify-end`) ra
 the moment to parameterize it — see `.claude/rules/components.md` §2 (don't over-engineer for a
 single use).
 
+### `ScoreBar` cells: a ColDef fragment in the grid, a prop in the row-detail panel
+
+A metric rendered above a score threshold shows as a `ScoreBar` plus a formatted number
+(`MetricScoreCellRenderer` in grids, `FieldValue`'s score branch in the row-detail panel), and both
+needed the same fix as everything else, split by the same case 1/3 mechanics from the Context:
+
+- **Grids** (`getMetricsColumns` in `Runs/View/utils.ts`; `buildMetricColumn` and
+  `buildComparedMetricColumn` in the Compare grid's `columns.ts`) are case 1: `MetricScoreCellRenderer`
+  renders an unstretched `<div>`, so the existing ag-grid `.ag-cell` flex row already has room to push
+  it right — a plain `...rightAlignedColumn` spread on the `ColDef` is enough, no renderer change.
+  Alignment is per-column here, not per-cell-value: a metric column's plain-text cells (a
+  non-score-indicator value, or a missing-data dash) right-align along with its score-indicator ones,
+  which is consistent with treating the whole column as a numeric metric column.
+- **The row-detail panel** is case 3: `FieldValue`'s score branch is its own `flex items-center gap-2`
+  row, and in `DetailRow`'s (non-flex) value cell that row is a block box that fills the cell width by
+  default — so the ancestor's `text-right` (which works for the panel's plain-text fields) has nothing
+  to act on; the div's own `justify-content` needs to move. `FieldValue` gains an optional
+  `isRightAligned?: boolean`, applied as `justify-end` on that div only. In `PivotValueCell`'s (flex)
+  layout the div is instead a shrink-to-fit flex item already pushed right by the button's own
+  `justify-end`, so passing the same prop there is a no-op today — done anyway so the two callers stay
+  symmetric and the prop keeps working if that layout ever stops being flex.
+- `isRightAlignedRowDetailField` — the same predicate `PivotValueCell` and `DetailRow` already used for
+  Run number/HTTP/Duration — gains `|| field.isScoreIndicator`. `isScoreIndicator` (unlike
+  `isNumeric`) already means exactly "renders as a `ScoreBar`", so no new field-identity list is
+  needed here the way Run number/HTTP/Duration needed a fieldKey allowlist.
+
 ## Consequences
 
 - `numericColumn` callers are unaffected; `rightAlignedColumn` is available for any future column that
@@ -108,6 +134,6 @@ single use).
 - Header-label alignment is best-effort: it lands wherever ag-grid's default header renderer is in
   play, and is skipped (not faked) wherever a column already overrides `headerComponent` entirely —
   see Decision 2. No column's header text moves in a way that contradicts its cell content.
-- `EditableCellRenderer` and `Common/HeatMap/HeatMapValueCellRenderer` are both shared, general-purpose
-  components; the changes here are additive (a new optional prop) or scoped to their only two current
-  callers (a default flip with no other consumer), so neither becomes Evaluation-specific.
+- `EditableCellRenderer`, `Common/HeatMap/HeatMapValueCellRenderer`, and `FieldValue` are all shared,
+  general-purpose components; the changes here are additive (a new optional prop) or scoped to their
+  only current callers (a default flip with no other consumer), so none becomes Evaluation-specific.

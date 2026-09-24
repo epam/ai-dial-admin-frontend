@@ -73,6 +73,7 @@ const buildMetricColumn = (groupKey: string, key: string, theme?: string): ColDe
   colId: `${groupKey}_${key}`,
   headerName: key,
   ...NUMBER_FILTER_COL_DEF,
+  ...rightAlignedColumn,
   valueGetter: (params) => {
     const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
     if (!groupExists) return '—';
@@ -197,6 +198,7 @@ const buildComparedMetricColumn = (
     ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
     ...NUMBER_FILTER_COL_DEF,
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    ...rightAlignedColumn,
     cellRendererSelector: (params) => {
       if (!params.data?._compared) return;
       const source = params.data._compared;

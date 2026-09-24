@@ -50,17 +50,29 @@
 - [x] 7.1 In `components/Common/HeatMap/HeatMapValueCellRenderer.tsx`, change the value wrapper from
       `justify-center` to `justify-end`.
 
-## 8. Tests
+## 8. ScoreBar cells (grid metric columns and the row-detail panel)
 
-- [x] 8.1 Update/extend unit tests for each touched util and component: `configs.spec.ts`
-      (`rightAlignedColumn`/`numericColumn`), `Runs/View/tests/utils.spec.ts` (execution column
-      classes), `Runs/Compare/ExecutionResults/utils/tests/columns.spec.ts` (compare pair classes),
-      a new spec for `isRightAlignedRowDetailField`, `PivotValueCell.spec.tsx` and `DetailRow.spec.tsx`
-      (right-aligned vs. unaffected fields), `EditableCellRenderer.spec.tsx` (`isRightAligned` prop),
-      `turn-columns` schema-column tests (INTEGER/NUMBER vs. other types), and the `HeatMap`/stability
-      column-builder specs.
+- [x] 8.1 In `components/Runs/View/utils.ts#getMetricsColumns` and
+      `components/Runs/Compare/ExecutionResults/utils/columns.ts` (`buildMetricColumn`,
+      `buildComparedMetricColumn`), spread `rightAlignedColumn` onto the metric leaf `ColDef`s that
+      render through `MetricScoreCellRenderer`.
+- [x] 8.2 Extend `isRightAlignedRowDetailField` to also match `field.isScoreIndicator`.
+- [x] 8.3 Add an optional `isRightAligned` prop to `FieldValue`
+      (`components/Runs/Details/RowDetails/FieldValue.tsx`), applied as `justify-end` on the
+      score-indicator branch's flex row, and pass it from both `PivotValueCell` and `DetailRow`.
 
-## 9. Quality gate
+## 9. Tests
 
-- [x] 9.1 Run lint, both typecheck gates (`typecheck`, `typecheck:specs`), and the full test suite with
-      coverage; fix any regressions before considering this change complete.
+- [x] 9.1 Update/extend unit tests for each touched util and component: `configs.spec.ts`
+      (`rightAlignedColumn`/`numericColumn`), `Runs/View/tests/utils.spec.ts` (execution and metric
+      column classes), `Runs/Compare/ExecutionResults/utils/tests/columns.spec.ts` (compare pair and
+      metric column classes), a new spec for `isRightAlignedRowDetailField`, a new `FieldValue.spec.tsx`,
+      `PivotValueCell.spec.tsx` and `DetailRow.spec.tsx` (right-aligned vs. unaffected fields, including
+      a score-indicator field), `EditableCellRenderer.spec.tsx` (`isRightAligned` prop), `turn-columns`
+      schema-column tests (INTEGER/NUMBER vs. other types), and the `HeatMap`/stability column-builder
+      specs.
+
+## 10. Quality gate
+
+- [x] 10.1 Run lint, both typecheck gates (`typecheck`, `typecheck:specs`), and the full test suite with
+       coverage; fix any regressions before considering this change complete.

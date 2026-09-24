@@ -37,4 +37,12 @@ describe('isRightAlignedRowDetailField', () => {
   test('run number is right-aligned even though it is not flagged isNumeric', () => {
     expect(isRightAlignedRowDetailField(field(ROW_DETAIL_RUN_NUMBER_FIELD_KEY, { isNumeric: false }))).toBe(true);
   });
+
+  test('a metric field rendered as a ScoreBar is right-aligned', () => {
+    expect(isRightAlignedRowDetailField(field('Accuracy_precision', { isScoreIndicator: true }))).toBe(true);
+  });
+
+  test('a metric field not rendered as a ScoreBar stays left-aligned', () => {
+    expect(isRightAlignedRowDetailField(field('Accuracy_precision', { isScoreIndicator: false }))).toBe(false);
+  });
 });
