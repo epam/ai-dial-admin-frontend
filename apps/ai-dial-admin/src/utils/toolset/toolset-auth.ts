@@ -34,7 +34,7 @@ export const getToolsetBasicBody = (toolset: Toolset | DialToolsetResource, leve
   const authType =
     (toolset as Toolset).authSettings?.authenticationType ||
     (toolset as DialToolsetResource).auth_settings?.authentication_type;
-  const path = (toolset as AssetToolset).path;
+  const path = (toolset as AssetToolset)._metadata?.path;
   const url = isPlatformBucketPath(path)
     ? stripPrefix(path as string, `${PLATFORM_ROOT_FOLDER}/`)
     : path
