@@ -4,7 +4,6 @@ import { DialGhostButton, DialGhostIconButton, DialInput, DialSelectField } from
 import { IconTrashX } from '@tabler/icons-react';
 import {
   createGroupKeyRow,
-  getGroupKeyOutputName,
   getTruncUnits,
   isTruncatable,
   toGroupKeyRows,
@@ -85,18 +84,13 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
               />
               <DialGhostIconButton
                 className="mb-1 shrink-0"
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={t(ButtonsI18nKey.Delete)}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />
             </div>
             {row.kind === GroupKeyKind.Trunc && row.column && !canTruncate && (
               <span className="text-error dial-tiny-text">{t(AnalyticsPipelinesI18nKey.GroupKeyNotTruncatable)}</span>
-            )}
-            {row.column && !row.as && (
-              <span className="text-secondary dial-tiny-text">
-                {t(AnalyticsPipelinesI18nKey.GroupKeyOutputName, { name: getGroupKeyOutputName(row) })}
-              </span>
             )}
           </div>
         );

@@ -37,7 +37,6 @@ interface Props {
   isReady: boolean;
   isDisabled?: boolean;
   /** The create modal opens on an empty list and says nothing about it; the detail page states the rule. */
-  hasEmptyState?: boolean;
   /** Off in the create modal, which asks for the required members only — a refinement is never one. */
   hasRefinement?: boolean;
   onChange: (outputs: TransformOutput[]) => void;
@@ -49,16 +48,7 @@ interface Props {
 const REFINEMENT_SELECT_CLASS = 'w-[220px] shrink-0';
 const REFINEMENT_FIELD_CLASS = 'min-w-[180px] flex-1';
 
-const OutputsEditor: FC<Props> = ({
-  outputs,
-  type,
-  columns,
-  isReady,
-  isDisabled,
-  hasEmptyState,
-  hasRefinement = true,
-  onChange,
-}) => {
+const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled, hasRefinement = true, onChange }) => {
   const t = useI18n();
 
   const [rows, setRows] = useState<OutputRow[]>(() => toOutputRows(outputs, type));
@@ -132,10 +122,6 @@ const OutputsEditor: FC<Props> = ({
     <div className="flex flex-col gap-3">
       {!isSql && rows.length > 0 && (
         <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.OutputsOrderHint)}</span>
-      )}
-
-      {hasEmptyState && rows.length === 0 && (
-        <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.NoOutputs)}</span>
       )}
 
       {/* A sql output is one line, so its columns are named once above the list. An llm output is a block

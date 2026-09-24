@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 
 import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
@@ -29,11 +29,9 @@ const NUMERIC_KNOBS = [
 
 interface Props {
   form: EnrichFormState;
-  /** Read-only, and placed here rather than by the frame so it lands just before the runner knobs. */
-  stateSection?: ReactNode;
 }
 
-const EnrichSection: FC<Props> = ({ form, stateSection }) => {
+const EnrichSection: FC<Props> = ({ form }) => {
   const t = useI18n();
 
   const { draft, onChange, onTriggerChange } = form;
@@ -94,20 +92,19 @@ const EnrichSection: FC<Props> = ({ form, stateSection }) => {
     </>
   );
 
-  const scopeAndTransformBlock = (
-    <>
-      <PipelineSharedFields form={form} />
-      <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionTransform)}>
-        <TransformSection form={form} isDisabled={!form.isTransformReady} />
-      </PipelineSection>
-    </>
+  const transformBlock = (
+    <PipelineSection title={t(AnalyticsPipelinesI18nKey.SectionTransform)}>
+      <TransformSection form={form} isDisabled={!form.isTransformReady} />
+    </PipelineSection>
   );
 
   return (
     <div className="flex flex-col gap-y-6">
+      {/* The scope comes first because the trigger's own controls read from it: a group trigger's member
+          selection ranks by the source's columns, which are not known until the source is. */}
+      <PipelineSharedFields form={form} />
       {triggerBlock}
-      {scopeAndTransformBlock}
-      {stateSection}
+      {transformBlock}
       <Accordion title={t(AnalyticsPipelinesI18nKey.SectionAdvanced)}>
         <div className="flex flex-col gap-y-6">
           <DialInput
