@@ -88,6 +88,7 @@ import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
+import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -103,6 +104,10 @@ export const customMultiSelectTagsRenderer = (
   handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
 ) => {
   return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
+};
+
+export const getCustomizedDisplayNameColumn = (headerName: string) => {
+  return { ...DISPLAY_NAME_COLUMN, headerName };
 };
 
 export const getGridColumns = (
@@ -189,7 +194,12 @@ export const getGridColumns = (
     return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
   }
 
-  return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  return [
+    getCustomizedDisplayNameColumn('Name'),
+    VERSION_COLUMN,
+    AUTHOR_COLUMN,
+    UPDATED_AT_COLUMN('Updated time') as ColDef,
+  ];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
