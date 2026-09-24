@@ -12,7 +12,6 @@ import {
   P95_LATENCY_ALIAS,
   QueryScope,
   SPEND_ALIAS,
-  TOOL_CALLS_ALIAS,
   buildBucketedQuery,
   buildDimensionBucketedQuery,
   buildDimensionSearchClause,
@@ -24,6 +23,7 @@ import {
 } from '@/src/components/Analytics/Usage/queries';
 import {
   QueryExprType,
+  QueryLogicalOperator,
   QueryOperator,
   QuerySortDirection,
   QueryValueType,
@@ -86,12 +86,9 @@ describe('buildTotalsQuery', () => {
   test('counts callers by the principal reference, which an API-key call also carries', () => {
     const entry = (buildTotalsQuery(scope()).select ?? []).find((select) => select.as === CALLERS_ALIAS);
 
-    expect(entry?.expr).toEqual({
-      type: QueryExprType.Fn,
-      name: 'count',
-      args: [{ type: QueryExprType.Field, name: 'usage_client_identity.user_ref' }],
-      distinct: true,
-    });
+    expect(entry?.expr).toMatchObject({ name: 'count', distinct: true });
+    expect(JSON.stringify(entry?.expr)).toContain('usage_client_identity.user_ref');
+    expect(JSON.stringify(entry?.expr)).toContain('user_hash');
   });
 
   test('counts tokens once per call, on the row that carries the price for it', () => {
@@ -138,11 +135,26 @@ describe('buildTotalsQuery', () => {
     });
   });
 
-  test('carries tool calls instead in the MCP view, which records no price', () => {
-    const aliases = aliasesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
+  test('carries no price in the MCP view, which records none', () => {
+    expect(aliasesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })))).not.toContain(SPEND_ALIAS);
+  });
 
-    expect(aliases).toContain(TOOL_CALLS_ALIAS);
-    expect(aliases).not.toContain(SPEND_ALIAS);
+  test('narrows the MCP view to tool calls, so its figures describe work and not connections', () => {
+    const clauses = clausesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
+
+    expect(clauses).toContainEqual({
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'mcp_method' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'tools/call' },
+      ],
+    });
+  });
+
+  test('adds no method clause in the LLM view', () => {
+    const clauses = clausesOf(buildTotalsQuery(scope()));
+
+    expect(clauses.some((clause) => JSON.stringify(clause).includes('mcp_method'))).toBe(false);
   });
 });
 
@@ -181,6 +193,23 @@ describe('buildTabQuery', () => {
     expect(query.group_by).toEqual(['deployment']);
     expect(query.sort?.[0]).toMatchObject({ field: CALLS_ALIAS, dir: 'desc' });
     expect(query.page).toMatchObject({ limit: 10 });
+  });
+
+  test('ranks on the measure the caller asked for, since the backend takes the cut', () => {
+    const query = buildTabQuery(scope(), BreakdownTab.Models, 5, { orderBy: SPEND_ALIAS });
+
+    expect(query.sort?.[0]).toMatchObject({ field: SPEND_ALIAS, dir: 'desc' });
+    expect(query.sort?.[1]).toMatchObject({ field: 'deployment', dir: 'asc' });
+  });
+
+  test('groups the tools breakdown by the server as well, since a tool name is not unique', () => {
+    const query = buildTabQuery(scope({ view: UsageView.Mcp }), BreakdownTab.Tools, 10);
+
+    expect(query.group_by).toEqual(['deployment', 'mcp_tool_call_name']);
+    expect(query.sort?.slice(1)).toEqual([
+      { field: 'deployment', dir: 'asc' },
+      { field: 'mcp_tool_call_name', dir: 'asc' },
+    ]);
   });
 
   test('groups an application breakdown by the calling deployment', () => {
@@ -263,5 +292,49 @@ describe('buildSpendBucketedQuery', () => {
 
   test('carries spend alone, since the view reads no other figure', () => {
     expect(aliasesOf(buildSpendBucketedQuery(scope(), { value: 1, unit: 'd' }))).toEqual([BUCKET_ALIAS, SPEND_ALIAS]);
+  });
+});
+
+describe('buildTabKeysQuery on a qualified tab', () => {
+  const KEYS = ['server-a\u0000execute_python', 'server-b\u0000execute_python'];
+
+  test("asks by both of a key's parts, so a composite id can match at all", () => {
+    const query = buildTabKeysQuery(scope({ view: UsageView.Mcp }), BreakdownTab.Tools, KEYS);
+    const clauses = clausesOf(query);
+
+    expect(query.group_by).toEqual(['deployment', 'mcp_tool_call_name']);
+    expect(clauses).toContainEqual({
+      op: QueryOperator.In,
+      args: [
+        { type: QueryExprType.Field, name: 'deployment' },
+        {
+          type: QueryExprType.Array,
+          items: [
+            { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'server-a' },
+            { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'server-b' },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('asks the dimension alone where the tab has no qualifier', () => {
+    const query = buildTabKeysQuery(scope(), BreakdownTab.Models, ['gpt-4o']);
+
+    expect(query.group_by).toEqual(['deployment']);
+  });
+});
+
+describe('buildDimensionSearchClause', () => {
+  test('searches a qualified tab by its server as well as its tool', () => {
+    const clause = buildDimensionSearchClause(BreakdownTab.Tools, 'aws') as { op: string; args: unknown[] };
+
+    expect(clause.op).toBe(QueryLogicalOperator.Or);
+    expect(JSON.stringify(clause)).toContain('deployment');
+    expect(JSON.stringify(clause)).toContain('mcp_tool_call_name');
+  });
+
+  test('searches the dimension alone elsewhere', () => {
+    expect(buildDimensionSearchClause(BreakdownTab.Models, 'gpt')).toMatchObject({ op: QueryOperator.Ico });
   });
 });

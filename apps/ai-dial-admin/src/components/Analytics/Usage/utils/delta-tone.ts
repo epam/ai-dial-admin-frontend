@@ -19,7 +19,6 @@ const RISE_IS_GOOD: Partial<Record<KpiMetric, boolean>> = {
   [KpiMetric.Requests]: true,
   [KpiMetric.Tokens]: true,
   [KpiMetric.UniqueCallers]: true,
-  [KpiMetric.ToolCalls]: true,
 };
 
 export const getDeltaTone = (metric: KpiMetric, deltaRatio: number | null): DeltaTone => {

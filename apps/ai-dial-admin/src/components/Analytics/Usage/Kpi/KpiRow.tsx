@@ -42,7 +42,6 @@ const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
   [KpiMetric.UniqueCallers]: AnalyticsUsageI18nKey.KpiUniqueCallers,
   [KpiMetric.ErrorRate]: AnalyticsUsageI18nKey.KpiErrorRate,
   [KpiMetric.AvgLatency]: AnalyticsUsageI18nKey.KpiAvgLatency,
-  [KpiMetric.ToolCalls]: AnalyticsUsageI18nKey.KpiTotalToolCalls,
 };
 
 /**
@@ -125,10 +124,14 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
 
     return {
       metric: figure.metric,
-      titleKey: TITLE_KEY[figure.metric],
+      titleKey:
+        view === UsageView.Mcp && figure.metric === KpiMetric.Requests
+          ? AnalyticsUsageI18nKey.KpiTotalToolCalls
+          : TITLE_KEY[figure.metric],
       value: formatted?.value ?? null,
       unit: formatted?.unit,
       deltaRatio: getDeltaRatio(current, previous),
+      isNew: isComparisonOn && previous === 0 && (current ?? 0) > 0,
       // With comparison on the card always says what it is compared against, including when the
       // previous window reported nothing — silence there reads as a missing feature.
       footnote: !isComparisonOn

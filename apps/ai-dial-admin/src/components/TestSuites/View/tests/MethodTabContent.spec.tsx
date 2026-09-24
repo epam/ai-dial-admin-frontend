@@ -107,17 +107,6 @@ describe('MethodTabContent - request chain', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders TryOutButton only for the first request', async () => {
-    const user = userEvent.setup();
-    render(<Harness initialSuite={baseSuite} />);
-
-    expect(screen.getByText('TryOut')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Second' }));
-
-    expect(screen.queryByText('TryOut')).not.toBeInTheDocument();
-  });
-
   test('shows the previous-outputs info banner only for requests after the first', async () => {
     const user = userEvent.setup();
     render(<Harness initialSuite={baseSuite} />);

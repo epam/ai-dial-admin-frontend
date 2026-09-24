@@ -97,6 +97,31 @@ export const BREAKDOWN_TAB_COLUMN: Record<BreakdownTab, string> = {
 };
 
 /**
+ * The column a tab's rows are qualified by, where its own dimension does not identify a row on its
+ * own. A tool name is not unique: `execute_python` exists on several MCP servers and they are
+ * different tools, so the tab groups by the server as well and states it under the name.
+ */
+export const BREAKDOWN_TAB_QUALIFIER: Partial<Record<BreakdownTab, string>> = {
+  [BreakdownTab.Tools]: 'deployment',
+};
+
+/**
+ * What joins a qualified row's group values into its id. A control character, because a row's parts
+ * are free text: a deployment name carries slashes, dots and commas, and any of those as a
+ * separator would split an id in the wrong place when it is read back.
+ */
+export const ROW_KEY_SEPARATOR = '\u0000';
+
+/**
+ * The MCP view is about tool execution, and `tools/call` is the only method that executes anything.
+ * The other methods on an `mcp` row are the handshake and discovery a client fires per connection —
+ * `initialize`, `notifications/initialized`, `tools/list`, `resources/list` — and they outnumber the
+ * calls. Counting them made the view rank servers by how often clients connected to them, and made
+ * its error rate and latency describe handshakes rather than work.
+ */
+export const MCP_TOOL_CALL_METHOD = 'tools/call';
+
+/**
  * Which plots a view offers. The MCP view has no spend: an `mcp` row carries no `deployment_price`
  * at all — measured over a week, 76k rows and not one priced — so a Cost tab there would be a flat
  * zero line whatever the window.

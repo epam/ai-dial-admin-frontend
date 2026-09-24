@@ -88,6 +88,18 @@ describe('UsageDashboard', () => {
     await waitFor(() => expect(groupings().some((grouping) => grouping === 'bucket+deployment')).toBe(true));
   });
 
+  test('re-ranks the share chart on spend and keeps the ring up while it reads', async () => {
+    const user = userEvent.setup();
+    render(<UsageDashboard />);
+
+    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await user.click(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost));
+
+    await waitFor(() => expect(queriesSent().some((query) => query.sort?.[0]?.field === 'spend')).toBe(true));
+    expect(screen.getByText(AnalyticsUsageI18nKey.DonutTitle)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.DonutEmptyCenter)).toBeNull();
+  });
+
   test('offers no spend plot in the MCP view, which records no price', async () => {
     const user = userEvent.setup();
     render(<UsageDashboard />);
