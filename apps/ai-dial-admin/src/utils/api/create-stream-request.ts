@@ -16,12 +16,16 @@ export const streamRequest = async (
     const reader = res?.body as ReadableStream<Uint8Array>;
     const stream = createReadableStream(reader);
     const headers = new Headers();
-    const contentType = getContentType(fileName);
+    const resolvedFileName = getFileNameFromContentDisposition(res?.headers.get('Content-Disposition')) || fileName;
+    const contentType = res?.headers.get('Content-Type') || getContentType(resolvedFileName);
     if (contentType) {
       headers.append('Content-Type', contentType);
     }
 
-    headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; ${buildFilenameDisposition(fileName)}`);
+    headers.append(
+      'Content-Disposition',
+      isPreview ? 'inline' : `attachment; ${buildFilenameDisposition(resolvedFileName)}`,
+    );
     return new Response(stream, { headers });
   } catch (e) {
     errorObjLog(e, 'Stream request failed');
@@ -53,6 +57,18 @@ export const createReadableStream = (stream: ReadableStream<Uint8Array>): Readab
       push();
     },
   });
+};
+
+/**
+ * Extracts the filename the backend actually sent, so a response whose content doesn't match the
+ * caller-supplied `fileName` (e.g. an export that becomes a ZIP once file-type fields are involved)
+ * still downloads with the right name and extension.
+ */
+export const getFileNameFromContentDisposition = (disposition?: string | null): string | null => {
+  if (!disposition) return null;
+
+  const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'";\n]+)\1/);
+  return match?.[2]?.trim() || null;
 };
 
 export const getContentType = (fileName: string): string | null => {
