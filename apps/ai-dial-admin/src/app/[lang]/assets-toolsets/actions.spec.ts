@@ -363,7 +363,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signIn as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signInToolset(
-      assetToolset({ path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER }),
+      assetToolset({ _metadata: { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, name: '' } }),
       ToolsetAuthCredentialLevel.GLOBAL,
       'https://redirect.example.com/callback',
       'key',
@@ -383,7 +383,7 @@ describe('Assets Toolset :: server actions', () => {
     (toolsetOpsApi.signOut as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await signOutToolset(
-      assetToolset({ path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER }),
+      assetToolset({ _metadata: { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, name: '' } }),
       ToolsetAuthCredentialLevel.GLOBAL,
     );
     expect(getUserToken).toHaveBeenCalled();

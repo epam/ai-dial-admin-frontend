@@ -117,6 +117,19 @@ describe('BaseAssetList', () => {
     );
   });
 
+  describe('getGridColumns — versioned asset views', () => {
+    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+      '%s uses the identity display column, labeled Name, for the name column',
+      (view) => {
+        const onChange = vi.fn();
+        const columns = getGridColumns(view, onChange, {}, false);
+        const nameColumn = columns.find((c) => c.colId === 'displayName');
+
+        expect(nameColumn?.headerName).toBe('Name');
+      },
+    );
+  });
+
   describe('getGridColumns — PlatformTranslators', () => {
     test('uses the flat platform-entity column set, matching its Catalog siblings', () => {
       const onChange = vi.fn();
