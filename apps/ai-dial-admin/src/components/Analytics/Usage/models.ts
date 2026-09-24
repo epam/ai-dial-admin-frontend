@@ -12,6 +12,12 @@ export enum ComparePeriod {
   PreviousYear = 'previous-year',
 }
 
+/** Which measure the share chart splits the window by. */
+export enum DonutMetric {
+  Calls = 'calls',
+  Cost = 'cost',
+}
+
 export enum BreakdownTab {
   Models = 'models',
   Applications = 'applications',
@@ -33,7 +39,6 @@ export enum KpiMetric {
   UniqueCallers = 'unique-callers',
   ErrorRate = 'error-rate',
   AvgLatency = 'avg-latency',
-  ToolCalls = 'tool-calls',
 }
 
 export interface RequestState<T> {
@@ -61,7 +66,6 @@ export interface UsageMeasures {
   spend: number | null;
   promptTokens: number | null;
   completionTokens: number | null;
-  toolCalls: number | null;
   /** Only the bucketed request carries these; every other aggregate leaves them null. */
   p50LatencyMs: number | null;
   p95LatencyMs: number | null;
@@ -110,7 +114,14 @@ export interface DonutSliceView {
   label: string;
   value: number;
   isOther: boolean;
+  /** The figure of the measure the ring is split by. */
   valueLabel: string;
+  /**
+   * The other measure, stated beside it where there is room for both. The dialog fills these; the
+   * card leaves them out and states `valueLabel` alone.
+   */
+  callsLabel?: string;
+  costLabel?: string;
   shareLabel: string | null;
   color: string;
 }
@@ -127,6 +138,8 @@ export interface KpiCardModel {
   value: string | null;
   unit?: string;
   deltaRatio: number | null;
+  /** The previous window held nothing and this one does: a change with nothing to divide by. */
+  isNew: boolean;
   footnote?: string;
   sparkline: number[];
 }

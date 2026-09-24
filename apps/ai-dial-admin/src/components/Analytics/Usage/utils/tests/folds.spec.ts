@@ -154,3 +154,25 @@ describe('foldBreakdownRows', () => {
     expect(row).toMatchObject({ id: 'deployment:missing', label: '', isFallbackLabel: true });
   });
 });
+
+describe('foldBreakdownRows with a qualifier', () => {
+  test("keeps two servers' same-named tools apart", () => {
+    const result = {
+      rows: [
+        { deployment: 'server-a', mcp_tool_call_name: 'execute_python', calls: 5 },
+        { deployment: 'server-b', mcp_tool_call_name: 'execute_python', calls: 3 },
+      ],
+    } as unknown as StructuredQueryResult;
+
+    const rows = foldBreakdownRows(result, 'mcp_tool_call_name', 'deployment');
+
+    expect(rows[0].id).not.toBe(rows[1].id);
+    expect(rows.map((row) => row.label)).toEqual(['execute_python', 'execute_python']);
+  });
+
+  test('leaves the id as the dimension value where a tab has no qualifier', () => {
+    const result = { rows: [{ deployment: 'gpt-4o', calls: 5 }] } as unknown as StructuredQueryResult;
+
+    expect(foldBreakdownRows(result, 'deployment')[0].id).toBe('gpt-4o');
+  });
+});

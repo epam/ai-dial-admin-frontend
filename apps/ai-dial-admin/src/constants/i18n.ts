@@ -3221,6 +3221,9 @@ export enum AnalyticsUsageI18nKey {
   KpiDeltaDecrease = 'AnalyticsUsage.KpiDeltaDecrease',
 
   TimeSeriesTitle = 'AnalyticsUsage.TimeSeriesTitle',
+  TimeSeriesTitleMcp = 'AnalyticsUsage.TimeSeriesTitleMcp',
+  TimeSeriesSubtitleMcp = 'AnalyticsUsage.TimeSeriesSubtitleMcp',
+  DonutSubtitleMcp = 'AnalyticsUsage.DonutSubtitleMcp',
   TimeSeriesSubtitle = 'AnalyticsUsage.TimeSeriesSubtitle',
   LoadFailed = 'AnalyticsUsage.LoadFailed',
   TimeSeriesEmptySubtitle = 'AnalyticsUsage.TimeSeriesEmptySubtitle',
@@ -3260,6 +3263,10 @@ export enum AnalyticsUsageI18nKey {
   DonutSubtitle = 'AnalyticsUsage.DonutSubtitle',
   DonutOther = 'AnalyticsUsage.DonutOther',
   DonutTotal = 'AnalyticsUsage.DonutTotal',
+  DonutTotalCost = 'AnalyticsUsage.DonutTotalCost',
+  DonutSubtitleCost = 'AnalyticsUsage.DonutSubtitleCost',
+  DonutMetricCalls = 'AnalyticsUsage.DonutMetricCalls',
+  DonutMetricCost = 'AnalyticsUsage.DonutMetricCost',
 
   BreakdownTitle = 'AnalyticsUsage.BreakdownTitle',
   BreakdownTabModels = 'AnalyticsUsage.BreakdownTabModels',

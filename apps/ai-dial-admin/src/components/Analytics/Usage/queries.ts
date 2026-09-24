@@ -1,5 +1,9 @@
 import {
   BREAKDOWN_TAB_COLUMN,
+  BREAKDOWN_TAB_QUALIFIER,
+  MCP_TOOL_CALL_METHOD,
+  QUERY_ROW_LIMIT,
+  ROW_KEY_SEPARATOR,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
   USAGE_VIEW_EVENT_KINDS,
@@ -67,6 +71,9 @@ const timestampValue = (date: Date): QueryExpr => ({
 export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): QueryFilterNode => {
   const clauses: QueryFilterNode[] = [
     eventKindFilter(scope.view),
+    ...(scope.view === UsageView.Mcp
+      ? [{ op: QueryOperator.Eq, args: [field('mcp_method'), value(MCP_TOOL_CALL_METHOD)] } as QueryFilterNode]
+      : []),
     { op: QueryOperator.Ge, args: [field('request_time'), timestampValue(scope.window.startDate)] },
     { op: QueryOperator.Lt, args: [field('request_time'), timestampValue(scope.window.endDate)] },
     ...extra,
@@ -102,7 +109,6 @@ const NAMES_GROUPED_DEPLOYMENTS: BreakdownTab[] = [BreakdownTab.Tools];
 
 export const GROUP_NAMES_ALIAS = 'group_names';
 export const GROUP_COUNT_ALIAS = 'group_count';
-export const TOOL_CALLS_ALIAS = 'tool_calls';
 export const P50_LATENCY_ALIAS = 'p50_latency';
 export const P95_LATENCY_ALIAS = 'p95_latency';
 
@@ -129,9 +135,23 @@ const pricedOnly = (column: string): QueryExpr =>
 const commonMeasures = (view: UsageView) => {
   const measures = [
     { expr: fn('count', []), as: CALLS_ALIAS },
-    // `user_hash` is set only on token calls and empty on every API-key one, so counting it folds
-    // all key traffic into a single bucket.
-    { expr: fn('count', [field(USER_REF_FIELD)], true), as: CALLERS_ALIAS },
+    /*
+     * The principal, falling back to the anonymized hash.
+     *
+     * `user_hash` alone is set only on token calls and empty on every API-key one, so counting it
+     * folds all key traffic into a single bucket. `user_ref` covers both branches — but it comes
+     * from an enrichment that is provisioned per environment rather than shipped with the service,
+     * and where that enrichment is absent the column is null on every row and the card read zero.
+     * The fallback costs nothing where the enrichment is there: the two agree row by row.
+     */
+    {
+      expr: fn(
+        'count',
+        [fn('if', [fn('not_empty', [field(USER_REF_FIELD)]), field(USER_REF_FIELD), field('user_hash')])],
+        true,
+      ),
+      as: CALLERS_ALIAS,
+    },
     {
       expr: fn('sum', [
         fn('if', [field('success'), value('0', QueryValueType.Integer), value('1', QueryValueType.Integer)]),
@@ -158,19 +178,9 @@ const commonMeasures = (view: UsageView) => {
     ];
   }
 
-  return [
-    ...measures,
-    {
-      expr: fn('sum', [
-        fn('if', [
-          fn('equals', [field('mcp_method'), value('tools/call')]),
-          value('1', QueryValueType.Integer),
-          value('0', QueryValueType.Integer),
-        ]),
-      ]),
-      as: TOOL_CALLS_ALIAS,
-    },
-  ];
+  // No separate tool-call count: the MCP view holds nothing but tool calls, so it would restate
+  // `calls` in a second column.
+  return measures;
 };
 
 /**
@@ -236,6 +246,12 @@ export interface TabQueryShape {
   offset?: number;
   /** Row-level clauses: they narrow which rows are grouped, not which groups are kept. */
   rowClauses?: QueryFilterNode[];
+  /**
+   * Which measure the top-N is taken on. The cut happens on the backend, so ranking by one measure
+   * and reading another returns the wrong rows outright: the five busiest models are not the five
+   * costliest, and re-sorting a page by spend only reorders what the call ranking already kept.
+   */
+  orderBy?: string;
 }
 
 /**
@@ -260,11 +276,19 @@ const groupNameMeasures = () => [
   { expr: fn('count', [field('deployment')], true), as: GROUP_COUNT_ALIAS },
 ];
 
-/** A search term narrowing a breakdown to the dimension values containing it, case-insensitively. */
-export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => ({
-  op: QueryOperator.Ico,
-  args: [field(BREAKDOWN_TAB_COLUMN[tab]), value(term)],
-});
+/**
+ * A search term narrowing a breakdown to the rows containing it, case-insensitively.
+ *
+ * A qualified tab searches both of its columns: a row there is a tool on a server, and a reader
+ * typing a server name means the tools it serves, not nothing at all.
+ */
+export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => {
+  const column = BREAKDOWN_TAB_COLUMN[tab];
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  const match = (name: string): QueryFilterNode => ({ op: QueryOperator.Ico, args: [field(name), value(term)] });
+
+  return qualifier ? { op: QueryLogicalOperator.Or, args: [match(column), match(qualifier)] } : match(column);
+};
 
 /**
  * The active breakdown tab, ranked, narrowed and limited by the backend.
@@ -280,20 +304,23 @@ export const buildTabQuery = (
   shape: TabQueryShape = {},
 ): StructuredQuery => {
   const column = BREAKDOWN_TAB_COLUMN[tab];
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  // The qualifier leads, so rows of one server sit together where the ranking allows it.
+  const columns = qualifier ? [qualifier, column] : [column];
 
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, shape.rowClauses ?? []),
     select: [
-      { expr: field(column) },
+      ...columns.map((name) => ({ expr: field(name) })),
       ...commonMeasures(scope.view),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
     ],
-    group_by: [column],
+    group_by: columns,
     sort: [
-      { field: CALLS_ALIAS, dir: QuerySortDirection.Desc },
-      { field: column, dir: QuerySortDirection.Asc },
+      { field: shape.orderBy ?? CALLS_ALIAS, dir: QuerySortDirection.Desc },
+      ...columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
     ],
     page: {
       type: 'offset',
@@ -312,30 +339,57 @@ export const buildTabQuery = (
  * A fallback bucket is not asked for: its value is absent rather than a name, and `in` matches no
  * absence. The dialog therefore states no comparison for that row, which is what it already states
  * for any row the previous window did not answer for.
+ *
+ * A key is a row's id, which on a qualified tab carries both of its group values — the row is a
+ * tool *on a server*. The clause is therefore built per column from the keys' own parts, and the
+ * response groups by both, so the ids it folds back match the ids that were asked for. Matching on
+ * the dimension alone returned nothing at all, and every row's change read as absent.
  */
 export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: string[]): StructuredQuery => {
   const column = BREAKDOWN_TAB_COLUMN[tab];
-  const keyClause: QueryFilterNode = {
+  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+  const columns = qualifier ? [qualifier, column] : [column];
+
+  const inClause = (name: string, values: string[]): QueryFilterNode => ({
     op: QueryOperator.In,
     args: [
-      field(column),
+      field(name),
       {
         type: QueryExprType.Array,
-        items: keys.map(
-          (key) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value: key }) as const,
+        items: [...new Set(values)].map(
+          (value) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value }) as const,
         ),
       },
     ],
-  };
+  });
+
+  /*
+   * One clause per column rather than a set of pairs: the grammar has no tuple comparison, so the
+   * filter is the cross product of the two sets. It can admit a pair nobody asked for — a tool that
+   * also exists on another named server — and that is harmless: the extra group folds to an id the
+   * caller never looks up.
+   */
+  const keyParts = keys.map((key) => key.split(ROW_KEY_SEPARATOR));
+  const keyClauses = columns.map((name, index) =>
+    inClause(
+      name,
+      keyParts.map((parts) => (parts.length > index ? parts[index] : '')),
+    ),
+  );
 
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
-    filter: buildFilter(scope, [keyClause]),
-    select: [{ expr: field(column) }, ...commonMeasures(scope.view)],
-    group_by: [column],
-    sort: [{ field: column, dir: QuerySortDirection.Asc }],
-    page: { type: 'offset', offset: 0, limit: keys.length, include_total: false } as StructuredQuery['page'],
+    filter: buildFilter(scope, keyClauses),
+    select: [...columns.map((name) => ({ expr: field(name) })), ...commonMeasures(scope.view)],
+    group_by: columns,
+    sort: columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
+    page: {
+      type: 'offset',
+      offset: 0,
+      limit: Math.min(keys.length * columns.length, QUERY_ROW_LIMIT),
+      include_total: false,
+    } as StructuredQuery['page'],
   };
 };
 

@@ -8,6 +8,8 @@ import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { DonutSliceView } from '@/src/components/Analytics/Usage/models';
 import { buildDonutOptions } from '@/src/components/Analytics/Usage/utils/chart-options';
+import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   slices: DonutSliceView[];
@@ -33,6 +35,11 @@ const DonutFigure: FC<Props> = ({
   legendClassName,
   onLegendEndReached,
 }) => {
+  const t = useI18n();
+  // Two unlabelled numeric columns say nothing about which is which beyond the currency marker.
+  const callsLabel = t(AnalyticsUsageI18nKey.DonutMetricCalls);
+  const costLabel = t(AnalyticsUsageI18nKey.DonutMetricCost);
+
   const options = useMemo(
     () =>
       buildDonutOptions(
@@ -91,7 +98,20 @@ const DonutFigure: FC<Props> = ({
           <li key={slice.id} className="flex min-w-0 items-center gap-3 dial-small-text">
             <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: slice.color }} />
             <EllipsisTooltip className="text-primary" text={slice.label} />
-            <span className="shrink-0 tabular-nums text-secondary">{slice.valueLabel}</span>
+            {/* Both measures where the caller supplied them, always calls then cost, so the columns
+                do not swap with whichever measure the ring happens to be split by. */}
+            {slice.callsLabel == null && slice.costLabel == null ? (
+              <span className="shrink-0 tabular-nums text-secondary">{slice.valueLabel}</span>
+            ) : (
+              <>
+                <span aria-label={callsLabel} className="min-w-16 shrink-0 text-right tabular-nums text-secondary">
+                  {slice.callsLabel ?? '—'}
+                </span>
+                <span aria-label={costLabel} className="min-w-20 shrink-0 text-right tabular-nums text-secondary">
+                  {slice.costLabel ?? '—'}
+                </span>
+              </>
+            )}
             <span className="w-10 shrink-0 text-right tabular-nums text-primary">{slice.shareLabel ?? '—'}</span>
           </li>
         ))}

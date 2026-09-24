@@ -128,8 +128,8 @@ const BreakdownTable: FC<Props> = ({
   const isFallbackPinnedLast = isFallbackRowPinnedLast(tab);
 
   /**
-   * A tool row aggregates every server the tool was called on, and the name alone does not say
-   * which: one server is named outright, several are counted, with the names it read in a tooltip.
+   * The counted form is what the rows looked like before the tab grouped by server, and it is kept
+   * for any tab that still aggregates names.
    */
   const readSubLabel = useCallback(
     (names: string[], count: number | null) => {

@@ -10,8 +10,8 @@ import {
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 describe('getFallbackLabelKey', () => {
-  test('names a tool row that carries no tool name', () => {
-    expect(getFallbackLabelKey(BreakdownTab.Tools)).toBe(AnalyticsUsageI18nKey.OtherMethods);
+  test('names no tool fallback, since the view reads only rows that name a tool', () => {
+    expect(getFallbackLabelKey(BreakdownTab.Tools)).toBeNull();
   });
 
   test('names a row with no project and one with no application', () => {
@@ -25,8 +25,8 @@ describe('getFallbackLabelKey', () => {
 });
 
 describe('getFallbackTooltipKey', () => {
-  test.each([UsageView.Llm, UsageView.Mcp])('explains the tool fallback the same way in %s', (view) => {
-    expect(getFallbackTooltipKey(BreakdownTab.Tools, view)).toBe(AnalyticsUsageI18nKey.OtherMethodsTooltip);
+  test.each([UsageView.Llm, UsageView.Mcp])('explains no tool fallback in %s, there being none', (view) => {
+    expect(getFallbackTooltipKey(BreakdownTab.Tools, view)).toBeNull();
   });
 
   test('explains a direct call by the view it was made in', () => {
@@ -44,16 +44,15 @@ describe('getFallbackTooltipKey', () => {
 });
 
 describe('isFallbackRowPinnedLast', () => {
-  test('pins the protocol bucket below the tools it outranks', () => {
-    expect(isFallbackRowPinnedLast(BreakdownTab.Tools)).toBe(true);
+  test.each([
+    BreakdownTab.Models,
+    BreakdownTab.Applications,
+    BreakdownTab.Projects,
+    BreakdownTab.McpServers,
+    BreakdownTab.Tools,
+  ])('leaves %s to its own ranking', (tab) => {
+    expect(isFallbackRowPinnedLast(tab)).toBe(false);
   });
-
-  test.each([BreakdownTab.Models, BreakdownTab.Applications, BreakdownTab.Projects, BreakdownTab.McpServers])(
-    'leaves %s to its own ranking',
-    (tab) => {
-      expect(isFallbackRowPinnedLast(tab)).toBe(false);
-    },
-  );
 });
 
 describe('formatDeploymentName', () => {
