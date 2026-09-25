@@ -6,13 +6,8 @@ import { DialGhostButton, DialLoader, DialNoDataContent, DialSegmentedControl } 
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
-import {
-  executeQuery,
-  executeSqlQuery,
-  getEntitySchema,
-  translateQuery,
-  translateSqlToQuery,
-} from '@/src/app/[lang]/queries/actions';
+import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
@@ -97,6 +92,8 @@ const QueryBuilder: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  // A run the operator walks away from is cancelled with the view rather than left to finish unseen.
+  const { runQuery, runSql } = useAnalyticsQuery();
   const { featureFlags } = useAppContext();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
@@ -492,19 +489,20 @@ const QueryBuilder: FC<Props> = ({
     setAiLoading(false);
 
     setIsRunning(true);
-    const runRes =
-      request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
-    if (runRes.success) {
-      const response = runRes.response ?? { rows: [] };
+    const runRes = request.kind === QueryRequestKind.Sql ? await runSql(request.sql) : await runQuery(request.query);
+    // The page was left mid-run: the read is cancelled, and there is nobody to show a result or a failure to.
+    if (runRes.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
+
+    if (runRes.isSuccess) {
+      const response = runRes.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
     } else {
       showNotification(
-        getErrorNotification(
-          runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed),
-          runRes.errorMessage,
-          runRes.requestId,
-        ),
+        getErrorNotification(runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId),
       );
     }
     setIsRunning(false);
@@ -529,17 +527,22 @@ const QueryBuilder: FC<Props> = ({
 
     setIsRunning(true);
     const [res, translated] = await Promise.all([
-      request.kind === QueryRequestKind.Sql ? executeSqlQuery(request.sql) : executeQuery(request.query),
+      request.kind === QueryRequestKind.Sql ? runSql(request.sql) : runQuery(request.query),
       translateForMeta(request),
     ]);
-    if (res.success) {
-      const response = res.response ?? { rows: [] };
+    if (res.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
+
+    if (res.isSuccess) {
+      const response = res.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, state.fields, state.entityName, translated));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
-        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.RunFailed), res.errorMessage, res.requestId),
+        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.RunFailed), res.error, res.requestId),
       );
     }
     setIsRunning(false);

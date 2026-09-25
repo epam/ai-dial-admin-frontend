@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { executeQuery } from '@/src/app/[lang]/queries/actions';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import {
   BREAKDOWN_TAB_COLUMN,
   BREAKDOWN_TAB_QUALIFIER,
@@ -41,18 +41,12 @@ import {
 } from '@/src/components/Analytics/Usage/utils/folds';
 import { padSpendBuckets } from '@/src/components/Analytics/Usage/utils/buckets';
 import { getSpendResolution } from '@/src/components/Analytics/Usage/utils/spend-resolution';
-import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import { ChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 
 const pending = <T>(): RequestState<T> => ({ data: null, isLoading: true, hasFailed: false });
 const failed = <T>(): RequestState<T> => ({ data: null, isLoading: false, hasFailed: true });
 const loaded = <T>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
-
-interface QueryOutcome {
-  result: StructuredQueryResult | null;
-  error?: string;
-}
 
 interface Params {
   view: UsageView;
@@ -141,23 +135,9 @@ export const useUsageDashboardData = ({
     [report],
   );
 
-  /**
-   * Never rejects. A transport failure would otherwise become an unhandled rejection with no
-   * `.then` to run, leaving the widget that asked for it on its skeleton for good.
-   */
-  const runQuery = useCallback(async (query: StructuredQuery): Promise<QueryOutcome> => {
-    try {
-      const response = await executeQuery(query);
-
-      if (response?.success) {
-        return { result: response.response ?? null };
-      }
-
-      return { result: null, error: response?.errorMessage ?? response?.errorHeader };
-    } catch (error) {
-      return { result: null, error: error instanceof Error ? error.message : void 0 };
-    }
-  }, []);
+  // Cancels what is still in flight when the page goes away, so neither the reads nor a notice about
+  // them outlive it. Every `then` below therefore drops a cancelled outcome before it reports anything.
+  const { runQuery } = useAnalyticsQuery();
 
   useEffect(() => {
     viewGeneration.current += 1;
@@ -169,13 +149,13 @@ export const useUsageDashboardData = ({
     setTotals(pending);
     const currentScope: QueryScope = { ...baseScope, window: windows.current };
 
-    void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error }) => {
-      if (!isCurrent()) return;
+    void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error, isCancelled }) => {
+      if (!isCurrent() || isCancelled) return;
       setBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
-    void runQuery(buildTotalsQuery(currentScope)).then(({ result, error }) => {
-      if (!isCurrent()) return;
+    void runQuery(buildTotalsQuery(currentScope)).then(({ result, error, isCancelled }) => {
+      if (!isCurrent() || isCancelled) return;
       const row = result?.rows?.[0];
       setTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
@@ -190,13 +170,13 @@ export const useUsageDashboardData = ({
     setPreviousBuckets(pending);
     setPreviousTotals(pending);
 
-    void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error }) => {
-      if (!isCurrent()) return;
+    void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error, isCancelled }) => {
+      if (!isCurrent() || isCancelled) return;
       setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
-    void runQuery(buildTotalsQuery(previousScope)).then(({ result, error }) => {
-      if (!isCurrent()) return;
+    void runQuery(buildTotalsQuery(previousScope)).then(({ result, error, isCancelled }) => {
+      if (!isCurrent() || isCancelled) return;
       const row = result?.rows?.[0];
       setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
@@ -224,8 +204,8 @@ export const useUsageDashboardData = ({
     setDimensionBuckets(pending);
     void runQuery(
       buildDimensionBucketedQuery({ ...baseScope, window: windows.current }, resolution, donutTab, seriesIds),
-    ).then(({ result, error }) => {
-      if (!isCurrent()) return;
+    ).then(({ result, error, isCancelled }) => {
+      if (!isCurrent() || isCancelled) return;
       setDimensionBuckets(
         result ? loaded(foldDimensionBuckets(result, BREAKDOWN_TAB_COLUMN[donutTab])) : reportFailed(error),
       );
@@ -263,8 +243,8 @@ export const useUsageDashboardData = ({
       buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit, {
         orderBy: donutMetric === DonutMetric.Cost ? SPEND_ALIAS : CALLS_ALIAS,
       }),
-    ).then(({ result, error }) => {
-      if (generation !== donutGeneration.current) return;
+    ).then(({ result, error, isCancelled }) => {
+      if (generation !== donutGeneration.current || isCancelled) return;
       setIsDonutReadingMore(false);
       setDonutRowsMetric(donutMetric);
       setDonutRows(
@@ -291,8 +271,8 @@ export const useUsageDashboardData = ({
     const spendResolution = getSpendResolution(windows.current);
 
     void runQuery(buildSpendBucketedQuery({ ...baseScope, window: windows.current }, spendResolution)).then(
-      ({ result, error }) => {
-        if (!isCurrent()) return;
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
         setSpendBuckets(
           result
             ? loaded(padSpendBuckets(foldSpendBuckets(result), windows.current, spendResolution))
@@ -310,10 +290,12 @@ export const useUsageDashboardData = ({
     const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
 
     setTabRows(pending);
-    void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(({ result, error }) => {
-      if (!isCurrent()) return;
-      setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
-    });
+    void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
+        setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
+      },
+    );
 
     if (!windows.previous) {
       setPreviousTabRows(loaded([]));
@@ -322,8 +304,8 @@ export const useUsageDashboardData = ({
 
     setPreviousTabRows(pending);
     void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit)).then(
-      ({ result, error }) => {
-        if (!isCurrent()) return;
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
         setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
       },
     );
