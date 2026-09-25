@@ -3,7 +3,7 @@
 import { IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { useMemo, useRef, useState } from 'react';
 
-import { BREAKDOWN_TAB_COLUMN } from '@/src/components/Analytics/Usage/constants';
+import { BREAKDOWN_TAB_COLUMN, BREAKDOWN_TAB_QUALIFIER } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -18,7 +18,7 @@ import {
   buildTabKeysQuery,
   buildTabQuery,
 } from '@/src/components/Analytics/Usage/queries';
-import { runUsageQuery } from '@/src/components/Analytics/Usage/run-query';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { foldBreakdownRows } from '@/src/components/Analytics/Usage/utils/folds';
 import { RowModelContext, toPreviousMeasures, toRowModels } from '@/src/components/Analytics/Usage/utils/row-models';
@@ -63,6 +63,7 @@ export const useBreakdownDialogRows = ({
   notice,
 }: Params): BreakdownDialogRows => {
   const { report } = notice;
+  const { runQuery } = useAnalyticsQuery();
   const [isLoadingBlock, setIsLoadingBlock] = useState(false);
   // Blocks can overlap — a fast scroll asks for the next one before the last has answered — so the
   // dialog reads as loading until every request it started has come back.
@@ -89,6 +90,7 @@ export const useBreakdownDialogRows = ({
 
   const datasource = useMemo<IDatasource>(() => {
     const column = BREAKDOWN_TAB_COLUMN[tab];
+    const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
     const baseScope = { view, window: windows.current } as QueryScope;
 
     const readPreviousMeasures = async (rows: BreakdownRow[]): Promise<Map<string, UsageMeasures>> => {
@@ -98,9 +100,15 @@ export const useBreakdownDialogRows = ({
         return new Map();
       }
 
-      const { result } = await runUsageQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+      const { result, isCancelled } = await runQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
 
-      return toPreviousMeasures(foldBreakdownRows(result, column));
+      // Without this a cancelled comparison would read as "the previous window has nothing", and the block
+      // would render deltas that say every row is new.
+      if (isCancelled) {
+        return new Map();
+      }
+
+      return toPreviousMeasures(foldBreakdownRows(result, column, qualifier));
     };
 
     return {
@@ -111,12 +119,18 @@ export const useBreakdownDialogRows = ({
         setIsLoadingBlock(true);
 
         try {
-          const { result, error } = await runUsageQuery(
+          const { result, error, isCancelled } = await runQuery(
             buildTabQuery(baseScope, tab, limit, {
               offset: params.startRow,
               rowClauses: term ? [buildDimensionSearchClause(tab, term)] : [],
             }),
           );
+
+          // The dialog closed or the page went away: the grid is unmounting with it, so the block is
+          // neither failed nor worth a notice.
+          if (isCancelled) {
+            return;
+          }
 
           if (!result) {
             report(error);
@@ -125,7 +139,7 @@ export const useBreakdownDialogRows = ({
             return;
           }
 
-          const rows = foldBreakdownRows(result, column);
+          const rows = foldBreakdownRows(result, column, qualifier);
           const previousMeasures = await readPreviousMeasures(rows);
           const models: BreakdownRowModel[] = toRowModels(rows, {
             windowTotal: presentation.current.windowTotal,
@@ -161,7 +175,7 @@ export const useBreakdownDialogRows = ({
         }
       },
     };
-  }, [view, tab, windows, searchTerm, report]);
+  }, [view, tab, windows, searchTerm, report, runQuery]);
 
   return { datasource, datasourceKey, isLoadingBlock };
 };

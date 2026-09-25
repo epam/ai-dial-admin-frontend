@@ -59,7 +59,7 @@ const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
 
 describe('Model asset :: list columns', () => {
   test('Should expose name, author, created-at and updated-at', () => {
-    expect(columnIds(VIEW)).toEqual(['name', 'author', 'createdAt', 'updatedAt']);
+    expect(columnIds(VIEW)).toEqual(['displayName', 'author', 'createdAt', 'updatedAt']);
   });
 
   test('Should not collide colIds, since two columns sharing one break ag-grid', () => {

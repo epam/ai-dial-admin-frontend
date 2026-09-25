@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, MouseEvent, 
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { LOCAL_STORAGE_SHOW_CONFIG_FILES_KEY, LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
+import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { UserInfo, UserRole } from '@/src/models/user-info';
 import { FeatureFlags } from '@/src/models/feature-flags';
@@ -14,9 +14,6 @@ export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
   toggleSidebar: (e?: MouseEvent<HTMLButtonElement>) => void;
-  /** Whether the config-file-backed admin-grid list/detail views are shown in place of the asset browser. */
-  showConfigFiles: boolean;
-  toggleShowConfigFiles: () => void;
   userMenuOpen: boolean;
   toggleUserMenu: () => void;
   visualizerConnector?: VisualizerConnector | null;
@@ -81,20 +78,12 @@ export const AppContextProvider = ({
   isEnableAuth?: boolean;
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showConfigFiles, setShowConfigFiles] = useState(false);
   const [isEntityReadOnly, setEntityReadOnly] = useState(false);
 
   useEffect(() => {
     const stored = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY);
     if (stored === 'false') {
       setSidebarOpen(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const stored = getFromLocalStorage(LOCAL_STORAGE_SHOW_CONFIG_FILES_KEY);
-    if (stored === 'true') {
-      setShowConfigFiles(true);
     }
   }, []);
 
@@ -111,11 +100,6 @@ export const AppContextProvider = ({
     e?.currentTarget.blur();
     setToLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY, String(!sidebarOpen));
     setSidebarOpen(!sidebarOpen);
-  };
-
-  const toggleShowConfigFiles = () => {
-    setToLocalStorage(LOCAL_STORAGE_SHOW_CONFIG_FILES_KEY, String(!showConfigFiles));
-    setShowConfigFiles(!showConfigFiles);
   };
 
   const toggleUserMenu = () => {
@@ -155,8 +139,6 @@ export const AppContextProvider = ({
   const value = {
     sidebarOpen,
     toggleSidebar,
-    showConfigFiles,
-    toggleShowConfigFiles,
     themeUrl,
     userMenuOpen,
     toggleUserMenu,

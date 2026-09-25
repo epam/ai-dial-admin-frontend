@@ -7,8 +7,9 @@ variable, that lets an operator explore and shape analytics data held by the Ana
 service (`analytics-data-access-service`, hosted at `DIAL_ANALYTICS_API_URL`). It surfaces as an
 "Analytics" left-navigation group carrying a "Preview" tag.
 
-All transport goes through a single server-side client (`AnalyticsDataApi`) via server actions; pages
-prefetch their initial data on the server and hand it to client views.
+All transport goes through a single server-side client (`AnalyticsDataApi`): server actions for prefetch
+and for writes, and a route handler for the queries a mounted view issues itself, which needs to be
+cancellable. Pages prefetch their initial data on the server and hand it to client views.
 
 This file holds only what every Analytics page shares — the feature flag, the menu group, the API
 layer, server-side prefetch, and the structured-query DSL primitives. Everything else lives in a

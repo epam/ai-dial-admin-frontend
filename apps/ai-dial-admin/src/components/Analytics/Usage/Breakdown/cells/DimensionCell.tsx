@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialTooltip, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import { BreakdownRowModel } from '@/src/components/Analytics/Usage/models';
@@ -25,12 +25,17 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
   return (
     <div className="flex min-w-0 flex-col justify-center">
       <div className="flex min-w-0 items-center gap-2">
+        {/*
+         * The truncation and its tooltip belong to one element. With the button clipping the text
+         * as well, two elements each believed they were the one cut: the pointer got two tooltips
+         * at once, both repeating the same name, and a third from the icon beside them.
+         */}
         <button
           type="button"
-          className="min-w-0 truncate text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
+          className="flex min-w-0 flex-1 text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
           onClick={() => onOpenRow(data)}
         >
-          <DialEllipsisTooltip text={data.displayLabel} />
+          <EllipsisTooltip text={data.displayLabel} />
         </button>
         {data.isFallbackLabel && data.fallbackTooltip && (
           <DialTooltip tooltip={data.fallbackTooltip}>
@@ -39,7 +44,7 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
         )}
       </div>
       {data.subLabel && (
-        <span className="dial-tiny-text min-w-0 truncate text-secondary">
+        <span className="dial-tiny-text flex min-w-0 text-secondary">
           {data.subLabelTooltip ? (
             <DialTooltip tooltip={data.subLabelTooltip}>
               <span className="truncate">
@@ -50,7 +55,7 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
               </span>
             </DialTooltip>
           ) : (
-            <DialEllipsisTooltip text={data.subLabel} />
+            <EllipsisTooltip text={data.subLabel} />
           )}
         </span>
       )}

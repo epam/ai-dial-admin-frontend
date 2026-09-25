@@ -12,6 +12,7 @@ import {
 } from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
 interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
@@ -19,8 +20,12 @@ interface CapturedGrid {
   columnDefs: { colId?: string; filter?: boolean | string }[];
 }
 
-vi.mock('@/src/app/[lang]/queries/actions', () => ({
-  executeQuery: vi.fn(async () => ({ success: true, response: { rows: [] } })),
+const RUNNER = {
+  runQuery: vi.fn(async (): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } })),
+  runSql: vi.fn(),
+};
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
 }));
 
 const grids: CapturedGrid[] = [];
@@ -165,16 +170,14 @@ describe('BreakdownTable', () => {
     expect(cardGrid().rowData[0].deltas.calls).toBeNull();
   });
 
-  test('ranks the Tools fallback bucket last, whatever its calls', () => {
+  test('leaves the Tools tab to its own ranking, having no bucket to pin', () => {
     renderTable({
       view: UsageView.Mcp,
       tab: BreakdownTab.Tools,
       rows: loaded<BreakdownRow[]>([fallbackRow(4706), row('execute_python', 142)]),
     });
 
-    expect(cardGrid().rowData.map((model) => model.id)).toEqual(['execute_python', 'mcp_tool_call_name:missing']);
-    expect(cardGrid().rowData[1].displayLabel).toBe(AnalyticsUsageI18nKey.OtherMethods);
-    expect(cardGrid().rowData[1].fallbackTooltip).toBe(AnalyticsUsageI18nKey.OtherMethodsTooltip);
+    expect(cardGrid().rowData.map((model) => model.id)).toEqual(['mcp_tool_call_name:missing', 'execute_python']);
   });
 
   test('leaves a fallback bucket in its ranked place on the other tabs', () => {

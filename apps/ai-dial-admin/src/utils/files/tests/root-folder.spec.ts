@@ -1,8 +1,11 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
+  FILE_ROOT_FOLDER,
+  getConfigFileEntityType,
   getRootFolder,
   getRootFolders,
+  isFileRootPath,
   isFlatPlatformView,
   isPlatformBucketPath,
   isPlatformDualBucketView,
@@ -66,9 +69,9 @@ describe('Root Folder Utils :: isFlatPlatformView', () => {
 
 describe('Root Folder Utils :: getRootFolders', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    'Should return both buckets, platform first, for %s',
+    'Should return file followed by both physical buckets for %s',
     (view) => {
-      expect(getRootFolders(view)).toEqual(['platform', 'public']);
+      expect(getRootFolders(view)).toEqual(['file', 'platform', 'public']);
     },
   );
 
@@ -82,14 +85,14 @@ describe('Root Folder Utils :: getRootFolders', () => {
   });
 
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    'Should return only the public root for %s when the platform bucket is disabled',
+    'Should retain the file and public roots for %s when the platform bucket is disabled',
     (view) => {
-      expect(getRootFolders(view, false)).toEqual([getRootFolder(view)]);
+      expect(getRootFolders(view, false)).toEqual(['file', 'public']);
     },
   );
 
-  test('Should keep both buckets for a dual-bucket view when the platform bucket is explicitly enabled', () => {
-    expect(getRootFolders(ApplicationRoute.AssetsApplications, true)).toEqual(['platform', 'public']);
+  test('Should return file, platform, and public when the platform bucket is explicitly enabled', () => {
+    expect(getRootFolders(ApplicationRoute.AssetsApplications, true)).toEqual(['file', 'platform', 'public']);
   });
 
   test('Should ignore the platform bucket flag for non-dual-bucket views', () => {
@@ -99,6 +102,20 @@ describe('Root Folder Utils :: getRootFolders', () => {
       expect(getRootFolders(view, false)).toEqual([getRootFolder(view)]);
       expect(getRootFolders(view, true)).toEqual([getRootFolder(view)]);
     });
+  });
+});
+
+describe('Root Folder Utils :: file roots', () => {
+  test('maps supported views to Core config-file types and continues to exclude Keys', () => {
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformTranslators)).toBe('translators');
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformCatalogSchemas)).toBe('catalog_schemas');
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformKeys)).toBeUndefined();
+  });
+
+  test('identifies only the synthetic file root path', () => {
+    expect(isFileRootPath(`${FILE_ROOT_FOLDER}/`)).toBe(true);
+    expect(isFileRootPath('public/')).toBe(false);
+    expect(isFileRootPath(undefined)).toBe(false);
   });
 });
 

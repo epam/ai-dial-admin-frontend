@@ -47,7 +47,7 @@ describe('Content', () => {
     await waitFor(() => expect(getBeVersion).toHaveBeenCalledOnce());
   });
 
-  test('hides the Footer and never polls status/core-version/BE-version when the admin API is disabled', async () => {
+  test('show only FE version in the Footer and never polls status/core-version/BE-version when the admin API is disabled', async () => {
     adminApiEnabled.value = false;
     render(
       <Content isEnableAuth={false}>
@@ -55,7 +55,7 @@ describe('Content', () => {
       </Content>,
     );
 
-    expect(screen.queryByText(/Admin: \[FE\]/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Admin: \[FE\]/)).toBeInTheDocument();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(getAppProcessStatus).not.toHaveBeenCalled();
     expect(getCoreVersions).not.toHaveBeenCalled();

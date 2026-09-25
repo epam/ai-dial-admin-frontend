@@ -21,6 +21,7 @@ import {
   BreakdownRowModel,
   BreakdownTab,
   ComparePeriod,
+  DonutMetric,
   TimeSeriesView,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
@@ -41,6 +42,7 @@ const UsageDashboard: FC = () => {
   const [tab, setTab] = useState<BreakdownTab>(VIEW_BREAKDOWN_TABS[UsageView.Llm][0]);
   const [refreshToken, setRefreshToken] = useState(0);
   const [isShowingAll, setIsShowingAll] = useState(false);
+  const [donutMetric, setDonutMetric] = useState<DonutMetric>(DonutMetric.Calls);
   const [isDonutFullOpen, setIsDonutFullOpen] = useState(false);
   // Blocks of the donut's dimension read so far. The dialog starts at one and grows as its legend
   // is scrolled; the card never reads more than its five slices.
@@ -93,6 +95,7 @@ const UsageDashboard: FC = () => {
     previousTotals,
     buckets,
     donutRows,
+    donutRowsMetric,
     dimensionBuckets,
     spendBuckets,
     tabRows,
@@ -106,6 +109,7 @@ const UsageDashboard: FC = () => {
     tab,
     tabLimit: rowLimit,
     donutLimit,
+    donutMetric,
     timeSeriesView,
     refreshToken,
     notice,
@@ -118,6 +122,8 @@ const UsageDashboard: FC = () => {
 
   const onViewChange = useCallback((next: UsageView) => {
     setView(next);
+    // The MCP view prices nothing, so a cost ring there would be empty whatever the window.
+    setDonutMetric(DonutMetric.Calls);
     setTab(VIEW_BREAKDOWN_TABS[next][0]);
     setTimeSeriesView((current) =>
       VIEW_TIME_SERIES_VIEWS[next].includes(current) ? current : VIEW_TIME_SERIES_VIEWS[next][0],
@@ -180,7 +186,12 @@ const UsageDashboard: FC = () => {
         <ShareBreakdown
           rows={donutRows}
           tab={donutTab}
-          windowTotal={windowTotalCalls}
+          view={view}
+          metric={donutMetric}
+          renderedMetric={donutRowsMetric}
+          onMetricChange={setDonutMetric}
+          windowTotalCalls={windowTotalCalls}
+          windowTotalSpend={totals.data?.spend ?? null}
           isFullOpen={isDonutFullOpen}
           // A response filled to the limit is the signal that the window holds further rows — but
           // only while the limit can still grow: at the query surface's own ceiling it never will,

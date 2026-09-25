@@ -26,6 +26,9 @@ interface OverallChartLabels {
 /** Matches `grid` in {@link buildOverallScoreChartOptions}. */
 export const OVERALL_SCORE_TREND_GRID = { left: 48, right: 16, bottom: 28, top: 16 } as const;
 
+/** Matches `grid` in {@link buildMetricTrendChartOptions}; left reserves space for Y-axis labels. */
+export const METRIC_TREND_GRID = { left: 28, right: 0, bottom: 10, top: 10 } as const;
+
 /**
  * Keep the sticky click tooltip away from the pointer and inside the chart view.
  * Low-score points sit near the x-axis; default placement puts the tooltip under the
@@ -305,7 +308,12 @@ export const buildMetricTrendChartOptions = (
       },
     },
     legend: { show: false },
-    grid: { left: 0, right: 0, top: 2, bottom: 2 },
+    grid: {
+      left: METRIC_TREND_GRID.left,
+      right: METRIC_TREND_GRID.right,
+      top: METRIC_TREND_GRID.top,
+      bottom: METRIC_TREND_GRID.bottom,
+    },
     xAxis: {
       type: 'category',
       data: categories,
@@ -317,7 +325,7 @@ export const buildMetricTrendChartOptions = (
       min: 0,
       max: 1,
       interval: 0.25,
-      axisLabel: { show: false },
+      axisLabel: { show: true, color: '#9FA6BD', fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: {

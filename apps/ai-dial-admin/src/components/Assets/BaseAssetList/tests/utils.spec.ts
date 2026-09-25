@@ -91,6 +91,20 @@ describe('BaseAssetList', () => {
     });
   });
 
+  describe('getGridColumns — file roots', () => {
+    test.each([
+      [ApplicationRoute.PlatformModels, 'Name'],
+      [ApplicationRoute.PlatformCatalogSchemas, 'ID'],
+      [ApplicationRoute.AssetsApplications, 'Name'],
+      [ApplicationRoute.AssetsToolsets, 'Name'],
+    ])('%s uses the customized display-name column labeled %s', (view, headerName) => {
+      const columns = getGridColumns(view, vi.fn(), {}, false, 'file/');
+
+      expect(columns).toHaveLength(1);
+      expect(columns[0]).toMatchObject({ colId: 'displayName', field: 'displayName', headerName });
+    });
+  });
+
   describe('getGridColumns — dual-bucket views', () => {
     const onChange = vi.fn();
 

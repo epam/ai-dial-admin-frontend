@@ -280,7 +280,9 @@ const publicationEnrichmentClients: EnrichmentClients = {
     assetApi.put(
       token,
       type,
-      (asset as { path: string }).path,
+      RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+        ? (asset as { _metadata: { path: string } })._metadata.path
+        : (asset as { path: string }).path,
       // `_metadata` rides the enriched review copies — stripped for every type (the config DTOs
       // 400 on it, the prompt/conversation DTOs would store it verbatim); the flat identity strip
       // stays application/toolset-only per the DTO contract above.

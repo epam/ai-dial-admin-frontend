@@ -461,10 +461,12 @@ export const mergeRouteResource = (
   metadata: CoreResourceMetadataNode,
 ): DialRouteResource => {
   const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE], content);
   return {
     ...rest,
+    name: correctMetadata.name,
     _metadata: {
-      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE], content),
+      ...correctMetadata,
       ...validity,
     },
   } as DialRouteResource;
@@ -537,11 +539,13 @@ export const mergeKeyResource = (
     allowedIpAddressRanges?: string[] | { ranges?: IpRangeBean[] } | null;
   };
   const normalizedRanges = normalizeIpRanges(allowedIpAddressRanges);
+  const correctMetadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY], content);
   return {
     ...remaining,
     ...(normalizedRanges !== undefined && { allowedIpAddressRanges: normalizedRanges }),
+    name: correctMetadata.name,
     _metadata: {
-      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY], content),
+      ...correctMetadata,
       ...validity,
     },
   } as DialKeyResource;

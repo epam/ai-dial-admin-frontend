@@ -95,21 +95,21 @@ describe('FilePath', () => {
     expect(screen.getByText('root:public')).toBeInTheDocument();
   });
 
-  test('fetches both bucket roots for a dual-bucket view when Catalog is enabled', () => {
+  test('fetches file, platform, and public roots for a dual-bucket view when Catalog is enabled', () => {
     mockFeatureFlags.catalogEnabled = true;
 
     const fetchFiles = renderFilePath([]);
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
   });
 
-  test('fetches only the public root for a dual-bucket view when Catalog is disabled', () => {
+  test('fetches file and public roots for a dual-bucket view when Catalog is disabled', () => {
     mockFeatureFlags.catalogEnabled = false;
 
     const fetchFiles = renderFilePath([]);
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith('public/');
+    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'public/']);
   });
 });

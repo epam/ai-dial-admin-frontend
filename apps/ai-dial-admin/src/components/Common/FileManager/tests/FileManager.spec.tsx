@@ -45,22 +45,22 @@ describe('FileManager', () => {
     dialFileManagerPropsSpy.mockClear();
   });
 
-  test('fetches both bucket roots on mount for a dual-bucket view when Catalog is enabled', () => {
+  test('fetches file, platform, and public roots on mount for a dual-bucket view when Catalog is enabled', () => {
     mockFeatureFlags.catalogEnabled = true;
 
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
   });
 
-  test('fetches only the public root for a dual-bucket view when Catalog is disabled', () => {
+  test('fetches file and public roots for a dual-bucket view when Catalog is disabled', () => {
     mockFeatureFlags.catalogEnabled = false;
 
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith('public/');
+    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'public/']);
   });
 
   // Regression (4.4): conversation rows and the flat platform views have no folder concept, so

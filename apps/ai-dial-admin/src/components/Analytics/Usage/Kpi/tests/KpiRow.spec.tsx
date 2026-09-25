@@ -52,8 +52,8 @@ describe('KpiRow', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.KpiCostPerMillionTokens)).toBeTruthy();
   });
 
-  test('offers tool calls instead of spend in the MCP view', () => {
-    renderRow({ view: UsageView.Mcp, totals: loaded<UsageMeasures | null>(measures({ calls: 10, toolCalls: 4 })) });
+  test('names its count card for tool calls in the MCP view, which holds nothing else', () => {
+    renderRow({ view: UsageView.Mcp, totals: loaded<UsageMeasures | null>(measures({ calls: 10 })) });
 
     expect(screen.getByText(AnalyticsUsageI18nKey.KpiTotalToolCalls)).toBeTruthy();
     expect(screen.queryByText(AnalyticsUsageI18nKey.KpiTotalSpend)).toBeNull();

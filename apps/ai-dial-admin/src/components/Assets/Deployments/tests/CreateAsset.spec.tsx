@@ -111,10 +111,10 @@ describe('CreateAsset', () => {
     expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
   });
 
-  test('requests both bucket roots for the folder sidebar on a dual-bucket view', () => {
+  test('requests file, platform, and public roots for the folder sidebar on a multi-root view', () => {
     renderCreateAsset(makeContext().ctx);
 
-    expect(folderListCalls.at(-1)?.rootPaths).toEqual(['platform/', 'public/']);
+    expect(folderListCalls.at(-1)?.rootPaths).toEqual(['file/', 'platform/', 'public/']);
   });
 
   test('hides the version field and marks the missing version valid on the platform root', async () => {

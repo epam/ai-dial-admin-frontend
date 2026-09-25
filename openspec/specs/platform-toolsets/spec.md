@@ -10,26 +10,34 @@ discovered-tools/sign-in/sign-out all resolve by the toolset's path regardless o
 this capability covers are structural (flat, no folders, no versioning) and surface-level (a
 restricted action set, a dedicated detail view). Created by archiving change `add-platform-toolsets`.
 ## Requirements
-### Requirement: Platform bucket shown above public in the Assets Toolsets grid
-The system SHALL display a `platform` bucket as a top-level node in the existing
-`Assets ▸ Toolsets` grid (`/assets-toolsets`), positioned above the `public` bucket, using the same
-`BaseAssetList` instance the public toolsets list already uses — but only when the Catalog
-menu group is not disabled, i.e. when `DISABLE_MENU_ITEMS` does not contain `catalog`
-(case-insensitive). When the Catalog menu group is disabled, the system SHALL NOT list or display the
-`platform` bucket in this grid: no `platform` list request is issued on mount, refresh, or
-folder-picker load, and the grid renders only the `public` tree, using the same single-root behavior
-as every other assets view. No new menu entry and no new top-level list route SHALL be introduced for
-this bucket.
+### Requirement: File root shown above physical buckets in the Assets Toolsets grid
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid when Catalog is enabled, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. When Catalog is disabled, the system SHALL omit `platform` and its resource requests but SHALL retain `file` and `public` roots. No new menu entry or top-level list route SHALL be introduced.
 
-#### Scenario: Platform bucket appears above public on first load
-- **WHEN** the user navigates to `/assets-toolsets` with no `catalog` entry in `DISABLE_MENU_ITEMS`
-- **THEN** the grid shows a `platform` top-level node above the `public` top-level node, both fetched
-  and rendered in the same tree
+#### Scenario: All roots appear when Catalog is enabled
+- **WHEN** a user opens `/assets-toolsets` with Catalog enabled
+- **THEN** the grid shows `file`, `platform`, and `public` roots in that order
 
-#### Scenario: Platform bucket skipped when Catalog is disabled
-- **WHEN** the user navigates to `/assets-toolsets` with `DISABLE_MENU_ITEMS` containing `catalog`
-- **THEN** the grid shows only the `public` tree — no `platform` top-level node is rendered
-- **AND** no `platform` bucket list request is issued (on mount and on every refresh of the tree)
+#### Scenario: File root remains when Catalog is disabled
+- **WHEN** a user opens `/assets-toolsets` with Catalog disabled
+- **THEN** the grid shows `file` and `public`, does not show `platform`, and makes no platform resource request
+
+### Requirement: File-root toolsets are flat and read-only
+The system SHALL treat Toolsets under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `toolsets` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
+
+#### Scenario: File-root toolset names load with the listing
+- **WHEN** a user opens the Toolsets listing
+- **THEN** the system requests config-file toolset names with the physical-root reads and renders them without resource metadata or per-name body reads
+
+#### Scenario: File-root toolset actions are immutable
+- **WHEN** a user browses the Toolsets `file` root
+- **THEN** only open and open-in-new-tab are available for a toolset row
+
+### Requirement: File-root toolset detail view
+The system SHALL open a file-root toolset at `/assets-toolsets/{id}?configFile=true`, without a public-bucket `path` parameter. It SHALL preserve the existing config-file detail read and read-only presentation, including hidden ADMIN|CORE format selection.
+
+#### Scenario: File-root toolset opens without public path
+- **WHEN** a user opens a toolset row from the `file` root
+- **THEN** the system navigates to `/assets-toolsets/{id}?configFile=true` and renders it read-only
 
 #### Scenario: No separate platform toolsets list page exists
 - **WHEN** the user looks for a platform toolsets entry in the sidebar navigation

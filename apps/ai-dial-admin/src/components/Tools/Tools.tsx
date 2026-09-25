@@ -341,7 +341,9 @@ const Tools: FC<Props> = ({
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAsset}
                     containerId={containerId}
-                    toolSetName={(isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name) || ''}
+                    toolSetName={
+                      (isAsset ? (selectedEntity as AssetToolset)?._metadata?.path : selectedEntity?.name) || ''
+                    }
                     view={view}
                   />
                 );
