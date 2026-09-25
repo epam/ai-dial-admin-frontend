@@ -1,5 +1,6 @@
 import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -50,19 +51,22 @@ describe('BaseAssetList config-file navigation', () => {
     vi.stubGlobal('open', windowOpen);
   });
 
-  test('preserves the path query when opening config-file asset details', () => {
+  test('preserves the path query when opening config-file asset details', async () => {
+    const user = userEvent.setup();
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'open-details' }));
+    await user.click(screen.getByRole('button', { name: 'open-details' }));
 
     expect(push).toHaveBeenCalledWith('/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true');
   });
 
-  test('opens the corrected URL in a new tab for modifier-click navigation', () => {
+  test('opens the corrected URL in a new tab for modifier-click navigation', async () => {
+    const user = userEvent.setup();
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
-    fireEvent.pointerDown(document, { ctrlKey: true, button: 0 });
-    fireEvent.click(screen.getByRole('button', { name: 'open-details' }));
+    await user.keyboard('[ControlLeft>]');
+    await user.click(screen.getByRole('button', { name: 'open-details' }));
+    await user.keyboard('[/ControlLeft]');
 
     expect(windowOpen).toHaveBeenCalledWith(
       '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true',
@@ -71,10 +75,11 @@ describe('BaseAssetList config-file navigation', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  test('opens the corrected URL through the action-menu new-tab callback', () => {
+  test('opens the corrected URL through the action-menu new-tab callback', async () => {
+    const user = userEvent.setup();
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'open-in-new-tab' }));
+    await user.click(screen.getByRole('button', { name: 'open-in-new-tab' }));
 
     expect(windowOpen).toHaveBeenCalledWith(
       '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true',
