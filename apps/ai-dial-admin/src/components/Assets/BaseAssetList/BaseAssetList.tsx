@@ -48,7 +48,7 @@ import {
 } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 import Modals from './Modals';
 import { BaseAssetRoute, CreateAssetRoute, CrudAssetRoute, ModalType } from './types';
@@ -192,12 +192,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       if (isItemOpenable(view, file.name)) {
         const pointerEvent = pointerClickModifierRef.current;
         pointerClickModifierRef.current = null;
-        const url = getUrnForEntity(view, {
-          name: file.name,
-          path: file.path,
-        });
+        const url = getUrnForEntity(view, file);
         navigateEntityUrl(
-          isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas ? `${url}?configFile=true` : url,
+          isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
+            ? appendUrlQuery(url, 'configFile=true')
+            : url,
           router.push,
           pointerEvent,
         );
@@ -678,7 +677,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     (file: DialFile) => {
       const url = getUrnForEntity(view, file);
       window.open(
-        isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas ? `${url}?configFile=true` : url,
+        isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
+          ? appendUrlQuery(url, 'configFile=true')
+          : url,
         '_blank',
       );
     },
