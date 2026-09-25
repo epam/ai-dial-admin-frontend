@@ -71,20 +71,18 @@ describe('import file type helper text size limits', () => {
     expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveDescription, { size: MAX_FILE_SIZE_MB });
   });
 
-  test('SEPARATE_FILES_IMPORT_TYPE passes the per-file and total size limits to the description key', () => {
+  test('SEPARATE_FILES_IMPORT_TYPE passes only the total size limit to the description key', () => {
     const spyT = vi.fn(t);
     SEPARATE_FILES_IMPORT_TYPE(spyT);
     expect(spyT).toHaveBeenCalledWith(ImportI18nKey.SeparateFilesDescription, {
-      size: MAX_FILE_SIZE_MB,
       totalSize: MAX_MULTI_FILES_SIZE_MB,
     });
   });
 
-  test('DIAL_JSON_IMPORT_TYPE passes the per-file and total size limits to the description key', () => {
+  test('DIAL_JSON_IMPORT_TYPE passes only the total size limit to the description key', () => {
     const spyT = vi.fn(t);
     DIAL_JSON_IMPORT_TYPE(spyT);
     expect(spyT).toHaveBeenCalledWith(ImportI18nKey.SeparateFilesDescription, {
-      size: MAX_FILE_SIZE_MB,
       totalSize: MAX_MULTI_FILES_SIZE_MB,
     });
   });

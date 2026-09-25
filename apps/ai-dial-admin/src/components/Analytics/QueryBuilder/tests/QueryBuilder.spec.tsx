@@ -3,19 +3,25 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
-import {
-  executeQuery,
-  executeSqlQuery,
-  generateQuery,
-  getEntitySchema,
-  translateQuery,
-  translateSqlToQuery,
-} from '@/src/app/[lang]/queries/actions';
+import { generateQuery, getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+
+const runQueryMock = vi.fn(
+  async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
+);
+const runSqlMock = vi.fn(async (_sql?: string): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }));
+
+// One object for the life of the file: a fresh one per render would change the identity the effects
+// depend on and re-issue every read forever.
+const RUNNER = { runQuery: runQueryMock, runSql: runSqlMock };
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
+}));
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
@@ -403,16 +409,16 @@ describe('QueryBuilder', () => {
 
   test('running from the Builder sends a structured query with the toolbar time bound', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeQuery).mockResolvedValue({
-      success: true,
-      response: { columns: ['event_id'], rows: [{ event_id: '1' }] },
-    });
+    runQueryMock.mockResolvedValue({
+      isSuccess: true,
+      result: { columns: ['event_id'], rows: [{ event_id: '1' }] },
+    } as never);
     renderBuilder();
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
 
-    expect(executeQuery).toHaveBeenCalledTimes(1);
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    expect(runQueryMock).toHaveBeenCalledTimes(1);
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
     expect(sent.entity).toBe('dial_usage_log');
     const args = (sent.filter as { args: { op: string; args: { name?: string }[] }[] }).args;
     expect(args.map((a) => a.op)).toEqual(['ge', 'le']);
@@ -424,7 +430,7 @@ describe('QueryBuilder', () => {
 
   test('labeled field shows its label on the Select chip while the query keeps the raw name', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { columns: [], rows: [] } });
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { columns: [], rows: [] } });
     const labeledFields: AnalyticsEntityField[] = [
       ...FIELDS.filter((f) => f.name !== 'project_id'),
       {
@@ -448,7 +454,7 @@ describe('QueryBuilder', () => {
     expect(screen.queryByText('project_id')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
     expect(sent.select).toEqual([{ expr: { type: QueryExprType.Field, name: 'project_id' } }]);
   });
 });
@@ -500,13 +506,13 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
     await user.click(runButton);
 
-    expect(executeSqlQuery).toHaveBeenCalledWith('SELECT 1');
+    expect(runSqlMock).toHaveBeenCalledWith('SELECT 1');
     await vi.waitFor(() => expect(runButton).toBeDisabled());
     // The run describes itself from the translation it already performed, never a second one.
     expect(translateSqlToQuery).toHaveBeenCalledOnce();
@@ -536,7 +542,7 @@ describe('QueryBuilder AI view', () => {
         },
       },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1 WHERE project_id = ~p1~\n```');
@@ -554,14 +560,14 @@ describe('QueryBuilder AI view', () => {
       success: true,
       response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
     await user.click(runButton);
 
-    expect(executeQuery).toHaveBeenCalled();
-    expect(executeSqlQuery).not.toHaveBeenCalled();
+    expect(runQueryMock).toHaveBeenCalled();
+    expect(runSqlMock).not.toHaveBeenCalled();
   });
 
   test('a message targeting another entity refreshes the schema so the time bound uses the right timestamp field', async () => {
@@ -579,7 +585,7 @@ describe('QueryBuilder AI view', () => {
       success: true,
       response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
     } as never);
-    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder({
       initialEntities: [{ name: 'custom_source' }, { name: 'dial_usage_log' }],
@@ -590,7 +596,7 @@ describe('QueryBuilder AI view', () => {
     await user.click(runButton);
 
     expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log');
-    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    const sent = runQueryMock.mock.calls[0][0] as StructuredQuery;
     expect(sent.entity).toBe('dial_usage_log');
     const args = (sent.filter as { args: { op: string; args: { name?: string }[] }[] }).args;
     expect(args.map((a) => a.op)).toEqual(['ge', 'le']);
@@ -637,7 +643,7 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
 
     renderBuilder();
     const firstRun = await sendMessage(user, '```sql\nSELECT 1\n```');
@@ -666,7 +672,7 @@ describe('QueryBuilder AI view', () => {
     // Clicking the first message's Run again moves execution back to it.
     await user.click(firstRun);
 
-    expect(executeSqlQuery).toHaveBeenLastCalledWith('SELECT 1');
+    expect(runSqlMock).toHaveBeenLastCalledWith('SELECT 1');
     await vi.waitFor(() => expect(firstRun).toBeDisabled());
     expect(runButtons[1]).toBeEnabled();
   });
@@ -675,7 +681,7 @@ describe('QueryBuilder AI view', () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
     vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
 
     renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
@@ -711,7 +717,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
   test('translates and executes together, then charts the translated grouping', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
     vi.mocked(translateSqlToQuery).mockResolvedValue({
       success: true,
       response: {
@@ -727,7 +733,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     renderBuilder();
     await runSql(user, 'SELECT deployment, count(*) AS total FROM dial_usage_log GROUP BY deployment');
 
-    expect(executeSqlQuery).toHaveBeenCalled();
+    expect(runSqlMock).toHaveBeenCalled();
     expect(translateSqlToQuery).toHaveBeenCalled();
 
     await user.click(await screen.findByRole('tab', { name: 'QueryBuilder.ViewChart' }));
@@ -737,7 +743,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
   test('a rejected translation still shows the result and raises no notification', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
 
     renderBuilder();
@@ -749,7 +755,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
   test('a rejected translation still charts, classifying columns from the rows', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
 
     renderBuilder();
@@ -762,7 +768,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
   test('a translation that rejects outright still shows the result and clears the running state', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
     vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network down'));
 
     renderBuilder();
@@ -775,7 +781,7 @@ describe('QueryBuilder :: SQL view Run', () => {
 
   test('a failed run keeps its error notification', async () => {
     const user = userEvent.setup();
-    vi.mocked(executeSqlQuery).mockResolvedValue({ success: false, errorMessage: 'boom' } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: false, result: null, errorMessage: 'boom' } as never);
     vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
 
     renderBuilder();

@@ -5,12 +5,18 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
 import { StructuredQuery } from '@/src/models/analytics/query';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
-vi.mock('@/src/app/[lang]/queries/actions', () => ({
-  executeQuery: vi.fn(async () => ({ success: true, response: { rows: [] } })),
+const runQueryMock = vi.fn(
+  async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
+);
+
+// The dialog reads through the shared runner, which owns cancellation; this spec is about what the
+// dialog does with an outcome, so the runner is the seam.
+const RUNNER = { runQuery: runQueryMock, runSql: vi.fn() };
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
 }));
-
-const { executeQuery } = await import('@/src/app/[lang]/queries/actions');
 
 const WINDOW = {
   startDate: new Date('2026-09-21T00:00:00.000Z'),
@@ -24,7 +30,7 @@ const PREVIOUS_WINDOW = {
 
 const NOTICE = { report: vi.fn(), reset: vi.fn() };
 
-const answer = (rows: Record<string, unknown>[]) => ({ success: true, response: { rows } });
+const answer = (rows: Record<string, unknown>[]) => ({ isSuccess: true, result: { rows } });
 
 const deploymentRows = (count: number, from = 0) =>
   Array.from({ length: count }, (_, index) => ({ deployment: `model-${from + index}`, calls: 10 }));
@@ -56,16 +62,16 @@ const renderRows = (overrides: Partial<Parameters<typeof useBreakdownDialogRows>
     }),
   );
 
-const queryOf = (call: number): StructuredQuery => vi.mocked(executeQuery).mock.calls[call][0] as StructuredQuery;
+const queryOf = (call: number): StructuredQuery => runQueryMock.mock.calls[call][0] as StructuredQuery;
 
 describe('useBreakdownDialogRows', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(executeQuery).mockImplementation(async () => answer([]) as never);
+    runQueryMock.mockImplementation(async () => answer([]) as never);
   });
 
   test('reads a block at the offset the grid asks for', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce(answer(deploymentRows(25)) as never);
+    runQueryMock.mockResolvedValueOnce(answer(deploymentRows(25)) as never);
     const { result } = renderRows();
     const params = getRowsParams(50, 75);
 
@@ -78,7 +84,7 @@ describe('useBreakdownDialogRows', () => {
   });
 
   test('states the end of the list when a block comes back short', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce(answer(deploymentRows(9)) as never);
+    runQueryMock.mockResolvedValueOnce(answer(deploymentRows(9)) as never);
     const { result } = renderRows();
     const params = getRowsParams(0, 25);
 
@@ -90,7 +96,7 @@ describe('useBreakdownDialogRows', () => {
   });
 
   test('states no end while a block comes back full', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce(answer(deploymentRows(25)) as never);
+    runQueryMock.mockResolvedValueOnce(answer(deploymentRows(25)) as never);
     const { result } = renderRows();
     const params = getRowsParams(0, 25);
 
@@ -112,31 +118,31 @@ describe('useBreakdownDialogRows', () => {
   });
 
   test('asks the previous window for the block own values, once comparison is on', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce(answer(deploymentRows(2)) as never);
+    runQueryMock.mockResolvedValueOnce(answer(deploymentRows(2)) as never);
     const { result } = renderRows({ windows: { current: WINDOW, previous: PREVIOUS_WINDOW } });
 
     await act(async () => {
       await result.current.datasource.getRows(getRowsParams(0, 25));
     });
 
-    expect(executeQuery).toHaveBeenCalledTimes(2);
+    expect(runQueryMock).toHaveBeenCalledTimes(2);
     expect(JSON.stringify(queryOf(1).filter)).toContain('model-0');
   });
 
   test('asks it nothing while comparison is off', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce(answer(deploymentRows(2)) as never);
+    runQueryMock.mockResolvedValueOnce(answer(deploymentRows(2)) as never);
     const { result } = renderRows();
 
     await act(async () => {
       await result.current.datasource.getRows(getRowsParams(0, 25));
     });
 
-    expect(executeQuery).toHaveBeenCalledOnce();
+    expect(runQueryMock).toHaveBeenCalledOnce();
   });
 
   test('says it is reading while a block is in flight, and stops when it lands', async () => {
     let release: ((rows: Record<string, unknown>[]) => void) | undefined;
-    vi.mocked(executeQuery).mockImplementationOnce(
+    runQueryMock.mockImplementationOnce(
       () => new Promise((resolve) => (release = (rows) => resolve(answer(rows) as never))),
     );
 
@@ -156,7 +162,7 @@ describe('useBreakdownDialogRows', () => {
   });
 
   test('stops saying so when a read throws between its two requests', async () => {
-    vi.mocked(executeQuery).mockRejectedValueOnce(new Error('boom'));
+    runQueryMock.mockRejectedValueOnce(new Error('boom'));
     const { result } = renderRows();
     const params = getRowsParams(0, 25);
 
@@ -169,7 +175,7 @@ describe('useBreakdownDialogRows', () => {
   });
 
   test('reports a failed read and tells the grid, rather than answering with no rows', async () => {
-    vi.mocked(executeQuery).mockResolvedValueOnce({ success: false, errorMessage: 'nope' } as never);
+    runQueryMock.mockResolvedValueOnce({ isSuccess: false, result: null, error: 'nope' } as never);
     const { result } = renderRows();
     const params = getRowsParams(0, 25);
 

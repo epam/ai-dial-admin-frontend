@@ -208,7 +208,6 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
             name: 'App',
             version: '1',
             endpoint: 'https://app',
-            path: 'old/App__1',
             _metadata: { name: 'App', folderId: 'old/', path: 'old/App__1', version: '1' },
           },
         },
@@ -221,7 +220,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
 
     expect(result.success).toBe(true);
     const putCall = fetch.mock.calls[fetch.mock.calls.length - 1];
-    expect(putCall[0]).toContain('v1/applications/');
+    expect(putCall[0]).toContain('v1/applications/old/App__1');
 
     // Application content DTOs reject unrecognized properties — folderId/path/version/id must
     // stay stripped here, unlike prompt/conversation above.
@@ -231,5 +230,47 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(body).not.toHaveProperty('version');
     expect(body).not.toHaveProperty('_metadata');
     expect(body).toMatchObject({ name: 'App', endpoint: 'https://app' });
+  });
+
+  test('updatePublication writes a toolset resource body using its metadata path', async () => {
+    const { publicationsApi } = await import('@/src/app/api/api');
+
+    fetch.mockResponse(JSON.stringify({ success: true }));
+
+    const publication = {
+      path: 'public/req',
+      requestName: 'My request',
+      folderId: 'public/folder',
+      rules: [],
+      toolSetResources: [
+        {
+          action: 'ADD',
+          sourceUrl: 'toolsets/src/Toolset__1',
+          targetUrl: 'toolsets/old/Toolset__1',
+          reviewUrl: 'toolsets/review/Toolset__1',
+          toolSetResource: {
+            name: 'Toolset',
+            version: '1',
+            tools: [],
+            _metadata: { name: 'Toolset', folderId: 'old/', path: 'old/Toolset__1', version: '1' },
+          },
+        },
+      ],
+    };
+    const formData = new FormData();
+    formData.append('publication', new Blob([JSON.stringify(publication)], { type: 'application/json' }));
+
+    const result = await publicationsApi.updatePublication(TOKEN_MOCK, formData);
+
+    expect(result.success).toBe(true);
+    const putCall = fetch.mock.calls[fetch.mock.calls.length - 1];
+    expect(putCall[0]).toContain('v1/toolsets/old/Toolset__1');
+
+    const body = JSON.parse((putCall[1] as RequestInit).body as string);
+    expect(body).not.toHaveProperty('folderId');
+    expect(body).not.toHaveProperty('path');
+    expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
+    expect(body).toMatchObject({ name: 'Toolset', tools: [] });
   });
 });
