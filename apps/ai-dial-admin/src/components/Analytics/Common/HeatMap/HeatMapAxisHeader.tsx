@@ -11,9 +11,9 @@ import {
   HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING,
   HEAT_MAP_HEADER_VERTICAL_FONT_SIZE,
   HEAT_MAP_HEADER_VERTICAL_LINE_HEIGHT,
-} from '@/src/components/Common/HeatMap/constants';
-import { shouldShowHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
-import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
+} from '@/src/components/Analytics/Common/HeatMap/constants';
+import { shouldShowHeatMapCellValue } from '@/src/components/Analytics/Common/HeatMap/utils/format-heat-map-cell-value';
+import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Analytics/Common/HeatMap/utils/heat-map-layout';
 
 interface Props extends IHeaderParams {
   label?: string;

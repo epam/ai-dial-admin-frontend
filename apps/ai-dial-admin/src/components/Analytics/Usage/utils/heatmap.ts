@@ -1,4 +1,4 @@
-import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
+import { HeatMapGridRow } from '@/src/components/Analytics/Common/HeatMap/models';
 import { BucketPoint, HeatmapMetric } from '@/src/components/Analytics/Usage/models';
 import { TimeRange } from '@/src/models/time-range';
 

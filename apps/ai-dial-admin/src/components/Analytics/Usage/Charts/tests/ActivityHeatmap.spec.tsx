@@ -11,7 +11,7 @@ import { getWeekRange } from '@/src/components/Analytics/Usage/utils/weeks';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 // The grid is AG Grid; this spec is about the card around it, not about the library.
-vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
+vi.mock('@/src/components/Analytics/Common/HeatMap/HeatMapGrid', () => ({
   default: ({ rowData }: { rowData: unknown[] }) => <div role="grid" aria-rowcount={rowData.length} />,
 }));
 

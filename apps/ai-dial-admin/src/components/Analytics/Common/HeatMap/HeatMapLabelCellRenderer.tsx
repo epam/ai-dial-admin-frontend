@@ -5,7 +5,7 @@ import { FC } from 'react';
 
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
-import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
+import { HeatMapGridRow } from '@/src/components/Analytics/Common/HeatMap/models';
 
 /** Figma node 11012:99503 — run label cell uses 12px horizontal padding (`p-[12px]` / `px-3`). */
 const HeatMapLabelCellRenderer: FC<ICellRendererParams<HeatMapGridRow>> = ({ data }) => {

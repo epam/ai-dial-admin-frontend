@@ -34,10 +34,10 @@ import {
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   getHeatMapDefaultCellStyle,
   getHeatMapGridCellBorderStyle,
-} from '@/src/components/Common/HeatMap/constants';
-import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
-import HeatMapGrid from '@/src/components/Common/HeatMap/HeatMapGrid';
-import HeatMapLabelCellRenderer from '@/src/components/Common/HeatMap/HeatMapLabelCellRenderer';
+} from '@/src/components/Analytics/Common/HeatMap/constants';
+import HeatMapAxisHeader from '@/src/components/Analytics/Common/HeatMap/HeatMapAxisHeader';
+import HeatMapGrid from '@/src/components/Analytics/Common/HeatMap/HeatMapGrid';
+import HeatMapLabelCellRenderer from '@/src/components/Analytics/Common/HeatMap/HeatMapLabelCellRenderer';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

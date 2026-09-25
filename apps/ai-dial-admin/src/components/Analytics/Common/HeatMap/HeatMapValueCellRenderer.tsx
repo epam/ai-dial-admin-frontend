@@ -3,11 +3,11 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { HeatMapValueFormatMode } from '@/src/components/Common/HeatMap/models';
+import { HeatMapValueFormatMode } from '@/src/components/Analytics/Common/HeatMap/models';
 import {
   formatHeatMapCellValueForMode,
   shouldShowHeatMapCellValue,
-} from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+} from '@/src/components/Analytics/Common/HeatMap/utils/format-heat-map-cell-value';
 
 interface HeatMapValueCellData {
   values: Record<string, number | null | undefined>;

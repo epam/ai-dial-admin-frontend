@@ -3,7 +3,7 @@
 import { ITooltipParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { HeatMapCellTooltipContent } from '@/src/components/Common/HeatMap/models';
+import { HeatMapCellTooltipContent } from '@/src/components/Analytics/Common/HeatMap/models';
 
 const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>> = ({ value }) => {
   if (!value) {

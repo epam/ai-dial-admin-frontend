@@ -11,15 +11,18 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
-import { HEAT_MAP_ROW_HEIGHT, HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE } from '@/src/components/Common/HeatMap/constants';
-import { HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
-import { centerHeatMapTooltipPopup } from '@/src/components/Common/HeatMap/utils/center-heat-map-tooltip-popup';
+import {
+  HEAT_MAP_ROW_HEIGHT,
+  HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
+} from '@/src/components/Analytics/Common/HeatMap/constants';
+import { HeatMapGridRow } from '@/src/components/Analytics/Common/HeatMap/models';
+import { centerHeatMapTooltipPopup } from '@/src/components/Analytics/Common/HeatMap/utils/center-heat-map-tooltip-popup';
 import {
   applyHeatMapColumnWidths,
   getHeatMapValueColumnWidth,
   resolveHeatMapHeaderHeight,
   resolveHeatMapRowHeight,
-} from '@/src/components/Common/HeatMap/utils/heat-map-layout';
+} from '@/src/components/Analytics/Common/HeatMap/utils/heat-map-layout';
 import GridView from '@/src/components/Grid/GridView/GridView';
 
 interface Props<T extends HeatMapGridRow> {

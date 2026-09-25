@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
+import HeatMapAxisHeader from '@/src/components/Analytics/Common/HeatMap/HeatMapAxisHeader';
 import {
   HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING,
   HEAT_MAP_VALUE_TEXT_MIN_WIDTH,
-} from '@/src/components/Common/HeatMap/constants';
-import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
+} from '@/src/components/Analytics/Common/HeatMap/constants';
+import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Analytics/Common/HeatMap/utils/heat-map-layout';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();

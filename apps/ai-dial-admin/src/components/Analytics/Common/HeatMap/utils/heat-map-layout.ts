@@ -11,8 +11,8 @@ import {
   HEAT_MAP_ROW_HEIGHT,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
-} from '@/src/components/Common/HeatMap/constants';
-import { shouldShowHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+} from '@/src/components/Analytics/Common/HeatMap/constants';
+import { shouldShowHeatMapCellValue } from '@/src/components/Analytics/Common/HeatMap/utils/format-heat-map-cell-value';
 
 export const measureVerticalHeatMapHeaderLabelHeight = (label: string): number =>
   label.length * HEAT_MAP_HEADER_VERTICAL_CHAR_WIDTH + HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER;

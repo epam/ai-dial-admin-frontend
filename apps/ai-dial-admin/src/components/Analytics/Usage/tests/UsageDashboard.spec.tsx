@@ -17,7 +17,7 @@ vi.mock('@/src/app/[lang]/queries/actions', () => ({
 
 // AG Grid and ECharts are the heavy children; this spec is about the page's wiring.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: () => <div role="grid" /> }));
-vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));
+vi.mock('@/src/components/Analytics/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));
 
 const queriesSent = (): StructuredQuery[] => executeQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
 
