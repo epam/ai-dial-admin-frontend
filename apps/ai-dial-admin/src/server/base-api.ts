@@ -81,8 +81,9 @@ export class BaseApi {
     dto: T,
     token?: Token,
     initHeaders?: HeadersInit,
+    signal?: AbortSignal,
   ): Promise<ServerActionResponse> {
-    return this.sendActionRequest<T>(url, 'POST', token, dto, initHeaders);
+    return this.sendActionRequest<T>(url, 'POST', token, dto, initHeaders, signal);
   }
 
   protected async postFiles(
@@ -122,12 +123,18 @@ export class BaseApi {
     return streamRequest(`${this.config.host || ''}${url}`, fileName, token, isPreview);
   }
 
+  /**
+   * `signal` belongs to whoever asked for the request — a route handler passing its client's. It is
+   * combined with the registry's own rather than replacing it, so logout still cancels everything while a
+   * caller that has gone away cancels only its own.
+   */
   protected async sendActionRequest<T extends object>(
     url: string,
     type: string,
     token?: Token,
     dto?: T,
     initHeaders?: HeadersInit,
+    signal?: AbortSignal,
   ): Promise<ServerActionResponse> {
     const requestId = crypto.randomUUID();
     const controller = requestRegistry.register(requestId);
@@ -138,7 +145,7 @@ export class BaseApi {
         type,
         { ...getApiHeaders(token), ...initHeaders },
         dto,
-        controller.signal,
+        signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
       );
       return this.handleResponse(res, type);
     } catch (error) {

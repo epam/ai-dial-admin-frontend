@@ -120,14 +120,26 @@ export class AnalyticsDataApi extends BaseApi {
     return this.getAction(QUERIES_FUNCTIONS_URL, token);
   }
 
-  executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token);
+  /**
+   * `signal` is the client's, handed over by the route handler that serves an interactive read: a view the
+   * operator has left stops its query here rather than only stopping itself from listening.
+   */
+  executeAction(
+    query: StructuredQuery,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token, undefined, signal);
   }
 
   // Ad-hoc SQL: the backend translates a single read-only SELECT to the structured DSL and runs it
   // through the same pipeline as `executeAction`, returning the same result envelope (no totalCount).
-  executeSqlAction(sql: string, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token);
+  executeSqlAction(
+    sql: string,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token, undefined, signal);
   }
 
   // Validation-only translation (never contacts ClickHouse): renders a structured query as the

@@ -18,7 +18,7 @@ import {
   buildTabKeysQuery,
   buildTabQuery,
 } from '@/src/components/Analytics/Usage/queries';
-import { runUsageQuery } from '@/src/components/Analytics/Usage/run-query';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { foldBreakdownRows } from '@/src/components/Analytics/Usage/utils/folds';
 import { RowModelContext, toPreviousMeasures, toRowModels } from '@/src/components/Analytics/Usage/utils/row-models';
@@ -63,6 +63,7 @@ export const useBreakdownDialogRows = ({
   notice,
 }: Params): BreakdownDialogRows => {
   const { report } = notice;
+  const { runQuery } = useAnalyticsQuery();
   const [isLoadingBlock, setIsLoadingBlock] = useState(false);
   // Blocks can overlap — a fast scroll asks for the next one before the last has answered — so the
   // dialog reads as loading until every request it started has come back.
@@ -99,7 +100,13 @@ export const useBreakdownDialogRows = ({
         return new Map();
       }
 
-      const { result } = await runUsageQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+      const { result, isCancelled } = await runQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+
+      // Without this a cancelled comparison would read as "the previous window has nothing", and the block
+      // would render deltas that say every row is new.
+      if (isCancelled) {
+        return new Map();
+      }
 
       return toPreviousMeasures(foldBreakdownRows(result, column, qualifier));
     };
@@ -112,12 +119,18 @@ export const useBreakdownDialogRows = ({
         setIsLoadingBlock(true);
 
         try {
-          const { result, error } = await runUsageQuery(
+          const { result, error, isCancelled } = await runQuery(
             buildTabQuery(baseScope, tab, limit, {
               offset: params.startRow,
               rowClauses: term ? [buildDimensionSearchClause(tab, term)] : [],
             }),
           );
+
+          // The dialog closed or the page went away: the grid is unmounting with it, so the block is
+          // neither failed nor worth a notice.
+          if (isCancelled) {
+            return;
+          }
 
           if (!result) {
             report(error);
@@ -162,7 +175,7 @@ export const useBreakdownDialogRows = ({
         }
       },
     };
-  }, [view, tab, windows, searchTerm, report]);
+  }, [view, tab, windows, searchTerm, report, runQuery]);
 
   return { datasource, datasourceKey, isLoadingBlock };
 };

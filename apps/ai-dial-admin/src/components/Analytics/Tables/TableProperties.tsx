@@ -6,7 +6,6 @@ import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from '
 import { DialLabelledText } from '@epam/ai-dial-ui-kit';
 
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
-import { DescriptionCellRenderer } from '@/src/components/Analytics/Tables/DescriptionCell';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import KeyFieldLabel from '@/src/components/Analytics/Tables/KeyFieldLabel';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
@@ -73,18 +72,9 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
         flex: 1,
       },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
-      // A long display name truncates into the grid's default tooltip: a name is scanned, and the tooltip
-      // is enough to confirm one. A description is read, so it clamps and offers Show more instead.
+      // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
       { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },
-      {
-        headerName: t(AnalyticsTablesI18nKey.Description),
-        field: 'description',
-        flex: 3,
-        autoHeight: true,
-        wrapText: true,
-        cellDataType: false,
-        cellRenderer: DescriptionCellRenderer,
-      },
+      { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
       {
         headerName: t(AnalyticsTablesI18nKey.Nullable),
         colId: 'nullable',

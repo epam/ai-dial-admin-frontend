@@ -12,6 +12,7 @@ import {
 } from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
 interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
@@ -19,8 +20,12 @@ interface CapturedGrid {
   columnDefs: { colId?: string; filter?: boolean | string }[];
 }
 
-vi.mock('@/src/app/[lang]/queries/actions', () => ({
-  executeQuery: vi.fn(async () => ({ success: true, response: { rows: [] } })),
+const RUNNER = {
+  runQuery: vi.fn(async (): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } })),
+  runSql: vi.fn(),
+};
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
 }));
 
 const grids: CapturedGrid[] = [];
