@@ -9,7 +9,6 @@ import {
   getModalTitle,
   getMultipleImportStatus,
   isInvalidJson,
-  isLargeFile,
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
@@ -25,7 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
-import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
+import { MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
 
 const MAX_FILES_COUNT = 30;
 const MAX_TOTAL_FILE_SIZE_BYTES = MAX_MULTI_FILES_SIZE_MB * 1024 * 1024;
@@ -178,8 +177,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         const newSeparateFileMap = new Map<string, FileImportMap>();
 
         sliced.forEach((file) => {
-          const isInvalid = isLargeFile(file, MAX_FILE_SIZE_MB);
-          newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid });
+          newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid: false });
         });
 
         setSeparateFileMap(newSeparateFileMap);

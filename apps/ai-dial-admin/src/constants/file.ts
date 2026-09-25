@@ -80,4 +80,4 @@ export const contentTypes: Record<string, string> = {
 };
 
 export const MAX_FILE_SIZE_MB = 100;
-export const MAX_MULTI_FILES_SIZE_MB = 1000;
+export const MAX_MULTI_FILES_SIZE_MB = 100;
