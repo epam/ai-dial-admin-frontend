@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getAppProcessStatus, getBeVersion, getCoreVersions } from '@/src/app/actions';
 import Content from './Content';
@@ -25,6 +25,10 @@ describe('Content', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('renders children', () => {
     render(
       <Content isEnableAuth={true}>
@@ -47,8 +51,9 @@ describe('Content', () => {
     await waitFor(() => expect(getBeVersion).toHaveBeenCalledOnce());
   });
 
-  test('show only FE version in the Footer and never polls status/core-version/BE-version when the admin API is disabled', async () => {
+  test('shows only FE and Core versions in the Footer and polls Core version when the admin API is disabled', async () => {
     adminApiEnabled.value = false;
+    (getCoreVersions as any).mockResolvedValue({ response: { autoDetectedVersion: '1.2.3' } });
     render(
       <Content isEnableAuth={false}>
         <div>Test Content</div>
@@ -56,9 +61,24 @@ describe('Content', () => {
     );
 
     expect(screen.queryByText(/Admin: \[FE\]/)).toBeInTheDocument();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await waitFor(() => expect(getCoreVersions).toHaveBeenCalledOnce());
     expect(getAppProcessStatus).not.toHaveBeenCalled();
-    expect(getCoreVersions).not.toHaveBeenCalled();
     expect(getBeVersion).not.toHaveBeenCalled();
+  });
+
+  test('refreshes Core version on the configured interval when the admin API is disabled', async () => {
+    vi.useFakeTimers();
+    adminApiEnabled.value = false;
+    render(
+      <Content isEnableAuth={false}>
+        <div>Test Content</div>
+      </Content>,
+    );
+
+    expect(getCoreVersions).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(60 * 1000);
+    expect(getCoreVersions).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
   });
 });
