@@ -40,7 +40,7 @@ export default async function Page(params: {
       const result = await getConfigFileModel(path);
       model = result.success ? (result.data as unknown as AssetModel) : null;
     } else {
-      model = await getModel(path, etag).then((res) => {
+      model = await getModel(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as AssetModel | null;
       });

@@ -248,6 +248,32 @@ describe('CreateEntity', () => {
     expect(createApp.mock.calls[0][0]).not.toHaveProperty('user_roles');
   });
 
+  test('navigates a Catalog model created from Core metadata to its encoded detail route', async () => {
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push });
+
+    const createModel = vi.fn().mockResolvedValue({
+      success: true,
+      response: { _metadata: { name: 'anthropic.claude-haiku-4-5-20251001-v1:0' } },
+    });
+    render(
+      <CreateEntity
+        route={ApplicationRoute.PlatformModels}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createModel}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/platform-models/anthropic.claude-haiku-4-5-20251001-v1%3A0'),
+    );
+  });
+
   test('navigates to a path built from folderId + name for AssetsSkills, with no version suffix', async () => {
     const push = vi.fn();
     (useRouter as Mock).mockReturnValue({ push });

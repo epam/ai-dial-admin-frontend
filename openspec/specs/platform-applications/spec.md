@@ -125,6 +125,10 @@ navigation and from the Assets Applications grid's platform bucket without a 404
   clicking the application's row in the Assets Applications grid's `platform` bucket opens the
   same detail view — neither resolves to a 404 page
 
+#### Scenario: A colon-named platform application opens through an encoded detail route
+- **WHEN** a user creates a platform-bucket application with `:` in its name from either create entry point
+- **THEN** the post-create redirect opens its detail view with `:` URL-encoded in the `[id]` segment and no `path` query parameter
+
 ### Requirement: Platform application server actions
 The system SHALL provide server actions to list, get, create, update, delete, and bulk-delete
 applications in the `platform` bucket, calling the shared Core asset client with

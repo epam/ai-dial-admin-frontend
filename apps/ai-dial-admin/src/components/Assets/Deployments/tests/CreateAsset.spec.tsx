@@ -1,3 +1,4 @@
+import { createToolset, createPlatformToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createApp, createPlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -23,6 +24,18 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getPlatformApplication: vi.fn(),
   importApps: vi.fn(),
   moveApps: vi.fn(),
+}));
+
+vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
+  bulkDeletePlatformToolsets: vi.fn(),
+  bulkDeleteToolsets: vi.fn(),
+  createPlatformToolset: vi.fn().mockResolvedValue({ success: true }),
+  createToolset: vi.fn().mockResolvedValue({ success: true }),
+  exportToolsets: vi.fn(),
+  getPlatformToolset: vi.fn(),
+  getToolset: vi.fn(),
+  importToolsets: vi.fn(),
+  moveToolsets: vi.fn(),
 }));
 
 interface CapturedAssetPropertiesProps {
@@ -71,15 +84,13 @@ const makeContext = (data: AssetsFolderContextReader['data'] = []) => {
   return { ctx, setFilePath: (path: string) => (currentPath = path) };
 };
 
-const renderCreateAsset = (ctx: AssetsFolderContextReader, initialValues?: Partial<AssetWithVersion>) =>
+const renderCreateAsset = (
+  ctx: AssetsFolderContextReader,
+  initialValues?: Partial<AssetWithVersion>,
+  view = ApplicationRoute.AssetsApplications,
+) =>
   render(
-    <CreateAsset
-      view={ApplicationRoute.AssetsApplications}
-      isModalOpen={true}
-      context={() => ctx}
-      initialValues={initialValues}
-      onClose={vi.fn()}
-    />,
+    <CreateAsset view={view} isModalOpen={true} context={() => ctx} initialValues={initialValues} onClose={vi.fn()} />,
   );
 
 const lastAssetProperties = () => assetPropertiesCalls.at(-1)!;
@@ -192,6 +203,42 @@ describe('CreateAsset', () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
     expect(push).toHaveBeenCalledWith('/assets-applications/app');
+  });
+
+  test('creates a colon-named platform application and redirects through the encoded flat route', async () => {
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push, refresh: vi.fn() });
+    vi.mocked(createPlatformApplication).mockResolvedValue({
+      success: true,
+      response: { name: 'app:platform', path: 'platform/app:platform', folderId: 'platform/' },
+    } as never);
+
+    const { ctx, setFilePath } = makeContext();
+    setFilePath('platform/');
+    renderCreateAsset(ctx, { name: 'app:platform' });
+
+    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/assets-applications/app%3Aplatform'));
+  });
+
+  test('creates a colon-named platform toolset and redirects through the encoded flat route', async () => {
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push, refresh: vi.fn() });
+    vi.mocked(createPlatformToolset).mockResolvedValue({
+      success: true,
+      response: { name: 'toolset:platform', path: 'platform/toolset:platform', folderId: 'platform/' },
+    } as never);
+
+    const { ctx, setFilePath } = makeContext();
+    setFilePath('platform/');
+    renderCreateAsset(ctx, { name: 'toolset:platform' }, ApplicationRoute.AssetsToolsets);
+
+    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/toolset%3Aplatform'));
   });
 
   test('creates through the public action and redirects to the versioned path on a public folder', async () => {
