@@ -46,6 +46,7 @@ import {
   MetricDeltaKind,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
@@ -57,10 +58,11 @@ type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SEC
 const compareRunIndexHeaderDef = (
   runIndex: CompareRunIndex,
   label?: string,
+  isRightAligned?: boolean,
 ): Pick<ColDef, 'headerName' | 'headerComponent' | 'headerComponentParams'> => ({
   headerName: label ? formatCompareColumnHeader(runIndex, label) : formatCompareRunIndexHeader(runIndex),
   headerComponent: CompareRunIndexHeader,
-  headerComponentParams: { runIndex, label },
+  headerComponentParams: { runIndex, label, isRightAligned },
 });
 
 const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string, unknown> => {
@@ -72,6 +74,7 @@ const buildMetricColumn = (groupKey: string, key: string, theme?: string): ColDe
   colId: `${groupKey}_${key}`,
   headerName: key,
   ...NUMBER_FILTER_COL_DEF,
+  ...rightAlignedColumn,
   valueGetter: (params) => {
     const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
     if (!groupExists) return '—';
@@ -193,9 +196,10 @@ const buildComparedMetricColumn = (
   return {
     colId: `cmp_${groupKey}_${key}`,
     field: `cmp_${groupKey}_${key}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key, true),
     ...NUMBER_FILTER_COL_DEF,
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    ...rightAlignedColumn,
     cellRendererSelector: (params) => {
       if (!params.data?._compared) return;
       const source = params.data._compared;
@@ -233,7 +237,7 @@ const buildComparePrimaryMetricColumn = (
 
   return {
     ...buildMetricColumn(groupKey, key, theme),
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key, true),
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     cellStyle: undefined,
     cellRendererSelector: (params) => {
@@ -267,6 +271,7 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
     buttons: ['reset'],
   },
   ...fixedWidthColDef(DELTA_COLUMN_WIDTH),
+  ...rightAlignedColumn,
   cellRenderer: CompareDeltaCellRenderer,
   cellRendererParams: { groupKey, metricKey: key },
   comparator: numberValueComparator,
@@ -301,20 +306,22 @@ const buildCompareIndexColumnPair = (
 ): [ColDef, ColDef] => [
   {
     field,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label, true),
     colId: field,
     hide: true,
     ...NO_FILTER_COL_DEF,
     ...fixedWidthColDef(width),
+    ...rightAlignedColumn,
     valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
       params.data?.[field] != null ? params.data[field]! + 1 : null,
   },
   {
     colId: `cmp_${field}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label, true),
     hide: true,
     ...NO_FILTER_COL_DEF,
     ...fixedWidthColDef(width),
+    ...rightAlignedColumn,
     valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
       params.data?._compared?.[field] != null ? params.data._compared[field]! + 1 : '—',
   },
@@ -344,40 +351,44 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
       ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
       {
         field: 'responseStatusCode',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP', true),
         colId: 'http',
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params) => params.data?.responseStatusCode ?? '—',
         ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
       },
       {
         colId: 'cmp_http',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP', true),
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
         ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'secondary'),
       },
       {
         field: 'durationMs',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration', true),
         colId: 'duration',
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
           getFormattedDuration(params.data ? (getCompareRowDurationMs(params.data) ?? undefined) : undefined),
         ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'primary'),
       },
       {
         colId: 'cmp_duration',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration', true),
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+        ...rightAlignedColumn,
         valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
           if (!params.data?._compared) return '—';
           return getFormattedDuration(getCompareRowDurationMs(params.data._compared) ?? undefined);

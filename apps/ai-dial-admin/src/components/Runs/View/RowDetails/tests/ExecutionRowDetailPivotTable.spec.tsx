@@ -76,4 +76,11 @@ describe('ExecutionRowDetailPivotTable', () => {
 
     expect(screen.getByRole('dialog', { name: 'HTTP' })).toHaveTextContent('200');
   });
+
+  test('right-aligns the header label of a right-aligned field', () => {
+    render(<ExecutionRowDetailPivotTable sections={sections} />);
+
+    expect(screen.getByText('HTTP')).toHaveClass('text-right');
+    expect(screen.getByText('answer')).not.toHaveClass('text-right');
+  });
 });

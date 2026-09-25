@@ -109,6 +109,8 @@ describe('Runs View :: getAnalyticsColumns', () => {
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
+        cellClass: 'align-right',
+        headerClass: 'align-right',
       }),
     );
     expect(accuracyChildren[0].cellStyle).toBeUndefined();
@@ -730,7 +732,10 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
     expect(col).toEqual(
       expect.objectContaining({
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
@@ -770,7 +775,10 @@ describe('Runs View :: executionColumns Request valueGetter', () => {
         headerName: 'Request',
         colId: 'requestIndex',
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
@@ -839,7 +847,10 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
         headerName: 'Turn',
         colId: 'turnIndex',
         sortable: true,
-        headerComponentParams: { innerHeaderComponent: expect.any(Function) },
+        headerComponentParams: {
+          innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
+        },
       }),
     );
     expect(col.headerComponent).toBeUndefined();
@@ -894,6 +905,30 @@ describe('Runs View :: executionColumns Total turns valueGetter', () => {
     const col = getTotalTurnsCol();
     expect(col.valueGetter({ data: null })).toBeNull();
     expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns are right-aligned', () => {
+  test.each(['runIndex', 'requestIndex', 'totalRequests', 'turnIndex', 'totalTurns'])(
+    '%s carries the align-right cell and header classes',
+    (colId) => {
+      const col = getExecutionColumn(colId);
+      expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right', headerClass: 'align-right' }));
+    },
+  );
+
+  test('HTTP column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('http');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 404 } })).toBe('align-right text-warning');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
+  });
+
+  test('Duration column keeps its status coloring and adds align-right', () => {
+    const col = getExecutionColumn('duration');
+    expect(col.headerClass).toBe('align-right');
+    expect(col.cellClass({ data: { responseStatusCode: 500 } })).toBe('align-right text-error');
+    expect(col.cellClass({ data: {} })).toBe('align-right');
   });
 });
 

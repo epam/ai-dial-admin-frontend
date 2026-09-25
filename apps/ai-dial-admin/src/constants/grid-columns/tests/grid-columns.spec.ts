@@ -23,6 +23,7 @@ import {
   USAGE_LOG_MCP_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
   TEST_SUITES_COLUMN,
+  RUNS_COLUMN,
 } from '../grid-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
@@ -425,5 +426,13 @@ describe('Constants :: grid columns', () => {
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'parameters')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'tags')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'datasets')).toBe(true);
+  });
+
+  test('RUNS_COLUMN right-aligns the numeric run/test-case count columns', () => {
+    const numberOfRuns = RUNS_COLUMN.find((c) => c.field === 'runConfig.numberOfRuns');
+    const numberOfTestCases = RUNS_COLUMN.find((c) => c.field === 'numberOfTestCases');
+
+    expect(numberOfRuns).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
   });
 });

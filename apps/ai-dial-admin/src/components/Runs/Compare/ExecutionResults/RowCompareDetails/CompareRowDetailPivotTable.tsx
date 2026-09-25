@@ -15,6 +15,7 @@ import {
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
 import { ROW_DETAIL_PIVOT_LEFT_COL_WIDTH } from '@/src/components/Runs/Details/RowDetails/constants';
 import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
@@ -140,7 +141,10 @@ const CompareRowDetailPivotTable: FC<Props> = ({
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}
               className={classNames(HEADER_CELL_BASE, 'text-secondary border-r')}
             >
-              <DialEllipsisTooltip text={column.field.label} className="text-secondary" />
+              <DialEllipsisTooltip
+                text={column.field.label}
+                className={classNames('text-secondary', isRightAlignedRowDetailField(column.field) && 'text-right')}
+              />
             </div>
           ))}
 
@@ -197,7 +201,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
               {columns.map((column) => (
                 <div
                   key={`delta-${column.sectionKey}-${column.field.fieldKey}`}
-                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}
+                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3', column.hasDelta && 'justify-end')}
                 >
                   {column.hasDelta ? (
                     <CompareMetricDeltaValue
