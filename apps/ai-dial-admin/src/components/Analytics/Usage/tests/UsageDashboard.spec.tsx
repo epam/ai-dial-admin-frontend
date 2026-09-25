@@ -11,8 +11,11 @@ const showNotificationMock = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
-vi.mock('@/src/app/[lang]/queries/actions', () => ({
-  executeQuery: (...args: unknown[]) => executeQueryMock(...args),
+// The page reads through the shared runner, which owns cancellation; this spec is about the page's
+// wiring, so the runner is the seam.
+const RUNNER = { runQuery: (...args: unknown[]) => executeQueryMock(...args), runSql: vi.fn() };
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
 }));
 
 // AG Grid and ECharts are the heavy children; this spec is about the page's wiring.
@@ -40,7 +43,7 @@ const ANY_ROW = {
 beforeEach(() => {
   executeQueryMock.mockReset();
   showNotificationMock.mockReset();
-  executeQueryMock.mockResolvedValue({ success: true, response: { rows: [ANY_ROW] } });
+  executeQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [ANY_ROW] } });
 });
 
 describe('UsageDashboard', () => {
@@ -113,7 +116,7 @@ describe('UsageDashboard', () => {
   });
 
   test('renders the page when every request fails, stating the failure once', async () => {
-    executeQueryMock.mockResolvedValue({ success: false, errorMessage: 'upstream refused' });
+    executeQueryMock.mockResolvedValue({ isSuccess: false, result: null, error: 'upstream refused' });
 
     render(<UsageDashboard />);
 

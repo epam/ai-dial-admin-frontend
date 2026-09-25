@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { executeQuery } from '@/src/app/[lang]/queries/actions';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import { BucketPoint, RequestState, UsageView } from '@/src/components/Analytics/Usage/models';
 import { buildBucketedQuery } from '@/src/components/Analytics/Usage/queries';
 import { foldBucketPoints } from '@/src/components/Analytics/Usage/utils/folds';
@@ -34,6 +34,8 @@ export interface HeatmapWeek {
 export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapWeek => {
   const { report, reset } = notice;
 
+  const { runQuery } = useAnalyticsQuery();
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [buckets, setBuckets] = useState<RequestState<BucketPoint[]>>({
     data: null,
@@ -60,28 +62,21 @@ export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapW
     reset();
     setBuckets({ data: null, isLoading: true, hasFailed: false });
 
-    const read = async () => {
-      try {
-        const response = await executeQuery(buildBucketedQuery({ view, window: week }, HOURLY));
+    void runQuery(buildBucketedQuery({ view, window: week }, HOURLY)).then(
+      ({ result, error, errorHeader, isCancelled }) => {
+        // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
+        if (current !== generation.current || isCancelled) return;
 
-        if (response?.success) {
-          return { data: foldBucketPoints(response.response ?? null), isLoading: false, hasFailed: false };
+        if (result) {
+          setBuckets({ data: foldBucketPoints(result), isLoading: false, hasFailed: false });
+          return;
         }
 
-        report(response?.errorMessage ?? response?.errorHeader);
-      } catch (error) {
-        report(error instanceof Error ? error.message : void 0);
-      }
-
-      return { data: null, isLoading: false, hasFailed: true };
-    };
-
-    void read().then((state) => {
-      if (current !== generation.current) return;
-
-      setBuckets(state);
-    });
-  }, [view, week, report, reset]);
+        report(error ?? errorHeader);
+        setBuckets({ data: null, isLoading: false, hasFailed: true });
+      },
+    );
+  }, [view, week, report, reset, runQuery]);
 
   const onPreviousWeek = useCallback(() => setWeekOffset((offset) => offset + 1), []);
   const onNextWeek = useCallback(() => setWeekOffset((offset) => Math.max(0, offset - 1)), []);

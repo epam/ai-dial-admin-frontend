@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "admin-worktree-4201",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "serve", "ai-dial-admin", "--port=4201"],
+      "port": 4201
+    }
+  ]
+}
