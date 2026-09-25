@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
-import { SuiteType } from '@/src/models/evaluation/test-suite';
 import Analytics from '../Analytics';
-import { COST_FETCH_POLL_INTERVAL_MS } from '../constants';
 
 const executeStructuredQueryMock = vi.fn();
 const getRunCostsMock = vi.fn();
@@ -23,8 +21,9 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     DialAnalyticsCard: ({ title, value, description, error, isLoading }: any) => (
       <div role="region" aria-label={typeof title === 'string' ? title : undefined}>
         <div>{title}</div>
-        {error ? <span>error-tag</span> : isLoading ? <span>cost-loading</span> : <div>{value}</div>}
-        {!error && !isLoading && <div>{description}</div>}
+        {isLoading ? <span>cost-loading</span> : <div>{value}</div>}
+        <div>{description}</div>
+        {error && <span>error-tag</span>}
       </div>
     ),
   };
@@ -43,11 +42,6 @@ const AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 291123.6 }]
 
 const RUN_WITH_THRESHOLD = { id: 'run-1', suiteSnapshot: { overallScoreThreshold: 0.5 } };
 const RUN_WITHOUT_THRESHOLD = { id: 'run-1' };
-const MCP_RUN = {
-  id: 'run-1',
-  status: RunStatus.COMPLETED,
-  suiteSnapshot: { overallScoreThreshold: 0.5, suiteType: SuiteType.McpTool },
-};
 
 const mockQueries = () => {
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
@@ -73,7 +67,6 @@ describe('Runs Summary :: Analytics', () => {
   beforeEach(() => {
     executeStructuredQueryMock.mockReset();
     getRunCostsMock.mockReset();
-    vi.useRealTimers();
   });
 
   test('shows a loader until data resolves', async () => {
@@ -150,7 +143,8 @@ describe('Runs Summary :: Analytics', () => {
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });
 
-  test('renders cost cards with dollar values', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders cost cards with dollar values', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -162,7 +156,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getAllByText('Runs.AvgPerTestCase').length).toBeGreaterThanOrEqual(2);
   });
 
-  test('renders em dash when a cost field is null', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('renders em dash when a cost field is null', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0 });
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -172,7 +167,8 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getByText('$0')).toBeInTheDocument();
   });
 
-  test('shows Error on cost cards without dropping other KPI cards when costs are unavailable', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows Cost data unavailable without dropping other KPI cards', async () => {
     mockQueries();
     mockCosts(null);
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
@@ -181,6 +177,7 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getByText('0.2 Runs.Seconds')).toBeInTheDocument();
     expect(screen.getByText('Runs.TestCaseLlmCost')).toBeInTheDocument();
     expect(screen.getByText('Runs.MetricEvalCost')).toBeInTheDocument();
+    expect(screen.getAllByText('Runs.CostDataUnavailable')).toHaveLength(2);
     const costRegions = [
       screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' }),
       screen.getByRole('region', { name: 'Runs.MetricEvalCost' }),
@@ -190,7 +187,8 @@ describe('Runs Summary :: Analytics', () => {
     }
   });
 
-  test('shows Calculating on cost cards while costs resolve after analytics', async () => {
+  // TODO: remove skip when SHOW_COST_CARDS is removed and cost cards are shown again
+  test.skip('shows loading on cost cards while costs resolve after analytics', async () => {
     mockQueries();
     let resolveCosts: (value: { avgTestCaseCost: number; avgMetricEvalCost: number }) => void = () => undefined;
     getRunCostsMock.mockReturnValue(
@@ -202,84 +200,12 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-    expect(screen.getAllByText('Runs.CostCalculatingElapsed')).toHaveLength(2);
-    expect(screen.getAllByLabelText('loading-20')).toHaveLength(2);
+    expect(screen.getAllByText('cost-loading')).toHaveLength(2);
 
     resolveCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
     expect(await screen.findByText('$0.5')).toBeInTheDocument();
     expect(screen.getByText('$0.25')).toBeInTheDocument();
-    expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
-  });
-
-  test.each([
-    ['all-null averages', { avgTestCaseCost: null, avgMetricEvalCost: null }],
-    ['an empty body degraded to a string', ''],
-  ])(
-    'keeps Calculating rather than showing a dash when the costs payload carries no figures (%s)',
-    async (_label, notReady) => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-      mockQueries();
-      getRunCostsMock.mockResolvedValueOnce(notReady).mockResolvedValue({
-        avgTestCaseCost: 0.5,
-        avgMetricEvalCost: 0.25,
-      });
-
-      render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
-
-      expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-      await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
-      expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-      expect(screen.queryByText('—')).not.toBeInTheDocument();
-
-      await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS);
-
-      await waitFor(() => expect(screen.getByText('$0.5')).toBeInTheDocument());
-      expect(screen.getByText('$0.25')).toBeInTheDocument();
-      expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
-    },
-  );
-
-  test('keeps Calculating indefinitely while the backend has no figures', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockQueries();
-    getRunCostsMock.mockResolvedValue({ avgTestCaseCost: null, avgMetricEvalCost: null });
-
-    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
-
-    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-
-    await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS * 100);
-
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-    expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
-    expect(screen.queryByText('—')).not.toBeInTheDocument();
-  });
-
-  test('shows Error on cost cards when a later poll hits an endpoint error', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockQueries();
-    getRunCostsMock.mockResolvedValueOnce({ avgTestCaseCost: null, avgMetricEvalCost: null }).mockResolvedValue(null);
-
-    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
-
-    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-
-    await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS);
-
-    await waitFor(() => {
-      const costRegions = [
-        screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' }),
-        screen.getByRole('region', { name: 'Runs.MetricEvalCost' }),
-      ];
-      for (const region of costRegions) {
-        expect(region).toHaveTextContent('error-tag');
-      }
-    });
-    expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
-    expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    expect(screen.queryByText('cost-loading')).not.toBeInTheDocument();
   });
 
   test('hides the test cases passed card when the run snapshot has no threshold', async () => {
@@ -299,52 +225,11 @@ describe('Runs Summary :: Analytics', () => {
       render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
 
       await screen.findByText('Runs.TestCasesPassed');
-      // The two cost cards settle after the query cards, so the count is awaited rather than read once:
-      // read immediately, it catches them still loading whenever the suite runs slowly enough.
-      await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(5));
       expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+      expect(screen.getAllByText('—')).toHaveLength(3);
+      expect(screen.queryByText('Runs.CostDataUnavailable')).not.toBeInTheDocument();
     },
   );
-
-  test('does not fetch costs for a run that is still in progress', async () => {
-    mockQueries();
-    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
-    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.RUNNING } as any} />);
-
-    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    expect(getRunCostsMock).not.toHaveBeenCalled();
-    expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(2);
-  });
-
-  test('does not fetch costs for an MCP-tool run that computed no metrics', async () => {
-    mockQueries();
-    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
-    render(<Analytics run={MCP_RUN as any} metricSnapshotCount={0} />);
-
-    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    expect(getRunCostsMock).not.toHaveBeenCalled();
-    expect(screen.getAllByText('—')).toHaveLength(2);
-  });
-
-  test('still fetches costs for an MCP-tool run whose metrics can be billed', async () => {
-    mockQueries();
-    mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0.25 });
-    render(<Analytics run={MCP_RUN as any} metricSnapshotCount={2} />);
-
-    expect(await screen.findByText('$0.25')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
-  });
-
-  test('keeps polling an MCP-tool run while the metric snapshots are still loading', async () => {
-    mockQueries();
-    getRunCostsMock.mockResolvedValue({ avgTestCaseCost: null, avgMetricEvalCost: null });
-    render(<Analytics run={MCP_RUN as any} />);
-
-    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
-  });
 
   test('still marks cards as error for a stopped run once data is present', async () => {
     mockQueries();
@@ -361,7 +246,7 @@ describe('Runs Summary :: Analytics', () => {
     mockCosts(null);
     render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} overallScore={null} />);
 
-    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(5));
+    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBe(3));
   });
 
   test('shows the test cases passed card when the snapshotted threshold is 0', async () => {
