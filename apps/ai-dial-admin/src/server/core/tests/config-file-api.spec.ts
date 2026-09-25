@@ -126,6 +126,7 @@ describe('Server :: Core :: ConfigFileApi', () => {
     ConfigFileEntityType.Applications,
     ConfigFileEntityType.Toolsets,
     ConfigFileEntityType.Schemas,
+    ConfigFileEntityType.Translators,
   ])('listNames accepts the newly-widened type %s', async (type) => {
     fetch.mockResponseOnce(JSON.stringify({ items: [] }), { headers: { 'content-type': 'application/json' } });
 

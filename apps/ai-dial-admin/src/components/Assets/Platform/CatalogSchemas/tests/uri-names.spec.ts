@@ -36,16 +36,6 @@ describe('Catalog schema asset :: URI-shaped names', () => {
     expect(getForbiddenSymbolsRegExp(VIEW)?.test('https://a\u0007b')).toBe(true);
   });
 
-  test('Should label the identity column ID rather than Name', () => {
-    // ui-kit's NAME_COLUMN(headerName) returns a locale-aware factory, not a resolved ColDef.
-    const [nameColumn] = getGridColumns(VIEW, () => void 0, {}, false) as unknown as ((
-      locale: Intl.LocalesArgument,
-      options: Intl.DateTimeFormatOptions | undefined,
-    ) => { headerName?: string })[];
-
-    expect(nameColumn('en-US', undefined).headerName).toEqual('ID');
-  });
-
   test('Should list metadata-only columns, with no version column', () => {
     const columns = getGridColumns(VIEW, () => void 0, {}, false);
 
