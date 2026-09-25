@@ -43,6 +43,39 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(result.response).toEqual([{ name: 'model1' }]);
   });
 
+  test('getCoreVersion calls the Core version route and returns its plain-text response', async () => {
+    fetch.mockResponseOnce('1.2.3', { headers: { 'content-type': 'text/plain' } });
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+
+    expect(result).toBe('1.2.3');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/version'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Accept: 'text/plain', authorization: 'Bearer access_token_mock' }),
+      }),
+    );
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).not.toContain('/api/');
+  });
+
+  test('getCoreVersion returns null when Core rejects the request', async () => {
+    fetch.mockResponseOnce('Unavailable', { status: 503 });
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+
+    expect(result).toBeNull();
+  });
+
+  test('getCoreVersion returns null when the request throws', async () => {
+    fetch.mockRejectOnce(new Error('Network error'));
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+
+    expect(result).toBeNull();
+  });
+
   test('getUserInfo maps a JWT caller into id/email', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
