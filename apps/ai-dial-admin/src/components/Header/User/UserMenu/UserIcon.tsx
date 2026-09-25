@@ -34,7 +34,7 @@ interface FallbackIconProps {
 
 export const FallbackIcon = ({ name, seed, className }: FallbackIconProps) => {
   const bg = randomColor({
-    luminosity: 'bright',
+    luminosity: 'light',
     seed: seed || name || '',
   });
 

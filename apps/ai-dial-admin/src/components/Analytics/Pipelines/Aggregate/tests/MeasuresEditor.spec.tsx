@@ -42,7 +42,6 @@ const renderEditor = (measures: Measure[] = [{ name: 'total_price', fn: 'sum', c
       columns={sourceColumns}
       targetColumns={targetColumns}
       functions={functions}
-      sourceName="dial_usage_log"
       onChange={vi.fn()}
     />,
   );
@@ -53,12 +52,6 @@ describe('MeasuresEditor', () => {
 
     expect(screen.getAllByText(AnalyticsPipelinesI18nKey.MeasureName)).toHaveLength(1);
     expect(screen.getAllByText(AnalyticsPipelinesI18nKey.MeasureColumn)).toHaveLength(1);
-  });
-
-  test('states which source the columns come from once, below the list', () => {
-    renderEditor();
-
-    expect(screen.getByText(`${AnalyticsPipelinesI18nKey.MeasuresColumnsNote} dial_usage_log`)).toBeTruthy();
   });
 
   test('names every row control, which the hidden header cannot do', () => {

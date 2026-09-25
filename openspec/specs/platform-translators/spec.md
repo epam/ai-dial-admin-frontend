@@ -19,13 +19,19 @@ after `Interceptors`, linking to a new `/platform-translators` route.
 - **THEN** `Translators` appears immediately after `Interceptors` and before `Routes`
 
 ### Requirement: Translator asset list is flat with create and delete actions
-The system SHALL render the translator asset list as a single, non-nested list of entries under the
-`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
-no folder-create, rename-folder, move-into-folder, or duplicate control.
+The system SHALL render the translator asset list with flat `platform` and synthetic `file` roots, built on the shared asset list. The `platform` root SHALL retain create, delete, and bulk-delete actions; the `file` root SHALL list config-file-defined translators and expose no mutating or folder action.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/platform-translators`
 - **THEN** all translator resources are shown as direct entries with no folder-expand affordance
+
+#### Scenario: Translator resource list remains mutable
+- **WHEN** a user browses the `platform` root on `/platform-translators`
+- **THEN** create, delete, and bulk-delete actions remain available according to the user's permissions
+
+#### Scenario: Translator file root is read-only
+- **WHEN** a user opens the `file` root on `/platform-translators`
+- **THEN** config-file translator names are listed and no create, delete, bulk-delete, duplicate, move, rename, or folder action is offered
 
 #### Scenario: No create-folder, move, or duplicate action is present
 - **WHEN** a user opens the translator asset list toolbar and row actions
@@ -75,13 +81,19 @@ URI-encoding or `$id`-style handling to it.
   address it by that plain name
 
 ### Requirement: Translator asset detail view tab set
-The system SHALL render a translator asset's detail view with exactly one tab, `Properties`, and
-SHALL NOT include a `Features`, `Configuration`, `Roles`, or `Audit` tab, a Core-sync status banner,
-or any reverse-index tab showing which other entities reference this translator.
+The system SHALL render a translator asset's detail view with exactly one tab, `Properties`, and SHALL NOT include a `Features`, `Configuration`, `Roles`, or `Audit` tab, a Core-sync status banner, or any reverse-index tab showing which other entities reference this translator. A file-defined translator opened from the `file` root SHALL be read through DIAL Core's config-file read endpoint and rendered read-only; it SHALL hide the ADMIN|CORE JSON format selector.
 
 #### Scenario: Detail view renders exactly Properties
 - **WHEN** a user opens a translator asset's detail view
 - **THEN** the tab list contains exactly `Properties`
+
+#### Scenario: File-defined Translator opens read-only
+- **WHEN** a user opens a Translator from the `file` root
+- **THEN** the system opens `/platform-translators/{id}?configFile=true`, reads it from the config-file endpoint, and renders all detail fields read-only
+
+#### Scenario: File-defined Translator hides format selection
+- **WHEN** a user opens the JSON editor for a file-defined Translator
+- **THEN** no ADMIN|CORE format selector is rendered
 
 #### Scenario: No Features, Configuration, Roles, or Audit tab
 - **WHEN** a user opens a translator asset's detail view
@@ -148,11 +160,10 @@ config-authoring concern this capability does not surface any editor for.
 - **WHEN** any existing entity-attach picker in the admin console renders
 - **THEN** its option list and columns are unaffected by the existence of `Catalog > Translators`
 
-### Requirement: Translators is excluded from the config-file readable-types allow-list
-The system SHALL NOT add `translators` to `READABLE_CONFIG_FILE_TYPES` — no existing cross-reference
-picker needs to resolve a config-file-declared translator by name through this capability.
+### Requirement: Translators are readable through the config-file client
+The system SHALL include `translators` in the config-file client entity-type enum and readable-type allow-list so the translator file root and its detail route can read DIAL Core configuration-file entities. This SHALL not widen unrelated attach-picker behavior.
 
-#### Scenario: A config-file translator read is refused
-- **WHEN** a caller requests a config-file read for the `translators` type
-- **THEN** the read is refused as not readable, the same outcome every other type outside the
-  allow-list already gets
+#### Scenario: Translator config-file read is accepted
+- **WHEN** the translator list or detail route requests a config-file entity of type `translators`
+- **THEN** the config-file client accepts the type and reads Core's corresponding endpoint
+

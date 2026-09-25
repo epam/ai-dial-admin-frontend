@@ -106,6 +106,7 @@ export const getEntityPath = (
     case ApplicationRoute.PlatformAppRunners:
     case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformTranslators:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys: {

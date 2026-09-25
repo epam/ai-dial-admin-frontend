@@ -401,8 +401,15 @@ to the pipeline.
 
 Both kinds share an identity, a target, a read scope, a trigger, an enabled state and a runtime state; they
 differ only in what they compute. The detail page SHALL therefore present **one** frame — the identity row,
-the read-only facts, the read scope, the trigger, the runtime state, the JSON editor toggle and the save
-bar — and SHALL choose the transform section by the pipeline's kind.
+the read-only facts, the scope, the trigger, the runtime state, the JSON editor toggle and the save bar —
+and SHALL choose the transform section by the pipeline's kind.
+
+The section carrying the source, the target and the filter SHALL be titled **Scope**. "Read scope" named
+only half of it: the target is written, not read.
+
+**Scope SHALL come before the trigger**, which is the order the author fills them in. A group trigger's
+member selection ranks rows by the source's columns and its readiness declaration is scoped to the same
+source, so a trigger presented above the scope asks about a table the page has not established yet.
 
 There is one frame per page and not one per kind. Everything the frame presents **below the identity row**
 is the content of the **Properties** tab (see *Pipeline detail view is organized into Properties and Audit
@@ -431,6 +438,11 @@ The detail page SHALL present **every** editable member of a pipeline, so that a
 the API can be inspected and corrected in the console. Controls that the create modal already provides SHALL
 be the same controls here, differing only in width and layout.
 
+#### Scenario: The scope is presented before the trigger
+
+- **WHEN** an enrichment pipeline is opened
+- **THEN** the Scope section appears above the trigger
+
 #### Scenario: An enrichment pipeline presents the enrichment section
 
 - **WHEN** an enrichment pipeline is opened
@@ -447,7 +459,7 @@ be the same controls here, differing only in width and layout.
 #### Scenario: The shared frame is the same for both kinds
 
 - **WHEN** a pipeline of either kind is opened
-- **THEN** the identity row, read-only facts, read scope, trigger, runtime state and save bar are presented
+- **THEN** the identity row, read-only facts, scope, trigger, runtime state and save bar are presented
 
 #### Scenario: Kind is not selectable
 
@@ -496,6 +508,13 @@ ones as read-only facts, visually separated from the editable form, so it is una
 operator can change. `version_column` SHALL render as an em dash when the read source declares no scan
 metadata.
 
+The **grain key** SHALL be the resolved target's where the page has resolved one, falling back to the
+pipeline's stored `grain_key` and then to an em dash. It is the one fact read from the draft's resolution
+rather than from the pipeline, because since the group trigger stopped repeating it this row is the only
+place it appears, and a grouping key has to re-derive with a target the caller has changed but not yet
+saved. Where the value comes from SHALL be stated on an **info affordance on its label** — reachable by
+keyboard and carrying the sentence as its own accessible name — rather than as a caption under the value.
+
 The composed **`response_schema` SHALL NOT be among them**. It is a document rather than a value — a dozen
 field names on a live pipeline, against neighbours that are one word each — and what it lists, the outputs
 editor states below in the form the operator authors them. It stays readable in the JSON editor, which is
@@ -505,10 +524,19 @@ verbatim rather than composing.
 The name SHALL be presented among the identity rather than among these facts, because it addresses the page.
 Because quoting it elsewhere is a common need, it SHALL carry a copy control.
 
-The resolved **read source** and the **target** SHALL be presented among these facts as well, the source
-first as the read scope presents them, each linking to that table's own page. Both sit inside collapsible sections of the form, so without this the page could not
-answer "which tables is this bound to" without a trip back to the listing; and an operator who asks that
-question is usually on their way to the table itself.
+The resolved **read source** and the **target** SHALL NOT be presented among these facts. The scope states
+both at the top of the form, no longer folded into a collapsible section, so a read-only copy of the pair
+said the same thing twice within a few centimetres — and the question the copy was added to answer, "which
+tables is this bound to", is answered by the controls themselves.
+
+Reaching a bound table SHALL instead be offered **beside the control that names it**: a control bound to a
+table SHALL carry an `Open` action that opens that table's page in a **new tab**, so the pipeline the
+operator was reading stays where it was. A control whose table is unresolved — a followed source whose
+target declares no parent — SHALL offer no such action, there being nothing to open.
+
+Because every such action carries the same label, each control and its action SHALL be grouped under the
+**name of the table** they are bound to. That name is what distinguishes one `Open` from another for a
+screen reader; the control's own label already names the field.
 
 No evaluator fact SHALL be presented and no link to an evaluator page SHALL be offered: the transform is
 authored on this page, and the composed `response_schema` is where "what the model is held to" is read.
@@ -517,8 +545,22 @@ These members SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: The facts name the source before the target
 
-- **WHEN** a pipeline's read-only facts are presented
-- **THEN** the source is named before the target, as the read scope below it presents them
+- **WHEN** a pipeline is opened
+- **THEN** neither the target nor the resolved read source is named among the read-only facts
+- **AND** the scope's own controls present the source before the target
+
+#### Scenario: The bound tables are reachable from the facts
+
+- **WHEN** the operator activates the `Open` action beside the target control
+- **THEN** that table's page is opened in a new tab
+- **AND** the same holds for the resolved read source's control
+- **AND** the facts carry no second, read-only copy of the pair
+
+#### Scenario: An unresolved source offers no Open
+
+- **GIVEN** an enrichment pipeline whose followed source cannot be resolved
+- **WHEN** the pipeline is opened
+- **THEN** the source control offers no `Open` action
 
 #### Scenario: Derived facts are shown but not editable
 
@@ -528,7 +570,9 @@ These members SHALL NOT be sent when the pipeline is saved.
 #### Scenario: An enrichment pipeline adds its resolved facts
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** its `grain_key` and `version_column` are presented as read-only values
+- **THEN** its grain key and `version_column` are presented as read-only values
+- **AND** the grain key is the resolved target's, with its provenance on an info affordance beside the label
+  rather than in a caption
 
 #### Scenario: The composed schema is not among the facts
 
@@ -546,12 +590,6 @@ These members SHALL NOT be sent when the pipeline is saved.
 - **WHEN** a pipeline is opened
 - **THEN** a control is offered that copies its name
 
-#### Scenario: The bound tables are reachable from the facts
-
-- **WHEN** a pipeline is opened
-- **THEN** its target and its resolved read source are presented among the facts
-- **AND** each links to that table's page
-
 #### Scenario: No evaluator fact is offered and none opens a page
 
 - **WHEN** an enrichment pipeline is opened
@@ -563,47 +601,75 @@ These members SHALL NOT be sent when the pipeline is saved.
 Every pipeline carries a server-owned `state` reporting how its execution is going: when it last ran, when
 it will next run, how far behind its input it is, the last failure, whether the last run left input behind,
 what held its window short of its input, and whether an enrichment it reads has been re-derived beneath it.
-The console SHALL present this state on the detail page, read-only.
+The console SHALL present this state on the detail page, read-only, and SHALL present it in two places
+according to what the reader does with it.
 
-This is the console's only answer to the question an operator arrives with when an analytics page looks
-stale — the pipeline that builds that table is the thing that is behind, disabled, failing or held — and
-until now none of it was reachable from the console at all.
+The **measured values** — last run, next run, lag, backlog, drained-at — SHALL be presented among the
+read-only facts, in the same row as the declaration's own derived members. They are read at a glance and
+belong beside `generation` and `updated_at` rather than under a heading of their own; the section that
+carried them was a heading over four short values.
+
+The **three states an operator acts on** — the last failure, a window held short by an enrichment the
+pipeline reads, and an output a re-derived input has left behind — SHALL be presented as **alerts**, above
+the tab strip, each stating what happened and naming the enrichment involved. As a line of small print
+below the facts they read as a footnote to them, which is what made them easy to miss.
+
+Each alert SHALL be drawn to what it is: the failure as an error, the rebuild as a warning, the clamp as
+information. None SHALL interrupt a screen reader, the page rendering all three as it loads rather than
+raising them while it is read.
+
+`unclamped_reads` SHALL NOT be presented. It reports, per enrichment the pipeline reads, why the window was
+**not** held — six closed-dictionary reasons, one of them simply "this pipeline does not read it" — and
+every one of them is the ordinary case. The member stays readable in the JSON editor.
 
 State SHALL be presented as reported and SHALL NOT be interpreted into a health verdict. A lag figure is
 measured against the moment it is read, so two reads of an unchanged position differ by the time between
 them and both are correct; a clamp is progress rather than an error. Presenting either as a fault would be
 the console inventing a judgement the service does not make.
 
-A member the service omits SHALL be presented as absent rather than as a zero. A pipeline that has never run
-reports no last run, which is not the same as having run at the epoch.
+A member the service omits SHALL be **left out** rather than presented as a zero or as an em dash. These
+values appear as the pipeline runs, so a row of placeholders would state absence where there is simply
+nothing yet — unlike the declaration's own facts, whose blank means the declaration names none.
 
 State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: Execution state is presented
 
 - **WHEN** a pipeline that has run is opened
-- **THEN** its last run, next run and lag are presented as read-only values
+- **THEN** its last run, next run and lag are presented among the read-only facts
 
 #### Scenario: A pipeline that has never run says so
 
 - **WHEN** a pipeline with no recorded run is opened
-- **THEN** its last run is presented as absent rather than as a zero or an epoch date
+- **THEN** its last run is left out of the facts rather than presented as a zero, an epoch date or an em
+  dash
 
 #### Scenario: The last failure is presented
 
 - **WHEN** a pipeline whose last run failed is opened
-- **THEN** the failure reported by the service is presented as worded by the service
+- **THEN** the failure reported by the service is presented as an alert, worded by the service
 
 #### Scenario: A clamp is presented as progress
 
 - **WHEN** a pipeline whose window was held short by an enrichment it reads is opened
-- **THEN** the clamp and the enrichment holding it are presented
+- **THEN** the clamp and the enrichment holding it are presented as an informational alert
 - **AND** the pipeline is not presented as failing on that account
 
 #### Scenario: A required rebuild is presented as an instruction
 
 - **WHEN** a pipeline whose read enrichment has been re-derived since its output was built is opened
-- **THEN** the console states that a rebuild is required and names the enrichment
+- **THEN** the console states as a warning alert that a rebuild is required and names the enrichment
+
+#### Scenario: A pipeline in none of those states raises no alert
+
+- **WHEN** a pipeline reporting neither a failure, a clamp nor a required rebuild is opened
+- **THEN** no alert is presented
+
+#### Scenario: Unclamped reads are not presented
+
+- **WHEN** a pipeline whose state reports `unclamped_reads` is opened
+- **THEN** none of them is presented among the facts or as an alert
+- **AND** the member remains readable in the JSON editor
 
 #### Scenario: State is not sent on save
 
@@ -813,9 +879,13 @@ operator arriving from the listing is asking whether it is running at all — an
 edge of the header is read last, after the name and after the actions.
 
 The enable/disable control SHALL carry the appearance its consequence warrants. While the pipeline is enabled
-the control reads "Disable pipeline" and SHALL be rendered as an outlined danger button, the same treatment
-the console gives Delete; while it is disabled it reads "Enable pipeline" and SHALL be rendered as a primary
-button. The control SHALL carry no icon: the trash glyph that accompanies Delete would misstate a reversible
+the control reads "Disable pipeline" and SHALL be rendered as a **neutral** button; while it is disabled it
+reads "Enable pipeline" and SHALL be rendered as a primary button. The danger treatment SHALL be reserved
+for **Delete**, which is the only irreversible action of the two: with both drawn in danger, side by side in
+the same header, the appearance said stopping a pipeline and destroying it weighed the same.
+
+**Delete SHALL be placed before the enable/disable control**, so the control the operator reaches for
+routinely is the last one in the row rather than the one they reach for once. The control SHALL carry no icon: the trash glyph that accompanies Delete would misstate a reversible
 switch as a removal, and no other glyph distinguishes the two directions better than the label already does.
 
 The control SHALL be offered only to a full admin, SHALL confirm before it applies, and SHALL be withheld
@@ -826,7 +896,8 @@ them.
 
 - **WHEN** an enabled pipeline is opened
 - **THEN** its enabled badge is presented above the pipeline name at the header's leading edge
-- **AND** the control offering to disable it is presented as a danger action
+- **AND** the control offering to disable it is presented as a neutral action, the danger treatment being
+  Delete's
 
 #### Scenario: A disabled pipeline offers enabling as the primary action
 
@@ -956,10 +1027,14 @@ physical — an enrichment is keyed on its grain and collapses by it, so groupin
 pile many groups onto a single row.
 
 The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
-`grain.grain_key` and present it as a **labelled read-only value** — not as a text input, which reads as a
-field someone forgot to enable, and not as a disabled one, which would leave the accessibility tree and stop
-the value being readable at all. It SHALL be captioned as the target table's grain key, and re-derived
-whenever the target changes.
+`grain.grain_key` and present it as a **labelled read-only value among the read-only facts** — not as a text
+input, which reads as a field someone forgot to enable, and not as a disabled one, which would leave the
+accessibility tree and stop the value being readable at all. A labelled value in a column of inputs reads as
+that same forgotten field, which is why it sits with the facts and not in the trigger block; the facts row
+already presents the pipeline's own `grain_key`, derived by the service from the same target, so a copy in
+the trigger stated one column twice with nothing to say the two were the same.
+
+The presented value SHALL be re-derived whenever the target changes, before the change is saved.
 
 This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
 its rows are grouped by. The two SHALL NOT share a control.
@@ -967,13 +1042,15 @@ its rows are grouped by. The two SHALL NOT share a control.
 #### Scenario: The grouping key is filled from the target's grain key
 
 - **WHEN** the trigger kind is `group` and a target is selected
-- **THEN** that table's grain key is presented as a labelled value, with no editable control for it
+- **THEN** that table's grain key is presented as a labelled value among the read-only facts, with no
+  editable control for it
 - **AND** the value is readable rather than removed from the accessibility tree
+- **AND** the trigger block states no copy of it
 
 #### Scenario: Changing the target re-derives the grouping key
 
 - **WHEN** the user changes the target to one with a different grain key
-- **THEN** the presented grouping key is the new table's grain key
+- **THEN** the grain key presented among the facts is the new table's, before the change is saved
 
 ### Requirement: Member selection for a group trigger
 
@@ -1437,20 +1514,28 @@ exactly two tabs, **Properties** and **Audit**, in that order. `Properties` SHAL
 the view is first opened.
 
 The identity row — the enabled-state badge, the pipeline name, its copy control, the `Discard` / `Save`
-change bar, the enable/disable control and the JSON editor toggle — SHALL render **above** the tab strip
-and SHALL be unchanged by this reorganization: the same controls, in the same order, under the same
-permission and pending-edit conditions the "The pipeline detail header states the pipeline's status before
-its name" requirement already states, presented whichever tab is selected. Everything the frame presents
-below that row — the read-only facts, the read scope, the trigger, the kind's transform section and the
-runtime state — SHALL render inside the **Properties** tab where a tab strip is rendered, and directly
-beneath the identity row where it is not.
+change bar, the enable/disable control, the delete control and the JSON editor toggle — SHALL render
+**above** the tab strip and SHALL be unchanged by this reorganization: the same controls, in the same
+order, under the same permission and pending-edit conditions the "The pipeline detail header states the
+pipeline's status before its name" requirement already states, presented whichever tab is selected.
+
+The **runtime alerts** — the last failure, the clamp and the required rebuild, as "A pipeline's runtime
+state is presented read-only" states them — SHALL render between the identity row and the tab strip, and
+SHALL therefore be presented whichever tab is selected. They are true of the pipeline rather than of the
+tab in view: filed under `Properties` they vanished the moment the reader opened the history, which is
+exactly where a reader goes to find out what a failing pipeline has been doing.
+
+Everything else the frame presents below the identity row — the read-only facts, the scope, the trigger and
+the kind's transform section — SHALL render inside the **Properties** tab where a tab strip is rendered,
+and directly beneath the identity row where it is not.
 
 Selecting the `Audit` tab SHALL NOT discard a pending edit. The draft the fields and the document share
 SHALL survive a tab switch, and the change bar SHALL stay offered from either tab, so a caller who reads
 the history mid-edit does not lose the edit by reading it.
 
 The JSON editor and the tab strip SHALL NOT be presented together. Enabling the editor withdraws the tab
-strip along with everything else below the identity row, as "The pipeline JSON editor takes the whole view,
+strip along with everything else below the identity row — the runtime alerts included, since the document
+on screen is a draft the alerts may already contradict — as "The pipeline JSON editor takes the whole view,
 and an unsaved change closes the way out" already requires, and leaving the editor SHALL restore the strip
 with `Properties` selected. The toggle itself is unchanged and stays offered to every caller.
 
@@ -1476,8 +1561,7 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **WHEN** the user opens the detail view of a registered pipeline
 - **THEN** a tab strip showing `Properties` and `Audit` is rendered
 - **AND** `Properties` is the selected tab
-- **AND** the read-only facts, the trigger, the kind's transform section and the runtime state are shown
-  beneath it
+- **AND** the read-only facts, the trigger and the kind's transform section are shown beneath it
 
 #### Scenario: The identity row and its actions stay above the tab strip
 
@@ -1485,6 +1569,12 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **WHEN** the user switches from `Properties` to `Audit`
 - **THEN** the enabled-state badge, the pipeline name, its copy control and the enable/disable control
   remain rendered above the tab strip, unchanged
+
+#### Scenario: A runtime alert is presented on either tab
+
+- **GIVEN** the detail view of a pipeline whose read enrichment has been re-derived beneath it
+- **WHEN** the user switches from `Properties` to `Audit`
+- **THEN** the alert stays presented, above the tab strip
 
 #### Scenario: The Audit tab is offered on a disabled pipeline
 
@@ -1512,6 +1602,7 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **WHEN** the caller enables the JSON editor
 - **THEN** the pipeline is presented as one JSON document
 - **AND** no tab strip is rendered
+- **AND** no runtime alert is presented
 - **AND** turning the editor off again renders the tab strip with `Properties` selected
 
 #### Scenario: Audit tab absent when analytics is disabled
@@ -1519,7 +1610,7 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **GIVEN** `featureFlags.analyticsEnabled` is false
 - **WHEN** the user reaches `/pipelines/{name}` by a direct link
 - **THEN** no tab strip and no `Audit` tab are rendered
-- **AND** the read-only facts, the trigger, the transform section and the runtime state are shown directly
+- **AND** the read-only facts, the trigger and the transform section are shown directly
 - **AND** no request is issued to the analytics activity feed
 
 ### Requirement: Pipeline Audit tab lists the pipeline's own activities
@@ -1824,8 +1915,11 @@ aggregate is stored disabled whatever the caller asks, so both kinds still regis
 
 The modal SHALL be mounted only while open, so closing discards its state without a manual reset.
 
-On success the modal SHALL close, show a success notification, and refresh the listing. The console SHALL
-NOT navigate to the new pipeline's page on its own.
+On success the modal SHALL close, show a success notification, and **navigate to the new pipeline's own
+page**. That page is where the declaration is authored, and a registration that collects three fields has
+produced nothing else to look at; leaving the operator on the listing makes them find the row they just
+created before they can continue. The listing is refreshed on the way, so returning to it shows the new
+pipeline.
 
 #### Scenario: Registration collects three fields
 
@@ -1866,8 +1960,13 @@ NOT navigate to the new pipeline's page on its own.
 
 #### Scenario: Successful creation refreshes the listing
 
+- **WHEN** creation succeeds and the operator returns to the listing
+- **THEN** the new pipeline appears in it
+
+#### Scenario: Successful creation opens the new pipeline
+
 - **WHEN** creation succeeds
-- **THEN** the modal closes, a success notification is shown, and the new pipeline appears in the listing
+- **THEN** the modal closes, a success notification is shown, and the new pipeline's own page is opened
 
 ### Requirement: The JSON document is the pipeline as the service serves it
 
@@ -2008,6 +2107,9 @@ ever validates it.
 
 An entry SHALL be addable and removable, and at least one SHALL be required.
 
+While no output is declared the section SHALL present its **add control and nothing else**, as the inputs
+section does: no column headings, no ordering hint and no empty-state sentence.
+
 An output declaring neither prose nor a refinement is sent as an empty body and is stored by the service as
 `null`, so it is the shape a declaration authored through this form comes back in. Reading one SHALL yield
 an output carrying its name alone.
@@ -2026,6 +2128,11 @@ an output carrying its name alone.
 - **THEN** the page presents that output with its target column selected and its prose, value list and
   transform empty
 - **AND** the page renders rather than failing on the declaration
+
+#### Scenario: An empty outputs section offers only its add control
+
+- **WHEN** an enrichment pipeline declaring no outputs is opened
+- **THEN** the section presents the add control, with no column headings and no empty-state sentence
 
 #### Scenario: A sql output carries only its expression
 
@@ -2302,11 +2409,28 @@ left the evaluator behind and an operator who learned that behaviour would other
 The confirmation SHALL keep the danger variant it already uses, and the target table's rows SHALL be stated
 as unaffected — the service leaves them in place.
 
+Deleting SHALL be offered from **both** surfaces that present a pipeline: the listing's row action menu and
+the **detail page's header**, each behind the same confirmation and the same full-admin guard. A pipeline
+opened by mistake is disposed of where it was opened rather than from a screen the operator has to go back
+to. A delete from the detail page SHALL return to the listing, the page it acted on having ceased to
+exist.
+
 #### Scenario: Deleting an enrichment pipeline warns that the transform goes with it
 
 - **WHEN** the user activates delete on an enrichment pipeline
 - **THEN** the confirmation states that its transform is deleted with it and that the target's rows are left
   in place
+
+#### Scenario: The detail page offers delete
+
+- **WHEN** a full admin opens a pipeline's detail page
+- **THEN** a delete control is offered in its header
+- **AND** confirming it deletes the pipeline and returns to the listing
+
+#### Scenario: Delete is not offered without full-admin rights
+
+- **WHEN** a user who is not a full admin opens a pipeline's detail page
+- **THEN** no delete control is offered
 
 #### Scenario: Deleting an aggregate pipeline says nothing about a transform
 
@@ -2413,6 +2537,16 @@ dropped: a `sql` transform renders no request, and the service refuses one decla
 the declaration, so the drop happens as soon as the type is known rather than after a resolution.
 
 A row carrying no name or no value SHALL be omitted from the request rather than sent blank.
+
+While no input is declared the section SHALL present its **add control and nothing else** — no column
+headings and no empty-state sentence. Headings label rows; with no row to label they are three words over
+an empty grid, and the control already says what to do. A read source the console could not read is the
+exception and SHALL still be reported, being a failure rather than an empty list.
+
+#### Scenario: An empty inputs section offers only its add control
+
+- **WHEN** an enrichment pipeline declaring no inputs is opened
+- **THEN** the section presents the add control, with no column headings and no empty-state sentence
 
 #### Scenario: Inputs are authored as name, binding and value
 

@@ -1,11 +1,12 @@
 'use client';
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useRef, useState } from 'react';
 
 import { DEFAULT_ROOT_FOLDER_PERMISSIONS } from '@/src/constants/file';
-import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { AssetListItem, BucketType, EntitySource } from '@/src/models/dial/asset-list-item';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { fillChildren, getFolderName, mergeFiles } from '@/src/utils/files/folder';
 import { isFolder } from '@/src/utils/files/path';
+import { isFileRootPath } from '@/src/utils/files/root-folder';
 
 export interface AssetsFolderContext<T extends AssetListItem> {
   isFetchingFiles: boolean;
@@ -43,6 +44,7 @@ export type AssetsFolderContextReader<T extends AssetListItem = AssetListItem> =
 export function createFolderContext<T extends AssetListItem>(
   getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
   contextName: string,
+  getConfigFileNames?: () => Promise<string[] | null | undefined>,
 ) {
   const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
@@ -52,8 +54,31 @@ export function createFolderContext<T extends AssetListItem>(
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
     const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, T[]>>({});
     const [isFetchingFiles, setIsFetchingFiles] = useState(false);
+    const failedFilePathsRef = useRef<Set<string>>(new Set());
 
     const [data, setData] = useState<T[] | null>(null);
+
+    const fetchByPath = async (path: string): Promise<T[] | null | undefined> => {
+      if (!isFileRootPath(path)) {
+        return getFilesFunc(path);
+      }
+
+      if (!getConfigFileNames) {
+        return undefined;
+      }
+
+      const names = await getConfigFileNames();
+      return names?.map(
+        (name) =>
+          ({
+            name,
+            path: name,
+            nodeType: DialFileNodeType.ITEM,
+            bucket: BucketType.Platform,
+            entitySource: EntitySource.File,
+          }) as T,
+      );
+    };
 
     const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
       if (!fullPath?.includes('/')) return;
@@ -83,7 +108,7 @@ export function createFolderContext<T extends AssetListItem>(
             tempExpandedFolders.add(currentPath);
 
             const nextFolderPath = pathParts[index + 1] ? currentPath + pathParts[index + 1] + '/' : undefined;
-            const fetched = await getFilesFunc(currentPath);
+            const fetched = await fetchByPath(currentPath);
 
             if (fetched === undefined) {
               setData(null);
@@ -123,11 +148,23 @@ export function createFolderContext<T extends AssetListItem>(
 
     const fetchRoots = (paths: string[], refreshData?: boolean, resetFolder?: boolean) => {
       setIsFetchingFiles(true);
-      Promise.all(paths.map((rootPath) => getFilesFunc(rootPath)))
+      Promise.all(paths.map((rootPath) => fetchByPath(rootPath)))
         .then((results) => {
-          if (results.some((result) => result === undefined)) {
+          const hasPhysicalRootFailure = results.some(
+            (result, index) => !isFileRootPath(paths[index]) && result === undefined,
+          );
+          if (hasPhysicalRootFailure) {
             setData(null);
             return;
+          }
+
+          const failedFilePaths = new Set(
+            paths.filter((rootPath, index) => isFileRootPath(rootPath) && results[index] === undefined),
+          );
+          if (refreshData) {
+            failedFilePathsRef.current = failedFilePaths;
+          } else {
+            failedFilePaths.forEach((path) => failedFilePathsRef.current.add(path));
           }
 
           const newFetchedFoldersData: Record<string, T[]> = {};
@@ -145,6 +182,7 @@ export function createFolderContext<T extends AssetListItem>(
                 // than a bare array repeated at each call site — see `DEFAULT_ROOT_FOLDER_PERMISSIONS`'s
                 // own comment for why it's not yet read from a real backend permission.
                 permissions: DEFAULT_ROOT_FOLDER_PERMISSIONS,
+                entitySource: isFileRootPath(rootPath) ? EntitySource.File : EntitySource.Resource,
                 items: fillChildren((results[index] ?? []) as DialFile[]),
               }) as unknown as T,
           );
@@ -154,10 +192,9 @@ export function createFolderContext<T extends AssetListItem>(
             refreshData ? newFetchedFoldersData : { ...prev, ...newFetchedFoldersData },
           );
 
-          // The last root keeps the pre-existing single-root behavior of opening on load (Applications
-          // orders `platform` first but keeps `public` — the historical single root — as the folder
-          // shown open by default, so existing users see no change in what's initially expanded).
-          const openPath = paths[paths.length - 1];
+          // The last physical root keeps the pre-existing initial view. A synthetic file root is
+          // already populated but remains collapsed until the user explicitly opens it.
+          const openPath = paths.findLast((rootPath) => !isFileRootPath(rootPath)) ?? paths[0];
           setData(newFetchedFoldersData[openPath] ?? []);
           setExpandedFolders((prev) => new Set(refreshData ? [openPath] : [...prev, openPath]));
           if (!filePath || resetFolder) {
@@ -174,7 +211,7 @@ export function createFolderContext<T extends AssetListItem>(
       }
 
       setIsFetchingFiles(true);
-      getFilesFunc(path)
+      fetchByPath(path)
         .then((fetched) => {
           if (fetched === undefined) {
             setData(null);
@@ -212,7 +249,9 @@ export function createFolderContext<T extends AssetListItem>(
         setData(fetchedFoldersData[folderPath]);
       } else {
         newExpanded.add(folderPath);
-        if (!fetchedFoldersData[folderPath] && !skipFetch) {
+        if (failedFilePathsRef.current.has(folderPath)) {
+          setData(null);
+        } else if (!fetchedFoldersData[folderPath] && !skipFetch) {
           fetchFiles(folderPath);
         } else if (fetchedFoldersData[folderPath]) {
           setData(fetchedFoldersData[folderPath]);

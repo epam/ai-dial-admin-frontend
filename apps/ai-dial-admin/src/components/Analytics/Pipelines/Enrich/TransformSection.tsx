@@ -217,7 +217,6 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
           columns={targetColumns}
           isReady={isTransformReady}
           isDisabled={isDisabled}
-          hasEmptyState
           hasRefinement
           onChange={(outputs) => onTransformChange({ outputs })}
         />

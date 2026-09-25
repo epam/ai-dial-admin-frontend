@@ -5,7 +5,7 @@ import {
   SpendBucket,
   UsageMeasures,
 } from '@/src/components/Analytics/Usage/models';
-import { UNDEFINED_VALUE } from '@/src/components/Analytics/Usage/constants';
+import { ROW_KEY_SEPARATOR, UNDEFINED_VALUE } from '@/src/components/Analytics/Usage/constants';
 import {
   AVG_LATENCY_ALIAS,
   BUCKET_ALIAS,
@@ -16,7 +16,6 @@ import {
   P95_LATENCY_ALIAS,
   PROMPT_TOKENS_ALIAS,
   SPEND_ALIAS,
-  TOOL_CALLS_ALIAS,
   CALLERS_ALIAS,
   GROUP_COUNT_ALIAS,
   GROUP_NAMES_ALIAS,
@@ -47,7 +46,6 @@ export const readMeasures = (row: Record<string, unknown>): UsageMeasures => ({
   spend: toNumber(row[SPEND_ALIAS]),
   promptTokens: toNumber(row[PROMPT_TOKENS_ALIAS]),
   completionTokens: toNumber(row[COMPLETION_TOKENS_ALIAS]),
-  toolCalls: toNumber(row[TOOL_CALLS_ALIAS]),
   p50LatencyMs: toNumber(row[P50_LATENCY_ALIAS]),
   p95LatencyMs: toNumber(row[P95_LATENCY_ALIAS]),
 });
@@ -60,7 +58,6 @@ export const EMPTY_MEASURES: UsageMeasures = {
   spend: null,
   promptTokens: null,
   completionTokens: null,
-  toolCalls: null,
   p50LatencyMs: null,
   p95LatencyMs: null,
 };
@@ -94,15 +91,25 @@ export const foldDimensionBuckets = (
     }))
     .filter((point) => !Number.isNaN(point.bucketMs));
 
-export const foldBreakdownRows = (result: StructuredQueryResult | null | undefined, column: string): BreakdownRow[] =>
+/**
+ * The qualifier only reaches the id: without it two rows that share a dimension value fold into
+ * one, colliding in the previous-window map and in the grid's row keys alike.
+ */
+export const foldBreakdownRows = (
+  result: StructuredQueryResult | null | undefined,
+  column: string,
+  qualifier?: string,
+): BreakdownRow[] =>
   (result?.rows ?? []).map((row) => {
     const raw = row[column];
     const isMissing = isMissingValue(raw);
+    const qualifierValue = qualifier == null ? null : String(row[qualifier] ?? '');
 
     const groupNames = row[GROUP_NAMES_ALIAS];
+    const ownId = isMissing ? `${column}:missing` : String(raw);
 
     return {
-      id: isMissing ? `${column}:missing` : String(raw),
+      id: qualifierValue == null ? ownId : `${qualifierValue}${ROW_KEY_SEPARATOR}${ownId}`,
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),

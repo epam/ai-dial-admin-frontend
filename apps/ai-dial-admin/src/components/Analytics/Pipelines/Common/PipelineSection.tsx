@@ -6,13 +6,14 @@ import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
   title: string;
+  description?: string;
   isExpanded?: boolean;
   children: ReactNode;
 }
 
-const PipelineSection: FC<Props> = ({ title, isExpanded, children }) => {
+const PipelineSection: FC<Props> = ({ title, description, isExpanded, children }) => {
   return (
-    <Accordion title={title} collapsed={!isExpanded}>
+    <Accordion title={title} description={description} collapsed={!isExpanded}>
       <div className="flex flex-col gap-y-6">{children}</div>
     </Accordion>
   );

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialModelResourceStatus } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +11,8 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteTranslators,
   createTranslator,
+  getConfigFileTranslator,
+  getConfigFileTranslators,
   getTranslator,
   getTranslators,
   removeTranslator,
@@ -48,6 +51,24 @@ describe('Assets translator :: server actions', () => {
       'platform/to-responses',
       'etag',
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should read config-file translator names', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileTranslators();
+
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Translators);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should read one config-file translator by name', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileTranslator('to-responses');
+
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Translators, 'to-responses');
     expect(result).toBe(RESPONSE_MOCK);
   });
 

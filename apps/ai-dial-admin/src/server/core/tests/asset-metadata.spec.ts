@@ -247,6 +247,7 @@ describe('Server :: Core :: asset-metadata', () => {
       paths: ['/api'],
       methods: ['GET'],
       order: 10,
+      name: 'my-route',
       _metadata: {
         name: 'my-route',
         path: 'my-route',
@@ -474,6 +475,7 @@ describe('Server :: Core :: asset-metadata', () => {
       project: 'proj',
       secured: true,
       roles: ['r1'],
+      name: 'my-key',
       _metadata: {
         name: 'my-key',
         path: 'my-key',

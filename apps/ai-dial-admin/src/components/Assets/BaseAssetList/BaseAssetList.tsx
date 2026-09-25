@@ -18,9 +18,7 @@ import {
   getImportNotificationContent,
   getVersionsPerName,
 } from '@/src/components/Assets/utils';
-import ConfigFilesToggle from '@/src/components/Common/ConfigFilesToggle/ConfigFilesToggle';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
-import { CONFIG_FILE_ENTITY_VIEWS } from '@/src/constants/config-file-entity-views';
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -42,6 +40,7 @@ import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import {
   getRootFolder,
+  isFileRootPath,
   isFlatPlatformView,
   isPlatformBucketPath,
   isPlatformDualBucketView,
@@ -49,7 +48,7 @@ import {
 } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 import Modals from './Modals';
 import { BaseAssetRoute, CreateAssetRoute, CrudAssetRoute, ModalType } from './types';
@@ -131,6 +130,10 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleDuplicateModalOpen = useCallback(
     async (files?: DialFile[]) => {
+      if (isFileRootPath(filePath)) {
+        return;
+      }
+
       if (!files?.length) {
         return;
       }
@@ -147,7 +150,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       setIsModalOpen(true);
       setModalType(ModalType.duplicate);
     },
-    [view],
+    [view, filePath],
   );
 
   const handleImportModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
@@ -189,17 +192,18 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       if (isItemOpenable(view, file.name)) {
         const pointerEvent = pointerClickModifierRef.current;
         pointerClickModifierRef.current = null;
+        const url = getUrnForEntity(view, {
+          name: file.name,
+          path: file.path,
+        });
         navigateEntityUrl(
-          getUrnForEntity(view, {
-            name: file.name,
-            path: file.path,
-          }),
+          isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas ? `${url}?configFile=true` : url,
           router.push,
           pointerEvent,
         );
       }
     },
-    [view, router, pointerClickModifierRef],
+    [view, router, pointerClickModifierRef, filePath],
   );
 
   const gridItemVersionsChange = useCallback(
@@ -672,16 +676,19 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleOpenInNewTab = useCallback(
     (file: DialFile) => {
-      onOpenInNewTab(view, file);
+      const url = getUrnForEntity(view, file);
+      window.open(
+        isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas ? `${url}?configFile=true` : url,
+        '_blank',
+      );
     },
-    [view],
+    [view, filePath],
   );
 
   return (
     <>
       <FileManager
         label={t(getFileManagerLabel(view))}
-        headerExtra={CONFIG_FILE_ENTITY_VIEWS.has(view) ? <ConfigFilesToggle /> : undefined}
         columnDefs={columnDefs}
         getContext={getContext}
         view={view}

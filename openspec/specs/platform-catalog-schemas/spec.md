@@ -6,9 +6,9 @@ two-tab detail view (Properties, Parameters) over DIAL Core's own `catalog_schem
 — the registered JSON-Schema documents that declare what display metadata a catalog entity type
 exposes and how a catalog renders it. Covers the `$id`-as-resource-name identity, the client-side
 meta-schema validation that substitutes for Core's absent write-time checks. The surface owns the
-API-written resources; the file-declared half is operator-managed and carries no `showConfigFiles`
-toggle here, reachable only at a schema's own detail address. The consumer side
-(`catalog_schema_id` / `catalog_properties` on deployments) belongs to `catalog-properties-editing`.
+API-written resources and exposes the operator-managed file-declared population through a synthetic,
+read-only `file` root. The consumer side (`catalog_schema_id` / `catalog_properties` on deployments)
+belongs to `catalog-properties-editing`.
 
 ## Requirements
 
@@ -95,8 +95,7 @@ metadata listing does not return, and fetching them would cost one content reque
 
 ### Requirement: A URI-shaped `$id` is a valid, fully usable row name
 
-Because the row name is the schema's `$id`, it contains characters the shared asset list treats as
-illegal in a filename — notably `:` and `/`. The system SHALL present such a row as ordinary and
+Because the row name is the schema's `$id`, the system SHALL support names containing characters the shared asset list treats as illegal in a filename — notably `:` and `/`. The system SHALL present such a row as ordinary and
 fully usable for this view: rendered in the normal text style with no invalid-name indication,
 opening on click, and offering its row actions. Views whose names are filenames SHALL keep the
 stricter default.
@@ -266,7 +265,7 @@ offer exactly the values Core's catalog meta-schema allows: `text`, `richText`, 
 
 ### Requirement: Client-side validation replaces Core's absent write-time checks
 
-DIAL Core stores this resource's body verbatim and validates only the `$id`, so a schema that
+DIAL Core SHALL store this resource's body verbatim and validate only the `$id`, so a schema that
 violates the catalog meta-schema is accepted on write and only surfaces later — as an `invalid`
 status on read, and as a rejected deployment when something references it. The system SHALL block
 such a save and SHALL surface the reason to the user.
@@ -324,38 +323,50 @@ regardless.
 ### Requirement: Configuring a catalog schema requires no admin-backend call
 
 Every field this surface reads or writes is owned by DIAL Core. The system SHALL NOT require any
-admin-backend request in order to list, view, create, edit, or delete a catalog schema, so the
-surface remains usable when that service is unavailable.
+admin-backend request in order to list, view, create, edit, or delete an API-written catalog schema,
+or to list and view a file-defined catalog schema through the synthetic `file` root, so the surface
+remains usable when that service is unavailable.
 
 #### Scenario: The surface is usable without the admin backend
 
-- **WHEN** a user lists, opens, edits, and saves a catalog schema while the admin backend is not
+- **WHEN** a user lists, opens, edits, and saves an API-written catalog schema while the admin backend is not
   configured
 - **THEN** no admin-backend request is required for any of those operations
 
-### Requirement: A file-declared schema is reachable at its own address, not through a list
+#### Scenario: File-defined schemas are listed without the admin backend
 
-This surface owns the catalog schemas written through DIAL Core's API. It SHALL NOT offer the
-`showConfigFiles` toggle and SHALL NOT present a config-file-backed list: the file-declared half of
-the population is operator-managed in `aidial.config.json`, and nothing here can create, edit, or
-delete it.
+- **WHEN** a user opens the `file` root on `/platform-catalog-schemas` while the admin backend is not configured
+- **THEN** the names are read from DIAL Core's config-file endpoint without an admin-backend request
 
-A file-declared schema SHALL still open at the ordinary detail address. Because Core keys its
-configuration-file catalog schemas by `$id` — the same identity this surface uses in the route — one
-address resolves either population: the system SHALL read the API-written resource first and, when
-none exists, SHALL read the configuration-file half by that `$id`. A schema resolved that way SHALL
-render read-only, and a `$id` in neither population SHALL be reported as not found.
+### Requirement: File-declared schemas are discoverable through a read-only file root
 
-#### Scenario: The list offers no config-file toggle
+This surface SHALL include a synthetic, flat `file` root beside its API-written `platform` root. The
+`file` root SHALL list configuration-file catalog schema names with the initial root batch, show
+name-only entries, and offer no mutating or folder action. It SHALL navigate rows to the existing
+ordinary encoded `$id` detail address without `configFile=true`.
 
-- **WHEN** a user opens `/platform-catalog-schemas`
-- **THEN** no `Show config entities` toggle is rendered next to the page title, and the list shows
-  the API-written schemas only
+The existing detail resolver SHALL read the API-written resource first and, when no resource exists,
+read the configuration-file population by `$id`; a file-defined result SHALL render read-only. The
+`file` root SHALL not alter this resolver or introduce a new detail route.
 
-#### Scenario: A schema a deployment points at opens even when only the configuration file declares it
+#### Scenario: File root exposes file-defined schemas
 
-- **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and that `$id`
-  has no API-written resource
+- **WHEN** a user opens the `file` root on `/platform-catalog-schemas`
+- **THEN** configuration-file schema names appear as read-only, name-only rows
+
+#### Scenario: File row preserves the fallback detail route
+
+- **WHEN** a user opens a file-defined Catalog Schema row
+- **THEN** the browser navigates to `/platform-catalog-schemas/{encoded-id}` without `configFile=true`, and the existing fallback renders the file-defined schema read-only
+
+#### Scenario: File root has no mutation controls
+
+- **WHEN** a user browses the Catalog Schemas `file` root
+- **THEN** no create, delete, bulk-delete, duplicate, rename, move, drag-and-drop, or folder action is offered
+
+#### Scenario: A schema a deployment points at opens when only the configuration file declares it
+
+- **WHEN** a user follows a deployment's catalog-schema selection to its detail view, and that `$id` has no API-written resource
 - **THEN** the schema the configuration file declares is shown
 
 #### Scenario: A file-declared schema is read-only

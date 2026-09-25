@@ -2,18 +2,20 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import { deletePipeline, getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { ApplicationRoute } from '@/src/types/routes';
 import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push }) }));
 
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -68,6 +70,7 @@ describe('PipelineDetailView', () => {
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
+    vi.mocked(deletePipeline).mockResolvedValue({ success: true });
   });
 
   test('presents the name as an identity rather than as a field', () => {
@@ -84,27 +87,132 @@ describe('PipelineDetailView', () => {
 
   const facts = () => screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.ReadOnlyFacts });
 
-  test('states the target and the read source among the facts, both reachable', async () => {
-    renderView();
+  const boundField = (table: string) => screen.getByRole('group', { name: table });
 
-    expect(within(facts()).getByRole('link', { name: 'turn_feedback' })).toHaveAttribute(
-      'href',
-      '/tables/turn_feedback',
-    );
-    await waitFor(() => expect(within(facts()).getByRole('link', { name: 'dial_usage_log' })).toBeTruthy());
+  // Each bound table is reached from its own control, in a new tab, rather than from a second read-only
+  // copy of the pair among the facts.
+  test('opens each bound table from the control that names it', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await user.click(within(boundField('turn_feedback')).getByRole('button', { name: ButtonsI18nKey.Open }));
+    expect(open).toHaveBeenCalledWith('/en/tables/turn_feedback', '_blank');
+
+    await user.click(within(boundField('dial_usage_log')).getByRole('button', { name: ButtonsI18nKey.Open }));
+    expect(open).toHaveBeenCalledWith('/en/tables/dial_usage_log', '_blank');
+
+    open.mockRestore();
   });
 
-  test('falls back to a placeholder while the followed source is unresolved', () => {
+  // A failed run, a pipeline held at its input's watermark and an output a rebuild left behind are all
+  // states an operator acts on. As a line of small print under the facts they read as a footnote to them.
+  test('raises the three runtime states as alerts above the facts', () => {
+    renderView({
+      state: {
+        last_error: 'connection refused',
+        clamp: { enrichment: 'usage_client_identity' },
+        rebuild_required: { enrichment: 'usage_client_identity', rederived_at: '2026-02-02T00:00:00Z' },
+      },
+    });
+
+    const alerts = screen.getAllByRole('status');
+
+    expect(alerts).toHaveLength(3);
+    expect(screen.getByText('connection refused')).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.ClampedByTitle)).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RebuildRequiredTitle)).toBeTruthy();
+    expect(within(facts()).queryByRole('status')).toBeNull();
+    expect(alerts[0].compareDocumentPosition(facts()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('raises nothing while the runtime reports no such state', () => {
+    renderView({ state: { lag_seconds: 12 } });
+
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  // The grain key is stated once, among the values the caller cannot change, and its provenance hangs on
+  // the label rather than on a caption under a second copy in the trigger.
+  test('presents the grain key among the facts, with its provenance on the label', async () => {
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+    expect(screen.getByRole('img', { name: AnalyticsPipelinesI18nKey.GrainKeyHint })).toBeTruthy();
+  });
+
+  test('states no grouping key of its own inside a group trigger', async () => {
+    renderView({ trigger: { kind: TriggerKind.Group } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(screen.getAllByText('response_id')).toHaveLength(1);
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+  });
+
+  // The presented value follows the target the caller has chosen, which is what the trigger's own copy did:
+  // a grouping key that waited for the save would state the old target's grain key in the meantime.
+  test('re-derives the presented grain key when the target changes', async () => {
+    const other: AnalyticsTable = {
+      name: 'session_summary',
+      type: AnalyticsTableType.Enrichment,
+      source_table: 'dial_usage_log',
+      grain: { grain_key: 'chat_id' },
+      columns: [],
+    };
+    const tables = [enrichment, sourceTable, other];
+    vi.mocked(getTables).mockResolvedValue(tables);
+    vi.mocked(getTable).mockImplementation(async (name) => tables.find((table) => table.name === name) ?? null);
+
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    // The ui-kit select is a custom listbox, not a native one: its options exist only while it is open.
+    await user.click(within(boundField('turn_feedback')).getByRole('button', { name: /turn_feedback/ }));
+    await user.click(await screen.findByRole('option', { name: 'session_summary' }));
+
+    await waitFor(() => expect(within(facts()).getByText('chat_id')).toBeTruthy());
+    expect(updatePipeline).not.toHaveBeenCalled();
+  });
+
+  test('falls back to the stored grain key while the target is unresolved', async () => {
     vi.mocked(getTable).mockResolvedValue(null);
     renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
+    expect(within(facts()).getByText('response_id')).toBeTruthy();
+  });
+
+  test('renders an em dash for a grain key that is neither resolved nor stored', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    renderView({ grain_key: undefined });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    expect(within(facts()).queryByText('response_id')).toBeNull();
     expect(within(facts()).getAllByText(AnalyticsPipelinesI18nKey.NotSet).length).toBeGreaterThan(0);
   });
 
-  test('states a pinned read source instead of the target’s own', async () => {
+  test('names neither bound table among the facts', () => {
+    renderView();
+
+    expect(within(facts()).queryByText(AnalyticsPipelinesI18nKey.Source)).toBeNull();
+    expect(within(facts()).queryByText(AnalyticsPipelinesI18nKey.Target)).toBeNull();
+  });
+
+  test('offers no Open while the followed source is unresolved', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    renderView();
+
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    expect(screen.queryByRole('group', { name: 'dial_usage_log' })).toBeNull();
+  });
+
+  test('opens the pinned read source rather than the target’s own', async () => {
     renderView({ inputs: ['otel_claude_code_logs'] });
 
-    await waitFor(() => expect(within(facts()).getByRole('link', { name: 'otel_claude_code_logs' })).toBeTruthy());
+    await waitFor(() => expect(boundField('otel_claude_code_logs')).toBeTruthy());
   });
 
   test('offers a control that copies the name', () => {
@@ -246,6 +354,20 @@ describe('PipelineDetailView', () => {
     expect(dto.transform?.type).toBe(TransformType.Llm);
   });
 
+  // A pipeline opened by mistake is disposed of where it was opened, rather than from the listing the
+  // operator has to navigate back to.
+  test('deletes the pipeline from its own header and returns to the listing', async () => {
+    const user = userEvent.setup();
+    renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }));
+    await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }));
+
+    await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith('feedback-live'));
+    expect(push).toHaveBeenCalledWith(ApplicationRoute.AnalyticsPipelines);
+  });
+
   test('the enable control is offered whatever the declaration holds', async () => {
     renderView({ trigger: undefined, transform: undefined, enabled: false });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
@@ -352,20 +474,16 @@ describe('PipelineDetailView', () => {
 
   // The facts row and the scope below it name the same two tables, so they are measured separately: a
   // reader who meets them in opposite orders reads the second as a different pair.
-  test('presents the source before the target in the facts row and in the read scope', () => {
+  // The two controls are inline at the top of the form rather than inside a section, so the order is
+  // read from the controls themselves.
+  test('presents the source control before the target control', async () => {
     renderView();
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    const rendered = document.body.textContent ?? '';
-    const scopeAt = rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope);
-    const facts = rendered.slice(0, scopeAt);
-    const scope = rendered.slice(scopeAt);
+    const source = boundField('dial_usage_log');
+    const target = boundField('turn_feedback');
 
-    expect(facts.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
-      facts.indexOf(AnalyticsPipelinesI18nKey.Target),
-    );
-    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Source)).toBeLessThan(
-      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
-    );
+    expect(source.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   // An aggregate names its input with a plain select rather than the follow-or-pin control, and it is
@@ -385,22 +503,21 @@ describe('PipelineDetailView', () => {
 
     await waitFor(() => expect(getTables).toHaveBeenCalled());
 
-    const rendered = document.body.textContent ?? '';
-    const scope = rendered.slice(rendered.indexOf(AnalyticsPipelinesI18nKey.SectionReadScope));
+    const input = boundField('dial_usage_log');
+    const target = boundField('usage_rollup');
+    const runs = screen.getByLabelText(AnalyticsPipelinesI18nKey.CronPreset, { exact: false });
 
-    expect(scope.indexOf(AnalyticsPipelinesI18nKey.Inputs)).toBeLessThan(
-      scope.indexOf(AnalyticsPipelinesI18nKey.Target),
-    );
+    expect(input.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // What it reads and writes is settled before when it runs, which is the order the fields are filled in.
+    expect(target.compareDocumentPosition(runs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('groups the members into collapsible sections', () => {
     renderView();
 
-    [
-      AnalyticsPipelinesI18nKey.SectionReadScope,
-      AnalyticsPipelinesI18nKey.SectionTransform,
-      AnalyticsPipelinesI18nKey.SectionAdvanced,
-    ].forEach((section) => expect(screen.getByRole('button', { name: section })).toBeTruthy());
+    [AnalyticsPipelinesI18nKey.SectionTransform, AnalyticsPipelinesI18nKey.SectionAdvanced].forEach((section) =>
+      expect(screen.getByRole('button', { name: section })).toBeTruthy(),
+    );
   });
 
   test('leaves identity and trigger open rather than behind a section header', () => {
@@ -417,11 +534,17 @@ describe('PipelineDetailView', () => {
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeTruthy();
   });
 
-  test('presents disabling as a danger action', () => {
+  // Disabling stops a pipeline and deleting destroys it; drawing both in danger said they weighed the
+  // same, and the two sit side by side in the header.
+  test('reserves the danger treatment for deleting, not for disabling', () => {
     renderView();
 
-    const toggle = screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline });
-    expect(toggle.className).toContain('dial-danger-outlined-button');
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }).className).not.toContain(
+      'danger',
+    );
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }).className).toContain(
+      'dial-danger-outlined-button',
+    );
   });
 
   test('presents enabling as the primary action', () => {
@@ -459,17 +582,18 @@ describe('PipelineDetailView', () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  test('withholds the toggle while edits are pending, because it would refresh them away', async () => {
+  // The standing actions step aside for the change bar rather than sitting beside it disabled: a toggle
+  // re-reads the pipeline, which would discard the edits.
+  test('withholds the toggle and delete while edits are pending', async () => {
     const user = userEvent.setup();
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
     await editScanEvery(user, 'PT2H');
 
-    const toggle = screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline });
-    // Withheld in place rather than removed: a vanished control answers "where did it go?" with nothing.
-    expect(toggle).toBeDisabled();
-    expect(toggle.getAttribute('title')).toBe(AnalyticsPipelinesI18nKey.ToggleBlockedByEdits);
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeNull();
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeNull();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
   });
 
   test('opens on the sections a rule is usually read for', () => {

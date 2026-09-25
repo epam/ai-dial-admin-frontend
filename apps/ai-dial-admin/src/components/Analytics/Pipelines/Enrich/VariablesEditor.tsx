@@ -48,12 +48,12 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
   const updateRow = (id: string, patch: Partial<VarRow>) =>
     commit(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
+  // A source that could not be read is a failure worth naming; one that is merely unresolved is not, and
+  // the add control says the rest.
   if (!isReady) {
-    return (
-      <span className={hasError ? 'text-error dial-small' : 'text-secondary dial-small'}>
-        {t(hasError ? AnalyticsPipelinesI18nKey.SourceFieldsLoadFailed : AnalyticsPipelinesI18nKey.VariablesEmpty)}
-      </span>
-    );
+    return hasError ? (
+      <span className="text-error dial-small">{t(AnalyticsPipelinesI18nKey.SourceFieldsLoadFailed)}</span>
+    ) : null;
   }
 
   const fieldOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
@@ -66,10 +66,15 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
   return (
     <div className="flex flex-col gap-3">
       <div className={GRID}>
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarName)} />
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarValue)} />
-        <span />
+        {/* The headings label rows; with none to label they are three words over an empty grid. */}
+        {rows.length > 0 && (
+          <>
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarName)} />
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarValue)} />
+            <span />
+          </>
+        )}
 
         {rows.map((row, index) => {
           const isNameTaken = Boolean(row.name) && getTakenVarNames(rows, row.id).has(row.name);
@@ -121,7 +126,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
               )}
 
               <DialGhostIconButton
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />

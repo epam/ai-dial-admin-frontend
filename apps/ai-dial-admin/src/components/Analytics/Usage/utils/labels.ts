@@ -18,27 +18,19 @@ export const getFallbackLabelKey = (tab: BreakdownTab): AnalyticsUsageI18nKey | 
     return AnalyticsUsageI18nKey.DirectCall;
   }
 
-  if (tab === BreakdownTab.Tools) {
-    return AnalyticsUsageI18nKey.OtherMethods;
-  }
-
   return null;
 };
 
 /**
- * Whether the tab's fallback row is pinned below the ranked ones. On the `Tools` tab it is: the
- * protocol methods outnumber the tool calls several times over, so ranking the bucket by its calls
- * would put the one row nobody came for at the top and push the tools out of the card's page.
+ * Whether the tab's fallback row is pinned below the ranked ones. No tab pins one today: the rule
+ * existed for the `Tools` bucket of protocol methods, and the MCP view no longer reads those rows
+ * at all. Kept as the one place to answer the question, rather than as a rule spread over callers.
  */
-export const isFallbackRowPinnedLast = (tab: BreakdownTab): boolean => tab === BreakdownTab.Tools;
+export const isFallbackRowPinnedLast = (_tab: BreakdownTab): boolean => false;
 
 export const getFallbackTooltipKey = (tab: BreakdownTab, view: UsageView): AnalyticsUsageI18nKey | null => {
   if (tab === BreakdownTab.Projects) {
     return AnalyticsUsageI18nKey.NoProjectTooltip;
-  }
-
-  if (tab === BreakdownTab.Tools) {
-    return AnalyticsUsageI18nKey.OtherMethodsTooltip;
   }
 
   if (tab !== BreakdownTab.Applications) {

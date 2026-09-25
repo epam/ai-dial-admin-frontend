@@ -81,7 +81,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
               onChange={(v) => onChangeRow(row.id, { value: v ?? '' })}
             />
             <DialGhostIconButton
-              icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+              icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
               aria-label={`${t(ButtonsI18nKey.Delete)} ${row.key || position}`}
               disabled={isDisabled}
               onClick={() => commit(rows.filter((item) => item.id !== row.id))}

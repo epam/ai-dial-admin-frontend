@@ -107,5 +107,18 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
     };
   }, [runId, canHaveCosts]);
 
+  /**
+   * `canHaveCosts` is allowed to start true on an optimistic guess — e.g. the analytics slice hasn't
+   * resolved yet, so "no results" can't be ruled in — and flip to false once better evidence lands.
+   * The effect above catches up and resets `unavailable`/`costs` on its own render pass, but that is
+   * one tick behind: on the render where `canHaveCosts` turns false, `unavailable` can still hold a
+   * settled outcome from the fetch that guess started. Gate the returned values on the current
+   * `canHaveCosts` directly so a caller never observes that stale outcome, without delaying the fetch
+   * itself for the case where the guess holds.
+   */
+  if (!canHaveCosts) {
+    return { costs: null, isPending: false, unavailable: false, elapsedMs: 0 };
+  }
+
   return { costs, isPending, unavailable, elapsedMs };
 };

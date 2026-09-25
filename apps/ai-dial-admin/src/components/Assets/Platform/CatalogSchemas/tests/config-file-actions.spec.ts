@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getCatalogSchema, getConfigFileCatalogSchema } from '@/src/app/[lang]/platform-catalog-schemas/actions';
 import { assetApi, configFileApi } from '@/src/app/api/api';
-import { CONFIG_FILE_ENTITY_VIEWS } from '@/src/constants/config-file-entity-views';
 import { READABLE_CONFIG_FILE_TYPES } from '@/src/constants/config-file-core';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getConfigFileEntityType } from '@/src/utils/files/root-folder';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -29,13 +29,12 @@ describe('Catalog schemas :: config-file population', () => {
     expect(READABLE_CONFIG_FILE_TYPES.has(ConfigFileEntityType.CatalogSchemas)).toBe(true);
   });
 
-  test('is not a covered config-file entity view, so the page renders no toggle', () => {
-    expect(CONFIG_FILE_ENTITY_VIEWS.has(ApplicationRoute.PlatformCatalogSchemas)).toBe(false);
+  test('is a covered file-root view', () => {
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformCatalogSchemas)).toBe(ConfigFileEntityType.CatalogSchemas);
   });
 
-  test('the seven covered views are exactly the ones expected', () => {
-    expect([...CONFIG_FILE_ENTITY_VIEWS]).toHaveLength(7);
-    expect(CONFIG_FILE_ENTITY_VIEWS.has(ApplicationRoute.PlatformKeys)).toBe(false);
+  test('excludes Keys from file-root coverage', () => {
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformKeys)).toBeUndefined();
   });
 
   test('reads one file-declared schema by name', async () => {

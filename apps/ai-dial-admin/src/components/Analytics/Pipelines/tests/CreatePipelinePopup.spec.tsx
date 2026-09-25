@@ -43,6 +43,9 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification }),
@@ -108,7 +111,7 @@ describe('CreatePipelinePopup', () => {
       AnalyticsPipelinesI18nKey.SectionMeasures,
       AnalyticsPipelinesI18nKey.SectionInputs,
       AnalyticsPipelinesI18nKey.SectionAdvanced,
-      AnalyticsPipelinesI18nKey.SectionReadScope,
+      AnalyticsPipelinesI18nKey.Filter,
     ].forEach((key) => expect(screen.queryByText(key)).toBeNull());
   });
 
@@ -185,6 +188,19 @@ describe('CreatePipelinePopup', () => {
     expect(vi.mocked(createPipeline).mock.calls[0][0]).not.toHaveProperty('trigger');
   });
 
+  // Registration collects three fields and leaves the declaration unwritten, so the page that authors it
+  // is where the operator goes next.
+  test('opens the new pipeline on success', async () => {
+    const user = userEvent.setup();
+    renderPopup();
+
+    typeName('my-pipeline');
+    await selectTarget(user);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/pipelines/my-pipeline'));
+  });
+
   test('closes, notifies and refreshes the listing on success', async () => {
     const user = userEvent.setup();
     renderPopup();
@@ -198,7 +214,7 @@ describe('CreatePipelinePopup', () => {
     expect(showNotification).toHaveBeenCalled();
   });
 
-  test('reports the service failure and stays open', async () => {
+  test('reports the service failure, stays open and navigates nowhere', async () => {
     vi.mocked(createPipeline).mockResolvedValue({ success: false, errorMessage: 'target already bound' });
     const user = userEvent.setup();
     renderPopup();
@@ -210,6 +226,7 @@ describe('CreatePipelinePopup', () => {
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(onClose).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   test('discards its state when closed', async () => {

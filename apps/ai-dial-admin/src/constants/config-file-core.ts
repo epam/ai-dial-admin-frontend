@@ -21,11 +21,10 @@ export const CORE_CONFIG_FILE_URL = 'v1/admin/config/file';
  * schemas", the same term App Runners uses for itself, and `entitySource()` resolves it to
  * `config.getApplicationTypeSchemas()`).
  *
- * `CatalogSchemas` is readable although its view is not covered — see `CONFIG_FILE_ENTITY_VIEWS`
- * for why. It stays here because this set guards every `ConfigFileApi` read, single entities
- * included, and the schema detail route falls back to the configuration-file half
- * (`config.getCatalogSchemas()`, keyed by `$id`) when no bucket resource exists. Dropping the
- * member would answer `TypeNotReadable` and 404 every file-declared schema a deployment points at.
+ * `CatalogSchemas` stays readable because the Catalog Schemas file root lists it and its detail route
+ * falls back to the configuration-file half (`config.getCatalogSchemas()`, keyed by `$id`) when no
+ * bucket resource exists. Dropping the member would answer `TypeNotReadable` and 404 every
+ * file-declared schema a deployment points at.
  */
 export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new Set([
   ConfigFileEntityType.Interceptors,
@@ -37,6 +36,7 @@ export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new
   ConfigFileEntityType.Toolsets,
   ConfigFileEntityType.Schemas,
   ConfigFileEntityType.CatalogSchemas,
+  ConfigFileEntityType.Translators,
 ]);
 
 /** The single settings entry Core exposes — `settings` is a singleton, not a listable collection. */

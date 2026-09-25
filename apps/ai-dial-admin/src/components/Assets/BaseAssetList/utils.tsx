@@ -77,17 +77,18 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
-import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
+import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -103,6 +104,10 @@ export const customMultiSelectTagsRenderer = (
   handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
 ) => {
   return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
+};
+
+export const getCustomizedDisplayNameColumn = (headerName: string) => {
+  return { ...DISPLAY_NAME_COLUMN, headerName };
 };
 
 export const getGridColumns = (
@@ -169,6 +174,10 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
+  if (isFileRootPath(currentPath)) {
+    return [getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef];
+  }
+
   // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: a
   // schema resource's row name is its `$id`, a model's is its plain name. Skills shares the same
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
@@ -176,7 +185,7 @@ export const getGridColumns = (
   // read a display name from.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      NAME_COLUMN(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef,
+      getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
@@ -186,10 +195,15 @@ export const getGridColumns = (
   // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
   // per-row version selection.
   if (isVersionlessAssetView(view)) {
-    return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+    return [getCustomizedDisplayNameColumn('Name'), AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
   }
 
-  return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  return [
+    getCustomizedDisplayNameColumn('Name'),
+    VERSION_COLUMN,
+    AUTHOR_COLUMN,
+    UPDATED_AT_COLUMN('Updated time') as ColDef,
+  ];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {

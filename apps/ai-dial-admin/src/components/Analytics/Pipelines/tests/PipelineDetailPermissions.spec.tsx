@@ -81,11 +81,19 @@ describe('PipelineDetailView — without full-admin rights', () => {
     expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeNull();
   });
 
-  test('offers both once the caller has full-admin rights', async () => {
+  test('offers no delete action', async () => {
+    renderView();
+
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeNull();
+  });
+
+  test('offers them all once the caller has full-admin rights', async () => {
     isFullAdmin.value = true;
     renderView();
 
     await waitFor(() => expect(getTable).toHaveBeenCalled());
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeTruthy();
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeTruthy();
   });
 });

@@ -6,6 +6,7 @@ import { ColDef, ITextFilterParams } from 'ag-grid-community';
 import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
+import { ROW_HEIGHT } from '@/src/components/Grid/constants';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -18,7 +19,7 @@ import {
   MAX_FOLDER_NESTING_DEPTH,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -155,11 +156,17 @@ export const getGridOptions = (
   currentPath?: string,
 ) =>
   ({
-    alternateOddRowColors: true,
+    alternateOddRowColors: false,
     columnDefs,
-    selectionMode: isReadOnlyAdmin ? void 0 : isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
+    selectionMode:
+      isReadOnlyAdmin || isFileRootPath(currentPath)
+        ? void 0
+        : isSingleSelection
+          ? GridSelectionMode.SINGLE
+          : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
+      rowHeight: ROW_HEIGHT,
       defaultColDef: {
         minWidth: 150,
         floatingFilter: true,
@@ -213,6 +220,13 @@ export const getBulkActionsToolbarOptions = (
   t: (key: string) => string,
   currentPath?: string,
 ) => {
+  if (isFileRootPath(currentPath)) {
+    return {
+      getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+      actionLabels: {},
+    };
+  }
+
   const isFlatBulkView =
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
