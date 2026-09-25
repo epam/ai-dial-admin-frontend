@@ -2,9 +2,12 @@
 
 import { FC, ReactNode, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { createPipeline } from '@/src/app/[lang]/pipelines/actions';
+import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -12,7 +15,6 @@ import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
-  kindControl: ReactNode;
   name?: string;
   onChangeName: (name: string) => void;
   isValid: boolean;
@@ -22,17 +24,9 @@ interface Props {
   children: ReactNode;
 }
 
-const CreatePipelineShell: FC<Props> = ({
-  kindControl,
-  name,
-  onChangeName,
-  isValid,
-  buildDto,
-  onClose,
-  onCreated,
-  children,
-}) => {
+const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto, onClose, onCreated, children }) => {
   const t = useI18n();
+  const router = useRouter();
   const { showNotification } = useNotification();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,13 +35,17 @@ const CreatePipelineShell: FC<Props> = ({
     if (!isValid || isSubmitting) return;
 
     setIsSubmitting(true);
-    const res = await createPipeline(buildDto());
+    const dto = buildDto();
+    const res = await createPipeline(dto);
     setIsSubmitting(false);
 
     if (res.success) {
       showNotification(getSuccessNotification(t(AnalyticsPipelinesI18nKey.Created)));
       onCreated();
       onClose();
+      // A registration collects three fields and leaves the declaration unwritten, so the page that
+      // authors it is where the operator is going next. The listing is refreshed on the way out.
+      router.push(pipelineDetailHref(dto.name));
       return;
     }
 
@@ -78,7 +76,6 @@ const CreatePipelineShell: FC<Props> = ({
           value={name ?? ''}
           onChange={(v) => onChangeName(v ?? '')}
         />
-        {kindControl}
         {children}
       </div>
     </DialFormPopup>

@@ -9,6 +9,7 @@ import {
   isAnchoredTimePeriodOption,
   timePeriodOptionsConfig,
 } from '../global-time-filter';
+import { RelativeTimeUnit } from '@/src/models/time-range';
 
 const anchoredOption: AnchoredTimePeriodOption = {
   value: 'since-creation',
@@ -16,7 +17,13 @@ const anchoredOption: AnchoredTimePeriodOption = {
   startDate: new Date('2026-01-01T00:00:00.000Z'),
 };
 
-const slidingOption: TimePeriodOption = { value: '1h', label: 'Last 1h', offset: 60 * 60 * 1000 };
+const slidingOption: TimePeriodOption = {
+  value: '1h',
+  label: 'Last 1h',
+  offset: 60 * 60 * 1000,
+  unit: RelativeTimeUnit.Hour,
+  amount: 1,
+};
 
 // An option that carries both fields at once — not produced by any helper in this codebase, but
 // worth pinning down because `isAnchoredTimePeriodOption` discriminates on `'startDate' in option`.
@@ -64,9 +71,9 @@ describe('Constants :: global-time-filter', () => {
     });
 
     test('Should return last option value when DEFAULT_TIME_PERIOD is not in options', () => {
-      const options = [
-        { value: '15m', label: 'Last 15m', offset: 15 * 60 * 1000 },
-        { value: '1h', label: 'Last 1h', offset: 60 * 60 * 1000 },
+      const options: TimePeriodOption[] = [
+        { value: '15m', label: 'Last 15m', offset: 15 * 60 * 1000, unit: RelativeTimeUnit.Minute, amount: 15 },
+        { ...slidingOption },
       ];
       expect(getDefaultTimePeriod(options)).toBe('1h');
     });

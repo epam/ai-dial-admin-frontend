@@ -1,0 +1,127 @@
+import {
+  BreakdownRow,
+  BucketPoint,
+  DimensionBucketPoint,
+  SpendBucket,
+  UsageMeasures,
+} from '@/src/components/Analytics/Usage/models';
+import { ROW_KEY_SEPARATOR, UNDEFINED_VALUE } from '@/src/components/Analytics/Usage/constants';
+import {
+  AVG_LATENCY_ALIAS,
+  BUCKET_ALIAS,
+  CALLS_ALIAS,
+  COMPLETION_TOKENS_ALIAS,
+  FAILED_ALIAS,
+  P50_LATENCY_ALIAS,
+  P95_LATENCY_ALIAS,
+  PROMPT_TOKENS_ALIAS,
+  SPEND_ALIAS,
+  CALLERS_ALIAS,
+  GROUP_COUNT_ALIAS,
+  GROUP_NAMES_ALIAS,
+  GROUP_NAMES_SEPARATOR,
+} from '@/src/components/Analytics/Usage/queries';
+import { StructuredQueryResult } from '@/src/models/analytics/query';
+
+export const isMissingValue = (value: unknown): boolean => {
+  const text = typeof value === 'string' ? value.trim() : value;
+  return text == null || text === '' || text === UNDEFINED_VALUE;
+};
+
+/** ADAS answers with typed rows, so a number arrives as a number — but a decimal may come as text. */
+export const toNumber = (value: unknown): number | null => {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+export const readMeasures = (row: Record<string, unknown>): UsageMeasures => ({
+  calls: toNumber(row[CALLS_ALIAS]) ?? 0,
+  callers: toNumber(row[CALLERS_ALIAS]) ?? 0,
+  failed: toNumber(row[FAILED_ALIAS]) ?? 0,
+  avgLatencyMs: toNumber(row[AVG_LATENCY_ALIAS]),
+  spend: toNumber(row[SPEND_ALIAS]),
+  promptTokens: toNumber(row[PROMPT_TOKENS_ALIAS]),
+  completionTokens: toNumber(row[COMPLETION_TOKENS_ALIAS]),
+  p50LatencyMs: toNumber(row[P50_LATENCY_ALIAS]),
+  p95LatencyMs: toNumber(row[P95_LATENCY_ALIAS]),
+});
+
+export const EMPTY_MEASURES: UsageMeasures = {
+  calls: 0,
+  callers: 0,
+  failed: 0,
+  avgLatencyMs: null,
+  spend: null,
+  promptTokens: null,
+  completionTokens: null,
+  p50LatencyMs: null,
+  p95LatencyMs: null,
+};
+
+export const foldBucketPoints = (result?: StructuredQueryResult | null): BucketPoint[] =>
+  (result?.rows ?? [])
+    .map((row) => ({
+      bucketMs: new Date(String(row[BUCKET_ALIAS])).getTime(),
+      measures: readMeasures(row),
+    }))
+    .filter((point) => !Number.isNaN(point.bucketMs))
+    .sort((left, right) => left.bucketMs - right.bucketMs);
+
+export const foldSpendBuckets = (result?: StructuredQueryResult | null): SpendBucket[] =>
+  (result?.rows ?? [])
+    .map((row) => ({
+      bucketMs: new Date(String(row[BUCKET_ALIAS])).getTime(),
+      spend: toNumber(row[SPEND_ALIAS]) ?? 0,
+    }))
+    .filter((point) => !Number.isNaN(point.bucketMs));
+
+export const foldDimensionBuckets = (
+  result: StructuredQueryResult | null | undefined,
+  column: string,
+): DimensionBucketPoint[] =>
+  (result?.rows ?? [])
+    .map((row) => ({
+      bucketMs: new Date(String(row[BUCKET_ALIAS])).getTime(),
+      seriesId: isMissingValue(row[column]) ? `${column}:missing` : String(row[column]),
+      calls: toNumber(row[CALLS_ALIAS]) ?? 0,
+    }))
+    .filter((point) => !Number.isNaN(point.bucketMs));
+
+/**
+ * The qualifier only reaches the id: without it two rows that share a dimension value fold into
+ * one, colliding in the previous-window map and in the grid's row keys alike.
+ */
+export const foldBreakdownRows = (
+  result: StructuredQueryResult | null | undefined,
+  column: string,
+  qualifier?: string,
+): BreakdownRow[] =>
+  (result?.rows ?? []).map((row) => {
+    const raw = row[column];
+    const isMissing = isMissingValue(raw);
+    const qualifierValue = qualifier == null ? null : String(row[qualifier] ?? '');
+
+    const groupNames = row[GROUP_NAMES_ALIAS];
+    const ownId = isMissing ? `${column}:missing` : String(raw);
+
+    return {
+      id: qualifierValue == null ? ownId : `${qualifierValue}${ROW_KEY_SEPARATOR}${ownId}`,
+      label: isMissing ? '' : String(raw),
+      isFallbackLabel: isMissing,
+      measures: readMeasures(row),
+      // Present only where the tab asked for them. A row of a single deployment carries it too:
+      // "which one" is the question even when the answer is one name.
+      ...(isMissingValue(groupNames)
+        ? {}
+        : {
+            // Split on the separator the query joined with, not on a bare comma: a deployment name
+            // may carry one, and splitting there would report two servers where there is one.
+            groupNames: String(groupNames).split(GROUP_NAMES_SEPARATOR).filter(Boolean),
+            groupCount: toNumber(row[GROUP_COUNT_ALIAS]),
+          }),
+    };
+  });

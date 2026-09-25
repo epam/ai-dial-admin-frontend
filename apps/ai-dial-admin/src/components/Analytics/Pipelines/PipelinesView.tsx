@@ -1,52 +1,44 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import {
-  ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  DialPrimaryButton,
-} from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
-import { EvaluatorCellRenderer } from '@/src/components/Analytics/Pipelines/Common/EvaluatorCell';
+import { TransformCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TransformCell';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import { PipelineKindCellRenderer } from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
 import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
+import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsPipelinesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { PipelineListItem } from '@/src/models/analytics/pipeline';
-import { QueryFunction } from '@/src/models/analytics/query-function';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   initialPipelines: PipelineListItem[];
-  functions?: QueryFunction[];
   loadFailure?: ReadFailure | null;
 }
 
-const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailure }) => {
+const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -54,8 +46,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
 
   const [pipelines, setPipelines] = useState<PipelineListItem[]>(initialPipelines);
   const [deleteTarget, setDeleteTarget] = useState<PipelineListItem | null>(null);
-  const [evaluators, setEvaluators] = useState<EvaluatorSummary[]>([]);
-  const [hasEvaluatorsError, setHasEvaluatorsError] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   useReadFailureNotification(loadFailure, AnalyticsPipelinesI18nKey.PipelinesLoadFailed);
@@ -92,42 +82,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
         reportFailure();
       }
     }
-  }, [showNotification, t]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const reportFailure = (failure?: ServerActionResponse) => {
-      setHasEvaluatorsError(true);
-      showNotification(
-        getErrorNotification(
-          failure?.errorHeader ?? t(AnalyticsPipelinesI18nKey.EvaluatorsLoadFailed),
-          failure?.errorMessage,
-          failure?.requestId,
-        ),
-      );
-    };
-
-    const load = async () => {
-      try {
-        const read = await getEvaluators();
-        if (isCancelled) return;
-
-        if (read.success) {
-          setEvaluators(read.response ?? []);
-        } else {
-          reportFailure(read);
-        }
-      } catch {
-        if (!isCancelled) reportFailure();
-      }
-    };
-
-    void load();
-
-    return () => {
-      isCancelled = true;
-    };
   }, [showNotification, t]);
 
   const notifyFailed = useCallback(
@@ -190,11 +144,11 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
         cellRenderer: TriggerCellRenderer,
       },
       {
-        headerName: t(AnalyticsPipelinesI18nKey.Evaluator),
-        colId: 'evaluator',
+        headerName: t(AnalyticsPipelinesI18nKey.SectionTransform),
+        colId: 'transform',
         flex: 2,
         cellDataType: false,
-        cellRenderer: EvaluatorCellRenderer,
+        cellRenderer: TransformCellRenderer,
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Enabled),
@@ -246,20 +200,9 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
       </div>
 
       {deleteTarget && (
-        <DialConfirmationPopup
-          open={!!deleteTarget}
-          variant={ConfirmationPopupVariant.Danger}
-          header={t(AnalyticsPipelinesI18nKey.DeleteConfirmTitle)}
-          description={
-            <div className="flex flex-col gap-y-2">
-              <span>{t(AnalyticsPipelinesI18nKey.DeleteConfirmDescription)}</span>
-              <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
-                <span className="shrink-0 text-secondary">{t(AnalyticsPipelinesI18nKey.Name)}:</span>
-                <DialEllipsisTooltip text={deleteTarget.name} />
-              </div>
-            </div>
-          }
-          confirmLabel={t(AnalyticsPipelinesI18nKey.DeletePipeline)}
+        <DeletePipelinePopup
+          name={deleteTarget.name}
+          kind={deleteTarget.kind}
           onConfirm={() => void onConfirmDelete()}
           onClose={() => setDeleteTarget(null)}
         />
@@ -267,9 +210,6 @@ const PipelinesView: FC<Props> = ({ initialPipelines, functions = [], loadFailur
 
       {isCreateOpen && (
         <CreatePipelinePopup
-          evaluators={evaluators}
-          hasEvaluatorsError={hasEvaluatorsError}
-          functions={functions}
           takenTargets={pipelines.map((pipeline) => pipeline.target)}
           onClose={() => setIsCreateOpen(false)}
           onCreated={() => void reload()}

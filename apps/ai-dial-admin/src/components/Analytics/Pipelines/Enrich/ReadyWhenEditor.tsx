@@ -18,7 +18,6 @@ interface Props {
   sourceName?: string;
   isCostCeilingValid: boolean;
   hasCondition: boolean;
-  isModal?: boolean;
   onChange: (readyWhen: ReadyWhen) => void;
 }
 
@@ -52,7 +51,7 @@ const enabledFrom = (readyWhen?: ReadyWhen): Set<ReadyWhenCondition> => {
  * A disabled condition keeps its control on screen rather than hiding it, so enabling one does not move
  * everything below it.
  */
-const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid, hasCondition, isModal, onChange }) => {
+const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid, hasCondition, onChange }) => {
   const t = useI18n();
 
   const [enabled, setEnabled] = useState<Set<ReadyWhenCondition>>(() => enabledFrom(readyWhen));
@@ -110,30 +109,28 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
           </div>
         </div>
 
-        {!isModal && (
-          <div className="flex flex-col gap-2">
-            <DialCheckbox
-              id="pipeline-ready-signal-enabled"
-              label={t(AnalyticsPipelinesI18nKey.ReadyWhenSignalLabel)}
-              checked={enabled.has(ReadyWhenCondition.Signal)}
-              onChange={(isChecked) => onToggle(ReadyWhenCondition.Signal, Boolean(isChecked))}
+        <div className="flex flex-col gap-2">
+          <DialCheckbox
+            id="pipeline-ready-signal-enabled"
+            label={t(AnalyticsPipelinesI18nKey.ReadyWhenSignalLabel)}
+            checked={enabled.has(ReadyWhenCondition.Signal)}
+            onChange={(isChecked) => onToggle(ReadyWhenCondition.Signal, Boolean(isChecked))}
+          />
+          <div className={CONDITION_CONTROL_INDENT}>
+            <SqlPredicateField
+              id="pipeline-ready-signal"
+              wrapperClassName="max-w-[420px]"
+              label={t(AnalyticsPipelinesI18nKey.ReadyWhenSignal)}
+              description={t(AnalyticsPipelinesI18nKey.ReadyWhenSignalCaption)}
+              placeholder={t(AnalyticsPipelinesI18nKey.PredicateExample)}
+              value={kept.signal}
+              sourceName={sourceName}
+              isCompact
+              isDisabled={!enabled.has(ReadyWhenCondition.Signal)}
+              onChange={(signal) => onValueChange({ signal })}
             />
-            <div className={CONDITION_CONTROL_INDENT}>
-              <SqlPredicateField
-                id="pipeline-ready-signal"
-                wrapperClassName="max-w-[420px]"
-                label={t(AnalyticsPipelinesI18nKey.ReadyWhenSignal)}
-                description={t(AnalyticsPipelinesI18nKey.ReadyWhenSignalCaption)}
-                placeholder={t(AnalyticsPipelinesI18nKey.PredicateExample)}
-                value={kept.signal}
-                sourceName={sourceName}
-                isCompact
-                isDisabled={!enabled.has(ReadyWhenCondition.Signal)}
-                onChange={(signal) => onValueChange({ signal })}
-              />
-            </div>
           </div>
-        )}
+        </div>
 
         <div className="flex flex-col gap-2">
           <DialCheckbox

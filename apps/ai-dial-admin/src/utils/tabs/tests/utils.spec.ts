@@ -100,7 +100,8 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
+  analyticsSessionsEnabled: false,
+  analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
   ...overrides,
 });

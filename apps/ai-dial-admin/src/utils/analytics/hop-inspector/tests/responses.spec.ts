@@ -1,16 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import {
-  ConversationEntryBodyRow,
-  HopDialect,
-  HopReadState,
-  MessageRole,
-} from '@/src/models/analytics/conversations-trace';
+import { SessionEntryBodyRow, HopDialect, HopReadState, MessageRole } from '@/src/models/analytics/sessions-trace';
 import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { responseEnvelopeOf } from '@/src/utils/analytics/hop-inspector/response';
 import { responsesMessagesOf } from '@/src/utils/analytics/hop-inspector/responses';
 
-const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEntryBodyRow => ({
+const row = (overrides: Partial<SessionEntryBodyRow> = {}): SessionEntryBodyRow => ({
   trace_id: 't1',
   event_kind: '',
   request_uri: '/openai/deployments/x/v1/responses',

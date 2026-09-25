@@ -1,0 +1,1122 @@
+import { ReactNode } from 'react';
+
+import { TreeRow } from '@/src/components/Common/TreeGrid/types';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
+import { ServerActionResponse } from '@/src/models/server-action';
+
+// Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
+// every session, an enrichment column is absent until an evaluation reaches it, and a feedback column is
+// resolved by a separate query for the page on screen.
+export enum ColumnProvenance {
+  Sessions = 'sessions',
+  Insights = 'insights',
+  Feedback = 'feedback',
+  // An enrichment this frontend knows no name for. The entity's enrichments are provisioned per instance,
+  // so one can appear that no release anticipated; its columns are still offered, attributed to it by the
+  // namespace its own field names carry.
+  Other = 'other',
+}
+
+export type SessionScalar = number | string | boolean | null;
+
+export interface SessionRow extends SessionRatingCounts {
+  client_session_id: string;
+  project_id: string;
+  user_hash: string | null;
+  turn_count: number | string | null;
+  total_tokens: number | string | null;
+  total_price: number | string | null;
+  last_request_time: number | string | null;
+  first_request_time: number | string | null;
+  'session_insights.title'?: string | null;
+}
+
+export type SessionListRow = SessionRow & Record<string, SessionScalar | undefined>;
+
+export interface SessionTitleSource {
+  'session_insights.title'?: string | null;
+}
+
+export interface SessionsPage {
+  rows: SessionRow[];
+  total: number | null;
+  period?: SessionPeriodSummary;
+  candidates?: SessionCandidateIds;
+  // The value sets the first page of this result resolved for its array-valued column filters, for the
+  // caller to carry into every later page of it. See `SessionPageRequest.arrayFilters`.
+  arrayFilters?: SessionArrayFilter[];
+}
+
+export interface SessionPeriodSummary {
+  totals?: SessionTotals;
+  ratings?: SessionRatingTotals;
+}
+
+export interface SessionTotals {
+  sessions: number | string | null;
+  cost: number | string | null;
+}
+
+export interface SessionRatingTotals {
+  rated: number | null;
+  negative: number | null;
+}
+
+export interface SessionRatingRow {
+  chat_id: string;
+  rating_up: number | string | null;
+  rate_zero: number | string | null;
+  rate_negative: number | string | null;
+  rate_bool_false: number | string | null;
+  rate_raw: number | string | null;
+  rate_events: number | string | null;
+}
+
+export interface RatingCounts {
+  rating_up: number | null;
+  rating_down: number | null;
+}
+
+export interface SessionRatingCounts extends RatingCounts {
+  provable_down?: number | null;
+  captured_form?: number | null;
+  rate_events?: number | null;
+}
+
+export enum FeedbackFilter {
+  All = 'all',
+  Positive = 'positive',
+  Negative = 'negative',
+  Rated = 'rated',
+}
+
+export enum SessionFilterOperator {
+  Contains = 'contains',
+  NotContains = 'notContains',
+  Equals = 'equals',
+  NotEquals = 'notEquals',
+  GreaterThan = 'greaterThan',
+  GreaterThanOrEqual = 'greaterThanOrEqual',
+  LessThan = 'lessThan',
+  LessThanOrEqual = 'lessThanOrEqual',
+  Range = 'range',
+  // Set membership, which a value filter contributes for its whole selection. Its operand is a list rather
+  // than one value, so it is the one operator no text or number filter menu can produce.
+  In = 'in',
+}
+
+// Every operator whose operand is a single value — one or two of them for a range.
+export type SessionScalarOperator = Exclude<SessionFilterOperator, SessionFilterOperator.In>;
+
+export interface SessionScalarFilter {
+  field: string;
+  operator: SessionScalarOperator;
+  value: string;
+  valueTo?: string;
+  valueType?: QueryValueType;
+}
+
+export interface SessionValueSetFilter {
+  field: string;
+  operator: SessionFilterOperator.In;
+  values: string[];
+  valueType?: QueryValueType;
+}
+
+export type SessionColumnFilter = SessionScalarFilter | SessionValueSetFilter;
+
+// One filter over an array-valued column, with its text already resolved to the whole values it matched.
+// The resolution is a second query and belongs to the server action, so this shape never reaches the client:
+// the grid's filter model carries the text, and only the listing query sees the values.
+export interface SessionArrayFilter {
+  field: string;
+  operator: SessionScalarOperator;
+  values: string[];
+  valueType?: QueryValueType;
+}
+
+// Where an array column's elements are drawn from, which is what a contains filter resolves its text
+// against. The array's own column cannot answer it: the service's array predicates match whole elements,
+// with no lambda form to test a substring of one.
+export interface SessionArrayValueSource {
+  entity: string;
+  field: string;
+  timeField: string;
+}
+
+export interface SessionSortKey {
+  field: string;
+  direction: QuerySortDirection;
+}
+
+export interface SessionFilters {
+  search: string;
+  startMs: number;
+  endMs: number;
+  feedback: FeedbackFilter;
+  columnFilters?: SessionColumnFilter[];
+}
+
+export interface SessionPageRequest extends SessionFilters {
+  offset: number;
+  limit: number;
+  // Carried by a later page only: the first page resolves the candidate ids and returns them, and the
+  // client sends them back for the rest of that result.
+  chatIds?: string[];
+  sort?: SessionSortKey[];
+  sourceFields?: string[];
+  visibleEnrichmentFields?: string[];
+  // Carried by a later page only, exactly as `chatIds` is: the resolution reads a live table, so resolving
+  // again per scroll block could narrow a later page by a different set of values and make rows duplicate
+  // or vanish across the scroll.
+  arrayFilters?: SessionArrayFilter[];
+}
+
+// One value an enum-typed column holds, with how many sessions carry it under the page's other
+// narrowing.
+export interface SessionFieldValue {
+  value: string;
+  count: number | null;
+}
+
+// What the value filter's popup is showing while it resolves its list. A failed or empty read is a state of
+// its own rather than a fallback to a text entry: an operator who opened one control and was handed another
+// would enter a value under the wrong operator.
+export enum SessionValuesState {
+  Loading = 'loading',
+  Available = 'available',
+  Empty = 'empty',
+  LoadFailed = 'loadFailed',
+}
+
+export interface SessionValueFilterModel {
+  values: string[];
+}
+
+// What the grid hands its filter components through `context`. The facet has to carry the page's period,
+// search term, feedback candidates and other columns' filters, all of which are the sessions hook's
+// state — so the hook supplies the reader and the control stays unaware of any of it.
+export interface SessionGridContext {
+  requestFieldValues: (field: string) => Promise<ServerActionResponse<SessionFieldValue[]>>;
+}
+
+export interface SessionFieldValuesRequest extends SessionFilters {
+  field: string;
+  // The feedback narrowing reaches the query as candidate ids the first page resolved, so a facet count
+  // agrees with the rows only when the caller sends the same set it is paging under. The value sets an
+  // array-valued column filter resolved travel for the same reason.
+  chatIds?: string[];
+  arrayFilters?: SessionArrayFilter[];
+}
+
+export interface SessionCandidateIds {
+  ids: string[];
+  isCapped: boolean;
+}
+
+// Offered fields split by what projecting one costs, which is not the same question as whether its column
+// is on screen. Measured over 6 328 sessions, twenty ordinary columns instead of two cost 1.6 MiB and
+// 2 ms — so gating them would only buy a re-fetch on every reveal. The one field the service marks heavy
+// cost 2.7× the other ten together, so it is worth the re-fetch.
+export interface SessionProjectableFields {
+  cheapSource: string[];
+  // Also plain columns, but marked heavy by the service, so projected only while their columns show.
+  heavySource: string[];
+  // Supplied by a joined enrichment, so naming one adds that join to every page. Projected on visibility.
+  enrichment: string[];
+  // Enrichment-backed and projected unconditionally — the identity column reads these and cannot be hidden.
+  requiredEnrichment: string[];
+}
+
+export interface ProvenanceEntity {
+  provenance: ColumnProvenance;
+  name: string;
+}
+
+// The view's rows are sessions: one row per client session id, which the service sets to the session's
+// `chat_id` wherever a hop carries one. `ChatId` keeps its symbol name so every call site reads unchanged.
+export enum SessionsField {
+  ChatId = 'client_session_id',
+  ProjectId = 'project_id',
+  UserHash = 'user_hash',
+  TurnCount = 'turn_count',
+  TotalTokens = 'total_tokens',
+  TotalPrice = 'total_price',
+  PromptTokens = 'prompt_tokens',
+  CompletionTokens = 'completion_tokens',
+  SuccessCount = 'success_count',
+  DurationMs = 'duration_ms',
+  AvgDurationMs = 'avg_duration_ms',
+  Deployments = 'deployments',
+  FirstRequestTime = 'first_request_time',
+  LastRequestTime = 'last_request_time',
+  Traces = 'traces',
+  // The insight fields are enrichment columns: the service exposes each under a qualified flat name, and
+  // the dot belongs to the name rather than marking a path into a nested value.
+  InsightTitle = 'session_insights.title',
+  InsightSummary = 'session_insights.summary',
+  InsightSentiment = 'session_insights.sentiment',
+  InsightTopic = 'session_insights.topic',
+  InsightTopics = 'session_insights.topics',
+  InsightLanguage = 'session_insights.language',
+  InsightResolutionStatus = 'session_insights.resolution_status',
+  InsightActivityType = 'session_insights.activity_type',
+  InsightActivitySubTaskType = 'session_insights.activity_sub_task_type',
+}
+
+// Grid-only column ids: every other column binds to a `SessionsField`, but Rating is composed
+// from the rating rollup's lookups and has no field on the sessions entity.
+export enum SessionColumn {
+  Rating = 'rating',
+}
+
+export enum SessionTotalsField {
+  Sessions = 'sessions',
+  Cost = 'cost',
+}
+
+export enum SessionRatingTotalsField {
+  Sessions = 'rated_conversations',
+}
+
+export enum ResponseRatingsField {
+  ChatId = 'chat_id',
+  ResponseId = 'response_id',
+  FirstRateTime = 'first_rate_time',
+  LastRateTime = 'last_rate_time',
+  RatePosCount = 'rate_pos_count',
+  RateZeroCount = 'rate_zero_count',
+  RateNegCount = 'rate_neg_count',
+  RateBoolFalseCount = 'rate_bool_false_count',
+  RateRawCount = 'rate_raw_count',
+  RateEventCount = 'rate_event_count',
+  RateDistinctCount = 'rate_distinct_count',
+  CommentCount = 'comment_count',
+  CommentSample = 'comment_sample',
+}
+
+export enum FeedbackField {
+  LastRated = 'last_rated',
+  RatingUp = 'rating_up',
+  RateZero = 'rate_zero',
+  RateNegative = 'rate_negative',
+  RateBoolFalse = 'rate_bool_false',
+  RateRaw = 'rate_raw',
+  RateEvents = 'rate_events',
+}
+
+export type SessionColumnId = SessionsField | SessionColumn;
+
+// One rendered column group, keyed on the pair of a column's origin and the tag the schema gives its field.
+// The pair rather than the tag alone: a rollup field and an enrichment field can carry the same tag, and one
+// group holding both would attribute an enrichment value to the rollup — which is the mis-attribution the
+// grouping exists to prevent, since the two produce different kinds of empty cell.
+export interface SessionColumnGroup {
+  provenance: ColumnProvenance;
+  // The enrichment supplying these fields, empty for the rollup; names a group this frontend cannot label.
+  source: string;
+  // Empty where the schema reports no tag for the field — including every column when the schema could not
+  // be fetched at all, which is what collapses the groups back to one per origin.
+  tag: string;
+  fields: string[];
+}
+
+export interface SessionDetailRow {
+  client_session_id: string;
+  // Which field the id was read from. Decides the column every hop-log read for this session predicates on.
+  client_session_source?: string | null;
+  project_id: string | null;
+  user_hash: string | null;
+  turn_count: number | string | null;
+  first_request_time: number | string | null;
+  last_request_time: number | string | null;
+  prompt_tokens: number | string | null;
+  completion_tokens: number | string | null;
+  total_tokens: number | string | null;
+  total_price: number | string | null;
+  success_count: number | string | null;
+  duration_ms: number | string | null;
+  avg_duration_ms: number | string | null;
+  deployments: string[] | null;
+  traces?: string[] | null;
+  // Optional because the insight enrichment runs per session: a session the evaluator has not
+  // processed has no insight row at all, so the service returns no value under these names.
+  'session_insights.title'?: string | null;
+  'session_insights.summary'?: string | null;
+  'session_insights.sentiment'?: string | null;
+  'session_insights.topic'?: string | null;
+  'session_insights.topics'?: string | null;
+  'session_insights.language'?: string | null;
+  'session_insights.resolution_status'?: string | null;
+  'session_insights.activity_type'?: string | null;
+  'session_insights.activity_sub_task_type'?: string | null;
+}
+
+export interface SessionDetailResult {
+  session: SessionDetailRow | null;
+}
+
+export interface SessionFeedbackRow {
+  response_id: string | null;
+  first_rate_time: number | string | null;
+  last_rate_time: number | string | null;
+  rate_pos_count: number | string | null;
+  rate_zero_count: number | string | null;
+  rate_neg_count: number | string | null;
+  rate_distinct_count: number | string | null;
+  comment_count: number | string | null;
+  comment_sample?: string | null;
+}
+
+export interface SessionFeedbackPage {
+  rows: SessionFeedbackRow[];
+  total: number | null;
+  ratings: SessionRatingCounts | null;
+  isCommentTextReadable: boolean;
+}
+
+// What a session's hops are located by. `source` is the rollup's `client_session_source`: the value
+// `chat_id` means the id came from a session header, and anything else means it came from a coding
+// harness, whose hops carry no `chat_id` at all.
+export interface SessionScope {
+  id: string;
+  source?: string | null;
+}
+
+export enum UsageLogField {
+  ChatId = 'chat_id',
+  // The identity enrichment's normalised session key: a chat's own id where the hop carries one, the
+  // harness session id otherwise. Not one of the table's bloom-filtered columns, so it scopes a read only
+  // where `chat_id` cannot — see `sessionScopeField`.
+  ClientSessionId = 'usage_client_identity.client_session_id',
+  TraceId = 'trace_id',
+  CoreSpanId = 'core_span_id',
+  CoreParentSpanId = 'core_parent_span_id',
+  RequestTime = 'request_time',
+  Deployment = 'deployment',
+  EventKind = 'event_kind',
+  TotalTokens = 'total_tokens',
+  DeploymentPrice = 'deployment_price',
+  // The chain-inclusive figure: on a root span it equals the sum of its subtree's own `deployment_price`
+  // (verified against a live app-form trace), which is what makes the card's own/chain price pair readable.
+  TotalPrice = 'total_price',
+  // Leads the table's sort key, so it is the listing's only real prune besides the partition range. Also the
+  // Core-internal marker's operand — a service call is recorded under Core's own project, not the caller's.
+  ProjectId = 'project_id',
+  // The exact join key to the rating source, which is grained by it.
+  ResponseId = 'response_id',
+  ParentDeployment = 'parent_deployment',
+  RequestMethod = 'request_method',
+  RequestUri = 'request_uri',
+  ResponseUpstreamUri = 'response_upstream_uri',
+  ResponseStatus = 'response_status',
+  Success = 'success',
+  OperationDurationMs = 'operation_duration_ms',
+  McpMethod = 'mcp_method',
+  McpToolCallName = 'mcp_tool_call_name',
+  ExecutionPath = 'execution_path',
+  NumberRequestMessages = 'number_request_messages',
+  RequestBodyBytes = 'request_body_bytes',
+  ResponseBodyBytes = 'response_body_bytes',
+  ReasoningTokens = 'reasoning_tokens',
+  // The column's own name, never the address it is published at. The service moved these three into the
+  // `dial_usage_log_payload` enrichment and now publishes them qualified by it, but an older instance
+  // publishes them bare — so the grant resolves each against the fetched schema by column name rather than
+  // by exact spelling, and the read selects whichever name that instance answered with.
+  RequestBody = 'request_body',
+  ResponseBody = 'response_body',
+  // A later addition to the hop log: an instance predating it does not persist the column, so it is named
+  // only when the fetched schema reports it.
+  AssembledResponse = 'assembled_response',
+}
+
+// A trace's own totals, as the drawer states them above its hops. A view model, not a row — hence camelCase,
+// matching the group and card models it is built from. Named for what it holds rather than for any one
+// source: the listing resolves these live, and the drawer reads whichever figures the view that opened it
+// already has. `durationMs` is card-level and therefore unavailable for a trace whose root the roots pass
+// never returned, which leaves no card to state it.
+export interface SessionTraceFigures {
+  traceId: string;
+  startedAt: number | string | null;
+  spans: number | string | null;
+  failedSpans: number | string | null;
+  tokens: number | string | null;
+  price: number | string | null;
+  durationMs?: number | string | null;
+}
+
+// The trace listing reads the hop log live, in three passes. The first pages traces and yields nothing but
+// their ids and their own time bounds; the second reads every root span of that page for its own facts; the
+// third resolves the traces' figures. The aliases below are what each pass projects, so a row's shape says
+// which pass produced it.
+export enum SessionTracePageField {
+  TraceId = 'trace_id',
+  FirstRequestTime = 'first_request_time',
+  LastRequestTime = 'last_request_time',
+}
+
+export interface SessionTracePageRow {
+  trace_id: string;
+  first_request_time: number | string | null;
+  last_request_time: number | string | null;
+}
+
+export enum SessionTraceFigureField {
+  TraceId = 'trace_id',
+  EventKind = 'event_kind',
+  Spans = 'spans',
+  Tokens = 'tokens',
+  Price = 'price',
+  FailedSpans = 'failed_spans',
+  ResponseIds = 'response_ids',
+}
+
+// One row per (trace, event kind): the per-kind rows are the chips, and their sums are the trace's figures.
+export interface SessionTraceFigureRow {
+  trace_id: string;
+  event_kind: string | null;
+  spans: number | string | null;
+  tokens: number | string | null;
+  price: number | string | null;
+  failed_spans: number | string | null;
+  response_ids: string[] | null;
+}
+
+// A root span, read for the card it becomes. `project_id` is here because the Core-internal marker compares
+// it against the session's; it is deliberately absent from the query's filter, where it would drop the
+// rows the marker exists to find.
+export interface SessionTraceRootRow {
+  trace_id: string;
+  core_span_id: string;
+  request_time: number | string | null;
+  operation_duration_ms: number | string | null;
+  success: boolean | null;
+  response_status: number | null;
+  total_tokens: number | string | null;
+  total_price: number | string | null;
+  deployment_price: number | string | null;
+  'usage_client_identity.client_session_id': string | null;
+  request_uri: string | null;
+  event_kind: string | null;
+  number_request_messages: number | string | null;
+  deployment: string | null;
+  project_id: string | null;
+}
+
+// Inclusive epoch-millis bounds, already padded. Carried as a value rather than recomputed per query so the
+// roots and figures passes cannot end up scoped to different windows.
+export interface SessionTraceWindow {
+  fromMs: number;
+  toMs: number;
+}
+
+export interface SessionTraceChip {
+  eventKind: string;
+  spans: number;
+}
+
+// What one recorded call states about itself. Every field is read from that root's own row — nothing here is
+// a trace-level figure, and nothing is derived from a body.
+export interface SessionTraceCard {
+  traceId: string;
+  coreSpanId: string;
+  startedAt: number | string | null;
+  durationMs: number | string | null;
+  isSuccess: boolean | null;
+  responseStatus: number | null;
+  ownTokens: number | string | null;
+  ownPrice: number | string | null;
+  chainPrice: number | string | null;
+  deployment: string | null;
+  requestUri: string | null;
+  eventKind: string | null;
+  requestMessages: number | string | null;
+  hasSessionLabel: boolean;
+  isCoreInternal: boolean;
+}
+
+// A trace and the cards beneath it. `isRootRecorded` false is the trace whose root the roots pass did not
+// return: it still renders, from these figures alone. `elidedCardCount` is what the card cap held back, so
+// the view can disclose it rather than truncating in silence.
+export interface SessionTraceGroup {
+  traceId: string;
+  startedAt: number | string | null;
+  spans: number;
+  tokens: number;
+  price: number;
+  failedSpans: number;
+  chips: SessionTraceChip[];
+  responseIds: string[];
+  cards: SessionTraceCard[];
+  elidedCardCount: number;
+  isRootRecorded: boolean;
+}
+
+export interface SessionTracePage {
+  groups: SessionTraceGroup[];
+  hasMore: boolean;
+}
+
+export interface SessionSpanRow {
+  core_span_id: string;
+  core_parent_span_id: string | null;
+  event_kind: string | null;
+  deployment: string | null;
+  parent_deployment: string | null;
+  request_method: string | null;
+  request_uri: string | null;
+  response_upstream_uri: string | null;
+  response_status: number | null;
+  success: boolean | null;
+  operation_duration_ms: number | string | null;
+  total_tokens: number | string | null;
+  deployment_price: number | string | null;
+  // The chain-inclusive price. A span that metered nothing of its own carries a null `deployment_price` and a
+  // real `total_price`, so this is the only cost figure such a row has. Required, like every other column the
+  // span query always selects: optional would put `undefined` in the type and no reader wants a third empty.
+  total_price: number | string | null;
+  request_time: number | string | null;
+  response_body_bytes: number | string | null;
+  request_body_bytes: number | string | null;
+  number_request_messages: number | string | null;
+  reasoning_tokens: number | string | null;
+  mcp_method?: string | null;
+  mcp_tool_call_name?: string | null;
+  execution_path?: string[] | null;
+}
+
+// The outcome axis. One member, because there is no "succeeded" control to offer: the turn's own status
+// figure already says whether anything failed, and a control marking almost every node answers nothing.
+export enum HopOutcomeFilter {
+  Failed = 'failed',
+}
+
+// What the tree is currently emphasising — a kind of call, or the outcome axis, or nothing.
+export type HopEmphasis = SpanKind | HopOutcomeFilter;
+
+export enum HopNodeKind {
+  Hop = 'hop',
+  UnrecordedRoot = 'unrecorded-root',
+}
+
+// Which figures a row has to state. The choice is made from what the hop recorded, never from what kind of
+// entity answered it: an application hop records no tokens and no price of its own while carrying a real
+// chain price, so a single token-shaped line would render it as `0 tok` and a dash and read as broken data.
+export enum HopFactsShape {
+  Metered = 'metered',
+  Unmetered = 'unmetered',
+}
+
+export interface HopMeteredFacts {
+  shape: HopFactsShape.Metered;
+  tokens: number | null;
+  requestMessages: number | null;
+  cost: number | string | null;
+}
+
+// Duration is not a member: every row states it in its own column, whatever shape its facts take, so
+// repeating it here would print it twice on exactly the rows that have least else to show.
+//
+// Neither is the upstream host. It is constant across every hop of one deployment, so as a row fact it
+// restates the row's own name once per row — and being the longest token on the line, it pushed the hop's
+// method into truncation. The detail panel states it in full, once, for the hop the reader opened.
+export interface HopUnmeteredFacts {
+  shape: HopFactsShape.Unmetered;
+  chainCost: number | string | null;
+}
+
+export type HopFacts = HopMeteredFacts | HopUnmeteredFacts;
+
+// Plain columns the span read already carries, so a hop whose bodies are withheld still states how it went.
+// Each field is stated on the side it describes: over both tabs, the outcome sat above the request describing
+// something the request has not done yet.
+export interface HopTransport {
+  method: string | null;
+  status: number | null;
+  // The protocol's own phrase, where this console names one; otherwise the number stands alone.
+  reason: string | null;
+  hasFailed: boolean;
+  requestBytes: number | null;
+  responseBytes: number | null;
+  durationMs: number | null;
+}
+
+// The parameters sent and the result answered with, each as the JSON it was recorded as — not a summary.
+export interface HopProtocolFacts {
+  state: HopReadState;
+  method: string | null;
+  // A notification carries none, and its method is the whole of the request.
+  requestText: string | null;
+  requestState: HopReadState;
+  resultText: string | null;
+  resultClamp: HopClamp;
+  responseState: HopReadState;
+}
+
+// The turn's recorded MCP tool calls per name, and whether the span read that produced them was complete.
+// The two travel together because a count read from a capped page cannot support a claim about an absence.
+export interface McpToolCallTally {
+  counts: Record<string, number>;
+  isComplete: boolean;
+}
+
+export interface HopNodeData {
+  kind: HopNodeKind;
+  type: SpanKind | null;
+  label: string;
+  // What the hop did, where its kind records one — an MCP tool call or protocol method. It sits beside the
+  // label rather than replacing it, so a protocol message states both its server and its method.
+  detail: string | null;
+  span: SessionSpanRow | null;
+  startedAtMs: number | null;
+  durationMs: number | null;
+  facts: HopFacts | null;
+  isFailed: boolean;
+  position: number;
+  isMatch: boolean;
+}
+
+export type HopTreeNode = TreeRow<HopNodeData>;
+
+export interface HopTreeRow {
+  node: HopTreeNode;
+  ancestorHasNextSibling: boolean[];
+  isLastChild: boolean;
+}
+
+export type SpanFieldRow = SessionSpanRow & Record<string, unknown>;
+
+export interface SessionSpansPage {
+  spans: SpanFieldRow[];
+  total: number | null;
+  // Resolved from the hop-log schema by the same read that fetched the spans: the two must describe one
+  // projection, or the rail states a field the query never selected as one the hop recorded nothing for.
+  fieldGroups: SpanFieldGroup[];
+}
+
+// The tags the hop-log catalog groups its columns under, as this release labels them. The set is not closed:
+// a tag outside it is presented under the schema's own spelling, so a column the service publishes under a
+// new tag reaches the rail without a release.
+export enum SpanFieldTag {
+  Identifier = 'identifier',
+  Dimension = 'dimension',
+  Principal = 'principal',
+  Deployment = 'deployment',
+  Request = 'request',
+  Response = 'response',
+  TokenUsage = 'token-usage',
+  Cost = 'cost',
+  Performance = 'performance',
+  Client = 'client',
+  Provenance = 'provenance',
+  Tracing = 'tracing',
+  System = 'system',
+}
+
+export interface SpanFieldDescriptor {
+  name: string;
+  label: string;
+  type: AnalyticsFieldType;
+  tag: string;
+}
+
+export interface SpanObjectEntry {
+  key: string;
+  text: string;
+}
+
+export interface SpanFactRowProps {
+  label: string;
+  value: string;
+  isMono?: boolean;
+  valueClassName?: string;
+}
+
+export interface SpanFieldGroup {
+  tag: string;
+  fields: SpanFieldDescriptor[];
+}
+
+// The projection the span read names, and the groups the rail presents it as.
+export interface SpanFieldSet {
+  names: string[];
+  groups: SpanFieldGroup[];
+}
+
+// What kind of call a hop stands for. Named as the hop log names them, and deliberately carrying no failure
+// member: a failed model call and a failed tool call are different problems, and one set naming both "error"
+// says neither. Failure travels beside the kind, never instead of it.
+//
+// It deliberately asserts nothing about *what answered* the call. An application hop and a model hop are
+// recorded as the same kind of call, and no column separates them reliably — so a call to an application's
+// chat endpoint is an `Llm` call, which is the only thing the log actually records.
+export enum SpanKind {
+  Llm = 'llm',
+  Mcp = 'mcp',
+  Embeddings = 'embeddings',
+  Route = 'route',
+  // A rating the reader left on the turn. It arrives as its own single-hop trace and records no event kind,
+  // so it is recognised by its endpoint — the same mechanism an unlabelled model call is classified by.
+  Rating = 'rating',
+  Other = 'other',
+}
+
+export interface SessionSpanNode {
+  span: SpanFieldRow;
+  kind: SpanKind;
+  hasFailed: boolean;
+  startedAtMs: number | null;
+}
+
+export enum MessageRole {
+  User = 'user',
+  Assistant = 'assistant',
+  System = 'system',
+  Tool = 'tool',
+  // A role this frontend does not recognise. Dropping such a message would hide recorded work, which is the
+  // worse failure in an observability tool — the same deny-list reasoning the hop typing follows.
+  Other = 'other',
+}
+
+// The hop log records model calls in two structurally different dialects, told apart by the endpoint alone.
+// `Unknown` is not a failure: it routes the hop to the raw view, which answers completely for a dialect this
+// frontend has not met.
+export enum HopDialect {
+  ChatCompletions = 'chat-completions',
+  Messages = 'messages',
+  Responses = 'responses',
+  Unknown = 'unknown',
+}
+
+// A body column of the hop log, and the unit every body read is issued in: the server turns a member of this
+// into a column list. Every member must therefore name a real column — which is why the reader's tab set is a
+// separate enum below rather than a third member here.
+export enum HopInspectorSide {
+  Request = 'request',
+  Response = 'response',
+}
+
+// What the reader chooses between in the trace view's bodies section. Chat is not a side of the envelope: it
+// is a second presentation of both, so it maps to sides rather than being one.
+export enum SpanBodyTab {
+  Request = 'request',
+  Response = 'response',
+  Chat = 'chat',
+}
+
+// Why a side has no content to fetch, decided from the hop row before any body read.
+//
+// `ProtocolNoBody` is not `NoResponse` with different words: one says the log recorded nothing, the other says
+// the protocol defines nothing to record. Reporting a notification's absent body as an empty recording sends a
+// reader looking for data that never existed.
+export enum HopSideSuppression {
+  NoResponse = 'no-response',
+  ProtocolNoBody = 'protocol-no-body',
+  Vector = 'vector',
+}
+
+export interface HopSideSuppressions {
+  request: HopSideSuppression | null;
+  response: HopSideSuppression | null;
+}
+
+// Withheld, empty and failed are three different facts about a side, and rendering any two of them
+// identically hides an outage behind an entitlement or an entitlement behind an empty result.
+export enum HopReadState {
+  Available = 'available',
+  ColumnWithheld = 'column-withheld',
+  NoBody = 'no-body',
+  LoadFailed = 'load-failed',
+  // The body was read but no parser claims its dialect. The raw view is the answer.
+  Unstructured = 'unstructured',
+}
+
+// A parameter the request carried, or one of the four always stated with a null value when it did not —
+// absence is itself a debugging answer.
+export interface HopParam {
+  name: string;
+  value: string | null;
+}
+
+export interface HopParams {
+  stated: HopParam[];
+  // The members the line does not name, carried as names so a reader can see which without their values.
+  rest: string[];
+}
+
+// What an assistant asked for, carried as part of the history rather than as metadata about it. An assistant
+// message that only called a tool records `content` as `""`, so the call *is* what that message said.
+export interface HopToolCall {
+  name: string;
+  args: string | null;
+  // The id the result will quote back. It is the only thing pairing a call with its answer: a turn that made
+  // three calls of the same tool is answered by three messages that are otherwise identical.
+  id: string | null;
+}
+
+// What the messages dialect's response carries, read from whichever of its two recorded forms the hop stored.
+// The two forms differ only in how the same three facts are spelled, so they reduce to one shape here rather
+// than at each call site.
+export interface HopMessagesResponse {
+  text: string | null;
+  toolCalls: HopToolCall[];
+  // This dialect's spelling of the finish reason.
+  stopReason: string | null;
+}
+
+// One call a message answers, with the tool it belongs to. Kept as a pair rather than as two parallel lists:
+// an id whose call is not in this request resolves to no name, and two lists would then be a different length
+// and silently pair the wrong result with the wrong tool.
+export interface HopToolAnswer {
+  callId: string;
+  // Null when nothing in this request carries that id — the history the client sent back reaches further than
+  // the request itself does.
+  toolName: string | null;
+}
+
+export interface HopRoleCount {
+  role: MessageRole;
+  count: number;
+}
+
+// One entry per recorded message. `bytes` is the size of the recorded JSON, not of the rendered text, so a
+// message whose text was clamped away entirely still states honestly what made the request heavy — and it is
+// the only field that says so.
+export interface HopMessageEntry {
+  index: number;
+  role: MessageRole;
+  bytes: number;
+  text: string | null;
+  toolCalls: HopToolCall[];
+  isTextClamped: boolean;
+  // The calls this message answers, resolved against the whole message list while the envelope is built. A
+  // result carries only an id, so a reader looking at one message has no way to tell which tool it came from
+  // — and the pairing cannot be resolved from that message alone.
+  answers: HopToolAnswer[];
+  isError: boolean;
+}
+
+// What a dialect parser yields before clamping and budgeting: the recorded shape, read once, with no
+// presentation decisions taken. Keeping the parsers free of the clamp is what lets both dialects share one
+// envelope builder and one set of budget rules.
+export interface HopDialectMessage {
+  role: MessageRole;
+  text: string | null;
+  toolCalls: HopToolCall[];
+  bytes: number;
+  // The calls this message answers. A list rather than one id because the messages dialect feeds several
+  // results back in a single message, and dropping all but the first would lose the pairing for the rest.
+  answeredCallIds: string[];
+  // Whether the tool reported a failure. Only the messages dialect records it, and for a reader debugging an
+  // agent loop it matters more than the result text.
+  isError: boolean;
+}
+
+export interface HopRequestEnvelope {
+  state: HopReadState;
+  dialect: HopDialect;
+  params: HopParams;
+  messages: HopMessageEntry[];
+  roleCounts: HopRoleCount[];
+  recordedBytes: number | null;
+  // Set when the envelope's own total budget was reached, so the message list is short of what was recorded.
+  isClamped: boolean;
+}
+
+// A clamp states itself **and** states by how much. One shape for every clamped thing, so the three places
+// that clamp cannot each invent their own spelling of the same sentence — and so none of them can carry the
+// flag without carrying the numbers, which is how two of them ended up computing a clamp and never saying so.
+export interface HopClamp {
+  isClamped: boolean;
+  recordedBytes: number | null;
+  deliveredBytes: number | null;
+}
+
+// What a response states about itself rather than about the message it carried. None of it is on the hop
+// row: the row has `total_tokens`, `reasoning_tokens` and the *deployment* name, which is not the string the
+// upstream reports as its model — a deployment can route to a model whose own id and version the row never
+// records.
+export interface HopResponseFacts {
+  model: string | null;
+  // The upstream's own id for the completion, which is what correlates this hop with the provider's logs.
+  completionId: string | null;
+  // The split the row cannot state, and the cache hit that explains a bill the token total does not. A zero
+  // is a reported zero — no cache hit — while null is a provider that reported nothing.
+  promptTokens: number | null;
+  completionTokens: number | null;
+  cachedTokens: number | null;
+}
+
+export interface HopResponseEnvelope {
+  state: HopReadState;
+  text: string | null;
+  textClamp: HopClamp;
+  reasoningText: string | null;
+  finishReason: string | null;
+  toolCalls: HopToolCall[];
+  errorText: string | null;
+  facts: HopResponseFacts;
+  recordedBytes: number | null;
+}
+
+// Tier 2 reads one *message* in full, not one property of one. The history is what a reader opens a hop for,
+// and a property was never the unit they were asking about.
+export interface HopMessageValue {
+  state: HopReadState;
+  text: string | null;
+  toolCalls: HopToolCall[];
+}
+
+export interface HopRawBody {
+  state: HopReadState;
+  text: string | null;
+  clamp: HopClamp;
+}
+
+// Which sides a read was actually entitled to. A fact panel is built from both body columns, so a builder
+// that is not told which side it was denied has to report a withheld column and a hop that recorded nothing
+// as the same empty field — the one distinction the inspector exists to keep.
+export interface HopSideGrants {
+  isRequestReadable: boolean;
+  isResponseReadable: boolean;
+}
+
+export interface HopMcpFacts {
+  state: HopReadState;
+  method: string | null;
+  toolName: string | null;
+  toolset: string | null;
+  argumentsText: string | null;
+  resultText: string | null;
+  resultClamp: HopClamp;
+  // The result comes from the response column and the arguments from the request one, so a caller granted
+  // only one side gets a hop that is half available and half withheld, and the two halves are stated on
+  // their own tabs. `state` is the hop-level read and cannot say either.
+  argumentsState: HopReadState;
+  resultState: HopReadState;
+}
+
+// The token count is not here: it is `total_tokens` on the hop row, which the panel already has and which
+// stays right when the body is withheld.
+export interface HopEmbeddingFacts {
+  state: HopReadState;
+  model: string | null;
+  inputCount: number | null;
+  dimensions: number | null;
+  inputText: string | null;
+  inputClamp: HopClamp;
+  // The dimension count is derived from the response column; every other field here comes from the request
+  // one. Withheld and "the vector was not recorded" both produce no number, and they are not the same fact.
+  isDimensionsWithheld: boolean;
+}
+
+// Which body columns this caller can read. A *schema* fact, resolved before any body query, so a span's body
+// tabs are gated before a body is read. Reported per side and never as a conjunction: each tab reads its own
+// column, and requiring both would withhold a readable request history over an unreadable answer. Whether a
+// granted column has anything in it for a given hop is a fact about the row, stated inside the tab.
+export interface HopBodyGrants {
+  isRequestReadable: boolean;
+  isResponseReadable: boolean;
+}
+
+export interface HopBodyFields extends HopBodyGrants {
+  // The names this instance publishes the columns under, resolved from its own schema — qualified by the
+  // enrichment that holds them where it reports them that way, bare where it does not. Held rather than
+  // recomputed so the read selects exactly what the grant matched.
+  requestField: string | null;
+  responseFields: string[];
+}
+
+export interface SessionEntryBodyRow {
+  trace_id: string;
+  event_kind: string | null;
+  request_body: string | null;
+  response_body: string | null;
+  assembled_response?: string | null;
+  // Selected by the inspector's own read so the dialect is resolved server-side from the endpoint rather than
+  // taken on trust from the caller. A plain column, and free beside the body it travels with.
+  request_uri?: string | null;
+}
+
+export enum SessionDetailPanel {
+  Insights = 'insights',
+  Usage = 'usage',
+  Feedback = 'feedback',
+  Metadata = 'metadata',
+}
+
+export enum SessionFieldFormat {
+  Count = 'count',
+  Cost = 'cost',
+  DateTime = 'date-time',
+  Duration = 'duration',
+  List = 'list',
+}
+
+export enum SessionPanelLayout {
+  Grid = 'grid',
+  Rows = 'rows',
+}
+
+export interface SessionFieldDefinition {
+  labelKey: string;
+  column?: SessionsField;
+  format?: SessionFieldFormat;
+  accentClassName?: string;
+  // A caveat for a figure that cannot be read at face value. The panel exposes it through a focusable
+  // control, so it reaches a keyboard as well as a pointer.
+  hintKey?: string;
+}
+
+export interface SessionPanelFrame {
+  panel: SessionDetailPanel;
+  sourceEntity: string;
+  provenance: ColumnProvenance;
+  labelKey: string;
+}
+
+export interface SessionPanelDefinition extends SessionPanelFrame {
+  layout: SessionPanelLayout;
+  fields: SessionFieldDefinition[];
+}
+
+export enum SessionFieldState {
+  Available = 'available',
+  Empty = 'empty',
+  Unavailable = 'unavailable',
+}
+
+export enum SessionInsightsState {
+  Available = 'available',
+  NotEvaluated = 'not-evaluated',
+  EnrichmentUnavailable = 'enrichment-unavailable',
+}
+
+export interface ResolvedSessionField {
+  labelKey: string;
+  state: SessionFieldState;
+  text: string;
+  accentClassName?: string;
+  hintKey?: string;
+}
+
+// One row of the rail's label-and-value register. The value is a node rather than a string because a field's
+// absence is presented differently from its content, and the panels that can render an absence carry that
+// distinction in markup rather than in the text.
+export interface SessionTerm {
+  key: string;
+  label: string;
+  hint?: string;
+  value: ReactNode;
+}
+
+// One insight column as the entity schema reports it, reduced to what the panel renders it with. Built from
+// the schema rather than declared here, so a column the enrichment gains is described without a release:
+// the label and the hint are the service's own words, and the type is what decides the value's formatting.
+export interface SessionInsightField {
+  name: string;
+  label: string;
+  hint?: string;
+  type: AnalyticsFieldType;
+}

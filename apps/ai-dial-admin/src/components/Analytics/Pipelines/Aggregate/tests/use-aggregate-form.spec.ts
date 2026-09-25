@@ -6,7 +6,6 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
   type: AnalyticsTableType.Enrichment,
@@ -52,7 +51,7 @@ describe('useAggregateForm — candidate targets', () => {
     expect(result.current.availableTargets).toEqual([]);
   });
 });
-describe('useAggregateForm — validity', () => {
+describe('useAggregateForm — what the console still judges', () => {
   const complete = {
     kind: PipelineKind.Aggregate,
     name: 'sessions_rollup',
@@ -62,30 +61,26 @@ describe('useAggregateForm — validity', () => {
     group_by: [{ column: 'client_session_id' }],
     measures: [{ name: 'turn_count', fn: 'count' }],
   };
-  test('accepts a complete declaration', async () => {
+  test('registration takes the identity and the target', async () => {
     const { result } = renderForm({ initialDraft: complete });
-    await waitFor(() => expect(result.current.isValid).toBe(true));
+    await waitFor(() => expect(result.current.isRegistrationValid).toBe(true));
   });
-  test('blocks without an input', async () => {
+  test('an input the author has not chosen yet is left to the service', async () => {
     const { result } = renderForm({ initialDraft: { ...complete, inputs: undefined } });
     await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.isRegistrationValid).toBe(true);
+    expect(result.current.hasDistinctWithoutColumn).toBe(false);
   });
-  test('accepts a declaration with no group key, which the service derives from the target', async () => {
-    const { result } = renderForm({ initialDraft: { ...complete, group_by: [] } });
-    await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
-    expect(result.current.isValid).toBe(true);
-  });
-  test('blocks without a measure', async () => {
+  test('a declaration with no measure is not withheld either', async () => {
     const { result } = renderForm({ initialDraft: { ...complete, measures: [] } });
     await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.hasDistinctWithoutColumn).toBe(false);
   });
-  test('blocks a distinct measure that names no column', async () => {
+  test('a distinct measure that names no column is reported', async () => {
     const { result } = renderForm({
       initialDraft: { ...complete, measures: [{ name: 'x', fn: 'count', distinct: true }] },
     });
     await waitFor(() => expect(result.current.isTargetResolved).toBe(true));
-    expect(result.current.isValid).toBe(false);
+    expect(result.current.hasDistinctWithoutColumn).toBe(true);
   });
 });

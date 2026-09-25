@@ -2,15 +2,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getPipelines } from '@/src/app/[lang]/pipelines/actions';
-import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineListItem, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 // test-setup.tsx pins isFullAdmin true for the whole suite, so the non-admin case needs its own file.
@@ -39,11 +36,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const rule: PipelineListItem = {
   name: 'turn-feedback-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform_type: TransformType.Sql,
   target: 'turn_feedback',
-  grain_key: 'response_id',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,
@@ -52,18 +46,13 @@ const rule: PipelineListItem = {
 
 describe('PipelinesView — permissions', () => {
   beforeEach(() => {
-    vi.mocked(getEvaluators).mockResolvedValue({
-      success: true,
-      response: [{ name: 'feedback-rollup', latest_version: 2 }],
-    });
     vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule] });
   });
 
-  test('offers no create action to a caller who is not a full admin', async () => {
+  test('offers no create action to a caller who is not a full admin', () => {
     isFullAdmin.value = false;
     render(<PipelinesView initialPipelines={[rule]} />);
 
-    await waitFor(() => expect(getEvaluators).toHaveBeenCalled());
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.CreatePipeline)).toBeNull();
   });
 

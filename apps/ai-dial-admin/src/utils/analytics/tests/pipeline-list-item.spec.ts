@@ -1,32 +1,23 @@
 import { describe, expect, test } from 'vitest';
 
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { toPipelineListItem } from '@/src/utils/analytics/pipeline-list-item';
-
-const evaluator: Evaluator = {
-  name: 'conversation-insights',
-  version: 4,
-  type: EvaluatorType.Llm,
-  request_template: 'a very long prompt template'.repeat(200),
-  response_schema: { type: 'object' },
-  input_vars: [{ name: 'request', type: 'string' }],
-  output_vars: [{ name: 'title', type: 'string' }],
-};
 
 const enrichPipeline: Pipeline = {
   name: 'conversation-insights-live',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'conversation-insights',
-  evaluator_version: 4,
-  evaluator,
+  transform: {
+    type: TransformType.Llm,
+    model: 'gpt-4o',
+    request_template: 'a very long prompt template'.repeat(200),
+    outputs: { title: 'Title of the session.' },
+  },
   target: 'conversation_insights',
   inputs: ['dial_usage_log'],
   grain_key: 'chat_id',
   version_column: '_ingested_at',
   trigger: { kind: TriggerKind.Group, group_by: 'chat_id', ready_when: { idle: '30m' } },
   filter: 'length(chat_id) > 0',
-  output_bindings: [{ column: 'title', var: 'title' }],
   enabled: true,
   generation: 10,
   created_at: '2026-08-17T11:59:13Z',
@@ -52,8 +43,7 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     expect(toPipelineListItem(enrichPipeline)).toEqual({
       name: 'conversation-insights-live',
       kind: PipelineKind.Enrich,
-      evaluator_name: 'conversation-insights',
-      evaluator_version: 4,
+      transform_type: TransformType.Llm,
       target: 'conversation_insights',
       inputs: ['dial_usage_log'],
       trigger: { kind: TriggerKind.Group, group_by: 'chat_id', ready_when: { idle: '30m' } },
@@ -63,17 +53,17 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     });
   });
 
-  test('drops the evaluator definition, which only a detail read carries', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+  test('carries the transform type alone, not the declaration that holds the prompt', () => {
+    const item = toPipelineListItem(enrichPipeline);
 
-    expect(item).not.toHaveProperty('evaluator');
+    expect(item.transform_type).toBe(TransformType.Llm);
+    expect(item).not.toHaveProperty('transform');
   });
 
   test('drops the members the listing does not show', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+    const item = toPipelineListItem(enrichPipeline);
 
     expect(item).not.toHaveProperty('filter');
-    expect(item).not.toHaveProperty('output_bindings');
     expect(item).not.toHaveProperty('created_at');
   });
 
@@ -81,14 +71,13 @@ describe('Utils :: analytics :: toPipelineListItem', () => {
     const item = toPipelineListItem(aggregatePipeline);
 
     expect(item.kind).toBe(PipelineKind.Aggregate);
-    expect(item.evaluator_name).toBeUndefined();
-    expect(item.evaluator_version).toBeUndefined();
+    expect(item.transform_type).toBeUndefined();
   });
 
   test('carries no resolved-only member, which no column reads', () => {
-    const item = toPipelineListItem(enrichPipeline) as Record<string, unknown>;
+    const item = toPipelineListItem(enrichPipeline);
 
-    expect(item.grain_key).toBeUndefined();
-    expect(item.version_column).toBeUndefined();
+    expect(item).not.toHaveProperty('grain_key');
+    expect(item).not.toHaveProperty('version_column');
   });
 });

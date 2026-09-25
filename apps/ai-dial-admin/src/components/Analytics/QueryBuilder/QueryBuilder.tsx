@@ -6,13 +6,8 @@ import { DialGhostButton, DialLoader, DialNoDataContent, DialSegmentedControl } 
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
-import {
-  executeQuery,
-  executeSqlQuery,
-  getEntitySchema,
-  translateQuery,
-  translateSqlToQuery,
-} from '@/src/app/[lang]/queries/actions';
+import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
+import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
@@ -42,6 +37,7 @@ import { buildExecutedMeta } from '@/src/components/Analytics/QueryBuilder/utils
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
+import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import {
   DEFAULT_CHART_CONFIG,
   JSON_INDENT,
@@ -96,6 +92,8 @@ const QueryBuilder: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  // A run the operator walks away from is cancelled with the view rather than left to finish unseen.
+  const { runQuery, runSql } = useAnalyticsQuery();
   const { featureFlags } = useAppContext();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
@@ -180,10 +178,13 @@ const QueryBuilder: FC<Props> = ({
     setIsLoadingSchema(true);
     setSchemaError(null);
     const schemaRead = await getEntitySchema(name);
-    if (schemaRead.response) {
-      setState({ ...createInitialState(state.functions), entityName: name, fields: schemaRead.response.fields || [] });
-    } else {
-      setState({ ...createInitialState(state.functions), entityName: name });
+    const nextState: QueryBuilderState = {
+      ...createInitialState(state.functions),
+      entityName: name,
+      fields: schemaRead.response?.fields ?? [],
+    };
+    setState(nextState);
+    if (!schemaRead.response) {
       setSchemaError(t(QueryBuilderI18nKey.SchemaLoadFailed));
       showNotification(
         getErrorNotification(
@@ -193,15 +194,28 @@ const QueryBuilder: FC<Props> = ({
         ),
       );
     }
+    // The new source has its own timestamp column — or none — so the bound is resolved against the
+    // schema just loaded rather than the one this render still holds.
+    const timestamp = findTimestampField(nextState.fields);
+    syncJsonBuffer(
+      nextState,
+      timestamp ? { field: timestamp, range: getCurrentTimeRange(), period: boundPeriod } : null,
+    );
     setIsLoadingSchema(false);
   };
 
   const fieldsLoaded = state.fields.length > 0;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
   const { getCurrentTimeRange } = timeFilter;
+  const boundPeriod = timeFilter.isCustom ? undefined : timeFilter.timePeriod;
+  const timeBoundOf = useCallback(
+    (range: TimeRange, period?: string): QueryTimeBound | null =>
+      timestampField ? { field: timestampField, range, period } : null,
+    [timestampField],
+  );
   const timeBound = useMemo<QueryTimeBound | null>(
-    () => (timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null),
-    [timestampField, getCurrentTimeRange],
+    () => timeBoundOf(getCurrentTimeRange(), boundPeriod),
+    [timeBoundOf, getCurrentTimeRange, boundPeriod],
   );
   const query = useMemo(() => buildQuery(state, timeBound), [state, timeBound]);
   const json = useMemo(() => JSON.stringify(query, null, JSON_INDENT), [query]);
@@ -279,15 +293,22 @@ const QueryBuilder: FC<Props> = ({
   ): Promise<{ fields: AnalyticsEntityField[]; state: QueryBuilderState; timeBound: QueryTimeBound | null }> => {
     const fields = await resolveFieldsForEntity(parsed.entity ?? state.entityName);
     const timestamp = findTimestampField(fields);
-    const lifted = timestamp ? liftTimeRange(parsed.filter, timestamp) : null;
+    const lifted = timestamp ? liftTimeRange(parsed.filter, timestamp, state.functions) : null;
     const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
     const nextState = parseQuery(forState, fields, state.functions);
     setState(nextState);
-    if (lifted && !sameRange(lifted.range, timeBound?.range)) {
+
+    // A relative pair names the preset it came from, so the toolbar goes back to that preset and
+    // the window keeps moving; an absolute pair is the custom range it always was.
+    if (lifted?.periodId) {
+      timeFilter.onTimePeriodChange(lifted.periodId);
+    } else if (lifted?.range && !sameRange(lifted.range, timeBound?.range)) {
       timeFilter.onTimeRangeChange(lifted.range, true);
     }
-    const range = lifted ? lifted.range : getCurrentTimeRange();
-    return { fields, state: nextState, timeBound: timestamp ? { field: timestamp, range } : null };
+
+    const period = lifted?.periodId ?? (lifted?.range ? undefined : boundPeriod);
+    const range = lifted?.range ?? (lifted?.periodId ? getTimeRangeById(lifted.periodId) : getCurrentTimeRange());
+    return { fields, state: nextState, timeBound: timestamp ? { field: timestamp, range, period } : null };
   };
 
   // Entering SQL seeds the editor from the backend translation of the current builder query — the
@@ -296,7 +317,7 @@ const QueryBuilder: FC<Props> = ({
   const seedSqlFromBuilder = async () => {
     setSqlLoading(true);
     setSqlError(null);
-    const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
+    const freshBound = timeBoundOf(getCurrentTimeRange(), boundPeriod);
     const res = await translateQuery(buildQuery(state, freshBound));
     if (res.success) {
       const sql = formatSql(res.response?.sql ?? '');
@@ -392,6 +413,31 @@ const QueryBuilder: FC<Props> = ({
     setPendingView(null);
   };
 
+  // The JSON buffer is the user's once they edit it, but until it diverges it is only a rendering of
+  // the built query — and the toolbar's time filter is part of that query. Without this, a period
+  // picked while the JSON view is open would neither show there nor reach Run, which executes the
+  // buffer verbatim, until the view was switched away and back.
+  // Takes the state and bound explicitly: the callers below have just computed the new ones, and the
+  // `state` of this render is still the old one.
+  const syncJsonBuffer = (nextState: QueryBuilderState, bound: QueryTimeBound | null) => {
+    if (!isJsonView || jsonDiverged) return;
+    setJsonText(JSON.stringify(buildQuery(nextState, bound), null, JSON_INDENT));
+    setJsonInvalid(false);
+  };
+
+  const onChangeTimePeriod = (period: string) => {
+    timeFilter.onTimePeriodChange(period);
+    syncJsonBuffer(state, timeBoundOf(getTimeRangeById(period), period));
+  };
+
+  // Picking a preset fires both callbacks — the period first, then its resolved range with
+  // `isCustom` false. Only the custom path syncs here: re-syncing on that second call would rebuild
+  // the buffer from this render's stale period and undo what the period handler just wrote.
+  const onChangeTimeRange = (range: TimeRange, isCustom?: boolean) => {
+    timeFilter.onTimeRangeChange(range, isCustom);
+    if (isCustom) syncJsonBuffer(state, timeBoundOf(range));
+  };
+
   const onChangeJson = (text: string | undefined) => {
     const value = text ?? '';
     setJsonText(value);
@@ -443,19 +489,20 @@ const QueryBuilder: FC<Props> = ({
     setAiLoading(false);
 
     setIsRunning(true);
-    const runRes =
-      request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
-    if (runRes.success) {
-      const response = runRes.response ?? { rows: [] };
+    const runRes = request.kind === QueryRequestKind.Sql ? await runSql(request.sql) : await runQuery(request.query);
+    // The page was left mid-run: the read is cancelled, and there is nobody to show a result or a failure to.
+    if (runRes.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
+
+    if (runRes.isSuccess) {
+      const response = runRes.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
     } else {
       showNotification(
-        getErrorNotification(
-          runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed),
-          runRes.errorMessage,
-          runRes.requestId,
-        ),
+        getErrorNotification(runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId),
       );
     }
     setIsRunning(false);
@@ -474,23 +521,28 @@ const QueryBuilder: FC<Props> = ({
         return;
       }
     } else {
-      const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
+      const freshBound = timeBoundOf(getCurrentTimeRange(), boundPeriod);
       request = { kind: QueryRequestKind.Structured, query: buildQuery(state, freshBound) };
     }
 
     setIsRunning(true);
     const [res, translated] = await Promise.all([
-      request.kind === QueryRequestKind.Sql ? executeSqlQuery(request.sql) : executeQuery(request.query),
+      request.kind === QueryRequestKind.Sql ? runSql(request.sql) : runQuery(request.query),
       translateForMeta(request),
     ]);
-    if (res.success) {
-      const response = res.response ?? { rows: [] };
+    if (res.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
+
+    if (res.isSuccess) {
+      const response = res.result ?? { rows: [] };
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, state.fields, state.entityName, translated));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
-        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.RunFailed), res.errorMessage, res.requestId),
+        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.RunFailed), res.error, res.requestId),
       );
     }
     setIsRunning(false);
@@ -509,9 +561,9 @@ const QueryBuilder: FC<Props> = ({
               selectedEntityName={state.entityName}
               onSelectEntity={onSelectEntity}
               timePeriod={timeFilter.timePeriod}
-              onTimePeriodChange={timeFilter.onTimePeriodChange}
+              onTimePeriodChange={onChangeTimePeriod}
               timeRange={timeFilter.timeRange}
-              onTimeRangeChange={timeFilter.onTimeRangeChange}
+              onTimeRangeChange={onChangeTimeRange}
               onRun={onRun}
               runDisabled={runDisabled}
               showRun={!isAiView}

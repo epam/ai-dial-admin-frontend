@@ -5,6 +5,7 @@ import {
   TimeFilterOption,
   timePeriodOptionsConfig,
 } from '@/src/constants/global-time-filter';
+import { RelativeTimeUnit } from '@/src/models/time-range';
 
 import { getTimeRangeById } from '../get-time-range-id';
 
@@ -16,7 +17,10 @@ const anchoredOption: AnchoredTimePeriodOption = {
   label: 'Since Creation',
   startDate: anchor,
 };
-const options: TimeFilterOption[] = [{ value: '1h', label: 'Last 1h', offset: mockOffset }, anchoredOption];
+const options: TimeFilterOption[] = [
+  { value: '1h', label: 'Last 1h', offset: mockOffset, unit: RelativeTimeUnit.Hour, amount: 1 },
+  anchoredOption,
+];
 
 describe('getTimeRangeById', () => {
   test('returns correct time range for known id', () => {

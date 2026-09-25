@@ -9,6 +9,16 @@ const HOURLY = '0 0 * * * *';
 const EVERY_FIVE_MINUTES = '0 */5 * * * *';
 
 describe('CronField', () => {
+  // A discard restores the expression alone, so a stored "custom" flag would outlive the value it
+  // described and leave the preset reading empty.
+  test('reads an expression matching no preset as custom, however it arrived', () => {
+    const { rerender } = renderField({ value: '0 0 * * * *' });
+
+    rerender(<CronField value="0 12/15 * * * *" onChange={vi.fn()} />);
+
+    expect(screen.getByDisplayValue('0 12/15 * * * *')).toBeTruthy();
+  });
+
   const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
     render(<CronField value="" onChange={vi.fn()} {...props} />);
 

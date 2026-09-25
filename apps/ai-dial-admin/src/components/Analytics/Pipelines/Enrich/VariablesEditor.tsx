@@ -11,15 +11,17 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { PipelineVar } from '@/src/models/analytics/pipeline';
 import { VarBindingKind, VarRow } from '@/src/models/analytics/pipeline-ui';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 const isSameDeclaration = (a: Record<string, PipelineVar>, b?: Record<string, PipelineVar>): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? {});
 
 interface Props {
   vars?: Record<string, PipelineVar>;
-  columns: AnalyticsTableColumn[];
+  fields: AnalyticsEntityField[];
   isReady: boolean;
+  /** The source's entity could not be read, so an empty list means "unknown", not "nothing to bind". */
+  hasError?: boolean;
   onChange: (vars: Record<string, PipelineVar>) => void;
 }
 
@@ -27,7 +29,7 @@ interface Props {
 // row, which sizes its own columns and leaves neighbouring rows out of line.
 const GRID = 'grid grid-cols-[minmax(160px,1fr)_minmax(160px,1fr)_minmax(180px,2fr)_2rem] items-center gap-x-3 gap-y-2';
 
-const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
+const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange }) => {
   const t = useI18n();
 
   const [rows, setRows] = useState<VarRow[]>(() => toVarRows(vars));
@@ -46,11 +48,15 @@ const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
   const updateRow = (id: string, patch: Partial<VarRow>) =>
     commit(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
+  // A source that could not be read is a failure worth naming; one that is merely unresolved is not, and
+  // the add control says the rest.
   if (!isReady) {
-    return <span className="text-secondary dial-small">{t(AnalyticsPipelinesI18nKey.VariablesEmpty)}</span>;
+    return hasError ? (
+      <span className="text-error dial-small">{t(AnalyticsPipelinesI18nKey.SourceFieldsLoadFailed)}</span>
+    ) : null;
   }
 
-  const columnOptions = columns.map((column) => ({ value: column.name, label: `${column.name} · ${column.type}` }));
+  const fieldOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
 
   const bindingOptions = [
     { value: VarBindingKind.Column, label: t(AnalyticsPipelinesI18nKey.VarColumn) },
@@ -60,14 +66,19 @@ const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
   return (
     <div className="flex flex-col gap-3">
       <div className={GRID}>
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarName)} />
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
-        <DialLabel label={t(AnalyticsPipelinesI18nKey.VarValue)} />
-        <span />
+        {/* The headings label rows; with none to label they are three words over an empty grid. */}
+        {rows.length > 0 && (
+          <>
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarName)} />
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
+            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarValue)} />
+            <span />
+          </>
+        )}
 
         {rows.map((row, index) => {
           const isNameTaken = Boolean(row.name) && getTakenVarNames(rows, row.id).has(row.name);
-          const isColumnStranded = Boolean(row.column) && !columns.some((column) => column.name === row.column);
+          const isFieldStranded = Boolean(row.column) && !fields.some((field) => field.name === row.column);
           const isColumnBinding = row.kind === VarBindingKind.Column;
 
           return (
@@ -97,10 +108,10 @@ const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
                   <DialSelectField
                     id={`pipeline-var-column-${index}`}
                     options={
-                      isColumnStranded ? [...columnOptions, { value: row.column, label: row.column }] : columnOptions
+                      isFieldStranded ? [...fieldOptions, { value: row.column, label: row.column }] : fieldOptions
                     }
                     value={row.column}
-                    invalid={isColumnStranded}
+                    invalid={isFieldStranded}
                     onChange={(value) => updateRow(row.id, { column: value as string })}
                   />
                 </div>
@@ -115,7 +126,7 @@ const VariablesEditor: FC<Props> = ({ vars, columns, isReady, onChange }) => {
               )}
 
               <DialGhostIconButton
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />

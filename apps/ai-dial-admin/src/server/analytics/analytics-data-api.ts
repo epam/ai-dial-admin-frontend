@@ -14,7 +14,6 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { Evaluator, EvaluatorRequest, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import {
   CreatePipelineDto,
   Pipeline,
@@ -60,13 +59,16 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
   return Array.isArray(wrapped) ? (wrapped as T[]) : null;
 };
 
+/** What the service answers when a declaration is too incomplete to compile. */
+const UNPROCESSABLE = 422;
+
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
 
-// `Compiled` is what carries everything the service resolved — the inlined evaluator, the grain key, the
-// version column, the output mapping and the read source — and it resolves for the `Enrich` kind alone:
-// the service refuses it with 422 for any other kind rather than answering the declaration under the
-// compiled name. So the projection is named per read, by whoever knows the kind.
+// `Compiled` is what carries everything the service resolved — the composed response schema, the grain
+// key, the version column, the output mapping and the read source — and it resolves for the `Enrich`
+// kind alone: the service refuses it with 422 for any other kind rather than answering the declaration
+// under the compiled name. So the projection is named per read, by whoever knows the kind.
 export const PIPELINE_READ_URL = (name: string, view: PipelineView): string => `${PIPELINE_URL(name)}?view=${view}`;
 
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
@@ -78,10 +80,10 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
 
   // No `view`: the service serves `compiled` in a listing only alongside `kind=enrich` and refuses the
-  // cross-kind combination with 400. The default `source` carries the evaluator name and pinned version
-  // as declared, so those cells are unaffected; `inputs` it carries as declared rather than as resolved,
-  // which leaves the cell empty for the one pipeline that declared no input and inherits its target's —
-  // read on that pipeline's own page, which does ask for `compiled`.
+  // cross-kind combination with 400. The default `source` carries the authored transform, so the type
+  // cell is unaffected; `inputs` it carries as declared rather than as resolved, which leaves the cell
+  // empty for the one pipeline that declared no input and inherits its target's — read on that
+  // pipeline's own page, which does ask for `compiled`.
   const query = params.toString();
 
   return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
@@ -94,11 +96,6 @@ const unreadableBody = <T extends object>({ status, requestId }: ServerActionRes
   status,
   requestId,
 });
-
-export const EVALUATORS_URL = 'v1/evaluators';
-export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
-export const EVALUATOR_VERSION_URL = (name: string, version: number): string =>
-  `${EVALUATOR_URL(name)}/versions/${encodeURIComponent(String(version))}`;
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -123,14 +120,26 @@ export class AnalyticsDataApi extends BaseApi {
     return this.getAction(QUERIES_FUNCTIONS_URL, token);
   }
 
-  executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token);
+  /**
+   * `signal` is the client's, handed over by the route handler that serves an interactive read: a view the
+   * operator has left stops its query here rather than only stopping itself from listening.
+   */
+  executeAction(
+    query: StructuredQuery,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token, undefined, signal);
   }
 
   // Ad-hoc SQL: the backend translates a single read-only SELECT to the structured DSL and runs it
   // through the same pipeline as `executeAction`, returning the same result envelope (no totalCount).
-  executeSqlAction(sql: string, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token);
+  executeSqlAction(
+    sql: string,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token, undefined, signal);
   }
 
   // Validation-only translation (never contacts ClickHouse): renders a structured query as the
@@ -252,6 +261,11 @@ export class AnalyticsDataApi extends BaseApi {
    * from the first answer rather than guessed. A failed second read is reported rather than downgraded to
    * the first: the detail view renders `grain_key` and `version_column` as "not set" when they are
    * absent, which for an enrich pipeline would be a false statement rather than a missing one.
+   *
+   * The exception is a declaration the service cannot compile at all, which it answers 422 for. That is
+   * an ordinary state now that a pipeline is registered before it is declared, and the authored
+   * projection is the whole of what such a pipeline has — reporting the refusal instead would leave the
+   * page the author has to finish the declaration on unreachable.
    */
   async getPipeline(name: string, token: Token): Promise<ServerActionResponse<Pipeline>> {
     const source = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Source), token);
@@ -261,6 +275,7 @@ export class AnalyticsDataApi extends BaseApi {
     if ((source.response as Pipeline).kind !== PipelineKind.Enrich) return source;
 
     const compiled = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Compiled), token);
+    if (compiled.status === UNPROCESSABLE) return source;
     if (!compiled.success) return compiled;
 
     return compiled.response ? compiled : unreadableBody(compiled);
@@ -282,31 +297,5 @@ export class AnalyticsDataApi extends BaseApi {
 
   deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(PIPELINE_URL(name), token);
-  }
-
-  async getEvaluators(token: Token): Promise<ServerActionResponse<EvaluatorSummary[]>> {
-    const res = await this.getAction(EVALUATORS_URL, token);
-
-    if (!res.success) {
-      return res;
-    }
-
-    const evaluators = unwrapList<EvaluatorSummary>(res.response, 'items');
-    return evaluators ? { ...res, response: evaluators } : unreadableBody(res);
-  }
-
-  async getEvaluator(name: string, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    const res = await this.getAction(EVALUATOR_URL(name), token);
-    return res.success && !res.response ? unreadableBody(res) : res;
-  }
-
-  async getEvaluatorVersion(name: string, version: number, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    const res = await this.getAction(EVALUATOR_VERSION_URL(name, version), token);
-    return res.success && !res.response ? unreadableBody(res) : res;
-  }
-
-  // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
-  createEvaluator(dto: EvaluatorRequest, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    return this.postAction<EvaluatorRequest>(EVALUATORS_URL, dto, token);
   }
 }

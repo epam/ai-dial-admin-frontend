@@ -33,24 +33,11 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
   );
 
   const resolution = usePipelineResolution({
-    evaluatorName: draft.evaluator_name,
-    evaluatorVersion: draft.evaluator_version,
     target: draft.target,
     input: getPipelineInput(draft.inputs),
   });
 
-  const onChange = useCallback((patch: PipelineDraft) => {
-    setDraft((prev) => {
-      const next = { ...prev, ...patch };
-
-      // A version pinned against the previous evaluator does not exist on the new one.
-      if (patch.evaluator_name !== undefined && patch.evaluator_name !== prev.evaluator_name) {
-        delete next.evaluator_version;
-      }
-
-      return next;
-    });
-  }, []);
+  const onChange = useCallback((patch: PipelineDraft) => setDraft((prev) => ({ ...prev, ...patch })), []);
 
   const onTriggerChange = useCallback(
     (patch: Partial<PipelineTrigger>) =>
@@ -80,32 +67,31 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
     trigger?.ready_when?.idle || trigger?.ready_when?.max_staleness || trigger?.ready_when?.signal,
   );
   const isCostCeilingValid = isPositiveIntegerOrEmpty(trigger?.ready_when?.cost_ceiling);
-  const isCronValid = Boolean(trimmedString(trigger?.cron)) && isValidSixFieldCron(trimmedString(trigger?.cron));
+  const cron = trimmedString(trigger?.cron);
+  // The service never parses the expression, so a typed one that does not is the console's to catch.
+  const hasInvalidCron = Boolean(cron) && !isValidSixFieldCron(cron);
 
-  // any other kind blocks the save with a message that is not on screen.
+  // Only a group trigger carries a member selection, and the service bounds its limit.
   const isMemberSelectValid =
     trigger?.kind !== TriggerKind.Group || !trigger.member_select || isValidMemberLimit(trigger.member_select.limit);
 
-  const isTriggerSatisfied = useMemo(() => {
-    if (draft.kind === PipelineKind.Aggregate) return isCronValid;
-    if (trigger?.kind === TriggerKind.Schedule) return isCronValid;
-    if (trigger?.kind === TriggerKind.Group) return Boolean(grainKey) && hasReadyWhen && isCostCeilingValid;
-    return trigger?.kind === TriggerKind.OnIngest;
-  }, [draft.kind, trigger?.kind, isCronValid, grainKey, hasReadyWhen, isCostCeilingValid]);
-
   const isTargetResolved = Boolean(resolution.target) && !resolution.isTargetPending && !resolution.hasTargetError;
 
-  const isSharedValid =
-    isValidPipelineName(draft.name) &&
-    Boolean(draft.kind) &&
-    Boolean(draft.target) &&
-    isTargetResolved &&
-    isTriggerSatisfied &&
-    isMemberSelectValid;
+  // What a registration takes, and the whole of it: the service stores the rest as the author writes
+  // it, and refuses what is missing only when the pipeline is armed.
+  const isRegistrationValid = isValidPipelineName(draft.name) && Boolean(draft.target) && isTargetResolved;
+
+  /** A value that was authored and cannot be stored as authored. Each kind's form adds its own. */
+  const hasSharedFieldErrors = hasInvalidCron || !isCostCeilingValid || !isMemberSelectValid;
 
   const buildDto = useCallback(
-    (): CreatePipelineDto => buildPipelineDto(draft, { grainKey, sourceTable: resolution.target?.source_table }),
-    [draft, grainKey, resolution.target?.source_table],
+    (): CreatePipelineDto =>
+      buildPipelineDto(draft, {
+        grainKey,
+        sourceTable: resolution.target?.source_table,
+        storedTransform: pipeline?.transform,
+      }),
+    [draft, grainKey, resolution.target?.source_table, pipeline?.transform],
   );
 
   return {
@@ -116,8 +102,9 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
     reset,
     buildDto,
     availableTargets,
-    isSharedValid,
-    isCronValid,
+    isRegistrationValid,
+    hasSharedFieldErrors,
+    hasInvalidCron,
     isCostCeilingValid,
     isMemberSelectValid,
     isTargetResolved,

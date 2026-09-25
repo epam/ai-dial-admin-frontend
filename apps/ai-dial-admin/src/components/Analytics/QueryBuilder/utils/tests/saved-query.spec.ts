@@ -292,6 +292,27 @@ describe('toSavedQueryRequest — the persisted body carries no time bound', () 
 
     expect(operatorsOnField(request.query?.filter, 'project')).toEqual([QueryOperator.Eq]);
   });
+
+  // The toolbar serializes a preset as a call relative to the current instant, and that call must
+  // not reach the persisted body: the preset already travels as time intent, and a body carrying it
+  // would be a second, competing bound.
+  test('carries no relative call either, whichever preset is selected', () => {
+    const request = toSavedQueryRequest(
+      baseCapture({ state: stateWithFilter(), time: { period: '30m', isCustom: false, range: RANGE } }),
+    );
+
+    expect(JSON.stringify(request.query)).not.toContain(QueryExprType.Fn);
+    expect(request.time).toEqual({ mode: SavedQueryTimeMode.Relative, period: '30m' });
+  });
+
+  // Unsaved-change detection compares the payload a save would send, so a body that shifted with the
+  // selected preset would make a clean page look dirty on every toolbar change.
+  test('produces the same body for two different presets', () => {
+    const capture = (period: string) =>
+      toSavedQueryRequest(baseCapture({ state: stateWithFilter(), time: { period, isCustom: false, range: RANGE } }));
+
+    expect(capture('30m').query).toEqual(capture('7d').query);
+  });
 });
 
 describe('deriveSavedQueryEditor', () => {
