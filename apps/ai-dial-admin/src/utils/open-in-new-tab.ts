@@ -112,11 +112,12 @@ export const getEntityPath = (
     case ApplicationRoute.PlatformKeys: {
       // Flat platform entities: `parseEncodedFlatPath` always yields `path === name`, so the `[id]`
       // segment alone identifies the resource. No `?path=` needed.
-      const { name, $id } = data as { name?: string; $id?: string };
-      // $id falls back here raw (not pre-encoded) so it goes through the same single
-      // `encodeURIComponent` below that the `name` branch relies on — row-click navigation reads
-      // the grid row's already-decoded `name`, so both entry points must produce the same segment.
-      const resolvedName = name || $id || '';
+      const { name, $id, _metadata } = data as { name?: string; $id?: string; _metadata?: { name?: string } };
+      // $id and Core's write-response `_metadata.name` both fall back here raw (not pre-encoded) so
+      // they go through the same single `encodeURIComponent` below that the `name` branch relies on.
+      // Row-click navigation reads the grid row's already-decoded `name`, so both entry points must
+      // produce the same segment.
+      const resolvedName = name || $id || _metadata?.name || '';
 
       return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
     }

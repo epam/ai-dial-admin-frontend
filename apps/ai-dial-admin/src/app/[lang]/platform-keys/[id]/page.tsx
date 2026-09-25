@@ -24,7 +24,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const path = (await params.params).id;
 
-    key = await getKey(path, etag).then((res) => {
+    key = await getKey(decodeURIComponent(path), etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialKeyResource | null;
     });

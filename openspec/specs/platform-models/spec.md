@@ -34,6 +34,10 @@ The shared create dispatch SHALL remove its transient `folderId` and merged-read
 - **WHEN** a user activates the create action in the list toolbar
 - **THEN** a modal opens requesting the model's name, and submitting it creates the model resource and navigates to its detail view
 
+#### Scenario: A created model with a colon in its name opens through an encoded detail route
+- **WHEN** a user creates a Catalog model whose name contains `:` and Core returns the created identity under `_metadata.name`
+- **THEN** the post-create redirect opens that model's detail view with `:` URL-encoded in the `[id]` segment, without a 404 page
+
 #### Scenario: Platform create dispatch does not forward shared identity fields
 - **WHEN** the shared asset-list create dispatch invokes a flat platform create action with `folderId` and `_metadata` present
 - **THEN** the delegated model create server action receives neither field and retains the model's content and identity fields

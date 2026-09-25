@@ -24,7 +24,7 @@ export default async function Page(params: {
       const result = await getConfigFileTranslator(path);
       translator = result.success ? result.data : null;
     } else {
-      translator = await getTranslator(path, etag).then((res) => {
+      translator = await getTranslator(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as DialTranslatorResource | null;
       });
