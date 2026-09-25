@@ -114,9 +114,13 @@ const Content: FC<Props> = ({ children, isEnableAuth }) => {
         <Sidebar />
       </div>
       <Sidebar slot={SidebarPosition.Bottom} />
-      {featureFlags.adminApiEnabled && (
-        <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
-      )}
+
+      <Footer
+        beVersion={beVersion}
+        coreVersions={coreVersions}
+        onChangeCoreVersion={setCoreVersions}
+        isOnlyFE={!featureFlags.adminApiEnabled}
+      />
     </div>
   );
 };
