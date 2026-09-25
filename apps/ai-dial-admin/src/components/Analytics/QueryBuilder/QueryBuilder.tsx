@@ -491,7 +491,10 @@ const QueryBuilder: FC<Props> = ({
     setIsRunning(true);
     const runRes = request.kind === QueryRequestKind.Sql ? await runSql(request.sql) : await runQuery(request.query);
     // The page was left mid-run: the read is cancelled, and there is nobody to show a result or a failure to.
-    if (runRes.isCancelled) return;
+    if (runRes.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
 
     if (runRes.isSuccess) {
       const response = runRes.result ?? { rows: [] };
@@ -527,7 +530,10 @@ const QueryBuilder: FC<Props> = ({
       request.kind === QueryRequestKind.Sql ? runSql(request.sql) : runQuery(request.query),
       translateForMeta(request),
     ]);
-    if (res.isCancelled) return;
+    if (res.isCancelled) {
+      setIsRunning(false);
+      return;
+    }
 
     if (res.isSuccess) {
       const response = res.result ?? { rows: [] };

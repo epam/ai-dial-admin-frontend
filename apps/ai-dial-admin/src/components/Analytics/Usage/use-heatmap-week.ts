@@ -62,20 +62,18 @@ export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapW
     reset();
     setBuckets({ data: null, isLoading: true, hasFailed: false });
 
-    void runQuery(buildBucketedQuery({ view, window: week }, HOURLY)).then(
-      ({ result, error, errorHeader, isCancelled }) => {
-        // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
-        if (current !== generation.current || isCancelled) return;
+    void runQuery(buildBucketedQuery({ view, window: week }, HOURLY)).then(({ result, error, isCancelled }) => {
+      // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
+      if (current !== generation.current || isCancelled) return;
 
-        if (result) {
-          setBuckets({ data: foldBucketPoints(result), isLoading: false, hasFailed: false });
-          return;
-        }
+      if (result) {
+        setBuckets({ data: foldBucketPoints(result), isLoading: false, hasFailed: false });
+        return;
+      }
 
-        report(error ?? errorHeader);
-        setBuckets({ data: null, isLoading: false, hasFailed: true });
-      },
-    );
+      report(error);
+      setBuckets({ data: null, isLoading: false, hasFailed: true });
+    });
   }, [view, week, report, reset, runQuery]);
 
   const onPreviousWeek = useCallback(() => setWeekOffset((offset) => offset + 1), []);

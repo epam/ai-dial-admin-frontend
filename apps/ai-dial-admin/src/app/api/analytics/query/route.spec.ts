@@ -50,6 +50,46 @@ describe('POST /api/analytics/query', () => {
     expect(analyticsDataApi.executeAction).not.toHaveBeenCalled();
   });
 
+  // `middleware.ts` excludes /api from its matcher, so the handler is the only thing between an
+  // unauthenticated caller and read-only SQL against the service.
+  test('refuses a caller with no token while auth is enabled', async () => {
+    vi.mocked(getUserToken).mockResolvedValue(undefined as never);
+
+    const res = await POST(makeRequest({ sql: 'SELECT 1' }));
+
+    expect(res.status).toBe(401);
+    expect(analyticsDataApi.executeSqlAction).not.toHaveBeenCalled();
+  });
+
+  test('runs with no token while auth is disabled', async () => {
+    vi.mocked(getIsEnableAuthToggle).mockReturnValue(false);
+    vi.mocked(getUserToken).mockResolvedValue(undefined as never);
+    vi.mocked(analyticsDataApi.executeAction).mockResolvedValue({ success: true, response: { rows: [] } });
+
+    const res = await POST(makeRequest({ query: QUERY }));
+
+    expect(res.status).toBe(200);
+    expect(analyticsDataApi.executeAction).toHaveBeenCalled();
+  });
+
+  test('refuses a body carrying neither a query nor a statement', async () => {
+    const res = await POST(makeRequest({}));
+
+    expect(res.status).toBe(400);
+    expect(analyticsDataApi.executeAction).not.toHaveBeenCalled();
+  });
+
+  // A thrown transport error would otherwise reach the client as Next's HTML error page, which fails at
+  // `res.json()` and reports the parser instead of the service.
+  test('answers with an envelope when the client throws', async () => {
+    vi.mocked(analyticsDataApi.executeAction).mockRejectedValue(new Error('socket hang up'));
+
+    const res = await POST(makeRequest({ query: QUERY }));
+
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ success: false, errorMessage: 'socket hang up' });
+  });
+
   // The envelope is the service's answer, not the handler's: a refusal reaches the caller whole.
   test('returns the failure envelope as the client gave it', async () => {
     vi.mocked(analyticsDataApi.executeAction).mockResolvedValue({

@@ -100,7 +100,13 @@ export const useBreakdownDialogRows = ({
         return new Map();
       }
 
-      const { result } = await runQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+      const { result, isCancelled } = await runQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+
+      // Without this a cancelled comparison would read as "the previous window has nothing", and the block
+      // would render deltas that say every row is new.
+      if (isCancelled) {
+        return new Map();
+      }
 
       return toPreviousMeasures(foldBreakdownRows(result, column, qualifier));
     };

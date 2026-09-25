@@ -149,15 +149,15 @@ export const useUsageDashboardData = ({
     setTotals(pending);
     const currentScope: QueryScope = { ...baseScope, window: windows.current };
 
-    void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error, errorHeader, isCancelled }) => {
+    void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
-      setBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error ?? errorHeader));
+      setBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
-    void runQuery(buildTotalsQuery(currentScope)).then(({ result, error, errorHeader, isCancelled }) => {
+    void runQuery(buildTotalsQuery(currentScope)).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
       const row = result?.rows?.[0];
-      setTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error ?? errorHeader));
+      setTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
 
     if (!windows.previous) {
@@ -170,15 +170,15 @@ export const useUsageDashboardData = ({
     setPreviousBuckets(pending);
     setPreviousTotals(pending);
 
-    void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error, errorHeader, isCancelled }) => {
+    void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
-      setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error ?? errorHeader));
+      setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
     });
 
-    void runQuery(buildTotalsQuery(previousScope)).then(({ result, error, errorHeader, isCancelled }) => {
+    void runQuery(buildTotalsQuery(previousScope)).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
       const row = result?.rows?.[0];
-      setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error ?? errorHeader));
+      setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
     });
   }, [baseScope, windows, resolution, refreshToken, runQuery, reset, reportFailed]);
 
@@ -204,12 +204,10 @@ export const useUsageDashboardData = ({
     setDimensionBuckets(pending);
     void runQuery(
       buildDimensionBucketedQuery({ ...baseScope, window: windows.current }, resolution, donutTab, seriesIds),
-    ).then(({ result, error, errorHeader, isCancelled }) => {
+    ).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
       setDimensionBuckets(
-        result
-          ? loaded(foldDimensionBuckets(result, BREAKDOWN_TAB_COLUMN[donutTab]))
-          : reportFailed(error ?? errorHeader),
+        result ? loaded(foldDimensionBuckets(result, BREAKDOWN_TAB_COLUMN[donutTab])) : reportFailed(error),
       );
     });
     // `seriesKey` stands in for `seriesIds`, which is a fresh array on every response.
@@ -245,14 +243,14 @@ export const useUsageDashboardData = ({
       buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit, {
         orderBy: donutMetric === DonutMetric.Cost ? SPEND_ALIAS : CALLS_ALIAS,
       }),
-    ).then(({ result, error, errorHeader, isCancelled }) => {
+    ).then(({ result, error, isCancelled }) => {
       if (generation !== donutGeneration.current || isCancelled) return;
       setIsDonutReadingMore(false);
       setDonutRowsMetric(donutMetric);
       setDonutRows(
         result
           ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab], BREAKDOWN_TAB_QUALIFIER[leadingTab]))
-          : reportFailed(error ?? errorHeader),
+          : reportFailed(error),
       );
     });
     // `donutScope` is read through a ref, so it is not a dependency of its own effect.
@@ -273,12 +271,12 @@ export const useUsageDashboardData = ({
     const spendResolution = getSpendResolution(windows.current);
 
     void runQuery(buildSpendBucketedQuery({ ...baseScope, window: windows.current }, spendResolution)).then(
-      ({ result, error, errorHeader, isCancelled }) => {
+      ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
         setSpendBuckets(
           result
             ? loaded(padSpendBuckets(foldSpendBuckets(result), windows.current, spendResolution))
-            : reportFailed(error ?? errorHeader),
+            : reportFailed(error),
         );
       },
     );
@@ -293,9 +291,9 @@ export const useUsageDashboardData = ({
 
     setTabRows(pending);
     void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(
-      ({ result, error, errorHeader, isCancelled }) => {
+      ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
-        setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error ?? errorHeader));
+        setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
       },
     );
 
@@ -306,11 +304,9 @@ export const useUsageDashboardData = ({
 
     setPreviousTabRows(pending);
     void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit)).then(
-      ({ result, error, errorHeader, isCancelled }) => {
+      ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
-        setPreviousTabRows(
-          result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error ?? errorHeader),
-        );
+        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
       },
     );
   }, [baseScope, windows, tab, tabLimit, refreshToken, runQuery, reportFailed]);

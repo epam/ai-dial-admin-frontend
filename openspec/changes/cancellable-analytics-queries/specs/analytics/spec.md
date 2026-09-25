@@ -8,9 +8,18 @@ SHALL stop the work behind it rather than only stopping the caller from listenin
 Client-issued queries SHALL therefore go through a **route handler**, `POST /api/analytics/query`, and not
 through a server action. A server action carries no `AbortSignal`: the client cannot call it off, so a page
 left mid-load keeps its reads running and receives, from the framework rather than from the service, an
-error it then reports as a failed load. The handler SHALL authenticate exactly as the equivalent server
-action does, SHALL delegate to the same `analyticsDataApi` method, and SHALL return the same
-`ServerActionResponse<T>` envelope, so nothing but the transport differs.
+error it then reports as a failed load. The handler SHALL delegate to the same `analyticsDataApi` method as
+the equivalent server action and SHALL return the same `ServerActionResponse<T>` envelope, so nothing but
+the transport differs.
+
+The handler SHALL **refuse a caller it cannot authenticate** while authentication is enabled, rather than
+passing the request on without an authorization header. The app's middleware does not cover `/api`, whereas
+a server action posts to a page path it does cover, so the guard the action inherited has to be stated here
+— and what is behind this endpoint is read-only SQL against the analytics service.
+
+Every answer SHALL be that same envelope, failures included: a request carrying neither a query nor a
+statement, and a transport error the client throws, both reach the caller as an envelope rather than as a
+framework error page, which the caller cannot parse and would report as a parser fault.
 
 The handler SHALL pass the **incoming request's abort signal** through to the data-access call, and
 `BaseApi` SHALL honour an external signal alongside the one it already keeps for logout. A client that
@@ -47,6 +56,18 @@ did report SHALL be surfaced as before, carrying the service's own message.
 - **WHEN** the service refuses a client-issued query
 - **THEN** the caller receives the envelope's `errorMessage` or `errorHeader`
 - **AND** the failure is reported as it was before
+
+#### Scenario: An unauthenticated caller is refused
+
+- **GIVEN** authentication is enabled and the caller carries no session
+- **WHEN** it posts a query to the route handler
+- **THEN** the handler answers 401 and issues no request to the analytics service
+
+#### Scenario: A transport failure reaches the caller as an envelope
+
+- **WHEN** the call to the analytics service throws rather than answering
+- **THEN** the caller receives a failure envelope carrying the thrown message
+- **AND** no framework error page reaches it in place of one
 
 #### Scenario: Server-side prefetch is unchanged
 

@@ -19,7 +19,9 @@ Both halves have one cause: the client cannot cancel what it started. Server act
 1. **Analytics queries go out over a route handler instead of a server action.** `POST
    /api/analytics/query` does exactly what the `executeQuery` action does — the same token, the same
    `analyticsDataApi.executeAction`, the same response envelope — but a route handler can be aborted, so
-   the client keeps a handle on the request it made.
+   the client keeps a handle on the request it made. It states its own auth guard, because the middleware
+   matcher excludes `/api` while it covers the page path an action posts to, and it answers every case
+   with an envelope so the client never has to parse a framework error page.
 
 2. **Cancellation reaches the service.** `BaseApi` already wraps every call in an `AbortController` for
    logout; it learns to accept an external signal beside it, and the handler passes the incoming

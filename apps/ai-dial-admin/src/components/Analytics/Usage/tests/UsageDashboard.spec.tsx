@@ -6,14 +6,14 @@ import UsageDashboard from '@/src/components/Analytics/Usage/UsageDashboard';
 import { AnalyticsUsageI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery } from '@/src/models/analytics/query';
 
-const executeQueryMock = vi.fn();
+const runQueryMock = vi.fn();
 const showNotificationMock = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
 // The page reads through the shared runner, which owns cancellation; this spec is about the page's
 // wiring, so the runner is the seam.
-const RUNNER = { runQuery: (...args: unknown[]) => executeQueryMock(...args), runSql: vi.fn() };
+const RUNNER = { runQuery: (...args: unknown[]) => runQueryMock(...args), runSql: vi.fn() };
 vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
   useAnalyticsQuery: () => RUNNER,
 }));
@@ -22,7 +22,7 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: () => <div role="grid" /> }));
 vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));
 
-const queriesSent = (): StructuredQuery[] => executeQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
+const queriesSent = (): StructuredQuery[] => runQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
 
 const groupings = () => queriesSent().map((query) => (query.group_by ?? []).join('+'));
 
@@ -41,9 +41,9 @@ const ANY_ROW = {
 };
 
 beforeEach(() => {
-  executeQueryMock.mockReset();
+  runQueryMock.mockReset();
   showNotificationMock.mockReset();
-  executeQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [ANY_ROW] } });
+  runQueryMock.mockResolvedValue({ isSuccess: true, result: { rows: [ANY_ROW] } });
 });
 
 describe('UsageDashboard', () => {
@@ -55,7 +55,7 @@ describe('UsageDashboard', () => {
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.HeatmapTitle })).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsUsageI18nKey.BreakdownTitle })).toBeTruthy();
 
-    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
   });
 
   test('reads each window exactly once on mount, since comparison starts on', async () => {
@@ -64,20 +64,20 @@ describe('UsageDashboard', () => {
     // Totals, buckets and the breakdown rows, each for the current window and the previous one,
     // plus the share chart's own ranking and the heatmap's independent week. An exact count, so a
     // window taken twice — which is what a snapshot re-taken in an effect produced — fails here.
-    await waitFor(() => expect(executeQueryMock.mock.calls.length).toBe(8));
+    await waitFor(() => expect(runQueryMock.mock.calls.length).toBe(8));
   });
 
   test('asks every query for the same entity', async () => {
     render(<UsageDashboard />);
 
-    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     expect(queriesSent().every((query) => query.entity === 'dial_usage_log')).toBe(true);
   });
 
   test('leaves the split series unasked while the plain plot is the one showing', async () => {
     render(<UsageDashboard />);
 
-    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     expect(groupings().some((grouping) => grouping === 'bucket+deployment')).toBe(false);
   });
 
@@ -85,7 +85,7 @@ describe('UsageDashboard', () => {
     const user = userEvent.setup();
     render(<UsageDashboard />);
 
-    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     await user.click(screen.getByText(AnalyticsUsageI18nKey.TimeSeriesTabSplit));
 
     await waitFor(() => expect(groupings().some((grouping) => grouping === 'bucket+deployment')).toBe(true));
@@ -95,7 +95,7 @@ describe('UsageDashboard', () => {
     const user = userEvent.setup();
     render(<UsageDashboard />);
 
-    await waitFor(() => expect(executeQueryMock).toHaveBeenCalled());
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     await user.click(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost));
 
     await waitFor(() => expect(queriesSent().some((query) => query.sort?.[0]?.field === 'spend')).toBe(true));
@@ -116,7 +116,7 @@ describe('UsageDashboard', () => {
   });
 
   test('renders the page when every request fails, stating the failure once', async () => {
-    executeQueryMock.mockResolvedValue({ isSuccess: false, result: null, error: 'upstream refused' });
+    runQueryMock.mockResolvedValue({ isSuccess: false, result: null, error: 'upstream refused' });
 
     render(<UsageDashboard />);
 
@@ -125,5 +125,16 @@ describe('UsageDashboard', () => {
     expect(showNotificationMock).toHaveBeenCalledWith(expect.objectContaining({ description: 'upstream refused' }));
     expect(screen.queryByText('upstream refused')).toBeNull();
     expect(screen.getByRole('heading', { name: MenuI18nKey.Dashboard })).toBeTruthy();
+  });
+
+  // Cancellation is what happens when the operator leaves mid-load. The page they went to is not the
+  // place to raise an alarm about the one they left.
+  test('says nothing when its requests are cancelled', async () => {
+    runQueryMock.mockResolvedValue({ isSuccess: false, result: null, isCancelled: true });
+
+    render(<UsageDashboard />);
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    expect(showNotificationMock).not.toHaveBeenCalled();
   });
 });

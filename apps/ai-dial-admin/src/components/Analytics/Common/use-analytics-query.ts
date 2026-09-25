@@ -10,7 +10,9 @@ export interface QueryOutcome {
   /** The service answered. A success with no body still succeeded, which `result` alone cannot say. */
   isSuccess: boolean;
   result: StructuredQueryResult | null;
+  /** What to show: the service's message, or its header where it sent no message. */
   error?: string;
+  /** The header on its own, for a caller that titles its notification with it. */
   errorHeader?: string;
   requestId?: string;
   /** The view asked and then went away. Neither a result nor a failure: nobody is waiting to be told. */
@@ -57,14 +59,21 @@ export const useAnalyticsQuery = (): AnalyticsQueryRunner => {
         signal: controller.signal,
       });
 
-      const envelope = (await res.json()) as ServerActionResponse<StructuredQueryResult>;
+      // The handler answers with an envelope even when it fails, but a proxy or a crashed route can still
+      // put a page of HTML on the wire — so a body that will not parse is reported as the status it came
+      // with rather than as whatever the JSON parser had to say about it.
+      const envelope = (await res.json().catch(() => null)) as ServerActionResponse<StructuredQueryResult> | null;
+
+      if (!envelope) {
+        return { isSuccess: false, result: null, error: `${res.status} ${res.statusText}`.trim() };
+      }
 
       return {
-        isSuccess: Boolean(envelope?.success),
-        result: envelope?.success ? (envelope.response ?? null) : null,
-        error: envelope?.errorMessage,
-        errorHeader: envelope?.errorHeader,
-        requestId: envelope?.requestId,
+        isSuccess: Boolean(envelope.success),
+        result: envelope.success ? (envelope.response ?? null) : null,
+        error: envelope.errorMessage ?? envelope.errorHeader,
+        errorHeader: envelope.errorHeader,
+        requestId: envelope.requestId,
       };
     } catch (error) {
       // The abort arrives as a rejection; it is read from the controller rather than from the error, whose
