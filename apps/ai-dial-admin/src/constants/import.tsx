@@ -43,7 +43,7 @@ export const DIAL_JSON_IMPORT_TYPE = (t: TranslateFn) => ({
   name: t(ImportI18nKey.DialCoreFiles),
   content: (
     <div className="dial-tiny-text ml-[33px]">
-      {t(ImportI18nKey.SeparateFilesDescription, { size: MAX_FILE_SIZE_MB, totalSize: MAX_MULTI_FILES_SIZE_MB })}
+      {t(ImportI18nKey.SeparateFilesDescription, { totalSize: MAX_MULTI_FILES_SIZE_MB })}
     </div>
   ),
 });
@@ -53,7 +53,7 @@ export const SEPARATE_FILES_IMPORT_TYPE = (t: TranslateFn) => ({
   name: t(ImportI18nKey.SeparateFiles),
   content: (
     <div className="dial-tiny-text ml-[33px]">
-      {t(ImportI18nKey.SeparateFilesDescription, { size: MAX_FILE_SIZE_MB, totalSize: MAX_MULTI_FILES_SIZE_MB })}
+      {t(ImportI18nKey.SeparateFilesDescription, { totalSize: MAX_MULTI_FILES_SIZE_MB })}
     </div>
   ),
 });
