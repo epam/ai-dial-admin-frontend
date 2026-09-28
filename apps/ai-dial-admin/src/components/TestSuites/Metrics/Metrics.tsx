@@ -58,7 +58,12 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
     const testSuiteId = selectedTestSuite.id as string;
 
     return getTestSuiteMetricsAggregated(testSuiteId).then((response) => {
-      setMetrics(response?.map((metric) => ({ ...metric, description: metric.metricDeclaration?.description })) || []);
+      setMetrics(
+        response?.map((metric) => ({
+          ...metric,
+          description: metric.description ?? metric.metricDeclaration?.description,
+        })) || [],
+      );
     });
   }, [selectedTestSuite.id]);
 
