@@ -3,6 +3,8 @@ import { SchemaMetaColumn } from './models';
 export const DIAL_META_PROPERTY_ORDER = 'dial:propertyOrder';
 export const DIAL_META_PROPERTY_KIND = 'dial:propertyKind';
 
+export const NEW_FIELD_NAME_PREFIX = 'field_';
+
 export const APP_RUNNER_META_COLUMNS: SchemaMetaColumn[] = [SchemaMetaColumn.Order, SchemaMetaColumn.PropertyKind];
 
 /** No property kind: every catalog field is client-visible, so the catalog meta-schema has none. */
