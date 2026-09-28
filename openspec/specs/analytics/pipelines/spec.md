@@ -510,10 +510,10 @@ metadata.
 
 The **grain key** SHALL be the resolved target's where the page has resolved one, falling back to the
 pipeline's stored `grain_key` and then to an em dash. It is the one fact read from the draft's resolution
-rather than from the pipeline, because since the group trigger stopped repeating it this row is the only
-place it appears, and a grouping key has to re-derive with a target the caller has changed but not yet
-saved. Where the value comes from SHALL be stated on an **info affordance on its label** — reachable by
-keyboard and carrying the sentence as its own accessible name — rather than as a caption under the value.
+rather than from the pipeline, so that a target the caller has changed but not yet saved is reflected here
+as it is in the trigger's grouping key, which starts from the same value. Where the value comes from SHALL
+be stated on an **info affordance on its label** — reachable by keyboard and carrying the sentence as its
+own accessible name — rather than as a caption under the value.
 
 The composed **`response_schema` SHALL NOT be among them**. It is a document rather than a value — a dozen
 field names on a live pipeline, against neighbours that are one word each — and what it lists, the outputs
@@ -1019,38 +1019,53 @@ than as a grammar error, because the two carry different remedies.
 - **WHEN** the service refuses the readiness predicate because it names a sensitive column
 - **THEN** the failure is reported as one of access rather than of expression
 
-### Requirement: A group trigger's grouping key is derived from the target enrichment's grain key
+### Requirement: A group trigger's grouping key defaults to the target's grain key and stays editable
 
-The trigger's `group_by` is a string in the API, but the service accepts exactly one value for an enrichment
-pipeline: the target enrichment's own grain key. Anything else is rejected with HTTP 422. The constraint is
-physical — an enrichment is keyed on its grain and collapses by it, so grouping by any other column would
-pile many groups onto a single row.
+The trigger's `group_by` must resolve to the target enrichment's grain key, because an enrichment is keyed
+on its grain and collapses by it — grouping by any other column would pile many groups onto a single row.
+The spelling, though, depends on the read source: the service takes the **bare** key only where that source
+declares it as a column of its own, and where the source reaches the key through an enrichment it demands
+`<enrichment>.<grain key>` instead, refusing the bare form with HTTP 422 and naming what to write.
 
-The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
-`grain.grain_key` and present it as a **labelled read-only value among the read-only facts** — not as a text
-input, which reads as a field someone forgot to enable, and not as a disabled one, which would leave the
-accessibility tree and stop the value being readable at all. A labelled value in a column of inputs reads as
-that same forgotten field, which is why it sits with the facts and not in the trigger block; the facts row
-already presents the pipeline's own `grain_key`, derived by the service from the same target, so a copy in
-the trigger stated one column twice with nothing to say the two were the same.
+The console SHALL present the grouping key in the **trigger block** as an editable field, prefilled with
+the resolved target's `grain_key` and accepting **any text**. It SHALL NOT restrict the value to a list it
+computed, and SHALL NOT rewrite what the author or the JSON editor put there: a console that predicts which
+spellings the service accepts is a console that locks the author out whenever the prediction is short, and
+the same value can be right for one source and wrong for the next.
 
-The presented value SHALL be re-derived whenever the target changes, before the change is saved.
+The value SHALL be sent as written, falling back to the resolved grain key when the author has written
+none. A spelling the service will not take SHALL be reported by the service, in its own words, rather than
+guessed at beforehand.
+
+The facts row SHALL keep presenting the target's `grain_key` itself. It is the key the pipeline is keyed by,
+and the trigger's spelling of it is a different statement — `client_session_id` against
+`usage_client_identity.client_session_id` — so neither stands in for the other.
 
 This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
 its rows are grouped by. The two SHALL NOT share a control.
 
-#### Scenario: The grouping key is filled from the target's grain key
+#### Scenario: The field starts at the target's grain key
 
-- **WHEN** the trigger kind is `group` and a target is selected
-- **THEN** that table's grain key is presented as a labelled value among the read-only facts, with no
-  editable control for it
-- **AND** the value is readable rather than removed from the accessibility tree
-- **AND** the trigger block states no copy of it
+- **WHEN** the trigger kind is `group` and the target has resolved
+- **THEN** the grouping key field holds that target's grain key
+- **AND** the saved pipeline carries it when the author writes nothing else
 
-#### Scenario: Changing the target re-derives the grouping key
+#### Scenario: Any spelling can be written
 
-- **WHEN** the user changes the target to one with a different grain key
-- **THEN** the grain key presented among the facts is the new table's, before the change is saved
+- **WHEN** the author replaces the value with a qualified spelling such as `<enrichment>.<grain key>`
+- **THEN** the field takes it as written
+- **AND** the saved pipeline carries exactly that
+
+#### Scenario: A declared value is presented rather than replaced
+
+- **GIVEN** a pipeline whose `group_by` the JSON editor set to something the form would not have offered
+- **WHEN** the form is presented again
+- **THEN** that value is what the field holds, and no change is raised against it
+
+#### Scenario: A target with no grain key leaves the field editable
+
+- **WHEN** the target declares no grain key, or has not resolved
+- **THEN** the field is empty and editable rather than disabled
 
 ### Requirement: Member selection for a group trigger
 
@@ -1149,9 +1164,20 @@ Each of an aggregate pipeline's group keys names either a column of the input or
 date-or-timestamp column to an `hour`, `day`, `week` or `month`. Either form may carry an alias naming the
 resulting column in the target.
 
+A **column of the input** is a field of the input's entity, not of its table alone: the service validates
+the key against the entity, so a column an enrichment supplies — `<enrichment>.<column>` — is one it
+accepts, and the console SHALL offer those alongside the input's own. What it refuses is narrower than what
+the table declares and wider than it too: an enrichment whose values have no settled position, a
+group-triggered one above all, is rejected with its own message, which the console surfaces rather than
+predicting.
+
 The console SHALL collect group keys as an ordered repeater whose every row offers that choice. A truncation
 SHALL offer only the units the chosen column's type admits, so a truncation the service would refuse cannot
 be built. Order SHALL be preserved as entered, because the service reads the keys in order.
+
+A key or a measure column the entity does not offer — written through the JSON editor, which exists to say
+what the form cannot — SHALL stay selected rather than reading as unset. The console SHALL NOT rewrite it:
+whether it stands is the service's answer to give.
 
 An alias SHALL be optional and, when absent, the console SHALL show the column name that will be used
 instead of leaving the row looking incomplete.
@@ -1439,9 +1465,10 @@ omitting one, and that refusal surfaces as any other does.
 ### Requirement: A pipeline document that does not parse blocks the save and reports where
 
 While the JSON editor is open, the form's own checks — including the check that no other pipeline already
-targets this table — SHALL NOT block the save. The one exception is the trigger's grouping key: it is rebuilt
-from the resolved target rather than carried from the document, so saving a group-triggered pipeline before
-that resolves would send no grouping key. That check SHALL keep applying in both presentations. The document
+targets this table — SHALL NOT block the save. The one exception is the trigger's grouping key, and only in
+its empty case: a group-triggered pipeline whose document names none and whose target has not resolved would
+send no grouping key at all, which the service refuses outright. A grouping key the document does carry SHALL
+be sent as written, whatever the target's state. That check SHALL keep applying in both presentations. The document
 is the input, and a document those controls could not have produced is not thereby wrong; the service's
 refusal is what surfaces instead.
 
@@ -1471,10 +1498,16 @@ controls SHALL withdraw again once the document parses.
 - **THEN** Discard and Save are offered
 - **AND** the Save control is offered as enabled
 
-#### Scenario: A group-triggered pipeline cannot be saved before its grain key resolves
+#### Scenario: A group-triggered pipeline with no grouping key at all cannot be saved
 
-- **WHEN** a group-triggered pipeline's target has not resolved, so the grain key is not yet known
+- **WHEN** a group-triggered pipeline names no grouping key and its target has not resolved, so none can be
+  defaulted either
 - **THEN** saving is refused by the console rather than sending a request without the grouping key
+
+#### Scenario: A grouping key the document carries is saved whatever the target's state
+
+- **WHEN** a group-triggered pipeline's document names a grouping key while its target has not resolved
+- **THEN** saving is offered, and the request carries that key as written
 
 #### Scenario: A member of the other kind is refused by the service
 
@@ -2450,8 +2483,11 @@ columns; the service addresses the **entity** — the source with every enrichme
 a column of it, qualified as `<enrichment>.<column>`. Both live enrichments bind such a column, so a form
 scoped to the table both hides them and marks a declared one invalid. The console SHALL therefore also read
 `GET /v1/queries/entities/schema/{name}` for the resolved read source, and every control scoped to that
-source — the inputs editor, the SQL predicates, the member-selection ranking — SHALL offer and accept its
-fields.
+source — the inputs editor, the SQL predicates, the member-selection ranking, and an aggregate's group keys
+and measures — SHALL offer and accept its fields. The service validates each of them against that same
+entity, so a control scoped to the table alone offers a shorter list than the one it will be judged by. The
+group trigger's grouping key is the exception, and deliberately: it takes free text, because which spelling
+the service accepts depends on the source in a way a list cannot be trusted to predict.
 
 A field the entity schema marks `sensitive` SHALL be offered like any other: the service filters that schema
 by the caller's own role, so what it returns is already what this operator may read. A failed entity read

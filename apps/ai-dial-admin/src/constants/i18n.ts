@@ -2689,6 +2689,7 @@ export enum AnalyticsPipelinesI18nKey {
   Trigger = 'AnalyticsPipelines.Trigger',
   GrainKey = 'AnalyticsPipelines.GrainKey',
   GrainKeyHint = 'AnalyticsPipelines.GrainKeyHint',
+  GroupBy = 'AnalyticsPipelines.GroupBy',
   VersionColumn = 'AnalyticsPipelines.VersionColumn',
   Enabled = 'AnalyticsPipelines.Enabled',
   Generation = 'AnalyticsPipelines.Generation',

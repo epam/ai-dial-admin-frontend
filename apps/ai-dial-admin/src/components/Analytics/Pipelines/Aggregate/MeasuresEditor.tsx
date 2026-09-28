@@ -19,11 +19,14 @@ import { Measure } from '@/src/models/analytics/pipeline';
 import { MeasureRow } from '@/src/models/analytics/pipeline-ui';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { findMeasureFunction, isColumnlessFunction, toMeasureFunctions } from '@/src/utils/analytics/measure-functions';
 
 interface Props {
   measures?: Measure[];
-  columns: AnalyticsTableColumn[];
+  /** The source's entity, so a column an enrichment supplies is offered under its qualified name. */
+  fields: AnalyticsEntityField[];
   targetColumns: AnalyticsTableColumn[];
   functions: QueryFunction[];
   onChange: (measures: Measure[]) => void;
@@ -41,7 +44,7 @@ const toFunctionOption = (name: string, signature: string, description?: string)
   ) : undefined,
 });
 
-const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions, onChange }) => {
+const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions, onChange }) => {
   const t = useI18n();
   const [rows, setRows] = useState<MeasureRow[]>(() => toMeasureRows(measures));
   const emittedRef = useRef<Measure[] | undefined>(measures);
@@ -61,7 +64,7 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
 
   const available = toMeasureFunctions(functions);
   const fnOptions = available.map((fn) => toFunctionOption(fn.name, fn.signature, fn.description));
-  const columnOptions = columns.map((column) => ({ value: column.name, label: `${column.name} · ${column.type}` }));
+  const columnOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
   const nameOptions = targetColumns.map((column) => ({ value: column.name, label: column.name }));
 
   const updateRow = (id: string, patch: Partial<MeasureRow>) =>
@@ -96,7 +99,7 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureName)} ${index + 1}`}>
                 <DialSelectField
                   id={`measure-name-${index}`}
-                  options={isNameStranded ? [...nameOptions, { value: row.name, label: row.name }] : nameOptions}
+                  options={withStrandedOption(nameOptions, row.name)}
                   value={row.name}
                   invalid={isNameStranded}
                   onChange={(v) => updateRow(row.id, { name: v as string })}
@@ -106,7 +109,7 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureFn)} ${index + 1}`}>
                 <DialSelectField
                   id={`measure-fn-${index}`}
-                  options={isUnknownFn ? [...fnOptions, { value: row.fn, label: row.fn }] : fnOptions}
+                  options={withStrandedOption(fnOptions, row.fn)}
                   value={row.fn}
                   onChange={(v) => updateRow(row.id, { fn: v as string, distinct: undefined })}
                 />
@@ -118,7 +121,7 @@ const MeasuresEditor: FC<Props> = ({ measures, columns, targetColumns, functions
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureColumn)} ${index + 1}`}>
                   <DialSelectField
                     id={`measure-column-${index}`}
-                    options={columnOptions}
+                    options={withStrandedOption(columnOptions, row.column)}
                     value={row.column ?? ''}
                     placeholder={t(AnalyticsPipelinesI18nKey.MeasureColumnDefault)}
                     onChange={(v) => updateRow(row.id, { column: v as string })}
