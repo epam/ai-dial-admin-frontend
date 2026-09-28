@@ -1019,38 +1019,54 @@ than as a grammar error, because the two carry different remedies.
 - **WHEN** the service refuses the readiness predicate because it names a sensitive column
 - **THEN** the failure is reported as one of access rather than of expression
 
-### Requirement: A group trigger's grouping key is derived from the target enrichment's grain key
+### Requirement: A group trigger's grouping key is chosen from the spellings that reach the target's grain key
 
-The trigger's `group_by` is a string in the API, but the service accepts exactly one value for an enrichment
-pipeline: the target enrichment's own grain key. Anything else is rejected with HTTP 422. The constraint is
-physical — an enrichment is keyed on its grain and collapses by it, so grouping by any other column would
-pile many groups onto a single row.
+The trigger's `group_by` must resolve to the target enrichment's grain key, because an enrichment is keyed on
+its grain and collapses by it — grouping by any other column would pile many groups onto a single row. But
+the value is **not** simply that key. The service accepts the **bare** key only when the read source declares
+it as a column of its own; where the source reaches the key through an enrichment, the bare spelling projects
+nothing the statement can name and is refused with HTTP 422, naming the qualified spelling to write instead —
+`<enrichment>.<grain key>`.
 
-The console SHALL therefore **derive** the trigger's `group_by` from the resolved target table's
-`grain.grain_key` and present it as a **labelled read-only value among the read-only facts** — not as a text
-input, which reads as a field someone forgot to enable, and not as a disabled one, which would leave the
-accessibility tree and stop the value being readable at all. A labelled value in a column of inputs reads as
-that same forgotten field, which is why it sits with the facts and not in the trigger block; the facts row
-already presents the pipeline's own `grain_key`, derived by the service from the same target, so a copy in
-the trigger stated one column twice with nothing to say the two were the same.
+The console SHALL therefore present the grouping key in the **trigger block**, as the choice between the
+spellings the service will accept: the bare key when the read source declares it, plus every field of the
+source whose last segment is the grain key and which the source reaches through an enrichment. The value
+SHALL be sent as chosen, defaulting to the first such spelling when the author has named none.
 
-The presented value SHALL be re-derived whenever the target changes, before the change is saved.
+Where more than one spelling qualifies, the console SHALL offer a **selection**. Where exactly one does, it
+SHALL state that value **read-only** and say on its label why there is nothing to choose — a select holding a
+single option claims a choice that does not exist. Where none qualifies, the console SHALL say that this
+source does not reach the target's grain key, which is the condition the service refuses the declaration on.
+
+The facts row SHALL keep presenting the target's `grain_key` itself. It is the key the pipeline is keyed by,
+and the trigger's spelling of it is a different statement — `client_session_id` against
+`usage_client_identity.client_session_id` — so neither stands in for the other.
 
 This grouping key is the trigger's and is distinct from an aggregate pipeline's group keys, which name what
 its rows are grouped by. The two SHALL NOT share a control.
 
-#### Scenario: The grouping key is filled from the target's grain key
+#### Scenario: Both spellings are offered when the source has the column and an enrichment repeats it
 
-- **WHEN** the trigger kind is `group` and a target is selected
-- **THEN** that table's grain key is presented as a labelled value among the read-only facts, with no
-  editable control for it
+- **WHEN** the trigger kind is `group` and the read source both declares the grain key and reaches it
+  through an enrichment
+- **THEN** the trigger block offers both the bare key and the qualified spelling
+- **AND** the pipeline is saved with the spelling the author chose
+
+#### Scenario: A single spelling is stated rather than offered
+
+- **WHEN** the read source reaches the target's grain key one way only
+- **THEN** that spelling is presented read-only, with the reason available from its label
 - **AND** the value is readable rather than removed from the accessibility tree
-- **AND** the trigger block states no copy of it
 
-#### Scenario: Changing the target re-derives the grouping key
+#### Scenario: A source that does not reach the grain key says so
+
+- **WHEN** no field of the read source resolves to the target's grain key
+- **THEN** the trigger block states that the source does not reach it
+
+#### Scenario: Changing the target re-derives the offered spellings
 
 - **WHEN** the user changes the target to one with a different grain key
-- **THEN** the grain key presented among the facts is the new table's, before the change is saved
+- **THEN** the spellings offered are those that reach the new key, before the change is saved
 
 ### Requirement: Member selection for a group trigger
 
