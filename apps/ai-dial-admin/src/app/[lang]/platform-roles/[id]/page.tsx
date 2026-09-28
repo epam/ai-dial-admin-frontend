@@ -25,7 +25,7 @@ export default async function Page(params: {
       const result = await getConfigFileRole(path);
       role = result.success ? (result.data as unknown as DialRoleResource) : null;
     } else {
-      role = await getRole(path, etag).then((res) => {
+      role = await getRole(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as DialRoleResource | null;
       });
