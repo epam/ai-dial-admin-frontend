@@ -58,11 +58,10 @@ type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SEC
 const compareRunIndexHeaderDef = (
   runIndex: CompareRunIndex,
   label?: string,
-  isRightAligned?: boolean,
 ): Pick<ColDef, 'headerName' | 'headerComponent' | 'headerComponentParams'> => ({
   headerName: label ? formatCompareColumnHeader(runIndex, label) : formatCompareRunIndexHeader(runIndex),
   headerComponent: CompareRunIndexHeader,
-  headerComponentParams: { runIndex, label, isRightAligned },
+  headerComponentParams: { runIndex, label },
 });
 
 const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string, unknown> => {
@@ -196,7 +195,7 @@ const buildComparedMetricColumn = (
   return {
     colId: `cmp_${groupKey}_${key}`,
     field: `cmp_${groupKey}_${key}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key, true),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
     ...NUMBER_FILTER_COL_DEF,
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     ...rightAlignedColumn,
@@ -237,7 +236,7 @@ const buildComparePrimaryMetricColumn = (
 
   return {
     ...buildMetricColumn(groupKey, key, theme),
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key, true),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key),
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     cellStyle: undefined,
     cellRendererSelector: (params) => {
@@ -306,7 +305,7 @@ const buildCompareIndexColumnPair = (
 ): [ColDef, ColDef] => [
   {
     field,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label, true),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label),
     colId: field,
     hide: true,
     ...NO_FILTER_COL_DEF,
@@ -317,7 +316,7 @@ const buildCompareIndexColumnPair = (
   },
   {
     colId: `cmp_${field}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label, true),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label),
     hide: true,
     ...NO_FILTER_COL_DEF,
     ...fixedWidthColDef(width),
@@ -351,7 +350,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
       ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
       {
         field: 'responseStatusCode',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP', true),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
         colId: 'http',
         hide: true,
         ...NO_FILTER_COL_DEF,
@@ -362,7 +361,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
       },
       {
         colId: 'cmp_http',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP', true),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
@@ -372,7 +371,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
       },
       {
         field: 'durationMs',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration', true),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
         colId: 'duration',
         hide: true,
         ...NO_FILTER_COL_DEF,
@@ -384,7 +383,7 @@ const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?
       },
       {
         colId: 'cmp_duration',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration', true),
+        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
         hide: true,
         ...NO_FILTER_COL_DEF,
         ...fixedWidthColDef(DURATION_COLUMN_WIDTH),

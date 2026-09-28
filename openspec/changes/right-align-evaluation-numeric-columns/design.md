@@ -14,15 +14,12 @@ not one, and each needs its own fix:
 
 1. **Plain ag-grid `ColDef`s using the default header renderer** — `RUNS_COLUMN`, most of the
    Extraction Result execution columns, the Compare Execution Results index/HTTP/Duration pairs.
-   `cellClass`/`headerClass: 'align-right'` works as-is.
+   `cellClass: 'align-right'` works as-is; the requirement is about cell content, so `headerClass` is
+   never added here — header labels stay left-aligned.
 2. **Ag-grid `ColDef`s with a fully custom `headerComponent`** — `buildIndexColumn`'s
-   `innerHeaderComponent: EllipsisHeader` usage still renders inside ag-grid's default
-   `.ag-header-cell-label` wrapper, so `headerClass` works there; but the Compare grid's
-   `CompareRunIndexHeader` and a couple of `headerComponent: EllipsisHeader` overrides (not
-   `innerHeaderComponent`) replace that wrapper entirely, so `headerClass: 'align-right'` is a no-op
-   on their header text. The requirement is about cell content, not header labels, so this change
-   still adds `headerClass` where it's free and correct, and accepts the no-op elsewhere rather than
-   reworking those header components for a cosmetic label tweak.
+   `innerHeaderComponent: EllipsisHeader` usage and the Compare grid's `CompareRunIndexHeader` both
+   render header text. Neither takes an alignment prop: the requirement is about cell content, not
+   header labels, so these header components stay as plain left-aligned labels.
 3. **Non-ag-grid renderers whose root fills the cell** — `EditableCellRenderer`'s `<input>` has
    `width: 100%` from the `dial-input` design-system class, and `HeatMapValueCellRenderer`'s root is
    `flex ... size-full`. A ColDef `cellClass` cannot right-align content inside either: the flex
@@ -38,7 +35,7 @@ not one, and each needs its own fix:
 
 `numericColumn` becomes `{ ...rightAlignedColumn, comparator, valueFormatter, filterValueGetter }`.
 Every existing spread of `numericColumn` keeps exactly the same resulting `ColDef` (the new fragment
-contributes only the two class properties `numericColumn` already had), so no existing column changes
+contributes only the `cellClass` property `numericColumn` already had), so no existing column changes
 behavior. `grid-columns.tsx`'s `USAGE_LOG_NUMERIC_COLUMNS` derivation
 (`c.cellClass === 'align-right'`, a strict string check) still matches, because `rightAlignedColumn`'s
 `cellClass` is the same literal string, not an array.
@@ -131,9 +128,8 @@ needed the same fix as everything else, split by the same case 1/3 mechanics fro
   Cases grids, so fixing it once right-aligns numeric schema columns in both places — a deliberate,
   positive side effect, consistent with how `RUNS_COLUMN` already being shared fixes the Runs tab and
   the Compare Against modal together.
-- Header-label alignment is best-effort: it lands wherever ag-grid's default header renderer is in
-  play, and is skipped (not faked) wherever a column already overrides `headerComponent` entirely —
-  see Decision 2. No column's header text moves in a way that contradicts its cell content.
+- Header-label alignment is out of scope everywhere: column headers stay left-aligned regardless of
+  whether their cell content is right-aligned. Only cell content moves.
 - `EditableCellRenderer`, `Common/HeatMap/HeatMapValueCellRenderer`, and `FieldValue` are all shared,
   general-purpose components; the changes here are additive (a new optional prop) or scoped to their
   only current callers (a default flip with no other consumer), so none becomes Evaluation-specific.

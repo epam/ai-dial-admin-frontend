@@ -223,7 +223,8 @@ describe('getGroupedSchemaColumn', () => {
       const column = getGroupedSchemaColumn({ name: 'field', type }, vi.fn(), ctx);
       const selected = column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.SINGLE }));
 
-      expect(column).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+      expect(column).toMatchObject({ cellClass: 'align-right' });
+      expect(column.headerClass).toBeUndefined();
       expect(selected?.params).toEqual(expect.objectContaining({ isRightAligned: true }));
     },
   );

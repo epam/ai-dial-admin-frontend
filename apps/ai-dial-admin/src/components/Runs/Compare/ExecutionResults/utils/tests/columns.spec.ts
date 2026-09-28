@@ -161,7 +161,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     executionColIds.forEach((colId) => {
       const col = exec.children.find((child) => child.colId === colId);
       expect(col?.cellClass).toBe('align-right');
-      expect(col?.headerComponentParams?.isRightAligned).toBe(true);
+      expect(col?.headerComponentParams?.isRightAligned).toBeUndefined();
     });
   });
 
@@ -337,11 +337,14 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const secondaryPrecision = metricGroup.children[1];
     const deltaPrecision = metricGroup.children[2];
 
-    expect(primaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
-    expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
-    expect(deltaPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
-    expect(primaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
-    expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
+    expect(primaryPrecision).toMatchObject({ cellClass: 'align-right' });
+    expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right' });
+    expect(deltaPrecision).toMatchObject({ cellClass: 'align-right' });
+    expect(primaryPrecision.headerClass).toBeUndefined();
+    expect(secondaryPrecision.headerClass).toBeUndefined();
+    expect(deltaPrecision.headerClass).toBeUndefined();
+    expect(primaryPrecision.headerComponentParams?.isRightAligned).toBeUndefined();
+    expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBeUndefined();
   });
 
   test('metric columns highlight added, changed, and removed pairs', () => {

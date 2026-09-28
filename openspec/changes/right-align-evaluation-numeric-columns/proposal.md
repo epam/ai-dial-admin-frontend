@@ -6,7 +6,7 @@ the first digit instead of the last, so a reader scanning a column of numbers ge
 magnitudes at a glance; right alignment is the standard fix for exactly this kind of column.
 
 The codebase already has this mechanism in one place — `numericColumn`
-(`cellClass`/`headerClass: 'align-right'`, backed by an `ag-grid.scss` rule) — spread across roughly
+(`cellClass: 'align-right'`, backed by an `ag-grid.scss` rule) — spread across roughly
 30 grid columns elsewhere in the app (Usage Log, Analytics). Evaluation's grids largely predate that
 convention, or build their columns through code paths that never reach it, so they were never opted
 in.
@@ -17,7 +17,7 @@ in.
   (`constants/grid-columns/configs.ts`) so a column that already carries its own
   formatter/comparator/`valueGetter` can opt into alignment without inheriting `numericColumn`'s other
   behavior (thousands-separator formatting, its own comparator, its own filter value getter).
-- Apply that alignment (or an equivalent inline `cellClass`/`headerClass`) to the numeric, HTTP, and
+- Apply that alignment (or an equivalent inline `cellClass`) to the numeric, HTTP, and
   duration columns across:
   - `RUNS_COLUMN` (`Number of runs`, `Number of test cases`) — shared by the Test Suite Runs tab, the
     Compare Against modal, and the standalone Runs list, so one edit covers all three.
@@ -49,6 +49,8 @@ in.
   `isScoreIndicator`).
 - Text, boolean, object, array, and file columns are untouched — none of the above changes reaches a
   non-numeric column.
+- Column header labels are untouched everywhere — only cell content moves. A right-aligned column's
+  header stays left-aligned, matching every other column.
 
 ## Non-goals
 
