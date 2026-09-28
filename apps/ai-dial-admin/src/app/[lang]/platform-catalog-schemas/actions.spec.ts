@@ -25,7 +25,9 @@ vi.mock('@/src/app/api/api');
 const ID = 'https://dial.epam.com/catalog_schemas/agent';
 const ENCODED = 'https%3A%2F%2Fdial.epam.com%2Fcatalog_schemas%2Fagent';
 
+const STORAGE_NAME = 'agent-schema';
 const catalogSchema = {
+  name: STORAGE_NAME,
   $id: ID,
   'dial:catalogEntityType': CatalogEntityType.Agent,
   'dial:catalogDisplayName': 'Agent',
@@ -55,27 +57,33 @@ describe('Catalog schemas :: server actions', () => {
     expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, '');
   });
 
-  test('Should create under the percent-encoded $id', async () => {
+  test('Should create under the percent-encoded storage name', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await createCatalogSchema(catalogSchema);
 
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, ENCODED, {
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.CATALOG_SCHEMA, STORAGE_NAME, {
       $id: ID,
       'dial:catalogEntityType': CatalogEntityType.Agent,
       'dial:catalogDisplayName': 'Agent',
     });
   });
 
-  test('Should update under the percent-encoded $id, passing the etag through', async () => {
+  test('Should update using the loaded storage path, passing the etag through', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    await updateCatalogSchema(catalogSchema, 'etag-1');
+    await updateCatalogSchema(
+      {
+        ...catalogSchema,
+        _metadata: { name: STORAGE_NAME, path: 'legacy-storage-name', folderId: '' },
+      },
+      'etag-1',
+    );
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.CATALOG_SCHEMA,
-      ENCODED,
+      STORAGE_NAME,
       expect.objectContaining({ $id: ID }),
       { etag: 'etag-1' },
     );

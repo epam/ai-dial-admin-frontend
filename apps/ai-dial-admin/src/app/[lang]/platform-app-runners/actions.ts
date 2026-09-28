@@ -13,13 +13,19 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { toCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
-import { hasUnencodableSchemaIdChars, toCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
+import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const MISSING_ID_ERROR: ServerActionResponse = {
   success: false,
   errorHeader: 'Missing application runner id',
-  errorMessage: 'An application runner needs an id — it becomes the resource name DIAL Core stores it under.',
+  errorMessage: 'An application runner needs a declared schema id.',
+};
+
+const MISSING_NAME_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Missing application runner name',
+  errorMessage: 'An application runner needs a storage name DIAL Core can address.',
 };
 
 const INVALID_ID_ERROR: ServerActionResponse = {
@@ -31,10 +37,17 @@ const INVALID_ID_ERROR: ServerActionResponse = {
 };
 
 const checkRunnerId = (id?: string): ServerActionResponse | null => {
-  if (!id) {
+  if (!id?.trim()) {
     return MISSING_ID_ERROR;
   }
   return hasUnencodableSchemaIdChars(id) ? INVALID_ID_ERROR : null;
+};
+
+const checkRunnerName = (name?: string): ServerActionResponse | null => {
+  if (!name?.trim()) {
+    return MISSING_NAME_ERROR;
+  }
+  return hasUnencodableSchemaIdChars(name) ? INVALID_ID_ERROR : null;
 };
 
 /**
@@ -76,13 +89,12 @@ export async function createRunner(runner: DialAppRunnerResource): Promise<Serve
   if (idError) {
     return idError;
   }
+  const nameError = checkRunnerName(runner.name);
+  if (nameError) {
+    return nameError;
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(
-    token,
-    ResourceType.APP_TYPE_SCHEMA,
-    toCoreSchemaResourceName(runner.$id as string),
-    toRunnerPayload(runner),
-  );
+  return assetApi.put(token, ResourceType.APP_TYPE_SCHEMA, runner.name as string, toRunnerPayload(runner));
 }
 
 export async function getRunner(path: string, etag: string) {
@@ -96,13 +108,9 @@ export async function updateRunner(runner: DialAppRunnerResource, etag: string):
     return idError;
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(
-    token,
-    ResourceType.APP_TYPE_SCHEMA,
-    toCoreSchemaResourceName(runner.$id as string),
-    toRunnerPayload(runner),
-    { etag },
-  );
+  return assetApi.put(token, ResourceType.APP_TYPE_SCHEMA, runner.name as string, toRunnerPayload(runner), {
+    etag,
+  });
 }
 
 export async function removeRunner(path: string, etag?: string) {

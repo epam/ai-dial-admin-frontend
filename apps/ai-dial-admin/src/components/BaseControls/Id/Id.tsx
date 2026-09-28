@@ -22,6 +22,8 @@ interface Props<T> {
   onChangeEntity?: (entity: T) => void;
   checkEmptySymbols?: boolean;
   isFullWidth?: boolean;
+  inputId?: string;
+  validationField?: string;
 }
 
 const IdControl = <T extends { name?: string }>({
@@ -37,6 +39,8 @@ const IdControl = <T extends { name?: string }>({
   onChangeEntity,
   checkEmptySymbols,
   isFullWidth = true,
+  inputId = 'name',
+  validationField = 'name',
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -59,9 +63,20 @@ const IdControl = <T extends { name?: string }>({
             checkEmptySymbols,
           );
       setNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: !error });
     },
-    [isUrlId, forbiddenChars, names, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
+    [
+      isUrlId,
+      forbiddenChars,
+      names,
+      t,
+      isUniqueNameError,
+      isDeploymentId,
+      label,
+      checkEmptySymbols,
+      dispatch,
+      validationField,
+    ],
   );
 
   const onChangeName = useCallback(
@@ -76,16 +91,16 @@ const IdControl = <T extends { name?: string }>({
     if (entity.name) {
       validateName(entity.name);
     } else {
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: false });
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUniqueNameError]);
+  }, [isUniqueNameError, validationField]);
 
   return (
     <DialInput
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
       labelProps={{ label: label || t(EntityFieldsI18nKey.id), required: true }}
-      id="name"
+      id={inputId}
       value={entity.name}
       onChange={onChangeName}
       error={nameError?.text}
