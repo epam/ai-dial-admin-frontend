@@ -34,7 +34,7 @@ describe('Catalog schema detail page :: resolving either population', () => {
     vi.clearAllMocks();
   });
 
-  test('reads the API-written half first, under the route segment as Core stores it', async () => {
+  test('decodes the route segment before reading the API-written resource from Core', async () => {
     vi.mocked(getCatalogSchema).mockResolvedValue({
       success: true,
       // A merged read carries its identity under `_metadata` (the merge layer's graft), never flat —
@@ -49,7 +49,7 @@ describe('Catalog schema detail page :: resolving either population', () => {
 
     const rendered = await renderPage();
 
-    expect(getCatalogSchema).toHaveBeenCalledWith(SEGMENT, expect.any(String));
+    expect(getCatalogSchema).toHaveBeenCalledWith(SCHEMA_ID, expect.any(String));
     expect(getConfigFileCatalogSchema).not.toHaveBeenCalled();
     expect(rendered.props.children.props.isConfigFileSource).toBe(false);
   });

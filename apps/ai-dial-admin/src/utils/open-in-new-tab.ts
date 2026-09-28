@@ -102,9 +102,19 @@ export const getEntityPath = (
         : `${encodeURIComponent(name)}?path=${encodeURIComponent(fullPath)}`;
     }
 
-    case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformAppRunners:
-    case ApplicationRoute.PlatformCatalogSchemas:
+    case ApplicationRoute.PlatformCatalogSchemas: {
+      const { name, path, _metadata } = data as {
+        name?: string;
+        path?: string;
+        _metadata?: { name?: string; path?: string };
+      };
+      const storagePath = _metadata?.path ?? path ?? name ?? _metadata?.name ?? '';
+
+      return forRemove ? decodeURIComponent(escapePercentSign(storagePath)) : encodeURIComponent(storagePath);
+    }
+
+    case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
     case ApplicationRoute.PlatformRoutes:
@@ -112,12 +122,8 @@ export const getEntityPath = (
     case ApplicationRoute.PlatformKeys: {
       // Flat platform entities: `parseEncodedFlatPath` always yields `path === name`, so the `[id]`
       // segment alone identifies the resource. No `?path=` needed.
-      const { name, $id, _metadata } = data as { name?: string; $id?: string; _metadata?: { name?: string } };
-      // $id and Core's write-response `_metadata.name` both fall back here raw (not pre-encoded) so
-      // they go through the same single `encodeURIComponent` below that the `name` branch relies on.
-      // Row-click navigation reads the grid row's already-decoded `name`, so both entry points must
-      // produce the same segment.
-      const resolvedName = name || $id || _metadata?.name || '';
+      const { name, _metadata } = data as { name?: string; _metadata?: { name?: string } };
+      const resolvedName = name || _metadata?.name || '';
 
       return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
     }
