@@ -32,7 +32,7 @@ import {
   isPlatformDualBucketView,
 } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { DialResource } from '@/src/models/dial/resource';
 
 interface Props {
@@ -98,16 +98,13 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             getCreateNotificationDescription(view, currentEntity.name, t),
           ),
         );
-        const originalRoute = view.split('/')[1];
-        router.push(
-          `${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(view, res.response || currentEntity)}`,
-        );
+        router.push(getUrnForEntity(view, res.response || currentEntity));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [folderContext, currentEntity, initialValues, onClose, router, showNotification, t, view]);
+  }, [folderContext, currentEntity, onClose, router, showNotification, t, view]);
 
   const onChangeEntity = useCallback((entity: object) => {
     setCurrentEntity(entity as DialResource);

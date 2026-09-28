@@ -194,6 +194,37 @@ describe('PipelineDetailView', () => {
     expect(within(facts()).getAllByText(AnalyticsPipelinesI18nKey.NotSet).length).toBeGreaterThan(0);
   });
 
+  // The grain key is the default for `group_by`, not the requirement — a declaration that already names its
+  // spelling is complete, and an unresolved target must not withhold the save from it.
+  test('offers the save for a group trigger that already names its grouping key', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    const user = userEvent.setup();
+    renderView({
+      grain_key: undefined,
+      trigger: {
+        kind: TriggerKind.Group,
+        group_by: 'usage_client_identity.response_id',
+        ready_when: { idle: '5m' },
+      },
+    });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+
+  test('withholds the save when neither a grouping key nor a grain key is known', async () => {
+    vi.mocked(getTable).mockResolvedValue(null);
+    const user = userEvent.setup();
+    renderView({ grain_key: undefined, trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editScanEvery(user, 'PT2H');
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('names neither bound table among the facts', () => {
     renderView();
 

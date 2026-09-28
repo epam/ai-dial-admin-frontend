@@ -140,9 +140,27 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
     expect(dto.trigger?.cron).toBe('0 0 * * * *');
   });
 
-  test('sends the grouping key from the resolved grain key, not from the draft', () => {
+  // The service takes the bare grain key only where the read source declares it, and demands
+  // `<enrichment>.<grain key>` where the source reaches it through one — so the author's spelling is sent.
+  test('sends the grouping key the author chose', () => {
     const dto = buildPipelineDto(
-      { ...draft, trigger: { kind: TriggerKind.Group, group_by: 'stale_key', ready_when: { idle: '5m' } } },
+      {
+        ...draft,
+        trigger: {
+          kind: TriggerKind.Group,
+          group_by: 'usage_client_identity.response_id',
+          ready_when: { idle: '5m' },
+        },
+      },
+      { grainKey: 'response_id' },
+    );
+
+    expect(dto.trigger?.group_by).toBe('usage_client_identity.response_id');
+  });
+
+  test('falls back to the resolved grain key when the draft names none', () => {
+    const dto = buildPipelineDto(
+      { ...draft, trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } } },
       { grainKey: 'response_id' },
     );
 

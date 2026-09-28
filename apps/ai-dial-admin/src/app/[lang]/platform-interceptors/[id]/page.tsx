@@ -30,7 +30,7 @@ export default async function Page(params: {
       const result = await getConfigFileInterceptor(path);
       interceptor = result.success ? (result.data as unknown as DialInterceptorResource) : null;
     } else {
-      interceptor = await getInterceptor(path, etag).then((res) => {
+      interceptor = await getInterceptor(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as DialInterceptorResource | null;
       });

@@ -26,7 +26,7 @@ import {
 } from '@/src/utils/entities/create-entity';
 import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { addTrailingSlash } from '@/src/utils/url';
 import { DUAL_BUCKET_VIEWS, isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { RoutesForCheckingUniqueName } from './constants';
@@ -148,14 +148,12 @@ const CreateEntity = <T extends CreateEntityBase>({
               getCreateNotificationDescription(route, entityLabel, t),
             ),
           );
-          const originalRoute = route.split('/')[1];
-          // Skill has nothing for `getEntityPath`'s shared branch (Prompts/Files/AssetsApplications/
-          // AssetsToolsets/Skills) to build a path from otherwise — no version, so it would fall
+          // Skill has nothing for the shared route builder's Prompts/Files/AssetsApplications/
+          // AssetsToolsets/Skills branch to build a path from otherwise — no version, so it would fall
           // back to a literal `__undefined` suffix. Scoped to this one route rather than "no version"
-          // generically: AssetsModels/AssetsAppRunners also have no version, but their own branch in
-          // `getEntityPath` already prefers an explicit `path` over its `$id` fallback, so adding one
-          // unconditionally there would change already-working behavior (design D5).
-          const newEntity = isAssetView(route)
+          // generically: AssetsModels/AssetsAppRunners already prefer an explicit path over their
+          // `$id` fallback, so adding one unconditionally would change their existing behavior.
+          const createdEntity = isAssetView(route)
             ? {
                 folderId: entity.folderId,
                 name: entity.name,
@@ -166,15 +164,16 @@ const CreateEntity = <T extends CreateEntityBase>({
                     ? `${addTrailingSlash(entity.folderId)}${entity.name || ''}`
                     : undefined,
               }
-            : res.response || entity;
-          router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, newEntity, false)}`);
+            : entity;
+          const newEntity = res.response ? { ...createdEntity, ...res.response } : createdEntity;
+          router.push(getUrnForEntity(route, newEntity));
           onClose();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
-    [route, createEntity, folderContext, showNotification, t, router, initialValues, onClose],
+    [route, createEntity, folderContext, showNotification, t, router, onClose],
   );
 
   useEffect(() => {

@@ -104,6 +104,14 @@ never by inferring either from a `folderId` value.
   `?path=`-carrying URL, selected by the row's flavor/bucket rather than by prefix-sniffing
   `folderId`
 
+#### Scenario: Config-file public asset details preserve path query
+- **WHEN** a config-file-sourced versioned public application or toolset row opens details and its detail URL contains `?path=`
+- **THEN** the URL retains the original `path` value and appends `&configFile=true` as a separate query parameter
+
+#### Scenario: Config-file asset action menu opens the corrected URL
+- **WHEN** a config-file-sourced versioned public application or toolset row is opened through the action-menu new-tab control
+- **THEN** the new tab opens a URL whose `path` and `configFile=true` values are separate query parameters
+
 #### Scenario: Detail-page bucket detection stays one stated contract
 - **WHEN** an asset application or toolset detail page decides which bucket it is rendering
 - **THEN** it applies the existing URL contract (presence of `?path=` means public) through a

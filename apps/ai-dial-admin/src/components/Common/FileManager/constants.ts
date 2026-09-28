@@ -10,3 +10,4 @@ export const MOVE_ITEMS_INDICATOR_SIZE = 100;
 export const MOVE_ITEMS_INDICATOR_WIDTH = 4;
 export const MOVE_ITEMS_INDICATOR_DELAY = 500;
 export const ASSET_LIST_FILTER_STORAGE_KEY = 'assetListFilter_';
+export const MOVE_EXCLUDED_PATHS = ['platform/', 'file/'];

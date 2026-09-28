@@ -223,6 +223,14 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('example-from-admin');
   });
 
+  test('Should use Core write metadata to encode a colon-containing PlatformModels name', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformModels, {
+      _metadata: { name: 'anthropic.claude-haiku-4-5-20251001-v1:0' },
+    });
+
+    expect(result).toEqual('anthropic.claude-haiku-4-5-20251001-v1%3A0');
+  });
+
   test('Should return decoded name for PlatformModels when forRemove is true', () => {
     const result = getEntityPath(
       ApplicationRoute.PlatformModels,
@@ -315,6 +323,14 @@ describe('Entity list view :: getEntityPath', () => {
     (route) => {
       const result = getEntityPath(route, { name: 'my-item', path: 'platform/my-item' });
       expect(result).toEqual('my-item');
+    },
+  );
+
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'Should encode a colon in a platform-bucket %s name without adding ?path=',
+    (route) => {
+      const result = getEntityPath(route, { name: 'my:item', path: 'platform/my:item' });
+      expect(result).toEqual('my%3Aitem');
     },
   );
 
