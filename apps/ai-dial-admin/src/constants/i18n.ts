@@ -2754,7 +2754,7 @@ export enum AnalyticsPipelinesI18nKey {
   GrainKey = 'AnalyticsPipelines.GrainKey',
   GrainKeyHint = 'AnalyticsPipelines.GrainKeyHint',
   GroupBy = 'AnalyticsPipelines.GroupBy',
-  GroupByCaption = 'AnalyticsPipelines.GroupByCaption',
+  GroupByChoice = 'AnalyticsPipelines.GroupByChoice',
   GroupByOnlySpelling = 'AnalyticsPipelines.GroupByOnlySpelling',
   GroupByUnreachable = 'AnalyticsPipelines.GroupByUnreachable',
   VersionColumn = 'AnalyticsPipelines.VersionColumn',
