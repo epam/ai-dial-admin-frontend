@@ -81,10 +81,6 @@ const Content: FC<Props> = ({ children, isEnableAuth }) => {
   }, [checkAppStatus, featureFlags.adminApiEnabled]);
 
   useEffect(() => {
-    if (!featureFlags.adminApiEnabled) {
-      return;
-    }
-
     checkCoreVersion();
     versionIntervalRef.current = setInterval(() => {
       checkCoreVersion();
@@ -95,7 +91,7 @@ const Content: FC<Props> = ({ children, isEnableAuth }) => {
         clearInterval(versionIntervalRef.current);
       }
     };
-  }, [checkCoreVersion, featureFlags.adminApiEnabled]);
+  }, [checkCoreVersion]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 min-w-0 relative overflow-hidden">

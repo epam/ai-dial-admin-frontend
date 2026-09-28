@@ -8,16 +8,17 @@ import { Deployment } from '@/src/models/evaluation/deployment';
 export const DEPLOYMENTS_URL = 'v1/deployments';
 export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_INFO_URL = 'v1/user/info';
+export const VERSION_URL = 'version';
 
 /** Claim Core reports the caller's email under, inside `/v1/user/info`'s `userClaims` map. */
 const EMAIL_CLAIM = 'email';
 
 /**
  * Direct-to-Core replacements for the admin-backend endpoints that only ever proxied Core
- * unchanged: deployment listing/lookup and the caller's own identity. The global-settings
- * singleton lives on {@link SettingsApi} instead, which already owns that resource.
- * {@link UtilityApi} keeps everything BE still owns (import/export, version, config sync) so
- * those aren't duplicated or moved here.
+ * unchanged: deployment listing/lookup, the caller's own identity, and the current Core version.
+ * The global-settings singleton lives on {@link SettingsApi} instead, which already owns that
+ * resource. {@link UtilityApi} keeps the Admin-backend-owned import/export, version configuration,
+ * and config-sync operations so those aren't duplicated or moved here.
  */
 export class CoreUtilityApi extends CoreApi {
   checkDeploymentByName(name: string, token: Token): Promise<Deployment | null> {
@@ -26,6 +27,10 @@ export class CoreUtilityApi extends CoreApi {
 
   getAllDeployments(token: Token): Promise<ServerActionResponse> {
     return this.getAction(DEPLOYMENTS_URL, token);
+  }
+
+  getCoreVersion(token: Token): Promise<string | null> {
+    return this.get(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null) as Promise<string | null>;
   }
 
   async getUserInfo(token: Token): Promise<ServerActionResponse<{ userInfo: UserInfo }>> {

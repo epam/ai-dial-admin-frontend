@@ -5,6 +5,7 @@ import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
+import { CoreSyncI18nKey } from '@/src/constants/i18n';
 import { CoreVersions } from '@/src/models/core-version';
 import VersionModal from './Modals/VersionModal';
 import { setCoreVersion } from '@/src/app/actions';
@@ -43,12 +44,16 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
   return (
     <div className="hidden lg:flex absolute bottom-0 right-0 caption text-right pr-6 pb-1 text-secondary tiny">
       <span className="mr-1">Admin: [FE]{process.env.NEXT_PUBLIC_APP_VERSION}</span>
-      {!isOnlyFE && (
+      {isOnlyFE ? (
+        <span className="mr-1 flex flex-row">
+          {t(CoreSyncI18nKey.Core)}: {coreVersion}
+        </span>
+      ) : (
         <>
           <span>[BE]{beVersion}</span>
           <span className="inline-block w-px h-[14px] mx-1 bg-controls-disable"></span>
           <span className="flex">
-            Core:
+            {t(CoreSyncI18nKey.Core)}:
             <span
               className="flex flex-row hover:text-accent-primary group/version"
               onClick={() => setIsModalOpen(true)}
