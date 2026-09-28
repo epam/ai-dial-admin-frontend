@@ -226,7 +226,7 @@ describe('useEnrichForm — the read source leg', () => {
 
     act(() => result.current.onChange({ target: 'turn_feedback' }));
 
-    await waitFor(() => expect(result.current.sourceColumns.map((column) => column.name)).toEqual(['chat_id']));
+    await waitFor(() => expect(result.current.readSource?.columns?.map((column) => column.name)).toEqual(['chat_id']));
     expect(result.current.sourceName).toBe('dial_usage_log');
   });
 
@@ -235,7 +235,9 @@ describe('useEnrichForm — the read source leg', () => {
 
     act(() => result.current.onChange({ target: 'turn_feedback', inputs: ['legacy_log'] }));
 
-    await waitFor(() => expect(result.current.sourceColumns.map((column) => column.name)).toEqual(['legacy_id']));
+    await waitFor(() =>
+      expect(result.current.readSource?.columns?.map((column) => column.name)).toEqual(['legacy_id']),
+    );
     expect(result.current.sourceName).toBe('legacy_log');
   });
 
@@ -261,7 +263,7 @@ describe('useEnrichForm — the read source leg', () => {
 
     // The source name is only knowable from the target's `source_table`, so nothing is read for it yet.
     expect(result.current.sourceName).toBeUndefined();
-    expect(result.current.sourceColumns).toEqual([]);
+    expect(result.current.readSource).toBeFalsy();
   });
 
   test('reports a failed source resolution', async () => {
@@ -271,7 +273,7 @@ describe('useEnrichForm — the read source leg', () => {
     act(() => result.current.onChange({ target: 'turn_feedback' }));
 
     await waitFor(() => expect(result.current.hasSourceError).toBe(true));
-    expect(result.current.sourceColumns).toEqual([]);
+    expect(result.current.readSource).toBeFalsy();
   });
 });
 

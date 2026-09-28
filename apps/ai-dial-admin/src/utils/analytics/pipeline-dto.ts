@@ -92,7 +92,10 @@ const buildTrigger = (draft: PipelineDraft, grainKey?: string): PipelineTrigger 
   }
 
   if (kind === TriggerKind.Group) {
-    trigger.group_by = grainKey;
+    // The author's spelling wins: the service takes the bare grain key only where the read source declares
+    // it, and demands `<enrichment>.<grain key>` where it does not, so the key alone is a default rather
+    // than the answer.
+    trigger.group_by = trimmedString(draft.trigger?.group_by) || grainKey;
 
     const readyWhen = compactReadyWhen(draft.trigger?.ready_when);
     if (readyWhen) trigger.ready_when = readyWhen;
