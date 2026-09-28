@@ -34,7 +34,7 @@ export default async function Page(params: {
       const result = await getConfigFileRoute(path);
       route = result.success ? (result.data as unknown as DialRouteResource) : null;
     } else {
-      route = await getRoute(path, etag).then((res) => {
+      route = await getRoute(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as DialRouteResource | null;
       });
