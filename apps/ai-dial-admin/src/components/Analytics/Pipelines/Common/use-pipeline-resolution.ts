@@ -70,11 +70,12 @@ const useCachedResolution = <T>(key: string | undefined, resolve: (key: string) 
  * The read source is the declared input or the target enrichment's `source_table`, so it cannot be
  * resolved until the target has been.
  *
- * Three reads, easy to conflate. The transform's inputs, every SQL predicate and the member ranking are
- * scoped to the source's **entity** — the source with its enrichments flattened in, which is what the
- * service accepts and where `<enrichment>.<column>` comes from. An aggregate's group keys and measure
- * inputs are scoped to the source **table**, which the entity would wrongly widen. A measure's name and
- * an output's target column are written against the **target table's** columns.
+ * Two reads of the source, easy to conflate with the target's. Everything scoped to the source — the
+ * transform's inputs, every SQL predicate, the member ranking, an aggregate's group keys and measure
+ * inputs — is scoped to its **entity**, the source with its enrichments flattened in, which is what the
+ * service validates against and where `<enrichment>.<column>` comes from. The source's own table is read
+ * for what the entity does not carry: its `source_table`, and whether it resolves at all. A measure's name
+ * and an output's target column are written against the **target table's** columns.
  */
 export const usePipelineResolution = ({ target: targetName, input }: Params) => {
   const [tables, setTables] = useState<AnalyticsTable[]>([]);
@@ -132,7 +133,6 @@ export const usePipelineResolution = ({ target: targetName, input }: Params) => 
     sourceName,
     grainKey: target.value?.grain?.grain_key ?? '',
     targetColumns: target.value?.columns ?? [],
-    sourceColumns: readSource.value?.columns ?? [],
     sourceFields: sourceEntity.value ?? [],
     isSourceEntityPending: sourceEntity.isPending,
     hasSourceEntityError: sourceEntity.hasError,
