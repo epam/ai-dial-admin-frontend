@@ -10,6 +10,7 @@ import {
   getPivotGridTemplateColumns,
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import PivotValueCell from '@/src/components/Runs/View/RowDetails/PivotValueCell';
@@ -73,7 +74,10 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}
               className={classNames(HEADER_CELL_BASE, 'text-secondary border-r')}
             >
-              <DialEllipsisTooltip text={column.field.label} className="text-secondary" />
+              <DialEllipsisTooltip
+                text={column.field.label}
+                className={classNames('text-secondary', isRightAlignedRowDetailField(column.field) && 'text-right')}
+              />
             </div>
           ))}
 

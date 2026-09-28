@@ -104,7 +104,7 @@ describe('CompareRowDetailPivotTable', () => {
     expect(dialog).toHaveTextContent('Secondary long answer');
   });
 
-  test('keeps header labels left-aligned regardless of field alignment', () => {
+  test('right-aligns the header label of a right-aligned field', () => {
     render(
       <CompareRowDetailPivotTable
         sections={sections}
@@ -116,7 +116,7 @@ describe('CompareRowDetailPivotTable', () => {
       />,
     );
 
-    expect(screen.getByText('HTTP')).not.toHaveClass('text-right');
+    expect(screen.getByText('HTTP')).toHaveClass('text-right');
     expect(screen.getByText('answer')).not.toHaveClass('text-right');
   });
 

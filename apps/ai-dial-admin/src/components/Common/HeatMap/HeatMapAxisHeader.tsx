@@ -29,7 +29,7 @@ const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
       <div className="flex h-full w-full min-w-0 items-center justify-center px-1">
         <DialEllipsisTooltip
           text={headerLabel}
-          className="min-w-0 max-w-full dial-small-semi-text text-secondary"
+          className="min-w-0 max-w-full dial-small-semi-text text-secondary text-end"
           contentClassName="truncate"
         />
       </div>

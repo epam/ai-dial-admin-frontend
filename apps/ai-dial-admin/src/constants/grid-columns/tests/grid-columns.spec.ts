@@ -436,10 +436,8 @@ describe('Constants :: grid columns', () => {
     const numberOfRuns = RUNS_COLUMN.find((c) => c.field === 'runConfig.numberOfRuns');
     const numberOfTestCases = RUNS_COLUMN.find((c) => c.field === 'numberOfTestCases');
 
-    expect(numberOfRuns).toMatchObject({ cellClass: 'align-right' });
-    expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right' });
-    expect(numberOfRuns?.headerClass).toBeUndefined();
-    expect(numberOfTestCases?.headerClass).toBeUndefined();
+    expect(numberOfRuns).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
   });
 });
 

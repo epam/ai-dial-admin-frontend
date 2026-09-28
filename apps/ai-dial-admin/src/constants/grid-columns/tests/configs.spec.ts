@@ -51,15 +51,15 @@ describe('priceColumn.filterValueGetter (inherited from numericColumn)', () => {
 });
 
 describe('rightAlignedColumn', () => {
-  test('only carries the cell alignment class', () => {
-    expect(rightAlignedColumn).toEqual({ cellClass: 'align-right' });
+  test('only carries the alignment classes', () => {
+    expect(rightAlignedColumn).toEqual({ cellClass: 'align-right', headerClass: 'align-right' });
   });
 });
 
 describe('numericColumn alignment', () => {
   test('spreads rightAlignedColumn so the two stay in sync', () => {
     expect(numericColumn.cellClass).toBe(rightAlignedColumn.cellClass);
-    expect(numericColumn.headerClass).toBeUndefined();
+    expect(numericColumn.headerClass).toBe(rightAlignedColumn.headerClass);
   });
 });
 

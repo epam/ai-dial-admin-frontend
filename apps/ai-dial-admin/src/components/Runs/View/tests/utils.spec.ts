@@ -110,6 +110,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
         floatingFilter: true,
         width: METRIC_COLUMN_WIDTH,
         cellClass: 'align-right',
+        headerClass: 'align-right',
       }),
     );
     expect(accuracyChildren[0].cellStyle).toBeUndefined();
@@ -733,6 +734,7 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
         sortable: true,
         headerComponentParams: {
           innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
         },
       }),
     );
@@ -775,6 +777,7 @@ describe('Runs View :: executionColumns Request valueGetter', () => {
         sortable: true,
         headerComponentParams: {
           innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
         },
       }),
     );
@@ -846,6 +849,7 @@ describe('Runs View :: executionColumns Turn valueGetter', () => {
         sortable: true,
         headerComponentParams: {
           innerHeaderComponent: expect.any(Function),
+          innerHeaderComponentParams: { isRightAligned: true },
         },
       }),
     );
@@ -906,24 +910,23 @@ describe('Runs View :: executionColumns Total turns valueGetter', () => {
 
 describe('Runs View :: executionColumns are right-aligned', () => {
   test.each(['runIndex', 'requestIndex', 'totalRequests', 'turnIndex', 'totalTurns'])(
-    '%s carries the align-right cell class',
+    '%s carries the align-right cell and header classes',
     (colId) => {
       const col = getExecutionColumn(colId);
-      expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right' }));
-      expect(col.headerClass).toBeUndefined();
+      expect(col).toEqual(expect.objectContaining({ cellClass: 'align-right', headerClass: 'align-right' }));
     },
   );
 
   test('HTTP column keeps its status coloring and adds align-right', () => {
     const col = getExecutionColumn('http');
-    expect(col.headerClass).toBeUndefined();
+    expect(col.headerClass).toBe('align-right');
     expect(col.cellClass({ data: { responseStatusCode: 404 } })).toBe('align-right text-warning');
     expect(col.cellClass({ data: {} })).toBe('align-right');
   });
 
   test('Duration column keeps its status coloring and adds align-right', () => {
     const col = getExecutionColumn('duration');
-    expect(col.headerClass).toBeUndefined();
+    expect(col.headerClass).toBe('align-right');
     expect(col.cellClass({ data: { responseStatusCode: 500 } })).toBe('align-right text-error');
     expect(col.cellClass({ data: {} })).toBe('align-right');
   });

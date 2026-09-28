@@ -1,7 +1,7 @@
 ## 1. Shared alignment fragment
 
 - [x] 1.1 In `constants/grid-columns/configs.ts`, extract `rightAlignedColumn: Partial<ColDef>`
-      (`cellClass: 'align-right'`) out of `numericColumn`, and have `numericColumn`
+      (`cellClass`/`headerClass: 'align-right'`) out of `numericColumn`, and have `numericColumn`
       spread it. Verify `grid-columns.tsx`'s `USAGE_LOG_NUMERIC_COLUMNS` filter
       (`c.cellClass === 'align-right'`) still matches.
 
@@ -17,8 +17,8 @@
 - [x] 3.1 In `components/Runs/View/utils.ts`, right-align `buildIndexColumn`'s output (`# Run number`,
       `Request`, `Turn`) and the `totalRequests` / `totalTurns` columns.
 - [x] 3.2 Compose `align-right` into the existing status-based `cellClass` functions on
-      `responseStatusCode` (HTTP) and `durationMs` (Duration). Header labels stay left-aligned — only
-      cell content is right-aligned.
+      `responseStatusCode` (HTTP) and `durationMs` (Duration), and add `headerClass: 'align-right'` to
+      both.
 
 ## 4. Run Comparison Execution Results grid
 
@@ -43,7 +43,7 @@
       `<input>` and the read-only `<div>` fallback.
 - [x] 6.2 In `getGroupedSchemaColumn` (`components/Grid/columns/turn-columns.tsx`), pass
       `isRightAligned: true` in `cellRendererParams` for the `INTEGER`/`NUMBER` branch, and add
-      `cellClass: 'align-right'` to that column's `ColDef`.
+      `cellClass`/`headerClass: 'align-right'` to that column's `ColDef`.
 
 ## 7. Heat Map and Test Case Stability
 
@@ -76,23 +76,3 @@
 
 - [x] 10.1 Run lint, both typecheck gates (`typecheck`, `typecheck:specs`), and the full test suite with
        coverage; fix any regressions before considering this change complete.
-
-## 11. Header labels reverted to left-aligned
-
-Follow-up correction: right-aligning column header labels alongside their numeric cell content read
-worse than intended — headers stay left-aligned everywhere; only cell content is right-aligned.
-
-- [x] 11.1 Drop `headerClass: 'align-right'` from `rightAlignedColumn`
-      (`constants/grid-columns/configs.ts`) and the standalone `headerClass: 'align-right'` set on the
-      Extraction Result tab's HTTP/Duration columns (`Runs/View/utils.ts`).
-- [x] 11.2 Remove the `isRightAligned` header-alignment prop from `EllipsisHeader` and
-      `CompareRunIndexHeader` (and the `isRightAligned` parameter threaded through
-      `compareRunIndexHeaderDef` in `Runs/Compare/ExecutionResults/utils/columns.ts`) — these header
-      components no longer support right alignment.
-- [x] 11.3 Revert the pivot row-detail panel's field-label header row
-      (`Runs/View/RowDetails/ExecutionRowDetailPivotTable.tsx`,
-      `Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPivotTable.tsx`) to left-aligned;
-      the value cells below them (`PivotValueCell`) keep their right alignment.
-- [x] 11.4 Revert the heatmap column header label (`Common/HeatMap/HeatMapAxisHeader.tsx`) from
-      `text-end` back to left-aligned; heatmap cell values are unaffected.
-- [x] 11.5 Update the affected specs/tests accordingly.
