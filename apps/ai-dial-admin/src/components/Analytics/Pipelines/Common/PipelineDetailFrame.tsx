@@ -85,7 +85,12 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const isChanged = !isEqualSkippingUndefined(draftDocument, storedDocument);
 
   const shouldCheckFields = !isEditorEnabled;
-  const isGroupKeyMissing = draft.trigger?.kind === TriggerKind.Group && !form.grainKey;
+  // The save is barred only when there is nothing to send as `group_by`. The target's grain key is the
+  // default, not the requirement: where the read source reaches that key through an enrichment, the value
+  // is the qualified spelling the author chose, and a target the page could not resolve must not withhold
+  // a save from a declaration that already carries one.
+  const isGroupKeyMissing =
+    draft.trigger?.kind === TriggerKind.Group && !draft.trigger?.group_by?.trim() && !form.grainKey;
 
   const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
   const isChangeBarShown = isFullAdmin && (isChanged || hasJsonErrors);

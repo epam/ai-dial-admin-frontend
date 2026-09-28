@@ -8,6 +8,7 @@ import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import PipelineSharedFields from '@/src/components/Analytics/Pipelines/Common/PipelineSharedFields';
+import GroupByField from '@/src/components/Analytics/Pipelines/Enrich/GroupByField';
 import MemberSelectEditor from '@/src/components/Analytics/Pipelines/Enrich/MemberSelectEditor';
 import ReadyWhenEditor from '@/src/components/Analytics/Pipelines/Enrich/ReadyWhenEditor';
 import TransformSection from '@/src/components/Analytics/Pipelines/Enrich/TransformSection';
@@ -60,11 +61,15 @@ const EnrichSection: FC<Props> = ({ form }) => {
       {trigger?.kind === TriggerKind.Schedule && (
         <CronField value={trigger.cron ?? ''} onChange={(cron) => onTriggerChange({ cron })} />
       )}
-      {/* The grouping key is not stated here: it is the target's grain key, which the facts row above
-          already presents — among values the caller cannot change, where it reads as derived rather than
-          as a field someone forgot to enable. */}
       {trigger?.kind === TriggerKind.Group && (
         <div className="flex flex-col gap-y-6">
+          <GroupByField
+            value={trigger.group_by}
+            grainKey={form.grainKey}
+            fields={form.sourceFields}
+            onChange={(group_by) => onTriggerChange({ group_by })}
+          />
+
           <ReadyWhenEditor
             readyWhen={trigger.ready_when}
             sourceName={form.sourceName}
