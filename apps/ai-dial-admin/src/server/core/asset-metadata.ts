@@ -109,8 +109,8 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
     parts = { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
   }
   return {
-    // A schema resource's name is its percent-encoded `$id`; rows show the `$id` while `path`
-    // stays encoded, since that is what the CRUD calls address.
+    // Schema metadata contains only the resource storage name, not the declared `$id` in the schema
+    // body. Decode it for list display while retaining the encoded `path` for CRUD calls.
     name: SCHEMA_RESOURCE_TYPES.has(type) ? fromCoreSchemaResourceName(parts.name) : parts.name,
     folderId: parts.folderId,
     path: parts.path,
@@ -364,14 +364,9 @@ export const mergeModelResource = (
 };
 
 /**
- * App runners are flat and unversioned like models, and additionally carry two conversions no other
- * type needs: the resource name is a percent-encoded `$id` (recovered here, since `$id` is the
- * runner's identity everywhere in the UI), and Core's `dial:applicationTypeRoutes` is a name-keyed
- * object that the route editors consume as an array.
- *
- * Unlike `mergeCatalogSchemaResource`, the decoded name still wins over the body's own `$id` here.
- * The two can differ for a runner created outside this console, with the same consequence — see that
- * function — but correcting it needs the app-runner capability's own delta, so it is left as is.
+ * App runners are flat and unversioned like models, and Core's `dial:applicationTypeRoutes` is a
+ * name-keyed object that the route editors consume as an array. The resource storage name and body
+ * `$id` are independent: Core addresses the blob by the former and resolves runners by the latter.
  */
 export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
@@ -380,10 +375,11 @@ export const mergeAppRunnerResource = (
   const { content: rest, validity } = splitValidityFields(content);
   const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA], content);
   const routes = fromCoreAppRoutes(content['dial:applicationTypeRoutes'] as CoreAppRunnerRoutes | undefined);
+  const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
   return {
     ...rest,
     _metadata: { ..._metadata, ...validity },
-    $id: fromCoreSchemaResourceName(_metadata.name),
+    $id: declaredId ?? fromCoreSchemaResourceName(_metadata.name),
     ...(routes && { 'dial:applicationTypeRoutes': routes }),
   } as DialAppRunnerResource;
 };

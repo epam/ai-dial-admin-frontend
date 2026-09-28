@@ -16,7 +16,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     const path = (await params.params).id;
-    const result = await getCatalogSchema(path, etag);
+    const result = await getCatalogSchema(decodeURIComponent(path), etag);
     etag = result?.etag || DEFAULT_ETAG;
     schema = result?.success ? (result.response as DialCatalogSchemaResource) : null;
 

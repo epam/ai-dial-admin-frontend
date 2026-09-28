@@ -35,7 +35,7 @@ export default async function Page(params: {
       const result = await getConfigFileAppRunner(decodeURIComponent(path));
       runner = result.success ? (result.data as unknown as DialAppRunnerResource) : null;
     } else {
-      runner = await getRunner(path, etag).then((res) => {
+      runner = await getRunner(decodeURIComponent(path), etag).then((res) => {
         etag = res?.etag || DEFAULT_ETAG;
         return res?.response as DialAppRunnerResource | null;
       });

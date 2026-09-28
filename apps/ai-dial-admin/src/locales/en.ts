@@ -230,6 +230,7 @@ export default {
     NoConfigurationSchema: 'No Configuration Scheme',
     InvalidAppRunner: 'App runner is not valid',
     InvalidCatalogSchema: 'Catalog schema is not valid',
+    ImmutableSchemaId: 'The declared schema id cannot be changed after creation.',
     IncompleteOptionList: 'Some options could not be loaded',
     OptionListUnavailable: 'This list could not be loaded from DIAL Core.',
     OptionListPartial: 'This list is incomplete — one of its two sources could not be read.',

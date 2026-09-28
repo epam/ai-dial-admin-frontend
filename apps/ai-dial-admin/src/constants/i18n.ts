@@ -219,6 +219,7 @@ export enum EntitiesI18nKey {
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   InvalidAppRunner = 'Entities.InvalidAppRunner',
   InvalidCatalogSchema = 'Entities.InvalidCatalogSchema',
+  ImmutableSchemaId = 'Entities.ImmutableSchemaId',
   IncompleteOptionList = 'Entities.IncompleteOptionList',
   OptionListUnavailable = 'Entities.OptionListUnavailable',
   OptionListPartial = 'Entities.OptionListPartial',

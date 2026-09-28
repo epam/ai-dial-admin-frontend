@@ -35,9 +35,7 @@ after `App Runners`, linking to a new `/platform-catalog-schemas` route.
 
 ### Requirement: Catalog-schema list is flat with create and delete actions
 
-The system SHALL render the catalog-schema list as a single, non-nested list of entries under the
-`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
-no folder-create, rename-folder, move-into-folder, or duplicate control.
+The system SHALL render the catalog-schema list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
 
 #### Scenario: List shows entries without a folder tree
 
@@ -52,14 +50,19 @@ no folder-create, rename-folder, move-into-folder, or duplicate control.
 #### Scenario: The folder tree offers no folder actions
 
 - **WHEN** a user opens the context menu on the catalog-schema folder tree's root
-- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered, since
-  the namespace is flat and a folder create would submit a schema with no `$id`
+- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered
 
-#### Scenario: Create action opens the create modal
+#### Scenario: Create action requests both identities
 
 - **WHEN** a user activates the create action in the list toolbar
-- **THEN** a modal opens requesting the schema's `$id`, entity type, and display name, and
-  submitting it creates the resource and refreshes the list
+- **THEN** a modal requests required storage `name`, declared `$id`, entity type, and display name fields
+- **AND** submitting valid values creates the resource and refreshes the list
+
+#### Scenario: Metadata-only row shows the storage name
+
+- **WHEN** the list renders a Catalog Schema whose Core storage name differs from its declared body `$id`
+- **THEN** the `Name` column shows the decoded storage name
+- **AND** no content request is made merely to display the declared `$id`
 
 #### Scenario: Bulk delete removes the selected schemas
 
@@ -123,38 +126,40 @@ stricter default.
 
 ### Requirement: `$id` is the schema identity and is immutable after creation
 
-The system SHALL treat the schema's `$id` as its user-facing identity — used in the detail route, the
-list `$id` column, and open-in-new-tab links — and SHALL allow editing it only in the create modal,
-not on the detail view. DIAL Core rejects a write that changes an existing resource's `$id`, and
-rejects a create whose `$id` is already registered, so the field is presented as fixed rather than
-offered and then refused.
+The system SHALL preserve and display the `$id` declared in a Catalog Schema's stored body. The loaded Core storage `name` and `_metadata.path` SHALL address the resource's route, update, and deletion; declared `$id` SHALL be used for merged-schema lookup and a deployment's `catalog_schema_id`. The system SHALL allow entering both values only on creation and SHALL reject any attempt to change an existing schema's declared `$id`, including through raw JSON editing.
 
-The `$id` the detail view shows SHALL be the one the stored schema declares. A schema created outside
-this console can live under a Core resource name that differs from its own `$id` — Core keys its
-merged configuration by `$id` and accepts any legal blob name — and for such a schema the console
-SHALL NOT replace the declared `$id` with the name decoded from the resource path, which would
-otherwise turn the next save into a rejected `$id` change.
+#### Scenario: Create keeps name and id separate
 
-#### Scenario: Id is editable on create
-
-- **WHEN** the create modal is open
-- **THEN** the `$id` field is editable and validated as a URL-shaped identifier
+- **WHEN** a user creates a schema with storage name `agent-schema` and `$id` `https://dial.example.com/catalog_schemas/agent`
+- **THEN** Core receives the create at the encoded `agent-schema` storage address
+- **AND** the stored schema body carries the typed URI as `$id`
 
 #### Scenario: Id is read-only on the detail view
 
 - **WHEN** a user opens an existing schema's Properties tab
-- **THEN** the `$id` is shown but cannot be edited
+- **THEN** the declared `$id` is shown but cannot be edited
 
 #### Scenario: A duplicate id is reported as the server's conflict
 
-- **WHEN** a user creates a schema whose `$id` is already registered in Core
+- **WHEN** Core rejects a create because either the storage name or declared `$id` is already registered
 - **THEN** an error notification carrying Core's conflict message is shown and the modal stays open
 
 #### Scenario: A schema stored under a different name keeps its declared id
 
-- **WHEN** a schema whose resource name differs from its own `$id` is opened
-- **THEN** the detail view shows the `$id` the schema body declares
-- **AND** saving it unchanged does not fail as an attempted `$id` change
+- **WHEN** a schema stored under `agent-schema` declares `$id` `https://dial.example.com/catalog_schemas/agent`
+- **THEN** the detail view and JSON editor show the declared `$id`
+- **AND** saving an unrelated edit addresses the loaded `_metadata.path` and preserves the declared `$id`
+
+#### Scenario: Existing schema deletes at its original storage path
+
+- **WHEN** an admin deletes a schema whose storage name differs from its declared `$id`
+- **THEN** the delete addresses the loaded storage path rather than a path reconstructed from `$id`
+
+#### Scenario: Raw JSON cannot change the declared id
+
+- **WHEN** an admin changes an existing schema's `$id` in the raw JSON editor and saves
+- **THEN** the save is blocked before a Core write
+- **AND** the edited JSON remains available for correction
 
 ### Requirement: Detail view renders exactly two tabs
 
@@ -383,3 +388,13 @@ read the configuration-file population by `$id`; a file-defined result SHALL ren
 
 - **WHEN** a user opens a detail address whose `$id` is in neither population
 - **THEN** the page reports it as not found rather than rendering an empty schema
+
+### Requirement: Catalog Schema storage name is visible but immutable after creation
+
+The detail view SHALL show the loaded Core storage name separately from declared `$id` and SHALL not offer a rename control for either identity.
+
+#### Scenario: Existing schema exposes both identities
+
+- **WHEN** an admin opens an API-written Catalog Schema whose storage name differs from `$id`
+- **THEN** the Properties view shows both values distinctly
+- **AND** neither value is editable
