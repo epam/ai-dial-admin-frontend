@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import MeasuresEditor from '@/src/components/Analytics/Pipelines/Aggregate/MeasuresEditor';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Measure } from '@/src/models/analytics/pipeline';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import {
@@ -20,7 +20,14 @@ const column = (name: string): AnalyticsTableColumn => ({
   type: AnalyticsFieldType.Long,
 });
 
-const sourceColumns = [column('deployment_price'), column('total_tokens')];
+const field = (name: string, source = name): AnalyticsEntityField => ({ name, source, type: AnalyticsFieldType.Long });
+
+// What the service accepts from this source: its own columns plus the ones an enrichment supplies.
+const sourceFields = [
+  field('deployment_price'),
+  field('total_tokens'),
+  field('usage_client_identity.client_session_id', 'client_session_id'),
+];
 const targetColumns = [column('total_price'), column('total_tokens')];
 
 const functions: QueryFunction[] = [
@@ -39,7 +46,7 @@ const renderEditor = (measures: Measure[] = [{ name: 'total_price', fn: 'sum', c
   render(
     <MeasuresEditor
       measures={measures}
-      columns={sourceColumns}
+      fields={sourceFields}
       targetColumns={targetColumns}
       functions={functions}
       onChange={vi.fn()}
@@ -79,6 +86,29 @@ describe('MeasuresEditor', () => {
     expect(screen.queryByText(functions[0].description)).toBeNull();
     await user.hover(screen.getByText('sum(value)'));
     expect(await screen.findByText(functions[0].description)).toBeTruthy();
+  });
+
+  // The service validates a measure against the source's entity, so a column an enrichment supplies is
+  // one it accepts — and the editor used to offer only the table's own columns, hiding them.
+  test('offers a column an enrichment supplies', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const column = screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` });
+    await user.click(within(column).getByRole('button'));
+
+    expect(await screen.findByRole('option', { name: /usage_client_identity\.client_session_id/ })).toBeTruthy();
+  });
+
+  // A column written in the JSON editor is not one the form may quietly drop.
+  test('keeps a column the entity does not offer', async () => {
+    const user = userEvent.setup();
+    renderEditor([{ name: 'total_price', fn: 'sum', column: 'written_by_hand.value' }]);
+
+    const column = screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` });
+    await user.click(within(column).getByRole('button'));
+
+    expect(await screen.findByRole('option', { name: 'written_by_hand.value' })).toBeTruthy();
   });
 
   test('offers the add control', () => {
