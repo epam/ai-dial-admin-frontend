@@ -74,6 +74,7 @@ export default {
     To: 'To',
     AddField: 'Add field',
     AddSubField: 'Add sub-field',
+    FieldNamesInvalid: 'Every field needs a name, unique among the fields next to it',
     MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',

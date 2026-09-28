@@ -149,6 +149,7 @@ export enum BasicI18nKey {
   To = 'Basic.To',
   AddField = 'Basic.AddField',
   AddSubField = 'Basic.AddSubField',
+  FieldNamesInvalid = 'Basic.FieldNamesInvalid',
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
   SelectAll = 'Basic.SelectAll',
