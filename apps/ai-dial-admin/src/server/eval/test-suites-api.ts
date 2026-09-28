@@ -244,6 +244,6 @@ export class TestSuitesApi extends BaseApi {
   }
 
   removeTestSuiteFile(id: string, fileName: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(`${TEST_SUITE_URL(id)}/files/${fileName}`, token);
+    return this.deleteAction(`${TEST_SUITE_URL(id)}/files/${encodeURIComponent(fileName)}`, token);
   }
 }

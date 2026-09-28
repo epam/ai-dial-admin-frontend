@@ -494,6 +494,15 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should encode file name in removeTestSuiteFile', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.removeTestSuiteFile('id', 'a#b?c/d.txt', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files/a%23b%3Fc%2Fd.txt`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
   test('Should call duplicateTestSuite', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const body = { name: 'Cloned Suite' };

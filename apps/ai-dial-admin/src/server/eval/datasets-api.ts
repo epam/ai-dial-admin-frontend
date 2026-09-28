@@ -1,5 +1,6 @@
 import { IF_MATCH } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
+import { CustomFile, DialFile } from '@/src/models/dial/file';
 import {
   Dataset,
   DatasetPublishBody,
@@ -23,6 +24,7 @@ export const DATASET_TEST_SUITES_URL = (id: string) => `${DATASET_URL(id)}/test-
 export const DATASET_CLONE_URL = (id: string) => `${DATASET_URL(id)}/clone`;
 export const DATASET_VISIBILITY_URL = (id: string) => `${DATASET_URL(id)}/visibility`;
 export const DATASET_PUBLISH_URL = (id: string) => `${DATASET_URL(id)}/publish`;
+export const DATASET_FILES_URL = (id: string) => `${DATASET_URL(id)}/files`;
 
 export class DatasetsApi extends BaseApi {
   getDatasets(
@@ -131,6 +133,18 @@ export class DatasetsApi extends BaseApi {
       file,
       token,
     );
+  }
+
+  getDatasetFiles(id: string, token: Token): Promise<CustomFile[] | null> {
+    return this.get(DATASET_FILES_URL(id), token);
+  }
+
+  uploadDatasetFiles(id: string, file: FormData, token: Token): Promise<ServerActionResponse<DialFile[]>> {
+    return this.postFiles(DATASET_FILES_URL(id), file, token);
+  }
+
+  removeDatasetFile(id: string, fileName: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(`${DATASET_FILES_URL(id)}/${encodeURIComponent(fileName)}`, token);
   }
 
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {
