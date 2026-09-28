@@ -40,19 +40,28 @@ interface Props {
   counts: PassFailErrorCounts;
   compact?: boolean;
   tooltipTitle?: string;
+  /**
+   * Rows that executed successfully but produced no threshold verdict. Opt-in: consumers that only
+   * classify pass/fail/error omit it and render three statuses as before.
+   */
+  notScored?: number;
+  /** Stacks the statuses one per line instead of wrapping them in a row, for a narrow column. */
+  isVertical?: boolean;
 }
 
-const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTitle }) => {
+const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTitle, notScored, isVertical }) => {
   const t = useI18n();
 
   const passLabel = t(RunsI18nKey.Pass);
   const failLabel = t(RunsI18nKey.Fail);
   const errorLabel = t(RunsI18nKey.ExecError);
+  const notScoredLabel = t(RunsI18nKey.NotScored);
 
   const breakdown = (
     <div
       className={classNames(
-        'flex flex-wrap items-center gap-y-1',
+        'flex gap-y-1',
+        isVertical ? 'flex-col items-start' : 'flex-wrap items-center',
         compact ? 'gap-x-2 dial-small-text' : 'gap-x-2 dial-tiny-text',
       )}
     >
@@ -77,6 +86,15 @@ const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTi
         label={errorLabel}
         compact={compact}
       />
+      {notScored != null && (
+        <StatusDot
+          className={STATUS_DOT_CLASSES.notScored}
+          icon={STATUS_DOT_ICONS.notScored}
+          count={notScored}
+          label={notScoredLabel}
+          compact={compact}
+        />
+      )}
     </div>
   );
 
@@ -96,6 +114,11 @@ const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTi
       <span>
         • {counts.error} {errorLabel}
       </span>
+      {notScored != null && (
+        <span>
+          • {notScored} {notScoredLabel}
+        </span>
+      )}
     </div>
   );
 
