@@ -17,6 +17,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -42,10 +43,11 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
 
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs = getAdapterTabs(t);
+  const tabs = getAdapterTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));

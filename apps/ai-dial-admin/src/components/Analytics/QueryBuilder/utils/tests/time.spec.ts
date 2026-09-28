@@ -10,12 +10,15 @@ import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics
 import {
   QueryExprType,
   QueryFilterNode,
+  QueryFnExpr,
   QueryGroup,
   QueryLogicalOperator,
   QueryOperator,
   QueryPredicate,
   QueryValueType,
 } from '@/src/models/analytics/query';
+import { QueryFunction } from '@/src/models/analytics/query-function';
+import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 const field = (name: string, type: AnalyticsFieldType): AnalyticsEntityField => ({ name, type, source: 'core' });
 
@@ -162,5 +165,121 @@ describe('liftTimeRange', () => {
       ),
     ).toBeNull();
     expect(liftTimeRange(undefined, 'request_time')).toBeNull();
+  });
+});
+
+describe('relative time bounds', () => {
+  const nowExpr: QueryFnExpr = { type: QueryExprType.Fn, name: 'now', args: [] };
+
+  const relativeExpr = (unit: string, amount: string): QueryFnExpr => ({
+    type: QueryExprType.Fn,
+    name: 'date_sub',
+    args: [
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: unit },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: amount },
+      nowExpr,
+    ],
+  });
+
+  const relativeGe = (unit: string, amount: string): QueryPredicate => ({
+    op: QueryOperator.Ge,
+    args: [{ type: QueryExprType.Field, name: 'request_time' }, relativeExpr(unit, amount)],
+  });
+
+  const nowLe: QueryPredicate = {
+    op: QueryOperator.Le,
+    args: [{ type: QueryExprType.Field, name: 'request_time' }, nowExpr],
+  };
+
+  // A catalog whose subtraction accepts fewer units than this deployment's presets need.
+  const NARROW_FUNCTIONS: QueryFunction[] = TEST_FUNCTIONS.map((fn) =>
+    fn.name === 'date_sub'
+      ? { ...fn, args: [{ ...fn.args[0], constraints: { allowed_values: ['second'] } }, fn.args[1], fn.args[2]] }
+      : fn,
+  );
+
+  test.each([
+    ['15m', 'minute', '15'],
+    ['24h', 'hour', '24'],
+    ['2d', 'day', '2'],
+  ])('preset %s serializes as a bound relative to the current instant', (period, unit, amount) => {
+    expect(timeRangePredicates('request_time', RANGE, period, TEST_FUNCTIONS)).toEqual([
+      relativeGe(unit, amount),
+      nowLe,
+    ]);
+  });
+
+  test('a custom range keeps serializing as two instants', () => {
+    expect(timeRangePredicates('request_time', RANGE, undefined, TEST_FUNCTIONS)).toEqual([
+      gePredicate(),
+      lePredicate(),
+    ]);
+  });
+
+  test('a catalog without the relative functions falls back to instants', () => {
+    expect(timeRangePredicates('request_time', RANGE, '30m', [])).toEqual([gePredicate(), lePredicate()]);
+  });
+
+  test('a catalog whose subtraction refuses the unit falls back to instants', () => {
+    expect(timeRangePredicates('request_time', RANGE, '30m', NARROW_FUNCTIONS)).toEqual([gePredicate(), lePredicate()]);
+  });
+
+  test('withTimeBound carries the relative pair into the filter', () => {
+    const bound = { field: 'request_time', range: RANGE, period: '1h' };
+
+    expect(withTimeBound(null, bound, TEST_FUNCTIONS)).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [relativeGe('hour', '1'), nowLe],
+    });
+  });
+
+  test('a relative pair lifts back to its preset, not to a range', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [relativeGe('day', '2'), nowLe] };
+    const lifted = liftTimeRange(filter, 'request_time', TEST_FUNCTIONS);
+
+    expect(lifted?.periodId).toBe('2d');
+    expect(lifted?.range).toBeUndefined();
+  });
+
+  test('a relative pair keeps the conditions around it', () => {
+    const filter: QueryGroup = {
+      op: QueryLogicalOperator.And,
+      args: [otherPredicate, relativeGe('minute', '30'), nowLe],
+    };
+    const lifted = liftTimeRange(filter, 'request_time', TEST_FUNCTIONS);
+
+    expect(lifted?.periodId).toBe('30m');
+    expect(lifted?.rest).toEqual(otherPredicate);
+  });
+
+  test('a relative span no preset offers stays a filter condition', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [relativeGe('hour', '7'), nowLe] };
+
+    expect(liftTimeRange(filter, 'request_time', TEST_FUNCTIONS)).toBeNull();
+  });
+
+  test('a lower bound with no matching upper bound stays a filter condition', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [relativeGe('minute', '30')] };
+
+    expect(liftTimeRange(filter, 'request_time', TEST_FUNCTIONS)).toBeNull();
+  });
+
+  test('a pair mixing a relative bound and an instant stays a filter condition', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [relativeGe('minute', '30'), lePredicate()] };
+
+    expect(liftTimeRange(filter, 'request_time', TEST_FUNCTIONS)).toBeNull();
+  });
+
+  test('a relative pair the catalog cannot express is not lifted', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [relativeGe('minute', '30'), nowLe] };
+
+    expect(liftTimeRange(filter, 'request_time', NARROW_FUNCTIONS)).toBeNull();
+    expect(liftTimeRange(filter, 'request_time', [])).toBeNull();
+  });
+
+  test('an absolute pair still lifts while the catalog is present', () => {
+    const filter: QueryGroup = { op: QueryLogicalOperator.And, args: [gePredicate(), lePredicate()] };
+
+    expect(liftTimeRange(filter, 'request_time', TEST_FUNCTIONS)?.range).toEqual(RANGE);
   });
 });

@@ -20,12 +20,18 @@ vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 
 describe('Platform application server actions', () => {
-  const platformApp: DialPlatformApplicationResource = {
+  // `path` no longer sits flat on a merged read — the fixture carries it under `_metadata`, the
+  // merge layer's graft — hence the double cast for the handful of members these cases care about.
+  const platformApp = {
     name: 'my-app',
-    path: 'platform/my-app',
     folderId: 'platform/',
     endpoint: 'http://mock',
-  } as DialPlatformApplicationResource;
+    _metadata: {
+      name: 'my-app',
+      path: 'platform/my-app',
+      folderId: 'platform/',
+    },
+  } as unknown as DialPlatformApplicationResource;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,15 +68,23 @@ describe('Platform application server actions', () => {
   // (FAIL_ON_UNKNOWN_PROPERTIES) — read-only/derived fields the merge reader adds must not round-trip
   // back onto a write, or Core rejects the whole body ("Failed to parse entity").
   test('createPlatformApplication strips read-only/derived fields before writing', async () => {
+    // `status`/`validationWarnings`/`author` exist only as `_metadata` grafts on a merged read; the
+    // flat `createdAt`/`updatedAt`/`reference` spellings are stripped too, and the exact-body
+    // assertions below prove none of them reaches Core.
     const appWithExtras = {
       ...platformApp,
-      status: 'valid',
-      validationWarnings: [{ field: 'endpoint' }],
-      author: 'Yauheni Osipau',
       createdAt: '1',
       updatedAt: '2',
       reference: 'b827783e-d894-467f-b790-d2e900cc8365',
-    } as DialPlatformApplicationResource;
+      _metadata: {
+        ...platformApp._metadata,
+        status: 'valid',
+        validationWarnings: [{ field: 'endpoint' }],
+        author: 'Yauheni Osipau',
+        createdAt: '1',
+        updatedAt: '2',
+      },
+    } as unknown as DialPlatformApplicationResource;
 
     await createPlatformApplication(appWithExtras);
 
@@ -85,15 +99,22 @@ describe('Platform application server actions', () => {
   });
 
   test('updatePlatformApplication strips read-only/derived fields before writing', async () => {
+    // Same shape as the create case above: grafts under `_metadata`, flat `ModifiedEntity` spellings
+    // stripped alongside.
     const appWithExtras = {
       ...platformApp,
-      status: 'valid',
-      validationWarnings: [{ field: 'endpoint' }],
-      author: 'Yauheni Osipau',
       createdAt: '1',
       updatedAt: '2',
       reference: 'b827783e-d894-467f-b790-d2e900cc8365',
-    } as DialPlatformApplicationResource;
+      _metadata: {
+        ...platformApp._metadata,
+        status: 'valid',
+        validationWarnings: [{ field: 'endpoint' }],
+        author: 'Yauheni Osipau',
+        createdAt: '1',
+        updatedAt: '2',
+      },
+    } as unknown as DialPlatformApplicationResource;
 
     await updatePlatformApplication(appWithExtras, 'etag-1');
 
@@ -105,6 +126,31 @@ describe('Platform application server actions', () => {
     expect(body).not.toHaveProperty('updatedAt');
     expect(body).not.toHaveProperty('reference');
     expect(body).toMatchObject({ name: 'my-app', endpoint: 'http://mock' });
+  });
+
+  test.each([
+    ['create', (app: any) => createPlatformApplication(app)],
+    ['update', (app: any) => updatePlatformApplication(app, 'etag-1')],
+  ])('carries catalog_schema_id and catalog_properties through a %s', async (_label, action) => {
+    await action({
+      ...platformApp,
+      catalog_schema_id: 'https://host/agent-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalog_schema_id: 'https://host/agent-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves an application carrying no catalog metadata untouched', async () => {
+    await updatePlatformApplication(platformApp, 'etag-1');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalog_schema_id');
+    expect(body).not.toHaveProperty('catalog_properties');
   });
 
   test('getPlatformApplication reads a platform-prefixed path with the caller-supplied etag', async () => {

@@ -8,7 +8,7 @@ import { FallbackIcon } from '@/src/components/Header/User/UserMenu/UserIcon';
 const noop = () => undefined;
 
 const DisplayNameCellRenderer = (params: ICellRendererParams) => {
-  const displayName = (params.data?.displayName as string) ?? (params.value as string);
+  const displayName = params.data?.displayName || (params.data?.name as string) || (params.value as string);
   const id = params.data?.name as string | undefined;
   const showId = Boolean(id) && id !== displayName;
   const iconUrl = params.data?.iconUrl as string | undefined;

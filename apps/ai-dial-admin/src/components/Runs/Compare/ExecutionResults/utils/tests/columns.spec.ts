@@ -137,6 +137,34 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(runPrimary?.cellClassRules).toBeUndefined();
   });
 
+  test('execution index, HTTP, and Duration columns are right-aligned', () => {
+    type ExecCol = {
+      colId?: string;
+      cellClass?: string;
+      headerComponentParams?: { isRightAligned?: boolean };
+    };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecCol[] };
+    const executionColIds = [
+      'runIndex',
+      'cmp_runIndex',
+      'requestIndex',
+      'cmp_requestIndex',
+      'turnIndex',
+      'cmp_turnIndex',
+      'http',
+      'cmp_http',
+      'duration',
+      'cmp_duration',
+    ];
+
+    executionColIds.forEach((colId) => {
+      const col = exec.children.find((child) => child.colId === colId);
+      expect(col?.cellClass).toBe('align-right');
+      expect(col?.headerComponentParams?.isRightAligned).toBe(true);
+    });
+  });
+
   test('execution columns are hidden by default', () => {
     type ExecCol = { colId?: string; hide?: boolean };
     const cols = getCompareColumnsCompare([makeRow()]);
@@ -287,6 +315,33 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(metricGroup.children[2].filter).toBe('agNumberColumnFilter');
     expect(metricGroup.children[2].floatingFilter).toBe(true);
     expect(metricGroup.children[2].floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
+  });
+
+  test('primary, secondary, and delta metric columns are right-aligned', () => {
+    const rows = [
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+        _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5 } } }),
+      }),
+    ];
+    const cols = getCompareColumnsCompare(rows);
+    const metricGroup = cols[3] as {
+      children: {
+        colId?: string;
+        cellClass?: string;
+        headerClass?: string;
+        headerComponentParams?: { isRightAligned?: boolean };
+      }[];
+    };
+    const primaryPrecision = metricGroup.children[0];
+    const secondaryPrecision = metricGroup.children[1];
+    const deltaPrecision = metricGroup.children[2];
+
+    expect(primaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(deltaPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(primaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
+    expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
   });
 
   test('metric columns highlight added, changed, and removed pairs', () => {
@@ -453,5 +508,28 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
 
     expect(primaryPrecision.cellClassRules).toBeUndefined();
     expect(secondaryPrecision.cellClassRules).toBeUndefined();
+  });
+
+  test('keeps the execution index pairs hidden even when their positions vary across both runs', () => {
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        runIndex: 0,
+        requestIndex: 0,
+        turnIndex: 0,
+        _compared: makeResult({ runIndex: 0, requestIndex: 0, turnIndex: 0 }),
+      }),
+      makeRow({
+        runIndex: 1,
+        requestIndex: 1,
+        turnIndex: 1,
+        _compared: makeResult({ runIndex: 1, requestIndex: 1, turnIndex: 1 }),
+      }),
+    ]);
+
+    const execution = cols.find((col) => (col as ColGroupDef).headerName === EXECUTION_GROUP_HEADER) as ColGroupDef;
+    const indexPairs = ['runIndex', 'cmp_runIndex', 'requestIndex', 'cmp_requestIndex', 'turnIndex', 'cmp_turnIndex'];
+    const hiddenColIds = (execution.children as ColDef[]).filter((col) => col.hide).map((col) => col.colId);
+
+    expect(hiddenColIds).toEqual(expect.arrayContaining(indexPairs));
   });
 });

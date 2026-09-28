@@ -14,9 +14,15 @@ export const dateTimeColumn: Partial<ColDef> = {
   filterValueGetter: (params) => toDateOrNull(params.data?.[params.colDef.field || '']),
 };
 
-export const numericColumn: Partial<ColDef> = {
+/** Right-aligns cell and header content. Split out of `numericColumn` so a column with its own
+ * `valueGetter`/comparator/filter can opt into alignment alone. */
+export const rightAlignedColumn: Partial<ColDef> = {
   cellClass: 'align-right',
   headerClass: 'align-right',
+};
+
+export const numericColumn: Partial<ColDef> = {
+  ...rightAlignedColumn,
   comparator: numberValueComparator,
   valueFormatter: ({ value }) => numberValueFormatter(value),
   filterValueGetter: ({ data, colDef }) => toNumberOrNull(data?.[colDef.field || '']),

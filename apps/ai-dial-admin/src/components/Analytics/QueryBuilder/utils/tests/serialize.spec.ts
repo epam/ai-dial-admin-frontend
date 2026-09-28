@@ -17,7 +17,12 @@ import {
   createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryBuilderState, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
+import {
+  FilterOperandKind,
+  FilterPredicateNode,
+  QueryBuilderState,
+  QueryBuilderWarning,
+} from '@/src/models/analytics/query-builder';
 import {
   QueryLogicalOperator,
   QueryMode,
@@ -643,5 +648,130 @@ describe('dropped-entry detection', () => {
     root.children.push({ ...createPredicate(), fn: 'lower', args: [{ field: 'project_id' }] });
 
     expect(hasDroppedCondition(root, TEST_FUNCTIONS)).toBe(false);
+  });
+});
+
+describe('serializeNode — function right operands', () => {
+  const conditionAgainst = (node: Partial<FilterPredicateNode>) => {
+    const group = createGroup();
+    group.children.push({ ...createPredicate(), field: 'request_time', op: QueryOperator.Ge, ...node });
+    return group;
+  };
+
+  const relativeArgs = (unit: string, amount: string) => [
+    { literal: unit },
+    { literal: amount },
+    { call: { fn: 'now', args: [] } },
+  ];
+
+  test("a function right operand serializes as the predicate's second fn expression", () => {
+    const group = conditionAgainst({
+      rightKind: FilterOperandKind.Function,
+      rightFn: 'date_sub',
+      rightArgs: relativeArgs('minute', '30'),
+    });
+
+    expect(serializeNode(group, TEST_FUNCTIONS)).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [
+        {
+          op: QueryOperator.Ge,
+          args: [
+            { type: 'field', name: 'request_time' },
+            {
+              type: 'fn',
+              name: 'date_sub',
+              args: [
+                { type: 'value', value_type: QueryValueType.String, value: 'minute' },
+                { type: 'value', value_type: QueryValueType.Integer, value: '30' },
+                { type: 'fn', name: 'now', args: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('a nested call fills the expression argument of a left operand too', () => {
+    const group = conditionAgainst({
+      fn: 'date_sub',
+      args: relativeArgs('hour', '2'),
+      field: '',
+      value: '0',
+      valueType: QueryValueType.Timestamp,
+    });
+    const filter = serializeNode(group, TEST_FUNCTIONS) as { args: { args: unknown[] }[] };
+
+    expect(filter.args[0].args[0]).toEqual({
+      type: 'fn',
+      name: 'date_sub',
+      args: [
+        { type: 'value', value_type: QueryValueType.String, value: 'hour' },
+        { type: 'value', value_type: QueryValueType.Integer, value: '2' },
+        { type: 'fn', name: 'now', args: [] },
+      ],
+    });
+  });
+
+  test('a right operand whose function is not picked yet drops the condition', () => {
+    const group = conditionAgainst({ rightKind: FilterOperandKind.Function, rightFn: null, rightArgs: [] });
+
+    expect(serializeNode(group, TEST_FUNCTIONS)).toBeNull();
+    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('an incomplete nested call drops the condition and is flagged', () => {
+    const group = conditionAgainst({
+      rightKind: FilterOperandKind.Function,
+      rightFn: 'date_sub',
+      // The nested call names a function the catalog does not serve, so it fills nothing.
+      rightArgs: [{ literal: 'minute' }, { literal: '30' }, { call: { fn: 'unserved', args: [] } }],
+    });
+
+    expect(serializeNode(group, TEST_FUNCTIONS)).toBeNull();
+    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a right-operand function left behind by a switch back to a literal is ignored', () => {
+    const group = conditionAgainst({
+      rightKind: FilterOperandKind.Literal,
+      rightFn: 'date_sub',
+      rightArgs: [],
+      value: '1750000000000',
+      valueType: QueryValueType.Timestamp,
+    });
+
+    expect(serializeNode(group, TEST_FUNCTIONS)).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [
+        {
+          op: QueryOperator.Ge,
+          args: [
+            { type: 'field', name: 'request_time' },
+            { type: 'value', value_type: QueryValueType.Timestamp, value: '1750000000000' },
+          ],
+        },
+      ],
+    });
+    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('in keeps its array shape', () => {
+    const group = conditionAgainst({
+      op: QueryOperator.In,
+      field: 'event_kind',
+      value: 'chat, embedding',
+      valueType: QueryValueType.String,
+    });
+    const filter = serializeNode(group, TEST_FUNCTIONS) as { args: { args: unknown[] }[] };
+
+    expect(filter.args[0].args[1]).toEqual({
+      type: 'array',
+      items: [
+        { type: 'value', value_type: QueryValueType.String, value: 'chat' },
+        { type: 'value', value_type: QueryValueType.String, value: 'embedding' },
+      ],
+    });
   });
 });

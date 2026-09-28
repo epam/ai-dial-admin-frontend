@@ -24,6 +24,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -42,9 +43,10 @@ interface Props {
   oAuthCode?: string | null;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
+  catalogSchemas?: CatalogSchemaOptions;
 }
 
-const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, catalogSchemas }) => {
   const t = useI18n();
   const { featureFlags } = useAppContext();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets, featureFlags);
@@ -91,7 +93,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       let updateFunction = updateToolset;
       if (newVersion) {
         updatedEntity = { ...addNewVersion(updatedEntity, newVersion), auth_settings: {} } as unknown as AssetToolset;
-        updateFunction = createToolset as (
+        updateFunction = createToolset as unknown as (
           asset: AssetToolset,
         ) => Promise<ServerActionResponse<Record<string, unknown>>>;
       }
@@ -104,8 +106,16 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                 ? getCreateNotificationTitle(ApplicationRoute.AssetsToolsets, t)
                 : getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
               newVersion
-                ? getCreateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t)
-                : getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+                ? getCreateNotificationDescription(
+                    ApplicationRoute.AssetsToolsets,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  )
+                : getUpdateNotificationDescription(
+                    ApplicationRoute.AssetsToolsets,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  ),
             ),
           );
           if (isNeedToMove) {
@@ -116,14 +126,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 router.push(
                   getUrnForEntity(ApplicationRoute.AssetsToolsets, {
-                    name: updatedEntity.name,
-                    path: changePath(updatedEntity.path, newPath),
+                    name: updatedEntity.name || updatedEntity._metadata?.name || '',
+                    path: changePath(updatedEntity.path || updatedEntity._metadata?.path || '', newPath),
                   }),
                 );
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
           }
           router.refresh();
@@ -157,7 +167,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       >
         <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
-          selectedToolset={selectedToolset as DialToolsetResource}
+          selectedToolset={selectedToolset as unknown as DialToolsetResource}
           signInToolset={signInToolset}
           signOutToolset={signOutToolset}
           oAuthCode={oAuthCode}
@@ -178,6 +188,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             activeTab={activeTab}
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedToolset}
           />
         )}

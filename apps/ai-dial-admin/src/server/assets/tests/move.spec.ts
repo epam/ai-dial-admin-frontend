@@ -19,17 +19,11 @@ describe('Server :: Assets :: move :: moveAssets', () => {
     expect(result).toEqual([{ success: true }]);
   });
 
-  test('duplicateName reapplies the source version suffix', async () => {
+  test('duplicateName uses the name verbatim — a `__` in the source name is part of the name, not a version to graft', async () => {
     const assetApi = { move: vi.fn().mockResolvedValue({ success: true }) } as any;
 
     await moveAssets(assetApi, 'token' as any, ResourceType.PROMPT, ['folder/name__2'], 'folder/', false, 'copy');
 
-    expect(assetApi.move).toHaveBeenCalledWith(
-      'token',
-      ResourceType.PROMPT,
-      'folder/name__2',
-      'folder//copy__2',
-      false,
-    );
+    expect(assetApi.move).toHaveBeenCalledWith('token', ResourceType.PROMPT, 'folder/name__2', 'folder//copy', false);
   });
 });

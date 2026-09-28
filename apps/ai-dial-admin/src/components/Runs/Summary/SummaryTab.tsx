@@ -36,6 +36,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [metricInfoByName, setMetricInfoByName] = useState<Record<string, MetricInfo>>({});
+  const [metricSnapshotCount, setMetricSnapshotCount] = useState<number | undefined>(undefined);
   const { selectedStatistic } = summaryState;
 
   const enrichedMetricScores = useMemo(
@@ -80,12 +81,14 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
       setMetricScores(null);
       setMetricOptions([]);
       setMetricInfoByName({});
+      setMetricSnapshotCount(undefined);
       return;
     }
 
     let cancelled = false;
     setMetricScores(null);
     setMetricInfoByName({});
+    setMetricSnapshotCount(undefined);
 
     executeStructuredQuery(buildMetricScoresQuery(run.id)).then((result) => {
       if (!cancelled) {
@@ -98,6 +101,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
         return;
       }
       setMetricOptions(toMetricOptions(snapshots));
+      setMetricSnapshotCount(snapshots?.length ?? 0);
 
       const declarationIds = Array.from(
         new Set((snapshots ?? []).map((snapshot) => snapshot.metricDeclarationId).filter(Boolean)),
@@ -136,7 +140,11 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
       <div className="flex shrink-0 flex-col gap-8">
         <Header run={run} testSuite={testSuite} />
-        <Analytics run={run} overallScore={enrichedMetricScores?.overallScore} />
+        <Analytics
+          run={run}
+          overallScore={enrichedMetricScores?.overallScore}
+          metricSnapshotCount={metricSnapshotCount}
+        />
       </div>
       <div className={SUMMARY_PANELS_GRID_CLASS}>
         <MetricScoresSection

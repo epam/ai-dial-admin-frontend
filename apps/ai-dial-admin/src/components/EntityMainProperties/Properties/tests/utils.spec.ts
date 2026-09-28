@@ -3,7 +3,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getDisplayNameError, getVersionError } from '../utils';
 import { describe, expect, test } from 'vitest';
 
-const mockT = (key: string, params?: Record<string, number>) => {
+const mockT = (key: string, params?: Record<string, string | number>) => {
   if (params) {
     return `${key}`;
   }

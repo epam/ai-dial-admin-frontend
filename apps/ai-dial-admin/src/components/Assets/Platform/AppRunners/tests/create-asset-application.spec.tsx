@@ -15,10 +15,6 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: false }),
 }));
 
-vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
-  createApp: vi.fn().mockResolvedValue({ success: true }),
-}));
-
 // The header's own gating is covered by its wrapper; here it only has to expose the children slot the
 // create action is passed through, which `View.spec.tsx`'s save-only stub deliberately does not.
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({

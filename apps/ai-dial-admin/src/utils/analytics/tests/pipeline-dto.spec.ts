@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { FreshnessMode, Pipeline, PipelineKind, PipelinePriority, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, SourceMode } from '@/src/models/analytics/pipeline-ui';
 import {
   buildPipelineDto,
@@ -14,13 +13,14 @@ import {
 const pipeline: Pipeline = {
   name: 'existing',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform: { type: TransformType.Sql, outputs: { rating: 'max(rating)' } },
+  response_schema: { type: 'object' },
   target: 'turn_feedback',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',
+  outputs: [{ name: 'rating', column: 'rating' }],
   generation: 3,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-02-01T00:00:00Z',
@@ -34,8 +34,12 @@ describe('Utils :: analytics :: toPipelineDraft', () => {
     getReadOnlyMembers().forEach((key) => expect(draft).not.toHaveProperty(key));
   });
 
+  test('drops the derived output mapping the compiled projection carries', () => {
+    expect(toPipelineDraft(pipeline)).not.toHaveProperty('outputs');
+  });
+
   test('keeps a member no control presents', () => {
-    expect(toPipelineDraft({ ...pipeline, cadence: '60s' }).cadence).toBe('60s');
+    expect(toPipelineDraft({ ...pipeline, filter: 'success = true' }).filter).toBe('success = true');
   });
 
   test('does not mutate the pipeline it was given', () => {
@@ -79,19 +83,27 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
   });
 
   test('never sends a member the API refuses', () => {
-    const dto = buildPipelineDto({ ...draft, generation: 9, state: {} } as PipelineDraft) as Record<string, unknown>;
+    const dto = buildPipelineDto({ ...draft, generation: 9, state: {} } as PipelineDraft);
 
     getReadOnlyMembers().forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 
   test('drops an empty array rather than sending it', () => {
-    expect(buildPipelineDto({ ...draft, output_bindings: [], input_bindings: [] })).not.toHaveProperty(
-      'output_bindings',
-    );
+    expect(buildPipelineDto({ ...draft, inputs: [] })).not.toHaveProperty('inputs');
+  });
+
+  test('drops an emptied inputs map rather than sending it', () => {
+    const dto = buildPipelineDto({ ...draft, transform: { type: TransformType.Llm, model: 'gpt-4o', inputs: {} } });
+
+    expect(dto.transform).not.toHaveProperty('inputs');
+  });
+
+  test('drops an emptied advanced block, which means the runner defaults', () => {
+    expect(buildPipelineDto({ ...draft, advanced: {} })).not.toHaveProperty('advanced');
   });
 
   test('keeps a knob deliberately set to zero', () => {
-    expect(buildPipelineDto({ ...draft, batch_chunk: 0 }).batch_chunk).toBe(0);
+    expect(buildPipelineDto({ ...draft, advanced: { rows_per_call: 0 } }).advanced?.rows_per_call).toBe(0);
   });
 
   test('keeps enabled false', () => {
@@ -108,19 +120,51 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
     expect(dto.trigger).toEqual({ kind: TriggerKind.OnIngest });
   });
 
+  // Registration collects no trigger, so a pipeline can reach a save before one is chosen. An object
+  // carrying no kind is read as a declared trigger and refused; an absent one is an unwritten member.
+  test('sends no trigger at all when the kind is unset', () => {
+    const dto = buildPipelineDto({ ...draft, trigger: undefined });
+
+    expect(dto).not.toHaveProperty('trigger');
+  });
+
+  test('sends a schedule for an aggregate whatever its draft says, its kind being no choice', () => {
+    const dto = buildPipelineDto({ kind: PipelineKind.Aggregate, name: 'rollup', target: 'usage_daily' });
+
+    expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule });
+  });
+
   test('sends the cron of a scheduled trigger', () => {
     const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' } });
 
-    expect(dto.trigger.cron).toBe('0 0 * * * *');
+    expect(dto.trigger?.cron).toBe('0 0 * * * *');
   });
 
-  test('sends the grouping key from the resolved grain key, not from the draft', () => {
+  // The service takes the bare grain key only where the read source declares it, and demands
+  // `<enrichment>.<grain key>` where the source reaches it through one — so the author's spelling is sent.
+  test('sends the grouping key the author chose', () => {
     const dto = buildPipelineDto(
-      { ...draft, trigger: { kind: TriggerKind.Group, group_by: 'stale_key', ready_when: { idle: '5m' } } },
+      {
+        ...draft,
+        trigger: {
+          kind: TriggerKind.Group,
+          group_by: 'usage_client_identity.response_id',
+          ready_when: { idle: '5m' },
+        },
+      },
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.group_by).toBe('response_id');
+    expect(dto.trigger?.group_by).toBe('usage_client_identity.response_id');
+  });
+
+  test('falls back to the resolved grain key when the draft names none', () => {
+    const dto = buildPipelineDto(
+      { ...draft, trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } } },
+      { grainKey: 'response_id' },
+    );
+
+    expect(dto.trigger?.group_by).toBe('response_id');
   });
 
   test('omits ready_when when every condition is blank', () => {
@@ -157,7 +201,7 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
       { grainKey: 'response_id' },
     );
 
-    expect(dto.trigger.member_select).toEqual({ limit: 5 });
+    expect(dto.trigger?.member_select).toEqual({ limit: 5 });
   });
 });
 
@@ -194,10 +238,9 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       ...toPipelineDraft(pipeline),
       group_by: [{ column: 'chat_id' }],
       measures: [{ name: 'n', fn: 'count' }],
-      freshness: { mode: FreshnessMode.Periodic },
-    }) as Record<string, unknown>;
+    });
 
-    ['group_by', 'measures', 'freshness'].forEach((key) => expect(dto).not.toHaveProperty(key));
+    ['group_by', 'measures'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 
   test('an aggregate declaration sends no enrichment member', () => {
@@ -207,15 +250,10 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       target: 'sessions',
       inputs: ['log'],
       trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
-      evaluator_name: 'feedback-rollup',
-      evaluator_version: 2,
-      output_bindings: [{ column: 'a', var: 'a' }],
-      cadence: '60s',
-      priority: PipelinePriority.Live,
-    }) as Record<string, unknown>;
+      transform: { type: TransformType.Llm, model: 'gpt-4o' },
+      advanced: { scan_every: '60s' },
+    });
 
-    ['evaluator_name', 'evaluator_version', 'output_bindings', 'cadence', 'priority'].forEach((key) =>
-      expect(dto).not.toHaveProperty(key),
-    );
+    ['transform', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));
   });
 });

@@ -51,7 +51,7 @@ describe('Queries server actions', () => {
   });
 
   test('getSavedQuery passes the id + token', async () => {
-    (analyticsDataApi.getSavedQuery as any).mockResolvedValue(null);
+    (analyticsDataApi.getSavedQuery as any).mockResolvedValue({ success: false, status: 404 });
 
     await getSavedQuery('sq_1');
 

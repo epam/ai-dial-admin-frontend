@@ -1,7 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { createToolset as createAssetToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createToolset } from '@/src/app/[lang]/toolsets/actions';
 import { getContainer, getImage, getMCPContainers } from '@/src/app/actions/deployments';
 import { toolSetsApi } from '@/src/app/api/api';
@@ -71,7 +70,6 @@ export default async function Page(params: Params) {
             containers?.map((container) => container.name as string).filter((name) => name !== container.name) || []
           }
           createEntity={createToolset}
-          createEntityAsAsset={createAssetToolset}
           entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
         />
       </ToolsetFolderProvider>

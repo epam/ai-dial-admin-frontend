@@ -1,10 +1,12 @@
-import { JWT } from 'next-auth/jwt';
 import { expect, test, describe, vi, beforeEach } from 'vitest';
+
+import { NextAuthToken } from '@/src/models/auth';
 
 import {
   streamRequest,
   createReadableStream,
   getContentType,
+  getFileNameFromContentDisposition,
   buildFilenameDisposition,
 } from '../create-stream-request';
 import { sendRequest } from '../send-request';
@@ -14,7 +16,12 @@ vi.mock('../send-request', () => ({
 }));
 
 describe('Utils :: api :: streamRequest', () => {
-  const mockToken: JWT = { access_token: 'token' };
+  const mockToken: NextAuthToken = {
+    access_token: 'token',
+    providerId: 'keycloak',
+    userId: 'user-1',
+    refreshToken: 'refresh',
+  };
   const mockUrl = 'https://example.com/file';
   const mockFileName = 'file.txt';
 
@@ -72,6 +79,33 @@ describe('Utils :: api :: streamRequest', () => {
     );
   });
 
+  test('uses the backend response filename over the caller-supplied fallback (e.g. ZIP export)', async () => {
+    const mockStream = createMockReadableStream();
+    const mockResponse = new Response(mockStream, {
+      headers: { 'Content-Disposition': 'attachment; filename="dataset_123_export.zip"' },
+    });
+
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
+
+    const response = await streamRequest(mockUrl, 'dataset_123_export.csv', mockToken, false);
+
+    expect(response.headers.get('Content-Disposition')).toBe(
+      `attachment; filename="dataset_123_export.zip"; filename*=UTF-8''dataset_123_export.zip`,
+    );
+    expect(response.headers.get('Content-Type')).toBe('application/zip');
+  });
+
+  test('forwards the backend response Content-Type as-is when present', async () => {
+    const mockStream = createMockReadableStream();
+    const mockResponse = new Response(mockStream, { headers: { 'Content-Type': 'application/zip' } });
+
+    vi.mocked(sendRequest).mockResolvedValue(mockResponse);
+
+    const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
+
+    expect(response.headers.get('Content-Type')).toBe('application/zip');
+  });
+
   describe('getContentType', () => {
     test('returns null for unknown extension', () => {
       expect(getContentType('file.unknown')).toBe(null);
@@ -79,6 +113,25 @@ describe('Utils :: api :: streamRequest', () => {
 
     test('returns "image/svg+xml" for unknown extension', () => {
       expect(getContentType('file.svg')).toBe('image/svg+xml');
+    });
+  });
+
+  describe('getFileNameFromContentDisposition', () => {
+    test('returns null when the header is missing', () => {
+      expect(getFileNameFromContentDisposition(null)).toBe(null);
+      expect(getFileNameFromContentDisposition(undefined)).toBe(null);
+    });
+
+    test('extracts a quoted filename', () => {
+      expect(getFileNameFromContentDisposition('attachment; filename="export.zip"')).toBe('export.zip');
+    });
+
+    test('extracts an unquoted filename', () => {
+      expect(getFileNameFromContentDisposition('attachment; filename=export.zip')).toBe('export.zip');
+    });
+
+    test('returns null when no filename is present', () => {
+      expect(getFileNameFromContentDisposition('inline')).toBe(null);
     });
   });
 
@@ -113,7 +166,7 @@ describe('Utils :: api :: streamRequest', () => {
       vi.mocked(sendRequest).mockImplementation(() => {
         throw new Error('fail');
       });
-      const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
+      const promise = streamRequest('url', 'file.txt', mockToken, true);
       expect(promise).toBeInstanceOf(Promise);
     });
   });

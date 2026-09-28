@@ -3,10 +3,11 @@ import { FC, useCallback } from 'react';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import AppRunnerExtendedProperties from './ExtendedProperties';
-import AppRunnerSource from './AppRunnerSource';
 import { ApplicationRoute } from '@/src/types/routes';
+import AppRunnerSource from './AppRunnerSource';
+import AppRunnerExtendedProperties from './ExtendedProperties';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -28,6 +29,7 @@ const SchemeProperties: FC<Props> = ({
   isModal,
   view = ApplicationRoute.ApplicationRunners,
 }) => {
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -68,6 +70,7 @@ const SchemeProperties: FC<Props> = ({
           isEntityImmutable={isImmutable}
           isModal={isModal}
           view={ApplicationRoute.ApplicationRunners}
+          isReadOnlyAdmin={isReadOnlyAdmin}
         />
       )}
     </div>

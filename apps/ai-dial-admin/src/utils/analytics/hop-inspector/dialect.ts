@@ -1,4 +1,4 @@
-import { HopDialect, HopDialectMessage } from '@/src/models/analytics/conversations-trace';
+import { HopDialect, HopDialectMessage } from '@/src/models/analytics/sessions-trace';
 import { chatCompletionsMessagesOf } from '@/src/utils/analytics/hop-inspector/chat-completions';
 import { withoutBlankEdges } from '@/src/utils/analytics/hop-inspector/envelope';
 import { messagesDialectMessagesOf } from '@/src/utils/analytics/hop-inspector/messages';

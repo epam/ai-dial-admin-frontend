@@ -10,11 +10,8 @@ interface Params {
 export const useAggregateForm = (params: Params = {}) => {
   const base = usePipelineForm(params);
   const { draft } = base;
-  const hasInput = Boolean(draft.inputs?.length);
-  const hasGroupKeys = Boolean(draft.group_by?.length);
-  const hasMeasures = Boolean(draft.measures?.length);
+  // A measure the service cannot compile, unlike one the author has simply not written yet.
   const hasDistinctWithoutColumn = Boolean(draft.measures?.some((measure) => measure.distinct && !measure.column));
-  const isValid = base.isSharedValid && hasInput && hasGroupKeys && hasMeasures && !hasDistinctWithoutColumn;
-  return { ...base, isValid, hasInput, hasGroupKeys, hasMeasures, hasDistinctWithoutColumn };
+  return { ...base, hasDistinctWithoutColumn, hasFieldErrors: base.hasSharedFieldErrors || hasDistinctWithoutColumn };
 };
 export type AggregateFormState = ReturnType<typeof useAggregateForm>;

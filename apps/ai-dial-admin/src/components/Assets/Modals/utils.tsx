@@ -4,8 +4,8 @@ import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/Se
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { enrichConversationWithVersion } from '@/src/components/Assets/BaseAssetList/utils';
-import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 
 export const getGridColumns = (
   view: ApplicationRoute,
@@ -66,9 +66,9 @@ export const getGridColumns = (
     // Name+Author instead, matching the flat column set the row's own list view already uses.
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
+      const firstItemToDelete = itemsToDelete?.[0] as { bucket?: string; folderId?: string } | undefined;
       const isPlatformBucketDelete =
-        !hasFoldersToDelete &&
-        isPlatformBucketPath((itemsToDelete?.[0] as { folderId?: string } | undefined)?.folderId);
+        !hasFoldersToDelete && isPlatformBucketRow(firstItemToDelete?.bucket, firstItemToDelete?.folderId);
       if (isPlatformBucketDelete) {
         return [GRID_NAME_COLUMN, AUTHOR_COLUMN];
       }
@@ -76,7 +76,8 @@ export const getGridColumns = (
     }
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Conversations:
-      return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
+      // Versionless rows — a single stored resource each, so no version tags column.
+      return hasFoldersToDelete ? [NAME_COLUMN('Display name')] : [GRID_NAME_COLUMN];
     case ApplicationRoute.Files:
       return hasFoldersToDelete
         ? [NAME_COLUMN('Display name'), SIZE_COLUMN('Size')]
@@ -124,6 +125,10 @@ export const getDeleteModalTitle = (
     case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner),
+      });
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.CatalogSchemas) : t(FileManagerI18nKey.CatalogSchema),
       });
     case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
@@ -212,6 +217,13 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1
+          ? t(FileManagerI18nKey.CatalogSchemas)
+          : t(FileManagerI18nKey.CatalogSchema)
+        ).toLowerCase(),
       });
     case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
@@ -360,11 +372,14 @@ export const processAssetsData = (
     return asset;
   });
 
+  // A versionless row (prompt/conversation) is a single stored resource — no same-name version
+  // merging, no per-row version selection state.
+  if (isVersionlessAssetView(view)) {
+    return processedAssets;
+  }
+
   return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
     if (curr.nodeType === DialFileNodeType.ITEM) {
-      if (view === ApplicationRoute.Conversations && !curr.version) {
-        curr = enrichConversationWithVersion(curr);
-      }
       curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
       const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
       if (existing) {

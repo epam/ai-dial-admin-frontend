@@ -27,8 +27,9 @@ const RunCancelModal: FC<Props> = ({ run, onClose, onCancelRun, onSuccess }) => 
   const onConfirm = useCallback(async () => {
     if (!run.id) return;
 
-    const res = await onCancelRun(run.id);
     onClose();
+
+    const res = await onCancelRun(run.id);
 
     if (res.success) {
       showNotification(

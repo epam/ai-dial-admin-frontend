@@ -25,6 +25,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   step?: string | number;
   min?: string | number;
   max?: string | number;
+  isRightAligned?: boolean;
 }
 
 const EditableCellRenderer = ({
@@ -48,6 +49,7 @@ const EditableCellRenderer = ({
   step,
   min,
   max,
+  isRightAligned,
 }: EditableCellRendererParams) => {
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
@@ -105,7 +107,7 @@ const EditableCellRenderer = ({
   }, [value, valueFormatter, translatedPlaceholder]);
 
   if (isReadonly) {
-    return <div>{correctValue}</div>;
+    return <div className={classNames(isRightAligned && 'text-right')}>{correctValue}</div>;
   }
 
   return (
@@ -126,6 +128,7 @@ const EditableCellRenderer = ({
           !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
           required && (correctValue == null || correctValue === '') && 'dial-input-error',
           isMaxValue && 'placeholder-primary',
+          isRightAligned && 'text-right',
         )}
       />
       {showTriangle && !hideTriangle && (

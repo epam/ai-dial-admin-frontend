@@ -1,5 +1,3 @@
-import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
-
 export enum PipelineKind {
   Enrich = 'enrich',
   Aggregate = 'aggregate',
@@ -9,11 +7,6 @@ export enum TriggerKind {
   OnIngest = 'on_ingest',
   Schedule = 'schedule',
   Group = 'group',
-}
-
-export enum PipelinePriority {
-  Live = 'live',
-  Backfill = 'backfill',
 }
 
 export enum SortDirection {
@@ -34,9 +27,15 @@ export enum TruncUnit {
   Month = 'month',
 }
 
-export enum FreshnessMode {
-  Periodic = 'periodic',
-  Incremental = 'incremental',
+/**
+ * Which projection a read returns. `Source` is the service's default and omits every resolved member;
+ * `Compiled` is that same declaration plus what the service derived. `Compiled` resolves for
+ * `PipelineKind.Enrich` alone — the service refuses it for a cross-kind listing and for a single read of
+ * any other kind — so a read names it only where it is served, never unconditionally.
+ */
+export enum PipelineView {
+  Source = 'source',
+  Compiled = 'compiled',
 }
 
 export interface PipelinesListFilters {
@@ -71,15 +70,90 @@ export interface PipelineTrigger {
   member_select?: MemberSelect;
 }
 
-export interface InputBinding {
-  var: string;
+// Always echoed in the object form, whichever spelling the declaration used, so a read never hands back
+// two shapes of one member.
+export interface PipelineVar {
   column?: string;
   jsonata?: string;
 }
 
-export interface OutputBinding {
+export interface PipelineAdvanced {
+  scan_every?: string;
+  rows_per_scan?: number;
+  rows_per_call?: number;
+  rate_rpm?: number;
+  sample_fraction?: number;
+}
+
+/** Derived by the service from the transform's outputs and the target's columns; never sent back. */
+export interface PipelineOutput {
+  name: string;
   column: string;
-  var: string;
+  jsonata?: string;
+}
+
+export enum TransformType {
+  Llm = 'llm',
+  Sql = 'sql',
+}
+
+export enum TransformPreset {
+  ChatCompletion = 'chat_completion',
+}
+
+/**
+ * The pre-`outputs` output shape, carried only by a declaration folded from an evaluator that predates
+ * `outputs`. Read-only to the console: it is served on the authored projection and accepted on a patch, so
+ * a read-modify-write keeps it, but no control authors one.
+ */
+export interface TransformVar {
+  name: string;
+  type: string;
+  sql?: string;
+  jsonata?: string;
+}
+
+/** The object form of an llm output on the wire; a bare string is the same thing with only `prose`. */
+export interface TransformOutputBody {
+  prose?: string;
+  values?: string[];
+  jsonata?: string;
+}
+
+/**
+ * `null` is what the service stores for an output declared with no refinement at all — the column already
+ * carries the description, so the empty object the console sends is normalised away on write.
+ */
+export type TransformOutputSpec = string | TransformOutputBody | null;
+
+/**
+ * What a transform produces for one target column. The column owns the type, the enum domain and the
+ * description, so an output carries only what the column cannot — and at most one of `values` / `jsonata`,
+ * which the service refuses together.
+ */
+export interface TransformOutput {
+  name: string;
+  prose?: string;
+  values?: string[];
+  jsonata?: string;
+  sql?: string;
+}
+
+/**
+ * `inputs` and `outputs` are keyed by name on the wire — the input's variable name, the output's target
+ * column — and the outputs map is served in declaration order, which is the order the model fills the
+ * fields in.
+ */
+export interface PipelineTransform {
+  type: TransformType;
+  preset?: TransformPreset;
+  model?: string;
+  params?: Record<string, unknown>;
+  request_template?: string;
+  inputs?: Record<string, PipelineVar>;
+  outputs?: Record<string, TransformOutputSpec>;
+  output_vars?: TransformVar[];
+  response_schema?: Record<string, unknown>;
 }
 
 export interface TruncSpec {
@@ -99,10 +173,6 @@ export interface Measure {
   column?: string;
   where?: string;
   distinct?: boolean;
-}
-
-export interface Freshness {
-  mode: FreshnessMode;
 }
 
 export interface PipelineClamp {
@@ -143,21 +213,18 @@ export interface CreatePipelineDto {
   target: string;
   inputs?: string[];
   filter?: string;
-  trigger: PipelineTrigger;
+  /** Absent until the author picks a kind: the service stores a pipeline that declares no trigger yet. */
+  trigger?: PipelineTrigger;
   enabled?: boolean;
-  evaluator_name?: string;
-  evaluator_version?: number;
-  input_bindings?: InputBinding[];
-  output_bindings?: OutputBinding[];
-  sampling?: number;
-  cadence?: string;
-  batch_scan_limit?: number;
-  batch_chunk?: number;
-  rate_rpm?: number;
-  priority?: PipelinePriority;
+  transform?: PipelineTransform;
+  advanced?: PipelineAdvanced;
   group_by?: GroupKey[];
   measures?: Measure[];
-  freshness?: Freshness;
+}
+
+/** Body of the enable/disable toggle, which is a state change rather than a re-declaration. */
+export interface PipelineEnabledDto {
+  enabled: boolean;
 }
 
 export interface Pipeline extends Omit<CreatePipelineDto, 'enabled'> {
@@ -166,15 +233,11 @@ export interface Pipeline extends Omit<CreatePipelineDto, 'enabled'> {
   created_at: string;
   updated_at: string;
   state?: PipelineState;
-  evaluator?: Evaluator;
   grain_key?: string;
   version_column?: string;
-}
-
-export interface PipelineEvaluatorSummary {
-  name: string;
-  version: number;
-  type: EvaluatorType;
+  outputs?: PipelineOutput[];
+  /** Composed by the service from the target's columns and the transform's outputs; never sent back. */
+  response_schema?: Record<string, unknown>;
 }
 
 export interface PipelineListItem {
@@ -182,18 +245,10 @@ export interface PipelineListItem {
   kind: PipelineKind;
   target: string;
   inputs?: string[];
-  trigger: PipelineTrigger;
+  trigger?: PipelineTrigger;
   enabled: boolean;
   generation: number;
   updated_at: string;
-  evaluator_name?: string;
-  evaluator_version?: number;
-  evaluator?: PipelineEvaluatorSummary;
-  grain_key?: string;
-  version_column?: string;
-}
-
-export interface PipelineReadResult<T> {
-  data: T | null;
-  isForbidden: boolean;
+  /** The declaration's own transform type, so the listing names it without a compiled projection. */
+  transform_type?: TransformType;
 }

@@ -11,13 +11,32 @@ export const CORE_CONFIG_FILE_URL = 'v1/admin/config/file';
  * for every caller — the file map's keys are themselves the secrets. Deriving the supported set from
  * the route pattern instead would make the client appear to support it and fail only at runtime.
  *
- * The remaining types are limited to the ones a picker on an asset surface actually needs; widening
- * this set is a deliberate act, not a side effect of adding an enum member.
+ * `Models`, `Routes`, `Applications`, and `Toolsets` were added for `config-file-entity-views` — the
+ * config-file-backed admin-grid list/detail surface for those types. Widening this set is a
+ * deliberate act, not a side effect of adding an enum member.
+ *
+ * `Schemas` was added for the same surface's seventh covered type, App Runners: Core's `schemas`
+ * config-file type is that entity's file-sourced population (confirmed against Core's
+ * `FileConfigController` — `listFileConfigSchemas` is documented as "file-sourced application type
+ * schemas", the same term App Runners uses for itself, and `entitySource()` resolves it to
+ * `config.getApplicationTypeSchemas()`).
+ *
+ * `CatalogSchemas` stays readable because the Catalog Schemas file root lists it and its detail route
+ * falls back to the configuration-file half (`config.getCatalogSchemas()`, keyed by `$id`) when no
+ * bucket resource exists. Dropping the member would answer `TypeNotReadable` and 404 every
+ * file-declared schema a deployment points at.
  */
 export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new Set([
   ConfigFileEntityType.Interceptors,
   ConfigFileEntityType.Roles,
   ConfigFileEntityType.Settings,
+  ConfigFileEntityType.Models,
+  ConfigFileEntityType.Routes,
+  ConfigFileEntityType.Applications,
+  ConfigFileEntityType.Toolsets,
+  ConfigFileEntityType.Schemas,
+  ConfigFileEntityType.CatalogSchemas,
+  ConfigFileEntityType.Translators,
 ]);
 
 /** The single settings entry Core exposes — `settings` is a singleton, not a listable collection. */

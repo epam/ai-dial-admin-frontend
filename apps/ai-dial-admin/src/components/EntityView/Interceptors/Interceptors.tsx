@@ -19,7 +19,6 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -27,7 +26,7 @@ import { hasConfigEntityOrigin } from '@/src/utils/config-entities/source-column
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
-import { AssetInterceptorOrigin, AssetInterceptorTagged } from './models';
+import { AssetInterceptorOrigin, AssetInterceptorTagged, InterceptorOption } from './models';
 import {
   getInterceptorsColumnDefs,
   getInterceptorsGridData,
@@ -79,9 +78,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { interceptors: appRunnerInterceptors } = useAssetRunnerDetails(appRunner);
-  const [availableInterceptors, setAvailableInterceptors] = useState<
-    (DialInterceptor | (BaseEntity & AssetInterceptorTagged))[]
-  >([]);
+  const [availableInterceptors, setAvailableInterceptors] = useState<(DialInterceptor | InterceptorOption)[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
   const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(providedGlobalInterceptors ?? null);
@@ -173,7 +170,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, interceptors, needsAssetMerge]);
 
   const onAddInterceptors = useCallback(
-    (interceptors: DialInterceptor[]) => {
+    (interceptors: (DialInterceptor | InterceptorOption)[]) => {
       if (isAppRunnerView) {
         onChangeEntity({
           ...entity,

@@ -10,8 +10,10 @@ import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import {
   ROW_DETAIL_CELL_BASE,
   ROW_DETAIL_FIELD_INDENT,
+  ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
@@ -50,21 +52,27 @@ const DetailRow: FC<Props> = ({
   const actionProps = getCompareDiffCellProps(diffKind, 'action');
   const showOpenDiff = primaryOverflow || secondaryOverflow;
   const isStatusRow = row.fieldKey === EXECUTION_STATUS_FIELD_KEY && !row.isMetric;
+  const isRightAligned = isRightAlignedRowDetailField(row);
 
   return (
     <div className="contents group">
       <div
+        data-field-key={row.fieldKey}
         className={mergeClasses(
           ROW_DETAIL_CELL_BASE,
           ROW_DETAIL_FIELD_INDENT,
           'pr-3 flex items-center',
           fieldProps.className,
         )}
+        style={{ scrollMarginTop: ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP }}
         {...diffCellDataAttr(fieldProps)}
       >
         <DialEllipsisTooltip text={row.label} className="dial-small-text text-primary min-w-0" />
       </div>
-      <div className={mergeClasses(ROW_DETAIL_CELL_BASE, valueProps.className)} {...diffCellDataAttr(valueProps)}>
+      <div
+        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
+        {...diffCellDataAttr(valueProps)}
+      >
         {isStatusRow ? (
           <StatusValue raw={row.primaryRaw} />
         ) : (
@@ -73,11 +81,15 @@ const DetailRow: FC<Props> = ({
             isFailed={row.primaryFailed}
             isScoreIndicator={row.isScoreIndicator}
             failedLabel={failedLabel}
+            isRightAligned={isRightAligned}
             onOverflowChange={setPrimaryOverflow}
           />
         )}
       </div>
-      <div className={mergeClasses(ROW_DETAIL_CELL_BASE, valueProps.className)} {...diffCellDataAttr(valueProps)}>
+      <div
+        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
+        {...diffCellDataAttr(valueProps)}
+      >
         {hasComparedMatch ? (
           isStatusRow ? (
             <StatusValue raw={row.secondaryRaw} />
@@ -87,6 +99,7 @@ const DetailRow: FC<Props> = ({
               isFailed={row.secondaryFailed}
               isScoreIndicator={row.isScoreIndicator}
               failedLabel={failedLabel}
+              isRightAligned={isRightAligned}
               onOverflowChange={setSecondaryOverflow}
             />
           )
@@ -94,7 +107,14 @@ const DetailRow: FC<Props> = ({
           <span className="text-secondary dial-small-text">{noMatchLabel}</span>
         )}
       </div>
-      <div className={mergeClasses(ROW_DETAIL_CELL_BASE, deltaProps.className)} {...diffCellDataAttr(deltaProps)}>
+      <div
+        className={mergeClasses(
+          ROW_DETAIL_CELL_BASE,
+          row.isNumeric && row.isMetric && 'text-right',
+          deltaProps.className,
+        )}
+        {...diffCellDataAttr(deltaProps)}
+      >
         {hasComparedMatch && row.isNumeric && row.isMetric ? (
           <CompareMetricDeltaValue primaryRaw={row.primaryRaw} secondaryRaw={row.secondaryRaw} />
         ) : null}

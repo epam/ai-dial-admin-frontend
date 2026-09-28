@@ -209,11 +209,13 @@ describe('ConfigurationPreview.utils', () => {
     const emptyResponse: DeploymentImportPreviewResponse = {
       mcpDeployments: [],
       adapterDeployments: [],
+      applicationDeployments: [],
       interceptorDeployments: [],
       nimDeployments: [],
       inferenceDeployments: [],
       mcpImageDefinitions: [],
       adapterImageDefinitions: [],
+      applicationImageDefinitions: [],
       interceptorImageDefinitions: [],
       globalImageBuildDomainWhitelist: null,
     };

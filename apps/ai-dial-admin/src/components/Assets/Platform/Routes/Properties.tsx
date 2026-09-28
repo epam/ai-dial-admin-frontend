@@ -34,6 +34,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { AttachmentPaths, RouteOutput } from '@/src/models/dial/route';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   asset: DialRouteResource;
@@ -209,6 +210,7 @@ const RouteAssetProperties: FC<Props> = ({ asset, originalAsset, onChange }) => 
         <div className={classNames(asset.response && 'hidden')}>
           <UpstreamSecretWarning originalUpstreams={originalAsset.upstreams} editedUpstreams={asset.upstreams} />
           <UpstreamEndpoints
+            view={ApplicationRoute.PlatformRoutes}
             disabled={isReadOnlyAdmin}
             entity={asset}
             onChangeEntity={onChange}

@@ -7,6 +7,7 @@ import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ResourceAuthentication from '@/src/components/Assets/Resources/Auth/ResourceAuthentication';
 import ResourceAuthHeader from '@/src/components/Assets/Resources/Auth/ResourceAuthHeader';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -27,27 +28,33 @@ import { useI18n } from '@/src/locales/client';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { Toolset } from '@/src/models/dial/toolset';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   selectedToolset: DialToolsetResource;
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialToolsetResource) => void;
   isPublication?: boolean;
 }
 
-const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
+const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+
+  // A merged read carries folder and name only in `_metadata`; the create flow seeds them flat.
+  const folderId = selectedToolset.folderId ?? selectedToolset._metadata?.folderId ?? '';
+  const resourceName = selectedToolset.name || selectedToolset._metadata?.name || '';
 
   const headerPostfix = useMemo(() => {
     return (
       <>
         <ResourceAuthHeader toolset={selectedToolset} />
-        <FoldersStorageLabel asset={selectedToolset} />
+        <FoldersStorageLabel asset={{ folderId }} />
       </>
     );
-  }, [selectedToolset]);
+  }, [selectedToolset, folderId]);
 
   return (
     <div className="flex flex-col">
@@ -98,9 +105,9 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
 
         {/* The platform bucket is flat — no folder tree to move into (design.md's `platform-toolsets`
             capability) — so this control is meaningless there and is hidden rather than shown-but-inert. */}
-        {!isPublication && !isPlatformBucketPath(selectedToolset.folderId) && (
+        {!isPublication && !isPlatformBucketPath(folderId) && (
           <FilePath
-            value={selectedToolset.folderId}
+            value={folderId}
             label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
@@ -111,9 +118,13 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
             view={ApplicationRoute.AssetsToolsets}
           />
         )}
-        <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} isAsset />
+        <ToolsetEndpoint
+          entity={selectedToolset}
+          onChange={onChange as (entity: Toolset | DialToolsetResource) => void}
+          isAsset
+        />
         <ResourceAuthentication
-          name={selectedToolset.name || ''}
+          name={resourceName}
           authSettings={selectedToolset.auth_settings}
           redirectUrl={TOOLSET_AUTH_REDIRECT_URL}
           onChange={(auth_settings, forward_per_request_key) =>
@@ -134,6 +145,14 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           }}
         />
         <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} isAsset />
+        {!isPublication && (
+          <CatalogSchemaField
+            schemaId={selectedToolset.catalog_schema_id}
+            options={catalogSchemas?.options}
+            optionsError={catalogSchemas?.error}
+            onChange={(catalog_schema_id) => onChange({ ...selectedToolset, catalog_schema_id })}
+          />
+        )}
       </div>
     </div>
   );

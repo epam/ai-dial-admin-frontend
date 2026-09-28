@@ -53,3 +53,19 @@ The user-resource (World C) routes `/assets-applications`, `/assets-toolsets`, `
 #### Scenario: Asset Applications page remains accessible at its original URL
 - **WHEN** a user navigates to `/<lang>/assets-applications`
 - **THEN** the system renders the Asset Applications list page (no change in behavior)
+
+### Requirement: Platform entity detail pages are addressed by the [id] segment alone
+The six platform entity detail pages SHALL be addressed by the entity's plain `[id]` path segment,
+without any additional query parameter carrying the entity's path. The existing `?path=<encodedPath>`
+pattern from the previous `/assets-*` routes SHALL NOT be carried over.
+
+#### Scenario: Clean URL produced for a platform entity detail page
+- **WHEN** a user navigates to a platform entity detail page (e.g. a Model, Interceptor, Route,
+  Role, Key, or App Runner)
+- **THEN** the browser address bar shows `/<lang>/platform-<type>/<id>` with no `?path=` query
+  parameter
+
+#### Scenario: Stale `?path=` URL is handled
+- **WHEN** a user navigates to `/<lang>/platform-<type>/<id>?path=<encodedPath>` (e.g. from a
+  stale bookmark)
+- **THEN** the page renders the entity detail view, ignoring the `path` query parameter

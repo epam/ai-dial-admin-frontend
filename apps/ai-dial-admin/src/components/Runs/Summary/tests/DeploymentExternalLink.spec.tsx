@@ -123,7 +123,7 @@ describe('DeploymentExternalLink', () => {
       <DeploymentExternalLink
         suiteContext={{
           suiteType: SuiteType.McpTool,
-          mcpDeploymentRef: { id: 'mcp-1', name: 'MCP Server' },
+          mcpDeploymentRef: { id: 'mcp-1', name: 'MCP Server', type: 'mcp' },
         }}
       />,
     );

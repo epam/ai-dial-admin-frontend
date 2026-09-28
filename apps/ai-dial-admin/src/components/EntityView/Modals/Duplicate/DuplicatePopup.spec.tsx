@@ -16,7 +16,9 @@ describe('DuplicatePopup', () => {
 
   const baseEntity = { name: 'oldName', displayName: 'oldDisplay', displayVersion: '1.0' };
   const baseProps = {
-    view: 'Simple',
+    // A route `isSimpleEntity` treats as simple and `RoutesForCheckingUniqueName` leaves out, so the
+    // base cases render the plain form and duplicate without a uniqueness round trip.
+    view: ApplicationRoute.Keys,
     isModalOpen: true,
     names: ['existing'],
     entity: baseEntity,

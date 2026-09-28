@@ -11,7 +11,12 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
 }));
 
 vi.mock('@/src/components/Common/SchemaGrid/SchemaGrid', () => ({
-  default: ({ isReadonly }: any) => <div>schema-grid:readonly={String(isReadonly)}</div>,
+  default: ({ isReadonly, schema, onChange }: any) => (
+    <div>
+      <div>schema-grid:readonly={String(isReadonly)}</div>
+      <button onClick={() => onChange(schema)}>emit-schema</button>
+    </div>
+  ),
 }));
 
 const ENDPOINT = 'dial:applicationTypeSchemaEndpoint';
@@ -56,6 +61,35 @@ describe('AppRunnerAssetParameters', () => {
     expect(screen.queryByText(EntitiesI18nKey.NoConfigurationSchema)).not.toBeInTheDocument();
   });
 
+  test('Should merge the grid schema into the runner without dropping its properties', async () => {
+    const properties = {
+      attachment: {
+        type: 'string',
+        format: 'dial-file-encoded',
+        'dial:file': true,
+        'dial:meta': { 'dial:propertyKind': 'client' },
+      },
+    };
+    const onChange = vi.fn();
+
+    render(
+      <AppRunnerAssetParameters
+        runner={runner({ properties } as Partial<DialAppRunnerResource>)}
+        onChange={onChange}
+      />,
+    );
+    (await screen.findByText('emit-schema')).click();
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ properties }), undefined);
+  });
+
+  /**
+   * Deliberately unlike the catalog-schema Parameters tab, which renders its grid with no properties
+   * at all. The gate this pins also covers an endpoint-owned schema that resolved empty, where the
+   * grid is read-only and has nothing to add; the endpoint-less case below is the same dead end that
+   * tab fixed, left to this capability's own change. A failed resolve never reaches it — the test
+   * above pins that it returns `ResolvedSchemaFailed` instead.
+   */
   test('Should show the no-parameters state when the runner genuinely has none', async () => {
     render(<AppRunnerAssetParameters runner={runner()} onChange={vi.fn()} />);
 

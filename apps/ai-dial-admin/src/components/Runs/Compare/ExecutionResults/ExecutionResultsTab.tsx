@@ -195,7 +195,8 @@ const ExecutionResultsTab: FC<Props> = ({
       if (!event.data) return;
       cellClickHandledRef.current = true;
       const colId = event.column?.getColId() ?? event.colDef?.colId ?? event.colDef?.field ?? null;
-      onOpenRowDetail(event.data, { focusFieldKey: mapGridColToPivotField(colId) });
+      const mappedFieldKey = mapGridColToPivotField(colId);
+      onOpenRowDetail(event.data, { focusFieldKey: mappedFieldKey });
     },
     [onOpenRowDetail],
   );

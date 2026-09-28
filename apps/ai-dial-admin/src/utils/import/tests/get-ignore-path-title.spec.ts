@@ -22,7 +22,7 @@ describe('getIgnorePathTitles', () => {
     expect(getIgnorePathTitles(ApplicationRoute.AssetsApplications, t)).toBe(ApplicationsI18nKey.ApplicationPaths);
   });
 
-  test('returns empty string for unknown route', () => {
-    expect(getIgnorePathTitles(undefined, t)).toBe('');
+  test('returns empty string for a route with no ignore-path title', () => {
+    expect(getIgnorePathTitles(ApplicationRoute.Models, t)).toBe('');
   });
 });

@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import {
+  assetApi,
+  configFileApi,
+  externalServiceConsentApi,
+  externalServiceOpsApi,
+  toolsetOpsApi,
+} from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -17,6 +24,8 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  getConfigFileApplication,
+  getConfigFileApplications,
   signInExternalService,
   signOutExternalService,
   grantExternalServiceConsent,
@@ -25,12 +34,48 @@ import {
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 vi.mock('@/src/server/applications/exim');
 vi.mock('@/src/server/applications/zip-exim');
+
+const resourceBase = {
+  created_at: 0,
+  updated_at: 0,
+  description_keywords: [],
+  dependencies: [],
+  interceptors: [],
+  icon_url: '',
+  reference: 'ref',
+  max_retry_attempts: 0,
+  forward_auth_token: false,
+};
+
+// `DialApplicationResource` requires the whole Core payload; the tests care about a handful of members,
+// so the factory carries the rest and the payload assertions match on what each case is about.
+// A fetched entity carries its identity grafts under `_metadata` (the merge layer's contract) while
+// the update flow resolves `folderId`/`version` flat via `getEntityForUpdate` — the factory sets both
+// spellings so either resolution path is exercised.
+const appResource = (overrides: Partial<DialApplicationResource> = {}): DialApplicationResource => ({
+  ...resourceBase,
+  // No `name` default: these cases assert the resource path the action builds, and `getVersionedName`
+  // folds the name into it — a fixture name would change every expected path.
+  folderId: 'public',
+  version: '1.0',
+  input_attachment_types: [],
+  application_properties: {},
+  _metadata: {
+    name: '',
+    path: 'applications/public/my-app__1.0',
+    folderId: 'public',
+    version: '1.0',
+    nodeType: DialFileNodeType.ITEM,
+  },
+  ...overrides,
+});
 
 describe('Assets application :: server actions', () => {
   beforeEach(() => {
@@ -126,14 +171,12 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateApp(
-      {
+      appResource({
         folderId: 'public',
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
-      },
+      }),
       'etag',
     );
     expect(getUserToken).toHaveBeenCalled();
@@ -141,16 +184,24 @@ describe('Assets application :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.APPLICATION,
       'public__1.0',
-      {
+      expect.objectContaining({
         folderId: undefined,
-        nodeType: DialFileNodeType.FOLDER,
         application_properties: { key: 'value' },
         defaults: { key: 'value' },
-        path: undefined,
         version: undefined,
         source: undefined,
         display_version: '1.0',
-      },
+      }),
+      { etag: 'etag' },
+    );
+    // The whole `_metadata` graft — identity and `nodeType` alike — is deleted before Core sees the
+    // body. `objectContaining` treats an absent key as unequal to `undefined`, so absence is asserted
+    // with the negative matcher instead.
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
       { etag: 'etag' },
     );
     expect(result).toBe(RESPONSE_MOCK);
@@ -160,12 +211,11 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await updateApp(
-      {
+      appResource({
         folderId: 'public',
-        path: 'test',
         version: '1.0',
         interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
-      },
+      }),
       'etag',
     );
 
@@ -184,13 +234,11 @@ describe('Assets application :: server actions', () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateApp(
-      {
+      appResource({
         folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
         version: '1.0',
         max_input_attachments: 2000,
-      },
+      }),
       'etag',
     );
 
@@ -201,34 +249,45 @@ describe('Assets application :: server actions', () => {
   test('Should call createApp action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+      }),
+    );
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'public__1.0', {
-      folderId: undefined,
-      nodeType: DialFileNodeType.FOLDER,
-      path: undefined,
-      version: undefined,
-      source: undefined,
-      displayVersion: '1.0',
-      application_type_schema_id: undefined,
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({
+        folderId: undefined,
+        version: undefined,
+        source: undefined,
+        displayVersion: '1.0',
+        application_type_schema_id: undefined,
+      }),
+    );
+    // See the `updateApp` case for why absence of the `_metadata` graft needs the negative matcher.
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.not.objectContaining({ _metadata: expect.anything(), nodeType: expect.anything() }),
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('createApp keeps a non-empty interface entry when calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    await createApp({
-      folderId: 'public',
-      path: 'test',
-      version: '1.0',
-      interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
-    });
+    await createApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
+      }),
+    );
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -243,13 +302,13 @@ describe('Assets application :: server actions', () => {
   test('createApp rejects an invalid viewerUrl before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-      viewer_url: 'https://exa mple.com',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        viewer_url: 'https://exa mple.com',
+      }),
+    );
 
     expect(result.success).toBe(false);
     expect(assetApi.put).not.toHaveBeenCalled();
@@ -262,12 +321,12 @@ describe('Assets application :: server actions', () => {
       errorMessage: 'Application already exists',
     });
 
-    const result = await createApp({
-      folderId: 'public',
-      nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
-    });
+    const result = await createApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+      }),
+    );
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toBe('Application already exists');
@@ -401,6 +460,26 @@ describe('Assets application :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(externalServiceConsentApi.withdraw).toHaveBeenCalledWith(TOKEN_MOCK, 'public/als code apps/my app', 'dial');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileApplications action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileApplications();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileApplication action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileApplication('my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Applications, 'my-app');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

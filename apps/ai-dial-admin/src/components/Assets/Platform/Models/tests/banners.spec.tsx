@@ -9,9 +9,22 @@ import UpstreamSecretWarning from '../UpstreamSecretWarning';
 const asset = (overrides: Partial<DialModelResource> = {}) =>
   ({ name: 'gpt-4', path: 'gpt-4', folderId: '', ...overrides }) as DialModelResource;
 
+// Core's invalid-model projection grafts `status`/`validationWarnings` under `_metadata` on the merged
+// read — `InvalidModelBanner` reads them from there.
+const invalidAsset = (overrides: Partial<NonNullable<DialModelResource['_metadata']>> = {}) =>
+  asset({
+    _metadata: {
+      name: 'gpt-4',
+      path: 'gpt-4',
+      folderId: '',
+      status: DialModelResourceStatus.Invalid,
+      ...overrides,
+    },
+  });
+
 describe('Model asset :: invalid-model banner', () => {
   test('Should warn that an invalid model is not part of the served configuration', () => {
-    render(<InvalidModelBanner asset={asset({ status: DialModelResourceStatus.Invalid })} />);
+    render(<InvalidModelBanner asset={invalidAsset()} />);
 
     expect(screen.getByText(ModelAssetI18nKey.InvalidTitle)).toBeInTheDocument();
   });
@@ -19,8 +32,7 @@ describe('Model asset :: invalid-model banner', () => {
   test('Should name the offending field rather than discarding the warnings', () => {
     render(
       <InvalidModelBanner
-        asset={asset({
-          status: DialModelResourceStatus.Invalid,
+        asset={invalidAsset({
           validationWarnings: [{ field: 'interceptors[0]', message: "Interceptor 'missing' not found in config" }],
         })}
       />,
@@ -30,7 +42,9 @@ describe('Model asset :: invalid-model banner', () => {
   });
 
   test('Should render nothing for a valid model', () => {
-    const { container } = render(<InvalidModelBanner asset={asset({ status: DialModelResourceStatus.Valid })} />);
+    const { container } = render(
+      <InvalidModelBanner asset={invalidAsset({ status: DialModelResourceStatus.Valid })} />,
+    );
 
     expect(container).toBeEmptyDOMElement();
   });

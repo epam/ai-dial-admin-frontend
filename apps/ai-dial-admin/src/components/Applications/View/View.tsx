@@ -53,8 +53,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { visualizerConnector, featureFlags } = useAppContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t));
+  const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t, featureFlags));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 
@@ -64,8 +65,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreApplication, setCoreApplication] = useState<DialApplication | null>(null);
   const [discardKey, setDiscardKey] = useState(0);
-
-  const { visualizerConnector } = useAppContext();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -85,9 +84,9 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
     const appRunner = getAppRunner(originalApplication, props.applicationSchemes);
 
     if (originalApplication.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
-      setTabs(getApplicationTabs(t).toSpliced(1, 0, toolsTab(t)));
+      setTabs(getApplicationTabs(t, featureFlags).toSpliced(1, 0, toolsTab(t)));
     } else {
-      setTabs(getApplicationTabs(t));
+      setTabs(getApplicationTabs(t, featureFlags));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalApplication.mcp?.endpoint]);
@@ -223,7 +222,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
           />
         ) : (
           <TabsContent
-            key={discardKey}
             view={ApplicationRoute.Applications}
             activeTab={activeTab}
             selectedApplication={selectedApplication}

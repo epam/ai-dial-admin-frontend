@@ -24,7 +24,6 @@ describe('PromptView', () => {
   const mockOriginalPrompt: DialPrompt = {
     id: 'prompt-1',
     name: 'Test Prompt',
-    version: '1.0.0',
     folderId: '/folder/',
     path: '/folder/prompt-1',
     content: 'Test content',
@@ -41,14 +40,8 @@ describe('PromptView', () => {
   });
 
   describe('Component rendering and props', () => {
-    test('should render with null prompts', () => {
-      render(<PromptView originalPrompt={mockOriginalPrompt} etag={mockEtag} prompts={null} />);
-
-      expect(screen.getByText('Test Prompt')).toBeInTheDocument();
-    });
-
-    test('should render with empty prompts array', () => {
-      render(<PromptView originalPrompt={mockOriginalPrompt} etag={mockEtag} prompts={[]} />);
+    test('should render the prompt', () => {
+      render(<PromptView originalPrompt={mockOriginalPrompt} etag={mockEtag} />);
 
       expect(screen.getByText('Test Prompt')).toBeInTheDocument();
     });

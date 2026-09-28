@@ -8,20 +8,24 @@ import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
+import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptorResource, DialResourceFeatures } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   asset: DialInterceptorResource;
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialInterceptorResource) => void;
 }
 
-const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
+const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange }) => {
   const t = useI18n();
 
   return (
@@ -36,10 +40,19 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
         />
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
+        <EndpointControl
+          id="base_url"
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          endpoint={asset.baseUrl}
+          onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+        />
         <InterfacesField
           interfaces={asset.interfaces}
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
+          entityBaseUrl={asset.baseUrl}
+          view={ApplicationRoute.PlatformInterceptors}
           isAsset
         />
         <EndpointControl
@@ -56,8 +69,19 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
           }
         />
         <Defaults values={asset.defaults} onChangeValues={(defaults) => onChange({ ...asset, defaults })} />
+        <KeyValueGrid
+          label={t(EntityFieldsI18nKey.defaultHeaders)}
+          value={asset.defaultHeaders}
+          onChange={(defaultHeaders) => onChange({ ...asset, defaultHeaders })}
+        />
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.PlatformInterceptors} />
         <ForwardAuthTokenField view={ApplicationRoute.PlatformInterceptors} entity={asset} onChangeEntity={onChange} />
+        <CatalogSchemaField
+          schemaId={asset.catalogSchemaId}
+          options={catalogSchemas?.options}
+          optionsError={catalogSchemas?.error}
+          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId })}
+        />
       </div>
     </div>
   );

@@ -58,7 +58,11 @@ const Conversations: FC<Props> = ({ publication, conversation }) => {
         />
       )}
       <div className="flex flex-col gap-4 flex-1 min-w-0 overflow-y-auto border-secondary border rounded p-4">
-        <div className="flex">{selectedConversation && <Properties selectedConversation={selectedConversation} />}</div>
+        {conversations.length > 1 && (
+          <div className="flex">
+            {selectedConversation && <Properties selectedConversation={selectedConversation} />}
+          </div>
+        )}
         <div className="flex-1 bg-layer-1">
           <div className="mx-auto w-[800px] max-w-full flex flex-col gap-6 py-6 px-4">
             {selectedConversation?.messages.map((message, index) =>

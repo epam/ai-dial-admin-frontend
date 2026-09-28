@@ -17,7 +17,7 @@ export default async function Page() {
   let tables: AnalyticsTable[] | null = null;
 
   try {
-    tables = await getTables();
+    tables = (await getTables()).response ?? null;
   } catch (e) {
     errorObjLog(e, 'Failed to fetch tables view data');
   }

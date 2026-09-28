@@ -9,13 +9,5 @@ export const toPipelineListItem = (pipeline: Pipeline): PipelineListItem => ({
   enabled: pipeline.enabled,
   generation: pipeline.generation,
   updated_at: pipeline.updated_at,
-  evaluator_name: pipeline.evaluator_name,
-  evaluator_version: pipeline.evaluator_version,
-  evaluator: pipeline.evaluator && {
-    name: pipeline.evaluator.name,
-    version: pipeline.evaluator.version,
-    type: pipeline.evaluator.type,
-  },
-  grain_key: pipeline.grain_key,
-  version_column: pipeline.version_column,
+  transform_type: pipeline.transform?.type,
 });

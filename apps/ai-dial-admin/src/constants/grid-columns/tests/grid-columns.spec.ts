@@ -22,6 +22,7 @@ import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  TEST_SUITES_COLUMN,
   RUNS_COLUMN,
   SUITE_RUNS_COLUMN,
   COMPARE_RUN_PICKER_COLUMN,
@@ -48,6 +49,23 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.cacheRead' && c.hide)).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
+  });
+
+  test('MODELS_COLUMNS cache rate tooltips keep flat values and format trees', () => {
+    const t = (s: string) => s;
+    const [cacheReadColumn] = MODELS_COLUMNS(t).filter((c) => c.field === 'pricing.cacheRead');
+    const tooltip = (pricing: Record<string, unknown>) =>
+      cacheReadColumn.tooltipValueGetter!({ data: { pricing } } as never);
+
+    expect(tooltip({ unit: 'token', cacheRead: '0.0000002' })).toBe('0.0000002');
+
+    const tree = {
+      test: { field: 'ttl', operator: '==', value: '1h' },
+      ifTrue: '0.000006',
+      ifFalse: '0.00000375',
+    };
+    expect(tooltip({ unit: 'token', cacheRead: tree })).toBe('ttl == 1h ? 6 : 3.75');
+    expect(tooltip({ unit: undefined, cacheRead: tree })).toBe('ttl == 1h ? 0.000006 : 0.00000375');
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {
@@ -311,7 +329,13 @@ describe('Constants :: grid columns', () => {
     const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.Prompts);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'name')).toBe(true);
-    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(true);
+    // Prompts are versionless — no Version column, unlike the deployment-asset views.
+    expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(false);
+  });
+
+  test('EXPORT_COLUMNS keeps the Version column for the versioned asset views', () => {
+    const cols = EXPORT_COLUMNS(vi.fn(), ApplicationRoute.AssetsApplications);
+    expect(cols.some((c) => c.field === 'version')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for files', () => {
@@ -390,6 +414,12 @@ describe('Constants :: grid columns', () => {
     assertUsageLogColumnSet(USAGE_LOG_TOOLSET_TRACES_COLUMNS);
   });
 
+  test('TEST_SUITES_COLUMN default-sorts on createdAt descending', () => {
+    const createdAt = TEST_SUITES_COLUMN.find((c) => c.field === 'createdAt');
+    expect(createdAt?.sort).toBe('desc');
+    expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);
@@ -400,6 +430,14 @@ describe('Constants :: grid columns', () => {
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'parameters')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'tags')).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'datasets')).toBe(true);
+  });
+
+  test('RUNS_COLUMN right-aligns the numeric run/test-case count columns', () => {
+    const numberOfRuns = RUNS_COLUMN.find((c) => c.field === 'runConfig.numberOfRuns');
+    const numberOfTestCases = RUNS_COLUMN.find((c) => c.field === 'numberOfTestCases');
+
+    expect(numberOfRuns).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
   });
 });
 

@@ -56,6 +56,23 @@ export const TEST_FUNCTIONS: QueryFunction[] = [
     ],
   },
   {
+    name: 'date_sub',
+    group: QueryFunctionGroup.Scalar,
+    signature: 'date_sub(unit, amount, timestamp)',
+    returns: QueryFunctionReturnType.Timestamp,
+    distinct_supported: false,
+    description: 'Moves timestamp back by amount × unit.',
+    args: [
+      {
+        name: 'unit',
+        kind: QueryFunctionArgKind.StringLiteral,
+        constraints: { allowed_values: ['day', 'hour', 'minute', 'month', 'second', 'year'] },
+      },
+      { name: 'amount', kind: QueryFunctionArgKind.IntegerLiteral, constraints: { min: 1 } },
+      { name: 'timestamp', kind: QueryFunctionArgKind.Expression },
+    ],
+  },
+  {
     name: 'json_extract_array',
     group: QueryFunctionGroup.Scalar,
     signature: 'json_extract_array(json, key)',
@@ -114,6 +131,15 @@ export const TEST_FUNCTIONS: QueryFunction[] = [
     distinct_supported: false,
     description: 'minimum',
     args: [{ name: 'value', kind: QueryFunctionArgKind.Expression }],
+  },
+  {
+    name: 'now',
+    group: QueryFunctionGroup.Scalar,
+    signature: 'now()',
+    returns: QueryFunctionReturnType.Timestamp,
+    distinct_supported: false,
+    description: 'The current instant, in UTC, read at execution.',
+    args: [],
   },
   {
     name: 'percentile_cont',

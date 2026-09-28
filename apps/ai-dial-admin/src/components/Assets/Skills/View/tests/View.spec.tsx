@@ -57,10 +57,14 @@ const buildSkill = (overrides?: Partial<DialSkillResource>): DialSkillResource =
   path: 'public/my-skill',
   folderId: 'public/',
   etag: 'etag-1',
-  author: 'author@example.com',
-  createdAt: 1700000000000,
-  updatedAt: 1700000001000,
   files: [{ name: 'SKILL.md' }],
+  // The skill read's only grafted fields: author/dates come from the skill's listing row, so they
+  // live under `_metadata` (see `DialSkillResource`), while `name`/`path`/`folderId` stay flat.
+  _metadata: {
+    author: 'author@example.com',
+    createdAt: '1700000000000',
+    updatedAt: '1700000001000',
+  },
   ...overrides,
 });
 

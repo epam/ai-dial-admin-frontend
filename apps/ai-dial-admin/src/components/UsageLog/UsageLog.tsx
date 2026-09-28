@@ -7,7 +7,7 @@ import { IconRefresh } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
-import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import { getDashboardData } from '@/src/app/[lang]/dashboards/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { useAppContext } from '@/src/context/AppContext';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';

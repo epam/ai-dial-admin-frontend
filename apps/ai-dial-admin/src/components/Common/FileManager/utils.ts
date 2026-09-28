@@ -6,18 +6,21 @@ import { ColDef, ITextFilterParams } from 'ag-grid-community';
 import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
+import { ROW_HEIGHT } from '@/src/components/Grid/constants';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import {
   CONTROL_CHARS_ONLY_REGEXP,
   CREATE_FOLDER_FORBIDDEN_CHARS,
   FILE_NAME_MAX_LENGTH,
   MAX_FOLDER_NESTING_DEPTH,
+  MOVE_EXCLUDED_PATHS,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -38,6 +41,7 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.PlatformModels]: FileManagerI18nKey.Models,
   [ApplicationRoute.PlatformAppRunners]: FileManagerI18nKey.AppRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: FileManagerI18nKey.CatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: FileManagerI18nKey.Interceptors,
   [ApplicationRoute.PlatformTranslators]: FileManagerI18nKey.Translators,
   [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
@@ -74,6 +78,7 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
   processDestinationFolderPath: (path: string) => addTrailingSlash(path),
+  excludedPaths: MOVE_EXCLUDED_PATHS,
 });
 
 export const createEmptyFile = () => {
@@ -101,17 +106,15 @@ export const isItemNameValid = (name: string): boolean => {
 };
 
 /**
- * An app-runner's row name is its `$id`, a URI — `:` and `/` are inherent to it. The ui-kit's default
- * forbidden-symbols regex covers both, which would mark every row invalid (grey name, "please rename
- * it" tooltip) and disable its context-menu actions. Only control characters are genuinely invalid
- * here; the CRUD calls address the separately-held encoded `path`, not this name.
+ * Only control characters are genuinely invalid in a schema `$id`; the CRUD calls address the
+ * separately-held encoded `path`, not this name.
  */
 export const getForbiddenSymbolsRegExp = (view: ApplicationRoute): RegExp | undefined =>
-  view === ApplicationRoute.PlatformAppRunners ? CONTROL_CHARS_ONLY_REGEXP : undefined;
+  SCHEMA_ID_NAMED_VIEWS.includes(view) ? CONTROL_CHARS_ONLY_REGEXP : undefined;
 
-/** Opening a row navigates by encoded `path`, so a URI-shaped app-runner name is safe to open. */
+/** Opening a row navigates by encoded `path`, so a URI-shaped schema name is safe to open. */
 export const isItemOpenable = (view: ApplicationRoute, name: string): boolean =>
-  view === ApplicationRoute.PlatformAppRunners || isItemNameValid(name);
+  SCHEMA_ID_NAMED_VIEWS.includes(view) || isItemNameValid(name);
 
 export const validateCreateFolder = (
   name: string,
@@ -154,11 +157,17 @@ export const getGridOptions = (
   currentPath?: string,
 ) =>
   ({
-    alternateOddRowColors: true,
+    alternateOddRowColors: false,
     columnDefs,
-    selectionMode: isReadOnlyAdmin ? void 0 : isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE,
+    selectionMode:
+      isReadOnlyAdmin || isFileRootPath(currentPath)
+        ? void 0
+        : isSingleSelection
+          ? GridSelectionMode.SINGLE
+          : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
+      rowHeight: ROW_HEIGHT,
       defaultColDef: {
         minWidth: 150,
         floatingFilter: true,
@@ -212,10 +221,18 @@ export const getBulkActionsToolbarOptions = (
   t: (key: string) => string,
   currentPath?: string,
 ) => {
+  if (isFileRootPath(currentPath)) {
+    return {
+      getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+      actionLabels: {},
+    };
+  }
+
   const isFlatBulkView =
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformCatalogSchemas ||
     view === ApplicationRoute.PlatformInterceptors ||
     view === ApplicationRoute.PlatformTranslators ||
     view === ApplicationRoute.PlatformRoutes ||

@@ -15,7 +15,7 @@ import {
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { DUAL_BUCKET_VIEWS } from '@/src/utils/files/root-folder';
 

@@ -11,6 +11,11 @@ import {
 } from '@/src/app/[lang]/assets-applications/actions';
 import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import {
+  bulkDeleteCatalogSchemas,
+  createCatalogSchema,
+  getCatalogSchema,
+} from '@/src/app/[lang]/platform-catalog-schemas/actions';
+import {
   bulkDeleteInterceptors,
   createInterceptor,
   getInterceptor,
@@ -47,6 +52,7 @@ import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
+import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
@@ -57,9 +63,12 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import {
+  CoreValidationWarning,
   DialAppRunnerResource,
   DialModelResource,
+  DialModelResourceStatus,
   DialPlatformApplicationResource,
   DialPlatformToolsetResource,
   PlatformAsset,
@@ -67,16 +76,19 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
+import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
+import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -92,6 +104,10 @@ export const customMultiSelectTagsRenderer = (
   handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
 ) => {
   return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
+};
+
+export const getCustomizedDisplayNameColumn = (headerName: string) => {
+  return { ...DISPLAY_NAME_COLUMN, headerName };
 };
 
 export const getGridColumns = (
@@ -158,21 +174,36 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
-  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: an
-  // app runner's row name is its `$id`, a model's is its plain name. Skills shares the same
+  if (isFileRootPath(currentPath)) {
+    return [getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef];
+  }
+
+  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: a
+  // schema resource's row name is its `$id`, a model's is its plain name. Skills shares the same
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
   // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
   // read a display name from.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      NAME_COLUMN(view === ApplicationRoute.PlatformAppRunners ? 'ID' : 'Name') as ColDef,
+      getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
     ];
   }
 
-  return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
+  // per-row version selection.
+  if (isVersionlessAssetView(view)) {
+    return [getCustomizedDisplayNameColumn('Name'), AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  }
+
+  return [
+    getCustomizedDisplayNameColumn('Name'),
+    VERSION_COLUMN,
+    AUTHOR_COLUMN,
+    UPDATED_AT_COLUMN('Updated time') as ColDef,
+  ];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
@@ -182,28 +213,29 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
   return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
-export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialPrompt => {
   const baseEmptyAsset = {
     name: TEMP_FOLDER,
     folderId: path,
-    version: '',
     path: `${path}${TEMP_FOLDER}`,
   };
 
   switch (view) {
     case ApplicationRoute.Prompts:
+      // A prompt never carries a version — the folder-marker body is plain name/folderId/content.
       return { ...baseEmptyAsset, content: '' };
     case ApplicationRoute.AssetsApplications:
-      return { ...baseEmptyAsset, endpoint: '' };
+      return { ...baseEmptyAsset, version: '', endpoint: '' };
     case ApplicationRoute.AssetsToolsets:
       return {
         ...baseEmptyAsset,
+        version: '',
         endpoint: 'http://mock',
         displayName: TEMP_FOLDER,
         transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
     default:
-      return baseEmptyAsset;
+      return { ...baseEmptyAsset, version: '' };
   }
 };
 
@@ -221,6 +253,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Models;
     case ApplicationRoute.PlatformAppRunners:
       return FileManagerI18nKey.AppRunners;
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return FileManagerI18nKey.CatalogSchemas;
     case ApplicationRoute.PlatformInterceptors:
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.PlatformTranslators:
@@ -273,6 +307,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
       };
+    case ApplicationRoute.PlatformCatalogSchemas:
+      return {
+        title: t(FileManagerI18nKey.CatalogSchemasEmptyStateTitle),
+        description: t(FileManagerI18nKey.CatalogSchemasEmptyStateDescription),
+      };
     case ApplicationRoute.PlatformInterceptors:
       return {
         title: t(FileManagerI18nKey.InterceptorsEmptyStateTitle),
@@ -309,6 +348,9 @@ export const getEmptyStateContent = (
 };
 
 export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: PlatformAsset): PlatformAsset => {
+  // The caller passes a listing row, whose identity is flat (`path`/`folderId`) and whose
+  // `status`/`validationWarnings` appear only where Core's projection serves them — fields the
+  // resource types no longer declare flat, so the strip cast spells them out explicitly.
   const {
     path: __path,
     folderId: __folderId,
@@ -320,7 +362,13 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     reference: __reference,
     name,
     ...duplicate
-  } = asset as DialModelResource & DialAppRunnerResource;
+  } = asset as DialModelResource &
+    DialAppRunnerResource & {
+      path?: string;
+      folderId?: string;
+      status?: DialModelResourceStatus;
+      validationWarnings?: CoreValidationWarning[];
+    };
 
   return view === ApplicationRoute.PlatformAppRunners
     ? (duplicate as PlatformAsset)
@@ -349,6 +397,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
@@ -364,6 +413,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
+  [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
   [ApplicationRoute.PlatformTranslators]: getTranslator,
   [ApplicationRoute.PlatformRoutes]: getRoute,
@@ -391,38 +441,56 @@ export const PlatformGetAssetActionMap: Partial<
   [ApplicationRoute.AssetsToolsets]: getPlatformToolset,
 };
 
-export const CreateAssetActionMap: Record<
-  CreateAssetRoute,
-  (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
-> = {
+type CreateAssetAction = (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>;
+
+// A flat platform view uses `folderId` only to identify the selected root in the shared list flow;
+// Core config-resource bodies cannot carry it. `_metadata` is likewise a merged-read graft, not
+// resource content. Individual server actions still remove their own DTO-specific fields.
+const sanitizePlatformCreateAsset =
+  (createAsset: CreateAssetAction): CreateAssetAction =>
+  (asset) => {
+    const {
+      folderId: __folderId,
+      _metadata: __metadata,
+      ...payload
+    } = asset as AssetWithVersion & { _metadata?: unknown };
+    return createAsset(payload as AssetWithVersion);
+  };
+
+export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> = {
   [ApplicationRoute.Prompts]: createPrompt,
-  [ApplicationRoute.AssetsApplications]: createApp as (
+  // `createApp`/`createToolset` take the `Dial*Resource` shapes, which no longer overlap the
+  // `AssetWithVersion` create-payload surface (its flat `path` identity) — hence the double casts.
+  [ApplicationRoute.AssetsApplications]: createApp as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsToolsets]: createToolset as (
+  [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformModels]: createModel as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformAppRunners]: createRunner as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformInterceptors]: createInterceptor as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformTranslators]: createTranslator as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformRoutes]: createRoute as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformRoles]: createRole as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.PlatformKeys]: createKey as (
-    asset: AssetWithVersion,
-  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
+    createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformAppRunners]: sanitizePlatformCreateAsset(
+    createRunner as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformCatalogSchemas]: sanitizePlatformCreateAsset(
+    createCatalogSchema as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformInterceptors]: sanitizePlatformCreateAsset(
+    createInterceptor as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
+    createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoutes]: sanitizePlatformCreateAsset(
+    createRoute as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRoles]: sanitizePlatformCreateAsset(
+    createRole as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformKeys]: sanitizePlatformCreateAsset(
+    createKey as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
 };
 
 export const PlatformCreateAssetActionMap: Partial<
@@ -475,6 +543,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
@@ -488,11 +557,4 @@ export const PlatformBulkDeleteAssetActionMap: Partial<
 > = {
   [ApplicationRoute.AssetsApplications]: bulkDeletePlatformApplications,
   [ApplicationRoute.AssetsToolsets]: bulkDeletePlatformToolsets,
-};
-
-export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {
-  const fullName = conversation.path.split('/').pop() || '';
-  const { name, version } = getNameVersionFromAsset(fullName);
-
-  return { ...conversation, name, version };
 };

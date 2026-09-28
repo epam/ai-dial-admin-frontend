@@ -746,6 +746,7 @@ describe('containers utils', () => {
       $type: CONTAINER_TYPE.ADAPTER,
       source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
       status: CONTAINER_STATUS.RUNNING,
+      metadata: { envs: [] },
     };
 
     test('returns the container unchanged when it has no probe properties', () => {

@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { DialIconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import { getDeploymentById } from '@/src/app/[lang]/test-suites/actions';
+import { getDeployment } from '@/src/app/[lang]/conversations/actions';
 import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -49,7 +49,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
     let cancelled = false;
     setIsModelLoading(true);
 
-    getDeploymentById(model)
+    getDeployment(model)
       .then((data) => {
         if (!cancelled) {
           setDeployment(data);
@@ -73,7 +73,6 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
       <LabelledText label={t(EntityFieldsI18nKey.name)}>
         <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
       </LabelledText>
-      <LabelledText label={t(EntityFieldsI18nKey.version)} text={selectedConversation.version} />
       <LabelledText label={t(EntityFieldsI18nKey.agent)}>
         <div className="flex flex-row gap-1 items-center">
           {isResolvingAgent ? (

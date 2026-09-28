@@ -2,9 +2,14 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { CreatePipelineDto, PipelineEnabledFilter, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
-import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import {
+  CreatePipelineDto,
+  PipelineEnabledFilter,
+  PipelineKind,
+  TriggerKind,
+  TransformType,
+} from '@/src/models/analytics/pipeline';
+import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -28,7 +33,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toEqual(entities);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: entities }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities'),
       expect.objectContaining({ method: 'GET' }),
@@ -41,7 +46,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getEntitySchema('my entity', TOKEN_MOCK);
 
-    expect(res).toEqual(schema);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: schema }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/entities/schema/my%20entity'),
       expect.objectContaining({ method: 'GET' }),
@@ -64,7 +69,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getFunctions(TOKEN_MOCK);
 
-    expect(res).toEqual(functions);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: functions }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/functions'),
       expect.objectContaining({ method: 'GET' }),
@@ -131,12 +136,13 @@ describe('Server :: AnalyticsDataApi', () => {
     expect(res.success).toBe(false);
   });
 
-  test('getEntities returns null on a failed response', async () => {
+  test('getEntities carries a failed response as an unsuccessful envelope', async () => {
     fetch.mockResponseOnce('nope', { status: 500 });
 
     const res = await instance.getEntities(TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
+    expect(res.response).toBeUndefined();
   });
 
   test('getTables issues GET /v1/tables and unwraps the { tables } envelope', async () => {
@@ -145,7 +151,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTables(TOKEN_MOCK);
 
-    expect(res).toEqual(tables);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: tables }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables'),
       expect.objectContaining({ method: 'GET' }),
@@ -164,7 +170,12 @@ describe('Server :: AnalyticsDataApi', () => {
   });
 
   test('createTable POSTs the identity-only create payload to /v1/tables', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, description: 'Raw events' };
+    const dto: CreateTableDto = {
+      name: 'events',
+      type: AnalyticsTableType.Source,
+      description: 'Raw events',
+      write: TableWriteMode.Append,
+    };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.createTable(dto, TOKEN_MOCK);
@@ -224,7 +235,9 @@ describe('Server :: AnalyticsDataApi', () => {
     };
     fetch.mockResponseOnce(JSON.stringify(table), { headers: { 'content-type': 'application/json' } });
 
-    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(table);
+    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(
+      expect.objectContaining({ success: true, response: table }),
+    );
   });
 
   test('defineTableSchema sends the scan-metadata pair only when declared', async () => {
@@ -280,7 +293,7 @@ describe('Server :: AnalyticsDataApi', () => {
 
     const res = await instance.getTableAccess('events', TOKEN_MOCK);
 
-    expect(res).toEqual(access);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: access }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'GET' }),
@@ -340,15 +353,16 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toEqual([savedQuery]);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: [savedQuery] }));
   });
 
-  test('listSavedQueries returns null when the envelope is absent', async () => {
+  test('listSavedQueries reads a missing envelope as an unreadable body', async () => {
     fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
 
     const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
 
-    expect(res).toBeNull();
+    expect(res.success).toBe(false);
+    expect(res.response).toBeUndefined();
   });
 
   test('getSavedQuery issues GET on the encoded saved-query URL and returns the parsed query', async () => {
@@ -356,7 +370,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
     const res = await instance.getSavedQuery('sq /1', TOKEN_MOCK);
 
-    expect(res).toEqual(savedQuery);
+    expect(res).toEqual(expect.objectContaining({ success: true, response: savedQuery }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/saved-queries/sq%20%2F1'),
       expect.objectContaining({ method: 'GET' }),
@@ -425,9 +439,8 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       target: 'turn_feedback',
       inputs: ['response_ratings'],
       trigger: { kind: TriggerKind.OnIngest },
-      evaluator_name: 'feedback-rollup',
-      evaluator_version: 2,
-      evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
+      response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } },
       grain_key: 'response_id',
       enabled: true,
       generation: 5,
@@ -440,45 +453,64 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
       trigger: { kind: TriggerKind.OnIngest },
-      evaluator_name: 'feedback-rollup',
+      transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
       enabled: false,
     };
 
     test('getPipelines unwraps the {pipelines} envelope, not {items}', async () => {
       fetch.mockResponseOnce(JSON.stringify({ pipelines: [pipeline] }), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
     });
 
-    test('getPipelines ignores a list under any other key', async () => {
+    test('getPipelines reads a list under any other key as an unreadable body', async () => {
       fetch.mockResponseOnce(JSON.stringify({ items: [pipeline] }), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+      expect(res.response).toBeUndefined();
     });
 
     // Deployed builds disagree: some answer a bare array, some the wrapper.
     test('getPipelines accepts a bare array as well as the wrapper', async () => {
       fetch.mockResponseOnce(JSON.stringify([pipeline]), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [pipeline], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [pipeline] }),
+      );
     });
 
     test('getPipelines reads an empty bare array as no pipelines rather than a failure', async () => {
       fetch.mockResponseOnce(JSON.stringify([]), JSON_HEADERS);
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: [], isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({ success: true, response: [] }),
+      );
     });
 
-    test('getPipelines marks a forbidden read so the page can offer its own fallback', async () => {
+    test('getPipelines carries a refusal as status 403 so the page can render its own fallback', async () => {
       fetch.mockResponseOnce('', { status: 403 });
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: true });
+      const res = await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
     });
 
-    test('getPipelines reports any other failure as readable but empty', async () => {
-      fetch.mockResponseOnce('boom', { status: 500 });
+    test('getPipelines carries any other failure with the service status and words', async () => {
+      fetch.mockResponseOnce('{"error":"upstream","message":"registry timed out"}', { status: 500 });
 
-      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual({ data: null, isForbidden: false });
+      expect(await instance.getPipelines(undefined, TOKEN_MOCK)).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 500,
+          errorHeader: 'upstream',
+          errorMessage: 'registry timed out',
+        }),
+      );
     });
 
     test('getPipelines omits enabled entirely when no preference is expressed', async () => {
@@ -488,7 +520,24 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
 
       const url = fetch.mock.calls[0][0] as string;
       expect(url).not.toContain('enabled');
-      expect(url).not.toContain('?');
+    });
+
+    // The service refuses `view=compiled` in a listing that is not scoped to `kind=enrich`, and the
+    // default `source` projection already carries every member the grid renders.
+    test('getPipelines names no projection, so a cross-kind listing is not refused', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).not.toContain('view=');
+    });
+
+    test('getPipelines leaves no dangling query separator when no filter is set', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ pipelines: [] }), JSON_HEADERS);
+
+      await instance.getPipelines(undefined, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toMatch(/\/v1\/pipelines$/);
     });
 
     test('getPipelines sends enabled=true for the enabled-only filter', async () => {
@@ -546,25 +595,100 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       expect(url).not.toContain('enabled');
     });
 
-    test('getPipeline issues GET on the encoded name URL', async () => {
+    test('getPipeline reads the declaration first, then the compiled projection for an enrich pipeline', async () => {
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined };
+      fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
       fetch.mockResponseOnce(JSON.stringify(pipeline), JSON_HEADERS);
 
       const res = await instance.getPipeline('turn feedback', TOKEN_MOCK);
 
-      expect(res).toEqual({ data: pipeline, isForbidden: false });
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/pipelines/turn%20feedback'),
-        expect.objectContaining({ method: 'GET' }),
-      );
+      // The compiled answer is what the caller gets: it is the one carrying the resolved members.
+      expect(res).toEqual(expect.objectContaining({ success: true, response: pipeline }));
+      expect(fetch.mock.calls[0][0] as string).toContain('/v1/pipelines/turn%20feedback?view=source');
+      expect(fetch.mock.calls[1][0] as string).toContain('/v1/pipelines/turn%20feedback?view=compiled');
+      expect(fetch).toHaveBeenLastCalledWith(expect.any(String), expect.objectContaining({ method: 'GET' }));
     });
 
-    test('getPipeline marks a forbidden read rather than reporting the pipeline missing', async () => {
+    // `view=compiled` is refused with 422 for every kind but `enrich`, so asking for it here would turn a
+    // readable aggregate pipeline into a failed read — which the detail page renders as a 404.
+    test('getPipeline reads an aggregate pipeline once and never asks for the compiled projection', async () => {
+      const aggregate = {
+        name: 'turns_rollup',
+        kind: PipelineKind.Aggregate,
+        target: 'turns',
+        inputs: ['dial_usage_log'],
+        trigger: { kind: TriggerKind.Schedule },
+        enabled: true,
+        generation: 8,
+        created_at: '2026-08-14T13:47:58Z',
+        updated_at: '2026-09-04T07:52:02Z',
+      };
+      fetch.mockResponseOnce(JSON.stringify(aggregate), JSON_HEADERS);
+
+      const res = await instance.getPipeline('turns_rollup', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: aggregate }));
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.calls[0][0] as string).toContain('view=source');
+    });
+
+    // Downgrading to the declaration would leave the detail view printing `grain_key` and
+    // `version_column` as "not set" — a false statement about an enrich pipeline, not a missing one.
+    test('getPipeline reports a failed compiled read rather than falling back to the declaration', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce('', { status: 500 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 500 }));
+      expect(res.response).toBeUndefined();
+      // Both reads were issued, so it is the compiled one that failed — not the declaration.
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A pipeline registered before it was declared has nothing to compile, and the service says so with
+    // 422. Reporting that would make the page the author finishes the declaration on a 404.
+    test('getPipeline serves the declaration when the compiled projection refuses an incomplete one', async () => {
+      const declaration = { ...pipeline, response_schema: undefined, grain_key: undefined, trigger: undefined };
+      fetch.mockResponseOnce(JSON.stringify(declaration), JSON_HEADERS);
+      fetch.mockResponseOnce(JSON.stringify({ error: 'pipeline_validation_failed' }), { status: 422 });
+
+      const res = await instance.getPipeline('half-written', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: declaration }));
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A 2xx whose body is not a pipeline leaves `handleResponse` with no error to describe, so the read
+    // reports the failure through an empty envelope rather than presenting an unusable object. The
+    // detail page turns that into its not-found state, which is why both reads need the guard.
+    test('getPipeline reports an unreadable declaration rather than an empty success', async () => {
+      fetch.mockResponseOnce('', { status: 200 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false }));
+      expect(res.response).toBeUndefined();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    test('getPipeline reports an unreadable compiled answer rather than an empty success', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ ...pipeline, response_schema: undefined }), JSON_HEADERS);
+      fetch.mockResponseOnce('', { status: 200 });
+
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false }));
+      expect(res.response).toBeUndefined();
+    });
+
+    test('getPipeline carries a refusal as status 403 rather than reporting the pipeline missing', async () => {
       fetch.mockResponseOnce('', { status: 403 });
 
-      expect(await instance.getPipeline('turn_feedback_live', TOKEN_MOCK)).toEqual({
-        data: null,
-        isForbidden: true,
-      });
+      const res = await instance.getPipeline('turn_feedback_live', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+      expect(res.response).toBeUndefined();
     });
 
     test('createPipeline POSTs the whole pipeline in one request', async () => {
@@ -601,49 +725,11 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     });
   });
 
-  describe('evaluators', () => {
-    const evaluator = {
-      name: 'conversation-insights',
-      version: 4,
-      type: EvaluatorType.Llm,
-      output_vars: [{ name: 'title', type: 'string' }],
-    };
+  // No evaluator call is exposed at all: the transform travels on the pipeline request, and a client
+  // method for a surface that authors nothing is a way to reintroduce one by accident.
+  test('exposes no call against any /v1/evaluators path', () => {
+    const surface = Object.getOwnPropertyNames(Object.getPrototypeOf(instance));
 
-    test('getEvaluators unwraps the {items} envelope', async () => {
-      const items = [{ name: 'conversation-insights', latest_version: 4 }];
-      fetch.mockResponseOnce(JSON.stringify({ items }), JSON_HEADERS);
-
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
-    });
-
-    test('getEvaluators accepts a bare array as well as the wrapper', async () => {
-      const items = [{ name: 'conversation-insights', latest_version: 4 }];
-      fetch.mockResponseOnce(JSON.stringify(items), JSON_HEADERS);
-
-      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
-    });
-
-    test('getEvaluator issues GET on the encoded evaluator URL', async () => {
-      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
-
-      const res = await instance.getEvaluator('my evaluator', TOKEN_MOCK);
-
-      expect(res).toEqual(evaluator);
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/evaluators/my%20evaluator'),
-        expect.objectContaining({ method: 'GET' }),
-      );
-    });
-
-    test('getEvaluatorVersion issues GET on the pinned-version URL', async () => {
-      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
-
-      await instance.getEvaluatorVersion('conversation-insights', 4, TOKEN_MOCK);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/evaluators/conversation-insights/versions/4'),
-        expect.objectContaining({ method: 'GET' }),
-      );
-    });
+    expect(surface.filter((name) => name.toLowerCase().includes('evaluator'))).toEqual([]);
   });
 });

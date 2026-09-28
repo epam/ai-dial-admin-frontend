@@ -1,5 +1,6 @@
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { Token } from '@/src/models/auth';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 // The schema describes a table's shape rather than its contents, so it changes on a schema patch and not
 // when rows arrive. The lifetime bounds how long a patched entity can stay hidden behind a stale entry.
@@ -27,22 +28,22 @@ const cacheKey = (entity: string, token: Token): string => `${entity}|${token?.u
 export const withEntitySchemaCache = async (
   entity: string,
   token: Token,
-  load: () => Promise<AnalyticsEntitySchema | null>,
-): Promise<AnalyticsEntitySchema | null> => {
+  load: () => Promise<ServerActionResponse<AnalyticsEntitySchema>>,
+): Promise<ServerActionResponse<AnalyticsEntitySchema>> => {
   const key = cacheKey(entity, token);
   const cached = entries.get(key);
 
   if (cached && cached.expiresAt > Date.now()) {
-    return cached.schema;
+    return { success: true, response: cached.schema };
   }
   entries.delete(key);
 
-  const schema = await load();
-  if (schema) {
-    entries.set(key, { schema, expiresAt: Date.now() + ENTITY_SCHEMA_CACHE_TTL_MS });
+  const read = await load();
+  if (read.success && read.response) {
+    entries.set(key, { schema: read.response, expiresAt: Date.now() + ENTITY_SCHEMA_CACHE_TTL_MS });
   }
 
-  return schema;
+  return read;
 };
 
 export const clearEntitySchemaCache = (): void => entries.clear();

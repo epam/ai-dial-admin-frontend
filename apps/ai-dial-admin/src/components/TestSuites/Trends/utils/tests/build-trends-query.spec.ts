@@ -21,6 +21,8 @@ import {
   QueryMode,
   SortDir,
   ValueType,
+  ComparisonNode,
+  SubqueryExpr,
 } from '@/src/models/evaluation/structured-query';
 
 describe('buildTrendsMetricScoresQuery', () => {
@@ -86,7 +88,8 @@ describe('buildTrendsMetricScoresQuery', () => {
   test('honors a custom run window', () => {
     const query = buildTrendsMetricScoresQuery('suite-1', 3);
     const args = query.filter && 'args' in query.filter ? query.filter.args : [];
-    const inNode = args[1] as { args: [unknown, { query: { page?: { limit: number } } }] };
-    expect(inNode.args[1].query.page?.limit).toBe(3);
+    const inNode = args[1] as ComparisonNode;
+    const subquery = inNode.args[1] as SubqueryExpr;
+    expect(subquery.query.page?.limit).toBe(3);
   });
 });

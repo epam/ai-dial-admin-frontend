@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { HopDialect } from '@/src/models/analytics/conversations-trace';
+import { HopDialect } from '@/src/models/analytics/sessions-trace';
 import { dialectOf } from '@/src/utils/analytics/hop-inspector/dialect';
 
 describe('dialectOf', () => {

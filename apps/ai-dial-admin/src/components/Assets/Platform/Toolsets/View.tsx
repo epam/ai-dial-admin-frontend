@@ -26,6 +26,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPlatformToolsetResource, DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -37,8 +38,11 @@ interface Props {
   oAuthCode?: string | null;
   originalToolset: AssetToolset;
   roles: DialRole[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side role-population read, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalToolset` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 /**
@@ -52,13 +56,28 @@ interface Props {
  * selector, no publish, no move) and which server actions get called differ here — mirrors
  * `Assets/Platform/Applications/View.tsx`.
  */
-const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, roles, optionWarnings }) => {
+const PlatformToolsetView: FC<Props> = ({
+  etag,
+  oAuthCode,
+  originalToolset,
+  roles,
+  catalogSchemas,
+  optionWarnings,
+  isConfigFileSource,
+}) => {
   const t = useI18n();
   const router = useRouter();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing role reads as deleted. Mirrors
@@ -123,10 +142,14 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
           showNotification(
             getSuccessNotification(
               getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
-              getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, selectedToolset.name, t),
+              getUpdateNotificationDescription(
+                ApplicationRoute.AssetsToolsets,
+                selectedToolset.name || selectedToolset._metadata?.name || '',
+                t,
+              ),
             ),
           );
-          fetchFiles(selectedToolset.folderId);
+          fetchFiles(selectedToolset._metadata?.folderId ?? '');
           router.refresh();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -152,7 +175,7 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
       >
         <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
-          selectedToolset={selectedToolset as DialToolsetResource}
+          selectedToolset={selectedToolset as unknown as DialToolsetResource}
           signInToolset={signInToolset}
           signOutToolset={signOutToolset}
           oAuthCode={oAuthCode}
@@ -174,6 +197,7 @@ const PlatformToolsetView: FC<Props> = ({ etag, oAuthCode, originalToolset, role
             selectedToolset={selectedToolset}
             originalToolset={originalToolset}
             roles={roles}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedToolset}
           />
         )}

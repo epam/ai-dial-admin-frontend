@@ -17,11 +17,11 @@ interface Props {
 const InvalidModelBanner: FC<Props> = ({ asset }) => {
   const t = useI18n();
 
-  if (asset.status !== DialModelResourceStatus.Invalid) {
+  if (asset._metadata?.status !== DialModelResourceStatus.Invalid) {
     return null;
   }
 
-  const reasons = (asset.validationWarnings ?? [])
+  const reasons = (asset._metadata?.validationWarnings ?? [])
     .map((warning) => [warning.field, warning.message].filter(Boolean).join(': '))
     .filter(Boolean);
 

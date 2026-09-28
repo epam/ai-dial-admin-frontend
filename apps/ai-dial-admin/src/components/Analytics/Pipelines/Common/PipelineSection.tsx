@@ -6,19 +6,14 @@ import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
   title: string;
-  // The modal reads straight through, so it renders flat; only the detail page's ~25 members need sections.
-  isModal?: boolean;
+  description?: string;
   isExpanded?: boolean;
   children: ReactNode;
 }
 
-const PipelineSection: FC<Props> = ({ title, isModal, isExpanded, children }) => {
-  if (isModal) {
-    return <>{children}</>;
-  }
-
+const PipelineSection: FC<Props> = ({ title, description, isExpanded, children }) => {
   return (
-    <Accordion title={title} collapsed={!isExpanded}>
+    <Accordion title={title} description={description} collapsed={!isExpanded}>
       <div className="flex flex-col gap-y-6">{children}</div>
     </Accordion>
   );

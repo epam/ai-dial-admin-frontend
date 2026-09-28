@@ -7,6 +7,7 @@ export type BaseAssetRoute =
   | ApplicationRoute.Conversations
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
+  | ApplicationRoute.PlatformCatalogSchemas
   | ApplicationRoute.PlatformInterceptors
   | ApplicationRoute.PlatformTranslators
   | ApplicationRoute.PlatformRoutes
@@ -23,6 +24,7 @@ export type CreateAssetRoute =
   | CrudAssetRoute
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
+  | ApplicationRoute.PlatformCatalogSchemas
   | ApplicationRoute.PlatformInterceptors
   | ApplicationRoute.PlatformTranslators
   | ApplicationRoute.PlatformRoutes

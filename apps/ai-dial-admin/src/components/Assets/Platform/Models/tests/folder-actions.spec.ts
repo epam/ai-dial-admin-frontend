@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { getGridColumns, getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
@@ -51,7 +51,7 @@ type ColumnFactory = (dateLocale?: unknown, dateOptions?: unknown) => { colId?: 
  * the updated-at one and two columns sharing a `colId` silently collide in ag-grid.
  */
 const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
-  getGridColumns(view).map((column) => {
+  getGridColumns(view, vi.fn(), {}, false).map((column) => {
     const resolved = typeof column === 'function' ? (column as ColumnFactory)('en-US', void 0) : column;
 
     return resolved.colId ?? resolved.field;
@@ -59,7 +59,7 @@ const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
 
 describe('Model asset :: list columns', () => {
   test('Should expose name, author, created-at and updated-at', () => {
-    expect(columnIds(VIEW)).toEqual(['name', 'author', 'createdAt', 'updatedAt']);
+    expect(columnIds(VIEW)).toEqual(['displayName', 'author', 'createdAt', 'updatedAt']);
   });
 
   test('Should not collide colIds, since two columns sharing one break ag-grid', () => {
@@ -72,8 +72,8 @@ describe('Model asset :: list columns', () => {
     expect(columnIds(VIEW)).toEqual(columnIds(ApplicationRoute.PlatformAppRunners));
   });
 
-  test('Should carry no version column, unlike the foldered views', () => {
+  test('Should carry no version column, unlike the versioned asset views', () => {
     expect(columnIds(VIEW)).not.toContain('version');
-    expect(columnIds(ApplicationRoute.Prompts)).toContain('version');
+    expect(columnIds(ApplicationRoute.AssetsApplications)).toContain('version');
   });
 });

@@ -37,7 +37,7 @@ const renderPanel = (onClose = vi.fn()) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getTableAccess).mockResolvedValue({ write: ['analytics-writer'], modify: [] });
+  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: ['analytics-writer'], modify: [] } });
 });
 
 describe('ConnectPanel :: tabs', () => {
@@ -115,11 +115,11 @@ describe('ConnectPanel :: roles', () => {
     vi.mocked(getTableAccess).mockReturnValue(new Promise(() => undefined));
     renderPanel();
 
-    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectRolesLoading)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading })).toBeInTheDocument();
   });
 
   test('names the consequence when no role grants write access', async () => {
-    vi.mocked(getTableAccess).mockResolvedValue({ write: [], modify: [] });
+    vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: [], modify: [] } });
     renderPanel();
 
     expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectNoWriteRoles)).toBeInTheDocument();
@@ -129,7 +129,9 @@ describe('ConnectPanel :: roles', () => {
     vi.mocked(getTableAccess).mockRejectedValue(new Error('403'));
     renderPanel();
 
-    await waitFor(() => expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRolesLoading)).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('img', { name: AnalyticsTablesI18nKey.ConnectRolesLoading })).not.toBeInTheDocument(),
+    );
     expect(screen.queryByText('analytics-writer')).not.toBeInTheDocument();
     expect(showNotification).not.toHaveBeenCalled();
     // The rest of the panel is unaffected — the snippets are the point of the panel, not the roles.

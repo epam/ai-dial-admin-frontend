@@ -32,7 +32,7 @@ const renderView = async (id?: string): Promise<RenderedElement> =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getTable).mockResolvedValue(table);
+  vi.mocked(getTable).mockResolvedValue({ success: true, response: table });
   delete process.env.ANALYTICS_PUBLIC_URL;
   delete process.env.ANALYTICS_FLIGHT_SQL_PUBLIC_URL;
 });
@@ -73,7 +73,7 @@ describe('table detail page', () => {
   });
 
   test('is not found when the table read resolves to nothing', async () => {
-    vi.mocked(getTable).mockResolvedValue(null);
+    vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
 
     await expect(renderPage('missing-table')).rejects.toThrow('NEXT_NOT_FOUND');
     expect(notFound).toHaveBeenCalled();

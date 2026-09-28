@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { ConversationPublication, PromptPublication } from '@/src/models/dial/publications';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -50,29 +51,92 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
       JSON_HEADERS,
     );
 
-    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req')) as Record<string, unknown>;
+    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req')) as PromptPublication;
 
     // Every request must have gone to Core (the admin BE URL never appears).
     for (const call of fetch.mock.calls) {
       expect(call[0]).not.toContain('DIAL_ADMIN_API_URL');
     }
-    // Requests 1-3 hit the versioned-resource content/metadata endpoints, not any /api/v1/... BE path.
+    // Requests 1-3 hit the prompt content/metadata endpoints, not any /api/v1/... BE path.
     expect(fetch.mock.calls[1][0]).toContain('v1/prompts/');
     expect(fetch.mock.calls[2][0]).toContain('v1/prompts/');
     expect(fetch.mock.calls[3][0]).toContain('v1/metadata/prompts/');
 
     expect(result.resourceIssues).toEqual([]);
     const prompts = result.prompts as { prompt: Record<string, unknown> }[];
+    // Identity grafts nest under `_metadata` (the merged Core read); the name is the last URL
+    // segment verbatim — a `__` in it is part of the name, and no `version` is grafted from anywhere.
     expect(prompts[0].prompt).toMatchObject({
       content: 'prompt body',
-      name: 'P',
-      version: '1.0',
-      author: 'me',
-      folderId: 'review/',
+      _metadata: {
+        name: 'P__1.0',
+        folderId: 'review/',
+        author: 'me',
+      },
     });
+    expect((prompts[0].prompt as { _metadata?: Record<string, unknown> })._metadata).not.toHaveProperty('version');
   });
 
-  test('updatePublication persists a versioned-type resource body to Core with no conditional header', async () => {
+  test('getPublication enriches a pending conversation whose name contains `__` verbatim, like prompts', async () => {
+    const { publicationsApi } = await import('@/src/app/api/api');
+
+    // 0. POST /v1/ops/publication/get
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        url: 'publications/public/req2',
+        status: 'PENDING',
+        resourceTypes: ['CONVERSATION'],
+        resources: [
+          {
+            action: 'ADD',
+            sourceUrl: 'conversations/src/C__2.0',
+            reviewUrl: 'conversations/review/C__2.0',
+            targetUrl: 'conversations/public/C__2.0',
+          },
+        ],
+      }),
+      JSON_HEADERS,
+    );
+    // 1. Target-exists check: content GET at the target path — not found
+    fetch.mockResponseOnce('not found', { status: 404 });
+    // 2. Real fetch: content GET at the review path
+    fetch.mockResponseOnce(JSON.stringify({ content: 'conversation body' }), JSON_HEADERS);
+    // 3. Real fetch: metadata GET at the review path
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        name: 'C__2.0',
+        nodeType: 'ITEM',
+        url: 'conversations/review/C__2.0',
+        author: 'me',
+        updatedAt: 123,
+      }),
+      JSON_HEADERS,
+    );
+
+    const result = (await publicationsApi.getPublication(TOKEN_MOCK, 'public/req2')) as ConversationPublication;
+
+    expect(fetch.mock.calls[1][0]).toContain('v1/conversations/');
+    expect(fetch.mock.calls[2][0]).toContain('v1/conversations/');
+    expect(fetch.mock.calls[3][0]).toContain('v1/metadata/conversations/');
+
+    expect(result.resourceIssues).toEqual([]);
+    const conversations = result.conversations ?? [];
+    // Same versionless contract as prompts: identity grafts nest under `_metadata`, the `__` in
+    // the name is part of the name, no version.
+    expect(conversations[0].conversation).toMatchObject({
+      content: 'conversation body',
+      _metadata: {
+        name: 'C__2.0',
+        folderId: 'review/',
+        author: 'me',
+      },
+    });
+    expect(
+      (conversations[0].conversation as unknown as { _metadata?: Record<string, unknown> })._metadata,
+    ).not.toHaveProperty('version');
+  });
+
+  test('updatePublication persists a prompt resource body (identity fields intact, no version) to Core with no conditional header', async () => {
     const { publicationsApi } = await import('@/src/app/api/api');
     const { IF_MATCH, IF_NONE_MATCH } = await import('@/src/constants/api-headers');
 
@@ -89,7 +153,13 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
           sourceUrl: 'prompts/src/P__1',
           targetUrl: 'prompts/old/P__1',
           reviewUrl: 'prompts/review/P__1',
-          prompt: { name: 'P', version: '1', content: 'body', path: 'old/P__1' },
+          // Carries `_metadata` the way an enriched review copy now does — the write strips it.
+          prompt: {
+            name: 'P__1',
+            content: 'body',
+            path: 'old/P__1',
+            _metadata: { name: 'P__1', folderId: 'old/', path: 'old/P__1', author: 'me' },
+          },
         },
       ],
     };
@@ -107,12 +177,15 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(headers[IF_MATCH]).toBeUndefined();
     expect(headers[IF_NONE_MATCH]).toBeUndefined();
 
-    // Unlike application/toolset content, Core's prompt (and conversation) content DTO requires
-    // `path`/`version` back on the body — stripping them (as `stripAssetIdentityFields` does for
-    // application/toolset) 400s against a real Core instance. `id` is separately recomputed by
-    // `AssetApi.put`'s `withContentId`.
+    // Core's prompt (and conversation) content DTO requires `path`/`folderId` back on the body —
+    // stripping them (as `stripAssetIdentityFields` does for application/toolset) 400s against a
+    // real Core instance, so prompts stay out of `RESOURCE_TYPES_STRIPPED_BEFORE_PUT`. The
+    // no-`version` guarantee is met by the model no longer carrying the field. `id` is separately
+    // recomputed by `AssetApi.put`'s `withContentId`.
     const body = JSON.parse((putCall[1] as RequestInit).body as string);
-    expect(body).toMatchObject({ name: 'P', content: 'body', path: 'old/P__1', version: '1' });
+    expect(body).toMatchObject({ name: 'P__1', content: 'body', path: 'old/P__1' });
+    expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
   });
 
   test('updatePublication strips folderId/path/version/id from an application-resource body before PUT', async () => {
@@ -131,7 +204,12 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
           sourceUrl: 'applications/src/App__1',
           targetUrl: 'applications/old/App__1',
           reviewUrl: 'applications/review/App__1',
-          applicationResource: { name: 'App', version: '1', endpoint: 'https://app', path: 'old/App__1' },
+          applicationResource: {
+            name: 'App',
+            version: '1',
+            endpoint: 'https://app',
+            _metadata: { name: 'App', folderId: 'old/', path: 'old/App__1', version: '1' },
+          },
         },
       ],
     };
@@ -142,7 +220,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
 
     expect(result.success).toBe(true);
     const putCall = fetch.mock.calls[fetch.mock.calls.length - 1];
-    expect(putCall[0]).toContain('v1/applications/');
+    expect(putCall[0]).toContain('v1/applications/old/App__1');
 
     // Application content DTOs reject unrecognized properties — folderId/path/version/id must
     // stay stripped here, unlike prompt/conversation above.
@@ -150,6 +228,49 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(body).not.toHaveProperty('folderId');
     expect(body).not.toHaveProperty('path');
     expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
     expect(body).toMatchObject({ name: 'App', endpoint: 'https://app' });
+  });
+
+  test('updatePublication writes a toolset resource body using its metadata path', async () => {
+    const { publicationsApi } = await import('@/src/app/api/api');
+
+    fetch.mockResponse(JSON.stringify({ success: true }));
+
+    const publication = {
+      path: 'public/req',
+      requestName: 'My request',
+      folderId: 'public/folder',
+      rules: [],
+      toolSetResources: [
+        {
+          action: 'ADD',
+          sourceUrl: 'toolsets/src/Toolset__1',
+          targetUrl: 'toolsets/old/Toolset__1',
+          reviewUrl: 'toolsets/review/Toolset__1',
+          toolSetResource: {
+            name: 'Toolset',
+            version: '1',
+            tools: [],
+            _metadata: { name: 'Toolset', folderId: 'old/', path: 'old/Toolset__1', version: '1' },
+          },
+        },
+      ],
+    };
+    const formData = new FormData();
+    formData.append('publication', new Blob([JSON.stringify(publication)], { type: 'application/json' }));
+
+    const result = await publicationsApi.updatePublication(TOKEN_MOCK, formData);
+
+    expect(result.success).toBe(true);
+    const putCall = fetch.mock.calls[fetch.mock.calls.length - 1];
+    expect(putCall[0]).toContain('v1/toolsets/old/Toolset__1');
+
+    const body = JSON.parse((putCall[1] as RequestInit).body as string);
+    expect(body).not.toHaveProperty('folderId');
+    expect(body).not.toHaveProperty('path');
+    expect(body).not.toHaveProperty('version');
+    expect(body).not.toHaveProperty('_metadata');
+    expect(body).toMatchObject({ name: 'Toolset', tools: [] });
   });
 });

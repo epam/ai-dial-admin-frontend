@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, deploymentConfigurationApi } from '@/src/app/api/api';
+import { assetApi, configFileApi, deploymentConfigurationApi } from '@/src/app/api/api';
 import { DialModelResourceStatus } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -9,6 +10,8 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteInterceptors,
   createInterceptor,
+  getConfigFileInterceptor,
+  getConfigFileInterceptors,
   getInterceptor,
   getInterceptorConfigurationSchema,
   getInterceptors,
@@ -54,12 +57,17 @@ describe('Assets interceptor :: server actions', () => {
   test('Should call createInterceptor action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The read-only projections (identity, `status`) graft under `_metadata`; the payload builder
+    // drops the whole object, so the exact-body assertion below proves the strip.
     const result = await createInterceptor({
       name: 'redactor',
-      path: 'platform/redactor',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
       displayName: 'Redactor',
+      _metadata: {
+        name: 'redactor',
+        path: 'platform/redactor',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.INTERCEPTOR, 'redactor', {
@@ -73,7 +81,7 @@ describe('Assets interceptor :: server actions', () => {
     const rejection = { success: false, errorHeader: 'Bad Request', errorMessage: 'displayName is required' };
     (assetApi.put as any).mockResolvedValue(rejection);
 
-    const result = await createInterceptor({ name: 'redactor', path: 'platform/redactor', folderId: 'platform/' });
+    const result = await createInterceptor({ name: 'redactor' });
 
     expect(result).toBe(rejection);
   });
@@ -81,10 +89,7 @@ describe('Assets interceptor :: server actions', () => {
   test('Should call updateInterceptor action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateInterceptor(
-      { name: 'redactor', path: 'platform/redactor', folderId: 'platform/' },
-      'etag',
-    );
+    const result = await updateInterceptor({ name: 'redactor' }, 'etag');
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -121,5 +126,63 @@ describe('Assets interceptor :: server actions', () => {
 
     expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.INTERCEPTOR, 'platform/redactor');
     expect(result).toEqual({ success: true });
+  });
+
+  test('Should call getConfigFileInterceptors action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileInterceptors();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileInterceptor action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileInterceptor('my-interceptor');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ConfigFileEntityType.Interceptors,
+      'my-interceptor',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+});
+
+describe('Assets interceptor :: catalog metadata', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+  });
+
+  test.each([
+    ['create', (interceptor: any) => createInterceptor(interceptor)],
+    ['update', (interceptor: any) => updateInterceptor(interceptor, 'etag')],
+  ])('carries catalogSchemaId and catalogProperties through a %s', async (_label, action) => {
+    await action({
+      name: 'redactor',
+      catalogSchemaId: 'https://host/interceptor-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).toMatchObject({
+      catalogSchemaId: 'https://host/interceptor-card',
+      catalogProperties: { tag: 'Featured' },
+    });
+  });
+
+  test('leaves an interceptor carrying no catalog metadata untouched', async () => {
+    await updateInterceptor({ name: 'redactor' }, 'etag');
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body).not.toHaveProperty('catalogSchemaId');
+    expect(body).not.toHaveProperty('catalogProperties');
   });
 });

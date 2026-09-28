@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { executeQuery, translateSqlToQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
+import { translateSqlToQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -18,6 +18,20 @@ import {
 } from '@/src/models/analytics/query';
 import { ChartConfig, ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
+import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
+
+const runQueryMock = vi.fn(
+  async (_query?: unknown): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } }),
+);
+
+// One object for the file: a fresh one per render would change the identity the effects depend on.
+const RUNNER = {
+  runQuery: runQueryMock,
+  runSql: vi.fn(async (): Promise<QueryOutcome> => ({ isSuccess: true, result: { rows: [] } })),
+};
+vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
+  useAnalyticsQuery: () => RUNNER,
+}));
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
@@ -159,8 +173,8 @@ describe('QueryBuilder — a stored saved query', () => {
     localStorage.clear();
     setFullAdmin(true);
     vi.mocked(updateSavedQuery).mockResolvedValue({ success: true, response: savedQuery({ generation: 2 }) });
-    vi.mocked(executeQuery).mockImplementation(() =>
-      Promise.resolve({ success: true, response: { columns: ['project_id'], rows: [{ project_id: 'a' }] } }),
+    runQueryMock.mockImplementation(() =>
+      Promise.resolve({ isSuccess: true, result: { columns: ['project_id'], rows: [{ project_id: 'a' }] } }),
     );
   });
 

@@ -4,6 +4,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { EntityType } from '@/src/types/entity-type';
 import { DEPLOYMENT_IMAGE_DEP } from '@/src/utils/entities/get-export-deps';
+import { ExportEntityKey } from '@/src/types/export';
 
 const entityTypeToMenuKey: Record<string, string> = {
   [EntityType.ROLE]: MenuI18nKey.Roles,
@@ -30,7 +31,7 @@ const entityTypeToMenuKey: Record<string, string> = {
   [DEPLOYMENT_IMAGE_DEP.APPLICATION]: ExportI18nKey.ApplicationImage,
 };
 
-export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
+export const getButtonTitle = (t: (v: string) => string, selectedTab?: ExportEntityKey, full?: boolean) => {
   const menuKey = selectedTab ? entityTypeToMenuKey[selectedTab] : undefined;
   const entity = menuKey ? t(menuKey) : '';
   return full ? `${t(ButtonsI18nKey.Add)} ${entity}` : entity;

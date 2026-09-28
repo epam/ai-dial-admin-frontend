@@ -1,10 +1,6 @@
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
-import {
-  getNameVersionForAsset,
-  getNameVersionFromAsset,
-  modifyNameVersionInAsset,
-} from '@/src/utils/entities/versions';
+import { getNameVersionForAsset, getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   ApplicationsI18nKey,
@@ -20,7 +16,7 @@ import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
 import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
 import { ImportFileType, ImportStatus } from '@/src/types/import';
-import { getFolderNameAndPath } from '@/src/utils/files/path';
+import { getFolderNameAndPath, updatePathWithName } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
@@ -111,12 +107,15 @@ export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepSt
  *
  * @param {Map<string, FileImportMap>} editedFileMap - data map for import
  * @param {?DialPrompt[]} [existingData] - array of already existing in current folder data
+ * @param {?(t: string) => string} [t] - translation function
+ * @param {?boolean} [isVersionless] - prompts import name-only (no `__version` split)
  * @returns {AssetImportGridData[]} - array of AssetImportGridData
  */
 export const generateAssetRowDataForImportGrid = (
   editedFileMap: Map<string, FileImportMap>,
   existingData?: (DialPrompt | AssetApp)[],
   t?: (t: string) => string,
+  isVersionless?: boolean,
 ): AssetImportGridData[] => {
   const data: AssetImportGridData[] = [];
 
@@ -124,9 +123,17 @@ export const generateAssetRowDataForImportGrid = (
     const { extension } = getNameExtensionFromFile(key);
     if (!value.isInvalid) {
       value.files.forEach((file, index) => {
-        const nameData = file.id
-          ? getNameVersionFromAsset(getFolderNameAndPath(file.id as string).name)
-          : { name: file.name as string, version: (file as AssetApp).version as string };
+        let nameData: { name: string; version?: string };
+        if (isVersionless) {
+          // A versionless prompt's name is the last id segment verbatim — a `__` in it is part
+          // of the name, never a name/version split.
+          const idName = file.id ? getFolderNameAndPath(file.id as string).name : (file.name as string);
+          nameData = { name: idName };
+        } else if (file.id) {
+          nameData = getNameVersionFromAsset(getFolderNameAndPath(file.id as string).name);
+        } else {
+          nameData = { name: file.name as string, version: (file as AssetApp).version as string };
+        }
 
         data.push({
           index,
@@ -196,14 +203,18 @@ export const generateFileRowDataForImportGrid = (
  * Generate columns for export grid
  *
  * @param {(value: string, key: string, field: string) => void} onChange - function for changing grid data
+ * @param {?boolean} [withIcon] - render the file-name icon renderer
+ * @param {?boolean} [readonly] - disable inline editing
+ * @param {?boolean} [isVersionless] - omit the editable Version column (prompts)
  * @returns {ColDef[]} - column definitions
  */
 export const generateAssetColumnsForImportGrid = (
   onChange: (value: string, data: unknown, field: string) => void,
   withIcon?: boolean,
   readonly?: boolean,
+  isVersionless?: boolean,
 ): ColDef[] => {
-  return [
+  const columns: ColDef[] = [
     {
       headerName: 'Name',
       field: 'assetName',
@@ -215,7 +226,10 @@ export const generateAssetColumnsForImportGrid = (
         onChange,
       },
     },
-    {
+  ];
+
+  if (!isVersionless) {
+    columns.push({
       headerName: 'Version',
       field: 'version',
       cellClass: NO_BORDER_CLASS,
@@ -223,15 +237,18 @@ export const generateAssetColumnsForImportGrid = (
         return !params.data.invalid && !readonly ? { component: EditableCellRenderer } : void 0;
       },
       cellRendererParams: { onChange },
+    });
+  }
+
+  columns.push({
+    headerName: 'File',
+    field: 'name',
+    cellRendererSelector: () => {
+      return withIcon ? { component: FileNameCellRenderer } : void 0;
     },
-    {
-      headerName: 'File',
-      field: 'name',
-      cellRendererSelector: () => {
-        return withIcon ? { component: FileNameCellRenderer } : void 0;
-      },
-    },
-  ];
+  });
+
+  return columns;
 };
 
 /**
@@ -279,13 +296,15 @@ export const generateFileColumnsForImportGrid = (
  * Check row data for errors
  *
  * @param {AssetImportGridData} data - row data
- * @returns {boolean} - true if DialPrompt with same name and version from row already exists
+ * @param {?boolean} [isVersionless] - prompts conflict on the plain name alone
+ * @returns {boolean} - true if an asset with the same name (and version, when versioned) already exists
  */
-export const isErrorPromptNode = (data: AssetImportGridData): boolean => {
-  const version = data.version;
-  const name = data.assetName;
-  const existingPrompts = data.existingNames as string[];
-  return existingPrompts.some((p) => p === getNameVersionForAsset(name, version));
+export const isErrorPromptNode = (data: AssetImportGridData, isVersionless?: boolean): boolean => {
+  const existingNames = data.existingNames as string[];
+  if (isVersionless) {
+    return existingNames.some((p) => p === data.assetName);
+  }
+  return existingNames.some((p) => p === getNameVersionForAsset(data.assetName, data.version || ''));
 };
 
 /**
@@ -326,9 +345,9 @@ export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute)
     return true;
   }
 
-  return view === ApplicationRoute.Prompts
-    ? !/^prompts\/public\/([^/]+\/)*[^/]+__[^/]+$/.test(values[0].id as string)
-    : false;
+  // A prompt id is `prompts/public/.../name` — a `__` in the name is neither required nor
+  // forbidden (mirrors the server-side `PROMPT_ID_REGEX`).
+  return view === ApplicationRoute.Prompts ? !/^prompts\/public\/([^/]+\/)*[^/]+$/.test(values[0].id as string) : false;
 };
 
 /**
@@ -369,20 +388,14 @@ export const changeFilesMap = (
     let targetFile = updatedValue.files[fileIndex];
     if (view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) {
       if (targetFile) {
-        if (field === 'version') {
+        if (field === 'assetName') {
+          // A versionless prompt's id is folder + plain name — the new name replaces the last
+          // segment verbatim, with no `__version` graft.
           updatedValue.files[fileIndex] = {
             content: (targetFile as DialPrompt).content,
             description: (targetFile as DialPrompt).description,
             folderId: targetFile.folderId,
-            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value),
-            name: targetFile.name,
-          } as DialPrompt;
-        } else if (field === 'assetName') {
-          updatedValue.files[fileIndex] = {
-            content: (targetFile as DialPrompt).content,
-            description: (targetFile as DialPrompt).description,
-            folderId: targetFile.folderId,
-            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, value, void 0),
+            id: updatePathWithName((targetFile.id || targetFile.name) as string, value),
             name: value,
           } as DialPrompt;
         } else if (field === 'fileName') {

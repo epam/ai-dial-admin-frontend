@@ -69,8 +69,8 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
       try {
         const access = await getTableAccess(table.name);
         if (!isCurrent) return;
-        setWriteRoles(access?.write ?? []);
-        setIsAccessReadable(Boolean(access));
+        setWriteRoles(access.response?.write ?? []);
+        setIsAccessReadable(Boolean(access.response));
       } catch {
         if (isCurrent) setIsAccessReadable(false);
       } finally {

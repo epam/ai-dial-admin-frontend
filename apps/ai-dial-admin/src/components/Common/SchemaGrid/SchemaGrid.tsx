@@ -10,11 +10,19 @@ import isEqual from 'lodash/isEqual';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { findRowInTree, updateRowInTree } from '@/src/components/Common/TreeGrid/utils';
 import { getRowIdById } from '@/src/components/Grid/utils';
+import {
+  CATALOG_META_LOCALIZED,
+  CATALOG_META_SECTION,
+  CATALOG_META_TAB,
+  CATALOG_META_WIDGET,
+} from '@/src/constants/catalog-schemas';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
+import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from './constants';
+import { SchemaMetaColumn, SchemaMetaHandlers } from './models';
 import {
   SchemaFieldRow,
   createEmptyField,
@@ -28,11 +36,12 @@ interface SchemaGridProps {
   schema?: JSONSchema7;
   onChange: (schema: JSONSchema7, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
-  isDialSchema?: boolean;
+  /** Which `dial:meta` columns this schema kind has — see the sets in `constants.ts`. */
+  metaColumns?: SchemaMetaColumn[];
   isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDialSchema, isReadonly }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, metaColumns, isReadonly }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
@@ -142,29 +151,55 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     [updateFields],
   );
 
-  const onChangeOrder = useCallback(
-    (value: number | string, data: SchemaFieldRow) => {
+  // A cleared cell removes its key rather than storing an empty hint.
+  const onChangeDialMeta = useCallback(
+    (key: string, value: unknown, data: SchemaFieldRow, skipRefresh?: boolean) => {
       if (data.parentId !== null) return;
-      const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
-      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
-        ...f,
-        dialMeta: { ...f.dialMeta, 'dial:propertyOrder': num },
-      }));
-      updateFields(updated, true);
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => {
+        const dialMeta = { ...f.dialMeta };
+        if (value === '' || value === undefined) {
+          delete dialMeta[key];
+        } else {
+          dialMeta[key] = value;
+        }
+        return { ...f, dialMeta: Object.keys(dialMeta).length ? dialMeta : undefined };
+      });
+      updateFields(updated, skipRefresh);
     },
     [updateFields],
   );
 
-  const onChangePropertyKind = useCallback(
-    (value: string, data: SchemaFieldRow) => {
-      if (data.parentId !== null) return;
-      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
-        ...f,
-        dialMeta: { ...f.dialMeta, 'dial:propertyKind': value },
-      }));
-      updateFields(updated);
+  const onChangeOrder = useCallback(
+    (value: number | string, data: SchemaFieldRow) => {
+      const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
+      onChangeDialMeta(DIAL_META_PROPERTY_ORDER, num, data, true);
     },
-    [updateFields],
+    [onChangeDialMeta],
+  );
+
+  const onChangeTab = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_TAB, value, data, true),
+    [onChangeDialMeta],
+  );
+
+  const onChangeSection = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_SECTION, value, data, true),
+    [onChangeDialMeta],
+  );
+
+  const onChangeWidget = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_WIDGET, value, data),
+    [onChangeDialMeta],
+  );
+
+  const onChangeLocalized = useCallback(
+    (value: boolean, data: SchemaFieldRow) => onChangeDialMeta(CATALOG_META_LOCALIZED, value, data),
+    [onChangeDialMeta],
+  );
+
+  const onChangePropertyKind = useCallback(
+    (value: string, data: SchemaFieldRow) => onChangeDialMeta(DIAL_META_PROPERTY_KIND, value, data),
+    [onChangeDialMeta],
   );
 
   const onRemoveField = useCallback(
@@ -207,6 +242,26 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
 
   const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
 
+  const metaHandlers = useMemo<SchemaMetaHandlers>(() => {
+    const handlers: Record<SchemaMetaColumn, SchemaMetaHandlers[SchemaMetaColumn]> = {
+      [SchemaMetaColumn.Order]: onChangeOrder,
+      [SchemaMetaColumn.PropertyKind]: onChangePropertyKind,
+      [SchemaMetaColumn.Tab]: onChangeTab,
+      [SchemaMetaColumn.Section]: onChangeSection,
+      [SchemaMetaColumn.Widget]: onChangeWidget,
+      [SchemaMetaColumn.Localized]: onChangeLocalized,
+    };
+    return Object.fromEntries((metaColumns ?? []).map((column) => [column, handlers[column]]));
+  }, [
+    metaColumns,
+    onChangeOrder,
+    onChangePropertyKind,
+    onChangeTab,
+    onChangeSection,
+    onChangeWidget,
+    onChangeLocalized,
+  ]);
+
   const columnDefs: ColDef[] = useMemo(
     () =>
       getSchemaGridColumns(
@@ -219,8 +274,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         onRemoveField,
         t,
         isReadonlyGrid,
-        isDialSchema ? onChangeOrder : undefined,
-        isDialSchema ? onChangePropertyKind : undefined,
+        metaHandlers,
       ),
     [
       onToggleExpand,
@@ -231,10 +285,8 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       onChangeRequired,
       onRemoveField,
       t,
-      isDialSchema,
       isReadonlyGrid,
-      onChangeOrder,
-      onChangePropertyKind,
+      metaHandlers,
     ],
   );
 

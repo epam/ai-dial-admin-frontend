@@ -14,6 +14,7 @@ import { IconPlayerPlay } from '@tabler/icons-react';
 import KpiStrip from '@/src/components/TestSuites/Trends/KpiStrip';
 import MetricTrends from '@/src/components/TestSuites/Trends/MetricTrends';
 import OverallScoreTrend from '@/src/components/TestSuites/Trends/OverallScoreTrend';
+import TestCaseStability from '@/src/components/TestSuites/Trends/TestCaseStability';
 import { useTrendsData } from '@/src/components/TestSuites/Trends/use-trends-data';
 import { aggregateThresholdStats } from '@/src/components/TestSuites/Trends/utils/threshold-stats';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -96,6 +97,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
         byStatistic={data.byStatistic}
         isLoading={isLoading}
       />
+      <TestCaseStability runOrder={data.runOrder} runCount={kpis.runCount} />
     </div>
   );
 };

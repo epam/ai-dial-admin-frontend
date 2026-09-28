@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { appRunnerSchemaApi, assetApi } from '@/src/app/api/api';
+import { appRunnerSchemaApi, assetApi, configFileApi } from '@/src/app/api/api';
 import { DialAppRunnerResource, DialModelResourceStatus } from '@/src/models/dial/resource';
 import { RoutePermission } from '@/src/models/dial/route';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +11,8 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeleteRunners,
   createRunner,
+  getConfigFileAppRunner,
+  getConfigFileAppRunners,
   getResolvedRunnerSchema,
   getRunner,
   getRunners,
@@ -107,16 +110,25 @@ describe('Assets app runner :: server actions', () => {
     });
 
     test('Should strip Core-injected and client-side identity fields', async () => {
+      // A merged read carries `path`/`folderId`/`status`/`author` only under `_metadata` (dropped
+      // wholesale by `stripMetadata`); `name`/`createdAt`/`updatedAt` may also sit flat — Core
+      // re-injects `name` on every read and `ModifiedEntity` types the timestamps — and the payload
+      // builder destructures those spellings out.
       await updateRunner(
         {
           ...runner,
           name: 'schemas/platform/qq',
-          status: DialModelResourceStatus.Valid,
-          path: 'platform/qq',
-          folderId: 'platform/',
-          author: 'someone',
           createdAt: '1',
           updatedAt: '2',
+          _metadata: {
+            name: 'schemas/platform/qq',
+            path: 'platform/qq',
+            folderId: 'platform/',
+            status: DialModelResourceStatus.Valid,
+            author: 'someone',
+            createdAt: '1',
+            updatedAt: '2',
+          },
         } as DialAppRunnerResource,
         'etag',
       );
@@ -231,5 +243,24 @@ describe('Assets app runner :: server actions', () => {
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toEqual('Schema not found');
+  });
+
+  test('Should call getConfigFileAppRunners action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileAppRunners();
+
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Schemas);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileAppRunner action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileAppRunner('my-runner');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Schemas, 'my-runner');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

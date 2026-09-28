@@ -99,7 +99,7 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
 
   return (
     <DialFileManager
-      className="p-0 gap-0 bg-layer-3"
+      className="p-0 gap-0 bg-layer-3 !grid-rows-1"
       gridClassName="p-3"
       path={filePath}
       items={files as []}

@@ -1,22 +1,25 @@
 'use client';
 
 import { useCallback } from 'react';
+
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModelPricing, PricingType } from '@/src/models/dial/model';
-import classNames from 'classnames';
-import { getMultipliedValue, getPriceRealValue } from './utils';
+import { DialModelPricing, PricingRate, PricingType } from '@/src/models/dial/model';
+import PricingRateControl from './PricingRateControl';
+import { getMultipliedRate, getMultipliedValue, getPriceRealValue, getRealRate } from './utils';
 
 interface Props<T> {
   model: T;
   onChangeModel: (model: T) => void;
+  isAsset?: boolean;
 }
 
-const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel }: Props<T>) => {
+const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel, isAsset }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -69,18 +72,18 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
     [isTokenType, onChangeModel, model],
   );
 
+  // Cache rates are flat-or-tree values: the control works in display units, and the whole tree is
+  // scaled back to per-token at this boundary, where an emptied branch also drops out of the model.
   const onChangeCacheRead = useCallback(
-    (cacheRead?: number | string) => {
-      const value = getPriceRealValue(cacheRead, isTokenType);
-      onChangeModel({ ...model, pricing: { ...model.pricing, cacheRead: value } });
+    (cacheRead: PricingRate | undefined) => {
+      onChangeModel({ ...model, pricing: { ...model.pricing, cacheRead: getRealRate(cacheRead, isTokenType) } });
     },
     [isTokenType, onChangeModel, model],
   );
 
   const onChangeCacheWrite = useCallback(
-    (cacheWrite?: number | string) => {
-      const value = getPriceRealValue(cacheWrite, isTokenType);
-      onChangeModel({ ...model, pricing: { ...model.pricing, cacheWrite: value } });
+    (cacheWrite: PricingRate | undefined) => {
+      onChangeModel({ ...model, pricing: { ...model.pricing, cacheWrite: getRealRate(cacheWrite, isTokenType) } });
     },
     [isTokenType, onChangeModel, model],
   );
@@ -121,25 +124,26 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
           containerClassName="w-[120px]"
           disabled={isPriceDisabled}
         />
-
-        <PriceControl
-          elementId="cacheReadPrice"
-          label={t(ModelViewI18nKey.CacheReadPrice)}
-          value={getMultipliedValue(model.pricing?.cacheRead, isTokenType)}
-          onChange={onChangeCacheRead}
-          containerClassName="w-[120px]"
-          disabled={isCacheRateDisabled}
-        />
-
-        <PriceControl
-          elementId="cacheWritePrice"
-          label={t(ModelViewI18nKey.CacheWritePrice)}
-          value={getMultipliedValue(model.pricing?.cacheWrite, isTokenType)}
-          onChange={onChangeCacheWrite}
-          containerClassName="w-[120px]"
-          disabled={isCacheRateDisabled}
-        />
       </div>
+      {isAsset && (
+        <div className="flex flex-col gap-y-4 flex-wrap lg:flex-row lg:gap-x-2 lg:items-start">
+          <PricingRateControl
+            elementId="cacheReadPrice"
+            label={t(ModelViewI18nKey.CacheReadPrice)}
+            value={getMultipliedRate(model.pricing?.cacheRead, isTokenType)}
+            onChange={onChangeCacheRead}
+            disabled={isCacheRateDisabled}
+          />
+
+          <PricingRateControl
+            elementId="cacheWritePrice"
+            label={t(ModelViewI18nKey.CacheWritePrice)}
+            value={getMultipliedRate(model.pricing?.cacheWrite, isTokenType)}
+            onChange={onChangeCacheWrite}
+            disabled={isCacheRateDisabled}
+          />
+        </div>
+      )}
     </div>
   );
 };

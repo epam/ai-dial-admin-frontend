@@ -14,7 +14,7 @@ interface SimpleHeaderMockProps {
 }
 
 const { useAppContextMock, simpleHeaderSpy } = vi.hoisted(() => ({
-  useAppContextMock: vi.fn<() => Pick<AppContextType, 'featureFlags'>>(),
+  useAppContextMock: vi.fn<() => Pick<AppContextType, 'featureFlags' | 'setEntityReadOnly'>>(),
   simpleHeaderSpy: vi.fn<(props: SimpleHeaderMockProps) => void>(),
 }));
 
@@ -40,15 +40,27 @@ vi.mock('../TabsContent', () => ({ default: () => null }));
 
 const model = { name: 'gpt-4', path: 'gpt-4', folderId: '' } as AssetModel;
 
-const MODEL_TABS = [EntityViewTab.Properties, EntityViewTab.Features, EntityViewTab.Roles, EntityViewTab.Interceptors];
+const MODEL_TABS = [
+  EntityViewTab.Properties,
+  EntityViewTab.Features,
+  EntityViewTab.Catalog,
+  EntityViewTab.Roles,
+  EntityViewTab.Interceptors,
+];
 
 describe('ModelView — Audit tab wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const renderTabIds = (isDashboardEnabled: boolean): EntityViewTab[] => {
-    useAppContextMock.mockReturnValue({ featureFlags: { dashboardEnabled: isDashboardEnabled } as FeatureFlags });
+  const renderTabIds = (isDashboardEnabled: boolean, isAdminApiEnabled = true): EntityViewTab[] => {
+    useAppContextMock.mockReturnValue({
+      featureFlags: {
+        dashboardEnabled: isDashboardEnabled,
+        adminApiEnabled: isAdminApiEnabled,
+      } as FeatureFlags,
+      setEntityReadOnly: vi.fn(),
+    });
     render(<ModelView etag="etag" originalModel={model} roles={[]} interceptors={[]} />);
 
     expect(simpleHeaderSpy).toHaveBeenCalled();
@@ -57,11 +69,15 @@ describe('ModelView — Audit tab wiring', () => {
     return (tabs ?? []).map((tab) => tab.id as EntityViewTab);
   };
 
-  test('Should pass the Audit tab to the header, last, when the dashboard feature is enabled', () => {
+  test('Should pass the Audit tab to the header, last, when the dashboard feature and admin API are enabled', () => {
     expect(renderTabIds(true)).toEqual([...MODEL_TABS, EntityViewTab.Audit]);
   });
 
   test('Should pass the header the model tabs without Audit when the dashboard feature is disabled', () => {
     expect(renderTabIds(false)).toEqual(MODEL_TABS);
+  });
+
+  test('Should pass the header the model tabs without Audit when the dashboard feature is enabled but the admin API is not', () => {
+    expect(renderTabIds(true, false)).toEqual(MODEL_TABS);
   });
 });

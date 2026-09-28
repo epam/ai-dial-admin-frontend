@@ -34,7 +34,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { disableDeploymentsJSONEditor } = useAppContext();
+  const { disableDeploymentsJSONEditor, featureFlags } = useAppContext();
 
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
@@ -61,6 +61,8 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
     t,
     selectedImage.buildStatus,
     selectedImage.allowedDomains,
+    undefined,
+    featureFlags,
   );
 
   useEffect(() => {

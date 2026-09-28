@@ -1,22 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import EvaluatorCell from '@/src/components/Analytics/Pipelines/Common/EvaluatorCell';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineKindCell from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
+import { TransformCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TransformCell';
 import TriggerCell from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
-import { AnalyticsPipelinesI18nKey, AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
-import { EvaluatorType } from '@/src/models/analytics/evaluator';
-import { PipelineListItem, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
+import { PipelineListItem, TransformType, TriggerKind, PipelineKind } from '@/src/models/analytics/pipeline';
 
 const baseRule: PipelineListItem = {
   name: 'rule',
   kind: PipelineKind.Enrich,
-  evaluator_name: 'feedback-rollup',
-  evaluator_version: 2,
-  evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+  transform_type: TransformType.Llm,
   target: 'turn_feedback',
-  grain_key: 'response_id',
   trigger: { kind: TriggerKind.OnIngest },
   enabled: true,
   generation: 5,
@@ -45,31 +42,34 @@ describe('Pipelines :: TriggerCell', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupedBy)).not.toBeInTheDocument();
   });
 
-  test('renders nothing without a rule', () => {
+  test('states an absent trigger rather than leaving the cell blank', () => {
     const { container } = render(<TriggerCell />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(container).not.toBeEmptyDOMElement();
+    expect(container.textContent).toBe(UNAVAILABLE_VALUE);
   });
 });
 
-describe('Pipelines :: EvaluatorCell', () => {
-  test('shows the pinned name, version and type badge', () => {
-    render(<EvaluatorCell pipeline={baseRule} />);
+describe('Pipelines :: TransformCell', () => {
+  const renderCell = (data?: PipelineListItem) =>
+    render(<TransformCellRenderer {...({ data } as Parameters<typeof TransformCellRenderer>[0])} />);
 
-    expect(screen.getByText('feedback-rollup@2')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.EvaluatorTypeSql)).toBeInTheDocument();
+  test('names the transform type the declaration carries', () => {
+    renderCell(baseRule);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TransformTypeLlm)).toBeInTheDocument();
   });
 
-  test('marks an unpinned rule as following latest', () => {
-    render(<EvaluatorCell pipeline={{ ...baseRule, evaluator_version: undefined }} />);
+  test('names a sql transform by its own type', () => {
+    renderCell({ ...baseRule, transform_type: TransformType.Sql });
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.Latest)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.TransformTypeSql)).toBeInTheDocument();
   });
 
-  test('does not mark a pinned rule as latest', () => {
-    render(<EvaluatorCell pipeline={baseRule} />);
+  test('leaves the cell empty for a row carrying no transform', () => {
+    renderCell({ ...baseRule, kind: PipelineKind.Aggregate, transform_type: undefined });
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.Latest)).not.toBeInTheDocument();
+    expect(screen.getByText(UNAVAILABLE_VALUE)).toBeInTheDocument();
   });
 });
 

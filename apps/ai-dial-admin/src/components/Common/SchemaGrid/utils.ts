@@ -21,8 +21,13 @@ export interface SchemaFieldRow {
   parentId: string | null;
   depth: number;
   isAddSubFieldRow?: boolean;
-  /** Value of dial:meta from schema (first-level only). Stored as-is, e.g. { "dial:propertyKind": "server", "dial:propertyOrder": 1 }. */
+  /** `dial:meta` as stored, at any depth. Editable columns exist for first-level rows only. */
   dialMeta?: Record<string, unknown>;
+  /**
+   * Keywords of the source property the grid does not own, carried verbatim: both rebuild paths
+   * reconstruct a property from the row's editable fields, so a keyword not held here is dropped.
+   */
+  preserved?: Record<string, unknown>;
   /** Enum values from schema when property has "enum". */
   enum?: string[];
   /** Default value from schema (e.g. for bindings row default). */
@@ -42,6 +47,22 @@ export interface SchemaTreeNode {
 
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
 const DIAL_META_KEY = 'dial:meta';
+
+/**
+ * Rebuilt from a row's editable fields, so not preserved. `$ref` is resolved for display —
+ * re-emitting it beside the resolved type would double-declare the property.
+ */
+const GRID_OWNED_KEYWORDS: ReadonlySet<string> = new Set([
+  'type',
+  'title',
+  'description',
+  'properties',
+  'required',
+  'items',
+  'additionalProperties',
+  '$ref',
+  DIAL_META_KEY,
+]);
 const MAP_ARRAY_ITEM_PRIMITIVE_TYPES = new Set<JSONSchema7TypeName>(['string', 'number', 'integer', 'boolean']);
 
 export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
@@ -188,7 +209,6 @@ export const getPrimaryType = (schema: JSONSchema7): JSONSchema7TypeName => {
  * @param {(string | null)} parentId - id of the parent field row
  * @param {number} depth - current depth level
  * @param {boolean} isRequired - whether this property is required
- * @param {boolean} isFirstLevel - whether this is a first-level (depth 0) property (for dialMeta extraction)
  * @returns {SchemaFieldRow} - the resulting schema field row with children recursively resolved
  */
 const convertPropertyToField = (
@@ -198,7 +218,6 @@ const convertPropertyToField = (
   parentId: string | null,
   depth: number,
   isRequired: boolean,
-  isFirstLevel: boolean,
 ): SchemaFieldRow => {
   const resolvedDef = resolveDef(def, rootSchema);
   if (!isJSONSchema7(resolvedDef)) {
@@ -207,11 +226,14 @@ const convertPropertyToField = (
 
   const effectiveDef = getEffectiveSchema(def, rootSchema) ?? (resolvedDef as JSONSchema7);
   const type = getPrimaryType(effectiveDef);
-  const rawDef = isFirstLevel && typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
+  const rawDef = typeof def === 'object' && def !== null ? (def as Record<string, unknown>) : null;
   const dialMeta =
     rawDef && typeof rawDef[DIAL_META_KEY] === 'object' && rawDef[DIAL_META_KEY] !== null
       ? (rawDef[DIAL_META_KEY] as Record<string, unknown>)
       : undefined;
+  const preserved = rawDef
+    ? Object.fromEntries(Object.entries(rawDef).filter(([keyword]) => !GRID_OWNED_KEYWORDS.has(keyword)))
+    : {};
   const propSchema = resolvedDef as JSONSchema7;
   const enumValues = Array.isArray(propSchema.enum) ? propSchema.enum.map((v) => String(v)) : undefined;
 
@@ -229,6 +251,7 @@ const convertPropertyToField = (
     ...(propSchema.minimum !== undefined && { minimum: propSchema.minimum }),
     ...(propSchema.maximum !== undefined && { maximum: propSchema.maximum }),
     ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }),
+    ...(Object.keys(preserved).length && { preserved }),
     ...(enumValues?.length && { enum: enumValues }),
     ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
   };
@@ -238,15 +261,7 @@ const convertPropertyToField = (
   if (type === 'object' && objectPropertyKeys.length > 0) {
     const nestedRequired = effectiveDef.required || [];
     field.children = Object.entries(effectiveDef.properties!).map(([childName, childDef]) =>
-      convertPropertyToField(
-        childName,
-        childDef,
-        rootSchema,
-        field.id,
-        depth + 1,
-        nestedRequired.includes(childName),
-        false,
-      ),
+      convertPropertyToField(childName, childDef, rootSchema, field.id, depth + 1, nestedRequired.includes(childName)),
     );
     if (field.children.length) {
       field.expanded = true;
@@ -289,7 +304,6 @@ const convertPropertyToField = (
           field.id,
           depth + 1,
           nestedRequired.includes(childName),
-          false,
         ),
       );
       if (field.children.length) {
@@ -335,8 +349,15 @@ export const jsonSchemaToFields = (schema: JSONSchema7 | undefined, root?: JSONS
   const requiredFields = schema.required || [];
 
   return Object.entries(schema.properties).map(([name, def]) =>
-    convertPropertyToField(name, def, rootSchema, null, 0, requiredFields.includes(name), true),
+    convertPropertyToField(name, def, rootSchema, null, 0, requiredFields.includes(name)),
   );
+};
+
+const applyPreservedKeywords = (prop: JSONSchema7 & Record<string, unknown>, field: SchemaFieldRow): void => {
+  Object.assign(prop, field.preserved);
+  if (field.dialMeta && Object.keys(field.dialMeta).length) {
+    prop[DIAL_META_KEY] = field.dialMeta;
+  }
 };
 
 /**
@@ -385,9 +406,7 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
       }
     }
 
-    if (field.parentId === null && field.dialMeta) {
-      prop[DIAL_META_KEY] = field.dialMeta;
-    }
+    applyPreservedKeywords(prop, field);
 
     schema.properties![fieldName] = prop as JSONSchema7;
     if (field.required) {
@@ -414,9 +433,10 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
 
   children.forEach((child) => {
     const childName = child.name;
-    const childProp: JSONSchema7 = { type: child.type };
+    const childProp: JSONSchema7 & Record<string, unknown> = { type: child.type };
     if (child.title) childProp.title = child.title;
     if (child.description) childProp.description = child.description;
+    applyPreservedKeywords(childProp, child);
 
     if (child.type === 'object') {
       if (child.children?.length) {

@@ -7,6 +7,8 @@ import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 const t = (key: string) => key;
 
 const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
+  adminApiEnabled: false,
+  catalogEnabled: true,
   dashboardEnabled: false,
   deploymentsEnabled: false,
   evaluationEnabled: false,
@@ -14,33 +16,46 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
-  analyticsConversationsEnabled: false,
+  analyticsSessionsEnabled: false,
+  analyticsUsageEnabled: false,
   queryAssistantEnabled: false,
   ...overrides,
 });
 
-const dashboardFlags = flags({ dashboardEnabled: true });
+const dashboardFlags = flags({ dashboardEnabled: true, adminApiEnabled: true });
 
 const tabIds = (featureFlags?: FeatureFlags) =>
   getTabsForAsset(t, ApplicationRoute.PlatformModels, featureFlags).map((tab) => tab.id);
 
 describe('Model asset :: detail view tab set', () => {
-  test('Should expose exactly Properties, Features, Roles and Interceptors in order', () => {
+  test('Should expose exactly Properties, Features, Catalog, Roles and Interceptors in order', () => {
     expect(tabIds()).toEqual([
       EntityViewTab.Properties,
       EntityViewTab.Features,
+      EntityViewTab.Catalog,
       EntityViewTab.Roles,
       EntityViewTab.Interceptors,
     ]);
   });
 
-  test('Should append Audit as the fifth and last tab when the dashboard feature is enabled', () => {
+  test('Should append Audit as the last tab when the dashboard feature and admin API are enabled', () => {
     expect(tabIds(dashboardFlags)).toEqual([
       EntityViewTab.Properties,
       EntityViewTab.Features,
+      EntityViewTab.Catalog,
       EntityViewTab.Roles,
       EntityViewTab.Interceptors,
       EntityViewTab.Audit,
+    ]);
+  });
+
+  test('Should not append Audit when the dashboard feature is enabled but the admin API is not', () => {
+    expect(tabIds(flags({ dashboardEnabled: true }))).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Features,
+      EntityViewTab.Catalog,
+      EntityViewTab.Roles,
+      EntityViewTab.Interceptors,
     ]);
   });
 

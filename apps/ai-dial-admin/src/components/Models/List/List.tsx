@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { createModel, removeModel } from '@/src/app/[lang]/models/actions';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
@@ -12,9 +12,12 @@ import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-name
 
 interface Props {
   data: DialModel[];
+  /** True when `data` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
+  headerExtra?: ReactNode;
 }
 
-const ModelsList: FC<Props> = ({ data }) => {
+const ModelsList: FC<Props> = ({ data, isConfigFileSource, headerExtra }) => {
   const names = filterDisplayNamesWithVersions(data);
 
   const t = useI18n();
@@ -29,6 +32,8 @@ const ModelsList: FC<Props> = ({ data }) => {
       onCreateEntity={createModel}
       onRemoveEntity={removeModel}
       showColumnsButton={true}
+      isConfigFileSource={isConfigFileSource}
+      headerExtra={headerExtra}
     />
   );
 };

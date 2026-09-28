@@ -4,16 +4,17 @@ import { FC, useEffect, useMemo } from 'react';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Publication } from '@/src/models/dial/publications';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   publication: Publication;
   onChange?: (publication: Publication) => void;
-  getContext: () => AssetsFolderContext;
+  getContext: () => AssetsFolderContextReader<AssetListItem>;
 }
 
 const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {

@@ -561,9 +561,10 @@ export const getColumnsGridColumns = (
         onChange,
         hideTriangle: true,
       },
+      flex: 1,
     },
     {
-      headerName: 'JSONata Expression',
+      headerName: 'JSON Path',
       colId: 'expression',
       field: 'expression',
       sortable: false,
@@ -575,6 +576,7 @@ export const getColumnsGridColumns = (
         onChange: onChangeExpression,
         variables: jsonataVariables,
       },
+      flex: 2,
     },
     {
       headerName: 'Data type',
@@ -583,6 +585,7 @@ export const getColumnsGridColumns = (
       sortable: false,
       filter: false,
       floatingFilter: false,
+      maxWidth: 200,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
         items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),

@@ -6,6 +6,7 @@ import {
   getNotification,
   getPrepareNotification,
   getSuccessNotification,
+  toReadFailure,
 } from '../notification';
 
 describe('Utils :: getErrorNotification', () => {
@@ -123,6 +124,32 @@ describe('Utils :: getNotification', () => {
       type: NotificationType.success,
       title: '',
       description: '',
+    });
+  });
+});
+
+describe('Utils :: toReadFailure', () => {
+  test('Should narrow an unsuccessful response to its reportable members', () => {
+    const result = toReadFailure({
+      success: false,
+      status: 503,
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'registry timed out',
+      requestId: 'trace-1',
+      etag: 'ignored',
+    });
+    expect(result).toEqual({
+      errorHeader: 'Upstream unavailable',
+      errorMessage: 'registry timed out',
+      requestId: 'trace-1',
+    });
+  });
+
+  test('Should return a failure with no words when there is no response', () => {
+    expect(toReadFailure()).toEqual({
+      errorHeader: void 0,
+      errorMessage: void 0,
+      requestId: void 0,
     });
   });
 });

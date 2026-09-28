@@ -1,0 +1,79 @@
+/**
+ * Dark defaults for the ui-kit 2.0 token set.
+ *
+ * 2.0 introduced its own variables (`--bg-layer-base`, `--bg-control-*`, `--text-control-*`,
+ * `--stroke-accent-*`) and marked the ones the themes service does define — `--bg-layer-0..4` and
+ * friends — as legacy. Those new names ship with LIGHT defaults, so a 2.0 control rendered in this
+ * app came out white on a dark page. The themes service does not know the new names yet, so their
+ * values are declared here, mapped onto the same dark palette the legacy tokens carry.
+ *
+ * Remove this file once the themes service serves the 2.0 token set itself.
+ */
+:root {
+  --bg-layer-sunken: #0c101d;
+  --bg-layer-base: #161b2d;
+  --bg-layer-raised: #1d2439;
+
+  --bg-control-neutral: #1d2439;
+  --bg-control-neutral-hover-strong: #242c42;
+  --bg-control-neutral-active: #242c42;
+  --bg-control-neutral-default: #7c8293;
+  --bg-control-inverted: #57647a;
+
+  --bg-control-accent: #3664e2;
+  --bg-control-accent-hover: #5976e9;
+  --bg-control-accent-alpha: #7da4ff14;
+  --bg-control-accent-alpha-hover: #7da4ff24;
+  --bg-control-accent-alpha-active: #7da4ff33;
+
+  --bg-control-error: #ae2f2f;
+  --bg-control-error-hover: #bf3939;
+  --bg-control-error-active: #cc4545;
+  --bg-control-error-alpha-hover: #f764641a;
+  --bg-control-error-alpha-active: #f7646433;
+
+  --bg-control-disable-primary: #242c42;
+  --bg-control-disable-secondary: #575f73;
+
+  --text-control-permanent: #fcfcfc;
+  --text-control-inverted: #161b2d;
+  --text-control-disable-primary: #7c8293;
+  --text-control-disable-secondary: #575f73;
+  --text-control-accent-hover: #7da4ff;
+  --text-control-accent-active: #a9c4ff;
+
+  --stroke-accent-alpha: #7da4ff59;
+  --stroke-accent-focus: #7da4ff;
+  --stroke-error-alpha: #f7646473;
+  --stroke-control-disable-primary: #575f73;
+
+  --shadow-xs-1: #0c101d66;
+  --shadow-xs-2: #0c101d40;
+
+  --bg-neutral: #161b2d;
+  --bg-backdrop: #0c101d99;
+
+  --bg-control-neutral-hover: #242c42;
+  --bg-control-neutral-hover-muted: #1d2439;
+
+  /* `--bg-gradient-1/-2` and their hover/active variants resolve through these, so the chain needs
+     no entries of its own. */
+  --bg-control-accent-gradient-from: #3664e2;
+  --bg-control-accent-gradient-to: #885df2;
+  --bg-control-accent-gradient-hover-from: #5976e9;
+  --bg-control-accent-gradient-active-to: #7c3aed;
+
+  --stroke-default: #57647a;
+  --stroke-accent: #5c8dea;
+  --stroke-gradient-1: #5976e9;
+  --stroke-gradient-2: #885df2;
+
+  --text-accent: #7da4ff;
+  --text-tertiary: #848e9c;
+
+  --red-900: #402027;
+
+  --shadow-sm: #0c101d66;
+  --shadow-md: #0c101d40;
+  --shadow-lg: #0c101d80;
+}

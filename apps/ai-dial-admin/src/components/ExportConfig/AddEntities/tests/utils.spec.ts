@@ -109,27 +109,27 @@ describe('Export Config Utils :: getButtonTitle', () => {
   });
 
   test('Should return title for MCP_CONTAINER (full)', () => {
-    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MCP_CONTAINER as EntityType, true);
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MCP_CONTAINER, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.McpContainers}`);
   });
 
   test('Should return title for INTERCEPTOR_CONTAINER (full)', () => {
-    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.INTERCEPTOR_CONTAINER as EntityType, true);
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.INTERCEPTOR_CONTAINER, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.InterceptorContainers}`);
   });
 
   test('Should return title for ADAPTER_CONTAINER (full)', () => {
-    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.ADAPTER_CONTAINER as EntityType, true);
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.ADAPTER_CONTAINER, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.AdapterContainers}`);
   });
 
   test('Should return title for MODEL_SERVING (full)', () => {
-    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MODEL_SERVING as EntityType, true);
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.MODEL_SERVING, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.ModelServings}`);
   });
 
   test('Should return title for IMAGE (full)', () => {
-    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.IMAGE as EntityType, true);
+    const res = getButtonTitle(mockTranslate, DeploymentExportEntityType.IMAGE, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Images}`);
   });
 

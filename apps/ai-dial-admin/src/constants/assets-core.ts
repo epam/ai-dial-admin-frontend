@@ -1,26 +1,47 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors, roles, routes and project keys are versionless. */
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors, roles, routes, project keys, prompts and conversations are versionless. */
 export type VersionedResourceType = Exclude<
   ResourceType,
   | ResourceType.FILE
   | ResourceType.SKILL
   | ResourceType.MODEL
   | ResourceType.APP_TYPE_SCHEMA
+  | ResourceType.CATALOG_SCHEMA
   | ResourceType.INTERCEPTOR
   | ResourceType.TRANSLATOR
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
+  | ResourceType.CONVERSATION
+  | ResourceType.PROMPT
 >;
 
-export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
+export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [ResourceType.APPLICATION, ResourceType.TOOLSET];
+
+/**
+ * Versionless resource types that nest in folders (prompt, conversation). Their paths parse with
+ * folder semantics — name = last `/` segment, folderId = the rest — and a `__` in the name is
+ * never split into name + version.
+ */
+export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Set([
+  ResourceType.CONVERSATION,
+  ResourceType.PROMPT,
+]);
+
+/**
+ * Resource types served by Core's `ResourceController`, whose content GET sets an `ETag` response
+ * header — unlike `ConfigResourceController`-served types (models, app runners, interceptors, …)
+ * whose etag must be read from the metadata node instead. Orthogonal to versioning: prompts and
+ * conversations are versionless but still `ResourceController`-served.
+ */
+export const RESOURCE_CONTROLLER_TYPES: ReadonlySet<ResourceType> = new Set([
   ResourceType.APPLICATION,
   ResourceType.TOOLSET,
   ResourceType.CONVERSATION,
   ResourceType.PROMPT,
-];
+]);
 
 /**
  * `v1/{prefix}` content endpoint per resource type (mirrors the backend's per-type Core clients).
@@ -38,6 +59,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.SKILL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
+  [ResourceType.CATALOG_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
@@ -55,6 +77,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.SKILL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
+  [ResourceType.CATALOG_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
   [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
@@ -78,6 +101,7 @@ export const DEFAULT_LIST_PATH_TYPES: ReadonlySet<ResourceType> = new Set([
 export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
   ResourceType.MODEL,
   ResourceType.APP_TYPE_SCHEMA,
+  ResourceType.CATALOG_SCHEMA,
   ResourceType.INTERCEPTOR,
   ResourceType.TRANSLATOR,
   ResourceType.ROLE,

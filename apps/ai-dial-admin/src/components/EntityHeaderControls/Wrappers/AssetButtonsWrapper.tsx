@@ -19,20 +19,26 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
 
-export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
+export interface AssetButtonsWrapperProps extends Omit<
+  SimpleButtonsWrapperProps<AssetWithVersion | DialPrompt>,
+  'onSave'
+> {
   assets?: AssetWithVersion[] | null;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   addedVersions?: string[];
   onChangeAsset?: (asset: AssetWithVersion) => void;
   onSave?: (version?: string) => void;
@@ -61,9 +67,16 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
   const { dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
 
+  // Prompts are versionless: no version dropdown, no save-as-new-version, no all-versions
+  // delete. Apps/toolsets keep the full versioned header.
+  const isVersionlessView = isVersionlessAssetView(view);
+  const entityVersion = entity._metadata?.version;
+  // A versionless entity has no `version` to look up — `includes` also requires a string.
+  const isAddedVersion = !!entityVersion && !!addedVersions?.includes(entityVersion);
+
   const existingVersions = useMemo(() => {
-    return assets?.map((asset) => asset.version) || [];
-  }, [assets]);
+    return isVersionlessView ? [] : assets?.map((asset) => asset.version) || [];
+  }, [assets, isVersionlessView]);
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -98,13 +111,13 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
       if (jsonErrors?.length) {
         const errorNotifications = showEditorErrorNotifications(jsonErrors, showNotification, t);
         dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
+      } else if (isVersionlessView) {
+        onSave?.();
       } else {
-        const isAddedVersion = !!addedVersions?.includes(entity.version);
-        const newVersion = entity.version;
-        onSave?.(version || (isAddedVersion ? newVersion : void 0));
+        onSave?.(version || (isAddedVersion ? entityVersion : void 0));
       }
     },
-    [jsonErrors, showNotification, t, dispatch, addedVersions, entity.version, onSave],
+    [jsonErrors, showNotification, t, dispatch, entityVersion, onSave, isVersionlessView, isAddedVersion],
   );
 
   return (
@@ -114,11 +127,12 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
           <JsonToggles isEditorEnabled={isEditorEnabled} onToggleEditor={jsonConfiguration?.onToggleEditor} />
         ) : isChanged ? (
           <AssetChangedEntityButtons
-            version={entity.version}
-            existingVersions={getVersionsPerName(assets || [])}
+            version={isVersionlessView ? undefined : entityVersion}
+            existingVersions={isVersionlessView ? undefined : getVersionsPerName(assets || [])}
             onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
-            isAddedVersion={!!addedVersions?.includes(entity.version)}
+            isAddedVersion={isVersionlessView ? undefined : isAddedVersion}
+            isVersionlessView={isVersionlessView}
             onSave={onTryToSave}
             entityName={entity.name}
           />
@@ -126,14 +140,16 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
-                <AssetVersionControl
-                  view={view}
-                  asset={entity}
-                  addedVersions={addedVersions || []}
-                  onChangeAddedVersion={onChangeAddedVersion}
-                  assets={assets}
-                  onChangeAsset={onChangeAsset}
-                />
+                {!isVersionlessView && (
+                  <AssetVersionControl
+                    view={view}
+                    asset={entity as AssetWithVersion}
+                    addedVersions={addedVersions || []}
+                    onChangeAddedVersion={onChangeAddedVersion}
+                    assets={assets}
+                    onChangeAsset={onChangeAsset}
+                  />
+                )}
                 <DialDangerButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
@@ -157,7 +173,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
             onCloseModal={onCloseModal}
             getAssetContext={getAssetContext}
             isSelectedView={true}
-            existingVersions={existingVersions}
+            existingVersions={isVersionlessView ? undefined : existingVersions}
             etag={etag}
           />,
           document.body,

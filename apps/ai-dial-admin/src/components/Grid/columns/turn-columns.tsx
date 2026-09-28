@@ -11,6 +11,7 @@ import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCa
 import TurnExpanderCellRenderer from '@/src/components/Grid/CellRenderers/TurnExpanderCellRenderer';
 import TurnIdCellRenderer from '@/src/components/Grid/CellRenderers/TurnIdCellRenderer';
 import { ACTION_COLUMN, EXPANDER_COLUMN_CEL_ID, NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -99,12 +100,14 @@ export const getGroupedSchemaColumn = (
   isReadOnly?: boolean,
 ): ColDef => {
   const field = param.name;
+  const isNumericType = param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER;
 
   return {
     field: getSchemaGridField(field),
     colId: getSchemaFieldColId(field),
     headerName: field,
     editable: false,
+    ...(isNumericType ? rightAlignedColumn : {}),
     valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
     cellRendererParams: {
       isReadonly: isReadOnly,
@@ -144,6 +147,7 @@ export const getGroupedSchemaColumn = (
             skipRequired: true,
             inputType: 'number' as const,
             step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
+            isRightAligned: true,
             onChange: (value: string | number, rowData: unknown) => {
               if (param.type === TestCaseItemType.INTEGER) {
                 const numValue = typeof value === 'string' ? parseFloat(value) : value;

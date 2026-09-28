@@ -24,8 +24,8 @@ const TabsContent: FC<Props> = ({ activeTab, selectedConversation }) => {
   const headerPostfix = useMemo(() => {
     return (
       <>
-        {selectedConversation.author ? (
-          <LabelledText label={t(EntitiesI18nKey.Author)} text={selectedConversation.author} />
+        {selectedConversation._metadata?.author ? (
+          <LabelledText label={t(EntitiesI18nKey.Author)} text={selectedConversation._metadata?.author} />
         ) : null}
         <FoldersStorageLabel asset={selectedConversation} />
       </>

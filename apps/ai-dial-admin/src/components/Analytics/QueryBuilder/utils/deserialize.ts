@@ -5,6 +5,7 @@ import {
   FilterGroupNode,
   FilterNode,
   FilterNodeKind,
+  FilterOperandKind,
   FilterPredicateNode,
   FnArgValue,
   GroupByRow,
@@ -20,6 +21,7 @@ import {
   QueryGroup,
   QueryLogicalOperator,
   QueryMode,
+  QueryOperator,
   QueryOutputColumn,
   QueryPage,
   QueryPageType,
@@ -75,15 +77,27 @@ const parseFilterNode = (node: QueryFilterNode, functions: QueryFunction[]): Fil
     valueType: QueryValueType.String,
     value: '',
     isNull: false,
+    rightKind: FilterOperandKind.Literal,
+    rightFn: null,
+    rightArgs: [],
   };
 
-  // A function left operand is shown as the call it is. One the catalog does not name cannot be
-  // shown at all — such a query is not builder-representable, so it never reaches here.
+  // A function operand is shown as the call it is. One the catalog does not name cannot be shown at
+  // all — such a query is not builder-representable, so it never reaches here.
   if (left?.type === QueryExprType.Fn) {
     const fn = functionByName(functions, left.name);
     if (fn) {
       predicate.fn = fn.name;
-      predicate.args = argsToSlots(fn, left.args);
+      predicate.args = argsToSlots(fn, left.args, functions);
+    }
+  }
+
+  if (right?.type === QueryExprType.Fn) {
+    const fn = functionByName(functions, right.name);
+    if (fn) {
+      predicate.rightKind = FilterOperandKind.Function;
+      predicate.rightFn = fn.name;
+      predicate.rightArgs = argsToSlots(fn, right.args, functions);
     }
   }
 
@@ -103,16 +117,30 @@ const parseFilterNode = (node: QueryFilterNode, functions: QueryFunction[]): Fil
   return predicate;
 };
 
-// One function argument as the builder holds it: a field reference for an `expression` argument, a
-// literal for a literal one. Anything else — a constant where a column belongs, a call nested inside
-// a call — has no editor, so the row would come back missing that argument.
-const isArgRepresentable = (argDef: QueryFunctionArg, expr: QueryExpr): boolean =>
-  isExpressionArg(argDef) ? expr.type === QueryExprType.Field : expr.type === QueryExprType.Value;
+// How deep the argument editor renders a call inside a call: one level. A deeper call has no editor,
+// so a query carrying one stays in the written views rather than hydrating with it dropped.
+const NESTED_CALL_MAX_DEPTH = 1;
+
+// One function argument as the builder holds it: a literal for a literal argument, and for an
+// `expression` argument a field reference or — within the nesting the editor renders — a call.
+// Anything else, such as a constant where a column belongs, has no editor, so the row would come
+// back missing that argument.
+const isArgRepresentable = (
+  argDef: QueryFunctionArg,
+  expr: QueryExpr,
+  functions: QueryFunction[],
+  depth: number,
+): boolean => {
+  if (!isExpressionArg(argDef)) return expr.type === QueryExprType.Value;
+  if (expr.type === QueryExprType.Field) return true;
+  return depth < NESTED_CALL_MAX_DEPTH && isExprRepresentable(expr, functions, depth + 1);
+};
 
 // An expression the builder can hold: a field reference, or a call to a served catalog function whose
 // arguments line up with the ones that function declares — none beyond them (a variadic call carries
-// more), and each of the kind its position expects.
-const isExprRepresentable = (expr: QueryExpr, functions: QueryFunction[] | null): boolean => {
+// more), and each of the kind its position expects. `depth` is how many calls this one already sits
+// inside.
+const isExprRepresentable = (expr: QueryExpr, functions: QueryFunction[] | null, depth = 0): boolean => {
   if (expr.type === QueryExprType.Field) return true;
   if (expr.type !== QueryExprType.Fn) return false;
   // No catalog to check against — the caller is judging structure alone (see isBuilderRepresentable).
@@ -120,15 +148,21 @@ const isExprRepresentable = (expr: QueryExpr, functions: QueryFunction[] | null)
   const fn = functionByName(functions, expr.name);
   if (!fn) return false;
   const args = expr.args || [];
-  return args.length <= fn.args.length && args.every((arg, i) => isArgRepresentable(fn.args[i], arg));
+  return args.length <= fn.args.length && args.every((arg, i) => isArgRepresentable(fn.args[i], arg, functions, depth));
 };
 
-// A condition the builder can hold: an expression on the left, a literal — one value, or an array of
-// them for `in` — on the right, which is the only right-hand shape its editor produces.
+// A condition the builder can hold: an expression on the left, and on the right a literal — one
+// value, or an array of them for `in` — or a call, the right-hand shapes its editor produces. A
+// field reference on the right is not among them: the condition editor compares against a value or
+// a call, never against another column. `in` is the exception to the call: its right operand is a
+// list of literals, so the editor returns it to a literal rather than offering a function, and a
+// body pairing the two would reserialize as a predicate the service rejects.
 const isPredicateRepresentable = (pred: QueryPredicate, functions: QueryFunction[] | null): boolean => {
   const [left, right] = pred.args || [];
   if (!left || !isExprRepresentable(left, functions)) return false;
-  return !right || right.type === QueryExprType.Value || right.type === QueryExprType.Array;
+  if (!right || right.type === QueryExprType.Value || right.type === QueryExprType.Array) return true;
+  if (pred.op === QueryOperator.In) return false;
+  return right.type === QueryExprType.Fn && isExprRepresentable(right, functions);
 };
 
 // The visual builder shows at most two filter levels: the root group plus one level of nested groups
@@ -186,14 +220,23 @@ const parseFilterRoot = (node?: QueryFilterNode, functions: QueryFunction[] = []
 // Reverse a serialized function call's ordered args into row arg-value slots, matched positionally
 // against the catalog function's argument list. `args` is typed as required but a hand-authored JSON
 // call can omit it entirely — every slot is then simply empty.
-const argsToSlots = (fn: QueryFunction, exprArgs: QueryExpr[] = []): FnArgValue[] =>
+const argsToSlots = (fn: QueryFunction, exprArgs: QueryExpr[] = [], functions: QueryFunction[] = []): FnArgValue[] =>
   fn.args.map((argDef, i) => {
     const argExpr = exprArgs[i];
-    if (isExpressionArg(argDef)) {
-      return { field: argExpr?.type === QueryExprType.Field ? argExpr.name : '' };
-    }
+    if (isExpressionArg(argDef)) return expressionSlot(argExpr, functions);
     return { literal: argExpr?.type === QueryExprType.Value ? (argExpr.value ?? '') : '' };
   });
+
+// A call the catalog does not serve leaves the slot empty — representability already keeps such a
+// query out of the builder.
+const expressionSlot = (expr: QueryExpr | undefined, functions: QueryFunction[]): FnArgValue => {
+  if (expr?.type === QueryExprType.Fn) {
+    const nested = functionByName(functions, expr.name);
+    if (nested) return { call: { fn: nested.name, args: argsToSlots(nested, expr.args, functions) } };
+    return { field: '' };
+  }
+  return { field: expr?.type === QueryExprType.Field ? expr.name : '' };
+};
 
 // An authored alias belongs to whoever wrote the query: it is kept as-is and marked user-owned so
 // the builder never rederives over it. A column that arrives without one is prefilled exactly as a
@@ -234,7 +277,7 @@ const parseRowSelect = (
     if (expr.type !== QueryExprType.Fn) return;
     const fn = functionByName(functions, expr.name);
     if (!fn) return;
-    const slots = argsToSlots(fn, expr.args);
+    const slots = argsToSlots(fn, expr.args, functions);
     const { alias, aliasEdited } = aliasFor(fn, slots, col.as, false, fields, assigned);
     rows.push({ ...createFnRow(fn, slots, alias), aliasEdited });
   });
@@ -262,7 +305,7 @@ const parseAggregateSelect = (
     // editable in the JSON/SQL views; here we simply skip it.
     const fn = functionByName(functions, expr.name);
     if (!fn) return;
-    const slots = argsToSlots(fn, expr.args);
+    const slots = argsToSlots(fn, expr.args, functions);
     const distinct = !!expr.distinct;
     const { alias, aliasEdited } = aliasFor(fn, slots, col.as, distinct, fields, assigned);
     if (fn.group === QueryFunctionGroup.Scalar) {

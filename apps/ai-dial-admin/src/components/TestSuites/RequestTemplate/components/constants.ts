@@ -1,3 +1,5 @@
+import { TEMPLATE_VARIABLE_TYPE_BY_HINT } from '@/src/components/TestSuites/utils/constants';
+
 export const TEMPLATE_SYNTAX_ROWS = [
   {
     format: '${{varName}}',
@@ -21,4 +23,5 @@ export const TEMPLATE_SYNTAX_ROWS = [
   },
 ] as const;
 
-export const TEMPLATE_VARIABLE_TYPES = ['string', 'integer', 'number', 'boolean', 'object', 'array', 'file'] as const;
+/** Derived from the parser's own map, so the documented list cannot drift from what a hint resolves to. */
+export const TEMPLATE_VARIABLE_TYPES = Object.keys(TEMPLATE_VARIABLE_TYPE_BY_HINT);

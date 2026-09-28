@@ -48,11 +48,11 @@ export const ThemeProvider = ({
     : null;
 
   const updateTheme = useCallback(
-    (themeId: string) => {
+    (themeId?: string) => {
       const theme = themesConfiguration?.themes.find((t) => t.id === themeId);
       const root = document.documentElement;
       applyThemeColors(root, theme);
-      setCurrentThemeId(themeId);
+      setCurrentThemeId(themeId || DEFAULT_THEME);
       const updatedLogo = getLogoPath(themesConfiguration as ThemeConfiguration, themeId);
       setCurrentThemeLogo(updatedLogo);
     },
@@ -62,9 +62,7 @@ export const ThemeProvider = ({
   useEffect(() => {
     const storedTheme = typeof window !== 'undefined' ? getFromLocalStorage('theme') : null;
     const configuredTheme = storedTheme || themesConfiguration?.themes?.[0].id;
-    if (configuredTheme) {
-      updateTheme(configuredTheme);
-    }
+    updateTheme(configuredTheme);
   }, [themesConfiguration, updateTheme]);
 
   const setTheme = useCallback(

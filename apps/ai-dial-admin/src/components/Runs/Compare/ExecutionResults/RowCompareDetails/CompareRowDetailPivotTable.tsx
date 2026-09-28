@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -15,7 +15,9 @@ import {
 } from '@/src/components/Runs/Details/RowDetails/utils/pivot-column-width';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
+import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { flattenPivotFields } from '@/src/components/Runs/Details/RowDetails/utils/flatten-pivot-fields';
+import { ROW_DETAIL_PIVOT_LEFT_COL_WIDTH } from '@/src/components/Runs/Details/RowDetails/constants';
 import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/utils/scroll-pivot-to-field';
 import {
   CompareDiffPivotPosition,
@@ -39,11 +41,13 @@ interface Props {
   showDiffsOnly: boolean;
   hideHighlights: boolean;
   focusFieldKey?: string | null;
+  focusRequestId?: number;
 }
 
 const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-secondary dial-small-semi-text';
 const LEFT_CELL_STICKY = 'sticky left-0';
-const VALUE_CELL_BASE = 'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-10 flex items-center';
+const VALUE_CELL_BASE =
+  'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-full min-h-10 flex items-start self-stretch';
 
 const CompareRowDetailPivotTable: FC<Props> = ({
   sections,
@@ -53,6 +57,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   showDiffsOnly,
   hideHighlights,
   focusFieldKey,
+  focusRequestId = 0,
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -73,10 +78,11 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
   const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns), [columns]);
+  const gridTemplateRows = hasComparedMatch ? 'auto auto 1fr 1fr auto' : 'auto auto 1fr 1fr';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
-  }, [focusFieldKey, columns]);
+  }, [focusFieldKey, focusRequestId, columns]);
 
   const renderValueCell = (
     key: string,
@@ -95,7 +101,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
         field={field}
         raw={raw}
         isFailed={isFailed}
-        className={mergeClasses(rowBg, 'h-10 min-h-10 items-center self-auto', props.className)}
+        className={mergeClasses(rowBg, props.className)}
         data-compare-diff={props['data-compare-diff']}
         onOpenFullscreen={() => onOpenDiff(field)}
       />
@@ -107,8 +113,12 @@ const CompareRowDetailPivotTable: FC<Props> = ({
       <div
         ref={scrollContainerRef}
         className="flex-1 min-h-0 overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ scrollPaddingLeft: ROW_DETAIL_PIVOT_LEFT_COL_WIDTH }}
       >
-        <div className="dial-tiny-text grid w-full" style={{ gridTemplateColumns, minWidth: gridMinWidth }}>
+        <div
+          className="dial-tiny-text grid w-full h-full"
+          style={{ gridTemplateColumns, gridTemplateRows, minWidth: gridMinWidth }}
+        >
           {/* Section header row */}
           <div className={classNames(HEADER_CELL_BASE, LEFT_CELL_STICKY, 'z-30 border-r')} aria-hidden />
           {columns.map((column) => {
@@ -131,7 +141,10 @@ const CompareRowDetailPivotTable: FC<Props> = ({
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}
               className={classNames(HEADER_CELL_BASE, 'text-secondary border-r')}
             >
-              <DialEllipsisTooltip text={column.field.label} className="text-secondary" />
+              <DialEllipsisTooltip
+                text={column.field.label}
+                className={classNames('text-secondary', isRightAlignedRowDetailField(column.field) && 'text-right')}
+              />
             </div>
           ))}
 
@@ -188,7 +201,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
               {columns.map((column) => (
                 <div
                   key={`delta-${column.sectionKey}-${column.field.fieldKey}`}
-                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}
+                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3', column.hasDelta && 'justify-end')}
                 >
                   {column.hasDelta ? (
                     <CompareMetricDeltaValue

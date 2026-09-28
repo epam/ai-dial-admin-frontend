@@ -129,7 +129,7 @@ const save = (user: ReturnType<typeof userEvent.setup>) => user.click(saveButton
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.jsonErrors = [];
-  vi.mocked(getTable).mockResolvedValue(null);
+  vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
   vi.mocked(updateTable).mockResolvedValue({ success: true });
   vi.mocked(defineTableSchema).mockResolvedValue({ success: true });
 });
@@ -315,7 +315,7 @@ describe('TableDetailView — saving the draft document', () => {
   });
 
   test('a successful save refreshes the view onto the activated table', async () => {
-    vi.mocked(getTable).mockResolvedValue(sourceDraft({ status: TableStatus.Active }));
+    vi.mocked(getTable).mockResolvedValue({ success: true, response: sourceDraft({ status: TableStatus.Active }) });
     const user = userEvent.setup();
     renderView();
 

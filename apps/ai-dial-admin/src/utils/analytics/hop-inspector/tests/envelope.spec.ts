@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/conversations-trace';
-import { HopDialect, MessageRole } from '@/src/models/analytics/conversations-trace';
+import { ENVELOPE_BYTE_BUDGET, MESSAGE_TEXT_CLAMP } from '@/src/constants/analytics/sessions-trace';
+import { HopDialect, MessageRole } from '@/src/models/analytics/sessions-trace';
 import { messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
 import { buildRequestEnvelope, withoutBlankEdges } from '@/src/utils/analytics/hop-inspector/envelope';
 

@@ -35,7 +35,7 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
         <h2>{t(menuGroup.key)}</h2>
       </div>
       <p className="small mb-3">{t(menuGroup.descriptionKey)}</p>
-      <ul className="flex flex-col gap-x-2">
+      <ul className="flex flex-col gap-x-2 min-h-0 overflow-y-auto">
         {menuGroup.items.map((item) => (
           <li
             key={item.key}

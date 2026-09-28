@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ActionType, ToolsetPublication } from '@/src/models/dial/publications';
-import { ToolsetAuthType } from '@/src/models/dial/resource';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationView from '../View';
 
@@ -77,7 +77,25 @@ const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublica
       targetUrl: 'test-target',
       reviewUrl: 'test-review',
       action: ActionType.ADD,
+      // A publication's review copy is a BE-stored payload copy with identity (`path`/`folderId`)
+      // attached flat — not a merged Core read, whose identity lives under `_metadata` — hence the
+      // double cast against `DialToolsetResource`.
       toolSetResource: {
+        created_at: 0,
+        updated_at: 0,
+        description_keywords: [],
+        dependencies: [],
+        interceptors: [],
+        icon_url: '',
+        reference: 'ref',
+        max_retry_attempts: 0,
+        forward_auth_token: false,
+        forward_per_request_key: false,
+        allowed_tools: [],
+        updatedAt: '0',
+        path: 'toolsets/public/test-toolset',
+        folderId: 'public',
+        version: '1.0',
         name: 'test-toolset',
         displayName: 'Test Toolset',
         description: 'Test toolset description',
@@ -86,7 +104,7 @@ const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublica
               authentication_type: authType,
             }
           : undefined,
-      },
+      } as unknown as DialToolsetResource,
     },
   ],
 });

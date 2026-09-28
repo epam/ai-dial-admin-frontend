@@ -7,16 +7,18 @@ import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
   DialDangerButton,
+  DialNeutralButton,
   DialPrimaryButton,
   DialTabs,
 } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
-import { updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
+import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineReadOnlyFacts from '@/src/components/Analytics/Pipelines/Common/PipelineReadOnlyFacts';
-import PipelineStateSection from '@/src/components/Analytics/Pipelines/Common/PipelineStateSection';
+import PipelineRuntimeAlerts from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeAlerts';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
@@ -29,19 +31,26 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
+import { ApplicationRoute } from '@/src/types/routes';
 import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { buildPipelineDto, getPipelineInput, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
+import { buildPipelineDto, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
 
-type PipelineFormLike = PipelineFormState & { isValid: boolean };
+type PipelineFormLike = PipelineFormState & { hasFieldErrors: boolean };
 
 interface Props {
   pipeline: Pipeline;
   form: PipelineFormLike;
   children: ReactNode;
 }
+
+// A predicate naming a sensitive column fails with 403 rather than the 422 a bad expression gets, and the
+// two have different remedies — so the heading says which happened instead of reading as a rejected
+// expression.
+const FORBIDDEN = 403;
 
 const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const t = useI18n();
@@ -54,13 +63,12 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglePromptOpen, setIsTogglePromptOpen] = useState(false);
+  const [isDeletePromptOpen, setIsDeletePromptOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [documentSeed, setDocumentSeed] = useState<PipelineDraft | null>(null);
+  const [documentSeed, setDocumentSeed] = useState<Pipeline | PipelineDraft | null>(null);
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
 
   const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
-
-  const readSource = getPipelineInput(pipeline.inputs) || target?.source_table;
 
   const assemblyContext = useMemo(
     () => ({ grainKey: form.grainKey, sourceTable: target?.source_table }),
@@ -77,31 +85,49 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const isChanged = !isEqualSkippingUndefined(draftDocument, storedDocument);
 
   const shouldCheckFields = !isEditorEnabled;
-  const isGroupKeyMissing = draft.trigger?.kind === TriggerKind.Group && !form.grainKey;
+  // The save is barred only when there is nothing to send as `group_by`. The target's grain key is the
+  // default, not the requirement: where the read source reaches that key through an enrichment, the value
+  // is the qualified spelling the author chose, and a target the page could not resolve must not withhold
+  // a save from a declaration that already carries one.
+  const isGroupKeyMissing =
+    draft.trigger?.kind === TriggerKind.Group && !draft.trigger?.group_by?.trim() && !form.grainKey;
+
   const hasJsonErrors = isEditorEnabled && Boolean(jsonErrors?.length);
   const isChangeBarShown = isFullAdmin && (isChanged || hasJsonErrors);
 
+  // The document is what the service holds, not what a save would send: every member of the response is
+  // shown, the resolved ones included. What may be sent back is decided on save, by `buildDto`, which
+  // drops the read-only members — so nothing here is hidden to keep a request valid.
   useEffect(() => {
     reset(pipeline);
-    setDocumentSeed((seed) => (seed ? storedDocument : seed));
-  }, [pipeline, reset, storedDocument]);
+    setDocumentSeed((seed) => (seed ? pipeline : seed));
+  }, [pipeline, reset]);
 
   const onDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
     reset(pipeline);
-    setDocumentSeed(storedDocument);
-  }, [dispatch, pipeline, reset, storedDocument]);
+    setDocumentSeed(pipeline);
+  }, [dispatch, pipeline, reset]);
 
   const onToggleEditor = useCallback(() => {
-    if (!isEditorEnabled) setDocumentSeed(draftDocument);
+    // Entering the editor is barred while anything is unsaved, so the stored object is also the draft.
+    if (!isEditorEnabled) setDocumentSeed(pipeline);
     // The strip is withdrawn with the rest of the body while the document is on screen, so leaving
     // the editor has to bring it back on Properties rather than on whatever was selected before.
     setActiveTab(EntityViewTab.Properties);
     setIsEditorEnabled((prev) => !prev);
-  }, [isEditorEnabled, draftDocument]);
+  }, [isEditorEnabled, pipeline]);
+
+  const saveFailureHeader = useCallback(
+    (res: ServerActionResponse) =>
+      res.status === FORBIDDEN
+        ? t(AnalyticsPipelinesI18nKey.SaveForbidden)
+        : (res.errorHeader ?? t(AnalyticsPipelinesI18nKey.SaveFailed)),
+    [t],
+  );
 
   const onSave = useCallback(async () => {
-    if ((shouldCheckFields && !form.isValid) || isGroupKeyMissing || isSaving) return;
+    if ((shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving) return;
 
     setIsSaving(true);
     const res = await updatePipeline(pipeline.name, buildDto());
@@ -113,16 +139,15 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
       return;
     }
 
-    showNotification(
-      getErrorNotification(res.errorHeader || t(AnalyticsPipelinesI18nKey.SaveFailed), res.errorMessage, res.requestId),
-    );
+    showNotification(getErrorNotification(saveFailureHeader(res), res.errorMessage, res.requestId));
   }, [
     shouldCheckFields,
-    form.isValid,
+    form.hasFieldErrors,
     isGroupKeyMissing,
     isSaving,
     pipeline.name,
     buildDto,
+    saveFailureHeader,
     showNotification,
     t,
     router,
@@ -141,7 +166,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const onToggleEnabled = useCallback(async () => {
     setIsTogglePromptOpen(false);
     setIsSaving(true);
-    const res = await updatePipeline(pipeline.name, { ...storedDocument, enabled: !pipeline.enabled });
+    // Only the flag: a body carrying any declaration member re-declares the pipeline, which a running
+    // aggregate one answers 409 for, and re-validates and bumps the change token for every other kind.
+    const res = await updatePipeline(pipeline.name, { enabled: !pipeline.enabled });
     setIsSaving(false);
 
     if (res.success) {
@@ -150,10 +177,32 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
       return;
     }
 
+    showNotification(getErrorNotification(saveFailureHeader(res), res.errorMessage, res.requestId));
+  }, [pipeline, saveFailureHeader, showNotification, t, router]);
+
+  // The page it acted on is gone, so this returns to the listing rather than refreshing.
+  const onConfirmDelete = useCallback(async () => {
+    if (isSaving) return;
+
+    setIsSaving(true);
+    const res = await deletePipeline(pipeline.name);
+
+    if (res.success) {
+      showNotification(getSuccessNotification(t(AnalyticsPipelinesI18nKey.Deleted)));
+      router.push(ApplicationRoute.AnalyticsPipelines);
+      return;
+    }
+
+    setIsSaving(false);
+    setIsDeletePromptOpen(false);
     showNotification(
-      getErrorNotification(res.errorHeader || t(AnalyticsPipelinesI18nKey.SaveFailed), res.errorMessage, res.requestId),
+      getErrorNotification(
+        res.errorHeader ?? t(AnalyticsPipelinesI18nKey.ActionFailed),
+        res.errorMessage,
+        res.requestId,
+      ),
     );
-  }, [pipeline, storedDocument, showNotification, t, router]);
+  }, [isSaving, pipeline.name, showNotification, t, router]);
 
   const toggleLabel = t(
     pipeline.enabled ? AnalyticsPipelinesI18nKey.DisablePipeline : AnalyticsPipelinesI18nKey.EnablePipeline,
@@ -166,8 +215,10 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     onClick: () => setIsTogglePromptOpen(true),
   };
 
+  // Disabling stops a pipeline; deleting destroys it. Only the second is destructive, so only the second
+  // is drawn in danger — two red buttons side by side said they were the same weight.
   const enabledToggle = pipeline.enabled ? (
-    <DialDangerButton {...toggleProps} appearance={ButtonAppearance.Outlined} />
+    <DialNeutralButton {...toggleProps} />
   ) : (
     <DialPrimaryButton {...toggleProps} />
   );
@@ -181,11 +232,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   const properties = (
     <>
-      <PipelineReadOnlyFacts pipeline={pipeline} readSource={readSource} />
-      <div className="flex flex-col gap-y-6 pt-6">
-        {children}
-        <PipelineStateSection state={pipeline.state} />
-      </div>
+      <PipelineReadOnlyFacts pipeline={pipeline} grainKey={form.grainKey} />
+      <div className="flex flex-col gap-y-6 pt-6">{children}</div>
     </>
   );
 
@@ -203,15 +251,35 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         <div className="flex flex-row items-center gap-3">
           {isChangeBarShown && (
             <ChangedEntityButtons
-              disableSave={(shouldCheckFields && !form.isValid) || isGroupKeyMissing || isSaving}
+              disableSave={(shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving}
               onDiscard={onDiscard}
               onSave={onTryToSave}
             />
           )}
-          {isFullAdmin && !isEditorEnabled && enabledToggle}
+          {/* The page's standing actions step aside for the change bar: neither can be used while edits
+              are pending, and four buttons in a row read as a choice between them. */}
+          {isFullAdmin && !isEditorEnabled && !isChangeBarShown && (
+            <>
+              <DialDangerButton
+                label={t(AnalyticsPipelinesI18nKey.DeletePipeline)}
+                appearance={ButtonAppearance.Outlined}
+                onClick={() => setIsDeletePromptOpen(true)}
+              />
+              {enabledToggle}
+            </>
+          )}
           {!isChangeBarShown && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />}
         </div>
       </div>
+
+      {isDeletePromptOpen && (
+        <DeletePipelinePopup
+          name={pipeline.name}
+          kind={pipeline.kind}
+          onConfirm={() => void onConfirmDelete()}
+          onClose={() => setIsDeletePromptOpen(false)}
+        />
+      )}
 
       {isTogglePromptOpen && (
         <DialConfirmationPopup
@@ -235,13 +303,21 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         />
       )}
 
+      {/* Above the strip, so a held or failing pipeline says so whichever tab is in view — and withdrawn
+          with everything else below the identity row while the document is on screen. */}
+      {!isEditorEnabled && <PipelineRuntimeAlerts pipeline={pipeline} />}
+
       {isTabStripShown && (
         <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
       )}
 
       <div className="flex-1 overflow-auto min-h-0 flex flex-col">
         {isEditorEnabled && (
-          <EntityJsonEditor entity={documentSeed} setSelectedEntity={form.replaceDraft} readonly={!isFullAdmin} />
+          <EntityJsonEditor
+            entity={documentSeed as PipelineDraft | null}
+            setSelectedEntity={form.replaceDraft}
+            readonly={!isFullAdmin}
+          />
         )}
         {isAuditShown && (
           <div className="flex min-h-0 flex-1 flex-col">

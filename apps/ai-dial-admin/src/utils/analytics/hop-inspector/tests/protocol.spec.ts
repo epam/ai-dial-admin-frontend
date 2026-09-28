@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { ConversationEntryBodyRow, HopReadState, HopSideGrants } from '@/src/models/analytics/conversations-trace';
+import { SessionEntryBodyRow, HopReadState, HopSideGrants } from '@/src/models/analytics/sessions-trace';
 import { protocolFactsOf } from '@/src/utils/analytics/hop-inspector/protocol';
 
 const BOTH_SIDES: HopSideGrants = { isRequestReadable: true, isResponseReadable: true };
@@ -9,7 +9,7 @@ const BOTH_SIDES: HopSideGrants = { isRequestReadable: true, isResponseReadable:
 const frame = (result: unknown): string =>
   `event: message\r\ndata: ${JSON.stringify({ jsonrpc: '2.0', id: 0, result })}\r\n\r\n`;
 
-const row = (overrides: Partial<ConversationEntryBodyRow> = {}): ConversationEntryBodyRow => ({
+const row = (overrides: Partial<SessionEntryBodyRow> = {}): SessionEntryBodyRow => ({
   trace_id: 't1',
   event_kind: 'mcp',
   request_body: null,

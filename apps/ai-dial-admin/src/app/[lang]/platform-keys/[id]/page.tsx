@@ -24,7 +24,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const path = (await params.params).id;
 
-    key = await getKey(path, etag).then((res) => {
+    key = await getKey(decodeURIComponent(path), etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialKeyResource | null;
     });
@@ -34,7 +34,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   // Deliberately outside the resource fetch's try, resolved after: an option-list problem must not
   // prevent the key from loading. Core-direct list matches the `Assets > Roles` surface.
-  const roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, []);
+  const roles = await readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, [], false);
 
   if (key == null) {
     notFound();

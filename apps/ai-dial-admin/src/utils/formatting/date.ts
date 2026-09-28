@@ -71,3 +71,34 @@ export const toDateOrNull = (value?: number | string | null): Date | null => {
 
   return Number.isNaN(date.getTime()) ? null : date;
 };
+
+// Every component has to be named: an options bag suppresses the defaults, so asking for the fractional
+// digits alone answers with the fraction and nothing else.
+const MILLIS_DATE_TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  second: '2-digit',
+  fractionalSecondDigits: 3,
+};
+
+/**
+ * Format date time to user local format, keeping the milliseconds the value carries.
+ *
+ * @param {?number | string} [value] - datetime in milliseconds and iso string
+ * @returns {string} - formatted datetime string with milliseconds
+ */
+export const formatDateTimeWithMillisToLocalString = (value?: number | string): string => {
+  if (!value) {
+    return '';
+  }
+  const date = toDate(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleString(undefined, MILLIS_DATE_TIME_FORMAT);
+};

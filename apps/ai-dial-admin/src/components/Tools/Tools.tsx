@@ -39,8 +39,13 @@ const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually]
 interface Props {
   view?: ApplicationRoute;
   containerId?: string;
-  originalEntity?: Toolset | DialApplication;
-  selectedEntity?: Toolset | DialApplication;
+  /**
+   * `DialToolsetResource` is named explicitly because the publications surface passes one: it types
+   * its display fields as `LocalizedText`, so it is no longer structurally a `Toolset`. Nothing here
+   * reads those fields — only `endpoint`, `name`, `path` and the allowed-tools list.
+   */
+  originalEntity?: Toolset | DialApplication | DialToolsetResource;
+  selectedEntity?: Toolset | DialApplication | DialToolsetResource;
   isAsset?: boolean;
   isMcpToolset?: boolean;
   disabled?: boolean;
@@ -93,7 +98,7 @@ const Tools: FC<Props> = ({
   const isAssetToolset = useMemo(() => !!isAsset && !isApplicationTools, [isAsset, isApplicationTools]);
 
   const getEntityAllowedTools = useCallback(
-    (entity?: Toolset | DialApplication): string[] | undefined => {
+    (entity?: Toolset | DialApplication | DialToolsetResource): string[] | undefined => {
       if (isApplicationTools) {
         return (entity as DialApplication)?.mcp?.allowedTools;
       }
@@ -178,7 +183,7 @@ const Tools: FC<Props> = ({
       } else {
         getFunction = isAsset ? getAssetToolsetTools : getToolsetTools;
       }
-      const path = isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name;
+      const path = (isAsset ? (selectedEntity as AssetToolset)._metadata?.path : selectedEntity?.name) as string;
       setLoading(true);
       getFunction(path).then((res) => {
         if (res.success) {
@@ -336,7 +341,9 @@ const Tools: FC<Props> = ({
                     isMcpToolset={isMcpToolset}
                     isAssetToolset={isAsset}
                     containerId={containerId}
-                    toolSetName={(isAsset ? (selectedEntity as AssetToolset)?.path : selectedEntity?.name) || ''}
+                    toolSetName={
+                      (isAsset ? (selectedEntity as AssetToolset)?._metadata?.path : selectedEntity?.name) || ''
+                    }
                     view={view}
                   />
                 );
@@ -355,7 +362,7 @@ const Tools: FC<Props> = ({
           isModalOpen={isModalOpen}
           onClose={onCloseModal}
           tools={tools || []}
-          originalEntity={selectedEntity || {}}
+          originalEntity={(selectedEntity || {}) as Toolset}
           onConfirm={onChangeEntity}
           view={view}
           isAsset={isAsset}

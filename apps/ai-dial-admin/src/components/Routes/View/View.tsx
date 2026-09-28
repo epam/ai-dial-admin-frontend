@@ -9,6 +9,7 @@ import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '@/src/a
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -36,7 +37,8 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const tabs = getRouteTabs(t);
+  const { featureFlags } = useAppContext();
+  const tabs = getRouteTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRoute, setSelectedRoute] = useState(cloneDeep(originalRoute));

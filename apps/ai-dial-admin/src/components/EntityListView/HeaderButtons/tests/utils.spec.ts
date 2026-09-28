@@ -19,7 +19,6 @@ describe('getFormDataForImport', () => {
       {
         name: '1',
         id: 'prompts/public/1__1.0.0',
-        version: '1.0.0',
         nodeType: DialFileNodeType.ITEM,
         path: 'prompts/public/1__1.0.0',
         folderId: 'prompts/public/',

@@ -5,8 +5,8 @@ Direct-to-DIAL-Core client, version-path helper, and content+metadata mappers fo
 
 ## Requirements
 
-### Requirement: Direct Core read/write for versioned asset resources
-The system SHALL provide a server-side client that reads and writes application-resource, toolset-resource, conversation, and prompt content directly against DIAL Core (`GET/PUT/DELETE /v1/{type}/{path}` for content, `GET /v1/metadata/{type}/{path}` for metadata), authenticating with the logged-in user's JWT via the existing Core client pipeline.
+### Requirement: Direct Core read/write for content-addressed asset resources
+The system SHALL provide a server-side client that reads and writes application-resource, toolset-resource, conversation, and prompt content directly against DIAL Core (`GET/PUT/DELETE /v1/{type}/{path}` for content, `GET /v1/metadata/{type}/{path}` for metadata), authenticating with the logged-in user's JWT via the existing Core client pipeline. Application-resource and toolset-resource are versioned (their paths carry a `__version` suffix); conversation and prompt are versionless (their paths are plain `/`-joined segments, and `__` within a name is never interpreted) — the same content-addressed, unversioned treatment the model resource kind already receives.
 
 #### Scenario: Content and metadata are fetched separately and merged
 - **WHEN** an application-resource, toolset-resource, conversation, or prompt is requested by path
@@ -16,27 +16,82 @@ The system SHALL provide a server-side client that reads and writes application-
 - **WHEN** any operation on this client executes
 - **THEN** the request goes to `DIAL_CORE_API_URL`, never to the admin-BE host
 
+#### Scenario: Prompt and conversation names are never version-parsed
+- **WHEN** a conversation or prompt is read or written and its name contains `__`
+- **THEN** the name is used verbatim in the path with no `__` split applied and no version extracted
+
 ### Requirement: Single consolidated version-path helper
-The system SHALL provide exactly one implementation of the `__`-suffix versioned-name parsing and building logic (extract name/version from a versioned name, build a versioned name, build and encode a versioned path), used by every asset mapper that needs it.
+The system SHALL provide exactly one implementation of the `__`-suffix versioned-name parsing and building logic (extract name/version from a versioned name, build a versioned name, build and encode a versioned path), used by every asset mapper that needs it. Its scope SHALL be the versioned group — application-resource and toolset-resource — only; conversation and prompt mappers SHALL NOT use it, in any bucket.
 
 #### Scenario: Version suffix extracted using the last occurrence
-- **WHEN** a versioned name contains more than one `__` occurrence
+- **WHEN** a versioned name of an application-resource or toolset-resource contains more than one `__` occurrence
 - **THEN** the name/version split uses the last `__` occurrence, not the first
 
 #### Scenario: Blank or missing version is treated as unversioned
 - **WHEN** a name has no `__` suffix, or the version portion is blank
 - **THEN** the parsed version is treated as absent (not an empty string) and the name is returned unchanged
 
+#### Scenario: Versionless group never passes through the helper
+- **WHEN** a conversation or prompt name or path is parsed or built
+- **THEN** the version-path helper is not applied, and a name containing `__` is preserved whole
+
 ### Requirement: Content+metadata field merge matches per-type source-of-truth
-For each of application-resource, toolset-resource, conversation, and prompt, the system SHALL populate `name`, `folderId`, `updatedAt`, `author`, and the parsed version from the metadata response, and populate the type-specific content fields from the content response, matching the field split the admin BE's per-type mappers use today.
+For application-resource and toolset-resource, the system SHALL populate `_metadata.name`,
+`_metadata.folderId`, `_metadata.updatedAt`, `_metadata.author`, and the parsed
+`_metadata.version` from the metadata response, and populate the type-specific content fields
+from the content response. For conversation and prompt, the system SHALL populate
+`_metadata.name`, `_metadata.folderId`, `_metadata.updatedAt`, and `_metadata.author` from the
+metadata response and the type-specific content fields from the content response, with no
+`version` grafted from the URL — a `__` in the name stays part of the name. All grafted helpers
+(`author`, `createdAt`, `updatedAt`, `name`, `path`, `folderId`, `version`, `nodeType`) SHALL
+live inside the `_metadata` object (see the `core-resource-entity-metadata` capability); no flat
+copy of a graft SHALL remain on the entity root, and no content field SHALL be overwritten.
 
 #### Scenario: Metadata-sourced fields
-- **WHEN** any of the four versioned types is merged from a content and metadata response pair
-- **THEN** `name`, `folderId`, `updatedAt`, `author`, and `version` come from the metadata response's parsed URL, not the content response
+- **WHEN** any of the four content-addressed types is merged from a content and metadata response pair
+- **THEN** `_metadata.name`, `_metadata.folderId`, `_metadata.updatedAt`, and `_metadata.author`
+  come from the metadata response's parsed URL, not the content response, and `_metadata.version`
+  comes from it only for application-resource and toolset-resource
 
 #### Scenario: Content-sourced fields
-- **WHEN** any of the four versioned types is merged
-- **THEN** its type-specific fields (e.g. `endpoint`/`viewerUrl`/`editorUrl` for application-resource, `content`/`description` for prompt) come from the content response
+- **WHEN** any of the four content-addressed types is merged
+- **THEN** its type-specific fields (e.g. `endpoint`/`viewerUrl`/`editorUrl` for
+  application-resource, `content`/`description` for prompt) come from the content response
+
+#### Scenario: Conversation and prompt merge without a version
+- **WHEN** a conversation or prompt is merged from a content and metadata response pair
+- **THEN** the returned model's `_metadata` carries no `version` key, and `_metadata.name` is the
+  full last path segment including any `__`
+
+#### Scenario: Flat grafts do not survive outside `_metadata`
+- **WHEN** any merged type is returned from `getMerged`/`getMergedWithEtag`
+- **THEN** the entity root carries no flat `author`/`createdAt`/`updatedAt`/`path`/`folderId`/
+  `version`/`nodeType` graft — except fields the content response itself serves, which remain
+  untouched as resource content
+
+### Requirement: Listing rows carry an explicit bucket and one mapper serves every asset list
+The shared Core asset client's list mapping SHALL project the metadata node's `bucket` field onto
+every listing row, and the skills and files list mappings SHALL be produced by that same shared
+row mapper rather than per-type hand-rolled copies — the per-type differences (skills' `/v2`
+path parsing, the folder trailing-slash convention, files' `parentPath`-derived `folderId`) live
+in the shared mapper as explicit per-type inputs, and the continuation-token pagination loop SHALL
+have exactly one implementation used by all three entry points.
+
+#### Scenario: Rows served by the shared list carry bucket
+- **WHEN** any asset type's metadata listing is mapped into rows
+- **THEN** every row carries `bucket` sourced from the metadata node's own `bucket` field, for both
+  the `public` and `platform` buckets
+
+#### Scenario: Skills rows come from the shared mapper
+- **WHEN** the skills list action returns rows
+- **THEN** they are produced by the same shared row mapper as every other asset type, with the
+  skills-specific path parsing applied inside it, and the previous hand-rolled skills mapper no
+  longer exists
+
+#### Scenario: One pagination implementation
+- **WHEN** any asset, file, or skill listing follows Core's continuation token
+- **THEN** it runs through a single paginated-list helper, and the token-vs-nextToken quirk is
+  documented exactly once at that helper
 
 ### Requirement: File asset client without versioning
 The system SHALL provide a file-specific client that reads file metadata (`GET /v1/metadata/files/{path}`, including `contentType` and `contentLength`), streams file content, and writes/deletes files against Core — without applying the `__` version-suffix logic, since files are not versioned.
@@ -80,17 +135,28 @@ The system SHALL default the list path to `"public/"` and the page-size limit to
 
 ### Requirement: Write operations resolve with normalized admin-format path fields
 
-On a successful `put` (create or update) of a versioned asset resource, the client SHALL resolve with a response that includes the admin-format identity fields `path`, `folderId`, `name`, and `version`, derived from the resource path written to (via the shared version-path helper). This matches the field shape the merge readers already return, so post-write consumers (redirects, list refresh) receive a consistent object regardless of Core's raw response shape.
+On a successful `put` (create or update) of a content-addressed asset resource, the client SHALL
+resolve with a response that includes the admin-format identity fields `path`, `folderId`, and
+`name`, derived from the resource path written to, grafted into the response's `_metadata` object
+(see the `core-resource-entity-metadata` capability). For the versioned group
+(application-resource, toolset-resource) the response's `_metadata` SHALL additionally include
+`version`, derived via the shared version-path helper; for conversation and prompt no `version`
+is included, since their paths carry no version part. This matches the field shape the merge
+readers already return, so post-write consumers (redirects, list refresh) receive a consistent
+object regardless of Core's raw response shape.
 
-Existing Core-format fields on the response SHALL be preserved; the admin-format fields SHALL be added alongside them.
+Existing Core-format fields on the response SHALL be preserved; the `_metadata` object SHALL be
+added alongside them.
 
 #### Scenario: Successful versioned write returns parsed path fields
-- **WHEN** `put` succeeds for a resource written to `folder/Name__1.0`
-- **THEN** the resolved response SHALL include `path`, `folderId=folder/`, `name=Name`, and `version=1.0`
+- **WHEN** `put` succeeds for an application-resource or toolset-resource written to `folder/Name__1.0`
+- **THEN** the resolved response's `_metadata` includes `path`, `folderId=folder/`, `name=Name`,
+  and `version=1.0`
 
-#### Scenario: Unversioned write omits version
-- **WHEN** `put` succeeds for a resource written to a path with no `__version` suffix
-- **THEN** the resolved response SHALL include `path`, `folderId`, and `name`, with `version` undefined
+#### Scenario: Successful versionless write returns path fields without version
+- **WHEN** `put` succeeds for a conversation or prompt written to `folder/Name` (whatever `Name` contains, including `__`)
+- **THEN** the resolved response's `_metadata` includes `path`, `folderId=folder/`, and
+  `name=Name`, with `version` undefined
 
 #### Scenario: Failed write is unchanged
 - **WHEN** `put` fails (non-success `ServerActionResponse`)

@@ -1,4 +1,5 @@
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { HeatMapCellTooltipSwatch } from '@/src/components/Common/HeatMap/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
 export enum HeatMapColorDisplayMode {
@@ -21,12 +22,8 @@ export interface HeatMapRow {
   runIndex?: HeatMapRunIndex;
   label: string;
   values: Record<string, number | null | undefined>;
-}
-
-export interface HeatMapCellTooltipSwatch {
-  value: string;
-  backgroundColor: string;
-  borderColor: string;
+  /** Synced with Common HeatMapGrid group-row handling. */
+  isGroup?: boolean;
 }
 
 export interface HeatMapCellTooltipData {

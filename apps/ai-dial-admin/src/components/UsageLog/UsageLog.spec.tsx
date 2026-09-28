@@ -10,7 +10,7 @@ import UsageLog from './UsageLog';
 
 const purgeInfiniteCache = vi.fn();
 
-vi.mock('@/src/app/[lang]/dashboard/actions', () => ({
+vi.mock('@/src/app/[lang]/dashboards/actions', () => ({
   getDashboardData: vi.fn(() => Promise.resolve({ success: true, response: { headers: [], data: [] } })),
 }));
 

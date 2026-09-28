@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { parseEncodedFlatPath } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
-import { fromCoreRunnerName, toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { fromCoreSchemaResourceName, toCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
 import { getEntityPath, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -11,13 +11,13 @@ const RUNNER_ID = 'http://asdqwe';
 const PREFIX = RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA];
 
 /**
- * Grid rows carry the *decoded* `$id` as `name` (`toResourceInfo` applies `fromCoreRunnerName`), and
+ * Grid rows carry the *decoded* `$id` as `name` (`toResourceInfo` applies `fromCoreSchemaResourceName`), and
  * `getEntityPath` applies exactly one `encodeURIComponent` regardless of whether it read `name` or
  * fell back to `$id`. That single encode/decode pair is what row-click and post-duplicate-redirect
  * navigation must agree on — a pre-encode on either side is what produced the #4349 404.
  */
 describe('App runner asset :: $id path round trip', () => {
-  const coreName = toCoreRunnerName(RUNNER_ID);
+  const coreName = toCoreSchemaResourceName(RUNNER_ID);
   const coreMetadataUrl = `${PREFIX}${encodeURIComponent(coreName)}`;
 
   test('Should store the id as one singly-encoded resource name', () => {
@@ -28,7 +28,7 @@ describe('App runner asset :: $id path round trip', () => {
   test('Should recover the raw $id from the metadata url', () => {
     const { name } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
 
-    expect(fromCoreRunnerName(name)).toEqual(RUNNER_ID);
+    expect(fromCoreSchemaResourceName(name)).toEqual(RUNNER_ID);
   });
 
   test('Row-click and post-duplicate-redirect build the identical URL segment', () => {

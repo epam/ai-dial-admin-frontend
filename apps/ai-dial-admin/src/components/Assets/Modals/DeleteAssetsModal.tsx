@@ -15,7 +15,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import {
   generateTreeForDeletingItems,
@@ -33,7 +34,7 @@ interface Props {
   isOpen: boolean;
   itemsToDelete: DialFile[];
   selectedVersionsMap?: Record<string, string[]>;
-  context: () => AssetsFolderContext;
+  context: () => AssetsFolderContextReader<AssetListItem>;
   onRemove: () => void;
   onClose: () => void;
 }

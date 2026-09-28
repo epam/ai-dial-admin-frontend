@@ -52,9 +52,16 @@ const Endpoint: FC<Props> = ({
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isModelView = view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels;
-
+  const isInterfacesHidden =
+    view === ApplicationRoute.Models || view === ApplicationRoute.Routes || view === ApplicationRoute.PlatformRoutes;
   const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
-
+  const isIncludeWss =
+    view === ApplicationRoute.Routes ||
+    view === ApplicationRoute.PlatformRoutes ||
+    view === ApplicationRoute.AssetsApplications ||
+    view === ApplicationRoute.Applications ||
+    view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.PlatformAppRunners;
   const idValidationField = `upstream-id-${index}`;
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
@@ -67,6 +74,13 @@ const Endpoint: FC<Props> = ({
       setEndpointWarning(!url ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],
+  );
+
+  const onChangeBaseUrl = useCallback(
+    (baseUrl?: string) => {
+      updateEndpoint({ ...endpoint, baseUrl });
+    },
+    [endpoint, updateEndpoint],
   );
 
   const onChangeResponses = useCallback(
@@ -191,6 +205,7 @@ const Endpoint: FC<Props> = ({
               onChange={onChangeEndPointUrl}
               iconAfter={<WarningIcon warningText={endpointWarning} />}
               required={required}
+              isIncludeWss={isIncludeWss}
             />
           </div>
 
@@ -211,15 +226,26 @@ const Endpoint: FC<Props> = ({
           )}
 
           {isTablet && (
-            <DialPasswordInput
-              disabled={disabled}
-              id={`key-${index}`}
-              value={endpoint.key}
-              placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-              labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-              required={!isKeyOptional}
-              onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
-            />
+            <>
+              <EndpointControl
+                disabled={disabled}
+                id={`upstream-base-url-${index}`}
+                endpoint={endpoint.baseUrl}
+                isFullWidth
+                placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+                label={t(EntityFieldsI18nKey.baseUrl)}
+                onChange={onChangeBaseUrl}
+              />
+              <DialPasswordInput
+                disabled={disabled}
+                id={`key-${index}`}
+                value={endpoint.key}
+                placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+                required={!isKeyOptional}
+                onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+              />
+            </>
           )}
 
           <DialNumberInput
@@ -259,13 +285,15 @@ const Endpoint: FC<Props> = ({
                 containerClassName="w-full"
                 onChange={onChangeSecretExtraData}
               />
-              <InterfacesField<DialUpstreamInterface>
-                interfaces={endpoint.interfaces}
-                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
-                allowedTypes={MODEL_INTERFACE_TYPES}
-                variant={InterfaceFieldVariant.Endpoint}
-                disabled={disabled}
-              />
+              {!isInterfacesHidden && (
+                <InterfacesField<DialUpstreamInterface>
+                  interfaces={endpoint.interfaces}
+                  onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                  allowedTypes={MODEL_INTERFACE_TYPES}
+                  variant={InterfaceFieldVariant.Endpoint}
+                  disabled={disabled}
+                />
+              )}
             </>
           )}
         </div>
@@ -273,16 +301,30 @@ const Endpoint: FC<Props> = ({
         {/* Desktop expanded rows: row 2 (key full-width), row 3 (extraData + secretExtraData 50/50) */}
         {!isTablet && isExpanded && (
           <>
-            <div className="mt-2 w-full">
-              <DialPasswordInput
-                disabled={disabled}
-                id={`key-${index}`}
-                value={endpoint.key}
-                placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
-                required={!isKeyOptional}
-                onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
-              />
+            <div className="flex flex-row gap-x-2 mt-2 w-full">
+              <div className="flex-1 min-w-0">
+                <EndpointControl
+                  disabled={disabled}
+                  id={`upstream-base-url-${index}`}
+                  endpoint={endpoint.baseUrl}
+                  isFullWidth
+                  placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+                  label={t(EntityFieldsI18nKey.baseUrl)}
+                  onChange={onChangeBaseUrl}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialPasswordInput
+                  disabled={disabled}
+                  id={`key-${index}`}
+                  value={endpoint.key}
+                  placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                  labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+                  required={!isKeyOptional}
+                  containerClassName="w-full"
+                  onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+                />
+              </div>
             </div>
             <div className="flex flex-row gap-x-2 mt-2 w-full">
               <ExtraDataField
@@ -301,16 +343,18 @@ const Endpoint: FC<Props> = ({
                 onChange={onChangeSecretExtraData}
               />
             </div>
-            <div className="mt-2 w-full">
-              <InterfacesField<DialUpstreamInterface>
-                interfaces={endpoint.interfaces}
-                onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
-                allowedTypes={MODEL_INTERFACE_TYPES}
-                variant={InterfaceFieldVariant.Endpoint}
-                disabled={disabled}
-                className="w-full"
-              />
-            </div>
+            {!isInterfacesHidden && (
+              <div className="mt-2 w-full">
+                <InterfacesField<DialUpstreamInterface>
+                  interfaces={endpoint.interfaces}
+                  onChangeInterfaces={(interfaces) => updateEndpoint({ ...endpoint, interfaces })}
+                  allowedTypes={MODEL_INTERFACE_TYPES}
+                  variant={InterfaceFieldVariant.Endpoint}
+                  disabled={disabled}
+                  className="w-full"
+                />
+              </div>
+            )}
           </>
         )}
       </div>

@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
 import { DialModelResourceStatus } from '@/src/models/dial/resource';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteRoutes, createRoute, getRoute, getRoutes, removeRoute, updateRoute } from './actions';
+import {
+  bulkDeleteRoutes,
+  createRoute,
+  getConfigFileRoute,
+  getConfigFileRoutes,
+  getRoute,
+  getRoutes,
+  removeRoute,
+  updateRoute,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -46,12 +56,17 @@ describe('Assets route :: server actions', () => {
   test('Should call createRoute action, stripping read-only projections', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // The read-only projections (identity, `status`) graft under `_metadata`; the exact-body
+    // assertion below proves the payload builder drops the whole object.
     const result = await createRoute({
       name: 'my-route',
-      path: 'platform/my-route',
-      folderId: 'platform/',
-      status: DialModelResourceStatus.Valid,
       paths: ['/api'],
+      _metadata: {
+        name: 'my-route',
+        path: 'platform/my-route',
+        folderId: 'platform/',
+        status: DialModelResourceStatus.Valid,
+      },
     });
 
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'my-route', {
@@ -66,8 +81,6 @@ describe('Assets route :: server actions', () => {
 
     await createRoute({
       name: 'my-route',
-      path: 'platform/my-route',
-      folderId: 'platform/',
       description: '',
     } as any);
 
@@ -78,7 +91,7 @@ describe('Assets route :: server actions', () => {
     const rejection = { success: false, errorHeader: 'Bad Request', errorMessage: 'paths is required' };
     (assetApi.put as any).mockResolvedValue(rejection);
 
-    const result = await createRoute({ name: 'my-route', path: 'platform/my-route', folderId: 'platform/' });
+    const result = await createRoute({ name: 'my-route' });
 
     expect(result).toBe(rejection);
   });
@@ -86,7 +99,7 @@ describe('Assets route :: server actions', () => {
   test('Should call updateRoute action', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updateRoute({ name: 'my-route', path: 'platform/my-route', folderId: 'platform/' }, 'etag');
+    const result = await updateRoute({ name: 'my-route' }, 'etag');
 
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
@@ -98,14 +111,15 @@ describe('Assets route :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call updateRoute action, stripping author/createdAt/updatedAt — Core metadata fields the read merges in, not `Route.class` fields', async () => {
+  test("Should call updateRoute action, stripping the merged read's audit grafts — Core metadata fields, not `Route.class` fields", async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
+    // `author` grafts under `_metadata` only; `createdAt`/`updatedAt` are `ModifiedEntity`-typed and
+    // may sit flat as well — the payload builder strips both spellings, and the exact-body assertion
+    // below proves neither reaches Core.
     await updateRoute(
       {
         name: 'qwe',
-        path: 'platform/qwe',
-        folderId: 'platform/',
         rewritePath: false,
         paths: [],
         methods: [],
@@ -113,9 +127,16 @@ describe('Assets route :: server actions', () => {
         maxRetryAttempts: 2,
         order: 2147483647,
         attachmentPaths: { requestBody: [], responseBody: [] },
-        author: 'Yauheni Osipau',
         createdAt: '1787660728755',
         updatedAt: '1787660728755',
+        _metadata: {
+          name: 'qwe',
+          path: 'platform/qwe',
+          folderId: 'platform/',
+          author: 'Yauheni Osipau',
+          createdAt: '1787660728755',
+          updatedAt: '1787660728755',
+        },
       },
       'etag',
     );
@@ -154,5 +175,25 @@ describe('Assets route :: server actions', () => {
 
     expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'platform/my-route');
     expect(result).toEqual({ success: true });
+  });
+
+  test('Should call getConfigFileRoutes action', async () => {
+    (configFileApi.listNames as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoutes();
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.listNames).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getConfigFileRoute action', async () => {
+    (configFileApi.getEntity as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getConfigFileRoute('my-route');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(configFileApi.getEntity).toHaveBeenCalledWith(TOKEN_MOCK, ConfigFileEntityType.Routes, 'my-route');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

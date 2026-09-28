@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineListItem, TriggerKind } from '@/src/models/analytics/pipeline';
@@ -28,8 +29,9 @@ const TriggerCell: FC<Props> = ({ pipeline }) => {
 
   const trigger = pipeline?.trigger;
 
+  // A pipeline registered before its trigger was chosen has none, which is an ordinary state.
   if (!trigger?.kind) {
-    return null;
+    return <span className="text-secondary">{UNAVAILABLE_VALUE}</span>;
   }
 
   return (

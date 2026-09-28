@@ -2,7 +2,16 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import { FC } from 'react';
 
+import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from '@/src/components/Common/SchemaGrid/constants';
+import { SchemaMetaColumn, SchemaMetaHandlers } from '@/src/components/Common/SchemaGrid/models';
 import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
+import {
+  CATALOG_META_LOCALIZED,
+  CATALOG_META_SECTION,
+  CATALOG_META_TAB,
+  CATALOG_META_WIDGET,
+  CATALOG_PROPERTY_WIDGETS,
+} from '@/src/constants/catalog-schemas';
 import BooleanButtonCellRenderer from '@/src/components/Grid/CellRenderers/BooleanButtonCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -30,6 +39,11 @@ const getPropertyKindOptions = (t: (key: BasicI18nKey) => string): SelectOption[
   { value: 'client', label: t(BasicI18nKey.Client) },
 ];
 
+const WIDGET_OPTIONS: SelectOption[] = CATALOG_PROPERTY_WIDGETS.map((widget) => ({
+  value: widget,
+  label: startCase(widget),
+}));
+
 const isFirstLevel = (data: SchemaFieldRow | undefined): boolean =>
   !!data && data.parentId === null && !data.isAddSubFieldRow;
 
@@ -43,6 +57,18 @@ const PropertyKindCellRenderer: FC<ICellRendererParams<SchemaFieldRow>> = (param
   return <SelectCellRenderer {...params} {...params.colDef?.cellRendererParams} />;
 };
 
+const TextMetaCellRenderer: FC<ICellRendererParams<SchemaFieldRow>> = (params) => {
+  if (!isFirstLevel(params.data)) return null;
+  return <EditableCellRenderer {...params} {...params.colDef?.cellRendererParams} />;
+};
+
+const WidgetCellRenderer = PropertyKindCellRenderer;
+
+const LocalizedCellRenderer: FC<ICellRendererParams<SchemaFieldRow>> = (params) => {
+  if (!isFirstLevel(params.data)) return null;
+  return <BooleanButtonCellRenderer {...params} {...params.colDef?.cellRendererParams} />;
+};
+
 export const getSchemaGridColumns = (
   onToggleExpand: (data: SchemaFieldRow) => void,
   onChangeName: (value: string, data: SchemaFieldRow) => void,
@@ -53,9 +79,15 @@ export const getSchemaGridColumns = (
   onRemoveField: (data?: SchemaFieldRow) => void,
   t: (stringToTranslate: string) => string,
   isReadonly?: boolean,
-  onChangeOrder?: (value: number | string, data: SchemaFieldRow) => void,
-  onChangePropertyKind?: (value: string, data: SchemaFieldRow) => void,
+  metaHandlers: SchemaMetaHandlers = {},
 ): ColDef<SchemaFieldRow>[] => {
+  const onChangeOrder = metaHandlers[SchemaMetaColumn.Order];
+  const onChangePropertyKind = metaHandlers[SchemaMetaColumn.PropertyKind];
+  const onChangeTab = metaHandlers[SchemaMetaColumn.Tab];
+  const onChangeSection = metaHandlers[SchemaMetaColumn.Section];
+  const onChangeWidget = metaHandlers[SchemaMetaColumn.Widget];
+  const onChangeLocalized = metaHandlers[SchemaMetaColumn.Localized];
+
   const baseColumns: ColDef<SchemaFieldRow>[] = [
     {
       headerName: 'Name',
@@ -162,7 +194,7 @@ export const getSchemaGridColumns = (
       filter: false,
       floatingFilter: false,
       valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
-        isFirstLevel(params.data) ? params.data?.dialMeta?.['dial:propertyOrder'] : undefined,
+        isFirstLevel(params.data) ? params.data?.dialMeta?.[DIAL_META_PROPERTY_ORDER] : undefined,
       cellRenderer: OrderCellRenderer,
       cellRendererParams: {
         inputType: 'number',
@@ -184,13 +216,101 @@ export const getSchemaGridColumns = (
       filter: false,
       floatingFilter: false,
       valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
-        isFirstLevel(params.data) ? params.data?.dialMeta?.['dial:propertyKind'] : undefined,
+        isFirstLevel(params.data) ? params.data?.dialMeta?.[DIAL_META_PROPERTY_KIND] : undefined,
       cellRenderer: PropertyKindCellRenderer,
       cellRendererParams: {
         isReadonly,
         items: getPropertyKindOptions(t),
         onChange: (value: string, data: SchemaFieldRow) => onChangePropertyKind(value, data),
       },
+    });
+  }
+
+  if (onChangeTab) {
+    baseColumns.push({
+      headerName: 'Tab',
+      colId: 'catalogTab',
+      cellClass: NO_BORDER_CLASS,
+      width: 130,
+      maxWidth: 150,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? params.data?.dialMeta?.[CATALOG_META_TAB] : undefined,
+      cellRenderer: TextMetaCellRenderer,
+      cellRendererParams: {
+        hideTriangle: true,
+        skipRequired: true,
+        isReadonly,
+        onChange: (value: string, data: SchemaFieldRow) => onChangeTab(value, data),
+      },
+    });
+  }
+
+  if (onChangeSection) {
+    baseColumns.push({
+      headerName: 'Section',
+      colId: 'catalogSection',
+      cellClass: NO_BORDER_CLASS,
+      width: 130,
+      maxWidth: 150,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? params.data?.dialMeta?.[CATALOG_META_SECTION] : undefined,
+      cellRenderer: TextMetaCellRenderer,
+      cellRendererParams: {
+        hideTriangle: true,
+        skipRequired: true,
+        isReadonly,
+        onChange: (value: string, data: SchemaFieldRow) => onChangeSection(value, data),
+      },
+    });
+  }
+
+  if (onChangeWidget) {
+    baseColumns.push({
+      headerName: 'Widget',
+      colId: 'catalogWidget',
+      cellClass: NO_BORDER_CLASS,
+      width: 130,
+      maxWidth: 150,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? params.data?.dialMeta?.[CATALOG_META_WIDGET] : undefined,
+      cellRenderer: WidgetCellRenderer,
+      cellRendererParams: {
+        isReadonly,
+        items: WIDGET_OPTIONS,
+        onChange: (value: string, data: SchemaFieldRow) => onChangeWidget(value, data),
+      },
+    });
+  }
+
+  if (onChangeLocalized) {
+    baseColumns.push({
+      headerName: 'Localized',
+      colId: 'catalogLocalized',
+      cellClass: NO_BORDER_CLASS,
+      width: 110,
+      maxWidth: 130,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      valueGetter: (params: ValueGetterParams<SchemaFieldRow>) =>
+        isFirstLevel(params.data) ? !!params.data?.dialMeta?.[CATALOG_META_LOCALIZED] : undefined,
+      cellRenderer: LocalizedCellRenderer,
+      cellRendererParams: {
+        onChange: (value: boolean, data: SchemaFieldRow) => onChangeLocalized(value, data),
+        trueLabel: t(BasicI18nKey.Yes),
+        falseLabel: t(BasicI18nKey.No),
+        isReadonly,
+      },
+      tooltipValueGetter: () => undefined,
     });
   }
 

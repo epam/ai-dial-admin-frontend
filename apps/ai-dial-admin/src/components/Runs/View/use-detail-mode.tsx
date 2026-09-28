@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ColDef } from 'ag-grid-community';
+
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { ROW_DETAIL_BOTTOM_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import RunMetricDetailPanel from '@/src/components/Runs/Details/RunMetricDetailPanel';
@@ -46,7 +48,15 @@ export function useDetailMode(
   const detailModeRef = useRef(detailMode);
   detailModeRef.current = detailMode;
 
-  const showDetailPanelRef = useRef<(resultId: string, mode: DetailMode, fieldKey: string | null) => void>(() => {});
+  const showDetailPanelRef = useRef<
+    (resultId: string, mode: DetailMode, fieldKey: string | null, focusRequestId?: number) => void
+  >(() => {});
+  const displayTreeRef = useRef<ColDef[]>([]);
+  const focusRequestIdRef = useRef(0);
+
+  const persistDisplayTree = useCallback((tree: ColDef[]) => {
+    displayTreeRef.current = tree;
+  }, []);
 
   const closeDetail = useCallback(() => {
     setSelectedResultId(null);
@@ -58,7 +68,7 @@ export function useDetailMode(
     setDetailMode(DetailMode.Drawer);
     const currentId = selectedResultIdRef.current;
     if (currentId) {
-      showDetailPanelRef.current(currentId, DetailMode.Drawer, null);
+      showDetailPanelRef.current(currentId, DetailMode.Drawer, null, focusRequestIdRef.current);
     }
   }, []);
 
@@ -71,14 +81,17 @@ export function useDetailMode(
   }, []);
 
   const showDetailPanel = useCallback(
-    (resultId: string, mode: DetailMode, fieldKey: string | null) => {
+    (resultId: string, mode: DetailMode, fieldKey: string | null, focusRequestId = 0) => {
       if (mode === DetailMode.Drawer) {
         sidebarRef.current.showSidebar(
           <ExecutionRowDetailBottomPanel
             resultId={resultId}
             focusFieldKey={fieldKey}
+            focusRequestId={focusRequestId}
             metricGroupOrder={metricGroupOrder}
             fieldSchema={fieldSchema}
+            initialDisplayTree={displayTreeRef.current}
+            onDisplayTreeChange={persistDisplayTree}
             onClose={closeDetail}
             onSwitchToSidebar={switchToSidebar}
           />,
@@ -99,7 +112,7 @@ export function useDetailMode(
         SidebarPosition.Right,
       );
     },
-    [closeDetail, switchToSidebar, switchToDrawer, metricBindings, metricGroupOrder, fieldSchema],
+    [closeDetail, switchToSidebar, switchToDrawer, persistDisplayTree, metricBindings, metricGroupOrder, fieldSchema],
   );
 
   showDetailPanelRef.current = showDetailPanel;
@@ -107,9 +120,10 @@ export function useDetailMode(
   const openDetail = useCallback(
     (resultId: string, options?: OpenDetailOptions) => {
       const fieldKey = options?.focusFieldKey ?? null;
+      focusRequestIdRef.current += 1;
       setSelectedResultId(resultId);
       setFocusFieldKey(fieldKey);
-      showDetailPanel(resultId, detailModeRef.current, fieldKey);
+      showDetailPanel(resultId, detailModeRef.current, fieldKey, focusRequestIdRef.current);
     },
     [showDetailPanel],
   );

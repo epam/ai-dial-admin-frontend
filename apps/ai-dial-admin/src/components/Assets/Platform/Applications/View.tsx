@@ -26,6 +26,8 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialPlatformApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -41,8 +43,12 @@ interface Props {
   roles: DialRole[];
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalApp` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 /**
@@ -74,7 +80,7 @@ const withPlatformApplicationTabs = (
  * (no version selector, no publish, no move) and which server actions get called differ here.
  */
 const PlatformApplicationView: FC<Props> = ({
-  etag,
+  etag: initialEtag,
   originalApp,
   models,
   applications,
@@ -82,15 +88,26 @@ const PlatformApplicationView: FC<Props> = ({
   roles,
   interceptors,
   globalInterceptors,
+  translators,
+  catalogSchemas,
   optionWarnings,
+  isConfigFileSource,
 }) => {
   const t = useI18n();
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const { visualizerConnector } = useAppContext();
+  const { visualizerConnector, setEntityReadOnly } = useAppContext();
 
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
+  const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState(false);
@@ -132,6 +149,14 @@ const PlatformApplicationView: FC<Props> = ({
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
 
+  // Resyncs after a `router.refresh()` (a successful save re-fetches the page). A failed save updates
+  // `etag` itself from the response below, without waiting for a refresh — Core returns its current
+  // etag on every response, success or not, and a save rejected for an unrelated reason (e.g. a
+  // validation error) still leaves the retry needing that fresher value or it fails precondition.
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
+
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
   useEffect(() => {
@@ -155,6 +180,9 @@ const PlatformApplicationView: FC<Props> = ({
     getReqRef
       .current(updatePlatformApplication, selectedApp as unknown as DialPlatformApplicationResource, etag)
       .then((res) => {
+        if (res.etag) {
+          setEtag(res.etag);
+        }
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -162,7 +190,7 @@ const PlatformApplicationView: FC<Props> = ({
               getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, selectedApp.name, t),
             ),
           );
-          fetchFiles(selectedApp.folderId);
+          fetchFiles(selectedApp.folderId || selectedApp._metadata?.folderId || '');
           router.refresh();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -216,6 +244,8 @@ const PlatformApplicationView: FC<Props> = ({
             roles={roles}
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
+            translators={translators}
+            catalogSchemas={catalogSchemas}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
             originalApplication={originalApp}

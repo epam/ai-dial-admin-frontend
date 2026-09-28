@@ -7,6 +7,7 @@ import { removeTranslator, updateTranslator } from '@/src/app/[lang]/platform-tr
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useAppContext } from '@/src/context/AppContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -22,15 +23,22 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalTranslator: DialTranslatorResource;
+  isConfigFileSource?: boolean;
 }
 
-const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator }) => {
+const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator, isConfigFileSource }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformTranslators);
   const router = useRouter();
   const { fetchFiles } = useTranslatorsFolder();
   const { showNotification } = useNotification();
+  const { setEntityReadOnly } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());
+
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedTranslator, setSelectedTranslator] = useState(structuredClone(originalTranslator));
@@ -42,8 +50,9 @@ const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator }) => {
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   useEffect(() => {
@@ -67,10 +76,14 @@ const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator }) => {
         showNotification(
           getSuccessNotification(
             getUpdateNotificationTitle(ApplicationRoute.PlatformTranslators, t),
-            getUpdateNotificationDescription(ApplicationRoute.PlatformTranslators, selectedTranslator.name, t),
+            getUpdateNotificationDescription(
+              ApplicationRoute.PlatformTranslators,
+              selectedTranslator.name ?? selectedTranslator._metadata?.name,
+              t,
+            ),
           ),
         );
-        fetchFiles(selectedTranslator.folderId);
+        fetchFiles(selectedTranslator._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

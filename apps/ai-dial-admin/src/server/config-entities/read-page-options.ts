@@ -21,6 +21,7 @@ export async function readConfigEntities<T>(
   token: Token,
   type: ConfigFileEntityType,
   warnings: EntitiesI18nKey[],
+  _showOnlyConfigFiles = false,
 ): Promise<T[]> {
   const result = await getConfigEntityOptions(token, type);
 

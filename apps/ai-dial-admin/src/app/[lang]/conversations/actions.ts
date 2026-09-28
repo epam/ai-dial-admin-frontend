@@ -33,3 +33,8 @@ export async function getAllDeployments() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return coreUtilityApi.getAllDeployments(token);
 }
+
+export async function getDeployment(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return coreUtilityApi.checkDeploymentByName(name, token);
+}

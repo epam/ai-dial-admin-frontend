@@ -24,14 +24,15 @@ export type PublicationAssetKey =
 
 /**
  * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types
- * (models, app runners, interceptors, roles) have no publications support — Core has no sharing or
- * publication concept for them. Interceptors and roles are read-only reference data here, registered
+ * (models, app runners, catalog schemas, interceptors, roles) have no publications support — Core
+ * has no sharing or publication concept for them. Interceptors and roles are read-only reference data here, registered
  * only so their metadata listing can be read.
  */
 export type PublishableResourceType = Exclude<
   ResourceType,
   | ResourceType.MODEL
   | ResourceType.APP_TYPE_SCHEMA
+  | ResourceType.CATALOG_SCHEMA
   | ResourceType.INTERCEPTOR
   | ResourceType.TRANSLATOR
   | ResourceType.ROLE

@@ -7,6 +7,7 @@ import { TabModel } from '@epam/ai-dial-ui-kit';
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import { useAppContext } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCoreSyncStatusUrl } from '@/src/utils/core-sync/get-core-sync-status-url';
 import { getHeaderClassName } from '@/src/utils/entities/view';
@@ -40,12 +41,13 @@ const SimpleEntityHeader = <T extends Entity>({
   tabsTrailing,
   ...props
 }: Props<T>) => {
+  const { featureFlags } = useAppContext();
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const readonlyId =
     props.view === ApplicationRoute.TestSuites || props.view === ApplicationRoute.Datasets
       ? props.entity.name || ''
       : props.entity.id || props.entity.$id || props.entity.name || '';
-  const hasCoreSyncStatus = getCoreSyncStatusUrl(props.view, readonlyId) !== null;
+  const hasCoreSyncStatus = featureFlags.adminApiEnabled && getCoreSyncStatusUrl(props.view, readonlyId) !== null;
 
   return (
     <div className="flex flex-col gap-y-4 mb-8">

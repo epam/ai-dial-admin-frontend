@@ -1,4 +1,4 @@
-import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import { getDashboardData } from '@/src/app/[lang]/dashboards/actions';
 import McpDashboard from '@/src/components/Telemetry/Dashboards/Mcp/McpDashboard';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
 import ViewByFilter from '@/src/components/Telemetry/TelemetryControls/ViewByFilter';

@@ -5,12 +5,20 @@ import {
   DEFAULT_LIST_LIMIT,
   DEFAULT_LIST_PATH,
   DEFAULT_LIST_PATH_TYPES,
+  FOLDER_NESTED_VERSIONLESS_TYPES,
   PLATFORM_BUCKET_RESOURCE_TYPES,
+  RESOURCE_CONTROLLER_TYPES,
 } from '@/src/constants/assets-core';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { encodeCorePath, parseVersionedPath, stripPrefix, VersionedPathParts } from '@/src/server/publications/path';
+import {
+  encodeCorePath,
+  parsePath,
+  parseVersionedPath,
+  stripPrefix,
+  VersionedPathParts,
+} from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { CoreApi } from './core-api';
@@ -22,6 +30,7 @@ import {
   ResourceInfo,
   toResourceInfoList,
 } from './asset-metadata';
+import { fetchAllPages } from './pagination';
 
 export interface GetMetadataOptions {
   recursive?: boolean;
@@ -68,18 +77,11 @@ export class AssetApi extends CoreApi {
   }
 
   /** Lists the items directly under a folder as lightweight rows (metadata only, no content fetch). */
-  async list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
-    const items: ResourceInfo[] = [];
-    let nextToken: string | undefined;
-    while (true) {
-      const node = await this.getMetadata(token, type, path, { recursive: false, nextToken });
-      items.push(...toResourceInfoList(node, type));
-      nextToken = node?.nextToken;
-      if (!nextToken) {
-        break;
-      }
-    }
-    return items;
+  list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
+    return fetchAllPages(
+      (nextToken) => this.getMetadata(token, type, path, { recursive: false, nextToken }),
+      (node) => toResourceInfoList(node, type),
+    );
   }
 
   /** Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`. */
@@ -136,10 +138,10 @@ export class AssetApi extends CoreApi {
       return { success: false, errorHeader: 'Not Found', errorMessage: 'Resource metadata not found' };
     }
     const merged = merge(contentResult.response as Record<string, unknown>, metadata) as T;
-    // Flat/unversioned types (e.g. MODEL) never get an `ETag` response header on the content GET
-    // (`ConfigResourceController.handleSingleGet`'s success path doesn't set one) — their blob
-    // etag is only available on the metadata node.
-    const eTag = isVersioned(type) ? contentResult.etag : (metadata.etag ?? contentResult.etag);
+    // `ResourceController`-served types (application, toolset, conversation, prompt) get an
+    // `ETag` response header on the content GET; `ConfigResourceController`-served flat types
+    // (e.g. MODEL) don't — their blob etag is only available on the metadata node.
+    const eTag = RESOURCE_CONTROLLER_TYPES.has(type) ? contentResult.etag : (metadata.etag ?? contentResult.etag);
     return { success: true, response: merged, etag: eTag };
   }
 
@@ -149,8 +151,10 @@ export class AssetApi extends CoreApi {
    * Core's PUT reply is a metadata node in Core format (`name`/`url`/`bucket`/…), but post-write consumers
    * (e.g. the create-asset redirect via `getEntityPath`) expect the admin-format identity split
    * (`path`/`folderId`/`name`/`version`) the BE proxy used to return. On success we derive those from the
-   * written `path` — authoritative for where the resource now lives — and merge them onto the response,
-   * keeping writes consistent with the merge readers (`getMerged*`).
+   * written `path` — authoritative for where the resource now lives — and graft them into the response's
+   * `_metadata` object, the same shape the merge readers (`getMerged*`) return, so writes and reads agree.
+   * A path that cannot be parsed (see `parsePathFields`) leaves the successful response unchanged rather
+   * than failing an otherwise-successful write.
    */
   async put<T extends object>(
     token: Token,
@@ -165,18 +169,31 @@ export class AssetApi extends CoreApi {
     if (!result.success) {
       return result;
     }
+    const pathFields = this.parsePathFields(type, path);
+    if (!pathFields) {
+      return result;
+    }
     const base = result.response && typeof result.response === 'object' ? result.response : {};
-    return { ...result, response: { ...base, ...this.parsePathFields(type, path) } };
+    return { ...result, response: { ...base, _metadata: pathFields } };
   }
 
   /**
    * Splits the written path into the admin-format identity fields. Flat/unversioned types (e.g.
-   * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Versioned types are
-   * guarded: a path with no `/` separator (e.g. an empty `folderId` falling back to the bare
-   * `ROOT_FOLDER` = `'public'`) makes `parseVersionedPath` throw — in that case we skip enrichment
-   * rather than fail an otherwise-successful write.
+   * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Folder-nested
+   * versionless types (prompt, conversation) split into folder + plain name with no version.
+   * Versioned types are guarded: a path with no `/` separator (e.g. an empty `folderId` falling
+   * back to the bare `ROOT_FOLDER` = `'public'`) makes the parse throw — in that case `null` is
+   * returned so the caller skips enrichment rather than failing an otherwise-successful write.
    */
-  private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> {
+  private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> | null {
+    if (FOLDER_NESTED_VERSIONLESS_TYPES.has(type)) {
+      try {
+        const { path: parsedPath, folderId, name } = parsePath(path);
+        return { path: parsedPath, folderId, name };
+      } catch {
+        return null;
+      }
+    }
     if (!isVersioned(type)) {
       return { path, folderId: '', name: path };
     }
@@ -184,7 +201,7 @@ export class AssetApi extends CoreApi {
       const { path: parsedPath, folderId, name, version } = parseVersionedPath(path);
       return { path: parsedPath, folderId, name, version };
     } catch {
-      return {};
+      return null;
     }
   }
 

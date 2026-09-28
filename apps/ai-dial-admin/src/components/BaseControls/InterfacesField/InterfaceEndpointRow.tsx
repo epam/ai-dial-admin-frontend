@@ -64,7 +64,9 @@ const InterfaceEndpointRow = ({ fieldId, typeLabel, value, disabled, onChange, o
 
   const onChangeEndpoint = useCallback(
     (newValue?: string) => {
-      const trimmedValue = newValue?.trimStart() || '';
+      // undefined, never '': Core treats an empty-string endpoint as a present, broken URL and dials it,
+      // instead of falling back to the upstream's own baseUrl for this interface.
+      const trimmedValue = newValue?.trimStart() || undefined;
       validate(trimmedValue);
       onChange({ ...value, endpoint: trimmedValue });
     },

@@ -5,6 +5,7 @@ import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { FilterOperatorDto } from '@/src/types/request';
 import {
   cancelRun,
   exportRunPreview,
@@ -87,8 +88,8 @@ describe('Runs :: server actions', () => {
 
   test('Should call getRunResults action and return extraction results', async () => {
     const filters: FilterDto[] = [
-      { column: 'testSuite', value: 'suite-1' },
-      { column: 'status', value: 'PASSED' },
+      { column: 'testSuite', value: 'suite-1', operator: FilterOperatorDto.EQUALS },
+      { column: 'status', value: 'PASSED', operator: FilterOperatorDto.EQUALS },
     ];
     const extractionResults = [{ id: 'result-1' }];
     (runsApi.getRunResults as any).mockResolvedValue(extractionResults);
@@ -102,8 +103,8 @@ describe('Runs :: server actions', () => {
 
   test('Should call getTestCaseRunResults action and return analytics results', async () => {
     const filters: FilterDto[] = [
-      { column: 'testSuite', value: 'suite-1' },
-      { column: 'status', value: 'PASSED' },
+      { column: 'testSuite', value: 'suite-1', operator: FilterOperatorDto.EQUALS },
+      { column: 'status', value: 'PASSED', operator: FilterOperatorDto.EQUALS },
     ];
     const analyticsResults = { content: [{ id: 'analytics-1' }] };
     (analyticsApi.getTestCaseRunResults as any).mockResolvedValue(analyticsResults);
@@ -127,7 +128,7 @@ describe('Runs :: server actions', () => {
   });
 
   test('Should call getMetricSnapshots action and return snapshots', async () => {
-    const filters: FilterDto[] = [{ column: 'runId', value: 'run-1' }];
+    const filters: FilterDto[] = [{ column: 'runId', value: 'run-1', operator: FilterOperatorDto.EQUALS }];
     const snapshots = [{ id: 'snap-1', tsmdName: 'RAGAS Faithfulness' }];
     (analyticsApi.getMetricSnapshots as any).mockResolvedValue(snapshots);
 

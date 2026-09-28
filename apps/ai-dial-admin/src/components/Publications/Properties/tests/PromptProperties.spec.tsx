@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PromptProperties from '../PromptProperties';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { ActionType, PromptPublication, PublicationPrompt, PublicationStatus } from '@/src/models/dial/publications';
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
   useFileFolder: vi.fn(),
@@ -24,6 +25,26 @@ vi.mock('@/src/components/Publications/Assets/Prompt/PromptsList', () => ({
   ),
 }));
 
+// The mocked list reads the prompts only; the factory carries the rest of a publication's required members.
+const publicationPrompt = (name: string): PublicationPrompt => ({
+  prompt: { name },
+  sourceUrl: `prompts/my-bucket/${name}`,
+  targetUrl: `prompts/public/${name}`,
+  reviewUrl: `prompts/review/${name}`,
+  action: ActionType.ADD,
+});
+
+const promptPublication = (prompts: PublicationPrompt[]): PromptPublication => ({
+  path: 'public/folder',
+  requestName: 'request',
+  author: 'author',
+  createdAt: '0',
+  status: PublicationStatus.PENDING,
+  action: ActionType.ADD,
+  folderId: 'public',
+  prompts,
+});
+
 describe('PromptProperties', () => {
   const mockFetchFiles = vi.fn();
   const mockOnChange = vi.fn();
@@ -38,10 +59,7 @@ describe('PromptProperties', () => {
   });
 
   test('renders BaseProperties and PromptsList components', () => {
-    const publication = {
-      prompts: [{ name: 'prompt1' }, { name: 'prompt2' }],
-      action: 'download',
-    };
+    const publication = promptPublication([publicationPrompt('prompt1'), publicationPrompt('prompt2')]);
 
     render(<PromptProperties publication={publication} onChange={mockOnChange} />);
 
@@ -51,10 +69,7 @@ describe('PromptProperties', () => {
   });
 
   test('renders with empty prompts array', () => {
-    const publication = {
-      prompts: [],
-      action: 'none',
-    };
+    const publication = promptPublication([]);
 
     render(<PromptProperties publication={publication} onChange={mockOnChange} />);
 
@@ -64,10 +79,7 @@ describe('PromptProperties', () => {
   });
 
   test('does not call fetchFiles on mount when files array is not empty', () => {
-    const publication = {
-      prompts: [],
-      action: 'download',
-    };
+    const publication = promptPublication([]);
 
     render(<PromptProperties publication={publication} onChange={mockOnChange} />);
 

@@ -1,4 +1,6 @@
-export type ActivityAuditEntity = Record<string, string | string[] | boolean | number | object>;
+// A snapshot member the service cleared comes back as a literal `null`, which the diff generators treat
+// differently from an absent key — `generate-diffs.spec.ts` covers both paths.
+export type ActivityAuditEntity = Record<string, string | string[] | boolean | number | object | null>;
 
 export enum DiffStatus {
   ADDED = 'added',

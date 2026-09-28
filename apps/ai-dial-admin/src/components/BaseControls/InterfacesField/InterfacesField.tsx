@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialGhostButton, DialLabel, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialLabel, DialPrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -12,10 +12,12 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceFieldVariant } from '@/src/models/dial/interfaces';
 import { DialUpstreamInterface } from '@/src/models/dial/model';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
 import InterfaceEndpointRow from './InterfaceEndpointRow';
 import InterfaceRow from './InterfaceRow';
+import { BaseUrlInterfaceValue } from './models';
 
-type BaseUrlInterfaceValue = { baseUrl?: string; base_url?: string };
 type InterfaceValue = BaseUrlInterfaceValue | DialUpstreamInterface;
 
 interface Props<V extends InterfaceValue> {
@@ -26,6 +28,13 @@ interface Props<V extends InterfaceValue> {
   isAsset?: boolean;
   disabled?: boolean;
   className?: string;
+  view?: ApplicationRoute;
+  // Available platform Translator assets for the translator-mode picker — isAsset surfaces only.
+  // Metadata-only (list, not content) — the picker only needs each translator's name.
+  translators?: ResourceInfo[];
+  // The entity-level base URL an interface's empty base_url falls back to; passed through to each
+  // row, which makes its own value optional. Absent on surfaces with no such field.
+  entityBaseUrl?: string;
 }
 
 export const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentInterfaceType): string => {
@@ -49,12 +58,16 @@ const InterfacesField = <V extends InterfaceValue>({
   isAsset,
   disabled,
   className,
+  translators,
+  entityBaseUrl,
+  view,
 }: Props<V>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
   const isEndpointVariant = variant === InterfaceFieldVariant.Endpoint;
   const baseUrlKey = isAsset ? 'base_url' : 'baseUrl';
+  const defaultHeadersKey = 'defaultHeaders';
 
   const [isSelectingType, setIsSelectingType] = useState(false);
 
@@ -62,8 +75,10 @@ const InterfacesField = <V extends InterfaceValue>({
   const usedTypes = Object.keys(interfaces) as DeploymentInterfaceType[];
   const availableTypes = allowedTypes.filter((type) => !usedTypes.includes(type));
 
+  // undefined, not '': an untouched row must persist as an entry with no base_url/endpoint field (Core
+  // reads an empty string as a present, broken URL).
   const createEmptyValue = useCallback(
-    (): V => (isEndpointVariant ? { endpoint: '' } : { [baseUrlKey]: '' }) as V,
+    (): V => (isEndpointVariant ? { endpoint: undefined } : { [baseUrlKey]: undefined }) as unknown as V,
     [isEndpointVariant, baseUrlKey],
   );
 
@@ -137,11 +152,18 @@ const InterfacesField = <V extends InterfaceValue>({
             <InterfaceRow
               key={type}
               fieldId={`interface-${type}`}
+              type={type}
               typeLabel={getInterfaceTypeLabel(t, type)}
-              baseUrl={(interfaces[type] as BaseUrlInterfaceValue)?.[baseUrlKey] || ''}
+              value={(interfaces[type] as BaseUrlInterfaceValue) || {}}
+              baseUrlKey={baseUrlKey}
+              defaultHeadersKey={defaultHeadersKey}
               disabled={isReadonly}
-              onChangeBaseUrl={(value) => onChangeValue(type, { ...interfaces[type], [baseUrlKey]: value } as V)}
+              onChange={(value) => onChangeValue(type, value as V)}
               onDelete={() => onDeleteType(type)}
+              isAsset={isAsset}
+              translators={translators}
+              entityBaseUrl={entityBaseUrl}
+              view={view}
             />
           ),
         )}
@@ -158,8 +180,8 @@ const InterfacesField = <V extends InterfaceValue>({
         )}
 
         {!isReadonly && showAddButton && (
-          <div>
-            <DialGhostButton
+          <div className="flex flex-1 justify-end">
+            <DialPrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.AddInterface)}
               onClick={onAddClick}

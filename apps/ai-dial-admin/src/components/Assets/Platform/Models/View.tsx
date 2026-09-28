@@ -17,6 +17,8 @@ import { useI18n } from '@/src/locales/client';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -32,16 +34,38 @@ interface Props {
   globalInterceptors?: string[];
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
+  /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
-const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, globalInterceptors, optionWarnings }) => {
+const ModelView: FC<Props> = ({
+  etag: initialEtag,
+  originalModel,
+  roles,
+  interceptors,
+  globalInterceptors,
+  optionWarnings,
+  translators,
+  catalogSchemas,
+  isConfigFileSource,
+}) => {
   const t = useI18n();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, setEntityReadOnly } = useAppContext();
   const router = useRouter();
   const { fetchFiles } = useModelsFolder();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
+
+  const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedModel, setSelectedModel] = useState(structuredClone(originalModel));
   const [isChanged, setIsChanged] = useState(false);
@@ -52,8 +76,11 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   const tabs = useMemo(
@@ -65,6 +92,14 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
   useEffect(() => {
     setSelectedModel(structuredClone(originalModel));
   }, [originalModel]);
+
+  // Resyncs after a `router.refresh()` (a successful save re-fetches the page). A failed save updates
+  // `etag` itself from the response below, without waiting for a refresh — Core returns its current
+  // etag on every response, success or not, and a save rejected for an unrelated reason (e.g. a
+  // validation error) still leaves the retry needing that fresher value or it fails precondition.
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
@@ -87,6 +122,9 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
 
   const onSave = useCallback(() => {
     getReqRef.current(updateModel, selectedModel, etag).then((res) => {
+      if (res.etag) {
+        setEtag(res.etag);
+      }
       if (res.success) {
         showNotification(
           getSuccessNotification(
@@ -94,7 +132,7 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
             getUpdateNotificationDescription(ApplicationRoute.PlatformModels, selectedModel.name, t),
           ),
         );
-        fetchFiles(selectedModel.folderId);
+        fetchFiles(selectedModel.folderId || selectedModel._metadata?.folderId || '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -136,6 +174,8 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, global
             roles={roles}
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
+            translators={translators}
+            catalogSchemas={catalogSchemas}
             onChange={setSelectedModel}
           />
         )}

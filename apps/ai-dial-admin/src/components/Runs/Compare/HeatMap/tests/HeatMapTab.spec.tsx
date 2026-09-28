@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -58,6 +59,7 @@ const ControlledHeatMapTab: FC<{
       <HeatMapTab
         primaryRunId="run-1"
         comparedRunId="run-sibling"
+        onlyMatchingTestCases={false}
         primaryRunName="Run #316"
         comparedRunName="Run #317"
         colorDisplayMode={colorDisplayMode}
@@ -105,7 +107,7 @@ describe('HeatMapTab', () => {
             testCaseId: 'tc-1',
             responseStatusCode: 200,
             runIndex: 0,
-            executionStatus: 'SUCCESS',
+            executionStatus: ExtractionResultStatus.SUCCESS,
             testCaseName: 'Test Case 1',
             metricValues: {
               Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
@@ -158,7 +160,7 @@ describe('HeatMapTab', () => {
         testCaseId: 'tc-1',
         responseStatusCode: 200,
         runIndex: 0,
-        executionStatus: 'SUCCESS',
+        executionStatus: ExtractionResultStatus.SUCCESS,
         testCaseName: 'Test Case 1',
         metricValues: {
           Accuracy: { precision: 0.5 },
@@ -195,6 +197,7 @@ describe('HeatMapTab', () => {
           <HeatMapTab
             primaryRunId="run-1"
             comparedRunId="run-sibling"
+            onlyMatchingTestCases={false}
             primaryRunName="Run #316"
             comparedRunName="Run #317"
             colorDisplayMode={colorDisplayMode}

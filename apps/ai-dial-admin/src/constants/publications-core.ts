@@ -32,6 +32,8 @@ export const FILES_PREFIX = 'files/';
 export const SKILLS_PREFIX = 'skills/';
 export const MODELS_PREFIX = 'models/platform/';
 export const SCHEMAS_PREFIX = 'schemas/platform/';
+/** Core's `catalog_schemas` type has no short URL alias, unlike `app_type_schemas` -> `schemas`. */
+export const CATALOG_SCHEMAS_PREFIX = 'catalog_schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
 export const TRANSLATORS_PREFIX = 'translators/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
@@ -47,6 +49,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.SKILL]: SKILLS_PREFIX,
   [ResourceType.MODEL]: MODELS_PREFIX,
   [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
+  [ResourceType.CATALOG_SCHEMA]: CATALOG_SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,
   [ResourceType.TRANSLATOR]: TRANSLATORS_PREFIX,
   [ResourceType.ROLE]: ROLES_PREFIX,

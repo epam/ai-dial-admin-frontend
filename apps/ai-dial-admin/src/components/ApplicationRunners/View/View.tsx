@@ -16,13 +16,13 @@ import {
   updateCoreRunner,
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
-import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -30,7 +30,6 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialApplicationResource, DialResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -55,9 +54,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const { featureFlags } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs = getAppRunnerTabs(t);
+  const tabs = getAppRunnerTabs(t, featureFlags);
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
@@ -167,8 +167,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     [setSelectedRunner, setIsSkipRefresh],
   );
 
-  const onCreate = (entity: DialResource) => createApp(entity as DialApplicationResource);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SimpleEntityHeader
@@ -237,7 +235,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
                 setIsCreateAssetAppModalOpen(false);
                 dispatch({ type: ValidationActionType.Reset });
               }}
-              onCreate={onCreate}
               context={useAppsFolder}
               initialValues={{
                 source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,

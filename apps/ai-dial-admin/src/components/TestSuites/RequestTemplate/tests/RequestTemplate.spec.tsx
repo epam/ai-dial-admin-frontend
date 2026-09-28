@@ -10,6 +10,12 @@ import RequestTemplate from '../RequestTemplate';
 let capturedTabClick: (id: string) => void;
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
+  ButtonAppearance: { Ghost: 'ghost' },
+  DialPrimaryButton: ({ label, onClick }: any) => (
+    <button type="button" onClick={onClick}>
+      {label}
+    </button>
+  ),
   DialTabs: ({ tabs, activeTab, onClick }: any) => {
     capturedTabClick = onClick;
     return (
@@ -50,6 +56,7 @@ vi.mock('@tabler/icons-react', () => ({
   IconPlus: () => <svg data-icon="plus" />,
   IconEqual: () => <svg />,
   IconEqualNot: () => <svg />,
+  IconInfoCircle: () => <svg data-icon="info-circle" />,
 }));
 
 const mockAdd = vi.fn();
@@ -75,10 +82,6 @@ vi.mock('../tabs/TabsContent', () => {
     }),
   };
 });
-
-vi.mock('../components/TemplateVariablesDoc', () => ({
-  default: () => <div aria-label="template-variables-doc" />,
-}));
 
 vi.mock('../components/ContentTypeSelect', () => ({
   default: ({ testSuite, onChangeTestSuite }: any) => (
@@ -294,6 +297,28 @@ describe('RequestTemplate', () => {
     expect(screen.getByText('Suite: suite-42')).toBeInTheDocument();
   });
 
+  test('clicking Variable references calls onShowVariableDocsClick', () => {
+    const onShowVariableDocsClick = vi.fn();
+    render(
+      <RequestTemplate
+        testSuite={createTestSuite({
+          requestTemplate: {
+            urlTemplate: '/api',
+            body: { contentType: ContentType.JSON, content: {} },
+            headers: [],
+            queryParams: [],
+          },
+        })}
+        onChangeTestSuite={mockOnChangeTestSuite}
+        onShowVariableDocsClick={onShowVariableDocsClick}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.TemplateVariablesViewDoc }));
+
+    expect(onShowVariableDocsClick).toHaveBeenCalledOnce();
+  });
+
   describe('JSONata toggle', () => {
     test('shows the toggle when Body tab is JSON', () => {
       render(
@@ -349,7 +374,7 @@ describe('RequestTemplate', () => {
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
       expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
-      expect(screen.getByLabelText('template-variables-doc')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: TestSuitesI18nKey.TemplateVariablesViewDoc })).toBeInTheDocument();
     });
 
     test('shows the toggle on when jsonataContent is present with no contentType (stranded-user case)', () => {
@@ -369,7 +394,7 @@ describe('RequestTemplate', () => {
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
       expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
-      expect(screen.getByLabelText('template-variables-doc')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: TestSuitesI18nKey.TemplateVariablesViewDoc })).toBeInTheDocument();
     });
   });
 

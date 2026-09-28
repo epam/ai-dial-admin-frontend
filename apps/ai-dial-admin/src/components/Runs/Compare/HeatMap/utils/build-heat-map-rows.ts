@@ -115,6 +115,7 @@ export const buildHeatMapDeltaRows = (mergedRows: CompareAnalyticsRow[]): HeatMa
     rows.push({
       id: `group_${groupKey}`,
       rowType: HeatMapRowType.Group,
+      isGroup: true,
       groupKey,
       label: groupKey,
       values: {},
@@ -153,6 +154,7 @@ export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[
     rows.push({
       id: `group_${groupKey}`,
       rowType: HeatMapRowType.Group,
+      isGroup: true,
       groupKey,
       label: groupKey,
       values: {},

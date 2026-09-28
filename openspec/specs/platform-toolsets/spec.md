@@ -9,19 +9,35 @@ discovered-tools/sign-in/sign-out all resolve by the toolset's path regardless o
 `toolset-resources-core-api`'s platform requirements for the write-path details); the differences
 this capability covers are structural (flat, no folders, no versioning) and surface-level (a
 restricted action set, a dedicated detail view). Created by archiving change `add-platform-toolsets`.
-
 ## Requirements
+### Requirement: File root shown above physical buckets in the Assets Toolsets grid
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid when Catalog is enabled, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. When Catalog is disabled, the system SHALL omit `platform` and its resource requests but SHALL retain `file` and `public` roots. No new menu entry or top-level list route SHALL be introduced.
 
-### Requirement: Platform bucket shown above public in the Assets Toolsets grid
-The system SHALL display a `platform` bucket as a top-level node in the existing
-`Assets ▸ Toolsets` grid (`/assets-toolsets`), positioned above the `public` bucket, using the same
-`BaseAssetList` instance the public toolsets list already uses. No new menu entry and no new
-top-level list route SHALL be introduced for this bucket.
+#### Scenario: All roots appear when Catalog is enabled
+- **WHEN** a user opens `/assets-toolsets` with Catalog enabled
+- **THEN** the grid shows `file`, `platform`, and `public` roots in that order
 
-#### Scenario: Platform bucket appears above public on first load
-- **WHEN** the user navigates to `/assets-toolsets`
-- **THEN** the grid shows a `platform` top-level node above the `public` top-level node, both fetched
-  and rendered in the same tree
+#### Scenario: File root remains when Catalog is disabled
+- **WHEN** a user opens `/assets-toolsets` with Catalog disabled
+- **THEN** the grid shows `file` and `public`, does not show `platform`, and makes no platform resource request
+
+### Requirement: File-root toolsets are flat and read-only
+The system SHALL treat Toolsets under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `toolsets` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
+
+#### Scenario: File-root toolset names load with the listing
+- **WHEN** a user opens the Toolsets listing
+- **THEN** the system requests config-file toolset names with the physical-root reads and renders them without resource metadata or per-name body reads
+
+#### Scenario: File-root toolset actions are immutable
+- **WHEN** a user browses the Toolsets `file` root
+- **THEN** only open and open-in-new-tab are available for a toolset row
+
+### Requirement: File-root toolset detail view
+The system SHALL open a file-root toolset at `/assets-toolsets/{id}?configFile=true`, without a public-bucket `path` parameter. It SHALL preserve the existing config-file detail read and read-only presentation, including hidden ADMIN|CORE format selection.
+
+#### Scenario: File-root toolset opens without public path
+- **WHEN** a user opens a toolset row from the `file` root
+- **THEN** the system navigates to `/assets-toolsets/{id}?configFile=true` and renders it read-only
 
 #### Scenario: No separate platform toolsets list page exists
 - **WHEN** the user looks for a platform toolsets entry in the sidebar navigation
@@ -76,9 +92,14 @@ rows, instead of the `public` bucket's Name/Version/Author/Updated time set.
 - **THEN** the grid keeps its existing Name, Version, Author, and Updated time columns
 
 ### Requirement: Creating a platform toolset has no version field
-The system SHALL NOT display or require a version field when creating a new toolset while browsing
-the `platform` bucket, since the bucket has no versioning concept. Creating into the `public` bucket
-is unaffected and keeps requiring a version.
+The system SHALL NOT display or require a version field on any create form whose destination is
+the `platform` bucket — the list-page create form while browsing the `platform` bucket in the
+Toolsets view, and the container-seeded create-asset modal opened from an MCP container detail
+view with the `platform` folder selected — since the bucket has no versioning concept. Creating
+into the `public` bucket is unaffected and keeps requiring a version. A create submitted with the
+`platform` bucket as its destination SHALL write the flat, unversioned `platform/{name}` resource
+through the platform-bucket create action, and the resulting toolset SHALL open from the
+post-create navigation and from the Assets Toolsets grid's platform bucket without a 404.
 
 #### Scenario: No version field when creating into the platform bucket
 - **WHEN** the user opens the create form while browsing the `platform` bucket in the Toolsets view
@@ -87,6 +108,29 @@ is unaffected and keeps requiring a version.
 #### Scenario: Version field unchanged when creating into the public bucket
 - **WHEN** the user opens the create form while browsing the `public` bucket in the Toolsets view
 - **THEN** the version field is shown and required, unchanged from current behavior
+
+#### Scenario: The container-seeded create modal hides the version field for a platform destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
+  selects the `platform` folder
+- **THEN** no version field is shown, the form can be submitted without one, and no version suffix
+  is written into the created resource's path
+
+#### Scenario: The container-seeded create modal keeps the version field for a public destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
+  selects a `public` folder
+- **THEN** the version field is shown and required, and the created resource keeps its
+  `{folderId}{name}__{version}` path, unchanged from current behavior
+
+#### Scenario: A platform-bucket toolset created from a container opens without a 404
+- **WHEN** a user creates a toolset from an MCP container detail view with the `platform` folder
+  selected
+- **THEN** the post-create navigation opens the new toolset's platform-bucket detail view, and
+  clicking the toolset's row in the Assets Toolsets grid's `platform` bucket opens the same detail
+  view — neither resolves to a 404 page
+
+#### Scenario: A colon-named platform toolset opens through an encoded detail route
+- **WHEN** a user creates a platform-bucket toolset with `:` in its name from either create entry point
+- **THEN** the post-create redirect opens its detail view with `:` URL-encoded in the `[id]` segment and no `path` query parameter
 
 ### Requirement: Platform toolset server actions
 The system SHALL provide server actions to list, get, create, update, delete, and bulk-delete
@@ -111,15 +155,18 @@ toolsets route.
   the caller's etag when supplied
 
 ### Requirement: Platform toolset writes strip read-only and derived fields
-The system SHALL strip fields the merge reader adds but that are not part of Core's `ToolSet` entity
-— `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, and `reference` — before sending
-a create or update write for a platform-bucket toolset. Unlike the `public` bucket's generic write
-path, the `platform` bucket's write path deserializes strictly and rejects any unrecognized field.
+The system SHALL strip the merge layer's `_metadata` object — which holds the read-only and
+derived fields `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, `name`,
+`path`, `folderId`, `version`, and `nodeType` (see the `core-resource-entity-metadata`
+capability) — plus the client-only tracking field `reference`, before sending a create or update
+write for a platform-bucket toolset. Unlike the `public` bucket's generic write path, the
+`platform` bucket's write path deserializes strictly and rejects any unrecognized field.
 
 #### Scenario: A platform toolset save round-trips without a parse failure
-- **WHEN** the user edits and saves a platform-bucket toolset whose fetched entity carries `status`,
-  `author`, `createdAt`, `updatedAt`, and `reference`
-- **THEN** the write succeeds, with none of those fields present in the request body sent to Core
+- **WHEN** the user edits and saves a platform-bucket toolset whose fetched entity carries
+  `_metadata` and `reference`
+- **THEN** the write succeeds, with neither `_metadata` nor `reference` present in the request
+  body sent to Core
 
 ### Requirement: A rejected platform toolset name surfaces through the existing error path
 The system SHALL NOT pre-validate a toolset name against Core's stricter platform-bucket key pattern
@@ -133,16 +180,35 @@ than failing silently.
 - **THEN** the write fails, and an error notification carrying Core's rejection message is shown
 
 ### Requirement: Platform toolset folderId identifies the platform bucket
-The system SHALL return `'platform/'` as `folderId` when reading a platform-bucket toolset from DIAL
-Core, matching the value the write path already sets on create and update, so that any check of
-`isPlatformBucketPath(asset.folderId)` correctly identifies a platform-bucket toolset on a
-freshly-fetched resource, not only on one just created or updated in the current session.
+The system SHALL identify a platform-bucket toolset's bucket explicitly on every shape that carries
+one: listing rows carry `bucket: 'platform'` and no `folderId`, and a merged detail read carries
+`'platform/'` as `_metadata.folderId` for write-path identity, matching what the write path sets on
+create and update. No code path SHALL infer the bucket by applying a `platform/`-prefix check to a
+`folderId`; the folderId-prefix check remains only as a path-level helper for the browsed current
+path, not as a row or entity discriminator.
 
-#### Scenario: A freshly-fetched platform toolset's folderId identifies its bucket
+#### Scenario: A freshly-fetched platform toolset's bucket is identified explicitly
 - **WHEN** the user opens a platform-bucket toolset that was not created or updated in the current
   session
-- **THEN** the fetched resource's `folderId` is `'platform/'`, and `isPlatformBucketPath` on that value
-  returns `true`
+- **THEN** the fetched resource identifies its bucket through its metadata shape, and every
+  consumer answers "which bucket" from that explicit field — no `isPlatformBucketPath(asset.folderId)`
+  check is performed on a freshly-fetched resource
+
+#### Scenario: A platform listing row carries no folderId
+- **WHEN** platform-bucket toolsets are listed into the folder tree
+- **THEN** each row carries `bucket: 'platform'` and no `folderId`, and row-action handling (delete
+  shaping, open-in-new-tab) selects the platform treatment from the row's bucket
+
+### Requirement: Platform toolset name reflects the corrected dual-bucket identity
+The system SHALL set both the flat `name` and `_metadata.name` on a platform-bucket toolset to the
+name its Core resource URL encodes, overriding a divergent `content.name`, when the resource is
+read from DIAL Core — the one documented exception to `core-resource-entity-metadata`'s "content is
+never mutated by the merge" requirement.
+
+#### Scenario: A platform toolset's stale content name is corrected on read
+- **WHEN** a platform-bucket toolset's content response carries a `name` that no longer matches
+  the name encoded in its Core resource URL
+- **THEN** the merged entity's flat `name` and `_metadata.name` both hold the URL-derived name
 
 ### Requirement: Platform toolset header shows the platform bucket with no link
 The system SHALL show `platform` as the value of the header's Folder Storage field for a
@@ -265,3 +331,50 @@ are unaffected.
 #### Scenario: A freshly created platform toolset starts with no granted roles
 - **WHEN** a user creates a new platform-bucket toolset and opens its Roles tab before granting any role
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
+
+### Requirement: A platform-bucket toolset exposes its catalog metadata
+
+The system SHALL let an admin attach a catalog schema to a platform-bucket toolset and edit the
+catalog values it describes, using the shared `catalog-properties-editing` mechanism. The
+platform-toolset resource SHALL round-trip `catalog_schema_id` and `catalog_properties`.
+
+A user-bucket toolset SHALL be offered the same editing, with the same split in who rejects an
+invalid write that applies to applications: Core answers `400` for a user-bucket resource, while a
+platform-bucket one is rejected only at merged-configuration assembly.
+
+#### Scenario: Catalog metadata is offered on a toolset
+
+- **WHEN** an admin opens a toolset's detail view in either bucket
+- **THEN** the catalog schema selection and, once a schema is selected, its values editor are offered
+
+#### Scenario: The two fields survive a save
+
+- **WHEN** an admin attaches a schema, fills in values, and saves the toolset
+- **THEN** both `catalog_schema_id` and `catalog_properties` are written to Core and reappear on
+  reload
+
+#### Scenario: The Tools tab is unaffected
+
+- **WHEN** an admin opens a toolset carrying catalog metadata
+- **THEN** its Tools tab behaves exactly as before
+
+### Requirement: Duplicating a platform-bucket toolset resets OAuth auth settings to NONE
+The platform-bucket duplicate modal SHALL replace, when a `platform`-bucket toolset's
+`auth_settings.authentication_type === OAUTH` is duplicated, that `auth_settings` with
+`{ authentication_type: NONE }` before the duplicate is created, matching the existing
+`public`-bucket toolset duplicate behavior. Core never returns a real `client_secret` on read, so an
+OAuth `auth_settings` copied verbatim fails Core's write-time validation with a
+missing-`CLIENT_SECRET` error. A toolset whose `authentication_type` is `API_KEY`, `NONE`,
+`DIAL_NATIVE`, or unrecognised SHALL be carried over unchanged.
+
+#### Scenario: Duplicating a platform toolset with OAuth auth settings
+- **WHEN** the user duplicates a `platform`-bucket toolset with `auth_settings.authentication_type
+  === OAUTH`
+- **THEN** the created duplicate has `auth_settings` equal to `{ authentication_type: NONE }`
+- **AND** the duplicate is created successfully, with no `CLIENT_SECRET`-required error from Core
+
+#### Scenario: Duplicating a platform toolset with non-OAuth auth settings
+- **WHEN** the user duplicates a `platform`-bucket toolset whose `authentication_type` is `API_KEY`,
+  `NONE`, `DIAL_NATIVE`, or a value the frontend does not recognise
+- **THEN** `auth_settings` is carried over to the duplicate unchanged
+

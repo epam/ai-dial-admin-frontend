@@ -13,20 +13,29 @@ vi.mock('@/src/app/[lang]/platform-routes/actions', () => ({
   getRoutes: vi.fn().mockResolvedValue([]),
 }));
 
+let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ onSave, tabs }: any) => (
-    <>
-      <button type="button" onClick={onSave}>
-        save
-      </button>
-      <div data-tabs={JSON.stringify(tabs)} />
-    </>
-  ),
+  default: ({ onSave, tabs, jsonConfiguration }: any) => {
+    capturedJsonConfiguration = jsonConfiguration;
+    return (
+      <>
+        <button type="button" onClick={onSave}>
+          save
+        </button>
+        <div data-tabs={JSON.stringify(tabs)} />
+      </>
+    );
+  },
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+const setEntityReadOnly = vi.fn();
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => ({ setEntityReadOnly }),
+}));
 
 const route = (overrides: Partial<DialRouteResource> = {}): DialRouteResource =>
   ({
@@ -69,5 +78,22 @@ describe('RouteAssetView', () => {
 
     const tabs = JSON.parse(container.querySelector('[data-tabs]')!.getAttribute('data-tabs')!);
     expect(tabs.find((tab: { id: string }) => tab.id === EntityViewTab.Roles).warning).toBe(expectedWarning);
+  });
+
+  test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
+    const { unmount } = render(<RouteAssetView etag="etag" originalRoute={route()} roles={[]} isConfigFileSource />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(true);
+    expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
+
+    unmount();
+
+    expect(setEntityReadOnly).toHaveBeenLastCalledWith(false);
+  });
+
+  test('Should not mark the entity read-only for an admin-backed route', () => {
+    render(<RouteAssetView etag="etag" originalRoute={route()} roles={[]} />);
+
+    expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });
 });

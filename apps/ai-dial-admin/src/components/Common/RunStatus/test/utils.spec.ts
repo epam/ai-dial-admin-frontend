@@ -1,5 +1,5 @@
 import { ValidityStatus } from '@/src/types/key';
-import { getStatusLabel, isTransitionalRunStatus } from '../utils';
+import { getStatusLabel, isIncompleteRunStatus, isTransitionalRunStatus } from '../utils';
 import { describe, expect, test } from 'vitest';
 import { RunStatus } from '@/src/models/evaluation/run';
 
@@ -52,5 +52,20 @@ describe('Run status :: isTransitionalRunStatus', () => {
 
   test('treats an unknown status as settled', () => {
     expect(isTransitionalRunStatus('SOMETHING_NEW')).toBe(false);
+  });
+});
+
+describe('Run status :: isIncompleteRunStatus', () => {
+  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])('treats %s as incomplete', (status) => {
+    expect(isIncompleteRunStatus(status)).toBe(true);
+  });
+
+  test.each([RunStatus.COMPLETED, RunStatus.FAILED])('treats %s as complete', (status) => {
+    expect(isIncompleteRunStatus(status)).toBe(false);
+  });
+
+  test('treats an unknown or missing status as complete', () => {
+    expect(isIncompleteRunStatus('SOMETHING_NEW')).toBe(false);
+    expect(isIncompleteRunStatus(undefined)).toBe(false);
   });
 });

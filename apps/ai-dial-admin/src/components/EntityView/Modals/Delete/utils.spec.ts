@@ -1,4 +1,8 @@
 import { DeleteI18nKey } from '@/src/constants/i18n';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -96,19 +100,26 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getRelatedText(ApplicationRoute.Models, t)).toBe('');
   });
 
+  // The helper takes a `BaseEntity` and narrows it per view, so each case gets the entity type whose
+  // field that branch actually reads.
   test('getRelatedArtifacts returns an array', async () => {
+    const runner: DialApplicationScheme = { applications: ['a2', 'a3'] };
+    const interceptorTemplate: InterceptorTemplate = { name: 'Test Entity', interceptors: ['i2', 'i5'] };
+    const adapter: DialAdapter = { name: 'Test Entity', models: ['m1', 'm3'] };
+    // Not a `Dataset`: its `createdAt` is epoch millis, so `Dataset` does not satisfy `BaseEntity`.
+    const dataset: BaseEntity & { id?: string } = { id: 'dataset-1' };
+
     expect(await getRelatedArtifacts(ApplicationRoute.Models, entity)).toEqual([]);
-    expect(
-      await getRelatedArtifacts(ApplicationRoute.ApplicationRunners, { ...entity, applications: ['a2', 'a3'] }),
-    ).toEqual([{ name: 'a2' }, { name: 'a3' }]);
-    expect(
-      await getRelatedArtifacts(ApplicationRoute.InterceptorTemplates, { ...entity, interceptors: ['i2', 'i5'] }),
-    ).toEqual([{ name: 'i2' }, { name: 'i5' }]);
-    expect(await getRelatedArtifacts(ApplicationRoute.Adapters, { ...entity, models: ['m1', 'm3'] })).toEqual([
-      { name: 'm1' },
-      { name: 'm3' },
+    expect(await getRelatedArtifacts(ApplicationRoute.ApplicationRunners, runner)).toEqual([
+      { name: 'a2' },
+      { name: 'a3' },
     ]);
-    expect(await getRelatedArtifacts(ApplicationRoute.Datasets, { id: 'dataset-1' })).toEqual([
+    expect(await getRelatedArtifacts(ApplicationRoute.InterceptorTemplates, interceptorTemplate)).toEqual([
+      { name: 'i2' },
+      { name: 'i5' },
+    ]);
+    expect(await getRelatedArtifacts(ApplicationRoute.Adapters, adapter)).toEqual([{ name: 'm1' }, { name: 'm3' }]);
+    expect(await getRelatedArtifacts(ApplicationRoute.Datasets, dataset)).toEqual([
       { id: 'ts-1', name: 'Suite 1' },
       { id: 'ts-2', name: 'Suite 2' },
     ]);

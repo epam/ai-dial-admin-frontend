@@ -1,8 +1,9 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
-import { stripAssetIdentityFields } from '@/src/server/assets/exim';
+import { stripAssetIdentityFields, stripMetadata } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
+import { CatalogSchemasApi } from '@/src/server/core/catalog-schemas-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
 import { CoreUtilityApi } from '@/src/server/core/core-utility-api';
 import { DeploymentConfigurationApi } from '@/src/server/core/deployment-configuration-api';
@@ -210,6 +211,12 @@ export const appRunnerSchemaApi = new AppRunnerSchemaApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+// Catalog-schema reads against Core's merged configuration — the picker's option list and the
+// single-schema resolve the values editor renders from.
+export const catalogSchemasApi = new CatalogSchemasApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
 // Generic deployment-configuration read (`v1/deployments/{name}/configuration`) — resolves any
 // deployment type Core knows, including interceptors, by plain name.
 export const deploymentConfigurationApi = new DeploymentConfigurationApi({
@@ -264,7 +271,8 @@ const RESOURCE_TYPES_STRIPPED_BEFORE_PUT: ReadonlySet<ResourceType> = new Set([
 ]);
 
 // Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
-// for the four versioned types, now that the assets→Core migration has landed AssetApi.
+// for the four ResourceController-served types (application/toolset versioned, conversation/
+// prompt versionless), now that the assets→Core migration has landed AssetApi.
 // File resources were already Core-native via filesCoreApi since Phase 1.
 const publicationEnrichmentClients: EnrichmentClients = {
   getAsset: (token, path, type, etag) => assetApi.getMergedWithEtag(token, type, path, etag),
@@ -272,10 +280,17 @@ const publicationEnrichmentClients: EnrichmentClients = {
     assetApi.put(
       token,
       type,
-      (asset as { path: string }).path,
       RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
-        ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
-        : asset,
+        ? (asset as { _metadata: { path: string } })._metadata.path
+        : (asset as { path: string }).path,
+      // `_metadata` rides the enriched review copies — stripped for every type (the config DTOs
+      // 400 on it, the prompt/conversation DTOs would store it verbatim); the flat identity strip
+      // stays application/toolset-only per the DTO contract above.
+      stripMetadata(
+        RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+          ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
+          : asset,
+      ),
       { etag },
     ),
   getBucket: (token) => bucketApi.getBucket(token),

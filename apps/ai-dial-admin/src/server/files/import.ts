@@ -77,6 +77,7 @@ export async function importZipFile(
   destinationFolder: string,
   upload: UploadFn,
   threshold: number,
+  flatImport?: boolean,
 ): Promise<FileImportOutcome> {
   const zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
   const entries = Object.values(zip.files).filter((entry) => !entry.dir);
@@ -95,7 +96,7 @@ export async function importZipFile(
     }
     const relativePath = stripZipFilesPrefix(entry.name);
     const fileName = relativePath.split('/').pop() || relativePath;
-    const targetPath = `${destinationFolder}${relativePath}`;
+    const targetPath = `${destinationFolder}${flatImport ? fileName : relativePath}`;
     const content = await entry.async('arraybuffer');
     const file = new File([content], fileName, { type: inferContentTypeFromFileName(fileName) });
 

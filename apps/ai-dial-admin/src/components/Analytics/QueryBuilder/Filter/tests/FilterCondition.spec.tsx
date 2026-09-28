@@ -12,7 +12,12 @@ import { OPERATOR_OPTION_DESCRIPTORS } from '@/src/constants/analytics/query-bui
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
-import { FieldOption, FilterPredicateNode, QueryBuilderState } from '@/src/models/analytics/query-builder';
+import {
+  FieldOption,
+  FilterOperandKind,
+  FilterPredicateNode,
+  QueryBuilderState,
+} from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 
 const t = (key: string) => key;
@@ -256,5 +261,94 @@ describe('FilterCondition function operands', () => {
     await openOperand(user);
 
     expect(screen.queryByRole('button', { name: /QueryBuilder.Functions/ })).not.toBeInTheDocument();
+  });
+
+  const switchRightToFunction = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.ComparedAgainst }));
+    await user.click(screen.getByRole('option', { name: QueryBuilderI18nKey.Function }));
+  };
+
+  const pickRightFunction = async (user: ReturnType<typeof userEvent.setup>, label: RegExp) => {
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Function }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Functions/ }));
+    await user.click(screen.getByRole('option', { name: label }));
+  };
+
+  test('comparing against a function hides the literal inputs and shows the call instead', async () => {
+    const node = predicateOn('request_time', QueryOperator.Ge);
+    const user = renderWithCatalog(node);
+
+    await switchRightToFunction(user);
+
+    expect(node.rightKind).toBe(FilterOperandKind.Function);
+    expect(screen.queryByRole('button', { name: QueryBuilderI18nKey.ValueType })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(QueryBuilderI18nKey.ValuePlaceholder)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: QueryBuilderI18nKey.Function })).toBeInTheDocument();
+  });
+
+  test('picking the compared function gives it one editor per catalog argument', async () => {
+    const node = predicateOn('request_time', QueryOperator.Ge);
+    const user = renderWithCatalog(node);
+
+    await switchRightToFunction(user);
+    await pickRightFunction(user, /Date sub/);
+
+    expect(node).toMatchObject({ rightFn: 'date_sub', rightArgs: [{}, {}, {}] });
+    expect(screen.getByRole('button', { name: 'unit' })).toBeInTheDocument();
+    expect(screen.getByLabelText('amount')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'timestamp' })).toBeInTheDocument();
+  });
+
+  test("a call fills the compared function's expression argument", async () => {
+    const node = predicateOn('request_time', QueryOperator.Ge);
+    const user = renderWithCatalog(node);
+
+    await switchRightToFunction(user);
+    await pickRightFunction(user, /Date sub/);
+    await user.click(screen.getByRole('button', { name: 'timestamp' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Functions/ }));
+    await user.click(screen.getByRole('option', { name: /^Now/ }));
+
+    expect(node.rightArgs[2]).toEqual({ call: { fn: 'now', args: [] } });
+  });
+
+  test('a nested call takes columns only', async () => {
+    const node = predicateOn('request_time', QueryOperator.Ge);
+    const user = renderWithCatalog(node);
+
+    await switchRightToFunction(user);
+    await pickRightFunction(user, /Date sub/);
+    await user.click(screen.getByRole('button', { name: 'timestamp' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Functions/ }));
+    await user.click(screen.getByRole('option', { name: /Date sub/ }));
+    // The nested call's own timestamp argument is the one level the editor does not render. It is
+    // addressable on its own name — the nested label is qualified by the call it belongs to.
+    await user.click(screen.getByRole('button', { name: 'date_sub timestamp' }));
+
+    expect(screen.queryByRole('button', { name: /QueryBuilder.Functions/ })).not.toBeInTheDocument();
+  });
+
+  test('switching to in returns the compared operand to a literal', async () => {
+    const node = predicateOn('request_time', QueryOperator.Ge);
+    const user = renderWithCatalog(node);
+
+    await switchRightToFunction(user);
+    await user.click(screen.getByRole('button', { name: QueryBuilderI18nKey.Operator }));
+    await user.click(screen.getByRole('option', { name: QueryBuilderI18nKey.OperatorIn }));
+
+    expect(node.rightKind).toBe(FilterOperandKind.Literal);
+    expect(screen.queryByRole('button', { name: QueryBuilderI18nKey.ComparedAgainst })).not.toBeInTheDocument();
+  });
+
+  test('a compared call reads as its call in the row label', () => {
+    const node: FilterPredicateNode = {
+      ...predicateOn('request_time', QueryOperator.Ge),
+      rightKind: FilterOperandKind.Function,
+      rightFn: 'date_sub',
+      rightArgs: [{ literal: 'minute' }, { literal: '30' }, { call: { fn: 'now', args: [] } }],
+    };
+    renderWithCatalog(node);
+
+    expect(screen.getByRole('button', { name: /date_sub\(minute, 30, now\(\)\)/ })).toBeInTheDocument();
   });
 });

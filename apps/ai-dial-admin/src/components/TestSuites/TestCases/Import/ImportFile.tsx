@@ -12,6 +12,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification } from '@/src/utils/notification';
+import { TEST_CASES_IMPORT_ACCEPT_TYPES } from './constants';
 import ImportOptionsStep from './ImportOptionsStep';
 import ImportWarningsList from './ImportWarningsList';
 import { CaseWarning, ImportPreview } from './models';
@@ -101,7 +102,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, portalId, onClose,
             <>
               {!testCases && !isLoading && (
                 <DialLoadFileArea
-                  acceptTypes="text/csv"
+                  acceptTypes={TEST_CASES_IMPORT_ACCEPT_TYPES}
                   emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
                   emptyTextSecondLine={t(BasicI18nKey.Or)}
                   emptyButtonLabel={t(ButtonsI18nKey.Browse)}

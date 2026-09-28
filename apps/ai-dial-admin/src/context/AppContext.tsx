@@ -36,6 +36,11 @@ export interface AppContextType {
   isFullAdmin: boolean;
   /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
   isEnableAuth: boolean;
+  /**
+   * Set by a `configFile=true` detail view on mount (cleared on unmount) to make `isReadOnlyAdmin`
+   * true for the duration of viewing a config-file-sourced entity — see `config-file-entity-views`.
+   */
+  setEntityReadOnly: (isReadOnly: boolean) => void;
 }
 
 interface AppContextSidebar {
@@ -73,6 +78,7 @@ export const AppContextProvider = ({
   isEnableAuth?: boolean;
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isEntityReadOnly, setEntityReadOnly] = useState(false);
 
   useEffect(() => {
     const stored = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY);
@@ -118,11 +124,13 @@ export const AppContextProvider = ({
   };
 
   // Without the admin backend there's no FULL_ADMIN/READ_ONLY_ADMIN to read — nothing is
-  // enforced, so treat every caller as a full admin.
+  // enforced, so treat every caller as a full admin. `isEntityReadOnly` folds in on top: a
+  // `configFile=true` detail view sets it for the entity it's viewing, regardless of role.
   const isReadOnlyAdmin =
-    featureFlags.adminApiEnabled &&
-    !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) &&
-    !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+    isEntityReadOnly ||
+    (featureFlags.adminApiEnabled &&
+      !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) &&
+      !userInfo?.roles?.includes(UserRole.FULL_ADMIN));
 
   // Auth off → nothing is enforced, so treat as full admin; otherwise only a mapped FULL_ADMIN.
   const isFullAdmin =
@@ -155,6 +163,7 @@ export const AppContextProvider = ({
     isReadOnlyAdmin,
     isFullAdmin,
     isEnableAuth,
+    setEntityReadOnly,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

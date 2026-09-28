@@ -2,24 +2,28 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi } from '@/src/app/api/api';
+import { assetApi, configFileApi } from '@/src/app/api/api';
+import { DialRole } from '@/src/models/dial/role';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
+import { stripMetadata } from '@/src/server/assets/exim';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { toWireRoleLimits } from '@/src/utils/roles/limits';
 
 /**
- * Core rejects `status`/`validationWarnings` on write — they are read-only projections it adds on a
- * rejected read — and never round-trips `path`/`folderId`, which are derived from the resource name
- * rather than stored. `author`/`createdAt`/`updatedAt` come from Core's *metadata* node
- * (`mergeRoleResource`'s `flatMetadataFields`), not from `Role.class` itself, and `description` is
- * stripped for the same reason the generic `CreateEntity` form seeds every new asset with
- * `{ name: '', description: '' }` regardless of view. `Role` is a plain class — like `Route extends
- * RoleBasedEntity`, it declares none of these — so Core's `Role.class` deserializer rejects the whole
- * write once any of them is present (see `assets-routes/actions.ts`'s `toRoutePayload`, which found
- * this the hard way; stripped here up front instead).
+ * Core's `Role` is a plain class — like `Route extends RoleBasedEntity`, it declares none of the
+ * merge layer's grafts — so `stripMetadata` drops the whole `_metadata` object (identity, audit,
+ * and validity fields nest there; see the `core-resource-entity-metadata` capability) rather than
+ * letting Core's `Role.class` deserializer reject the whole write.
+ *
+ * `description`/`createdAt`/`updatedAt` are stripped on top of it: `Role.class` declares none of
+ * them, the generic `CreateEntity` form seeds every new asset with `{ name: '', description: '' }`
+ * regardless of view (surviving onto the runtime object despite the type — see
+ * `assets-routes/actions.ts`'s `toRoutePayload`, which found this the hard way), and `ModifiedEntity`
+ * types the timestamp pair.
  *
  * `costLimit`/`limits` go through `toWireRoleLimits` — `mergeRoleResource` already dropped any
  * token that overflowed a safe integer (the `Long.MAX_VALUE` "unlimited" sentinel included; see its
@@ -29,18 +33,13 @@ import { toWireRoleLimits } from '@/src/utils/roles/limits';
  */
 function toRolePayload(role: DialRoleResource) {
   const {
-    status: __status,
-    validationWarnings: __validationWarnings,
-    path: __path,
-    folderId: __folderId,
-    author: __author,
+    description: __description,
     createdAt: __createdAt,
     updatedAt: __updatedAt,
-    description: __description,
     costLimit,
     limits,
     ...payload
-  } = role as DialRoleResource & { description?: string };
+  } = stripMetadata(role) as Omit<DialRoleResource, '_metadata'> & { description?: string };
   return {
     ...payload,
     ...(costLimit !== undefined && { costLimit: toWireRoleLimits(costLimit) }),
@@ -80,4 +79,16 @@ export async function removeRole(path: string, etag?: string) {
 export async function bulkDeleteRoles(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return bulkDeleteAssets(assetApi, token, ResourceType.ROLE, paths);
+}
+
+/** `config-file-entity-views`: the role names Core's config file declares. */
+export async function getConfigFileRoles() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.listNames(token, ConfigFileEntityType.Roles);
+}
+
+/** `config-file-entity-views`: reads a role by name from Core's config-file population directly. */
+export async function getConfigFileRole(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return configFileApi.getEntity<DialRole>(token, ConfigFileEntityType.Roles, name);
 }

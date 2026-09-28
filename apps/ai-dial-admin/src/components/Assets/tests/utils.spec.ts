@@ -1,11 +1,10 @@
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
   addNewVersion,
-  filterLatestVersions,
   getAgentLinkForConversation,
   getDeleteNotificationContent,
   getEntityForUpdate,
@@ -87,6 +86,31 @@ describe('getTreeActionLabels', () => {
   );
 });
 
+// Regression (4.4): conversation rows have no folder concept, so neither the grid row menu nor the
+// folder tree may offer a move action for them.
+describe('Conversations offers no move action', () => {
+  test('getGridActionLabels excludes move for Conversations', () => {
+    const keys = getGridActionLabels(ApplicationRoute.Conversations, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('move');
+  });
+
+  test('getGridActionLabels returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.Conversations, true)).toEqual([]);
+  });
+
+  test('getTreeActionLabels excludes move for Conversations, keeping only delete', () => {
+    const keys = getTreeActionLabels(false, ApplicationRoute.Conversations).map((item) => item.key);
+
+    expect(keys).toEqual(['delete']);
+  });
+
+  test('getTreeActionLabels returns no options for a read-only admin', () => {
+    expect(getTreeActionLabels(true, ApplicationRoute.Conversations)).toEqual([]);
+  });
+});
+
 describe('getToolbarOptionLabels — dual-bucket views', () => {
   test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
     const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
@@ -138,53 +162,48 @@ describe('getGridActionLabels', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
   });
 
-  test('PlatformTranslators offers delete and openInNewTab but no duplicate', () => {
+  test('PlatformTranslators exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
     const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
 
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
-    expect(keys).not.toContain('duplicate');
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
   });
 
   test('PlatformTranslators returns no options for a read-only admin', () => {
     expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
   });
-});
 
-describe('filterLatestVersions', () => {
-  test('Should return only latest versions', () => {
-    const res = filterLatestVersions([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
-    expect(res).toEqual([
-      { name: 'prompts', version: '7' },
-      { name: 'model', version: '1' },
-    ]);
+  test('PlatformCatalogSchemas exposes delete and openInNewTab but never duplicate, since a copy would reuse the $id', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('duplicate');
+  });
+
+  test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, true)).toEqual([]);
   });
 });
 
 describe('getVersionsPerName', () => {
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '1' },
-      { name: 'prompts', version: '2' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '1' },
+      { name: 'app', version: '2' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '2'],
+      app: ['1', '2'],
     });
   });
   test('Should return correct map', () => {
     const res = getVersionsPerName([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
+      { name: 'app', version: '7' },
+      { name: 'app', version: '4' },
+      { name: 'toolset', version: '1' },
+      { name: 'app', version: '1' },
+    ] as AssetWithVersion[]);
     expect(res).toEqual({
-      prompts: ['1', '4', '7'],
-      model: ['1'],
+      app: ['1', '4', '7'],
+      toolset: ['1'],
     });
   });
 });
@@ -232,8 +251,11 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__1.2.3',
-      version: '1.2.3',
+      path: 'somePath__0.0.1',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 
@@ -243,8 +265,24 @@ describe('addNewVersion', () => {
     expect(result).toEqual({
       folderId: '2',
       name: 'Prompt',
-      path: 'somePath__newVersion',
-      version: 'newVersion',
+      path: 'somePath__oldVersion',
+      _metadata: {
+        path: 'somePath__newVersion',
+        version: 'newVersion',
+      },
+    });
+  });
+
+  test('reads the source path from an existing _metadata graft when the flat path is absent', () => {
+    const entity = { folderId: '2', name: 'Prompt', _metadata: { path: 'somePath__0.0.1' } } as any;
+    const result = addNewVersion(entity, '1.2.3');
+    expect(result).toEqual({
+      folderId: '2',
+      name: 'Prompt',
+      _metadata: {
+        path: 'somePath__1.2.3',
+        version: '1.2.3',
+      },
     });
   });
 });

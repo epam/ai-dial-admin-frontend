@@ -1,9 +1,9 @@
-import { HopDialectMessage, HopToolCall } from '@/src/models/analytics/conversations-trace';
-import { messageTextOf } from '@/src/utils/analytics/conversation-bodies';
+import { HopDialectMessage, HopToolCall } from '@/src/models/analytics/sessions-trace';
+import { messageTextOf } from '@/src/utils/analytics/session-bodies';
 import { asRecords, isRecord, jsonByteLength, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
 
 // A request message's calls sit on the message itself, not under `choices[].message` — so the response-side
-// decoder in `conversation-bodies.ts` does not apply here, and this is the one shape it does not already read.
+// decoder in `session-bodies.ts` does not apply here, and this is the one shape it does not already read.
 const toolCallsOf = (message: Record<string, unknown>): HopToolCall[] =>
   asRecords(message.tool_calls)
     .filter((call) => isRecord(call.function))

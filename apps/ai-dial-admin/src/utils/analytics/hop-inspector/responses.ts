@@ -1,4 +1,4 @@
-import { HopDialectMessage, HopToolCall, MessageRole } from '@/src/models/analytics/conversations-trace';
+import { HopDialectMessage, HopToolCall, MessageRole } from '@/src/models/analytics/sessions-trace';
 import { asRecords, isRecord, jsonByteLength, roleOf } from '@/src/utils/analytics/hop-inspector/envelope';
 
 const INPUT_TEXT_PART = 'input_text';

@@ -5,6 +5,7 @@ import { IconHelpCircle } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
 
+import { useAppContext } from '@/src/context/AppContext';
 import { getHelpUrl, isListView } from '@/src/utils/help/get-help-url';
 
 interface Props {
@@ -12,7 +13,8 @@ interface Props {
 }
 const HelpButton: FC<Props> = ({ docLink }) => {
   const pathname = usePathname();
-  const helpUrl = getHelpUrl(pathname ?? '');
+  const { featureFlags } = useAppContext();
+  const helpUrl = getHelpUrl(pathname ?? '', featureFlags);
   const hasHelpLink = Boolean(helpUrl && docLink);
 
   const onClick = useCallback(() => {

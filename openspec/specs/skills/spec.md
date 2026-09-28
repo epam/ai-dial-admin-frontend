@@ -15,7 +15,7 @@ archiving change `add-skill-creation`.
 
 ### Requirement: Assets > Skills menu entry
 The system SHALL add a `Skills` menu item to the Assets section of the admin menu, directly after `Files`
-(the last existing Assets entry), linking to a new `/assets-skills` route.
+(the last existing Assets entry), linking to the `/skills` route.
 
 #### Scenario: Skills follows Files in the Assets section
 - **WHEN** the Assets section of the menu renders
@@ -23,7 +23,7 @@ The system SHALL add a `Skills` menu item to the Assets section of the admin men
 
 #### Scenario: Selecting Skills navigates to its list
 - **WHEN** a user selects `Skills` from the Assets menu
-- **THEN** the app navigates to `/assets-skills`
+- **THEN** the app navigates to `/skills`
 
 ### Requirement: Skill asset list is a folder tree with metadata-only columns
 The system SHALL render the Skills asset list on the shared asset list, browsable as a folder tree (a

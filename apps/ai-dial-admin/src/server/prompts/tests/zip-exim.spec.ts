@@ -49,7 +49,7 @@ describe('Server :: Prompts :: zip-exim :: extractPromptsFromZip', () => {
 
     const result = await extractPromptsFromZip(buffer);
 
-    expect(result.prompts.map((p) => p.id).sort()).toEqual(['prompts/public/a__1.0', 'prompts/public/b__1.0']);
+    expect((result.prompts ?? []).map((p) => p.id).sort()).toEqual(['prompts/public/a__1.0', 'prompts/public/b__1.0']);
   });
 
   test('ignores an entry outside the prompts/ prefix', async () => {
@@ -60,7 +60,7 @@ describe('Server :: Prompts :: zip-exim :: extractPromptsFromZip', () => {
 
     const result = await extractPromptsFromZip(buffer);
 
-    expect(result.prompts.map((p) => p.id)).toEqual(['prompts/public/a__1.0']);
+    expect((result.prompts ?? []).map((p) => p.id)).toEqual(['prompts/public/a__1.0']);
   });
 
   test('rejects an archive with no valid prompts entries', async () => {

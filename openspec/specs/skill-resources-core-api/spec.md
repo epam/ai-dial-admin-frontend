@@ -11,16 +11,20 @@ corrected `skill-publications` properties view depend on — created by archivin
 ## Requirements
 
 ### Requirement: Skill folder metadata can be listed
-The system SHALL provide a Skill Core API method that lists the direct children of a Skill folder path
-(`GET /v2/metadata/skills/{bucket}/{path}`), mapping each returned item into the same `Asset`-shaped row
-(`name`, `path`, `nodeType`, `author`, `createdAt`, `updatedAt`) the shared asset list and folder-tree
-context already consume for every other asset type, and SHALL paginate using Core's continuation token
-until the full folder has been read.
+The system SHALL provide a Skill Core API method that lists the direct children of a Skill folder
+path (`GET /v2/metadata/skills/{bucket}/{path}`), mapping each returned item through the shared
+asset row mapper into the unified asset row shape (`name`, `path`, `nodeType`, `author`,
+`createdAt`, `updatedAt`, `bucket`, and the movable flavor's root-level `folderId`) the folder-tree
+context consumes for every other asset type, with the skills-specific path parsing and the
+FOLDER-row trailing-slash convention applied inside that shared mapper. Pagination SHALL follow
+Core's continuation token through the shared paginated-list helper until the full folder has been
+read.
 
 #### Scenario: Listing returns metadata-only rows
 - **WHEN** the list method is called for a folder path
-- **THEN** it returns one row per child with `name`, `path`, `nodeType`, `author`, `createdAt`, and
-  `updatedAt` populated from Core's response, and no other per-row Core request is made
+- **THEN** it returns one row per child with `name`, `path`, `nodeType`, `author`, `createdAt`,
+  `updatedAt`, `bucket`, and `folderId` populated from Core's response, and no other per-row Core
+  request is made
 
 #### Scenario: A folder child is distinguished from a skill child
 - **WHEN** the listing response classifies a child as `FOLDER` versus `ITEM`
@@ -31,6 +35,11 @@ until the full folder has been read.
 - **WHEN** Core's response for a folder includes a continuation token
 - **THEN** the method continues requesting subsequent pages until no token is returned, and the combined
   result includes every child across all pages
+
+#### Scenario: Skills rows are produced by the shared mapper
+- **WHEN** the skills list maps Core's response
+- **THEN** it runs through the same row mapper as every other asset type, and the hand-rolled
+  per-type skills row mapping no longer exists
 
 ### Requirement: A skill can be deleted through the Skill Core client, not the generic asset client
 The system SHALL provide a Skill Core API method that deletes a skill (`DELETE /v2/skills/{bucket}/{path}`)
@@ -84,23 +93,26 @@ an unconditional delete.
 - **THEN** the delete request still reaches Core, unlike the whole-skill delete method
 
 ### Requirement: A single skill's author, created/updated dates, and etag are read from a single parent-folder listing
-The system SHALL populate a single skill's `author`/`createdAt`/`updatedAt`/`etag` by finding that
+The system SHALL populate a single skill's `author`/`createdAt`/`updatedAt` — inside the skill
+entity's `_metadata` object (see the `core-resource-entity-metadata` capability) — by finding that
 skill's own row in a single (first-page, non-paginated) read of its parent folder's listing, and SHALL
 NOT issue a separate `SKILL.md` manifest fetch for this purpose. Confirmed by reading Core's actual
 implementation, not just its design documentation: no metadata endpoint returns these for a direct "read
 this one skill" call — the children-listing mapper that backs `GET /v2/metadata/skills/{bucket}/{path}`
 only ever sets `nodeType`/`createdAt`/`updatedAt`/`author`/`etag` on *children of a listed folder*, but
 that same per-child `etag` is exactly the aggregate etag a `SKILL.md` content-read's `ETag` header would
-carry, making a second, dedicated manifest fetch redundant. `name`/`description`/`version` remain
+carry, making a second, dedicated manifest fetch redundant. `etag` SHALL keep flowing as a separate
+value, outside `_metadata`. `name`/`description`/`version` remain
 unpopulated by this method — they live only in `SKILL.md`'s frontmatter, out of scope until in-browser
 `SKILL.md` editing is built. A skill read costs exactly two Core requests: this listing read, plus the
 files listing (see the file-listing requirement above).
 
 #### Scenario: Author, dates, and etag all come from one parent-folder listing read
 - **WHEN** a single skill is read
-- **THEN** its `author`, `createdAt`, `updatedAt`, and `etag` are all populated from that skill's row in
-  a single read of its parent folder's listing, with no separate manifest fetch and no per-skill
-  metadata call
+- **THEN** its `_metadata.author`, `_metadata.createdAt`, and `_metadata.updatedAt` are populated
+  from that skill's row in a single read of its parent folder's listing, with no separate manifest
+  fetch and no per-skill metadata call, and the etag is returned as a separate value outside
+  `_metadata`
 
 #### Scenario: A skill missing from its parent folder's first listing page is reported not found
 - **WHEN** a skill's row cannot be found on the first page of its parent folder's listing

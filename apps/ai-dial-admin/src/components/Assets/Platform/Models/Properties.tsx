@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
@@ -13,6 +14,7 @@ import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TokenizerModelControl from '@/src/components/BaseControls/TokenizerModel';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
+import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
@@ -25,16 +27,20 @@ import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
 import { supportsResponsesInterface } from '@/src/utils/models/responses-interface';
 
 interface Props {
   asset: DialModelResource;
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialModelResource) => void;
 }
 
-const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
+const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, onChange }) => {
   const t = useI18n();
   const showResponsesDefaults = supportsResponsesInterface(asset);
 
@@ -82,10 +88,21 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
         />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
 
+        <EndpointControl
+          id="base_url"
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          endpoint={asset.baseUrl}
+          onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+        />
+
         <InterfacesField
           interfaces={asset.interfaces}
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={MODEL_INTERFACE_TYPES}
+          translators={translators}
+          entityBaseUrl={asset.baseUrl}
+          view={ApplicationRoute.PlatformModels}
           isAsset
         />
         <EndpointControl
@@ -125,6 +142,12 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
           />
         )}
 
+        <KeyValueGrid
+          label={t(EntityFieldsI18nKey.defaultHeaders)}
+          value={asset.defaultHeaders}
+          onChange={(defaultHeaders) => onChange({ ...asset, defaultHeaders })}
+        />
+
         <TokenizerModelControl entity={asset} onChangeEntity={onChange} />
         <ForwardAuthTokenField view={ApplicationRoute.PlatformModels} entity={asset} onChangeEntity={onChange} />
 
@@ -133,7 +156,13 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
         {asset.type === DialModelResourceType.Embedding && (
           <EmbeddingDimensions model={asset} onChangeModel={onChange} />
         )}
-        <Pricing model={asset} onChangeModel={onChange} />
+        <Pricing model={asset} onChangeModel={onChange} isAsset />
+        <CatalogSchemaField
+          schemaId={asset.catalogSchemaId}
+          options={catalogSchemas?.options}
+          optionsError={catalogSchemas?.error}
+          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId })}
+        />
       </div>
     </div>
   );

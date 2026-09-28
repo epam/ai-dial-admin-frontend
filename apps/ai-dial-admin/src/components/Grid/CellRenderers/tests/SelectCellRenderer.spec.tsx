@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+import { ICellRendererParams } from 'ag-grid-community';
+
 import SelectCellRenderer from '../SelectCellRenderer';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
@@ -16,6 +18,9 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
 }));
 
+// The renderer reads only the members each case sets; the rest of `ICellRendererParams` is grid-supplied.
+const cellParams = {} as ICellRendererParams;
+
 const booleanItems = [
   { value: 'true', label: 'true' },
   { value: 'false', label: 'false' },
@@ -28,6 +33,7 @@ describe('SelectCellRenderer', () => {
     const row = { data: { flag: true } };
     const { rerender } = render(
       <SelectCellRenderer
+        {...cellParams}
         value={true}
         items={booleanItems}
         onChange={onChange}
@@ -45,6 +51,7 @@ describe('SelectCellRenderer', () => {
 
     rerender(
       <SelectCellRenderer
+        {...cellParams}
         value={true}
         items={booleanItems}
         onChange={onChange}
@@ -61,6 +68,7 @@ describe('SelectCellRenderer', () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <SelectCellRenderer
+        {...cellParams}
         value={true}
         items={booleanItems}
         onChange={onChange}
@@ -74,6 +82,7 @@ describe('SelectCellRenderer', () => {
 
     rerender(
       <SelectCellRenderer
+        {...cellParams}
         value={true}
         items={booleanItems}
         onChange={onChange}

@@ -2,9 +2,7 @@
 
 import { getConversations } from '@/src/app/[lang]/conversations/actions';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { TreeAssetListItem } from '@/src/models/dial/asset-list-item';
 
-export const { Provider: ConversationFolderProvider, useFolderContext: useConversationFolder } = createFolderContext(
-  getConversations as (path: string) => Promise<Asset[] | null | undefined>,
-  'useConversationFolder',
-);
+export const { Provider: ConversationFolderProvider, useFolderContext: useConversationFolder } =
+  createFolderContext<TreeAssetListItem>(getConversations, 'useConversationFolder');

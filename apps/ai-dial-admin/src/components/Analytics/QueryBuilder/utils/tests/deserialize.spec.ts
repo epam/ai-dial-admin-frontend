@@ -11,7 +11,7 @@ import {
   createPredicate,
   createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { FilterOperandKind, FilterPredicateNode, QueryBuilderState } from '@/src/models/analytics/query-builder';
 import {
   QueryExprType,
   QueryFilterNode,
@@ -24,6 +24,8 @@ import {
   QuerySortNulls,
   QueryValueType,
   StructuredQuery,
+  QueryExpr,
+  QueryFnExpr,
 } from '@/src/models/analytics/query';
 import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
@@ -43,7 +45,7 @@ describe('parseQuery round-trip', () => {
   test('row query with filter, projection, sort and offset page', () => {
     const s = base();
     s.distinct = true;
-    s.select = ['project_id', 'chat_id'];
+    s.select = [createColumnRow('project_id'), createColumnRow('chat_id')];
 
     const eq = createPredicate();
     eq.field = 'event_kind';
@@ -275,7 +277,7 @@ describe('isBuilderRepresentable', () => {
 });
 
 describe('parseQuery — row-mode function columns', () => {
-  const extractExpr = {
+  const extractExpr: QueryFnExpr = {
     type: QueryExprType.Fn,
     name: 'json_extract_string',
     args: [
@@ -481,10 +483,94 @@ describe('isBuilderRepresentable — function calls', () => {
 
   // The saved-queries grid labels a query's editor without loading the catalog.
   test('with no catalog given, a function call is taken at face value', () => {
-    expect(isBuilderRepresentable(call('regexp_extract', []))).toBe(true);
+    expect(isBuilderRepresentable(call('regexp_extract', []), null)).toBe(true);
   });
 
   test('an empty catalog leaves no function query representable', () => {
     expect(isBuilderRepresentable(lowerOfField, [])).toBe(false);
+  });
+});
+
+describe('function right operands and nested calls', () => {
+  const nowCall: QueryFnExpr = { type: QueryExprType.Fn, name: 'now', args: [] };
+
+  const relativeCall = (unit: string, amount: string, inner: QueryExpr = nowCall): QueryFnExpr => ({
+    type: QueryExprType.Fn,
+    name: 'date_sub',
+    args: [
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: unit },
+      { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: amount },
+      inner,
+    ],
+  });
+
+  // Wrapped in the root AND group the builder always holds, so a round trip compares like for like.
+  const relativeQuery = (right: QueryExpr): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    filter: {
+      op: QueryLogicalOperator.And,
+      args: [{ op: QueryOperator.Ge, args: [{ type: QueryExprType.Field, name: 'request_time' }, right] }],
+    },
+  });
+
+  test('a bound relative to the current instant is representable', () => {
+    expect(isBuilderRepresentable(relativeQuery(relativeCall('minute', '30')), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a relative bound hydrates into the condition with both calls intact', () => {
+    const state = parseQuery(relativeQuery(relativeCall('minute', '30')), [], TEST_FUNCTIONS);
+    const condition = state.filter.children[0] as FilterPredicateNode;
+
+    expect(condition.field).toBe('request_time');
+    expect(condition.rightKind).toBe(FilterOperandKind.Function);
+    expect(condition.rightFn).toBe('date_sub');
+    expect(condition.rightArgs).toEqual([{ literal: 'minute' }, { literal: '30' }, { call: { fn: 'now', args: [] } }]);
+  });
+
+  test('a relative bound round-trips through the builder unchanged', () => {
+    const original = relativeQuery(relativeCall('day', '2'));
+    const reparsed = buildQuery(parseQuery(original, [], TEST_FUNCTIONS));
+
+    expect(reparsed.filter).toEqual(original.filter);
+  });
+
+  test('a call nested two levels deep is not representable', () => {
+    const twoDeep = relativeCall('minute', '30', relativeCall('hour', '1'));
+
+    expect(isBuilderRepresentable(relativeQuery(twoDeep), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a right-hand call the catalog does not serve is not representable', () => {
+    const unserved: QueryFnExpr = { type: QueryExprType.Fn, name: 'unserved', args: [] };
+
+    expect(isBuilderRepresentable(relativeQuery(unserved), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a call on the right of in is not representable', () => {
+    const query = relativeQuery(relativeCall('minute', '30'));
+    const filter = query.filter as { args: { op: QueryOperator }[] };
+    filter.args[0].op = QueryOperator.In;
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a column on the right is not representable', () => {
+    const column: QueryExpr = { type: QueryExprType.Field, name: 'response_time' };
+
+    expect(isBuilderRepresentable(relativeQuery(column), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a nested call in a projected column hydrates too', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      select: [{ expr: { type: QueryExprType.Fn, name: 'length', args: [relativeCall('hour', '1')] }, as: 'since' }],
+    };
+    const state = parseQuery(query, [], TEST_FUNCTIONS);
+
+    expect(state.select[0].args).toEqual([
+      { call: { fn: 'date_sub', args: [{ literal: 'hour' }, { literal: '1' }, { call: { fn: 'now', args: [] } }] } },
+    ]);
   });
 });

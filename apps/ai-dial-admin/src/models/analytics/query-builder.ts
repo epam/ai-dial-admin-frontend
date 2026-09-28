@@ -15,9 +15,19 @@ import { TimeRange } from '@/src/models/time-range';
 
 // The toolbar time filter serializes into the structured query as ge/le predicates on this field —
 // resolved once per build so the JSON view, Copy, and Run all carry the same visible time bound.
+// `period` names the preset the range came from, and is what makes the pair relative to the current
+// instant instead of two fixed ones; a custom range leaves it unset and serializes as instants.
 export interface QueryTimeBound {
   field: string;
   range: TimeRange;
+  period?: string;
+}
+
+// The pair of served functions a relative time bound needs, resolved from the catalog together so a
+// caller cannot hold one without the other.
+export interface RelativeTimeFunctions {
+  subtract: QueryFunction;
+  now: QueryFunction;
 }
 
 export enum FilterNodeKind {
@@ -25,8 +35,18 @@ export enum FilterNodeKind {
   Predicate = 'predicate',
 }
 
+// What a condition compares its left operand against: a typed literal (the value input), or a
+// scalar-function call. Kept as its own member rather than derived from `rightFn`, because "switched
+// to a function, none picked yet" is a state with its own editor.
+export enum FilterOperandKind {
+  Literal = 'literal',
+  Function = 'function',
+}
+
 // One condition. Its left operand is either a schema column (fn = null, named by `field`) or a
-// scalar-function call, named the same way an ExpressionRow names one.
+// scalar-function call, named the same way an ExpressionRow names one. Its right operand is either
+// the literal `value`/`valueType`/`isNull` triple or, under `rightKind: Function`, a call named by
+// `rightFn` with one `rightArgs` slot per catalog argument.
 export interface FilterPredicateNode {
   id: string;
   kind: FilterNodeKind.Predicate;
@@ -37,6 +57,9 @@ export interface FilterPredicateNode {
   valueType: QueryValueType;
   value: string;
   isNull: boolean;
+  rightKind: FilterOperandKind;
+  rightFn: string | null;
+  rightArgs: FnArgValue[];
 }
 
 export interface FilterGroupNode {
@@ -48,11 +71,22 @@ export interface FilterGroupNode {
 
 export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
+// A call standing in for an `expression` argument's value, with one `args` slot per the called
+// function's own catalog arguments.
+export interface FnCallValue {
+  fn: string;
+  args: FnArgValue[];
+}
+
 // One ordered argument value of a function row. Exactly one member is populated per the catalog
-// argument's kind: `field` for an `expression` argument, `literal` for a literal argument.
+// argument's kind: for an `expression` argument either `field` or `call`, `literal` for a literal
+// argument. The type is recursive while the argument editor renders one level of nesting only — the
+// depth limit belongs to the editor and the representability check, not to the shape a query may
+// take, so the two can move apart without a model change.
 export interface FnArgValue {
   field?: string;
   literal?: string;
+  call?: FnCallValue;
 }
 
 // One entry of a column list the user assembles — a Group by key or a row-mode projection column:

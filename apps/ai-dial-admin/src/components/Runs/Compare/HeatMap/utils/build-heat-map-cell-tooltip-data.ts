@@ -2,19 +2,19 @@ import { ITooltipParams } from 'ag-grid-community';
 
 import { getAccuracyColors, getDeltaColors } from '@/src/components/Common/ColorScale/utils';
 import { DELTA_NEUTRAL_SEGMENT } from '@/src/components/Common/ColorScale/constants';
+import { HEAT_MAP_GROUP_ROW_BG, HEAT_MAP_STROKE_TERTIARY } from '@/src/components/Common/HeatMap/constants';
+import { HeatMapCellTooltipSwatch } from '@/src/components/Common/HeatMap/models';
+import {
+  formatHeatMapCellValue,
+  formatHeatMapDeltaCellValue,
+} from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 import { RUN_COMPARE_PRIMARY_INDEX } from '@/src/components/Runs/Compare/constants';
-import { HEAT_MAP_GROUP_ROW_BG, HEAT_MAP_STROKE_TERTIARY } from '@/src/components/Runs/Compare/HeatMap/constants';
 import {
   HeatMapCellTooltipData,
-  HeatMapCellTooltipSwatch,
   HeatMapColorDisplayMode,
   HeatMapRow,
   HeatMapRowType,
 } from '@/src/components/Runs/Compare/HeatMap/models';
-import {
-  formatHeatMapCellValue,
-  formatHeatMapDeltaCellValue,
-} from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
 interface BuildHeatMapCellTooltipDataOptions {

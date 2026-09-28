@@ -7,6 +7,7 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.PlatformModels ||
     view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformCatalogSchemas ||
     view === ApplicationRoute.PlatformInterceptors ||
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
@@ -18,7 +19,16 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
 };
 
 export const isAssetWithVersion = (view?: ApplicationRoute): boolean => {
-  return view === ApplicationRoute.Prompts || isDeploymentAsset(view);
+  return isDeploymentAsset(view);
+};
+
+/**
+ * Folder-nested versionless asset views — prompt and conversation. Their names never carry a
+ * `__version` suffix: a `__` in a prompt/conversation name is part of the name itself, never a
+ * name/version delimiter.
+ */
+export const isVersionlessAssetView = (view?: ApplicationRoute): boolean => {
+  return view === ApplicationRoute.Prompts || view === ApplicationRoute.Conversations;
 };
 
 export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
@@ -41,6 +51,7 @@ export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
 const VIEWS_WITHOUT_TOPIC_CATALOGUE: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformInterceptors,
 ];
 

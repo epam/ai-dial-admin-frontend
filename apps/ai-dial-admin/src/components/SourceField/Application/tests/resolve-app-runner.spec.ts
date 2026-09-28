@@ -60,7 +60,7 @@ describe('resolveAppRunnerScheme', () => {
   });
 
   test('resolves a Platform runner against its content $id, not the picker option $id', async () => {
-    const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' };
+    const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe', name: 'edited', folderId: 'public' };
     const scheme = { $id: 'http://asdqwe/edited', properties: {} };
     vi.mocked(getRunner).mockResolvedValue({ success: true, response: detail });
     vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: true, response: scheme });
@@ -86,7 +86,7 @@ describe('resolveAppRunnerScheme', () => {
   });
 
   test('falls back to the (possibly corrected) runner when the resolved-schema call fails', async () => {
-    const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' };
+    const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe', name: 'edited', folderId: 'public' };
     vi.mocked(getRunner).mockResolvedValue({ success: true, response: detail });
     vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: false });
 

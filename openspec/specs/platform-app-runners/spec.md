@@ -102,6 +102,14 @@ backend's own runner table, so an asset runner has no row to point at and the cr
 with an unresolvable source. Because a single valid target does not warrant a menu, the action SHALL be a single
 button rather than the two-item dropdown `Entities > Application Runners` offers.
 
+The create modal SHALL offer both of the applications view's bucket roots — `platform` and `public` — as
+destinations in its folder sidebar (the `platform` root only when the Catalog menu group is enabled), and its form
+SHALL follow the destination bucket's shape: no version field when the `platform` bucket is selected, the version
+field shown and required when the `public` bucket is selected. A create into the `platform` bucket SHALL be
+submitted through the platform-bucket create action — writing the flat, unversioned `platform/{name}` resource —
+and SHALL navigate to the new application's detail view at the bare `/assets-applications/{name}` route, which
+SHALL resolve without a 404. A create into the `public` bucket is unchanged.
+
 #### Scenario: Detail view renders exactly five tabs
 
 - **WHEN** a user opens an app-runner asset's detail view
@@ -137,8 +145,23 @@ heading is retained because a scenario's name is the identity a delta rewrites c
 #### Scenario: The create modal opens with the runner as a fixed source
 
 - **WHEN** a user activates `Create Assets Application`
-- **THEN** the shared asset-application create modal opens, requesting name, display name, version, and description
+- **THEN** the shared asset-application create modal opens, requesting name, display name, description, and — only
+  while the `public` bucket is the selected destination — a version
 - **AND** no source field is offered, since the source is the runner the action was started from
+
+#### Scenario: The create modal offers both bucket roots as destinations
+
+- **WHEN** the create modal opens with the Catalog menu group enabled
+- **THEN** the folder sidebar lists the `platform` root and the `public` root, without requiring a prior visit to
+  the Assets Applications view in the same session
+- **AND** when the Catalog menu group is disabled, only the `public` root is listed
+
+#### Scenario: The version field follows the selected destination bucket
+
+- **WHEN** the user selects the `platform` bucket in the create modal's folder sidebar
+- **THEN** no version field is shown and the form can be submitted without one
+- **AND** when the user selects the `public` bucket, the version field is shown and required, unchanged from
+  current behavior
 
 #### Scenario: The new application references the runner by its Core resource name
 
@@ -160,6 +183,13 @@ heading is retained because a scenario's name is the identity a delta rewrites c
   application's detail view
 - **AND** when the request fails, an error notification carrying the server's message is shown and the modal stays
   open
+
+#### Scenario: A platform-bucket create navigates to a resolving detail view
+
+- **WHEN** a user submits the create modal with the `platform` bucket selected
+- **THEN** the application is created at the flat, unversioned `platform/{name}` path, and the browser navigates to
+  `/assets-applications/{name}` — no `path` query parameter — which opens the new application's platform-bucket
+  detail view on its Property tab rather than a 404 page
 
 #### Scenario: The action follows the header's existing gating
 
@@ -249,6 +279,13 @@ will refuse regardless.
 
 The system SHALL populate the app-runner Parameters tab from DIAL Core's resolved-schema read, which already performs the external-schema download declared by `dial:applicationTypeSchemaEndpoint`.
 
+Editing a runner's parameters SHALL preserve every schema declaration the tab does not itself render.
+The app-runner meta-schema lets a property carry a file-valued declaration, the encoded-file format
+that accompanies it, and per-property metadata at any nesting depth; the tab exposes only a subset of
+these as editable fields. A declaration the tab cannot edit is data the runner's author put there —
+losing it on save silently breaks the behavior that depended on it, so it SHALL survive an edit
+untouched.
+
 #### Scenario: Parameters reflect a resolved external schema
 
 - **WHEN** a runner declares `dial:applicationTypeSchemaEndpoint` and its Parameters tab is opened
@@ -258,6 +295,19 @@ The system SHALL populate the app-runner Parameters tab from DIAL Core's resolve
 
 - **WHEN** Core cannot download the declared external schema
 - **THEN** the Parameters tab surfaces an error rather than rendering an empty parameter set silently
+
+#### Scenario: A file-valued property survives an unrelated edit
+
+- **WHEN** a user edits one property of a runner whose schema declares another property file-valued,
+  and saves
+- **THEN** that property is still declared file-valued, with its format intact
+- **AND** DIAL Core still resolves it as a file reference when the runner is published or shared
+
+#### Scenario: Nested per-property metadata survives an edit
+
+- **WHEN** a user edits a runner whose schema carries per-property metadata below the first level of
+  `properties`, and saves
+- **THEN** that nested metadata is unchanged in the saved schema
 
 ### Requirement: Entities > Application Runners is unaffected
 
@@ -442,4 +492,40 @@ Every field this surface reads or writes is owned by DIAL Core. The system SHALL
 #### Scenario: The claim is stated with its scope
 - **WHEN** the capability describes itself as Core-direct
 - **THEN** it states what holds — that the runner resource and every option list it offers are read from Core — rather than implying the surface has no other dependency
+
+### Requirement: Duplicating a runner navigates to the new runner, not a 404
+
+Because `$id` is always a URI (it always contains characters `encodeURIComponent` must escape), the post-duplicate redirect for `Catalog > App Runners` SHALL apply exactly the same single URL-encoding to the new `$id` that row-click navigation applies to an existing runner's decoded name, so both entry points resolve to the same URL segment.
+
+#### Scenario: Duplicating a runner with a URI-shaped id lands on the new runner
+
+- **WHEN** a user duplicates a runner whose `$id` requires URL-encoding (e.g. contains `:` or `/`) and submits the Duplicate modal
+- **THEN** the runner is created
+- **AND** the browser navigates to the new runner's detail page, not a 404
+
+#### Scenario: The post-duplicate redirect URL matches the row-click URL
+
+- **WHEN** the redirect URL for a freshly duplicated runner is computed from its `$id`
+- **THEN** it is identical to the URL that clicking that same runner's row in the list would produce, once both exist as list rows
+
+### Requirement: Viewing an application's Parameters tab resolves an Asset-origin runner's scheme through Core
+The Parameters tab SHALL resolve the currently-selected App Runner's scheme by the runner's origin,
+matching the branching the App Runner picker already applies at selection time: an Asset-origin
+runner (one created through `Assets > App Runners`) SHALL resolve via `getResolvedRunnerSchema`
+(Core's resolved-schema read), while any other runner SHALL resolve via `getResolvedApplicationScheme`
+(the admin-BE's resolved-schema read). This applies whenever the Parameters tab loads or reloads its
+scheme for the application's currently-selected runner, not only at selection time.
+
+#### Scenario: Generated form renders for an Asset-origin runner's application
+- **WHEN** a user opens the Parameters tab of an application whose selected App Runner was created
+  through `Assets > App Runners` and declares a configuration schema
+- **AND** selects the "Generated form" view
+- **THEN** the configuration form renders using that runner's resolved schema, instead of showing
+  "No Configuration Scheme"
+
+#### Scenario: Admin-BE-origin runners are unaffected
+- **WHEN** a user opens the Parameters tab of an application whose selected App Runner comes from
+  `Entities > Application Runners`
+- **THEN** the scheme is resolved via the admin-BE's resolved-schema read, unchanged from current
+  behavior
 

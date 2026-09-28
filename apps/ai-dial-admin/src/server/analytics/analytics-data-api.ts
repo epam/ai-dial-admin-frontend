@@ -14,12 +14,13 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import {
   CreatePipelineDto,
   Pipeline,
+  PipelineEnabledDto,
   PipelineEnabledFilter,
-  PipelineReadResult,
+  PipelineKind,
+  PipelineView,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
 import {
@@ -58,8 +59,17 @@ const unwrapList = <T>(res: unknown, key: string): T[] | null => {
   return Array.isArray(wrapped) ? (wrapped as T[]) : null;
 };
 
+/** What the service answers when a declaration is too incomplete to compile. */
+const UNPROCESSABLE = 422;
+
 export const PIPELINES_URL = 'v1/pipelines';
 export const PIPELINE_URL = (name: string): string => `${PIPELINES_URL}/${encodeURIComponent(name)}`;
+
+// `Compiled` is what carries everything the service resolved — the composed response schema, the grain
+// key, the version column, the output mapping and the read source — and it resolves for the `Enrich`
+// kind alone: the service refuses it with 422 for any other kind rather than answering the declaration
+// under the compiled name. So the projection is named per read, by whoever knows the kind.
+export const PIPELINE_READ_URL = (name: string, view: PipelineView): string => `${PIPELINE_URL(name)}?view=${view}`;
 
 export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   const params = new URLSearchParams();
@@ -69,17 +79,23 @@ export const PIPELINES_LIST_URL = (filters?: PipelinesListFilters): string => {
   if (filters?.enabled === PipelineEnabledFilter.Disabled) params.set('enabled', 'false');
   if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
 
+  // No `view`: the service serves `compiled` in a listing only alongside `kind=enrich` and refuses the
+  // cross-kind combination with 400. The default `source` carries the authored transform, so the type
+  // cell is unaffected; `inputs` it carries as declared rather than as resolved, which leaves the cell
+  // empty for the one pipeline that declared no input and inherits its target's — read on that
+  // pipeline's own page, which does ask for `compiled`.
   const query = params.toString();
+
   return query ? `${PIPELINES_URL}?${query}` : PIPELINES_URL;
 };
 
-const readResult = <T>(res: unknown, unwrap: (value: unknown) => T | null): PipelineReadResult<T> =>
-  res === undefined ? { data: null, isForbidden: true } : { data: unwrap(res), isForbidden: false };
-
-export const EVALUATORS_URL = 'v1/evaluators';
-export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
-export const EVALUATOR_VERSION_URL = (name: string, version: number): string =>
-  `${EVALUATOR_URL(name)}/versions/${encodeURIComponent(String(version))}`;
+// A 2xx whose body is not a shape the read accepts: `handleResponse` found no error to describe, so the
+// envelope carries the failure and no words.
+const unreadableBody = <T extends object>({ status, requestId }: ServerActionResponse): ServerActionResponse<T> => ({
+  success: false,
+  status,
+  requestId,
+});
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -92,26 +108,38 @@ export class AnalyticsDataApi extends BaseApi {
     return this.getAction(QUERIES_ENTITIES_URL, token);
   }
 
-  getEntities(token: Token): Promise<AnalyticsEntity[] | null> {
-    return this.get<AnalyticsEntity[]>(QUERIES_ENTITIES_URL, token);
+  getEntities(token: Token): Promise<ServerActionResponse<AnalyticsEntity[]>> {
+    return this.getAction(QUERIES_ENTITIES_URL, token);
   }
 
-  getEntitySchema(name: string, token: Token): Promise<AnalyticsEntitySchema | null> {
-    return this.get<AnalyticsEntitySchema>(QUERIES_ENTITY_SCHEMA_URL(name), token);
+  getEntitySchema(name: string, token: Token): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
+    return this.getAction(QUERIES_ENTITY_SCHEMA_URL(name), token);
   }
 
-  getFunctions(token: Token): Promise<QueryFunction[] | null> {
-    return this.get<QueryFunction[]>(QUERIES_FUNCTIONS_URL, token);
+  getFunctions(token: Token): Promise<ServerActionResponse<QueryFunction[]>> {
+    return this.getAction(QUERIES_FUNCTIONS_URL, token);
   }
 
-  executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token);
+  /**
+   * `signal` is the client's, handed over by the route handler that serves an interactive read: a view the
+   * operator has left stops its query here rather than only stopping itself from listening.
+   */
+  executeAction(
+    query: StructuredQuery,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token, undefined, signal);
   }
 
   // Ad-hoc SQL: the backend translates a single read-only SELECT to the structured DSL and runs it
   // through the same pipeline as `executeAction`, returning the same result envelope (no totalCount).
-  executeSqlAction(sql: string, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
-    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token);
+  executeSqlAction(
+    sql: string,
+    token: Token,
+    signal?: AbortSignal,
+  ): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token, undefined, signal);
   }
 
   // Validation-only translation (never contacts ClickHouse): renders a structured query as the
@@ -131,13 +159,20 @@ export class AnalyticsDataApi extends BaseApi {
   // caller, which is all the list and the detail page need. Writes use the `*Action` variants
   // because their failures are load-bearing: the caller branches on the machine code the envelope
   // carries (see `utils/saved-query-error.ts`).
-  async listSavedQueries(scope: SavedQueryScope, token: Token): Promise<SavedQuery[] | null> {
-    const res = await this.get<SavedQueryListResponse>(SAVED_QUERIES_SCOPE_URL(scope), token);
-    return res?.saved_queries ?? null;
+  async listSavedQueries(scope: SavedQueryScope, token: Token): Promise<ServerActionResponse<SavedQuery[]>> {
+    const res = await this.getAction(SAVED_QUERIES_SCOPE_URL(scope), token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const saved = (res.response as SavedQueryListResponse | undefined)?.saved_queries;
+    return saved ? { ...res, response: saved } : unreadableBody(res);
   }
 
-  getSavedQuery(id: string, token: Token): Promise<SavedQuery | null> {
-    return this.get<SavedQuery>(SAVED_QUERY_URL(id), token);
+  async getSavedQuery(id: string, token: Token): Promise<ServerActionResponse<SavedQuery>> {
+    const res = await this.getAction(SAVED_QUERY_URL(id), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   createSavedQuery(dto: SavedQueryRequest, token: Token): Promise<ServerActionResponse<SavedQuery>> {
@@ -154,13 +189,20 @@ export class AnalyticsDataApi extends BaseApi {
     return this.deleteAction(SAVED_QUERY_URL(id), token);
   }
 
-  async getTables(token: Token): Promise<AnalyticsTable[] | null> {
-    const res = await this.get<{ tables: AnalyticsTable[] }>(TABLES_URL, token);
-    return res?.tables ?? null;
+  async getTables(token: Token): Promise<ServerActionResponse<AnalyticsTable[]>> {
+    const res = await this.getAction(TABLES_URL, token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const tables = (res.response as { tables?: AnalyticsTable[] } | undefined)?.tables;
+    return tables ? { ...res, response: tables } : unreadableBody(res);
   }
 
-  getTable(name: string, token: Token): Promise<AnalyticsTable | null> {
-    return this.get<AnalyticsTable>(TABLE_URL(name), token);
+  async getTable(name: string, token: Token): Promise<ServerActionResponse<AnalyticsTable>> {
+    const res = await this.getAction(TABLE_URL(name), token);
+    return res.success && !res.response ? unreadableBody(res) : res;
   }
 
   createTable(dto: CreateTableDto, token: Token): Promise<ServerActionResponse> {
@@ -190,8 +232,8 @@ export class AnalyticsDataApi extends BaseApi {
   }
 
   // Per-table role lists (write/modify). Admin-only on the backend; a non-admin GET is rejected 403.
-  getTableAccess(name: string, token: Token): Promise<TableAccess | null> {
-    return this.get<TableAccess>(TABLE_ACCESS_URL(name), token);
+  getTableAccess(name: string, token: Token): Promise<ServerActionResponse<TableAccess>> {
+    return this.getAction(TABLE_ACCESS_URL(name), token);
   }
 
   // Full-replace of the table's role lists (admin-only).
@@ -199,43 +241,61 @@ export class AnalyticsDataApi extends BaseApi {
     return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
   }
 
-  async getPipelines(filters: PipelinesListFilters | undefined, token: Token): Promise<PipelineReadResult<Pipeline[]>> {
-    const res = (await this.get<object>(PIPELINES_LIST_URL(filters), token)) as object | null | undefined;
-    return readResult(res, (value) => unwrapList<Pipeline>(value, 'pipelines'));
+  async getPipelines(
+    filters: PipelinesListFilters | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<Pipeline[]>> {
+    const res = await this.getAction(PIPELINES_LIST_URL(filters), token);
+
+    if (!res.success) {
+      return res;
+    }
+
+    const pipelines = unwrapList<Pipeline>(res.response, 'pipelines');
+    return pipelines ? { ...res, response: pipelines } : unreadableBody(res);
   }
 
-  async getPipeline(name: string, token: Token): Promise<PipelineReadResult<Pipeline>> {
-    const res = (await this.get<Pipeline>(PIPELINE_URL(name), token)) as Pipeline | null | undefined;
-    return readResult(res, (value) => (value as Pipeline) ?? null);
+  /**
+   * Two reads for an enrich pipeline, one for every other kind. `view=compiled` resolves for `Enrich`
+   * alone and the kind is not known until the declaration has been read, so the projection is chosen
+   * from the first answer rather than guessed. A failed second read is reported rather than downgraded to
+   * the first: the detail view renders `grain_key` and `version_column` as "not set" when they are
+   * absent, which for an enrich pipeline would be a false statement rather than a missing one.
+   *
+   * The exception is a declaration the service cannot compile at all, which it answers 422 for. That is
+   * an ordinary state now that a pipeline is registered before it is declared, and the authored
+   * projection is the whole of what such a pipeline has — reporting the refusal instead would leave the
+   * page the author has to finish the declaration on unreachable.
+   */
+  async getPipeline(name: string, token: Token): Promise<ServerActionResponse<Pipeline>> {
+    const source = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Source), token);
+
+    if (!source.success) return source;
+    if (!source.response) return unreadableBody(source);
+    if ((source.response as Pipeline).kind !== PipelineKind.Enrich) return source;
+
+    const compiled = await this.getAction(PIPELINE_READ_URL(name, PipelineView.Compiled), token);
+    if (compiled.status === UNPROCESSABLE) return source;
+    if (!compiled.success) return compiled;
+
+    return compiled.response ? compiled : unreadableBody(compiled);
   }
 
   createPipeline(dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
     return this.postAction<CreatePipelineDto>(PIPELINES_URL, dto, token);
   }
 
-  updatePipeline(name: string, dto: CreatePipelineDto, token: Token): Promise<ServerActionResponse> {
-    return this.patchAction<CreatePipelineDto>(PIPELINE_URL(name), dto, token);
+  // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
+  // answers 409 for; `PipelineEnabledDto` is how the toggle stays a state change.
+  updatePipeline(
+    name: string,
+    dto: CreatePipelineDto | PipelineEnabledDto,
+    token: Token,
+  ): Promise<ServerActionResponse> {
+    return this.patchAction<CreatePipelineDto | PipelineEnabledDto>(PIPELINE_URL(name), dto, token);
   }
 
   deletePipeline(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(PIPELINE_URL(name), token);
-  }
-
-  async getEvaluators(token: Token): Promise<EvaluatorSummary[] | null> {
-    const res = await this.get<object>(EVALUATORS_URL, token);
-    return unwrapList<EvaluatorSummary>(res, 'items');
-  }
-
-  getEvaluator(name: string, token: Token): Promise<Evaluator | null> {
-    return this.get<Evaluator>(EVALUATOR_URL(name), token);
-  }
-
-  getEvaluatorVersion(name: string, version: number, token: Token): Promise<Evaluator | null> {
-    return this.get<Evaluator>(EVALUATOR_VERSION_URL(name, version), token);
-  }
-
-  // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
-  createEvaluator(dto: CreateEvaluatorDto, token: Token): Promise<ServerActionResponse<Evaluator>> {
-    return this.postAction<CreateEvaluatorDto>(EVALUATORS_URL, dto, token);
   }
 }

@@ -3,7 +3,7 @@ import { FC } from 'react';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
-import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 
 interface Props {
   entity: DialAppRunnerResource;

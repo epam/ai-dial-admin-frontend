@@ -8,10 +8,10 @@ import { getRequestFilters, getRequestFiltersStr } from '../get-request-filters'
 describe('getRequestFilters', () => {
   test('converts grid filters to request filters correctly', () => {
     const gridFilters: Record<string, GridFilter> = {
-      name: { type: GridFilterType.CONTAINS, filter: 'John' },
-      surname: { type: GridFilterType.NOT_CONTAINS, filter: 'Smith' },
-      age: { type: GridFilterType.EQUALS, filter: '30' },
-      children: { type: GridFilterType.NOT_EQUAL, filter: '2' },
+      name: { filterType: 'text', type: GridFilterType.CONTAINS, filter: 'John' },
+      surname: { filterType: 'text', type: GridFilterType.NOT_CONTAINS, filter: 'Smith' },
+      age: { filterType: 'text', type: GridFilterType.EQUALS, filter: '30' },
+      children: { filterType: 'text', type: GridFilterType.NOT_EQUAL, filter: '2' },
     };
 
     const expected: FilterDto[] = [
@@ -26,8 +26,8 @@ describe('getRequestFilters', () => {
 
   test('ignores filters with unknown types', () => {
     const gridFilters: Record<string, GridFilter> = {
-      name: { type: 'invalid' as GridFilterType, filter: 'test' },
-      age: { type: GridFilterType.EQUALS, filter: '25' },
+      name: { filterType: 'text', type: 'invalid' as GridFilterType, filter: 'test' },
+      age: { filterType: 'text', type: GridFilterType.EQUALS, filter: '25' },
     };
 
     const expected: FilterDto[] = [{ column: 'age', value: '25', operator: FilterOperatorDto.EQUALS }];

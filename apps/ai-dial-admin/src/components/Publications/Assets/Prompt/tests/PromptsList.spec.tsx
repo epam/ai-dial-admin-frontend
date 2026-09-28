@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
+import { ActionType, PromptPublication, PublicationPrompt } from '@/src/models/dial/publications';
 import PromptsList from '../PromptsList';
 
 vi.mock('../PromptDetails', () => ({
@@ -26,34 +26,40 @@ vi.mock('../PromptDetails', () => ({
 
 const mockPrompts: PublicationPrompt[] = [
   {
+    sourceUrl: 'prompts/public/first',
+    targetUrl: 'prompts/review/first',
+    reviewUrl: 'prompts/review/first',
+    action: ActionType.ADD,
     prompt: {
       id: 'prompt1',
       name: 'First Prompt',
       content: 'First content',
-      version: '1.0.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/first/1.0.0.json',
     },
   },
   {
+    sourceUrl: 'prompts/public/second',
+    targetUrl: 'prompts/review/second',
+    reviewUrl: 'prompts/review/second',
+    action: ActionType.ADD,
     prompt: {
       id: 'prompt2',
       name: 'Second Prompt',
       content: 'Second content',
-      version: '2.0.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/second/2.0.0.json',
     },
   },
   {
+    sourceUrl: 'prompts/public/third',
+    targetUrl: 'prompts/review/third',
+    reviewUrl: 'prompts/review/third',
+    action: ActionType.DELETE,
     prompt: {
       id: 'prompt3',
       name: 'Third Prompt',
       content: 'Third content',
-      version: '1.5.0',
-      type: 'prompt',
       folderId: 'folder1',
       path: 'publications/prompts/third/1.5.0.json',
     },
@@ -239,7 +245,7 @@ describe('Publications :: PromptsList', () => {
   test('handles prompts with partial data', () => {
     const partialPrompts: PublicationPrompt[] = [
       { prompt: { id: 'partial1', name: 'Partial Prompt' } as Partial<DialPrompt> } as PublicationPrompt,
-      { prompt: { id: 'partial2', version: '1.0.0' } as Partial<DialPrompt> } as PublicationPrompt,
+      { prompt: { id: 'partial2', name: '' } as Partial<DialPrompt> } as PublicationPrompt,
     ];
 
     const publication = createMockPublication(partialPrompts);

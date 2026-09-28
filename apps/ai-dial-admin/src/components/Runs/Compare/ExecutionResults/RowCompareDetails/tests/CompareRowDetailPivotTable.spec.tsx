@@ -103,4 +103,56 @@ describe('CompareRowDetailPivotTable', () => {
     expect(dialog).toHaveTextContent('Run B');
     expect(dialog).toHaveTextContent('Secondary long answer');
   });
+
+  test('right-aligns the header label of a right-aligned field', () => {
+    render(
+      <CompareRowDetailPivotTable
+        sections={sections}
+        primaryRunName="Run A"
+        comparedRunName="Run B"
+        hasComparedMatch
+        showDiffsOnly={false}
+        hideHighlights={false}
+      />,
+    );
+
+    expect(screen.getByText('HTTP')).toHaveClass('text-right');
+    expect(screen.getByText('answer')).not.toHaveClass('text-right');
+  });
+
+  test('right-aligns the delta cell for a numeric metric field', () => {
+    const metricSections: RowDetailSection[] = [
+      {
+        key: 'Accuracy',
+        label: 'Accuracy',
+        rows: [
+          {
+            fieldKey: 'Accuracy_precision',
+            label: 'precision',
+            primaryRaw: '0.8',
+            secondaryRaw: '0.6',
+            diffKind: MetricDeltaKind.Changed,
+            isNumeric: true,
+            isScoreIndicator: false,
+            isMetric: true,
+          },
+        ],
+      },
+    ];
+
+    const { container } = render(
+      <CompareRowDetailPivotTable
+        sections={metricSections}
+        primaryRunName="Run A"
+        comparedRunName="Run B"
+        hasComparedMatch
+        showDiffsOnly={false}
+        hideHighlights={false}
+      />,
+    );
+
+    // The metric's own value cells stay left-aligned (not a fieldKey/score-indicator match); only the
+    // delta cell gets justify-end.
+    expect(container.querySelectorAll('.justify-end')).toHaveLength(1);
+  });
 });

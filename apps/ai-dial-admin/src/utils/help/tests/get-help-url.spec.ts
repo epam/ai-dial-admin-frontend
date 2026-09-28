@@ -1,10 +1,28 @@
 import { describe, expect, test } from 'vitest';
 
 import { HELP_DOCUMENTATION_LINKS } from '@/src/constants/help-documentation-links';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getHelpUrl, isListView } from '../get-help-url';
 
 describe('Utils :: getHelpUrl', () => {
+  describe('the Dashboards route', () => {
+    const flags = (analyticsEnabled: boolean, analyticsUsageEnabled: boolean) =>
+      ({ analyticsEnabled, analyticsUsageEnabled }) as FeatureFlags;
+
+    test('offers no link while it serves the analytics page', () => {
+      expect(getHelpUrl('/en/dashboards', flags(true, true))).toBeUndefined();
+    });
+
+    test('offers the telemetry link while it serves the telemetry dashboard', () => {
+      const link = HELP_DOCUMENTATION_LINKS[ApplicationRoute.Dashboard];
+
+      expect(getHelpUrl('/en/dashboards', flags(true, false))).toEqual(link);
+      expect(getHelpUrl('/en/dashboards', flags(false, true))).toEqual(link);
+      expect(getHelpUrl('/en/dashboards')).toEqual(link);
+    });
+  });
+
   test('Should return help link for a valid base route', () => {
     expect(getHelpUrl('/models')).toEqual(HELP_DOCUMENTATION_LINKS[ApplicationRoute.Models]);
   });

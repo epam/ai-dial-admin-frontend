@@ -1,16 +1,16 @@
-import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/conversations-trace';
+import { RAW_BODY_BYTE_BUDGET } from '@/src/constants/analytics/sessions-trace';
 import {
-  ConversationEntryBodyRow,
+  SessionEntryBodyRow,
   HopProtocolFacts,
   HopReadState,
   HopSideGrants,
-} from '@/src/models/analytics/conversations-trace';
-import { jsonRpcParamsOf, jsonRpcResultOf } from '@/src/utils/analytics/conversation-bodies';
+} from '@/src/models/analytics/sessions-trace';
+import { jsonRpcParamsOf, jsonRpcResultOf } from '@/src/utils/analytics/session-bodies';
 import { NO_CLAMP, clampToBudget, textByteLength } from '@/src/utils/analytics/hop-inspector/envelope';
 import { formatJsonValue } from '@/src/utils/analytics/hop-inspector/json-text';
 
 interface ProtocolInput {
-  row: ConversationEntryBodyRow;
+  row: SessionEntryBodyRow;
   method: string | null;
   grants: HopSideGrants;
 }

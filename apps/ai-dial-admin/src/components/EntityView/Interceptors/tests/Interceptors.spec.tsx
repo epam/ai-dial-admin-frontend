@@ -10,7 +10,14 @@ describe('EntityInterceptors', () => {
     const interceptors = [{ name: 'int1' }, { name: 'int2' }];
     const onChangeEntity = vi.fn();
 
-    render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={onChangeEntity} />);
+    render(
+      <EntityInterceptors
+        view={ApplicationRoute.Adapters}
+        entity={entity}
+        interceptors={interceptors}
+        onChangeEntity={onChangeEntity}
+      />,
+    );
 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
@@ -20,7 +27,14 @@ describe('EntityInterceptors', () => {
     const interceptors = [{ name: 'int3' }];
     const onChangeEntity = vi.fn();
 
-    render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={onChangeEntity} />);
+    render(
+      <EntityInterceptors
+        view={ApplicationRoute.Adapters}
+        entity={entity}
+        interceptors={interceptors}
+        onChangeEntity={onChangeEntity}
+      />,
+    );
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.Add));
     expect(screen.getByText(InterceptorsI18nKey.Add)).toBeInTheDocument();

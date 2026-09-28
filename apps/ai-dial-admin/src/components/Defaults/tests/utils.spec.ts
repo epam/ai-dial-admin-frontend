@@ -79,8 +79,8 @@ describe('Defaults :: utils :: convertDefaultsToRecord', () => {
 
   test('should convert an array with string values to a record', () => {
     const defaults = [
-      { key: 'name', value: 'Alice' },
-      { key: 'email', value: 'alice@example.com' },
+      { key: 'name', value: 'Alice', type: 'string' },
+      { key: 'email', value: 'alice@example.com', type: 'string' },
     ];
 
     const result = convertDefaultsToRecord(defaults);
@@ -92,8 +92,8 @@ describe('Defaults :: utils :: convertDefaultsToRecord', () => {
 
   test('should convert an array with number values to a record', () => {
     const defaults = [
-      { key: 'age', value: 30 },
-      { key: 'salary', value: 50000 },
+      { key: 'age', value: 30, type: 'number' },
+      { key: 'salary', value: 50000, type: 'number' },
     ];
 
     const result = convertDefaultsToRecord(defaults);
@@ -105,8 +105,8 @@ describe('Defaults :: utils :: convertDefaultsToRecord', () => {
 
   test('should convert an array with boolean values to a record', () => {
     const defaults = [
-      { key: 'isActive', value: true },
-      { key: 'isVerified', value: false },
+      { key: 'isActive', value: true, type: 'boolean' },
+      { key: 'isVerified', value: false, type: 'boolean' },
     ];
 
     const result = convertDefaultsToRecord(defaults);
@@ -118,9 +118,9 @@ describe('Defaults :: utils :: convertDefaultsToRecord', () => {
 
   test('should handle a mix of string, number, and boolean values', () => {
     const defaults = [
-      { key: 'username', value: 'john_doe' },
-      { key: 'age', value: 25 },
-      { key: 'isAdmin', value: true },
+      { key: 'username', value: 'john_doe', type: 'string' },
+      { key: 'age', value: 25, type: 'number' },
+      { key: 'isAdmin', value: true, type: 'boolean' },
     ];
 
     const result = convertDefaultsToRecord(defaults);
@@ -133,8 +133,8 @@ describe('Defaults :: utils :: convertDefaultsToRecord', () => {
 
   test('should ignore duplicate keys and overwrite values', () => {
     const defaults = [
-      { key: 'name', value: 'Alice' },
-      { key: 'name', value: 'Bob' },
+      { key: 'name', value: 'Alice', type: 'string' },
+      { key: 'name', value: 'Bob', type: 'string' },
     ];
 
     const result = convertDefaultsToRecord(defaults);

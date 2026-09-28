@@ -1,3 +1,4 @@
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import {
@@ -20,6 +21,8 @@ interface Props {
   isRolesLoading: boolean;
   isAccessReadable: boolean;
 }
+
+const LOADER_SIZE = 18;
 
 const FORMAT_RULE_KEY: Record<ConnectFormatRule, AnalyticsTablesI18nKey> = {
   [ConnectFormatRule.Timestamp]: AnalyticsTablesI18nKey.ConnectFormatTimestamp,
@@ -45,7 +48,7 @@ const ConnectWriteTab: FC<Props> = ({
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectWhoCanWrite)}</h4>
         {isRolesLoading && (
-          <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectRolesLoading)}</p>
+          <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(AnalyticsTablesI18nKey.ConnectRolesLoading)} />
         )}
         {!isRolesLoading && isAccessReadable && writeRoles.length > 0 && (
           <>

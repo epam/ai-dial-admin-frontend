@@ -7,13 +7,13 @@ import { createPortal } from 'react-dom';
 import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
-import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -22,7 +22,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialApplicationResource, DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
@@ -42,6 +42,8 @@ interface Props {
   globalInterceptors: string[];
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  /** True when `originalRunner` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
+  isConfigFileSource?: boolean;
 }
 
 const AppRunnerAssetView: FC<Props> = ({
@@ -51,6 +53,7 @@ const AppRunnerAssetView: FC<Props> = ({
   interceptors,
   globalInterceptors,
   optionWarnings,
+  isConfigFileSource,
 }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformAppRunners);
@@ -59,6 +62,14 @@ const AppRunnerAssetView: FC<Props> = ({
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
+  const { setEntityReadOnly } = useAppContext();
+
+  // Config-file entities have no write endpoint and no admin-backend "compare with Core" projection
+  // of their own (they already *are* Core's view) — see `config-file-entity-views`.
+  useEffect(() => {
+    setEntityReadOnly(!!isConfigFileSource);
+    return () => setEntityReadOnly(false);
+  }, [isConfigFileSource, setEntityReadOnly]);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(structuredClone(originalRunner));
@@ -81,8 +92,11 @@ const AppRunnerAssetView: FC<Props> = ({
     () => ({
       isEditorEnabled,
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
+      // A config-file-sourced entity has no admin-backend "compare with Core" projection of its own —
+      // it already is Core's own view — so the ADMIN|CORE format selector has nothing to switch to.
+      onHideFormatSelector: () => !!isConfigFileSource,
     }),
-    [isEditorEnabled],
+    [isEditorEnabled, isConfigFileSource],
   );
 
   useEffect(() => {
@@ -134,7 +148,6 @@ const AppRunnerAssetView: FC<Props> = ({
     setSelectedRunner(runner);
     setIsSkipRefresh(!!skipRefresh);
   }, []);
-
   const onSave = useCallback(() => {
     const errors = validateAppRunner(selectedRunner);
     if (errors.length) {
@@ -154,15 +167,13 @@ const AppRunnerAssetView: FC<Props> = ({
             getUpdateNotificationDescription(ApplicationRoute.PlatformAppRunners, selectedRunner.$id, t),
           ),
         );
-        fetchFiles(selectedRunner.folderId);
+        fetchFiles(selectedRunner._metadata?.folderId ?? '');
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedRunner, etag, showNotification, t, router, fetchFiles]);
-
-  const onCreate = (entity: DialResource) => createApp(entity as DialApplicationResource);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -214,7 +225,6 @@ const AppRunnerAssetView: FC<Props> = ({
               view={ApplicationRoute.AssetsApplications}
               isModalOpen={isCreateAssetAppModalOpen}
               onClose={onCloseCreateAssetAppModal}
-              onCreate={onCreate}
               context={useAppsFolder}
               initialValues={{
                 source: originalRunner.$id ? createSchemaSource(originalRunner.$id) : undefined,

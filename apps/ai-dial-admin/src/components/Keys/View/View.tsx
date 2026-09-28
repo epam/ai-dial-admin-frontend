@@ -13,6 +13,7 @@ import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHead
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -43,7 +44,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
-  const tabs = getKeyTabs(t);
+  const { featureFlags } = useAppContext();
+  const tabs = getKeyTabs(t, featureFlags);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);

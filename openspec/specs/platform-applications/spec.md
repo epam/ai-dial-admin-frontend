@@ -8,19 +8,35 @@ Features, external services, schema-rich apps — see `application-resources-cor
 requirements for the write-path details); the differences this capability covers are structural
 (flat, no folders, no versioning) and surface-level (a restricted action set, a dedicated detail
 view). Created by archiving change `add-platform-applications`.
-
 ## Requirements
+### Requirement: File root shown above physical buckets in the Assets Applications grid
+The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Applications` grid when Catalog is enabled, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. When Catalog is disabled, the system SHALL omit `platform` and its resource requests but SHALL retain `file` and `public` roots. No new menu entry or top-level list route SHALL be introduced.
 
-### Requirement: Platform bucket shown above public in the Assets Applications grid
-The system SHALL display a `platform` bucket as a top-level node in the existing
-`Assets ▸ Applications` grid (`/assets-applications`), positioned above the `public` bucket, using the
-same `BaseAssetList` instance the public applications list already uses. No new menu entry and no new
-top-level list route SHALL be introduced for this bucket.
+#### Scenario: All roots appear when Catalog is enabled
+- **WHEN** a user opens `/assets-applications` with Catalog enabled
+- **THEN** the grid shows `file`, `platform`, and `public` roots in that order
 
-#### Scenario: Platform bucket appears above public on first load
-- **WHEN** the user navigates to `/assets-applications`
-- **THEN** the grid shows a `platform` top-level node above the `public` top-level node, both fetched
-  and rendered in the same tree
+#### Scenario: File root remains when Catalog is disabled
+- **WHEN** a user opens `/assets-applications` with Catalog disabled
+- **THEN** the grid shows `file` and `public`, does not show `platform`, and makes no platform resource request
+
+### Requirement: File-root applications are flat and read-only
+The system SHALL treat Applications under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `applications` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
+
+#### Scenario: File-root application names load with the listing
+- **WHEN** a user opens the Applications listing
+- **THEN** the system requests config-file application names with the physical-root reads and renders them without resource metadata or per-name body reads
+
+#### Scenario: File-root application actions are immutable
+- **WHEN** a user browses the Applications `file` root
+- **THEN** only open and open-in-new-tab are available for an application row
+
+### Requirement: File-root application detail view
+The system SHALL open a file-root application at `/assets-applications/{id}?configFile=true`, without a public-bucket `path` parameter. It SHALL preserve the existing config-file detail read and read-only presentation, including hidden ADMIN|CORE format selection.
+
+#### Scenario: File-root application opens without public path
+- **WHEN** a user opens an application row from the `file` root
+- **THEN** the system navigates to `/assets-applications/{id}?configFile=true` and renders it read-only
 
 #### Scenario: No separate platform applications list page exists
 - **WHEN** the user looks for a platform applications entry in the sidebar navigation
@@ -73,9 +89,14 @@ bucket's Name/Version/Author/Updated time set.
 - **THEN** the grid keeps its existing Name, Version, Author, and Updated time columns
 
 ### Requirement: Creating a platform application has no version field
-The system SHALL NOT display or require a version field when creating a new application while
-browsing the `platform` bucket, since the bucket has no versioning concept. Creating into the
-`public` bucket is unaffected and keeps requiring a version.
+The system SHALL NOT display or require a version field on any create form whose destination is
+the `platform` bucket — the list-page create form while browsing the `platform` bucket, and the
+runner-seeded create modal opened from an app-runner detail view with the `platform` folder
+selected — since the bucket has no versioning concept. Creating into the `public` bucket is
+unaffected and keeps requiring a version. A create submitted with the `platform` bucket as its
+destination SHALL write the flat, unversioned `platform/{name}` resource through the
+platform-bucket create action, and the resulting application SHALL open from the post-create
+navigation and from the Assets Applications grid's platform bucket without a 404.
 
 #### Scenario: No version field when creating into the platform bucket
 - **WHEN** the user opens the create form while browsing the `platform` bucket
@@ -84,6 +105,29 @@ browsing the `platform` bucket, since the bucket has no versioning concept. Crea
 #### Scenario: Version field unchanged when creating into the public bucket
 - **WHEN** the user opens the create form while browsing the `public` bucket
 - **THEN** the version field is shown and required, unchanged from current behavior
+
+#### Scenario: The runner-seeded create modal hides the version field for a platform destination
+- **WHEN** the user opens the create-assets-application modal from an app-runner detail view and
+  selects the `platform` folder
+- **THEN** no version field is shown, the form can be submitted without one, and no version suffix
+  is written into the created resource's path
+
+#### Scenario: The runner-seeded create modal keeps the version field for a public destination
+- **WHEN** the user opens the create-assets-application modal from an app-runner detail view and
+  selects a `public` folder
+- **THEN** the version field is shown and required, and the created resource keeps its
+  `{folderId}{name}__{version}` path, unchanged from current behavior
+
+#### Scenario: A platform-bucket application created from a runner opens without a 404
+- **WHEN** a user creates an application from an app-runner detail view with the `platform`
+  folder selected
+- **THEN** the post-create navigation opens the new application's platform-bucket detail view, and
+  clicking the application's row in the Assets Applications grid's `platform` bucket opens the
+  same detail view — neither resolves to a 404 page
+
+#### Scenario: A colon-named platform application opens through an encoded detail route
+- **WHEN** a user creates a platform-bucket application with `:` in its name from either create entry point
+- **THEN** the post-create redirect opens its detail view with `:` URL-encoded in the `[id]` segment and no `path` query parameter
 
 ### Requirement: Platform application server actions
 The system SHALL provide server actions to list, get, create, update, delete, and bulk-delete
@@ -108,28 +152,49 @@ since Core already routes the `platform` bucket segment for applications to
   caller's etag when supplied
 
 ### Requirement: Platform application writes strip read-only and derived fields
-The system SHALL strip fields the merge reader adds but that are not part of Core's `Application`
-entity — `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, and `reference` — before
-sending a create or update write for a platform-bucket application. Unlike the `public` bucket's
-generic write path, the `platform` bucket's write path deserializes strictly and rejects any
-unrecognized field.
+The system SHALL strip the merge layer's `_metadata` object — which holds the read-only and
+derived fields `status`, `validationWarnings`, `author`, `createdAt`, `updatedAt`, `name`,
+`path`, `folderId`, `version`, and `nodeType` (see the `core-resource-entity-metadata`
+capability) — plus the client-only tracking field `reference`, before sending a create or update
+write for a platform-bucket application. Unlike the `public` bucket's generic write path, the
+`platform` bucket's write path deserializes strictly and rejects any unrecognized field.
 
 #### Scenario: A platform application save round-trips without a parse failure
 - **WHEN** the user edits and saves a platform-bucket application whose fetched entity carries
-  `status`, `author`, `createdAt`, `updatedAt`, and `reference`
-- **THEN** the write succeeds, with none of those fields present in the request body sent to Core
+  `_metadata` and `reference`
+- **THEN** the write succeeds, with neither `_metadata` nor `reference` present in the request
+  body sent to Core
 
 ### Requirement: Platform application folderId identifies the platform bucket
-The system SHALL return `'platform/'` as `folderId` when reading a platform-bucket application from
-DIAL Core, matching the value the write path already sets on create and update, so that any check of
-`isPlatformBucketPath(asset.folderId)` correctly identifies a platform-bucket application on a
-freshly-fetched resource, not only on one just created or updated in the current session.
+The system SHALL identify a platform-bucket application's bucket explicitly on every shape that
+carries one: listing rows carry `bucket: 'platform'` and no `folderId`, and a merged detail read
+carries `'platform/'` as `_metadata.folderId` for write-path identity, matching what the write path
+sets on create and update. No code path SHALL infer the bucket by applying a `platform/`-prefix
+check to a `folderId`; the folderId-prefix check remains only as a path-level helper for the
+browsed current path, not as a row or entity discriminator.
 
-#### Scenario: A freshly-fetched platform application's folderId identifies its bucket
-- **WHEN** the user opens a platform-bucket application that was not created or updated in the current
-  session
-- **THEN** the fetched resource's `folderId` is `'platform/'`, and `isPlatformBucketPath` on that value
-  returns `true`
+#### Scenario: A freshly-fetched platform application's bucket is identified explicitly
+- **WHEN** the user opens a platform-bucket application that was not created or updated in the
+  current session
+- **THEN** the fetched resource identifies its bucket through its metadata shape, and every
+  consumer answers "which bucket" from that explicit field — no `isPlatformBucketPath(asset.folderId)`
+  check is performed on a freshly-fetched resource
+
+#### Scenario: A platform listing row carries no folderId
+- **WHEN** platform-bucket applications are listed into the folder tree
+- **THEN** each row carries `bucket: 'platform'` and no `folderId`, and row-action handling (delete
+  shaping, open-in-new-tab) selects the platform treatment from the row's bucket
+
+### Requirement: Platform application name reflects the corrected dual-bucket identity
+The system SHALL set both the flat `name` and `_metadata.name` on a platform-bucket application to
+the name its Core resource URL encodes, overriding a divergent `content.name`, when the resource
+is read from DIAL Core — the one documented exception to `core-resource-entity-metadata`'s
+"content is never mutated by the merge" requirement.
+
+#### Scenario: A platform application's stale content name is corrected on read
+- **WHEN** a platform-bucket application's content response carries a `name` that no longer
+  matches the name encoded in its Core resource URL
+- **THEN** the merged entity's flat `name` and `_metadata.name` both hold the URL-derived name
 
 ### Requirement: Platform application header shows the platform bucket with no link
 The system SHALL show `platform` as the value of the header's Folder Storage field for a
@@ -247,3 +312,50 @@ entities) are unaffected.
 #### Scenario: A freshly created platform application starts with no granted roles
 - **WHEN** a user creates a new platform-bucket application and opens its Roles tab before granting any role
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
+
+### Requirement: A platform-bucket application exposes its catalog metadata
+
+The system SHALL let an admin attach a catalog schema to a platform-bucket application and edit the
+catalog values it describes, using the shared `catalog-properties-editing` mechanism. The
+platform-application resource SHALL round-trip `catalog_schema_id` and `catalog_properties`.
+
+A user-bucket application SHALL be offered the same editing, with one difference in who rejects an
+invalid write: DIAL Core validates a user-bucket resource on write and answers `400`, whereas a
+platform-bucket resource is only rejected later, when Core assembles its merged configuration. The
+client-side gate applies to both.
+
+#### Scenario: Catalog metadata is offered on an application
+
+- **WHEN** an admin opens an application's detail view in either bucket
+- **THEN** the catalog schema selection and, once a schema is selected, its values editor are offered
+
+#### Scenario: The two fields survive a save
+
+- **WHEN** an admin attaches a schema, fills in values, and saves the application
+- **THEN** both `catalog_schema_id` and `catalog_properties` are written to Core and reappear on
+  reload
+
+#### Scenario: Core's own rejection is surfaced for a user-bucket application
+
+- **WHEN** Core rejects a user-bucket application's catalog values with a `400`
+- **THEN** the error notification carries Core's message rather than a generic failure
+
+### Requirement: Switching App Runner preserves already-set applicationProperties
+The `Assets` resource source editor SHALL, when the user switches the selected App Runner on a
+platform/asset Application, merge the new runner's default `applicationProperties` under the
+entity's existing `applicationProperties` rather than replacing them outright. For any key present
+in both the entity's current `applicationProperties` and the new runner's defaults, the entity's
+existing value SHALL win. A key present only in the new runner's defaults SHALL be added; a key
+present only in the entity's existing values and not in the new runner's schema SHALL be preserved
+unchanged.
+
+#### Scenario: Switching to a runner with the same schema preserves a set value
+- **WHEN** the user has set a value for a parameter (e.g. `openapi`) on an Application, then switches
+  the selected App Runner to a different runner that defines the same parameter
+- **THEN** the parameter's value on the Application is unchanged after the switch
+
+#### Scenario: Switching runner still applies defaults for parameters not already set
+- **WHEN** the user switches the selected App Runner to one that defines a parameter the Application
+  does not already have a value for
+- **THEN** that parameter is added with the new runner's default value
+

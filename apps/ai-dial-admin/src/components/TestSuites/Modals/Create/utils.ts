@@ -1,6 +1,11 @@
+import { CREATE_MESSAGE_METHOD } from '@/src/components/TestSuites/constants/anthropic-messages-method';
+import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/responses-method';
+import { reseedRequestModels } from '@/src/components/TestSuites/utils/model-reseeding';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from './types';
+
+const MODEL_TARGET_ENDPOINTS = [CREATE_MESSAGE_METHOD, CREATE_RESPONSE_METHOD];
 
 export function buildDeploymentUpdate(data: Deployment): Partial<TestSuite> {
   return {
@@ -30,6 +35,17 @@ export function buildMcpDeploymentUpdate(deployment: Deployment): Partial<TestSu
     requestTemplate: void 0,
     toolRef: void 0,
   };
+}
+
+export function applyTargetSelection(suite: TestSuite, deployment: Deployment, targetTab: string): TestSuite {
+  const updatedSuite = {
+    ...suite,
+    ...(targetTab === TargetTab.Mcp ? buildMcpDeploymentUpdate(deployment) : buildDeploymentUpdate(deployment)),
+  };
+
+  return targetTab === TargetTab.Mcp
+    ? updatedSuite
+    : reseedRequestModels(updatedSuite, deployment.deploymentId, MODEL_TARGET_ENDPOINTS);
 }
 
 export function getInitialTab(suiteType?: SuiteType): TargetTab {

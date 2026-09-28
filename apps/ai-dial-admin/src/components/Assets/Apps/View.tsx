@@ -26,6 +26,8 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -45,12 +47,14 @@ interface Props {
   schemes: DialApplicationScheme[];
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
+  translators?: ResourceInfo[];
+  catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
 }
 
 const AppView: FC<Props> = ({
-  etag,
+  etag: initialEtag,
   originalApp,
   assets,
   models,
@@ -58,6 +62,8 @@ const AppView: FC<Props> = ({
   schemes,
   interceptors,
   globalInterceptors,
+  translators,
+  catalogSchemas,
   optionWarnings,
 }) => {
   const t = useI18n();
@@ -68,6 +74,7 @@ const AppView: FC<Props> = ({
 
   const [tabs, setTabs] = useState<TabModel[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
 
+  const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState(false);
@@ -108,6 +115,14 @@ const AppView: FC<Props> = ({
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
 
+  // Resyncs after a `router.refresh()` (a successful save re-fetches the page). A failed save updates
+  // `etag` itself from the response below, without waiting for a refresh — Core returns its current
+  // etag on every response, success or not, and a save rejected for an unrelated reason (e.g. a
+  // validation error) still leaves the retry needing that fresher value or it fails precondition.
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
+
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
   // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
   useEffect(() => {
@@ -136,10 +151,13 @@ const AppView: FC<Props> = ({
       let updateFunction = updateApp;
 
       if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updatedEntity = addNewVersion(updatedEntity, newVersion) as AssetApp;
         updateFunction = createApp;
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
+        if (res.etag) {
+          setEtag(res.etag);
+        }
         if (res.success) {
           setAddedVersions([]);
           showNotification(
@@ -148,8 +166,16 @@ const AppView: FC<Props> = ({
                 ? getCreateNotificationTitle(ApplicationRoute.AssetsApplications, t)
                 : getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
               newVersion
-                ? getCreateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t)
-                : getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t),
+                ? getCreateNotificationDescription(
+                    ApplicationRoute.AssetsApplications,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  )
+                : getUpdateNotificationDescription(
+                    ApplicationRoute.AssetsApplications,
+                    updatedEntity.name || updatedEntity._metadata?.name || '',
+                    t,
+                  ),
             ),
           );
           if (isNeedToMove) {
@@ -160,14 +186,14 @@ const AppView: FC<Props> = ({
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 router.push(
                   getUrnForEntity(ApplicationRoute.AssetsApplications, {
-                    name: updatedEntity.name,
-                    path: changePath(updatedEntity.path, newPath),
+                    name: updatedEntity.name || updatedEntity._metadata?.name || '',
+                    path: changePath(updatedEntity.path || updatedEntity._metadata?.path || '', newPath),
                   }),
                 );
               });
             });
           } else {
-            fetchFiles(updatedEntity.folderId);
+            fetchFiles(updatedEntity.folderId || updatedEntity._metadata?.folderId || '');
             router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
           }
           router.refresh();
@@ -236,6 +262,8 @@ const AppView: FC<Props> = ({
             applicationSchemes={schemes}
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
+            translators={translators}
+            catalogSchemas={catalogSchemas}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
             originalApplication={originalApp}

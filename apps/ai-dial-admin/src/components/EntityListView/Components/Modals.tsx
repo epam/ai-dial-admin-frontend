@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -60,7 +61,7 @@ interface Props {
     ignorePaths?: boolean,
   ) => void;
   onClose: () => void;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   preselectedItems?: File[];
 }
 

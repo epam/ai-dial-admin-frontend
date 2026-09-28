@@ -1,13 +1,13 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
-import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
-vi.mock('@/src/components/Runs/Compare/HeatMap/HeatMapTestCaseHeader', () => ({
+vi.mock('@/src/components/Common/HeatMap/HeatMapAxisHeader', () => ({
   default: () => null,
 }));
 vi.mock('@/src/components/Runs/Compare/HeatMap/HeatMapLabelCellRenderer', () => ({

@@ -2,22 +2,18 @@ import { createRef } from 'react';
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IFloatingFilterParent } from 'ag-grid-community';
+import { IFloatingFilterParent, IFloatingFilterParams } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { GridFilterType } from '@/src/types/grid-filter';
 
-const makeProps = (
-  overrides: Partial<{
-    currentParentModel: () => unknown;
-    parentFilterInstance: (callback: (instance: IFloatingFilterParent) => void) => void;
-  }> = {},
-) => ({
+// The component takes ag-grid's whole floating-filter params; these cases only vary two of them, so
+// the rest come from one typed fake.
+const makeProps = (overrides: Partial<IFloatingFilterParams> = {}): IFloatingFilterParams => ({
+  ...({} as IFloatingFilterParams),
   currentParentModel: () => null,
-  parentFilterInstance: vi.fn(),
-  column: {} as never,
-  filterParams: {},
+  parentFilterInstance: vi.fn<IFloatingFilterParams['parentFilterInstance']>(),
   showParentFilter: vi.fn(),
   ...overrides,
 });
@@ -47,9 +43,9 @@ describe('NumericGridFilterFloatingFilter', () => {
   test('calls onFloatingFilterChanged when a value is applied', async () => {
     const user = userEvent.setup();
     const onFloatingFilterChanged = vi.fn();
-    const parentFilterInstance = vi.fn((callback: (instance: IFloatingFilterParent) => void) => {
-      callback({ onFloatingFilterChanged } as IFloatingFilterParent);
-    });
+    // ag-grid hands the callback its own parent type, so the fake takes the signature from the params.
+    const parentFilterInstance: IFloatingFilterParams['parentFilterInstance'] = (callback) =>
+      callback({ onFloatingFilterChanged } as unknown as Parameters<typeof callback>[0]);
 
     render(<NumericGridFilterFloatingFilter {...makeProps({ parentFilterInstance })} />);
 
@@ -62,9 +58,9 @@ describe('NumericGridFilterFloatingFilter', () => {
   test('calls onFloatingFilterChanged with null when reset', async () => {
     const user = userEvent.setup();
     const onFloatingFilterChanged = vi.fn();
-    const parentFilterInstance = vi.fn((callback: (instance: IFloatingFilterParent) => void) => {
-      callback({ onFloatingFilterChanged } as IFloatingFilterParent);
-    });
+    // ag-grid hands the callback its own parent type, so the fake takes the signature from the params.
+    const parentFilterInstance: IFloatingFilterParams['parentFilterInstance'] = (callback) =>
+      callback({ onFloatingFilterChanged } as unknown as Parameters<typeof callback>[0]);
 
     render(
       <NumericGridFilterFloatingFilter

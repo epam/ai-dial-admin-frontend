@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getDuplicateModal } from '@/src/components/EntityListView/utils';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,7 +33,7 @@ interface Props<T> {
   onChangeCurrentEntity: (value?: T) => void;
   onCreateEntity?: (entity: T, duplicate?: boolean) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
-  getAssetContext?: () => AssetsFolderContext;
+  getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
 }
 
 const Actions = <T extends object>({

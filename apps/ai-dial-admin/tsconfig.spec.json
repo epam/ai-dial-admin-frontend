@@ -12,6 +12,7 @@
     ]
   },
   "include": [
+    "index.d.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "vite.config.mts",

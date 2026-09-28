@@ -2,7 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
-import { ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { ExtractionResultStatus, RunCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -30,6 +30,7 @@ import {
   EVAL_SUMMARY_ID_FIELD,
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
+  PASSED_FIELD,
   LATEST_COMPUTATION,
   METRIC_EVAL_DURATION_MS_FIELD,
   METRIC_FIELD_PREFIX,
@@ -52,8 +53,8 @@ import {
 } from './models';
 
 /**
- * Query: count of test-case eval summaries grouped by execution status within a run.
- * Rows shape: `{ execution_status: string, count: number }`.
+ * Query: count of test-case eval summaries grouped by threshold `passed` and execution status.
+ * Rows shape: `{ passed: boolean | null, execution_status: string, count: number }`.
  * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])`
  * so counts describe the matched-only population used in run comparison.
  */
@@ -67,8 +68,8 @@ export const buildTestCasesStatusQuery = (runId: string, excludeEvalSummaryIds: 
   return aggregateQuery({
     entity: EVAL_SUMMARIES_ENTITY,
     filter,
-    groupBy: [EXECUTION_STATUS_FIELD],
-    select: [col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
+    groupBy: [PASSED_FIELD, EXECUTION_STATUS_FIELD],
+    select: [col(field(PASSED_FIELD)), col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
   });
 };
 
@@ -413,23 +414,36 @@ const toCount = (value: unknown): number => {
   return Number.isFinite(num) ? num : 0;
 };
 
+/** True when a snapshotted (or live) overall score threshold is set, including `0`. */
+export const hasOverallScoreThreshold = (threshold: number | null | undefined): boolean => threshold != null;
+
+const isPassedTrue = (value: unknown): boolean => value === true || value === 'true';
+
+const isPassedFalse = (value: unknown): boolean => value === false || value === 'false';
+
 /**
- * Folds status-grouped rows into pass/fail/error buckets. SUCCESS → passed, ERROR → error,
- * everything else (FAILED, TIMEOUT) → failed, so the buckets always sum to the total.
+ * Folds grouped rows into pass/fail/error buckets.
+ * Non-SUCCESS execution (FAILED, TIMEOUT, ERROR) → error.
+ * SUCCESS + `passed === true` → passed; SUCCESS + `passed === false` → failed.
+ * SUCCESS with null `passed` (unscored) only increases total.
  */
 export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null): TestCaseStatusCounts => {
   const counts: TestCaseStatusCounts = { passed: 0, failed: 0, error: 0, total: 0 };
 
   for (const row of result?.rows ?? []) {
     const status = row[EXECUTION_STATUS_FIELD];
+    const passed = row[PASSED_FIELD];
     const count = toCount(row[COUNT_ALIAS]);
     counts.total += count;
 
-    if (status === ExtractionResultStatus.SUCCESS) {
-      counts.passed += count;
-    } else if (status === ExtractionResultStatus.ERROR) {
+    if (status !== ExtractionResultStatus.SUCCESS) {
       counts.error += count;
-    } else {
+      continue;
+    }
+
+    if (isPassedTrue(passed)) {
+      counts.passed += count;
+    } else if (isPassedFalse(passed)) {
       counts.failed += count;
     }
   }
@@ -459,6 +473,18 @@ const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 
 /**
+ * Formats elapsed milliseconds as `MM:SS` for the cost-card calculating description.
+ * Negative or non-finite input is treated as zero.
+ */
+export const formatElapsedMmSs = (ms: number): string => {
+  const safeMs = !Number.isFinite(ms) || ms < 0 ? 0 : ms;
+  const totalSeconds = Math.floor(safeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+/**
  * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite
  * so callers can render an em dash. Zero is a real value (`$0`).
  */
@@ -480,3 +506,12 @@ export const formatRunCost = (value: number | null | undefined): string | null =
   const decimals = -exponent + RUN_COST_SIGNIFICANT_DIGITS - 1;
   return `$${stripTrailingZeros(value.toFixed(decimals))}`;
 };
+
+/**
+ * Whether a `GET /costs` payload actually carries a figure. The endpoint responds before the backend
+ * has aggregated the run's usage logs, and that not-ready answer reaches the client in several shapes
+ * — all-null averages, `{}`, or an empty body that `BaseApi` degrades to `''`. None of them are a
+ * result, so the caller must keep waiting rather than settle on them. Zero is a real average.
+ */
+export const hasRunCostFigure = (costs: RunCosts | null | undefined): boolean =>
+  Number.isFinite(costs?.avgTestCaseCost) || Number.isFinite(costs?.avgMetricEvalCost);

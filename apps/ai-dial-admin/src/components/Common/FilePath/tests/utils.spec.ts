@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
-import { processAssetsData, getFilePathGridOptions, excludePlatformRoot } from '../utils';
+import { processAssetsData, getFilePathGridOptions } from '../utils';
 import * as fileManagerUtils from '@/src/components/Common/FileManager/utils';
 import * as baseAssetListUtils from '@/src/components/Assets/BaseAssetList/utils';
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -186,41 +186,6 @@ describe('FilePath utils', () => {
 
       expect(result).toHaveLength(1);
       expect((result[0] as AssetWithVersion).versions).toEqual(['1.0']);
-    });
-  });
-
-  describe('excludePlatformRoot', () => {
-    const platformRoot = { name: 'platform', path: 'platform/', nodeType: DialFileNodeType.FOLDER, items: [] };
-    const publicRoot = { name: 'public', path: 'public/', nodeType: DialFileNodeType.FOLDER, items: [] };
-
-    it('drops the platform root for a dual-bucket view', () => {
-      const result = excludePlatformRoot([platformRoot, publicRoot] as Asset[], ApplicationRoute.AssetsApplications);
-
-      expect(result).toEqual([publicRoot]);
-    });
-
-    it('drops the platform root for the AssetsToolsets dual-bucket view', () => {
-      const result = excludePlatformRoot([platformRoot, publicRoot] as Asset[], ApplicationRoute.AssetsToolsets);
-
-      expect(result).toEqual([publicRoot]);
-    });
-
-    it('returns files unchanged for a non-dual-bucket view', () => {
-      const result = excludePlatformRoot([platformRoot, publicRoot] as Asset[], ApplicationRoute.Prompts);
-
-      expect(result).toEqual([platformRoot, publicRoot]);
-    });
-
-    it('returns files unchanged when view is undefined', () => {
-      const result = excludePlatformRoot([platformRoot, publicRoot] as Asset[]);
-
-      expect(result).toEqual([platformRoot, publicRoot]);
-    });
-
-    it('returns an empty array when no files are given', () => {
-      const result = excludePlatformRoot(undefined, ApplicationRoute.AssetsApplications);
-
-      expect(result).toEqual([]);
     });
   });
 

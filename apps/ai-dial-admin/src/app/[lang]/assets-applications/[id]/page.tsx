@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import PlatformApplicationView from '@/src/components/Assets/Platform/Applications/View';
@@ -16,20 +17,21 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { CatalogSchemaOptions, readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { getApp, getApps, getPlatformApplication } from '../actions';
+import { PLATFORM_ROOT_FOLDER, isPlatformBucketDetailRoute } from '@/src/utils/files/root-folder';
+import { getApp, getApps, getConfigFileApplication, getPlatformApplication } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path?: string }>;
+  searchParams: Promise<{ path?: string; configFile?: string }>;
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -46,22 +48,29 @@ export default async function Page(params: {
   let roles: DialRole[] = [];
   let interceptors: DialInterceptor[] = [];
   let globalInterceptors: string[] = [];
+  let translators: ResourceInfo[] = [];
   const optionWarnings: EntitiesI18nKey[] = [];
 
-  // A `path` query param means this is a public-bucket (versioned, folder-nested) application; its
-  // absence means a platform-bucket one — flat, identified by name alone (design.md D3/D5).
-  const rawPath = (await params.searchParams).path;
-  const isPlatformBucket = !rawPath;
+  // See `isPlatformBucketDetailRoute` for the `?path=` URL contract this reads.
+  const searchParams = await params.searchParams;
+  const rawPath = searchParams.path;
+  const isConfigFileMode = searchParams.configFile === 'true';
+  const isPlatformBucket = isPlatformBucketDetailRoute(rawPath);
   const name = decodeURIComponent((await params.params).id);
 
   try {
     if (isPlatformBucket) {
-      const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
+      if (isConfigFileMode) {
+        const result = await getConfigFileApplication(name);
+        app = result.success ? (result.data as unknown as AssetApp) : null;
+      } else {
+        const path = `${PLATFORM_ROOT_FOLDER}/${name}`;
 
-      app = await getPlatformApplication(path, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return (res?.response as unknown as AssetApp) || null;
-      });
+        app = await getPlatformApplication(path, etag).then((res) => {
+          etag = res?.etag || DEFAULT_ETAG;
+          return (res?.response as unknown as AssetApp) || null;
+        });
+      }
     } else {
       const path = decodeURIComponent(rawPath as string);
 
@@ -70,23 +79,23 @@ export default async function Page(params: {
         return res?.response as AssetApp | null;
       });
 
-      apps = ((await getApps(app?.folderId as string))?.filter(
+      apps = ((await getApps(app?.folderId || app?._metadata?.folderId || ''))?.filter(
         (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
       ) || []) as AssetApp[];
     }
 
-    models = await getModelsList();
-    applications = await applicationsApi.getApplicationsList(token);
+    assetRunners = await getAllRunners();
+    translators = (await getTranslators('')) || [];
 
-    applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+    // Admin-backend enrichment only: without DIAL_ADMIN_API_URL there is no host to call, so
+    // `applications`/`applicationSchemes` stay empty and the page renders on Core-direct data alone.
+    if (process.env.DIAL_ADMIN_API_URL) {
+      models = await getModelsList();
+      applications = await applicationsApi.getApplicationsList(token);
+      applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
-  }
-
-  try {
-    assetRunners = await getAllRunners();
-  } catch (e) {
-    errorObjLog(e, 'Failed to fetch asset app runners');
   }
 
   // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
@@ -96,10 +105,12 @@ export default async function Page(params: {
   // `Assets > Interceptors`'/`Assets > Roles`' own API-written one. Read unconditionally for both
   // buckets (not just the platform-bucket Roles tab that uses `roles`) to match the existing
   // interceptors read here, which is likewise unconditional.
-  [roles, interceptors, globalInterceptors] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+  let catalogSchemas: CatalogSchemaOptions;
+  [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
     readGlobalInterceptors(token, optionWarnings),
+    readCatalogSchemaOptions(token),
   ]);
 
   if (app == null) {
@@ -118,7 +129,10 @@ export default async function Page(params: {
           roles={roles}
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
+          translators={translators}
+          catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
+          isConfigFileSource={isConfigFileMode}
         />
       ) : (
         <AppView
@@ -130,6 +144,8 @@ export default async function Page(params: {
           schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
           interceptors={interceptors}
           globalInterceptors={globalInterceptors}
+          translators={translators}
+          catalogSchemas={catalogSchemas}
           optionWarnings={optionWarnings}
         />
       )}

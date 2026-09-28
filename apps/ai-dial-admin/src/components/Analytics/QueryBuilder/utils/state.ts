@@ -3,6 +3,7 @@ import {
   AggregateRow,
   FilterGroupNode,
   FilterNodeKind,
+  FilterOperandKind,
   FilterPredicateNode,
   ExpressionRow,
   FnArgValue,
@@ -41,6 +42,9 @@ export const createPredicate = (fieldType?: string): FilterPredicateNode => ({
   valueType: defaultValueType(fieldType),
   value: '',
   isNull: false,
+  rightKind: FilterOperandKind.Literal,
+  rightFn: null,
+  rightArgs: [],
 });
 
 export const createColumnRow = (field: string): ExpressionRow => ({

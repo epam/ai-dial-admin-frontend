@@ -15,6 +15,7 @@ import {
   removeTrailingSlash,
   replacePathPrefix,
   updatePathWithNameAndVersion,
+  updatePathWithName,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -70,24 +71,24 @@ describe('Utils :: files :: getFolderNameAndPath', () => {
 
 describe('Utils :: files :: getListOfPathsToMove', () => {
   test('Should return correct list of paths from prompts', () => {
-    const res = getListOfPathsToMove({ name: 'name' }, null, [
-      { name: 'name', path: 'path' },
-      { name: 'name', path: 'path2' },
-      { name: 'name', path: 'path3' },
-      { name: 'name2', path: 'path4' },
+    const res = getListOfPathsToMove({ name: 'name', path: 'prompts/public/name', folderId: 'public' }, null, [
+      { name: 'name', path: 'path', folderId: 'public' },
+      { name: 'name', path: 'path2', folderId: 'public' },
+      { name: 'name', path: 'path3', folderId: 'public' },
+      { name: 'name2', path: 'path4', folderId: 'public' },
     ]);
     expect(res).toEqual(['path', 'path2', 'path3']);
   });
 
   test('Should return correct list of paths from map', () => {
     const res = getListOfPathsToMove(
-      { name: 'name', folderId: 'folder' },
+      { name: 'name', path: 'folder/name', folderId: 'folder' },
       {
         'folder/': [
-          { name: 'name', path: 'path' },
-          { name: 'name', path: 'path2' },
-          { name: 'name', path: 'path3' },
-          { name: 'name2', path: 'path4' },
+          { name: 'name', path: 'path', folderId: 'public' },
+          { name: 'name', path: 'path2', folderId: 'public' },
+          { name: 'name', path: 'path3', folderId: 'public' },
+          { name: 'name2', path: 'path4', folderId: 'public' },
         ],
       },
       null,
@@ -96,13 +97,13 @@ describe('Utils :: files :: getListOfPathsToMove', () => {
   });
   test('Should return correct list of paths from map with extension', () => {
     const res = getListOfPathsToMove(
-      { name: 'name.txt', folderId: 'folder' },
+      { name: 'name.txt', path: 'folder/name.txt', folderId: 'folder' },
       {
         'folder/': [
-          { name: 'name.txt', path: 'path' },
-          { name: 'name.txt', path: 'path2' },
-          { name: 'name.txt', path: 'path3' },
-          { name: 'name2.txt', path: 'path4' },
+          { name: 'name.txt', path: 'path', folderId: 'public' },
+          { name: 'name.txt', path: 'path2', folderId: 'public' },
+          { name: 'name.txt', path: 'path3', folderId: 'public' },
+          { name: 'name2.txt', path: 'path4', folderId: 'public' },
         ],
       },
       null,
@@ -112,7 +113,12 @@ describe('Utils :: files :: getListOfPathsToMove', () => {
   });
 
   test('Should return  empty array', () => {
-    const res = getListOfPathsToMove({ name: 'name.txt', folderId: 'folder' }, null, null, true);
+    const res = getListOfPathsToMove(
+      { name: 'name.txt', path: 'folder/name.txt', folderId: 'folder' },
+      null,
+      null,
+      true,
+    );
     expect(res).toEqual([]);
   });
 });
@@ -121,10 +127,10 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
   test('Should return all paths from a record of DialFiles', () => {
     const record = {
       'folder1/': [
-        { path: 'folder1/file1', name: 'file1', nodeType: 'item' },
-        { path: 'folder1/file2', name: 'file2', nodeType: 'item' },
+        { path: 'folder1/file1', name: 'file1', folderId: 'folder1', nodeType: DialFileNodeType.ITEM },
+        { path: 'folder1/file2', name: 'file2', folderId: 'folder1', nodeType: DialFileNodeType.ITEM },
       ],
-      'folder2/': [{ path: 'folder2/file3', name: 'file3', nodeType: 'item' }],
+      'folder2/': [{ path: 'folder2/file3', name: 'file3', folderId: 'folder1', nodeType: DialFileNodeType.ITEM }],
     };
 
     const res = getListOfPathsToBulkDelete(record);
@@ -134,8 +140,8 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
   test('Should return all paths from a record of DialPrompts', () => {
     const record = {
       'folder1/': [
-        { path: 'folder1/prompt1', name: 'prompt1', prompt: 'Write a poem' },
-        { path: 'folder1/prompt2', name: 'prompt2', prompt: 'Write code' },
+        { path: 'folder1/prompt1', name: 'prompt1', folderId: 'folder1', version: '1.0', content: 'Write a poem' },
+        { path: 'folder1/prompt2', name: 'prompt2', folderId: 'folder1', version: '1.0', content: 'Write code' },
       ],
     };
 
@@ -235,8 +241,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -250,8 +257,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -265,8 +273,9 @@ describe('Utils :: files :: checkSelectedPath', () => {
     const files: DialFolder[] = [
       {
         path: '/root',
+        folderId: 'root',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
 
@@ -281,7 +290,8 @@ describe('Utils :: files :: checkSelectedPath', () => {
       {
         path: '/project',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        folderId: '/',
+        items: [],
       },
     ];
 
@@ -435,6 +445,33 @@ describe('Utils :: files :: updatePathWithNameAndVersion', () => {
     const oldPath = 'abc123XYZ456/def789/item-name__1.0.0';
     const result = updatePathWithNameAndVersion(oldPath, 'new-item', '1.5.0');
     expect(result).toBe('abc123XYZ456/def789/new-item__1.5.0');
+  });
+});
+
+describe('Utils :: files :: updatePathWithName', () => {
+  test('Should update the last segment to the new name', () => {
+    const result = updatePathWithName('folder/my-prompt', 'renamed-prompt');
+    expect(result).toBe('folder/renamed-prompt');
+  });
+
+  test('Should keep a `__` in the new name verbatim — it is part of the name, not a version', () => {
+    const result = updatePathWithName('folder/my-prompt', 'renamed__1.0.0');
+    expect(result).toBe('folder/renamed__1.0.0');
+  });
+
+  test('Should replace a name that carried a `__` suffix verbatim', () => {
+    const result = updatePathWithName('folder/my-prompt__1.0.0', 'renamed-prompt');
+    expect(result).toBe('folder/renamed-prompt');
+  });
+
+  test('Should handle a nested folder structure', () => {
+    const result = updatePathWithName('root/subfolder/nested/prompt', 'new-name');
+    expect(result).toBe('root/subfolder/nested/new-name');
+  });
+
+  test('Should handle a bare name with no folder', () => {
+    const result = updatePathWithName('my-prompt', 'renamed-prompt');
+    expect(result).toBe('renamed-prompt');
   });
 });
 

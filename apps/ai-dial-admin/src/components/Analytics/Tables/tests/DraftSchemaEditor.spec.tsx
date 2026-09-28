@@ -1,3 +1,4 @@
+import { DraftSchemaDto } from '@/src/models/analytics/table';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -81,6 +82,9 @@ const fixtureDraft = (overrides?: DraftOverrides): ReturnType<typeof useDraftSch
     scanPairRequired: scanPairRequired ?? false,
     scanPairIncomplete: scanPairIncomplete ?? false,
     canMaterialize: false,
+    baselineDto: { columns: [] } as DraftSchemaDto,
+    isChanged: false,
+    reset: vi.fn(),
     buildDto: () => ({ columns: [] }),
   };
 };

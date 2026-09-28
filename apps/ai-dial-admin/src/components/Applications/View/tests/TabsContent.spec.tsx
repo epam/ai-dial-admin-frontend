@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { useEffect, useRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { DialApplication } from '@/src/models/dial/application';
@@ -21,10 +22,28 @@ vi.mock('@/src/components/EntityView/Roles/AssetRoles', () => ({
   },
 }));
 
-vi.mock('@/src/components/EntityView/Roles/Roles', () => ({
-  default: (props: typeof capturedEntityRolesProps) => {
+vi.mock('@/src/components/EntityView/Roles/Roles', () => {
+  const RolesMock = (props: typeof capturedEntityRolesProps) => {
     capturedEntityRolesProps = props;
+    entityRolesMountCount += 1;
     return <section aria-label="entity-roles" />;
+  };
+  return { default: RolesMock };
+});
+
+let entityRolesMountCount = 0;
+let parametersTabMountCount = 0;
+
+vi.mock('@/src/components/Applications/ParametersTab/ParametersTab', () => ({
+  default: () => {
+    const hasMounted = useRef(false);
+    useEffect(() => {
+      if (!hasMounted.current) {
+        hasMounted.current = true;
+        parametersTabMountCount += 1;
+      }
+    }, []);
+    return <section aria-label="parameters-tab" />;
   },
 }));
 
@@ -87,5 +106,62 @@ describe('TabsContent — Roles tab', () => {
     capturedEntityRolesProps?.onChangeEntity?.({ name: 'app', roleLimits: {} });
 
     expect(onChangeApplication).toHaveBeenCalledWith({ name: 'app', roleLimits: {} });
+  });
+});
+
+describe('TabsContent — Discard remount scope (Issue #4477)', () => {
+  test('does not remount ParametersTab on a discardKey change, unlike other tabs', () => {
+    entityRolesMountCount = 0;
+    parametersTabMountCount = 0;
+    const selectedApplication = { name: 'app' } as unknown as DialApplication;
+
+    const { rerender } = render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Parameters}
+        view={ApplicationRoute.Applications}
+        selectedApplication={selectedApplication}
+        discardKey={0}
+      />,
+    );
+
+    expect(screen.getByLabelText('parameters-tab')).toBeInTheDocument();
+    expect(parametersTabMountCount).toBe(1);
+
+    rerender(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Parameters}
+        view={ApplicationRoute.Applications}
+        selectedApplication={selectedApplication}
+        discardKey={1}
+      />,
+    );
+
+    expect(parametersTabMountCount).toBe(1);
+
+    rerender(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Roles}
+        view={ApplicationRoute.Applications}
+        selectedApplication={selectedApplication}
+        discardKey={1}
+      />,
+    );
+
+    expect(entityRolesMountCount).toBe(1);
+
+    rerender(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Roles}
+        view={ApplicationRoute.Applications}
+        selectedApplication={selectedApplication}
+        discardKey={2}
+      />,
+    );
+
+    expect(entityRolesMountCount).toBe(2);
   });
 });
