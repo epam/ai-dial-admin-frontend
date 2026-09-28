@@ -41,10 +41,19 @@ interface SchemaGridProps {
   isSkipRefresh?: boolean;
   /** Which `dial:meta` columns this schema kind has — see the sets in `constants.ts`. */
   metaColumns?: SchemaMetaColumn[];
+  /** Which of those columns the schema kind requires a value in, on every top-level property. */
+  requiredMetaColumns?: SchemaMetaColumn[];
   isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, metaColumns, isReadonly }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({
+  schema,
+  onChange,
+  isSkipRefresh,
+  metaColumns,
+  requiredMetaColumns,
+  isReadonly,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
@@ -292,6 +301,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
         t,
         isReadonlyGrid,
         metaHandlers,
+        requiredMetaColumns,
       ),
     [
       onToggleExpand,
@@ -304,6 +314,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
       t,
       isReadonlyGrid,
       metaHandlers,
+      requiredMetaColumns,
     ],
   );
 

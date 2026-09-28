@@ -235,7 +235,7 @@ The system SHALL render the app-runner Features tab with the same controls the e
 
 ### Requirement: Client-side validation replaces Core's absent write-time checks
 
-Because DIAL Core performs no validation when writing this resource kind, the system SHALL block a save that violates the app-runner meta-schema and SHALL surface the reason to the user. The enforced rules are: a non-empty `dial:applicationTypeDisplayName`; every route key matching `^[a-zA-Z0-9_]+$`; every route carrying non-empty `dial:paths`, non-empty `dial:methods`, and `dial:upstreams`; every method within `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `PATCH`; every upstream carrying `dial:endpoint`; and a present `dial:response` carrying both `dial:status` and `dial:body`.
+Because DIAL Core performs no validation when writing this resource kind, the system SHALL block a save that violates the app-runner meta-schema and SHALL surface the reason to the user. The enforced rules are: a non-empty `dial:applicationTypeDisplayName`; every route key matching `^[a-zA-Z0-9_]+$`; every route carrying non-empty `dial:paths`, non-empty `dial:methods`, and `dial:upstreams`; every method within `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `PATCH`; every upstream carrying `dial:endpoint`; a present `dial:response` carrying both `dial:status` and `dial:body`; and every top-level parameter carrying `dial:meta` with both `dial:propertyOrder` and `dial:propertyKind`, whether or not the parameter is required.
 
 #### Scenario: Missing display name blocks save
 
@@ -256,6 +256,12 @@ Because DIAL Core performs no validation when writing this resource kind, the sy
 
 - **WHEN** a route declares a method outside the supported set
 - **THEN** the save is blocked with a message identifying the offending method
+
+#### Scenario: A parameter without an order or kind blocks save
+
+- **WHEN** a top-level parameter, required or optional, has no `dial:propertyOrder` or no `dial:propertyKind`
+- **THEN** the save is blocked with a message naming the parameter and the missing key
+- **AND** the Parameters tab marks that parameter's empty Order cell as invalid
 
 ### Requirement: `$id` constraint violations are reported at the create form
 
