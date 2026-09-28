@@ -173,6 +173,11 @@ export async function getTestSuiteMetricDetailsWithSchema(id: string, metricId: 
   return testSuitesApi.getTestSuiteMetricDetailsWithSchema(id, metricId, token);
 }
 
+export async function getTestSuiteMetricsAggregated(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuiteMetricsAggregated(id, token);
+}
+
 export async function getTestSuiteFiles(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getTestSuiteFiles(id, token);

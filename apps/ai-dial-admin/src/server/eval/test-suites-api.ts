@@ -235,6 +235,10 @@ export class TestSuitesApi extends BaseApi {
     return this.get(`${TEST_SUITE_METRICS_URL(id)}/${metricId}/aggregated`, token);
   }
 
+  getTestSuiteMetricsAggregated(id: string, token: Token): Promise<Metric[] | null> {
+    return this.get(`${TEST_SUITE_METRICS_URL(id)}/aggregated`, token);
+  }
+
   getTestSuiteFiles(id: string, token: Token): Promise<CustomFile[] | null> {
     return this.get(`${TEST_SUITE_URL(id)}/files`, token);
   }
