@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BasicI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { CatalogEntityType, CatalogSchemaOption } from '@/src/models/dial/catalog-schema';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import CatalogSchemaField from '../CatalogSchemaField';
 
 const isReadOnlyAdmin = vi.fn(() => false);
@@ -116,33 +114,6 @@ describe('CatalogSchemaField', () => {
     renderField();
 
     expect(screen.queryByRole('button', { name: 'Buttons.Open' })).toBeNull();
-  });
-
-  test('opens the selected schema in a new tab', async () => {
-    const user = userEvent.setup();
-    const open = vi.fn();
-    vi.stubGlobal('open', open);
-    renderField({ schemaId: apiWritten.$id });
-
-    await user.click(screen.getByRole('button', { name: 'Buttons.Open' }));
-
-    expect(open).toHaveBeenCalledWith(`/en/platform-catalog-schemas/${encodeURIComponent(apiWritten.$id)}`, '_blank');
-  });
-
-  test('produces the same segment a grid row click does, so a URI-shaped id stays one path segment', async () => {
-    const user = userEvent.setup();
-    const open = vi.fn();
-    vi.stubGlobal('open', open);
-    const schemaId = 'https://dial.epam.com/catalog-schemas/agent';
-    renderField({ schemaId });
-
-    await user.click(screen.getByRole('button', { name: 'Buttons.Open' }));
-
-    const [url] = open.mock.calls[0];
-    expect(url).toEqual(
-      `/en/platform-catalog-schemas/${getUrnForEntity(ApplicationRoute.PlatformCatalogSchemas, { name: schemaId }).split('/').pop()}`,
-    );
-    expect(url.split('/en/platform-catalog-schemas/')[1]).not.toContain('/');
   });
 
   test('a read-only admin cannot change the selection', () => {

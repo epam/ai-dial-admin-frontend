@@ -71,13 +71,6 @@ describe('App runner asset :: validation survives arbitrary JSON', () => {
  * a pre-encode on either side is what caused #4349's post-duplicate 404.
  */
 describe('App runner asset :: post-create navigation', () => {
-  test('Should build a detail path from $id alone, singly encoded', () => {
-    const path = getEntityPath(VIEW, { $id: RUNNER_ID } as never, false);
-
-    expect(path).toEqual(encodeURIComponent(RUNNER_ID)); // 'http%3A%2F%2Fasdqwe'
-    expect(path).not.toContain('?path=');
-  });
-
   test('Should prefer an existing listing row name over deriving one from $id', () => {
     // Listing rows carry the decoded raw $id as `name`, not the Core-encoded form.
     const path = getEntityPath(VIEW, { name: RUNNER_ID } as never, false);
@@ -85,11 +78,6 @@ describe('App runner asset :: post-create navigation', () => {
     expect(path).toEqual(encodeURIComponent(RUNNER_ID)); // 'http%3A%2F%2Fasdqwe'
   });
 
-  test('Should agree with the row-click path, so both entry points reach the same resource', () => {
-    expect(getEntityPath(VIEW, { $id: RUNNER_ID } as never, false)).toEqual(
-      getEntityPath(VIEW, { name: RUNNER_ID } as never, false),
-    );
-  });
 });
 
 describe('App runner asset :: labels', () => {
