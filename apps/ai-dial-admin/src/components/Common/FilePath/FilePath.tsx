@@ -11,11 +11,12 @@ import {
 import { IconFolderShare } from '@tabler/icons-react';
 
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';
+import { MOVE_EXCLUDED_PATHS } from '@/src/components/Common/FileManager/constants';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
-import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
+import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -144,7 +145,7 @@ const FilePath: FC<Props> = ({
             searchable: false,
           }}
           showCreateFolderButton={shouldAbleToCreateNewFolder}
-          excludedPaths={['platform/']}
+          excludedPaths={MOVE_EXCLUDED_PATHS}
         />
       </div>
     </div>

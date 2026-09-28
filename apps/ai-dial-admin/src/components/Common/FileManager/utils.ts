@@ -17,6 +17,7 @@ import {
   CREATE_FOLDER_FORBIDDEN_CHARS,
   FILE_NAME_MAX_LENGTH,
   MAX_FOLDER_NESTING_DEPTH,
+  MOVE_EXCLUDED_PATHS,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
@@ -77,7 +78,7 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
   processDestinationFolderPath: (path: string) => addTrailingSlash(path),
-  excludedPaths: ['platform/'],
+  excludedPaths: MOVE_EXCLUDED_PATHS,
 });
 
 export const createEmptyFile = () => {

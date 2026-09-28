@@ -23,12 +23,7 @@ export const getConfigEntityOptions = async (
 ): Promise<ConfigFileReadResult<ConfigEntityOptions>> => {
   const [apiWritten, configFile] = await Promise.all([
     toFailureOnThrow(listApiWrittenNames(token, type)),
-    // Config-file entities are the admin console's own configuration surface — without the admin
-    // backend there is nothing declaring them, so skip the read rather than reporting an empty
-    // population as a partial failure.
-    process.env.DIAL_ADMIN_API_URL
-      ? toFailureOnThrow(configFileApi.listNames(token, type))
-      : Promise.resolve<ConfigFileReadResult<string[]>>({ success: true, data: [] }),
+    toFailureOnThrow(configFileApi.listNames(token, type)),
   ]);
 
   return unionConfigEntityOptions(apiWritten, configFile);
