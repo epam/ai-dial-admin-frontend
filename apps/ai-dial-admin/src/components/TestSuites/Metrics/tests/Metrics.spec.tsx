@@ -8,20 +8,18 @@ import { TestSuite } from '@/src/models/evaluation/test-suite';
 import Metrics from '../Metrics';
 import { MetricBindingType } from '../../../../types/evaluation';
 
-const mockGetTestSuiteMetrics = vi.fn();
+const mockGetTestSuiteMetricsAggregated = vi.fn();
 const mockGetDetailedMetricDeclarations = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
 const mockDeleteTestSuiteMetric = vi.fn();
 const mockUpdateTestSuiteMetric = vi.fn();
-const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTestSuiteMetrics: (...args: unknown[]) => mockGetTestSuiteMetrics(...args),
+  getTestSuiteMetricsAggregated: (...args: unknown[]) => mockGetTestSuiteMetricsAggregated(...args),
   getDetailedMetricDeclarations: (...args: unknown[]) => mockGetDetailedMetricDeclarations(...args),
   createTestSuiteMetric: (...args: unknown[]) => mockCreateTestSuiteMetric(...args),
   deleteTestSuiteMetric: (...args: unknown[]) => mockDeleteTestSuiteMetric(...args),
   updateTestSuiteMetric: (...args: unknown[]) => mockUpdateTestSuiteMetric(...args),
-  getTestSuiteMetricDetailsWithSchema: (...args: unknown[]) => mockGetTestSuiteMetricDetailsWithSchema(...args),
 }));
 
 vi.mock('../AddMetric/AddMetricModal', () => ({
@@ -119,57 +117,69 @@ describe('Metrics', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([]);
     mockGetDetailedMetricDeclarations.mockResolvedValue([]);
     mockCreateTestSuiteMetric.mockResolvedValue({ success: true, response: { id: 'created-metric' } });
     mockDeleteTestSuiteMetric.mockResolvedValue({ success: true });
     mockUpdateTestSuiteMetric.mockResolvedValue({ success: true });
-    mockGetTestSuiteMetricDetailsWithSchema.mockResolvedValue(null);
   });
 
-  test('loads metrics and shows empty state when list is empty', async () => {
+  test('loads metrics with a single aggregated request and shows empty state when list is empty', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
     });
 
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
     expect(screen.getByText(`${TabsI18nKey.Metrics}: 0`)).toBeInTheDocument();
     expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
+  });
+
+  test('does not fetch metric declarations when the tab loads', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
   });
 
   test('renders ScoreSettings column', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
     });
 
     expect(screen.getByRole('region', { name: 'score-settings' })).toBeInTheDocument();
   });
 
-  test('merges fetched output schema when bound metric has no output properties', async () => {
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [{ ...metric, outputSchema: {} }] });
-    mockGetTestSuiteMetricDetailsWithSchema.mockResolvedValue({
-      metricDeclarationVersion: { outputSchema: { type: 'object', properties: { score: {}, latency: {} } } },
-    });
+  test('renders output schema from the aggregated response without a per-metric request', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([
+      {
+        ...metric,
+        outputSchema: { type: 'object', properties: { score: {}, latency: {} } },
+      },
+    ]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-1', 'metric-1');
-    });
-
-    await waitFor(() => {
       expect(screen.getByText('metric-1:score,latency')).toBeInTheDocument();
     });
+
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
   });
 
   test('renders Add button with correct label', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
     });
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
@@ -181,7 +191,7 @@ describe('Metrics', () => {
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
     });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
@@ -189,13 +199,31 @@ describe('Metrics', () => {
     expect(screen.getByRole('dialog', { name: 'Add metric' })).toBeInTheDocument();
   });
 
+  test('fetches metric declarations once the Add metric dialog opens', async () => {
+    const user = userEvent.setup();
+
+    render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
+    });
+
+    expect(mockGetDetailedMetricDeclarations).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+
+    await waitFor(() => {
+      expect(mockGetDetailedMetricDeclarations).toHaveBeenCalledOnce();
+    });
+  });
+
   test('renders metric card and bindings when metrics exist', async () => {
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
     });
 
     expect(screen.getByText('Metric One')).toBeInTheDocument();
@@ -211,7 +239,7 @@ describe('Metrics', () => {
     render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} onChange={vi.fn()} />);
 
     await waitFor(() => {
-      expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
+      expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalled();
     });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
@@ -224,7 +252,7 @@ describe('Metrics', () => {
 
   test('deletes metric and refreshes list', async () => {
     const user = userEvent.setup();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
@@ -244,12 +272,12 @@ describe('Metrics', () => {
       expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');
     });
 
-    expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
+    expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledWith('suite-1');
   });
 
   test('opens edit modal and updates metric on confirmation', async () => {
     const user = userEvent.setup();
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metric]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
@@ -275,7 +303,7 @@ describe('Metrics', () => {
       ...metric,
       condition: 'turn.value > 0.5',
     };
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithCondition] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metricWithCondition]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
@@ -291,7 +319,7 @@ describe('Metrics', () => {
       ...metric,
       condition: undefined,
     };
-    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithoutCondition] });
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([metricWithoutCondition]);
 
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 

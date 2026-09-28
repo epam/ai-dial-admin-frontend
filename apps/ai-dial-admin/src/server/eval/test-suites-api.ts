@@ -235,6 +235,10 @@ export class TestSuitesApi extends BaseApi {
     return this.get(`${TEST_SUITE_METRICS_URL(id)}/${metricId}/aggregated`, token);
   }
 
+  getTestSuiteMetricsAggregated(id: string, token: Token): Promise<Metric[] | null> {
+    return this.get(`${TEST_SUITE_METRICS_URL(id)}/aggregated`, token);
+  }
+
   getTestSuiteFiles(id: string, token: Token): Promise<CustomFile[] | null> {
     return this.get(`${TEST_SUITE_URL(id)}/files`, token);
   }
@@ -244,6 +248,6 @@ export class TestSuitesApi extends BaseApi {
   }
 
   removeTestSuiteFile(id: string, fileName: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(`${TEST_SUITE_URL(id)}/files/${fileName}`, token);
+    return this.deleteAction(`${TEST_SUITE_URL(id)}/files/${encodeURIComponent(fileName)}`, token);
   }
 }

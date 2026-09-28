@@ -432,6 +432,15 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call getTestSuiteMetricsAggregated', async () => {
+    fetch.mockResponseOnce(JSON.stringify([{ id: 'metric-id' }]));
+    await instance.getTestSuiteMetricsAggregated('suite-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/aggregated`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should call createTestSuiteMetric', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const metric = { name: 'My Metric', metricDeclarationId: 'decl-id' };
@@ -490,6 +499,15 @@ describe('Server :: TestSuiteApi', () => {
     await instance.removeTestSuiteFile('id', 'fileName', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_URL('id')}/files/fileName`,
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should encode file name in removeTestSuiteFile', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    await instance.removeTestSuiteFile('id', 'a#b?c/d.txt', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL('id')}/files/a%23b%3Fc%2Fd.txt`,
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
