@@ -31,6 +31,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { GridFilterType } from '@/src/types/grid-filter';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -418,18 +419,11 @@ const RUNS_COLUMN_ORDER = [
 ];
 
 /**
- * Neither sortable nor filterable: five are mock-backed (see `run-list-mock-data`) and the two counts
- * are values the listing endpoint can neither order nor filter on.
+ * Neither sortable nor filterable: Duration/Cost/Overall score are not raw query-API fields (Duration
+ * is derived client-side, Cost/Overall score are appended to a row after the query runs). The two
+ * counts are real, sortable fields and are asserted separately below.
  */
-const DERIVED_COL_IDS = [
-  'runConfig.numberOfRuns',
-  'numberOfTestCases',
-  'target',
-  'metrics',
-  'duration',
-  'cost',
-  'overallScore',
-];
+const DERIVED_COL_IDS = ['duration', 'cost', 'overallScore'];
 
 /** Columns capped narrower than `defaultColDef`'s `minWidth` in `AgGridWrapper`. */
 const GRID_DEFAULT_MIN_WIDTH = 150;
@@ -454,6 +448,17 @@ describe('RUNS_COLUMN', () => {
       expect(col.sortable).toBe(false);
       expect(col.filter).toBe(false);
     });
+  });
+
+  test('the two counts are sortable against their real query-API fields, but offer no filter', () => {
+    const runs = RUNS_COLUMN.find((col) => col.colId === 'runConfig.numberOfRuns');
+    const testCases = RUNS_COLUMN.find((col) => col.colId === 'numberOfTestCases');
+
+    // Left to the grid default (sortable), since both map to a real, single query-API field.
+    expect(runs?.sortable).toBeUndefined();
+    expect(testCases?.sortable).toBeUndefined();
+    expect(runs?.filter).toBe(false);
+    expect(testCases?.filter).toBe(false);
   });
 
   test('caps the narrow columns, so the grid-wide flex cannot stretch them to the default width', () => {
@@ -491,6 +496,29 @@ describe('RUNS_COLUMN', () => {
     expect(status?.width).toBe(65);
     expect(status?.minWidth).toBe(65);
     expect(status?.maxWidth).toBe(65);
+  });
+
+  test('Target is both filterable and sortable, though sort only approximates its two-field OR shape', () => {
+    const target = RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    // Left to the grid default (sortable): `buildRunsSort` approximates it by the deployment name alone.
+    expect(target?.sortable).toBeUndefined();
+    expect(target?.filter).toBeUndefined();
+    expect((target?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
+  test('Metrics is both sortable and filterable against the real metric_names field', () => {
+    const metrics = RUNS_COLUMN.find((col) => col.colId === 'metrics');
+
+    // Left to the grid default (sortable), since `metric_names` is a real, single query-API field.
+    expect(metrics?.sortable).toBeUndefined();
+    expect((metrics?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.CONTAINS,
+    ]);
   });
 });
 

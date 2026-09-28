@@ -1,4 +1,5 @@
-import { Run } from '@/src/models/evaluation/run';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { Run, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
 
 const MS_IN_SECOND = 1000;
 const SECONDS_IN_MINUTE = 60;
@@ -48,4 +49,32 @@ export const formatRunScore = (score?: number | null): string | null => {
     return null;
   }
   return score.toFixed(SCORE_DECIMALS);
+};
+
+const DEPLOYMENT_TYPE_TO_TARGET_KIND: Partial<Record<string, RunTargetKind>> = {
+  [DeploymentType.Model]: RunTargetKind.Model,
+  [DeploymentType.Application]: RunTargetKind.Application,
+};
+
+/**
+ * The run's evaluated entity, from its `suiteSnapshot`. An MCP deployment ref always resolves to
+ * `RunTargetKind.Mcp`; a model/application ref's kind comes from its own `type`
+ * (`dial-model` / `dial-application`) rather than the suite's `suiteType`, since a snapshot can carry
+ * a `deploymentRef` without a recognized `type` — that case leaves `kind` unset instead of guessing
+ * between Model and Application.
+ */
+export const resolveRunTarget = (run?: Run | null): RunTarget | null => {
+  const snapshot = run?.suiteSnapshot;
+
+  const mcpName = snapshot?.mcpDeploymentRef?.name;
+  if (mcpName) {
+    return { name: mcpName, kind: RunTargetKind.Mcp };
+  }
+
+  const deploymentName = snapshot?.deploymentRef?.name;
+  if (!deploymentName) {
+    return null;
+  }
+  const deploymentType = snapshot?.deploymentRef?.type;
+  return { name: deploymentName, kind: deploymentType ? DEPLOYMENT_TYPE_TO_TARGET_KIND[deploymentType] : undefined };
 };

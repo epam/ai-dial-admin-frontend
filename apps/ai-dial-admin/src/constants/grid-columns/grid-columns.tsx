@@ -141,14 +141,13 @@ import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpa
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
-import {
-  getMockRunCost,
-  getMockRunMetricNames,
-  getMockRunOverallScore,
-  getMockRunTarget,
-} from '@/src/components/Runs/mocks/run-list-mock-data';
 import { formatRunCost } from '@/src/components/Runs/Summary/utils';
-import { formatRunDuration, formatRunScore, getRunDurationMs } from '@/src/components/Runs/utils/run-list-values';
+import {
+  formatRunDuration,
+  formatRunScore,
+  getRunDurationMs,
+  resolveRunTarget,
+} from '@/src/components/Runs/utils/run-list-values';
 import { Metric } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
 import { getMetricOutputTags } from '@/src/components/TestSuites/Metrics/ScoreSettings/utils';
@@ -1292,7 +1291,6 @@ const RUN_STATUS_COLUMN_WIDTH = 65;
 const RUN_TARGET_COLUMN_MIN_WIDTH = 100;
 const RUN_DATE_COLUMN_MIN_WIDTH = 166;
 
-/** Neither sortable nor filterable: the run listing endpoint cannot order or filter on these values. */
 const derivedRunColDef: Partial<ColDef> = { sortable: false, filter: false, hide: false };
 
 export const RUNS_COLUMN: ColDef[] = [
@@ -1305,10 +1303,8 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRendererParams: { isLabelHidden: true },
     tooltipValueGetter: () => undefined,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
-    // A free-text input cannot match a fixed status, so the filter row keeps only its filter button.
     floatingFilterComponent: EmptyFloatingFilter,
     width: RUN_STATUS_COLUMN_WIDTH,
-    // Both bounds, so neither the grid's global `minWidth` nor its `flex` can stretch the column.
     minWidth: RUN_STATUS_COLUMN_WIDTH,
     maxWidth: RUN_STATUS_COLUMN_WIDTH,
     cellClass: 'flex items-center justify-center',
@@ -1329,14 +1325,16 @@ export const RUNS_COLUMN: ColDef[] = [
     colId: 'runConfig.numberOfRuns',
     headerName: 'Runs',
     maxWidth: 68,
-    ...derivedRunColDef,
+    filter: false,
+    hide: false,
   },
   {
     field: 'numberOfTestCases',
     colId: 'numberOfTestCases',
     headerName: 'Test cases',
     maxWidth: 98,
-    ...derivedRunColDef,
+    filter: false,
+    hide: false,
   },
   {
     field: 'testSuiteId',
@@ -1349,25 +1347,27 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'target',
     colId: 'target',
     headerName: 'Target',
-    valueGetter: ({ data }) => getMockRunTarget(data as Run)?.name ?? MISSING_VALUE_DISPLAY,
+    valueGetter: ({ data }) => resolveRunTarget(data as Run)?.name ?? MISSING_VALUE_DISPLAY,
     cellRenderer: TitleSubtitleCellRenderer,
-    cellRendererParams: { getSubtitle: (data?: Run) => getMockRunTarget(data)?.kind },
+    cellRendererParams: { getSubtitle: (data?: Run) => resolveRunTarget(data)?.kind },
     tooltipValueGetter: () => undefined,
-    ...derivedRunColDef,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+    hide: false,
     minWidth: RUN_TARGET_COLUMN_MIN_WIDTH,
   },
   {
     field: 'metrics',
     colId: 'metrics',
     headerName: 'Metrics',
-    valueGetter: ({ data }) => getMockRunMetricNames(data as Run),
+    valueGetter: ({ data }) => (data as Run)?.metricNames ?? [],
     cellRenderer: TagsCellRenderer,
     cellRendererParams: (params: { value: string[] }) => ({
       items: params.value,
       tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
     }),
     tooltipValueGetter: () => null,
-    ...derivedRunColDef,
+    ...evalStringFilter([GridFilterType.CONTAINS]),
+    hide: false,
   },
   {
     field: 'startedAt',
@@ -1401,7 +1401,7 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'cost',
     colId: 'cost',
     headerName: 'Cost',
-    valueGetter: ({ data }) => getMockRunCost(data as Run),
+    valueGetter: ({ data }) => (data as Run)?.totalCost ?? null,
     valueFormatter: ({ value }) => formatRunCost(value as number | null) ?? MISSING_VALUE_DISPLAY,
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 100,
@@ -1411,7 +1411,7 @@ export const RUNS_COLUMN: ColDef[] = [
     field: 'overallScore',
     colId: 'overallScore',
     headerName: 'Overall score',
-    valueGetter: ({ data }) => getMockRunOverallScore(data as Run),
+    valueGetter: ({ data }) => (data as Run)?.overallScoreValue ?? null,
     valueFormatter: ({ value }) => formatRunScore(value as number | null) ?? MISSING_VALUE_DISPLAY,
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 110,
