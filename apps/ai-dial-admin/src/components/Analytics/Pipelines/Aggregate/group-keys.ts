@@ -1,20 +1,19 @@
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { GroupKey, TruncUnit } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind, GroupKeyRow } from '@/src/models/analytics/pipeline-ui';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 const UNIT_TYPES: Record<TruncUnit, AnalyticsFieldType[]> = {
   [TruncUnit.Hour]: [AnalyticsFieldType.Timestamp],
   [TruncUnit.Day]: [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp],
   [TruncUnit.Week]: [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp],
   [TruncUnit.Month]: [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp],
 };
-export const getTruncUnits = (columns: AnalyticsTableColumn[], column?: string): TruncUnit[] => {
-  const type = columns.find((candidate) => candidate.name === column)?.type;
+export const getTruncUnits = (fields: AnalyticsEntityField[], column?: string): TruncUnit[] => {
+  const type = fields.find((candidate) => candidate.name === column)?.type;
   if (!type) return [];
   return Object.values(TruncUnit).filter((unit) => UNIT_TYPES[unit].includes(type));
 };
-export const isTruncatable = (columns: AnalyticsTableColumn[], column?: string): boolean =>
-  getTruncUnits(columns, column).length > 0;
+export const isTruncatable = (fields: AnalyticsEntityField[], column?: string): boolean =>
+  getTruncUnits(fields, column).length > 0;
 export const createGroupKeyRow = (): GroupKeyRow => ({
   id: crypto.randomUUID(),
   kind: GroupKeyKind.Column,

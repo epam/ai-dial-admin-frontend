@@ -14,13 +14,15 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { GroupKey } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind, GroupKeyRow } from '@/src/models/analytics/pipeline-ui';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 interface Props {
   groupKeys?: GroupKey[];
-  columns: AnalyticsTableColumn[];
+  /** The source's entity, so a column an enrichment supplies is offered under its qualified name. */
+  fields: AnalyticsEntityField[];
   onChange: (groupKeys: GroupKey[]) => void;
 }
-const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
+const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
   const t = useI18n();
   const [rows, setRows] = useState<GroupKeyRow[]>(() => toGroupKeyRows(groupKeys));
   const emittedRef = useRef<GroupKey[] | undefined>(groupKeys);
@@ -37,12 +39,13 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
   };
   const updateRow = (id: string, patch: Partial<GroupKeyRow>) =>
     commit(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  const columnOptions = columns.map((column) => ({ value: column.name, label: `${column.name} · ${column.type}` }));
+  const columnOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
   return (
     <div className="flex flex-col gap-3">
       {rows.map((row, index) => {
-        const units = getTruncUnits(columns, row.column);
-        const canTruncate = isTruncatable(columns, row.column);
+        const isColumnKnown = fields.some((field) => field.name === row.column);
+        const units = getTruncUnits(fields, row.column);
+        const canTruncate = isTruncatable(fields, row.column);
         return (
           <div key={row.id} className="flex flex-col gap-2">
             <div className="flex flex-row flex-wrap items-end gap-3">
@@ -50,7 +53,7 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
                 id={`group-key-column-${index}`}
                 containerClassName="min-w-[180px] flex-1"
                 label={t(AnalyticsPipelinesI18nKey.GroupKeyColumn)}
-                options={columnOptions}
+                options={withStrandedOption(columnOptions, row.column)}
                 value={row.column}
                 onChange={(v) => updateRow(row.id, { column: v as string, unit: undefined })}
               />
@@ -70,7 +73,10 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
                   id={`group-key-unit-${index}`}
                   containerClassName="min-w-[180px] flex-1"
                   label={t(AnalyticsPipelinesI18nKey.GroupKeyUnit)}
-                  options={units.map((unit) => ({ value: unit, label: unit }))}
+                  options={withStrandedOption(
+                    units.map((unit) => ({ value: unit, label: unit })),
+                    row.unit,
+                  )}
                   value={row.unit ?? ''}
                   onChange={(v) => updateRow(row.id, { unit: v as GroupKeyRow['unit'] })}
                 />
@@ -89,7 +95,7 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, columns, onChange }) => {
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />
             </div>
-            {row.kind === GroupKeyKind.Trunc && row.column && !canTruncate && (
+            {row.kind === GroupKeyKind.Trunc && row.column && isColumnKnown && !canTruncate && (
               <span className="text-error dial-tiny-text">{t(AnalyticsPipelinesI18nKey.GroupKeyNotTruncatable)}</span>
             )}
           </div>

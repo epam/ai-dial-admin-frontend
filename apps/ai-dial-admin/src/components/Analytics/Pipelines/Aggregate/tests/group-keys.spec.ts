@@ -7,11 +7,10 @@ import {
   toGroupKeyRows,
   toGroupKeys,
 } from '@/src/components/Analytics/Pipelines/Aggregate/group-keys';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { TruncUnit } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind } from '@/src/models/analytics/pipeline-ui';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
-const column = (name: string, type: AnalyticsFieldType): AnalyticsTableColumn => ({ name, source_name: name, type });
+const column = (name: string, type: AnalyticsFieldType): AnalyticsEntityField => ({ name, source: name, type });
 const columns = [
   column('chat_id', AnalyticsFieldType.String),
   column('request_time', AnalyticsFieldType.Timestamp),

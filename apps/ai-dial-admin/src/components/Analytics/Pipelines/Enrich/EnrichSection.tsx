@@ -66,7 +66,6 @@ const EnrichSection: FC<Props> = ({ form }) => {
           <GroupByField
             value={trigger.group_by}
             grainKey={form.grainKey}
-            fields={form.sourceFields}
             onChange={(group_by) => onTriggerChange({ group_by })}
           />
 
