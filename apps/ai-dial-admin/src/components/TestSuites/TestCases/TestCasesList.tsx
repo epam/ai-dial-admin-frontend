@@ -296,6 +296,7 @@ const TestCasesList: FC<Props> = ({
     (activeSchema?: TestCaseSchema[]) => [
       ...getTestCaseColumns({
         suite: selectedTestSuite,
+        dataset,
         onCellChange,
         onToggleExpand: turnGrid.onToggleExpand,
         t,
@@ -316,6 +317,7 @@ const TestCasesList: FC<Props> = ({
     ],
     [
       selectedTestSuite,
+      dataset,
       onCellChange,
       t,
       isReadOnly,

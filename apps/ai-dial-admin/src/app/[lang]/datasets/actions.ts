@@ -129,3 +129,18 @@ export async function publishDataset(id: string, body: DatasetPublishBody) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.publishDataset(id, body, token);
 }
+
+export async function getDatasetFiles(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasetFiles(id, token);
+}
+
+export async function uploadDatasetFiles(id: string, file: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.uploadDatasetFiles(id, file, token);
+}
+
+export async function removeDatasetFile(id: string, fileName: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.removeDatasetFile(id, fileName, token);
+}

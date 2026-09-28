@@ -87,6 +87,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
                 {activeTab === EntityViewTab.Application && (
                   <ApplicationFileManager
                     id={id}
+                    view={view}
                     value={filePath}
                     selectedFilePath={selectedFilePath}
                     onChangeSelectedFilePath={setSelectedFilePath}
