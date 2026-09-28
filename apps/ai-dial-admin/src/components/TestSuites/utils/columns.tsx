@@ -22,6 +22,7 @@ import {
   getGroupedIdColumn,
   getGroupedNameColumn,
   getGroupedSchemaColumn,
+  SchemaColumnContext,
   getTurnExpanderColumn,
 } from '@/src/components/Grid/columns/turn-columns';
 import IncludeInRunCellRenderer from '@/src/components/TestSuites/TestCases/RunCondition/IncludeInRunCellRenderer';
@@ -29,6 +30,7 @@ import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constan
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
 import { InputBindingRowData, ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
@@ -40,6 +42,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export interface TestCaseColumnsOptions {
   suite: TestSuite;
+  dataset?: Dataset | null;
   onCellChange: OnCellChange;
   onToggleExpand: (groupKey: string) => void;
   t?: (key: string) => string;
@@ -74,12 +77,17 @@ const getIncludeInRunFilterOptions = (
 ];
 
 export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] => {
-  const { suite, onCellChange, onToggleExpand, t, schema, isReadOnly, includedIds } = options;
+  const { suite, dataset, onCellChange, onToggleExpand, t, schema, isReadOnly, includedIds } = options;
   const includedLabel = t?.(TestSuitesI18nKey.IncludedInRun) ?? 'Included';
   const excludedLabel = t?.(TestSuitesI18nKey.ExcludedFromRun) ?? 'Excluded';
   const allLabel = 'All';
   const resolvedSchema = schema ?? [];
   const resolveIncludedIds = () => (typeof includedIds === 'function' ? includedIds() : includedIds);
+  // A private dataset owns its files; otherwise they are stored on the suite.
+  const fileContext: SchemaColumnContext =
+    dataset?.visibility === DatasetVisibility.PRIVATE
+      ? { entityId: dataset.id, view: ApplicationRoute.Datasets }
+      : { entityId: suite.id, view: ApplicationRoute.TestSuites };
 
   return [
     getTurnExpanderColumn(onToggleExpand),
@@ -113,14 +121,7 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
     } as ColDef,
     getGroupedIdColumn(),
     getGroupedNameColumn(onCellChange, isReadOnly),
-    ...resolvedSchema.map((param) =>
-      getGroupedSchemaColumn(
-        param,
-        onCellChange,
-        { entityId: suite.id, view: ApplicationRoute.TestSuites },
-        isReadOnly,
-      ),
-    ),
+    ...resolvedSchema.map((param) => getGroupedSchemaColumn(param, onCellChange, fileContext, isReadOnly)),
     getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
   ];
 };

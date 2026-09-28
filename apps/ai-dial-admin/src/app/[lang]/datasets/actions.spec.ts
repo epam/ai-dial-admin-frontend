@@ -13,6 +13,7 @@ import {
   createTestCase,
   exportTestCasesCsv,
   getDataset,
+  getDatasetFiles,
   getDatasetByName,
   getDatasetTestSuites,
   getDatasets,
@@ -20,11 +21,13 @@ import {
   importTestCase,
   importTestCasePreview,
   removeDataset,
+  removeDatasetFile,
   removeMultipleTestCases,
   removeTestCase,
   transitionVisibility,
   updateDataset,
   updateTestCases,
+  uploadDatasetFiles,
 } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -228,6 +231,34 @@ describe('Datasets :: server actions', () => {
       TestCaseImportMode.MERGE,
       TestCaseConflictStrategy.SKIP,
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDatasetFiles action', async () => {
+    (datasetsApi.getDatasetFiles as any).mockResolvedValue([]);
+
+    const result = await getDatasetFiles('dataset-1');
+
+    expect(datasetsApi.getDatasetFiles).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
+    expect(result).toEqual([]);
+  });
+
+  test('Should call uploadDatasetFiles action', async () => {
+    (datasetsApi.uploadDatasetFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    const body = new FormData();
+
+    const result = await uploadDatasetFiles('dataset-1', body);
+
+    expect(datasetsApi.uploadDatasetFiles).toHaveBeenCalledWith('dataset-1', body, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeDatasetFile action', async () => {
+    (datasetsApi.removeDatasetFile as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await removeDatasetFile('dataset-1', 'file.txt');
+
+    expect(datasetsApi.removeDatasetFile).toHaveBeenCalledWith('dataset-1', 'file.txt', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
