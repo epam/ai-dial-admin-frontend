@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
   DATASET_CLONE_URL,
+  DATASET_FILES_URL,
   DATASET_PUBLISH_URL,
   DATASET_TEST_CASES_URL,
   DATASET_TEST_CASE_URL,
@@ -266,6 +267,36 @@ describe('Server :: DatasetsApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${DATASET_TEST_CASES_URL('dataset-1')}/import?importMode=OVERRIDE&conflictStrategy=FAIL`,
       expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call getDatasetFiles with dataset files URL', async () => {
+    fetch.mockResponseOnce(JSON.stringify([]));
+
+    await instance.getDatasetFiles('dataset-1', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${DATASET_FILES_URL('dataset-1')}`, expect.anything());
+  });
+
+  test('Should call uploadDatasetFiles with POST method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.uploadDatasetFiles('dataset-1', new FormData(), TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_FILES_URL('dataset-1')}`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call removeDatasetFile with DELETE method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.removeDatasetFile('dataset-1', 'a#b?c/d.txt', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_FILES_URL('dataset-1')}/a%23b%3Fc%2Fd.txt`,
+      expect.objectContaining({ method: 'DELETE' }),
     );
   });
 });

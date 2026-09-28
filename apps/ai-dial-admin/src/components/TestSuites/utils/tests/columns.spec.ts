@@ -1,8 +1,10 @@
-import { ColDef, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
 import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { getTestCaseColumns, getSchemaFieldGridColumns, getValidityStatusColumn } from '../columns';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { ApplicationRoute } from '@/src/types/routes';
 import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
 import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -145,6 +147,35 @@ describe('getTestCaseColumns', () => {
     expect(
       valueGetterOf(promptColumn)({ data: { prompt: 'fallback value', data: undefined } } as ValueGetterParams),
     ).toBe('fallback value');
+  });
+
+  describe('file field context', () => {
+    const fileSchema = [makeSchema('attachment', TestCaseItemType.FILE)];
+    const getFileParams = (dataset?: Dataset) => {
+      const [, , , , fileColumn] = getTestCaseColumns({
+        suite: { id: 'suite-1' },
+        dataset,
+        onCellChange,
+        onToggleExpand: () => {},
+        schema: fileSchema,
+      });
+      return fileColumn.cellRendererSelector?.({ data: {} } as ICellRendererParams)?.params;
+    };
+
+    test('should bind files to a private dataset', () => {
+      expect(getFileParams({ id: 'dataset-1', visibility: DatasetVisibility.PRIVATE })).toEqual(
+        expect.objectContaining({ id: 'dataset-1', view: ApplicationRoute.Datasets }),
+      );
+    });
+
+    test.each([undefined, { id: 'dataset-1', visibility: DatasetVisibility.PUBLIC }])(
+      'should bind files to the suite when dataset is %o',
+      (dataset) => {
+        expect(getFileParams(dataset)).toEqual(
+          expect.objectContaining({ id: 'suite-1', view: ApplicationRoute.TestSuites }),
+        );
+      },
+    );
   });
 });
 

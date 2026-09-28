@@ -3,7 +3,6 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialFileIcon, DialLoader, DialLoadFileAreaField, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
-import { getTestSuiteFiles, removeTestSuiteFile, uploadTestSuiteFiles } from '@/src/app/[lang]/test-suites/actions';
 import { getFormDataForUpload } from '@/src/components/EntityListView/HeaderButtons/utils';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -18,17 +17,20 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { CustomFileRowData, generateCustomFileGridData } from '@/src/utils/files/grid-data';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getEntityFileActions } from './constants';
 
 interface Props {
   id?: string;
   value?: string;
+  view?: ApplicationRoute;
   selectedFilePath: string | null;
   onChangeSelectedFilePath: (filePath: string | null) => void;
 }
 
-const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChangeSelectedFilePath }) => {
+const ApplicationFileManager: FC<Props> = ({ id, value, view, selectedFilePath, onChangeSelectedFilePath }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const { getFiles: fetchFiles, uploadFiles, removeFile } = getEntityFileActions(view);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,12 +40,12 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
 
   const getFiles = useCallback(() => {
     if (id) {
-      getTestSuiteFiles(id).then((res) => {
+      fetchFiles(id).then((res) => {
         setFiles(res || []);
         setIsLoading(false);
       });
     }
-  }, [id]);
+  }, [id, fetchFiles]);
 
   useEffect(() => {
     getFiles();
@@ -75,14 +77,14 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
       const { body } = getFormDataForUpload(files);
       setSeparateFiles(files);
       setIsLoading(true);
-      uploadTestSuiteFiles(id as string, body).then((res) => {
+      uploadFiles(id as string, body).then((res) => {
         setSeparateFiles([]);
 
         if (res.success) {
           showNotification(
             getSuccessNotification(
               t(ImportI18nKey.FileUploadSuccessTitle),
-              t(ImportI18nKey.FileUploadSuccessDescription, { folder: `${ApplicationRoute.TestSuites}` }),
+              t(ImportI18nKey.FileUploadSuccessDescription, { folder: `${view ?? ApplicationRoute.TestSuites}` }),
             ),
           );
           getFiles();
@@ -92,13 +94,13 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
         }
       });
     },
-    [getFiles, id, showNotification, t],
+    [getFiles, id, showNotification, t, uploadFiles, view],
   );
 
   const onRemoveFile = useCallback(
     (data?: CustomFileRowData) => {
       setIsLoading(true);
-      removeTestSuiteFile(id as string, data?.displayName as string).then((res) => {
+      removeFile(id as string, data?.displayName as string).then((res) => {
         if (res?.success) {
           showNotification(
             getSuccessNotification(t(ImportI18nKey.FileRemovedTitle), t(ImportI18nKey.FileRemovedDescription)),
@@ -110,7 +112,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
         }
       });
     },
-    [getFiles, showNotification, t, id],
+    [getFiles, showNotification, t, id, removeFile],
   );
 
   // after implementing multiple upload, the code above should be used
