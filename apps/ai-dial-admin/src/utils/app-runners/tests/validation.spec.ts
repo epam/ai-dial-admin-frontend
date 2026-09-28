@@ -123,4 +123,57 @@ describe('App Runner Utils :: validateAppRunner', () => {
 
     expect(errors[0].field).toEqual('dial:applicationTypeRoutes.other_route');
   });
+
+  describe('parameters', () => {
+    const withParameter = (definition: unknown) =>
+      runner({ properties: { temperature: definition } } as unknown as Partial<DialAppRunnerResource>);
+
+    test('Should accept a parameter carrying its order and kind', () => {
+      const definition = { type: 'number', 'dial:meta': { 'dial:propertyOrder': 1, 'dial:propertyKind': 'client' } };
+
+      expect(validateAppRunner(withParameter(definition))).toEqual([]);
+    });
+
+    test('Should require both keys on a parameter without dial:meta, whether or not it is required', () => {
+      const optional = validateAppRunner(withParameter({ type: 'number' }));
+      const required = validateAppRunner({ ...withParameter({ type: 'number' }), required: ['temperature'] });
+
+      const expected = {
+        field: 'properties.temperature',
+        message: 'Parameter "temperature" requires dial:propertyOrder and dial:propertyKind',
+      };
+      expect(optional).toEqual([expected]);
+      expect(required).toEqual([expected]);
+    });
+
+    test('Should name only the missing key', () => {
+      const errors = validateAppRunner(withParameter({ 'dial:meta': { 'dial:propertyKind': 'server' } }));
+
+      expect(errors).toEqual([
+        { field: 'properties.temperature', message: 'Parameter "temperature" requires dial:propertyOrder' },
+      ]);
+    });
+
+    test('Should accept an order of zero', () => {
+      const definition = { 'dial:meta': { 'dial:propertyOrder': 0, 'dial:propertyKind': 'server' } };
+
+      expect(validateAppRunner(withParameter(definition))).toEqual([]);
+    });
+
+    test('Should report properties that are not an object instead of throwing', () => {
+      const invalid = runner({ properties: [] } as unknown as Partial<DialAppRunnerResource>);
+
+      expect(fieldsOf(invalid)).toEqual(['properties']);
+    });
+
+    test('Should ignore nested properties, which carry no dial:meta', () => {
+      const definition = {
+        type: 'object',
+        properties: { inner: { type: 'string' } },
+        'dial:meta': { 'dial:propertyOrder': 1, 'dial:propertyKind': 'client' },
+      };
+
+      expect(validateAppRunner(withParameter(definition))).toEqual([]);
+    });
+  });
 });

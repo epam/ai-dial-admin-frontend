@@ -248,6 +248,11 @@ offer exactly the values Core's catalog meta-schema allows: `text`, `richText`, 
 - **WHEN** a user edits a property's tab, section, order, widget, or localized flag and saves
 - **THEN** the values are stored under that property's catalog metadata and reappear on reload
 
+#### Scenario: Presentation hints stay optional on a required property
+
+- **WHEN** a user marks a property as required and leaves its order empty
+- **THEN** the order field is not marked invalid and the save is not blocked
+
 #### Scenario: Widget offers exactly the supported values
 
 - **WHEN** a user opens the widget selection on a property

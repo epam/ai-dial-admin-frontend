@@ -94,6 +94,50 @@ describe('GridView columns panel :: flat grids', () => {
   });
 });
 
+describe('GridView columns panel :: column order', () => {
+  const storeOrder = (colIds: string[]) =>
+    localStorage.setItem(
+      'gridColumnsStateflat-view',
+      JSON.stringify({ columns: colIds.map((colId) => ({ colId })), filters: {} }),
+    );
+
+  const renderView = (showColumnsPanel: boolean) =>
+    render(
+      <GridView
+        columnDefs={FLAT}
+        rowData={[]}
+        showColumnsPanel={showColumnsPanel}
+        storageKey="flat-view"
+        toggleColumnsPanel={vi.fn()}
+      />,
+    );
+
+  test('a closed panel shows the grid in the stored order', () => {
+    storeOrder(['b', 'a']);
+
+    renderView(false);
+
+    expect(leaves()).toEqual(['b', 'a']);
+  });
+
+  test('closing the panel keeps the order chosen in it', () => {
+    storeOrder(['b', 'a']);
+    const { rerender } = renderView(true);
+
+    rerender(
+      <GridView
+        columnDefs={FLAT}
+        rowData={[]}
+        showColumnsPanel={false}
+        storageKey="flat-view"
+        toggleColumnsPanel={vi.fn()}
+      />,
+    );
+
+    expect(leaves()).toEqual(['b', 'a']);
+  });
+});
+
 describe('GridView columns panel :: grouped grids', () => {
   test('lists the columns inside the groups rather than the groups', () => {
     renderPanel(GROUPED);

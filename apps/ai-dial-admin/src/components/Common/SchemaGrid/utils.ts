@@ -1,6 +1,7 @@
 import { JSONSchema7, JSONSchema7Definition, JSONSchema7TypeName } from 'json-schema';
 
 import { resolveRef } from '@/src/utils/schema';
+import { NEW_FIELD_NAME_PREFIX } from './constants';
 
 export interface SchemaFieldRow {
   id: string;
@@ -70,9 +71,9 @@ export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
 let nextId = 0;
 export const generateFieldId = (): string => `schema-field-${++nextId}`;
 
-export const createEmptyField = (parentId: string | null = null, depth = 0): SchemaFieldRow => ({
+export const createEmptyField = (parentId: string | null = null, depth = 0, name = ''): SchemaFieldRow => ({
   id: generateFieldId(),
-  name: '',
+  name,
   type: 'string',
   required: false,
   title: '',
@@ -82,6 +83,29 @@ export const createEmptyField = (parentId: string | null = null, depth = 0): Sch
   parentId,
   depth,
 });
+
+/**
+ * A property is keyed by its name, so a new row takes the first free `field_N` among its siblings:
+ * two unnamed rows would otherwise share the key `''` and collapse into one property.
+ */
+export const getNextFieldName = (siblings: SchemaFieldRow[]): string => {
+  const taken = new Set(siblings.map((field) => field.name));
+  let index = 1;
+  while (taken.has(`${NEW_FIELD_NAME_PREFIX}${index}`)) {
+    index++;
+  }
+  return `${NEW_FIELD_NAME_PREFIX}${index}`;
+};
+
+/** True when some level holds an empty name or a name used twice — either one loses a property on save. */
+export const hasInvalidFieldNames = (fields: SchemaFieldRow[]): boolean => {
+  const names = fields.map((field) => field.name);
+  return (
+    names.some((name) => !name.trim()) ||
+    new Set(names).size !== names.length ||
+    fields.some((field) => hasInvalidFieldNames(field.children ?? []))
+  );
+};
 
 const isJSONSchema7 = (def: JSONSchema7Definition): def is JSONSchema7 => typeof def === 'object';
 

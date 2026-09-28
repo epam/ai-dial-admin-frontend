@@ -74,6 +74,7 @@ export default {
     To: 'To',
     AddField: 'Add field',
     AddSubField: 'Add sub-field',
+    FieldNamesInvalid: 'Every field needs a name, unique among the fields next to it',
     MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',
@@ -2737,10 +2738,6 @@ export default {
     GrainKey: 'Grain key',
     GrainKeyHint: 'The target table’s grain key. A group trigger groups by it, under the Group by field.',
     GroupBy: 'Group by',
-    GroupByChoice: 'The spellings this source reaches the target’s grain key by.',
-    GroupByOnlySpelling: 'This source reaches the target’s grain key one way only, so there is nothing else to choose.',
-    GroupByUnreachable:
-      'This source does not reach the target’s grain key. Pin a source that declares it, or one whose enrichment does.',
     VersionColumn: 'Version column',
     Enabled: 'Enabled',
     Generation: 'Generation',
