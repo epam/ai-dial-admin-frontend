@@ -77,7 +77,6 @@ describe('App runner asset :: post-create navigation', () => {
 
     expect(path).toEqual(encodeURIComponent(RUNNER_ID)); // 'http%3A%2F%2Fasdqwe'
   });
-
 });
 
 describe('App runner asset :: labels', () => {
