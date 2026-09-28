@@ -19,8 +19,7 @@ import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
   getDetailedMetricDeclarations,
-  getTestSuiteMetricDetailsWithSchema,
-  getTestSuiteMetrics,
+  getTestSuiteMetricsAggregated,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
@@ -36,7 +35,6 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import AddMetricModal from './AddMetric/AddMetricModal';
 import MetricBindingsDisplay from './MetricBindingsDisplay';
 import ScoreSettings from './ScoreSettings/ScoreSettings';
-import { mergeMetricsWithDeclarations, mergeMetricsWithOutputSchemas } from './utils';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -59,30 +57,9 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
   const loadMetrics = useCallback(() => {
     const testSuiteId = selectedTestSuite.id as string;
 
-    return Promise.all([getTestSuiteMetrics(testSuiteId, 0, 1000), getDetailedMetricDeclarations()]).then(
-      ([metricsResponse, declarationsResponse]) => {
-        const declarations = declarationsResponse || [];
-        setMetricDeclarations(declarations);
-
-        const metricsWithDescriptions = mergeMetricsWithDeclarations(metricsResponse?.content || [], declarations);
-        const metricIds = metricsWithDescriptions.map((metric) => metric.id).filter((id): id is string => !!id);
-
-        if (!metricIds.length) {
-          setMetrics(metricsWithDescriptions);
-          return;
-        }
-
-        return Promise.all(
-          metricIds.map((metricId) =>
-            getTestSuiteMetricDetailsWithSchema(testSuiteId, metricId).then(
-              (details) => [metricId, details?.metricDeclarationVersion?.outputSchema] as const,
-            ),
-          ),
-        ).then((entries) => {
-          setMetrics(mergeMetricsWithOutputSchemas(metricsWithDescriptions, new Map(entries)));
-        });
-      },
-    );
+    return getTestSuiteMetricsAggregated(testSuiteId).then((response) => {
+      setMetrics(response?.map((metric) => ({ ...metric, description: metric.metricDeclaration?.description })) || []);
+    });
   }, [selectedTestSuite.id]);
 
   const onRemoveMetric = useCallback(
@@ -164,6 +141,14 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
     setIsMetricsLoading(true);
     loadMetrics().finally(() => setIsMetricsLoading(false));
   }, [metrics, loadMetrics]);
+
+  useEffect(() => {
+    if (!isAddModalOpen || metricDeclarations) {
+      return;
+    }
+
+    getDetailedMetricDeclarations().then((declarations) => setMetricDeclarations(declarations || []));
+  }, [isAddModalOpen, metricDeclarations]);
 
   return (
     <div className="h-full flex flex-col gap-6">
