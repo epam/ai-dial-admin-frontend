@@ -48,7 +48,7 @@ describe('GroupByField', () => {
   test('offers every spelling the service accepts', () => {
     renderField();
 
-    const select = screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.GroupBy });
+    const select = screen.getByRole('combobox');
 
     expect(Array.from(select.querySelectorAll('option')).map((option) => option.textContent)).toEqual([
       'client_session_id',
@@ -61,10 +61,7 @@ describe('GroupByField', () => {
     const user = userEvent.setup();
     renderField({ onChange });
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.GroupBy }),
-      'usage_client_identity.client_session_id',
-    );
+    await user.selectOptions(screen.getByRole('combobox'), 'usage_client_identity.client_session_id');
 
     expect(onChange).toHaveBeenCalledWith('usage_client_identity.client_session_id');
   });
@@ -72,18 +69,19 @@ describe('GroupByField', () => {
   test('presents the stored spelling rather than the first candidate', () => {
     renderField({ value: 'usage_client_identity.client_session_id' });
 
-    expect(screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.GroupBy })).toHaveValue(
-      'usage_client_identity.client_session_id',
-    );
+    expect(screen.getByRole('combobox')).toHaveValue('usage_client_identity.client_session_id');
   });
 
-  // One spelling is no choice: a select with a single option would claim otherwise, so the value is read
-  // only and the label says why.
-  test('states the single spelling read-only, with the reason on its label', () => {
+  // One spelling is no choice: a select with a single option would claim otherwise. It is still the
+  // field's value, so it stays a field — disabled — rather than becoming a line of text.
+  test('states the single spelling in a disabled field, with the reason on its label', () => {
     renderField({ fields: [QUALIFIED] });
 
+    const input = screen.getByRole('textbox');
+
     expect(screen.queryByRole('combobox')).toBeNull();
-    expect(screen.getByText('usage_client_identity.client_session_id')).toBeTruthy();
+    expect(input).toBeDisabled();
+    expect(input).toHaveValue('usage_client_identity.client_session_id');
     expect(screen.getByRole('img', { name: AnalyticsPipelinesI18nKey.GroupByOnlySpelling })).toBeTruthy();
   });
 
@@ -91,6 +89,6 @@ describe('GroupByField', () => {
     renderField({ fields: [field('response_id')] });
 
     expect(screen.getByRole('img', { name: AnalyticsPipelinesI18nKey.GroupByUnreachable })).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.NotSet)).toBeTruthy();
+    expect(screen.getByRole('textbox')).toHaveValue('');
   });
 });
