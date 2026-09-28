@@ -2282,6 +2282,7 @@ export default {
     SchemaDescription: 'Define the structure of test case data for this dataset.',
     ImportSuccess: 'Import successful',
     ImportFailed: 'Import failed',
+    ExportFailed: 'Export failed',
     ImportSuccessDescription: 'Test cases have been imported successfully.',
     RemoveSuccess: 'Test cases removed',
     RemoveFailed: 'Failed to remove test cases',
