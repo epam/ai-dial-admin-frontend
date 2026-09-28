@@ -1350,6 +1350,7 @@ export const RUNS_COLUMN: ColDef[] = [
     maxWidth: 98,
     filter: false,
     hide: false,
+    ...rightAlignedColumn,
   },
   {
     field: 'testSuiteId',
@@ -1357,7 +1358,6 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Test Suite ID',
     ...evalStringFilter([GridFilterType.EQUALS]),
     hide: false,
-    ...rightAlignedColumn,
   },
   {
     field: 'target',
@@ -1412,6 +1412,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 88,
     ...derivedRunColDef,
+    ...rightAlignedColumn,
   },
   {
     field: 'cost',
@@ -1422,6 +1423,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 100,
     ...derivedRunColDef,
+    ...rightAlignedColumn,
   },
   {
     field: 'overallScore',
@@ -1432,6 +1434,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 110,
     ...derivedRunColDef,
+    ...rightAlignedColumn,
   },
 ];
 
