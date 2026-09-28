@@ -93,11 +93,13 @@ export const buildRunsSort = (sorts: SortDto[]) =>
 export const buildRunsQuery = (page: number, size: number, sorts: SortDto[], filters: FilterDto[]): StructuredQuery => {
   const filter = buildRunsFilter(filters);
   const sort = buildRunsSort(sorts);
+  const defaultSort = [sortItem(RUN_COLUMN_TO_DSL_FIELD.startedAt, SortDir.Desc)];
+
   return rowQuery({
     entity: TEST_SUITE_RUNS_ENTITY,
     select: RUN_SELECT_FIELDS.map((name) => col(field(name))),
     ...(filter ? { filter } : {}),
-    ...(sort.length > 0 ? { sort } : {}),
+    ...(sort.length > 0 ? { sort } : { sort: defaultSort }),
     page: offsetPage(page * size, size, true),
   });
 };
