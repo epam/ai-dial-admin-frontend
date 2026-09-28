@@ -432,6 +432,15 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call getTestSuiteMetricsAggregated', async () => {
+    fetch.mockResponseOnce(JSON.stringify([{ id: 'metric-id' }]));
+    await instance.getTestSuiteMetricsAggregated('suite-id', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_METRICS_URL('suite-id')}/aggregated`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should call createTestSuiteMetric', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const metric = { name: 'My Metric', metricDeclarationId: 'decl-id' };
