@@ -3,17 +3,9 @@ import { getTestSuiteFiles, removeTestSuiteFile, uploadTestSuiteFiles } from '@/
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityFileActions } from './models';
 
-const TEST_SUITE_FILE_ACTIONS: EntityFileActions = {
-  getFiles: getTestSuiteFiles,
-  uploadFiles: uploadTestSuiteFiles,
-  removeFile: removeTestSuiteFile,
-};
-
-const DATASET_FILE_ACTIONS: EntityFileActions = {
-  getFiles: getDatasetFiles,
-  uploadFiles: uploadDatasetFiles,
-  removeFile: removeDatasetFile,
-};
-
+// Built on call, not at module load: reading the imported actions eagerly breaks every spec whose
+// `vi.mock` factory for these action modules omits the file actions.
 export const getEntityFileActions = (view?: ApplicationRoute): EntityFileActions =>
-  view === ApplicationRoute.Datasets ? DATASET_FILE_ACTIONS : TEST_SUITE_FILE_ACTIONS;
+  view === ApplicationRoute.Datasets
+    ? { getFiles: getDatasetFiles, uploadFiles: uploadDatasetFiles, removeFile: removeDatasetFile }
+    : { getFiles: getTestSuiteFiles, uploadFiles: uploadTestSuiteFiles, removeFile: removeTestSuiteFile };
