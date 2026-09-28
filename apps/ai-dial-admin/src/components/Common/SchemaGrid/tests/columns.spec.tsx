@@ -1,8 +1,10 @@
+import { render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ColDef, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
+import { FC } from 'react';
 
-import { APP_RUNNER_META_COLUMNS, CATALOG_SCHEMA_META_COLUMNS } from '../constants';
+import { APP_RUNNER_META_COLUMNS, APP_RUNNER_REQUIRED_META_COLUMNS, CATALOG_SCHEMA_META_COLUMNS } from '../constants';
 import { getSchemaGridColumns } from '../columns';
 import { SchemaMetaColumn, SchemaMetaHandlers } from '../models';
 import { SchemaFieldRow } from '../utils';
@@ -27,11 +29,27 @@ const row = (overrides: Partial<SchemaFieldRow> = {}): SchemaFieldRow =>
   }) as SchemaFieldRow;
 
 /** The grid builds one column per supplied handler, so a caller's meta set is expressed as handlers. */
-const columnsFor = (metaColumns: SchemaMetaColumn[], overrides: SchemaMetaHandlers = {}) =>
-  getSchemaGridColumns(noop, noop, noop, noop, noop, noop, noop, t, false, {
-    ...Object.fromEntries(metaColumns.map((column) => [column, noop])),
-    ...overrides,
-  }) as ColDef<SchemaFieldRow>[];
+const columnsFor = (
+  metaColumns: SchemaMetaColumn[],
+  overrides: SchemaMetaHandlers = {},
+  requiredMetaColumns: SchemaMetaColumn[] = [],
+) =>
+  getSchemaGridColumns(
+    noop,
+    noop,
+    noop,
+    noop,
+    noop,
+    noop,
+    noop,
+    t,
+    false,
+    {
+      ...Object.fromEntries(metaColumns.map((column) => [column, noop])),
+      ...overrides,
+    },
+    requiredMetaColumns,
+  ) as ColDef<SchemaFieldRow>[];
 
 const colIds = (columns: ColDef<SchemaFieldRow>[]) => columns.map((column) => column.colId).filter(Boolean);
 
@@ -126,5 +144,38 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
     (column?.cellRendererParams as { onChange: (value: string, data: SchemaFieldRow) => void }).onChange('About', data);
 
     expect(onChangeTab).toHaveBeenCalledWith('About', data);
+  });
+
+  describe('Order cell', () => {
+    const renderOrder = (column: ColDef<SchemaFieldRow> | undefined, data: SchemaFieldRow, value?: number) => {
+      const Renderer = column?.cellRenderer as FC<ICellRendererParams<SchemaFieldRow>>;
+      const params = { data, value, colDef: column };
+      const view = render(<Renderer {...(params as ICellRendererParams<SchemaFieldRow>)} />);
+      expect(view.getByRole('spinbutton')).toBeTruthy();
+      return view.container;
+    };
+    const orderOf = (columns: ColDef<SchemaFieldRow>[]) => columns.find((c) => c.colId === 'order');
+
+    test('Should not flag an empty order on a required row when the schema kind does not require it', () => {
+      const container = renderOrder(orderOf(columnsFor(CATALOG_SCHEMA_META_COLUMNS)), row({ required: true }));
+
+      expect(container.querySelector('.dial-input-error')).toBeNull();
+    });
+
+    test('Should flag an empty order on an optional row when the schema kind requires it', () => {
+      const columns = columnsFor(APP_RUNNER_META_COLUMNS, {}, APP_RUNNER_REQUIRED_META_COLUMNS);
+
+      const container = renderOrder(orderOf(columns), row({ required: false }));
+
+      expect(container.querySelector('.dial-input-error')).toBeTruthy();
+    });
+
+    test('Should not flag a filled order when the schema kind requires it', () => {
+      const columns = columnsFor(APP_RUNNER_META_COLUMNS, {}, APP_RUNNER_REQUIRED_META_COLUMNS);
+
+      const container = renderOrder(orderOf(columns), row(), 1);
+
+      expect(container.querySelector('.dial-input-error')).toBeNull();
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
-import { CORE_ROUTE_METHODS } from './constants';
+import { CORE_ROUTE_METHODS, REQUIRED_PARAMETER_META_KEYS } from './constants';
 import { CORE_ROUTE_NAME_PATTERN, getCoreRouteName } from './core-app-routes';
 import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
 
@@ -9,6 +9,30 @@ export interface AppRunnerValidationError {
   field: string;
   message: string;
 }
+
+const DIAL_META_KEY = 'dial:meta';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const validateParameters = (runner: DialAppRunnerResource): AppRunnerValidationError[] => {
+  const properties: unknown = runner.properties;
+  if (properties == null) {
+    return [];
+  }
+  if (!isRecord(properties)) {
+    return [{ field: 'properties', message: 'Properties must be an object keyed by parameter name' }];
+  }
+  return Object.entries(properties).flatMap(([name, definition]) => {
+    const meta = isRecord(definition) ? definition[DIAL_META_KEY] : undefined;
+    const missing = REQUIRED_PARAMETER_META_KEYS.filter(
+      (key) => !isRecord(meta) || meta[key] == null || meta[key] === '',
+    );
+    return missing.length
+      ? [{ field: `properties.${name}`, message: `Parameter "${name}" requires ${missing.join(' and ')}` }]
+      : [];
+  });
+};
 
 const validateRoute = (route: DialAppRoute, seen: Set<string>): AppRunnerValidationError[] => {
   const errors: AppRunnerValidationError[] = [];
@@ -85,6 +109,8 @@ export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValid
       errors.push(...validateRoute(route ?? {}, seen));
     }
   }
+
+  errors.push(...validateParameters(runner));
 
   return errors;
 };
