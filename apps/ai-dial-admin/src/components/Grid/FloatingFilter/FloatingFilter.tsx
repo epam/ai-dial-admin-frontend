@@ -1,12 +1,29 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
-import { IFloatingFilterParams, IFloatingFilterParent } from 'ag-grid-community';
+import { IFilterParams, IFloatingFilterParams, IFloatingFilterParent, ITextFilterParams } from 'ag-grid-community';
 import { debounce } from 'lodash';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { FLOATING_FILTER_DEBOUNCE_MS } from '@/src/constants/ag-grid';
 import { useI18n } from '@/src/locales/client';
+import { GridFilterType } from '@/src/types/grid-filter';
+
+/**
+ * The search box can only express one operator, and `contains` is the natural one — but a column that
+ * does not declare it (`testSuiteId` offers `equals` alone) would otherwise transmit an operator the
+ * backend rejects for that field, and the list comes back empty.
+ */
+const getFilterType = (filterParams?: IFilterParams): GridFilterType => {
+  const options = (filterParams as ITextFilterParams | undefined)?.filterOptions;
+  const declared = (options ?? []).filter((option) => typeof option === 'string') as GridFilterType[];
+
+  if (declared.length === 0 || declared.includes(GridFilterType.CONTAINS)) {
+    return GridFilterType.CONTAINS;
+  }
+
+  return declared[0];
+};
 
 const FloatingFilter = (props: IFloatingFilterParams) => {
   const t = useI18n();
@@ -17,11 +34,14 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
   const parentFilterInstanceRef = useRef(props.parentFilterInstance);
   parentFilterInstanceRef.current = props.parentFilterInstance;
 
+  const filterTypeRef = useRef(getFilterType(props.filterParams));
+  filterTypeRef.current = getFilterType(props.filterParams);
+
   const applyFilter = useMemo(
     () =>
       debounce((nextValue: string) => {
         parentFilterInstanceRef.current((instance: IFloatingFilterParent) => {
-          instance.onFloatingFilterChanged('contains', nextValue);
+          instance.onFloatingFilterChanged(filterTypeRef.current, nextValue);
         });
       }, FLOATING_FILTER_DEBOUNCE_MS),
     [],

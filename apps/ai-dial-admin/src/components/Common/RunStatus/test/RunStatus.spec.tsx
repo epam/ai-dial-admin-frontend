@@ -64,3 +64,43 @@ describe('RunStatusComponent', () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe('RunStatusComponent — indicator only', () => {
+  const renderIndicator = (status: RunStatus | string) => render(<RunStatusComponent status={status} isLabelHidden />);
+
+  test.each([
+    [RunStatus.RUNNING, 'Runs.Status.Running'],
+    [RunStatus.COMPLETED, 'Runs.Status.Completed'],
+  ])('exposes the %s label to assistive tech without showing it', (status, label) => {
+    renderIndicator(status);
+
+    // `sr-only` is the whole point of the variant: the label stays readable but takes no column width.
+    expect(screen.getByText(label).className).toContain('sr-only');
+  });
+
+  test('keeps the in-progress indicator for a transitional status', () => {
+    renderIndicator(RunStatus.CANCELLING);
+
+    expect(screen.getByRole('img', { name: 'Loading' })).toBeInTheDocument();
+    expect(screen.getByText('Runs.Status.Cancelling').className).toContain('sr-only');
+  });
+
+  test('keeps the coloured dot for a settled status', () => {
+    const { container } = renderIndicator(RunStatus.FAILED);
+
+    expect(container.querySelector('.bg-error')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();
+  });
+
+  test('renders nothing for a run with no status', () => {
+    const { container } = renderIndicator('');
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  test('leaves the label visible when the variant is not requested', () => {
+    render(<RunStatusComponent status={RunStatus.COMPLETED} />);
+
+    expect(screen.getByText('Runs.Status.Completed').className).not.toContain('sr-only');
+  });
+});

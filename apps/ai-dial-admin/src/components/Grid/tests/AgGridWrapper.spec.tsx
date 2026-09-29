@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { mockState } = vi.hoisted(() => ({
   mockState: { lastProps: null as Record<string, unknown> | null },
@@ -12,6 +12,12 @@ vi.mock('ag-grid-react', () => ({
   },
 }));
 
+vi.mock('@/src/components/Grid/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/components/Grid/utils')>()),
+  saveColumnsStateToStorage: vi.fn(),
+}));
+
+import { saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 import AgGridWrapper from '../AgGridWrapper';
 
 const makeFakeApi = () => ({
@@ -131,5 +137,72 @@ describe('AgGridWrapper', () => {
 
       expect(api.applyColumnState).toHaveBeenCalled();
     });
+  });
+});
+
+describe('AgGridWrapper — column state persistence', () => {
+  const STORAGE_KEY = 'runs-v2';
+  const DEBOUNCE_MS = 300;
+
+  const renderWithStorage = () => {
+    const result = render(
+      <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} storageKey={STORAGE_KEY} />,
+    );
+    fireOnGridReady(makeFakeApi());
+    return result;
+  };
+
+  const fireColumnResized = (source: string) => {
+    act(() => {
+      const onColumnResized = mockState.lastProps?.onColumnResized as ((event: unknown) => void) | undefined;
+      onColumnResized?.({ source, api: makeFakeApi() });
+      vi.advanceTimersByTime(DEBOUNCE_MS);
+    });
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mockState.lastProps = null;
+    vi.mocked(saveColumnsStateToStorage).mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('does not write column state for a resize the grid itself performed', () => {
+    renderWithStorage();
+    vi.mocked(saveColumnsStateToStorage).mockClear();
+
+    fireColumnResized('autosizeColumns');
+
+    expect(saveColumnsStateToStorage).not.toHaveBeenCalled();
+  });
+
+  test('writes column state for a resize the operator performed', () => {
+    renderWithStorage();
+    vi.mocked(saveColumnsStateToStorage).mockClear();
+
+    fireColumnResized('uiColumnResized');
+
+    expect(saveColumnsStateToStorage).toHaveBeenCalledWith(STORAGE_KEY, expect.anything());
+  });
+});
+
+describe('AgGridWrapper — sizing strategy', () => {
+  beforeEach(() => {
+    mockState.lastProps = null;
+  });
+
+  test('fits the grid width for a grid without persisted state', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+    expect(mockState.lastProps?.autoSizeStrategy).toEqual({ type: 'fitGridWidth' });
+  });
+
+  test('applies no sizing strategy for a grid with persisted state', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} storageKey="runs-v2" />);
+
+    expect(mockState.lastProps?.autoSizeStrategy).toBeUndefined();
   });
 });
