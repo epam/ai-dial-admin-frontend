@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
+import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -40,14 +41,16 @@ const builderState = (overrides?: Partial<QueryBuilderState>): QueryBuilderState
   ...overrides,
 });
 
-const renderPanel = (
-  overrides: Partial<Parameters<typeof AiPanel>[0]> = {},
-  state: QueryBuilderState = builderState(),
-) => {
+type PanelProps = Omit<Parameters<typeof AiPanel>[0], 'conversation'>;
+
+// The conversation lives in the page; the harness plays that part so the panel is tested as mounted.
+const PanelWithConversation = (props: PanelProps) => <AiPanel conversation={useAiConversation()} {...props} />;
+
+const renderPanel = (overrides: Partial<PanelProps> = {}, state: QueryBuilderState = builderState()) => {
   const props = { onRunMessage: vi.fn(), loadedMessageIndex: null, runInFlight: false, ...overrides };
   render(
     <QueryBuilderContext.Provider value={{ state, refresh: vi.fn(), patch: vi.fn() }}>
-      <AiPanel {...props} />
+      <PanelWithConversation {...props} />
     </QueryBuilderContext.Provider>,
   );
   return props;

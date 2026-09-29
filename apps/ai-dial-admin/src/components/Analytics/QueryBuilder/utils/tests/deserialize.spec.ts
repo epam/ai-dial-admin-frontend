@@ -574,3 +574,256 @@ describe('function right operands and nested calls', () => {
     ]);
   });
 });
+
+// Each shape here passed the check before and then hydrated with part of it gone. The representable
+// neighbours prove the check is not simply wider: they come back from the builder unchanged.
+describe('isBuilderRepresentable — shapes the builder would drop', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const text = (value: string) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value }) as const;
+  const row = (patch: Partial<StructuredQuery>): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Row,
+    ...patch,
+  });
+  // Wrapped in the root group the builder always emits, so a round trip compares like with like.
+  const where = (predicate: QueryFilterNode) => row({ filter: { op: QueryLogicalOperator.And, args: [predicate] } });
+  const comesBackUnchanged = (query: StructuredQuery) =>
+    expect(buildQuery(parseQuery(query, [], TEST_FUNCTIONS))).toEqual(query);
+
+  test('a plain column renamed with AS is not representable, one under its own name is', () => {
+    expect(isBuilderRepresentable(row({ select: [{ expr: field('model'), as: 'm' }] }), TEST_FUNCTIONS)).toBe(false);
+    expect(
+      isBuilderRepresentable(
+        { ...row({ select: [{ expr: field('model'), as: 'm' }] }), mode: QueryMode.Aggregate, group_by: ['m'] },
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+    expect(isBuilderRepresentable(row({ select: [{ expr: field('model'), as: 'model' }] }), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('distinct is representable only on an aggregate metric', () => {
+    const distinctCall = (name: string): QueryFnExpr => ({
+      type: QueryExprType.Fn,
+      name,
+      args: [field('project_id')],
+      distinct: true,
+    });
+    const aggregate = (name: string): StructuredQuery => ({
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: distinctCall(name), as: 'n' }],
+    });
+
+    expect(isBuilderRepresentable(aggregate('count'), TEST_FUNCTIONS)).toBe(true);
+    comesBackUnchanged(aggregate('count'));
+    expect(isBuilderRepresentable(aggregate('lower'), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(row({ select: [{ expr: distinctCall('lower'), as: 'n' }] }), TEST_FUNCTIONS)).toBe(
+      false,
+    );
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [distinctCall('lower'), text('x')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+  });
+
+  test('a predicate with other than two operands is not representable', () => {
+    expect(isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [field('model')] }), TEST_FUNCTIONS)).toBe(false);
+    expect(
+      isBuilderRepresentable(
+        where({ op: QueryOperator.Eq, args: [field('model'), text('a'), text('b')] }),
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+  });
+
+  test('a list is representable only under `in` and only with items its text editor keeps', () => {
+    const list = (...values: string[]): QueryExpr => ({ type: QueryExprType.Array, items: values.map(text) });
+    const inList = (items: QueryExpr) => where({ op: QueryOperator.In, args: [field('model'), items] });
+
+    expect(isBuilderRepresentable(inList(list('a', 'b')), TEST_FUNCTIONS)).toBe(true);
+    comesBackUnchanged(inList(list('a', 'b')));
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.Eq, args: [field('model'), list('a')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+    expect(isBuilderRepresentable(inList(list('a,b')), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(inList(list(' a')), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(inList(list('')), TEST_FUNCTIONS)).toBe(false);
+    const mixed: QueryExpr = {
+      type: QueryExprType.Array,
+      items: [text('a'), { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '1' }],
+    };
+    expect(isBuilderRepresentable(inList(mixed), TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('under `in` only a list is representable, and a list item that is not a string value does not throw', () => {
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.In, args: [field('model'), text('a,b')] }), TEST_FUNCTIONS),
+    ).toBe(false);
+    const numeric = {
+      type: QueryExprType.Array,
+      items: [{ type: QueryExprType.Value, value_type: QueryValueType.Integer, value: 1 }],
+    } as never;
+    expect(
+      isBuilderRepresentable(where({ op: QueryOperator.In, args: [field('model'), numeric] }), TEST_FUNCTIONS),
+    ).toBe(false);
+  });
+
+  test('a blank literal argument is not representable', () => {
+    const extract = (key: string) =>
+      row({
+        select: [
+          {
+            expr: { type: QueryExprType.Fn, name: 'json_extract_string', args: [field('request_tags'), text(key)] },
+            as: 'x',
+          },
+        ],
+      });
+
+    expect(isBuilderRepresentable(extract(''), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(extract(' '), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(extract('baggage'), TEST_FUNCTIONS)).toBe(true);
+  });
+
+  test('a having tree in row mode is not representable', () => {
+    expect(
+      isBuilderRepresentable(
+        row({ having: { op: QueryOperator.Eq, args: [field('model'), text('a')] } }),
+        TEST_FUNCTIONS,
+      ),
+    ).toBe(false);
+  });
+
+  test('without a catalog an aggregate-mode distinct is taken at face value', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        { expr: { type: QueryExprType.Fn, name: 'count', args: [field('project_id')], distinct: true }, as: 'n' },
+      ],
+    };
+
+    expect(isBuilderRepresentable(query, null)).toBe(true);
+  });
+});
+
+describe('isBuilderRepresentable — aggregate select and group_by agree', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const call = (name: string, args: QueryExpr[]): QueryExpr => ({ type: QueryExprType.Fn, name, args });
+  const aggregate = (patch: Partial<StructuredQuery>): StructuredQuery => ({
+    entity: 'dial_usage_log',
+    mode: QueryMode.Aggregate,
+    ...patch,
+  });
+
+  // Regression: the builder files every scalar call under Group by, so `round(avg(x))` came back as a
+  // grouping key and the rebuilt query put an aggregate into GROUP BY.
+  test('a scalar call that is not a group-by key is not representable', () => {
+    const query = aggregate({
+      select: [{ expr: field('model') }, { expr: call('abs', [call('avg', [field('latency')])]), as: 'a' }],
+      group_by: ['model'],
+    });
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(false);
+  });
+
+  test('a plain column that is not a group-by key is not representable', () => {
+    expect(isBuilderRepresentable(aggregate({ select: [{ expr: field('model') }] }), TEST_FUNCTIONS)).toBe(false);
+    expect(isBuilderRepresentable(aggregate({ select: [{ expr: field('model') }] }), null)).toBe(false);
+  });
+
+  test('an unaliased scalar key is found under the name the service gives it', () => {
+    const query = aggregate({
+      select: [{ expr: call('lower', [field('model')]) }, { expr: call('count', []), as: 'n' }],
+      group_by: ['lower'],
+    });
+
+    expect(isBuilderRepresentable(query, TEST_FUNCTIONS)).toBe(true);
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+    expect(rebuilt.group_by).toEqual([rebuilt.select?.[0].as]);
+  });
+});
+
+describe('parseQuery — references to an unaliased call', () => {
+  const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
+  const countAll: QueryExpr = { type: QueryExprType.Fn, name: 'count', args: [] };
+
+  // The query sorts by the service's name for the column; the builder names it itself, so the sort
+  // key has to follow or the rebuilt query orders by a column it no longer emits.
+  test('a sort key naming the service name of an unaliased call follows the alias the builder gives it', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: field('model') }, { expr: countAll }],
+      group_by: ['model'],
+      sort: [{ field: 'count', dir: QuerySortDirection.Desc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([{ field: rebuilt.select?.[1].as, dir: QuerySortDirection.Desc }]);
+  });
+
+  test('a having condition on it follows the alias too, while a plain column keeps its name', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [{ expr: field('model') }, { expr: countAll }],
+      group_by: ['model'],
+      having: {
+        op: QueryLogicalOperator.And,
+        args: [
+          {
+            op: QueryOperator.Gt,
+            args: [field('count'), { type: QueryExprType.Value, value_type: QueryValueType.Long, value: '5' }],
+          },
+        ],
+      },
+      sort: [{ field: 'model', dir: QuerySortDirection.Asc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+    const condition = (rebuilt.having as { args: QueryPredicate[] }).args[0];
+
+    expect(condition.args[0]).toEqual(field(rebuilt.select?.[1].as ?? ''));
+    expect(rebuilt.sort).toEqual([{ field: 'model', dir: QuerySortDirection.Asc }]);
+  });
+
+  test('a repeated function takes the service suffix, so each reference follows its own column', () => {
+    const lower = (name: string): QueryExpr => ({ type: QueryExprType.Fn, name: 'lower', args: [field(name)] });
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      select: [{ expr: lower('model') }, { expr: lower('project_id') }],
+      sort: [{ field: 'lower_1', dir: QuerySortDirection.Asc }],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([{ field: rebuilt.select?.[1].as, dir: QuerySortDirection.Asc }]);
+  });
+
+  // The service reserves explicit aliases first, so an unaliased `count` yields its name to an alias
+  // spelled `count` and takes `count_1` — the name a sort written against the query uses.
+  test('an explicit alias claims its name before a derived one, as the service assigns them', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        { expr: field('model') },
+        { expr: countAll },
+        { expr: { type: QueryExprType.Fn, name: 'sum', args: [field('total_tokens')] }, as: 'count' },
+      ],
+      group_by: ['model'],
+      sort: [
+        { field: 'count_1', dir: QuerySortDirection.Desc },
+        { field: 'count', dir: QuerySortDirection.Asc },
+      ],
+    };
+
+    const rebuilt = buildQuery(parseQuery(query, [], TEST_FUNCTIONS));
+
+    expect(rebuilt.sort).toEqual([
+      { field: rebuilt.select?.[1].as, dir: QuerySortDirection.Desc },
+      { field: 'count', dir: QuerySortDirection.Asc },
+    ]);
+  });
+});
