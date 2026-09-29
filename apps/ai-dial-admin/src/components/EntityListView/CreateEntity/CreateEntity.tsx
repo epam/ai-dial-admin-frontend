@@ -165,7 +165,9 @@ const CreateEntity = <T extends CreateEntityBase>({
                     : undefined,
               }
             : entity;
-          const newEntity = res.response ? { ...createdEntity, ...res.response } : createdEntity;
+          const newEntity = res.response
+            ? { ...createdEntity, ...res.response, name: res.response?._metadata?.name || res.response.name }
+            : createdEntity;
           router.push(getUrnForEntity(route, newEntity));
           onClose();
         } else {
