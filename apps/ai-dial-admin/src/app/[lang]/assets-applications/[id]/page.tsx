@@ -93,6 +93,12 @@ export default async function Page(params: {
       models = await getModelsList();
       applications = await applicationsApi.getApplicationsList(token);
       applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
+    } else {
+      [models, applications, applicationSchemes] = await Promise.all([
+        readConfigEntities<DialModel>(token, ConfigFileEntityType.Models, optionWarnings, true),
+        readConfigEntities<DialApplication>(token, ConfigFileEntityType.Applications, optionWarnings, true),
+        readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, optionWarnings, true),
+      ]);
     }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
@@ -107,8 +113,8 @@ export default async function Page(params: {
   // interceptors read here, which is likewise unconditional.
   let catalogSchemas: CatalogSchemaOptions;
   [roles, interceptors, globalInterceptors, catalogSchemas] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
-    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings, false),
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
     readGlobalInterceptors(token, optionWarnings),
     readCatalogSchemaOptions(token),
   ]);
