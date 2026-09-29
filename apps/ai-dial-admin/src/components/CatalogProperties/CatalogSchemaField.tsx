@@ -43,6 +43,8 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabl
       ...(options || []).map((option) => ({
         value: option.$id,
         label: option['dial:catalogDisplayName'] || option.$id,
+        // Display names are not unique, so the `$id` is what tells two same-named schemas apart.
+        description: option['dial:catalogDisplayName'] ? option.$id : void 0,
       })),
     ],
     [options, t],

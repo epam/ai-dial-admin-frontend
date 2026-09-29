@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent, ICellRendererParams, IsFullWidthRowParams } from 'ag-grid-community';
@@ -17,9 +17,10 @@ import {
   CATALOG_META_WIDGET,
 } from '@/src/constants/catalog-schemas';
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
 import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from './constants';
 import { SchemaMetaColumn, SchemaMetaHandlers } from './models';
@@ -29,6 +30,8 @@ import {
   fieldsToJsonSchema,
   flattenFields,
   getGridSchemaPart,
+  getNextFieldName,
+  hasInvalidFieldNames,
   jsonSchemaToFields,
 } from './utils';
 
@@ -38,10 +41,19 @@ interface SchemaGridProps {
   isSkipRefresh?: boolean;
   /** Which `dial:meta` columns this schema kind has — see the sets in `constants.ts`. */
   metaColumns?: SchemaMetaColumn[];
+  /** Which of those columns the schema kind requires a value in, on every top-level property. */
+  requiredMetaColumns?: SchemaMetaColumn[];
   isReadonly?: boolean;
 }
 
-const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, metaColumns, isReadonly }) => {
+const SchemaGrid: FC<SchemaGridProps> = ({
+  schema,
+  onChange,
+  isSkipRefresh,
+  metaColumns,
+  requiredMetaColumns,
+  isReadonly,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonlyGrid = isReadonly || isReadOnlyAdmin;
@@ -221,7 +233,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
   );
 
   const onAddField = useCallback(() => {
-    const newField = createEmptyField(null, 0);
+    const newField = createEmptyField(null, 0, getNextFieldName(fieldsRef.current));
     const updated = [...fieldsRef.current, newField];
     updateFields(updated);
   }, [updateFields]);
@@ -233,7 +245,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
       const updated = updateRowInTree(fieldsRef.current, parentId, (p) => ({
         ...p,
         expanded: true,
-        children: [...p.children, createEmptyField(parentId, childDepth)],
+        children: [...p.children, createEmptyField(parentId, childDepth, getNextFieldName(p.children))],
       }));
       updateFields(updated);
     },
@@ -241,6 +253,20 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
   );
 
   const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
+
+  const validationField = useId();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+  const hasNameErrors = useMemo(() => hasInvalidFieldNames(fields), [fields]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: !hasNameErrors });
+    // A Reset from a modal closing over this grid clears every field, so the grid reports itself again.
+  }, [dispatch, validationField, hasNameErrors, resetCounter]);
+
+  useEffect(
+    () => () => dispatch({ type: ValidationActionType.RemoveField, field: validationField }),
+    [dispatch, validationField],
+  );
 
   const metaHandlers = useMemo<SchemaMetaHandlers>(() => {
     const handlers: Record<SchemaMetaColumn, SchemaMetaHandlers[SchemaMetaColumn]> = {
@@ -275,6 +301,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
         t,
         isReadonlyGrid,
         metaHandlers,
+        requiredMetaColumns,
       ),
     [
       onToggleExpand,
@@ -287,6 +314,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
       t,
       isReadonlyGrid,
       metaHandlers,
+      requiredMetaColumns,
     ],
   );
 
@@ -330,17 +358,20 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, meta
   );
 
   return (
-    <div className="h-full">
-      <GridView<SchemaFieldRow>
-        getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
-        emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
-        onGridReady={onGridReady}
-        additionalGridOptions={{
-          getRowId: getRowIdById,
-          isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
-          fullWidthCellRenderer,
-        }}
-      />
+    <div className="flex flex-col h-full">
+      {hasNameErrors && <DialErrorText className="mb-2" text={t(BasicI18nKey.FieldNamesInvalid)} />}
+      <div className="flex-1 min-h-0">
+        <GridView<SchemaFieldRow>
+          getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
+          emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
+          onGridReady={onGridReady}
+          additionalGridOptions={{
+            getRowId: getRowIdById,
+            isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
+            fullWidthCellRenderer,
+          }}
+        />
+      </div>
     </div>
   );
 };

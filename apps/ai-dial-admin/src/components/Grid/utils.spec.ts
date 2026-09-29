@@ -1,7 +1,8 @@
+import { ColDef } from 'ag-grid-community';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import {
-  updateColumnVisibilityInStorage,
+  updateColumnPanelStateInStorage,
   getColumnVisibilityFromGridState,
   applyColumnStateOrderToColDefs,
   haveColDefsSamePanelState,
@@ -16,7 +17,7 @@ vi.mock('@/src/utils/local-storage', () => ({
   getFromLocalStorage: vi.fn(() => null),
 }));
 
-describe('Grid :: updateColumnVisibilityInStorage', () => {
+describe('Grid :: updateColumnPanelStateInStorage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -35,7 +36,7 @@ describe('Grid :: updateColumnVisibilityInStorage', () => {
       { field: 'name', hide: false },
       { field: 'status', hide: true },
     ];
-    updateColumnVisibilityInStorage(ApplicationRoute.Models, colDefs);
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, colDefs);
 
     expect(setToLocalStorage).toHaveBeenCalledWith(`${GRID_COLUMNS_KEY}${ApplicationRoute.Models}`, expect.any(String));
     const saved = JSON.parse(vi.mocked(setToLocalStorage).mock.calls[0][1] as string);
@@ -48,9 +49,72 @@ describe('Grid :: updateColumnVisibilityInStorage', () => {
     vi.mocked(getFromLocalStorage).mockReturnValue(null);
 
     const colDefs = [{ field: 'name', hide: true }];
-    updateColumnVisibilityInStorage(ApplicationRoute.Models, colDefs);
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, colDefs);
 
     expect(setToLocalStorage).toHaveBeenCalled();
+  });
+});
+
+describe('Grid :: updateColumnPanelStateInStorage :: order', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const savedColumns = () => JSON.parse(vi.mocked(setToLocalStorage).mock.calls[0][1] as string).columns;
+
+  test('stores the columns in the order the panel lists them', () => {
+    vi.mocked(getFromLocalStorage).mockReturnValue(
+      JSON.stringify({ columns: [{ colId: 'name', width: 200 }, { colId: 'status' }], filters: {} }),
+    );
+
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, [{ field: 'status' }, { field: 'name' }]);
+
+    expect(savedColumns()).toEqual([
+      { colId: 'status', hide: undefined },
+      { colId: 'name', width: 200, hide: undefined },
+    ]);
+  });
+
+  test('keeps a column the panel does not list in its stored position', () => {
+    vi.mocked(getFromLocalStorage).mockReturnValue(
+      JSON.stringify({ columns: [{ colId: 'name' }, { colId: 'status' }, { colId: 'actions' }], filters: {} }),
+    );
+
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, [{ field: 'status' }, { field: 'name' }]);
+
+    expect(savedColumns().map((col: { colId: string }) => col.colId)).toEqual(['status', 'name', 'actions']);
+  });
+
+  test('writes the panel order when the grid has not saved its state yet', () => {
+    vi.mocked(getFromLocalStorage).mockReturnValue(null);
+
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, [{ field: 'status' }, { field: 'name', hide: true }]);
+
+    expect(savedColumns()).toEqual([
+      { colId: 'status', hide: undefined },
+      { colId: 'name', hide: true },
+    ]);
+  });
+});
+
+describe('Grid :: updateColumnPanelStateInStorage :: grouped order', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('reorders inside a group and leaves the other group in place', () => {
+    vi.mocked(getFromLocalStorage).mockReturnValue(
+      JSON.stringify({ columns: [{ colId: 'a' }, { colId: 'b' }, { colId: 'c' }], filters: {} }),
+    );
+    const grouped = [
+      { groupId: 'left', children: [{ field: 'b' }, { field: 'a' }] },
+      { groupId: 'right', children: [{ field: 'c' }] },
+    ] as unknown as ColDef[];
+
+    updateColumnPanelStateInStorage(ApplicationRoute.Models, grouped);
+
+    const saved = JSON.parse(vi.mocked(setToLocalStorage).mock.calls[0][1] as string);
+    expect(saved.columns.map((col: { colId: string }) => col.colId)).toEqual(['b', 'a', 'c']);
   });
 });
 

@@ -1,4 +1,10 @@
-## MODIFIED Requirements
+# application-source Specification
+
+## Purpose
+
+The shared application-source model and editor behavior for applications and asset applications.
+
+## Requirements
 
 ### Requirement: FE internal model uses a single shared source struct
 
@@ -85,41 +91,34 @@ The user MUST be able to enable chat endpoint and/or MCP endpoint independently 
 
 ### Requirement: Applications Schema panel owns runner-scheme side-effects
 
-When source `$type === 'schema'` for a `DialApplication`, the `AppRunners` component SHALL own the runner-selection side-effects, resolving the selected runner's scheme through the shared `resolveAppRunnerScheme` helper rather than calling a resolver inline:
+When source `$type === 'schema'` for a `DialApplication`, the `AppRunners` component SHALL own runner-selection side-effects, resolving the selected runner's scheme through the shared `resolveAppRunnerScheme` helper rather than calling a resolver inline:
 
 1. On runner selection, it resolves the picked runner via `resolveAppRunnerScheme(runner)`:
-   - For a `Config`-origin runner (`AppRunnerOrigin.Config`), this fetches the resolved application scheme via `getResolvedApplicationScheme(runner.$id)` — unchanged from today.
-   - For a `Platform`-origin runner (`AppRunnerOrigin.Platform`), this first fetches the runner's full content (`getRunner(path, DEFAULT_ETAG)`) and uses **that resource's own `$id`** — not the picker option's list-derived `$id` — to call `getResolvedRunnerSchema`. The list-derived `$id` MUST NOT be passed to `getResolvedRunnerSchema` directly, since it reflects the runner's id at creation time and can be stale if the runner's `$id` was edited afterwards through its content.
+   - For a `Config`-origin runner, this fetches the resolved application scheme via `getResolvedApplicationScheme(runner.$id)`.
+   - For a `Platform`-origin runner, this fetches the resource content by its Core metadata storage path and calls `getResolvedRunnerSchema` with that content's declared `$id`. A metadata-list storage name or encoded resource reference MUST NOT be passed as the resolved-schema query id.
 2. If the schema fetch succeeds, it derives default `applicationProperties` via `getSchemaDefaults(scheme)`.
-3. It calls `onChange` once with the combined update: `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: resolvedId }, applicationProperties }`, where `resolvedId` is the runner id returned by `resolveAppRunnerScheme` — the corrected content `$id` for a `Platform`-origin runner, or the picked `$id` unchanged for a `Config`-origin one.
+3. It calls `onChange` once with the combined update: `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: resolvedId }, applicationProperties }`, where `resolvedId` is the declared content `$id` for a Platform-origin runner or the selected `$id` for a Config-origin runner.
 
-If the schema fetch fails, the component SHALL fall back to using the non-resolved runner (current behavior). If the `Platform`-origin content fetch itself fails, the component SHALL fall back to the picker option as originally listed (its list-derived `$id`), so a transient failure degrades to today's behavior rather than blocking selection.
+If the schema fetch fails, the component SHALL fall back to using the non-resolved runner. If the Platform-origin content fetch itself fails, it SHALL fall back to the picker option as originally listed, so a transient failure does not block selection.
 
 #### Scenario: Runner selection with successful schema fetch
 
-- **WHEN** the user picks a `Config`-origin runner and `getResolvedApplicationScheme` returns a schema
+- **WHEN** the user picks a Config-origin runner and `getResolvedApplicationScheme` returns a schema
 - **THEN** `entity.source.$type` is set to `SCHEMA`
 - **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
 - **AND** `entity.applicationProperties` is set to `getSchemaDefaults(schema)`
 
-#### Scenario: Runner selection with fetch failure
+#### Scenario: Platform runner selection resolves against its declared content id
 
-- **WHEN** the user picks a `Config`-origin runner and `getResolvedApplicationScheme` fails
-- **THEN** `entity.source.$type` is set to `SCHEMA`
-- **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
-- **AND** `entity.applicationProperties` is derived from the unresolved runner
-
-#### Scenario: Platform runner selection resolves against its content `$id`
-
-- **WHEN** the user picks a `Platform`-origin runner whose picker-option `$id` (derived from its Core resource name) differs from the `$id` currently stored in its content
-- **THEN** the component fetches the runner's content via `getRunner`
-- **AND** calls `getResolvedRunnerSchema` with the content's `$id`, not the picker option's `$id`
-- **AND** `entity.source.applicationTypeSchemaId` is set to the content's `$id`
+- **WHEN** the user picks a Platform-origin runner whose metadata storage name differs from the `$id` stored in its content
+- **THEN** the component fetches the runner content through its metadata storage path
+- **AND** calls `getResolvedRunnerSchema` with the content's declared `$id`
+- **AND** sets `entity.source.applicationTypeSchemaId` to the declared `$id`
 
 #### Scenario: Platform runner selection with a failed content fetch
 
-- **WHEN** the user picks a `Platform`-origin runner and the `getRunner` content fetch fails
-- **THEN** the component falls back to the picker option's own `$id` for both `getResolvedRunnerSchema` and `entity.source.applicationTypeSchemaId`, matching today's behavior
+- **WHEN** the user picks a Platform-origin runner and the content fetch fails
+- **THEN** the component falls back to the picker option's own value for both `getResolvedRunnerSchema` and `entity.source.applicationTypeSchemaId`
 
 ### Requirement: Source-type change clears stale Application fields
 
@@ -229,3 +228,13 @@ The application runner editor (`DialApplicationScheme`, accessed via `Applicatio
 - **WHEN** the user edits a `DialApplicationScheme`
 - **THEN** the endpoint + MCP editor renders via `EndpointAndMCPContainer.tsx`
 - **AND** no source-type selector is shown
+
+### Requirement: Platform runner resource references remain distinct from application schema ids
+
+The system SHALL use the Platform App Runner's Core storage path only to fetch or navigate to the resource. It SHALL store the runner's declared raw `$id`, not `schemas/platform/{name}` or the storage name, in an asset application's `application_type_schema_id`.
+
+#### Scenario: Application source stores the declared id
+
+- **WHEN** an admin selects a Platform App Runner stored under `quickapps2` whose declared `$id` is `https://dial.example.com/custom_application_schemas/quickapps2`
+- **THEN** the asset application's `application_type_schema_id` is `https://dial.example.com/custom_application_schemas/quickapps2`
+- **AND** the storage name is retained only for resource retrieval and navigation

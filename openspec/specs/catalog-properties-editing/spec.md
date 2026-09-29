@@ -14,13 +14,12 @@ of them contributes only its placement, never its own copy of this behavior.
 
 ### Requirement: A deployment can be pointed at a catalog schema
 
-The system SHALL let an admin select a catalog schema for a deployment, store the selection as the
-deployment's `catalog_schema_id`, and clear it again. The selection SHALL survive a save and reopen.
+The system SHALL let an admin select a Catalog Schema for a deployment, store the selected schema's declared raw `$id` as `catalog_schema_id`, and clear it again. A Core resource storage name or path SHALL be used only to retrieve or navigate to the schema, never as the deployment reference. The selection SHALL survive a save and reopen.
 
 #### Scenario: A schema is selected and persists
 
-- **WHEN** an admin selects a catalog schema on a deployment and saves
-- **THEN** the deployment's `catalog_schema_id` is that schema's `$id`
+- **WHEN** an admin selects a Catalog Schema stored under `agent-schema` with declared `$id` `https://dial.example.com/catalog_schemas/agent` and saves
+- **THEN** the deployment's `catalog_schema_id` is `https://dial.example.com/catalog_schemas/agent`
 - **AND** reopening the deployment shows the same schema as selected
 
 #### Scenario: The selection can be cleared
@@ -33,6 +32,12 @@ deployment's `catalog_schema_id`, and clear it again. The selection SHALL surviv
 
 - **WHEN** a read-only admin opens a deployment carrying a catalog schema
 - **THEN** the selection is shown but cannot be changed, and no values are editable
+
+#### Scenario: The selected schema is opened by storage address but identified by declared id
+
+- **WHEN** an admin opens the selected schema in a new tab
+- **THEN** the detail route addresses the schema's Core storage path
+- **AND** the opened detail view shows the schema's declared `$id`
 
 ### Requirement: The schema picker lists both populations in one grid
 
@@ -130,7 +135,8 @@ surface gains it without changing.
 
 ### Requirement: Catalog values are validated before the write
 
-DIAL Core validates `catalog_properties` against the referenced schema, and what a failure costs
+The system SHALL validate `catalog_properties` against the selected schema before the write. DIAL Core
+validates the values itself, and what a failure costs
 depends on where the deployment lives: for a platform-bucket resource the rejection happens when Core
 assembles its merged configuration, taking the whole configuration down with it; for a user-bucket
 application or toolset Core rejects the write itself with a `400`. The system SHALL therefore validate
@@ -165,7 +171,7 @@ that locale is missing.
 
 ### Requirement: A locale-map display field is preserved rather than corrupted
 
-DIAL Core accepts a deployment's `displayName`, `description`, and `intro` as either a plain string
+The system SHALL preserve a locale-map display field rather than corrupting it. DIAL Core accepts a deployment's `displayName`, `description`, and `intro` as either a plain string
 or a `locale -> value` map. The system SHALL preserve the map form through a read and a save, and
 SHALL NOT render it into a text input or overwrite it with the rendering.
 

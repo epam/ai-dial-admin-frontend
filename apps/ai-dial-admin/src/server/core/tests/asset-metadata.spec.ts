@@ -425,13 +425,15 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result.$id).toEqual('https://host/agent');
   });
 
-  test('mergeAppRunnerResource still overwrites the body $id with the decoded name', () => {
+  test('mergeAppRunnerResource preserves the $id a runner stored under another name declares', () => {
     const result = mergeAppRunnerResource(
       { $id: 'https://host/other' },
-      metadata({ url: 'schemas/platform/https%253A%252F%252Fhost%252Frunner' }),
+      metadata({ url: 'schemas/platform/legacy-name' }),
     );
 
-    expect(result.$id).toEqual('https://host/runner');
+    expect(result.$id).toEqual('https://host/other');
+    expect(result._metadata?.name).toEqual('legacy-name');
+    expect(result._metadata?.path).toEqual('legacy-name');
   });
 
   test('toResourceInfoList decodes a catalog schema row name to its $id while leaving path encoded', () => {

@@ -104,6 +104,11 @@ nothing on screen to explain it.
 - **WHEN** the operator hides a column, reorders another, and reloads the page
 - **THEN** the grid renders with that visibility and that order
 
+#### Scenario: Closing the panel keeps the chosen order
+
+- **WHEN** the operator reorders a column in the panel and closes the panel
+- **THEN** the grid keeps the order chosen in the panel rather than returning to the view's default order
+
 #### Scenario: Reset returns to the view's defaults
 
 - **WHEN** the operator resets the panel

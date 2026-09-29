@@ -131,6 +131,16 @@ describe('Entity list view :: getEntityPath', () => {
     expect(res2).toBe('');
   });
 
+  test('uses a flat platform schema storage path for navigation and deletion', () => {
+    const schema = {
+      $id: 'https://dial.example.com/catalog_schemas/agent',
+      _metadata: { name: 'agent-schema', path: 'agent%2Dschema' },
+    };
+
+    expect(getEntityPath(ApplicationRoute.PlatformCatalogSchemas, schema)).toEqual('agent%252Dschema');
+    expect(getEntityPath(ApplicationRoute.PlatformCatalogSchemas, schema, true)).toEqual('agent%2Dschema');
+  });
+
   test('Should return id field for ApplicationRunners', () => {
     const result = getEntityPath(ApplicationRoute.ApplicationRunners, data);
     expect(result).toEqual('%24id');
@@ -245,45 +255,42 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('example-from-admin');
   });
 
-  test('Should return double-encoded name for PlatformAppRunners when name is a URL-encoded $id', () => {
-    // name = encodeURIComponent($id); getEntityPath encodes once more so the URL segment is safe.
-    // page.tsx uses params.id directly (Next's one automatic decode restores the singly-encoded name).
-    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http%3A%2F%2Frunner' });
-    expect(result).toEqual('http%253A%252F%252Frunner');
+  test('uses an encoded schema storage path as the PlatformAppRunner route segment', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { path: 'runner%3Aname' });
+
+    expect(result).toEqual('runner%253Aname');
   });
 
-  test('Should singly-encode $id fallback for PlatformAppRunners when no name is present', () => {
-    // No pre-encoding: this goes through the same single final encodeURIComponent as the `name`
-    // branch, so it matches the URL row-click navigation would produce for the same runner.
+  test('does not use a declared id without a storage name for PlatformAppRunners', () => {
     const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: 'http://runner' });
-    expect(result).toEqual('http%3A%2F%2Frunner');
+
+    expect(result).toEqual('');
   });
 
-  test('Should produce the same URL segment from $id as row-click navigation does from name', () => {
-    const fromId = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: 'http://runner' });
-    const fromRowClickName = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http://runner' });
-    expect(fromId).toEqual(fromRowClickName);
+  test('uses the metadata storage path for PlatformAppRunner deletion', () => {
+    const result = getEntityPath(
+      ApplicationRoute.PlatformAppRunners,
+      { $id: 'http://runner', _metadata: { name: 'runner-storage-name', path: 'runner%2Dstorage%2Dname' } },
+      true,
+    );
+
+    expect(result).toEqual('runner%2Dstorage%2Dname');
   });
 
-  test('Should return singly-encoded Core path for PlatformAppRunners when forRemove is true', () => {
-    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http%3A%2F%2Frunner' }, true);
-    expect(result).toEqual('http%3A%2F%2Frunner');
+  test('uses a schema storage name as the PlatformCatalogSchema route segment', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'agent-schema' });
+
+    expect(result).toEqual('agent-schema');
   });
 
-  test('Should double-encode a catalog-schema name the same way an app-runner name is encoded', () => {
-    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' });
-    expect(result).toEqual('https%253A%252F%252Fhost%252Fagent');
-  });
+  test('uses the metadata storage path for catalog schema deletion', () => {
+    const result = getEntityPath(
+      ApplicationRoute.PlatformCatalogSchemas,
+      { $id: 'https://host/agent', _metadata: { name: 'agent-schema', path: 'agent-schema' } },
+      true,
+    );
 
-  test('Should produce the same catalog-schema segment from $id as from a row-click name', () => {
-    const fromId = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { $id: 'https://host/agent' });
-    const fromRowClickName = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https://host/agent' });
-    expect(fromId).toEqual(fromRowClickName);
-  });
-
-  test('Should return the singly-encoded Core path for a catalog schema when forRemove is true', () => {
-    const result = getEntityPath(ApplicationRoute.PlatformCatalogSchemas, { name: 'https%3A%2F%2Fhost%2Fagent' }, true);
-    expect(result).toEqual('https%3A%2F%2Fhost%2Fagent');
+    expect(result).toEqual('agent-schema');
   });
 
   test('Should return encoded name for PlatformRoutes (no ?path= appended)', () => {
