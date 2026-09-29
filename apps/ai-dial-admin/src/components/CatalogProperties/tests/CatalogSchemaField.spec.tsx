@@ -70,6 +70,28 @@ describe('CatalogSchemaField', () => {
     expect(screen.getByText('Agent card')).toBeTruthy();
   });
 
+  test('tells same-named schemas apart by their id', async () => {
+    const user = userEvent.setup();
+    const namesake: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': 'Model card' };
+    renderField({ options: [apiWritten, namesake] });
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getAllByText('Model card')).toHaveLength(2);
+    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
+    expect(screen.getByText(namesake.$id)).toBeTruthy();
+  });
+
+  test('adds no id beside a schema that has no display name', async () => {
+    const user = userEvent.setup();
+    const unnamed: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': '' };
+    renderField({ options: [unnamed] });
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getAllByText(unnamed.$id)).toHaveLength(1);
+  });
+
   test('stores the picked schema id', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -98,7 +120,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: 'Model card' }));
+    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
     await user.click(screen.getByText(BasicI18nKey.None));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
