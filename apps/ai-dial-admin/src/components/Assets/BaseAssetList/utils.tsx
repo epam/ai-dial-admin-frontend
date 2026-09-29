@@ -82,12 +82,19 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { FileManagerColumnKey, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-import { MouseEvent } from 'react';
+import {
+  DialFileNodeType,
+  FileManagerColumnKey,
+  NAME_COLUMN,
+  SelectOption,
+  UPDATED_AT_COLUMN,
+} from '@epam/ai-dial-ui-kit';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { MouseEvent, ReactNode } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
+import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
+import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
-import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -105,9 +112,42 @@ export const customMultiSelectTagsRenderer = (
   return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
 };
 
-export const getCustomizedDisplayNameColumn = (headerName: string) => {
-  return { ...DISPLAY_NAME_COLUMN, headerName };
-};
+/**
+ * The asset grid's name column. Built on ui-kit's `NAME_COLUMN` rather than replacing it, because
+ * that column's cell renderer is where the folder icon, the inline new-folder input and the inline
+ * rename editor all live — swapping it out for a plain display-name column is what
+ * left folders indistinguishable from assets and made a new folder unnameable and
+ * unsaveable. Its `colId` matters too: ui-kit attaches the arrow-key guard that keeps
+ * those inputs usable only to a column identified as `FileManagerColumnKey.Name`.
+ *
+ * Only ITEM rows keep the repo's own renderer, for the icon/displayName/id presentation a folder
+ * row has nothing to show for. Returned curried, like `UPDATED_AT_COLUMN`, so ui-kit can pass the
+ * locale and compact-view arguments its renderer needs (`useFileManagerColumns`).
+ */
+export const getAssetNameColumn =
+  (headerName: string) =>
+  (
+    dateLocale: Intl.LocalesArgument,
+    dateOptions: Intl.DateTimeFormatOptions | undefined,
+    isCompactView: boolean,
+  ): ColDef => {
+    const fileManagerColumn = NAME_COLUMN(headerName)(dateLocale, dateOptions, isCompactView);
+    const renderFileManagerName = fileManagerColumn.cellRenderer as (params: ICellRendererParams) => ReactNode;
+
+    return {
+      ...fileManagerColumn,
+      // Sort and filter on the label actually rendered: a folder row has no `displayName`, and an
+      // asset row's `name` is its id, shown under the display name.
+      valueGetter: ({ data }) => data?.displayName ?? data?.name,
+      filterValueGetter: ({ data }) => displayNameFilterValue(data),
+      cellRenderer: (params: ICellRendererParams) =>
+        params.data?.nodeType === DialFileNodeType.FOLDER ? (
+          renderFileManagerName(params)
+        ) : (
+          <DisplayNameCellRenderer {...params} />
+        ),
+    };
+  };
 
 export const getGridColumns = (
   view: ApplicationRoute,
@@ -174,14 +214,14 @@ export const getGridColumns = (
   });
 
   if (isFileRootPath(currentPath)) {
-    return [getCustomizedDisplayNameColumn('Name') as ColDef];
+    return [getAssetNameColumn('Name') as unknown as ColDef];
   }
 
   // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
   // resource's storage name; schema body `$id` values are available after opening the resource.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      getCustomizedDisplayNameColumn('Name') as ColDef,
+      getAssetNameColumn('Name') as unknown as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
@@ -191,11 +231,15 @@ export const getGridColumns = (
   // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
   // per-row version selection.
   if (isVersionlessAssetView(view)) {
-    return [getCustomizedDisplayNameColumn('Name'), AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+    return [
+      getAssetNameColumn('Name') as unknown as ColDef,
+      AUTHOR_COLUMN,
+      UPDATED_AT_COLUMN('Updated time') as ColDef,
+    ];
   }
 
   return [
-    getCustomizedDisplayNameColumn('Name'),
+    getAssetNameColumn('Name') as unknown as ColDef,
     VERSION_COLUMN,
     AUTHOR_COLUMN,
     UPDATED_AT_COLUMN('Updated time') as ColDef,
