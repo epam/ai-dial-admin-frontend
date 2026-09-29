@@ -142,4 +142,53 @@ describe('EditableCellRenderer', () => {
     render(<EditableCellRenderer {...cellParams} value="42" colDef={{}} data={{}} isReadonly />);
     expect(screen.getByText('42')).not.toHaveClass('text-right');
   });
+
+  test('passes inputProps to the input', () => {
+    render(
+      <EditableCellRenderer {...cellParams} value="" colDef={{}} data={{}} inputProps={{ maxLength: 5, min: 1 }} />,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveAttribute('maxlength', '5');
+    expect(input).toHaveAttribute('min', '1');
+  });
+
+  test('keeps its own value and change handling over inputProps', () => {
+    const onChange = vi.fn();
+    const foreignOnChange = vi.fn();
+    render(
+      <EditableCellRenderer
+        {...cellParams}
+        value="own"
+        colDef={{ field: 'col1' }}
+        data={{}}
+        onChange={onChange}
+        // A cast stands in for a caller that slips a grid-owned attribute past the type.
+        inputProps={{ value: 'foreign', onChange: foreignOnChange } as object}
+      />,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('own');
+    fireEvent.change(input, { target: { value: 'next' } });
+    expect(onChange).toHaveBeenCalled();
+    expect(foreignOnChange).not.toHaveBeenCalled();
+  });
+
+  test('falls back to the inputProps placeholder only when it has none of its own', () => {
+    const { rerender } = render(
+      <EditableCellRenderer {...cellParams} value="" colDef={{}} data={{}} inputProps={{ placeholder: 'fallback' }} />,
+    );
+    expect(screen.getByPlaceholderText('fallback')).toBeInTheDocument();
+
+    rerender(
+      <EditableCellRenderer
+        {...cellParams}
+        value=""
+        placeholder="own"
+        colDef={{}}
+        data={{}}
+        inputProps={{ placeholder: 'fallback' }}
+      />,
+    );
+    expect(screen.getByPlaceholderText('own')).toBeInTheDocument();
+  });
 });

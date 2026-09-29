@@ -6,8 +6,8 @@ import { FC } from 'react';
 
 import { APP_RUNNER_META_COLUMNS, APP_RUNNER_REQUIRED_META_COLUMNS, CATALOG_SCHEMA_META_COLUMNS } from '../constants';
 import { getSchemaGridColumns } from '../columns';
-import { SchemaMetaColumn, SchemaMetaHandlers } from '../models';
-import { SchemaFieldRow } from '../utils';
+import { SchemaInputField, SchemaMetaColumn, SchemaMetaHandlers } from '../models';
+import { resolveSchemaFieldInputProps, SchemaFieldRow } from '../utils';
 
 const t = (key: string) => key;
 
@@ -176,6 +176,44 @@ describe('SchemaGrid :: getSchemaGridColumns', () => {
       const container = renderOrder(orderOf(columns), row(), 1);
 
       expect(container.querySelector('.dial-input-error')).toBeNull();
+    });
+  });
+
+  describe('input props', () => {
+    const inputPropsOf = (columns: ColDef<SchemaFieldRow>[], headerName: string) =>
+      columns.find((column) => column.headerName === headerName)?.cellRendererParams?.inputProps;
+
+    const columnsWith = (fieldInputProps = resolveSchemaFieldInputProps()) =>
+      getSchemaGridColumns(
+        noop,
+        noop,
+        noop,
+        noop,
+        noop,
+        noop,
+        noop,
+        t,
+        false,
+        Object.fromEntries(CATALOG_SCHEMA_META_COLUMNS.map((column) => [column, noop])),
+        [],
+        fieldInputProps,
+      ) as ColDef<SchemaFieldRow>[];
+
+    test('Should hand each free-text column its resolved defaults', () => {
+      const columns = columnsWith();
+
+      expect(inputPropsOf(columns, 'Name')).toEqual({ maxLength: 255 });
+      expect(inputPropsOf(columns, 'Title')).toEqual({ maxLength: 255 });
+      expect(inputPropsOf(columns, 'Description')).toEqual({ maxLength: 1024 });
+      expect(inputPropsOf(columns, 'Tab')).toEqual({ maxLength: 255 });
+      expect(inputPropsOf(columns, 'Section')).toEqual({ maxLength: 255 });
+    });
+
+    test('Should give Order nothing by default and a consumer attribute when configured', () => {
+      expect(inputPropsOf(columnsWith(), 'Order')).toBeUndefined();
+      expect(
+        inputPropsOf(columnsWith(resolveSchemaFieldInputProps({ [SchemaInputField.Order]: { min: 0 } })), 'Order'),
+      ).toEqual({ min: 0 });
     });
   });
 });
