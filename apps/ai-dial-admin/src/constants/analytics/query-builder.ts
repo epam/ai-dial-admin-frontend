@@ -116,10 +116,24 @@ export const SORT_DIRECTION_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] 
 ];
 
 export const SORT_NULLS_DEFAULT = QuerySortNulls.Default;
-export const SORT_NULLS_OPTIONS: SelectOption[] = [
-  { value: QuerySortNulls.Default, label: 'Default' },
-  { value: QuerySortNulls.First, label: 'First' },
-  { value: QuerySortNulls.Last, label: 'Last' },
+// Each label names what it places, because the option list shows no prefix. The default serializes as no
+// `nulls` at all, so its description states where the engine then puts them.
+export const SORT_NULLS_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
+  {
+    value: QuerySortNulls.Default,
+    labelKey: QueryBuilderI18nKey.NullsDefault,
+    descriptionKey: QueryBuilderI18nKey.NullsDefaultDescription,
+  },
+  {
+    value: QuerySortNulls.First,
+    labelKey: QueryBuilderI18nKey.NullsFirst,
+    descriptionKey: QueryBuilderI18nKey.NullsFirstDescription,
+  },
+  {
+    value: QuerySortNulls.Last,
+    labelKey: QueryBuilderI18nKey.NullsLast,
+    descriptionKey: QueryBuilderI18nKey.NullsLastDescription,
+  },
 ];
 
 export const PAGE_TYPE_OPTIONS: SelectOption[] = [

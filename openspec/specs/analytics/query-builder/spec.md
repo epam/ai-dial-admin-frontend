@@ -599,7 +599,7 @@ In `aggregate` mode the builder SHALL provide a Having section using the same ne
 
 ### Requirement: Sort keys
 
-The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select trigger SHALL carry a dimmed "Nulls:" prefix so its role is readable next to the direction select. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
+The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select SHALL name what each option places — "Nulls: default", "Nulls first", "Nulls last" — in its open list and its trigger, SHALL describe each option in its hover tooltip (the default's stating where the engine puts empty values: last when ascending, first when descending), and a non-default placement SHALL appear in the sort row's collapsed summary. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
 
 #### Scenario: Sort key serializes
 
@@ -608,8 +608,19 @@ The Sort section SHALL let the user add, edit, and remove sort keys, each with a
 
 #### Scenario: Nulls control names itself
 
-- **WHEN** the user inspects a sort key row
-- **THEN** the nulls select shows a "Nulls:" prefix before the selected value
+- **WHEN** the user opens a sort key's nulls select
+- **THEN** the options read "Nulls: default", "Nulls first", and "Nulls last"
+- **AND** hovering an option shows its description
+
+#### Scenario: A non-default placement shows in the collapsed row
+
+- **WHEN** a sort key places nulls first and its row is collapsed
+- **THEN** the row's summary names the field, the direction, and "Nulls first"
+
+#### Scenario: The default placement stays out of the collapsed row
+
+- **WHEN** a sort key leaves nulls at default and its row is collapsed
+- **THEN** the row's summary names only the field and the direction
 
 #### Scenario: A freshly added aggregate is immediately sortable
 
