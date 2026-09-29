@@ -93,7 +93,7 @@ describe('Trends', () => {
 
   test('renders KPI and section titles when data is available', async () => {
     (executeStructuredQuery as ReturnType<typeof vi.fn>).mockImplementation(async (query: { entity?: string }) => {
-      if (query?.entity === 'eval_summaries') {
+      if (query?.entity === 'test_case_eval_scores') {
         return {
           rows: [{ test_suite_run_id: 'run-1', test_case_name: 'case-a', score: 0.5, passed: true }],
         };
