@@ -76,7 +76,7 @@ export default async function Page(params: {
   // prevent the toolset from loading. Core-direct (`readConfigEntities`), not the admin-BE role list,
   // which cannot see a role declared only in Core's configuration file.
   const [rolesResult, catalogSchemas] = await Promise.all([
-    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings, false),
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
     readCatalogSchemaOptions(token),
   ]);
   roles = rolesResult;
