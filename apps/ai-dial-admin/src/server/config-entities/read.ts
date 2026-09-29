@@ -19,10 +19,12 @@ const HTTP_NOT_FOUND = 404;
 export const getConfigEntityOptions = async (
   token: Token,
   type: ConfigFileEntityType,
-  _showOnlyConfigFiles = false,
+  showOnlyConfigFiles = false,
 ): Promise<ConfigFileReadResult<ConfigEntityOptions>> => {
   const [apiWritten, configFile] = await Promise.all([
-    toFailureOnThrow(listApiWrittenNames(token, type)),
+    showOnlyConfigFiles
+      ? Promise.resolve<ConfigFileReadResult<string[]>>({ success: true, data: [] })
+      : toFailureOnThrow(listApiWrittenNames(token, type)),
     toFailureOnThrow(configFileApi.listNames(token, type)),
   ]);
 

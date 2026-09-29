@@ -47,6 +47,7 @@ export async function createToolset(toolset: DialToolsetResource) {
     displayVersion: version,
     folderId: undefined,
     version: undefined,
+    path: undefined,
   });
 }
 

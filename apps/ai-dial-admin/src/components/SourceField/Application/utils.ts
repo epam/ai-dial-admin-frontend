@@ -10,6 +10,7 @@ const toConfigOption = (runner: DialApplicationScheme): AppRunnerOption => ({
   ...runner,
   origin: AppRunnerOrigin.Config,
   reference: runner.$id || '',
+  $id: runner.$id || runner.name,
 });
 
 // Timestamps come from the Core metadata node, so they are available without a content read —
@@ -18,7 +19,7 @@ const toConfigOption = (runner: DialApplicationScheme): AppRunnerOption => ({
 // creation, not any later content edit. Resolving against a Platform runner's *current* `$id`
 // requires a content read; see `resolveAppRunnerScheme`.
 const toPlatformOption = (runner: ResourceInfo): AppRunnerOption => ({
-  $id: runner.name,
+  $id: (runner as DialApplicationScheme).$id || runner.name,
   origin: AppRunnerOrigin.Platform,
   reference: toRunnerReference(runner.name),
   path: runner.path,
