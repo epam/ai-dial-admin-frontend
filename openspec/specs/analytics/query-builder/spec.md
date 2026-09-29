@@ -1289,3 +1289,54 @@ happens only through the per-message actions on the transcript.
 - **WHEN** the AI view is active
 - **THEN** the entity selector and time filter controls are still shown and usable
 
+### Requirement: The AI conversation outlives leaving the AI view
+
+The AI conversation and which of its messages is the loaded query SHALL persist while the user shows another
+view (Form, JSON, SQL) or collapses and restores the rail, and SHALL be shown unchanged on returning to the
+AI view. Only selecting a different entity clears them (see "Changing the entity clears the conversation
+and loaded state"); a reply still in flight from a cleared conversation SHALL NOT appear in the next one.
+
+#### Scenario: Returning from another view shows the same conversation
+
+- **WHEN** the user has run a message in the AI view, switches to the SQL view, and returns to the AI view
+- **THEN** the earlier messages are shown and the run message's Run action is still disabled
+
+#### Scenario: A new reply after returning is runnable
+
+- **WHEN** the user returns to the AI view after running a message and sends a new request whose reply
+  carries SQL
+- **THEN** the new reply's Run action is enabled
+
+#### Scenario: Collapsing the rail keeps the conversation
+
+- **WHEN** the user collapses and restores the rail while the AI view holds a conversation
+- **THEN** the conversation is shown unchanged
+
+#### Scenario: A reply for a cleared conversation is dropped
+
+- **WHEN** the user selects a different entity while a reply is still in flight
+- **THEN** the late reply does not appear and the prompt is usable again
+
+#### Scenario: A send that fails in transit
+
+- **WHEN** the request for a reply fails in transit
+- **THEN** a failure notification is shown and the prompt and Send remain usable
+
+### Requirement: Running a message survives a failed translation round trip
+
+When translating a message's SQL, or reading the schema its query targets, fails in transit, running that
+message SHALL behave as for a refused translation: the raw SQL is shown in the SQL view and executed via
+the SQL path. A failure while loading a
+message's query SHALL NOT leave the transcript's Run actions disabled.
+
+#### Scenario: Translation rejected in transit
+
+- **WHEN** the user clicks Run on a message and the translation request fails in transit
+- **THEN** the query executes via the SQL path and Run actions on other messages remain enabled
+
+#### Scenario: Schema read rejected in transit
+
+- **WHEN** the user clicks Run on a representable message targeting another entity and that entity's schema
+  read fails in transit
+- **THEN** the query executes via the SQL path
+

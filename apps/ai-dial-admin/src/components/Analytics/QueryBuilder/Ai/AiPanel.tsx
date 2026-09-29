@@ -15,16 +15,15 @@ import { IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
-import { generateQuery } from '@/src/app/[lang]/queries/actions';
 import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { QueryAssistantMessage, QueryAssistantRole } from '@/src/models/analytics/query-assistant';
-import { getErrorNotification } from '@/src/utils/notification';
+import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
 
 interface Props {
+  conversation: ReturnType<typeof useAiConversation>;
   onRunMessage: (sql: string, messageIndex: number) => void;
   loadedMessageIndex: number | null;
   runInFlight: boolean;
@@ -32,13 +31,11 @@ interface Props {
 
 const LOADER_SIZE = 18;
 
-const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) => {
+const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, runInFlight }) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
+  const { messages, isSending } = conversation;
 
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<QueryAssistantMessage[]>([]);
-  const [loading, setLoading] = useState(false);
   const lastUserMessageRef = useRef<HTMLDivElement | null>(null);
 
   // Scrolls the latest user message to the top of the transcript, so the question that was just asked
@@ -49,34 +46,14 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
 
   const onSend = async () => {
     const prompt = input.trim();
-    if (!prompt || loading) {
+    if (!prompt || isSending) {
       return;
     }
-    const nextMessages: QueryAssistantMessage[] = [...messages, { role: QueryAssistantRole.User, content: prompt }];
-    setMessages(nextMessages);
     setInput('');
-    setLoading(true);
-    // The transcript is sent verbatim: the assistant deployment owns its system prompt and resolves any
-    // schema it needs through its own tools, so this panel adds no message of its own.
-    const res = await generateQuery(nextMessages);
-    if (res.success && res.response) {
-      const reply = res.response.choices?.[0]?.message;
-      if (reply) {
-        setMessages([...nextMessages, reply]);
-      }
-    } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(QueryBuilderI18nKey.AiGenerateFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
-    }
-    setLoading(false);
+    await conversation.send(prompt);
   };
 
-  const sendDisabled = !input.trim() || loading;
+  const sendDisabled = !input.trim() || isSending;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
@@ -148,7 +125,7 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
               appearance={ButtonAppearance.Ghost}
               variant={ButtonVariant.Secondary}
               onClick={() => setInput(t(key))}
-              disabled={loading}
+              disabled={isSending}
             />
           ))}
         </div>
@@ -161,11 +138,13 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
           placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}
           value={input}
           onChange={setInput}
-          disabled={loading}
+          disabled={isSending}
           rows={3}
         />
         <div className="flex items-center justify-end gap-2">
-          {loading && <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />}
+          {isSending && (
+            <DialLoader size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />
+          )}
           <DialPrimaryButton
             label={t(QueryBuilderI18nKey.AiSend)}
             iconBefore={<IconSparkles size={18} stroke={2} />}
