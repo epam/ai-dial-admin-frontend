@@ -6,10 +6,19 @@ import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
+import { ComparisonNode, ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
 import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { GridRowType } from '@/src/types/grid-row-type';
+
+const makeTestCaseFilter = (): ComparisonNode => ({
+  op: ComparisonOp.Ne,
+  args: [
+    { type: ExprType.Field, name: 'testCaseName' },
+    { type: ExprType.Value, value_type: ValueType.String, value: 'blr' },
+  ],
+});
 
 // `ColDef.valueGetter` is `string | ValueGetterFunc`, so it cannot be called through the union.
 const valueGetterOf = (column?: ColDef): ValueGetterFunc => {
@@ -147,6 +156,23 @@ describe('getTestCaseColumns', () => {
     expect(
       valueGetterOf(promptColumn)({ data: { prompt: 'fallback value', data: undefined } } as ValueGetterParams),
     ).toBe('fallback value');
+  });
+
+  test('should default the includedInRun column to a descending sort when a run condition is active', () => {
+    const suite: TestSuite = { testCaseFilter: makeTestCaseFilter() };
+    const result = getTestCaseColumns({ suite, onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === 'includedInRun');
+
+    // Declaring the sort on the colDef (not only applying it imperatively) is what lets it survive a
+    // grid remount, e.g. leaving the Test Cases tab and coming back — see TestCasesList's comment.
+    expect(includedInRunColumn?.sort).toBe('desc');
+  });
+
+  test('should not default-sort the includedInRun column when no run condition is active', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === 'includedInRun');
+
+    expect(includedInRunColumn?.sort).toBeFalsy();
   });
 
   describe('file field context', () => {

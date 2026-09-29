@@ -16,6 +16,7 @@ import {
   CustomFilterModule,
   DateFilterModule,
   EventApiModule,
+  ExternalFilterModule,
   GetRowIdParams,
   GridApi,
   GridOptions,
@@ -87,6 +88,7 @@ ModuleRegistry.registerModules([
   PinnedRowModule,
   DateFilterModule,
   CustomFilterModule,
+  ExternalFilterModule,
 ]);
 
 const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
