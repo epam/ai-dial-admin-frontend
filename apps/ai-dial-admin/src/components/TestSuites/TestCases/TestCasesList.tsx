@@ -39,11 +39,11 @@ import { hasIncompleteInputBindings } from '@/src/components/TestSuites/utils/te
 import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useDatasetExport } from '@/src/hooks/use-dataset-export';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -93,6 +93,7 @@ const TestCasesList: FC<Props> = ({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const exportDataset = useDatasetExport();
   const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -396,8 +397,8 @@ const TestCasesList: FC<Props> = ({
     const datasetId = selectedTestSuite.datasetId;
     if (!datasetId) return;
 
-    window.open(`${ApiRoute.DatasetsExport}?id=${encodeURIComponent(datasetId)}`, '_blank');
-  }, [selectedTestSuite.datasetId]);
+    void exportDataset(datasetId);
+  }, [exportDataset, selectedTestSuite.datasetId]);
 
   const onAddTestCase = useCallback(() => {
     const datasetId = selectedTestSuite.datasetId;

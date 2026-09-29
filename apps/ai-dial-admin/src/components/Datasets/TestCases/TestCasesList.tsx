@@ -26,10 +26,10 @@ import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useDatasetExport } from '@/src/hooks/use-dataset-export';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
@@ -57,6 +57,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const exportDataset = useDatasetExport();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -250,8 +251,8 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
 
   const onExport = useCallback(() => {
     if (!dataset.id) return;
-    window.open(`${ApiRoute.DatasetsExport}?id=${encodeURIComponent(dataset.id)}`, '_blank');
-  }, [dataset.id]);
+    void exportDataset(dataset.id);
+  }, [dataset.id, exportDataset]);
 
   const onAddTestCase = useCallback(() => {
     if (!dataset.id) return;

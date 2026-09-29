@@ -18,3 +18,15 @@ export const getFileName = (res?: Response) => {
   }
   return name;
 };
+
+/**
+ * Extracts the filename the backend actually sent, so a response whose content doesn't match the
+ * caller-supplied `fileName` (e.g. an export that becomes a ZIP once file-type fields are involved)
+ * still downloads with the right name and extension.
+ */
+export const getFileNameFromContentDisposition = (disposition?: string | null): string | null => {
+  if (!disposition) return null;
+
+  const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'";\n]+)\1/);
+  return match?.[2]?.trim() || null;
+};
