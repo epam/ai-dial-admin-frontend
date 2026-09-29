@@ -76,7 +76,6 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import { isFileRootPath, isFlatPlatformView, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -175,17 +174,14 @@ export const getGridColumns = (
   });
 
   if (isFileRootPath(currentPath)) {
-    return [getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef];
+    return [getCustomizedDisplayNameColumn('Name') as ColDef];
   }
 
-  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: a
-  // schema resource's row name is its `$id`, a model's is its plain name. Skills shares the same
-  // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
-  // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
-  // read a display name from.
+  // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
+  // resource's storage name; schema body `$id` values are available after opening the resource.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      getCustomizedDisplayNameColumn(SCHEMA_ID_NAMED_VIEWS.includes(view) ? 'ID' : 'Name') as ColDef,
+      getCustomizedDisplayNameColumn('Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,

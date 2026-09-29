@@ -11,13 +11,19 @@ import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
-import { hasUnencodableSchemaIdChars, toCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
+import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const MISSING_ID_ERROR: ServerActionResponse = {
   success: false,
   errorHeader: 'Missing catalog schema id',
-  errorMessage: 'A catalog schema needs an id — it becomes the resource name DIAL Core stores it under.',
+  errorMessage: 'A catalog schema needs a declared schema id.',
+};
+
+const MISSING_NAME_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Missing catalog schema name',
+  errorMessage: 'A catalog schema needs a storage name DIAL Core can address.',
 };
 
 const INVALID_ID_ERROR: ServerActionResponse = {
@@ -33,6 +39,13 @@ const checkSchemaId = (id?: string): ServerActionResponse | null => {
     return MISSING_ID_ERROR;
   }
   return hasUnencodableSchemaIdChars(id) ? INVALID_ID_ERROR : null;
+};
+
+const checkSchemaName = (name?: string): ServerActionResponse | null => {
+  if (!name?.trim()) {
+    return MISSING_NAME_ERROR;
+  }
+  return hasUnencodableSchemaIdChars(name) ? INVALID_ID_ERROR : null;
 };
 
 /**
@@ -63,13 +76,12 @@ export async function createCatalogSchema(schema: DialCatalogSchemaResource): Pr
   if (idError) {
     return idError;
   }
+  const nameError = checkSchemaName(schema.name);
+  if (nameError) {
+    return nameError;
+  }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(
-    token,
-    ResourceType.CATALOG_SCHEMA,
-    toCoreSchemaResourceName(schema.$id as string),
-    toCatalogSchemaPayload(schema),
-  );
+  return assetApi.put(token, ResourceType.CATALOG_SCHEMA, schema.name as string, toCatalogSchemaPayload(schema));
 }
 
 export async function getCatalogSchema(path: string, etag: string) {
@@ -86,13 +98,9 @@ export async function updateCatalogSchema(
     return idError;
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetApi.put(
-    token,
-    ResourceType.CATALOG_SCHEMA,
-    toCoreSchemaResourceName(schema.$id as string),
-    toCatalogSchemaPayload(schema),
-    { etag },
-  );
+  return assetApi.put(token, ResourceType.CATALOG_SCHEMA, schema.name as string, toCatalogSchemaPayload(schema), {
+    etag,
+  });
 }
 
 export async function removeCatalogSchema(path: string, etag?: string) {

@@ -80,6 +80,7 @@ export const getSchemaGridColumns = (
   t: (stringToTranslate: string) => string,
   isReadonly?: boolean,
   metaHandlers: SchemaMetaHandlers = {},
+  requiredMetaColumns: SchemaMetaColumn[] = [],
 ): ColDef<SchemaFieldRow>[] => {
   const onChangeOrder = metaHandlers[SchemaMetaColumn.Order];
   const onChangePropertyKind = metaHandlers[SchemaMetaColumn.PropertyKind];
@@ -199,6 +200,9 @@ export const getSchemaGridColumns = (
       cellRendererParams: {
         inputType: 'number',
         hideTriangle: true,
+        // A row's own `required` flag says nothing about its order; the schema kind decides that.
+        skipRequired: true,
+        required: requiredMetaColumns.includes(SchemaMetaColumn.Order),
         isReadonly,
         onChange: (value: number | string, data: SchemaFieldRow) => onChangeOrder(value, data),
       },

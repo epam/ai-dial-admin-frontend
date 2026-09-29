@@ -27,7 +27,9 @@ vi.mock('@/src/app/api/api');
 const ID = 'https://mydial.epam.com/custom_application_schemas/qq';
 const ENCODED = 'https%3A%2F%2Fmydial.epam.com%2Fcustom_application_schemas%2Fqq';
 
-const runner = { $id: ID, 'dial:applicationTypeDisplayName': 'QQ' } as DialAppRunnerResource;
+const STORAGE_NAME = 'quickapps2';
+const ENCODED_STORAGE_NAME = 'quickapps2';
+const runner = { $id: ID, name: STORAGE_NAME, 'dial:applicationTypeDisplayName': 'QQ' } as DialAppRunnerResource;
 
 describe('Assets app runner :: server actions', () => {
   beforeEach(() => {
@@ -55,12 +57,17 @@ describe('Assets app runner :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should encode the $id once as the Core resource name on create', async () => {
+  test('Should encode the storage name once as the Core resource name on create', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await createRunner(runner);
 
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, ENCODED, expect.anything());
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APP_TYPE_SCHEMA,
+      ENCODED_STORAGE_NAME,
+      expect.anything(),
+    );
   });
 
   test('Should create without an etag so Core rejects an existing runner', async () => {
@@ -71,14 +78,26 @@ describe('Assets app runner :: server actions', () => {
     expect((assetApi.put as any).mock.calls[0]).toHaveLength(4);
   });
 
-  test('Should pass the caller etag on update', async () => {
+  test('Should pass the caller etag and loaded storage path on update', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    await updateRunner(runner, 'etag123');
+    await updateRunner(
+      {
+        ...runner,
+        _metadata: { name: STORAGE_NAME, path: 'legacy-storage-name', folderId: '' },
+      },
+      'etag123',
+    );
 
-    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, ENCODED, expect.anything(), {
-      etag: 'etag123',
-    });
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APP_TYPE_SCHEMA,
+      STORAGE_NAME,
+      expect.anything(),
+      {
+        etag: 'etag123',
+      },
+    );
   });
 
   test.each(['!', '~', '*', "'", '(', ')'])('Should reject an id containing %s before calling Core', async (char) => {

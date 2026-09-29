@@ -80,7 +80,22 @@ const CatalogSchemaCreateProperties: FC<Props> = ({ entity, names, isUniqueNameE
   return (
     <div className="flex flex-col gap-y-8">
       <IdControl
+        label={t(EntityFieldsI18nKey.name)}
+        inputId="name"
+        validationField="name"
         names={names}
+        isUniqueNameError={isUniqueNameError}
+        entity={{ name: entity.name }}
+        isFullWidth={isModal}
+        disabled={!isModal}
+        onChangeEntity={({ name }) => onChangeEntity({ ...entity, name })}
+      />
+
+      <IdControl
+        inputId="schema-id"
+        validationField="schemaId"
+        label={t(EntityFieldsI18nKey.id)}
+        names={[]}
         isUrlId
         forbiddenChars={CORE_UNENCODABLE_ID_CHARS}
         isUniqueNameError={isUniqueNameError}

@@ -74,7 +74,7 @@ describe('CatalogSchemaCreateProperties', () => {
     const user = userEvent.setup();
     const onChangeEntity = renderForm(schema({ 'dial:catalogDisplayName': '' }));
 
-    await user.type(screen.getAllByRole('textbox')[1], 'A');
+    await user.type(screen.getAllByRole('textbox')[2], 'A');
 
     expect(onChangeEntity).toHaveBeenCalledWith(expect.objectContaining({ 'dial:catalogDisplayName': 'A' }));
   });

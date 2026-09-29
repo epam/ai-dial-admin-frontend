@@ -94,7 +94,8 @@ describe('BaseAssetList', () => {
   describe('getGridColumns — file roots', () => {
     test.each([
       [ApplicationRoute.PlatformModels, 'Name'],
-      [ApplicationRoute.PlatformCatalogSchemas, 'ID'],
+      [ApplicationRoute.PlatformCatalogSchemas, 'Name'],
+      [ApplicationRoute.PlatformAppRunners, 'Name'],
       [ApplicationRoute.AssetsApplications, 'Name'],
       [ApplicationRoute.AssetsToolsets, 'Name'],
     ])('%s uses the customized display-name column labeled %s', (view, headerName) => {

@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BasicI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { CatalogEntityType, CatalogSchemaOption } from '@/src/models/dial/catalog-schema';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import CatalogSchemaField from '../CatalogSchemaField';
 
 const isReadOnlyAdmin = vi.fn(() => false);
@@ -72,6 +70,28 @@ describe('CatalogSchemaField', () => {
     expect(screen.getByText('Agent card')).toBeTruthy();
   });
 
+  test('tells same-named schemas apart by their id', async () => {
+    const user = userEvent.setup();
+    const namesake: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': 'Model card' };
+    renderField({ options: [apiWritten, namesake] });
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getAllByText('Model card')).toHaveLength(2);
+    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
+    expect(screen.getByText(namesake.$id)).toBeTruthy();
+  });
+
+  test('adds no id beside a schema that has no display name', async () => {
+    const user = userEvent.setup();
+    const unnamed: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': '' };
+    renderField({ options: [unnamed] });
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getAllByText(unnamed.$id)).toHaveLength(1);
+  });
+
   test('stores the picked schema id', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -100,7 +120,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: 'Model card' }));
+    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
     await user.click(screen.getByText(BasicI18nKey.None));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
@@ -116,33 +136,6 @@ describe('CatalogSchemaField', () => {
     renderField();
 
     expect(screen.queryByRole('button', { name: 'Buttons.Open' })).toBeNull();
-  });
-
-  test('opens the selected schema in a new tab', async () => {
-    const user = userEvent.setup();
-    const open = vi.fn();
-    vi.stubGlobal('open', open);
-    renderField({ schemaId: apiWritten.$id });
-
-    await user.click(screen.getByRole('button', { name: 'Buttons.Open' }));
-
-    expect(open).toHaveBeenCalledWith(`/en/platform-catalog-schemas/${encodeURIComponent(apiWritten.$id)}`, '_blank');
-  });
-
-  test('produces the same segment a grid row click does, so a URI-shaped id stays one path segment', async () => {
-    const user = userEvent.setup();
-    const open = vi.fn();
-    vi.stubGlobal('open', open);
-    const schemaId = 'https://dial.epam.com/catalog-schemas/agent';
-    renderField({ schemaId });
-
-    await user.click(screen.getByRole('button', { name: 'Buttons.Open' }));
-
-    const [url] = open.mock.calls[0];
-    expect(url).toEqual(
-      `/en/platform-catalog-schemas/${getUrnForEntity(ApplicationRoute.PlatformCatalogSchemas, { name: schemaId }).split('/').pop()}`,
-    );
-    expect(url.split('/en/platform-catalog-schemas/')[1]).not.toContain('/');
   });
 
   test('a read-only admin cannot change the selection', () => {

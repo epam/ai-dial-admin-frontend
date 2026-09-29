@@ -6,6 +6,8 @@ import {
   generateFieldId,
   createEmptyField,
   getGridSchemaPart,
+  getNextFieldName,
+  hasInvalidFieldNames,
   resolveDef,
   isNullOnly,
   getEffectiveSchema,
@@ -57,6 +59,52 @@ describe('createEmptyField', () => {
     const field = createEmptyField('parent-1', 2);
     expect(field.parentId).toBe('parent-1');
     expect(field.depth).toBe(2);
+  });
+});
+
+describe('getNextFieldName', () => {
+  test('starts from field_1 on an empty level', () => {
+    expect(getNextFieldName([])).toBe('field_1');
+  });
+
+  test('takes the first name no sibling uses', () => {
+    const siblings = [createEmptyField(null, 0, 'field_1'), createEmptyField(null, 0, 'field_3')];
+    expect(getNextFieldName(siblings)).toBe('field_2');
+  });
+
+  test('keeps two added fields as two properties across a rebuild', () => {
+    const first = createEmptyField(null, 0, getNextFieldName([]));
+    const second = createEmptyField(null, 0, getNextFieldName([first]));
+
+    const rebuilt = jsonSchemaToFields(fieldsToJsonSchema([first, second]));
+
+    expect(rebuilt.map((field) => field.name)).toEqual(['field_1', 'field_2']);
+  });
+});
+
+describe('hasInvalidFieldNames', () => {
+  test('accepts unique non-empty names', () => {
+    expect(hasInvalidFieldNames([createEmptyField(null, 0, 'a'), createEmptyField(null, 0, 'b')])).toBe(false);
+  });
+
+  test('flags a blank name', () => {
+    expect(hasInvalidFieldNames([createEmptyField(null, 0, '  ')])).toBe(true);
+  });
+
+  test('flags a name used twice on one level', () => {
+    expect(hasInvalidFieldNames([createEmptyField(null, 0, 'a'), createEmptyField(null, 0, 'a')])).toBe(true);
+  });
+
+  test('allows the same name on different levels', () => {
+    const parent = { ...createEmptyField(null, 0, 'a'), type: 'object' as const };
+    parent.children = [createEmptyField(parent.id, 1, 'a')];
+    expect(hasInvalidFieldNames([parent])).toBe(false);
+  });
+
+  test('flags a duplicate inside a nested level', () => {
+    const parent = { ...createEmptyField(null, 0, 'a'), type: 'object' as const };
+    parent.children = [createEmptyField(parent.id, 1, 'x'), createEmptyField(parent.id, 1, 'x')];
+    expect(hasInvalidFieldNames([parent])).toBe(true);
   });
 });
 

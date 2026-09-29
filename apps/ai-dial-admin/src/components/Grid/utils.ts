@@ -186,15 +186,36 @@ export const haveGroupedColDefsSamePanelState = (columnDefs: ColDef[], nextColum
   );
 };
 
-export const updateGroupedColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
+// Stored entries that match a leaf are re-slotted into the leaves' order, and leaves the grid has not
+// saved yet are appended, so the panel's order survives even before the grid first writes its state.
+const withLeafOrderAndVisibility = (columns: ColumnState[], colDefs: ColDef[]): ColumnState[] => {
+  const leaves = toColumnLeaves(colDefs).filter((leaf) => leaf.field);
+  const leafIndex = new Map(leaves.map((leaf, index) => [leaf.field, index]));
+  const indexOf = (col: ColumnState) => leafIndex.get(col.colId) ?? -1;
+  const ordered = columns.filter((col) => indexOf(col) >= 0).sort((a, b) => indexOf(a) - indexOf(b));
+
+  let next = 0;
+  const slotted = columns.map((col) => {
+    if (indexOf(col) < 0) {
+      return col;
+    }
+    const target = ordered[next++];
+    return { ...target, hide: leaves[indexOf(target)].hide };
+  });
+
+  const storedIds = new Set(columns.map((col) => col.colId));
+  const unsaved = leaves
+    .filter((leaf) => !storedIds.has(leaf.field))
+    .map((leaf) => ({ colId: leaf.field, hide: leaf.hide }));
+
+  return [...slotted, ...unsaved];
+};
+
+export const updateColumnPanelStateInStorage = (storageKey: string, colDefs: ColDef[]) => {
   const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const model: GridModel = JSON.parse(stored);
-  const leafByField = new Map(toColumnLeaves(colDefs).map((leaf) => [leaf.field, leaf]));
-  const columns = (model.columns || []).map((col) => {
-    const leaf = leafByField.get(col.colId);
-    return leaf ? { ...col, hide: leaf.hide } : col;
-  });
-  saveColumnsStateToStorage(storageKey, { ...model, columns });
+  const columns = withLeafOrderAndVisibility(model.columns || [], colDefs);
+  saveColumnsStateToStorage(storageKey, { ...model, filters: model.filters ?? {}, columns });
 };
 
 export const getGroupedColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {
@@ -207,16 +228,6 @@ export const getGroupedColumnVisibilityFromGridState = (storageKey: string, colu
     return null;
   }
   return applyColumnStateOrderToGroupedColDefs(columnDefs, model.columns);
-};
-
-export const updateColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
-  const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
-  const model: GridModel = JSON.parse(stored);
-  const columns = (model.columns || []).map((col) => {
-    const def = colDefs.find((d) => d.field === col.colId);
-    return def ? { ...col, hide: def.hide } : col;
-  });
-  saveColumnsStateToStorage(storageKey, { ...model, columns });
 };
 
 export const getColumnVisibilityFromGridState = (storageKey: string, columnDefs: ColDef[]): ColDef[] | null => {
