@@ -8,6 +8,8 @@ describe('PingId', () => {
     expect(config.id).toBe('ping-id');
     expect(config.name).toBe('Ping Identity');
     expect(config.type).toBe('oauth');
+    expect(config.wellKnown).toBeUndefined();
+    expect(config.token).toBeUndefined();
     expect(config.options).toBe(options);
     expect(config.style.bg).toBe('#b3282d');
     expect(config.style.text).toBe('#fff');
