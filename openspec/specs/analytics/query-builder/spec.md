@@ -860,6 +860,13 @@ The SQL editor SHALL auto-format its contents — there SHALL be no manual "Form
 
 SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
 
+The guard SHALL follow the SQL buffer rather than the view being left: whenever the buffer holds SQL the
+builder has not been hydrated from — a message the AI view ran as raw SQL, or edited SQL the user left for
+the AI view — selecting the Builder or JSON view from any view SHALL go through the same translation and,
+where it applies, the same confirmation. Cancelling keeps the user in the view they were in. While an AI
+message's query is loading, the view switcher SHALL be disabled, so the SQL that loading leaves in the
+buffer always lands while the AI view is active.
+
 Leaving the SQL view for the **JSON** view is guarded the same way, by the same translation and the same popup — see "Switching from the SQL view to JSON translates the SQL buffer". The two switches differ only in where a successful translation lands: the Builder switch requires a builder-representable body, while the JSON switch shows any translated body.
 
 #### Scenario: Translatable SQL hydrates the builder without a prompt
@@ -892,6 +899,22 @@ Leaving the SQL view for the **JSON** view is guarded the same way, by the same 
 - **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
 - **THEN** no confirmation is shown
 - **AND** the builder reflects that query
+
+#### Scenario: Leaving the AI view after a raw-SQL run asks for confirmation
+
+- **WHEN** the user runs an AI message whose SQL the builder cannot represent and then selects the Builder view
+- **THEN** the confirmation popup is shown instead of the builder showing its earlier query
+- **AND** cancelling keeps the AI view
+
+#### Scenario: Edited SQL left for the AI view is still translated
+
+- **WHEN** the user edits SQL, switches to the AI view, and then selects the Builder view
+- **THEN** the edited SQL is translated and handled exactly as if the switch were made from the SQL view
+
+#### Scenario: The view switcher waits for a message to load
+
+- **WHEN** the user clicks Run on an AI message and its query is still loading
+- **THEN** the view switcher is disabled until loading finishes
 
 ### Requirement: Switching from the SQL view to JSON translates the SQL buffer
 

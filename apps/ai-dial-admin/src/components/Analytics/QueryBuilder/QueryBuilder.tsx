@@ -373,7 +373,9 @@ const QueryBuilder: FC<Props> = ({
   const onChangeView = async (next: QueryBuilderView) => {
     if (next === view) return;
     const isStructuredView = next === QueryBuilderView.Form || next === QueryBuilderView.Json;
-    if (isSqlView && sqlEdited && isStructuredView) {
+    // Judged by the SQL buffer, not the view being left: SQL the builder was never hydrated from can sit
+    // in the buffer while another view is active, and the builder would then show an older query.
+    if (sqlEdited && isStructuredView) {
       await leaveSqlBuffer(next);
       return;
     }
@@ -619,6 +621,9 @@ const QueryBuilder: FC<Props> = ({
                       options={viewOptions}
                       value={view}
                       onChange={onChangeView}
+                      // Loading an AI message decides what lands in the SQL buffer; a switch made before
+                      // it returns would leave that SQL pending under a view that never showed it.
+                      disabled={aiLoading}
                     />
                   ) : undefined
                 }
