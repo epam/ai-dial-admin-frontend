@@ -121,8 +121,13 @@ export const customMultiSelectTagsRenderer = (
  * those inputs usable only to a column identified as `FileManagerColumnKey.Name`.
  *
  * Only ITEM rows keep the repo's own renderer, for the icon/displayName/id presentation a folder
- * row has nothing to show for. Returned curried, like `UPDATED_AT_COLUMN`, so ui-kit can pass the
- * locale and compact-view arguments its renderer needs (`useFileManagerColumns`).
+ * row has nothing to show for.
+ *
+ * Curried, like `UPDATED_AT_COLUMN`: `useFileManagerColumns` calls a function column with these
+ * three arguments, and ui-kit's renderer needs all of them — under the 800px compact breakpoint it
+ * swaps a folder row for `DialFileManagerItemSummaryCell`, which formats the modified date from
+ * `dateLocale`/`dateOptions`. Resolving them here instead would leave folder rows uncompacted in
+ * the one layout where the date column is hidden.
  */
 export const getAssetNameColumn =
   (headerName: string) =>
@@ -213,15 +218,19 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
+  // Cast once: ui-kit accepts a column factory wherever a `ColDef` is declared and resolves it in
+  // `useFileManagerColumns`, but that union is not in ag-grid's own type.
+  const NAME_COLUMN_DEF = getAssetNameColumn('Name') as unknown as ColDef;
+
   if (isFileRootPath(currentPath)) {
-    return [getAssetNameColumn('Name') as unknown as ColDef];
+    return [NAME_COLUMN_DEF];
   }
 
   // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
   // resource's storage name; schema body `$id` values are available after opening the resource.
   if (isFlatPlatformView(view) || view === ApplicationRoute.Skills || isPlatformDualBucketView(view, currentPath)) {
     return [
-      getAssetNameColumn('Name') as unknown as ColDef,
+      NAME_COLUMN_DEF,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
@@ -231,19 +240,10 @@ export const getGridColumns = (
   // A versionless row (prompt/conversation) is a single stored resource — no Version column, so no
   // per-row version selection.
   if (isVersionlessAssetView(view)) {
-    return [
-      getAssetNameColumn('Name') as unknown as ColDef,
-      AUTHOR_COLUMN,
-      UPDATED_AT_COLUMN('Updated time') as ColDef,
-    ];
+    return [NAME_COLUMN_DEF, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
   }
 
-  return [
-    getAssetNameColumn('Name') as unknown as ColDef,
-    VERSION_COLUMN,
-    AUTHOR_COLUMN,
-    UPDATED_AT_COLUMN('Updated time') as ColDef,
-  ];
+  return [NAME_COLUMN_DEF, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
