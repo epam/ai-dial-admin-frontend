@@ -3,6 +3,7 @@ import { contentTypes } from '@/src/constants/file';
 import { Token } from '@/src/models/auth';
 import { errorObjLog } from '@/src/server/logger';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { getFileNameFromContentDisposition } from './get-file-name';
 import { sendRequest } from './send-request';
 
 export const streamRequest = async (
@@ -57,18 +58,6 @@ export const createReadableStream = (stream: ReadableStream<Uint8Array>): Readab
       push();
     },
   });
-};
-
-/**
- * Extracts the filename the backend actually sent, so a response whose content doesn't match the
- * caller-supplied `fileName` (e.g. an export that becomes a ZIP once file-type fields are involved)
- * still downloads with the right name and extension.
- */
-export const getFileNameFromContentDisposition = (disposition?: string | null): string | null => {
-  if (!disposition) return null;
-
-  const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'";\n]+)\1/);
-  return match?.[2]?.trim() || null;
 };
 
 export const getContentType = (fileName: string): string | null => {

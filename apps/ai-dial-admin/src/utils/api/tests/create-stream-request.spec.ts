@@ -6,7 +6,6 @@ import {
   streamRequest,
   createReadableStream,
   getContentType,
-  getFileNameFromContentDisposition,
   buildFilenameDisposition,
 } from '../create-stream-request';
 import { sendRequest } from '../send-request';
@@ -113,25 +112,6 @@ describe('Utils :: api :: streamRequest', () => {
 
     test('returns "image/svg+xml" for unknown extension', () => {
       expect(getContentType('file.svg')).toBe('image/svg+xml');
-    });
-  });
-
-  describe('getFileNameFromContentDisposition', () => {
-    test('returns null when the header is missing', () => {
-      expect(getFileNameFromContentDisposition(null)).toBe(null);
-      expect(getFileNameFromContentDisposition(undefined)).toBe(null);
-    });
-
-    test('extracts a quoted filename', () => {
-      expect(getFileNameFromContentDisposition('attachment; filename="export.zip"')).toBe('export.zip');
-    });
-
-    test('extracts an unquoted filename', () => {
-      expect(getFileNameFromContentDisposition('attachment; filename=export.zip')).toBe('export.zip');
-    });
-
-    test('returns null when no filename is present', () => {
-      expect(getFileNameFromContentDisposition('inline')).toBe(null);
     });
   });
 
