@@ -29,7 +29,7 @@ const AttributeSamplesPreview: FC<Props> = ({ title, type, values, totalCount })
         <div className="flex flex-col gap-1">
           {values.map((value, index) => (
             <div key={index} className="grid grid-cols-[20px_1fr] truncate text-sm text-primary">
-              <span className="text-secondary">{index + 1}</span> {value}
+              <span className="text-secondary">{index + 1}</span> <span className="truncate">{value}</span>
             </div>
           ))}
         </div>
