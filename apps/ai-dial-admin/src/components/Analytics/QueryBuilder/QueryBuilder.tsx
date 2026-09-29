@@ -11,6 +11,7 @@ import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analyti
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
+import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
 import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
@@ -131,7 +132,8 @@ const QueryBuilder: FC<Props> = ({
   const isChartConfigKept = useRef(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
-  // Remounts AiPanel (clearing its conversation) only on an explicit user entity switch — not on
+  const aiConversation = useAiConversation();
+  // Remounts AiPanel (clearing its prompt draft) only on an explicit user entity switch — not on
   // `state.entityName` directly, since running a message can itself change entityName (the generated
   // query may target a different entity than the one currently selected) and must NOT wipe the chat.
   const [aiConversationKey, setAiConversationKey] = useState(0);
@@ -139,6 +141,7 @@ const QueryBuilder: FC<Props> = ({
   const resetAiQuery = () => {
     setAiLoading(false);
     setAiLoadedMessageIndex(null);
+    aiConversation.reset();
     setAiConversationKey((key) => key + 1);
   };
 
@@ -339,15 +342,7 @@ const QueryBuilder: FC<Props> = ({
   };
 
   const leaveSqlBuffer = async (next: QueryBuilderView): Promise<void> => {
-    // A round trip that fails in transit is guarded exactly like a refused translation: either way
-    // there is no body to show, and letting the rejection escape would leave the view switch half-done.
-    let translated: StructuredQuery | null = null;
-    try {
-      const res = await translateSqlToQuery(sqlText);
-      translated = res?.success ? (res.response?.query ?? null) : null;
-    } catch {
-      translated = null;
-    }
+    const translated = await translateSqlOrNull(sqlText);
     const isRepresentable = !!translated && isBuilderRepresentable(translated, state.functions);
 
     if (!translated || (next === QueryBuilderView.Form && !isRepresentable)) {
@@ -373,7 +368,9 @@ const QueryBuilder: FC<Props> = ({
   const onChangeView = async (next: QueryBuilderView) => {
     if (next === view) return;
     const isStructuredView = next === QueryBuilderView.Form || next === QueryBuilderView.Json;
-    if (isSqlView && sqlEdited && isStructuredView) {
+    // Judged by the SQL buffer, not the view being left: SQL the builder was never hydrated from can sit
+    // in the buffer while another view is active, and the builder would then show an older query.
+    if (sqlEdited && isStructuredView) {
       await leaveSqlBuffer(next);
       return;
     }
@@ -468,25 +465,33 @@ const QueryBuilder: FC<Props> = ({
   const onRunAiMessage = async (sql: string, index: number) => {
     setAiLoadedMessageIndex(index);
     setAiLoading(true);
-    const res = await translateSqlToQuery(sql);
-    const translated = res.success ? (res.response?.query ?? null) : null;
+    const translated = await translateSqlOrNull(sql);
     let runFields = state.fields;
     let runEntityName = state.entityName;
     let request: QueryRunRequest = { kind: QueryRequestKind.Sql, sql };
-    if (translated && isBuilderRepresentable(translated, state.functions)) {
-      const hydrated = await hydrateBuilderFromQuery(translated);
-      runFields = hydrated.fields;
-      runEntityName = hydrated.state.entityName;
-      setSqlText('');
-      setJsonText('');
-      setJsonDiverged(false);
-      lastGeneratedSql.current = '';
-      request = { kind: QueryRequestKind.Structured, query: buildQuery(hydrated.state, hydrated.timeBound) };
-    } else {
+    const loadAsSql = () => {
       setSqlText(formatSql(sql));
       lastGeneratedSql.current = '';
+    };
+    try {
+      if (translated && isBuilderRepresentable(translated, state.functions)) {
+        const hydrated = await hydrateBuilderFromQuery(translated);
+        runFields = hydrated.fields;
+        runEntityName = hydrated.state.entityName;
+        setSqlText('');
+        setJsonText('');
+        setJsonDiverged(false);
+        lastGeneratedSql.current = '';
+        request = { kind: QueryRequestKind.Structured, query: buildQuery(hydrated.state, hydrated.timeBound) };
+      } else {
+        loadAsSql();
+      }
+    } catch {
+      // The builder could not take the query (its schema read failed in transit), so it runs as the SQL it was.
+      loadAsSql();
+    } finally {
+      setAiLoading(false);
     }
-    setAiLoading(false);
 
     setIsRunning(true);
     const runRes = request.kind === QueryRequestKind.Sql ? await runSql(request.sql) : await runQuery(request.query);
@@ -619,6 +624,9 @@ const QueryBuilder: FC<Props> = ({
                       options={viewOptions}
                       value={view}
                       onChange={onChangeView}
+                      // Loading an AI message decides what lands in the SQL buffer; a switch made before
+                      // it returns would leave that SQL pending under a view that never showed it.
+                      disabled={aiLoading}
                     />
                   ) : undefined
                 }
@@ -657,6 +665,7 @@ const QueryBuilder: FC<Props> = ({
                 ) : isAiView ? (
                   <AiPanel
                     key={aiConversationKey}
+                    conversation={aiConversation}
                     onRunMessage={onRunAiMessage}
                     loadedMessageIndex={aiLoadedMessageIndex}
                     runInFlight={aiLoading || isRunning}
@@ -772,17 +781,19 @@ const QueryBuilder: FC<Props> = ({
 const sameRange = (a: TimeRange, b?: TimeRange): boolean =>
   !!b && a.startDate.getTime() === b.startDate.getTime() && a.endDate.getTime() === b.endDate.getTime();
 
-// Describing the run must never be able to break it: the translation is rejected routinely (the SQL
-// view exists for DSL-inexpressible SQL) and can also fail in transit, and neither may take the run
-// down with it.
-const translateForMeta = async (request: QueryRunRequest): Promise<StructuredQuery | null> => {
-  if (request.kind !== QueryRequestKind.Sql) return null;
+// A translation that fails in transit counts as a refused one: the translation is rejected routinely
+// (the SQL view exists for DSL-inexpressible SQL), and no caller — a view switch, an AI run, the run's
+// description — may be taken down by it.
+const translateSqlOrNull = async (sql: string): Promise<StructuredQuery | null> => {
   try {
-    const res = await translateSqlToQuery(request.sql);
-    return res.success ? (res.response?.query ?? null) : null;
+    const res = await translateSqlToQuery(sql);
+    return res?.success ? (res.response?.query ?? null) : null;
   } catch {
     return null;
   }
 };
+
+const translateForMeta = async (request: QueryRunRequest): Promise<StructuredQuery | null> =>
+  request.kind === QueryRequestKind.Sql ? translateSqlOrNull(request.sql) : null;
 
 export default QueryBuilder;

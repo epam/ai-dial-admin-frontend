@@ -599,7 +599,7 @@ In `aggregate` mode the builder SHALL provide a Having section using the same ne
 
 ### Requirement: Sort keys
 
-The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select trigger SHALL carry a dimmed "Nulls:" prefix so its role is readable next to the direction select. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
+The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select SHALL name what each option places — "Nulls: default", "Nulls first", "Nulls last" — in its open list and its trigger, SHALL describe each option in its hover tooltip (the default's stating where the engine puts empty values: last when ascending, first when descending), and a non-default placement SHALL appear in the sort row's collapsed summary. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
 
 #### Scenario: Sort key serializes
 
@@ -608,8 +608,19 @@ The Sort section SHALL let the user add, edit, and remove sort keys, each with a
 
 #### Scenario: Nulls control names itself
 
-- **WHEN** the user inspects a sort key row
-- **THEN** the nulls select shows a "Nulls:" prefix before the selected value
+- **WHEN** the user opens a sort key's nulls select
+- **THEN** the options read "Nulls: default", "Nulls first", and "Nulls last"
+- **AND** hovering an option shows its description
+
+#### Scenario: A non-default placement shows in the collapsed row
+
+- **WHEN** a sort key places nulls first and its row is collapsed
+- **THEN** the row's summary names the field, the direction, and "Nulls first"
+
+#### Scenario: The default placement stays out of the collapsed row
+
+- **WHEN** a sort key leaves nulls at default and its row is collapsed
+- **THEN** the row's summary names only the field and the direction
 
 #### Scenario: A freshly added aggregate is immediately sortable
 
@@ -860,6 +871,13 @@ The SQL editor SHALL auto-format its contents — there SHALL be no manual "Form
 
 SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
 
+The guard SHALL follow the SQL buffer rather than the view being left: whenever the buffer holds SQL the
+builder has not been hydrated from — a message the AI view ran as raw SQL, or edited SQL the user left for
+the AI view — selecting the Builder or JSON view from any view SHALL go through the same translation and,
+where it applies, the same confirmation. Cancelling keeps the user in the view they were in. While an AI
+message's query is loading, the view switcher SHALL be disabled, so the SQL that loading leaves in the
+buffer always lands while the AI view is active.
+
 Leaving the SQL view for the **JSON** view is guarded the same way, by the same translation and the same popup — see "Switching from the SQL view to JSON translates the SQL buffer". The two switches differ only in where a successful translation lands: the Builder switch requires a builder-representable body, while the JSON switch shows any translated body.
 
 #### Scenario: Translatable SQL hydrates the builder without a prompt
@@ -892,6 +910,22 @@ Leaving the SQL view for the **JSON** view is guarded the same way, by the same 
 - **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
 - **THEN** no confirmation is shown
 - **AND** the builder reflects that query
+
+#### Scenario: Leaving the AI view after a raw-SQL run asks for confirmation
+
+- **WHEN** the user runs an AI message whose SQL the builder cannot represent and then selects the Builder view
+- **THEN** the confirmation popup is shown instead of the builder showing its earlier query
+- **AND** cancelling keeps the AI view
+
+#### Scenario: Edited SQL left for the AI view is still translated
+
+- **WHEN** the user edits SQL, switches to the AI view, and then selects the Builder view
+- **THEN** the edited SQL is translated and handled exactly as if the switch were made from the SQL view
+
+#### Scenario: The view switcher waits for a message to load
+
+- **WHEN** the user clicks Run on an AI message and its query is still loading
+- **THEN** the view switcher is disabled until loading finishes
 
 ### Requirement: Switching from the SQL view to JSON translates the SQL buffer
 
@@ -957,13 +991,31 @@ the existing two-level nesting rule, a structured query SHALL be treated as repr
   **either** operand of a `filter` or `having` predicate — names a function the served catalog
   lists;
 - each such call carries no argument beyond the ones its catalog entry declares (a variadic call
-  carries more, and the builder has exactly one slot per declared argument); and
+  carries more, and the builder has exactly one slot per declared argument);
 - each argument is of the kind its position expects — a literal for a literal argument, and for an
   `expression` argument either a field reference or a call to a served catalog function nested no
   more than one level deep, whose own `expression` arguments are field references — because those
-  are the only forms the argument editor produces and therefore the only ones it can show back.
-- a predicate's right operand is a literal value, an array of them, or a call to a served catalog
-  function — the right-hand shapes the condition editor produces.
+  are the only forms the argument editor produces and therefore the only ones it can show back;
+- a predicate carries exactly two operands, and its right operand is a literal value, a call to a served
+  catalog function, or — under `in`, and only there — an array of values; these are the right-hand shapes
+  the condition editor produces;
+- an array operand holds only items the `in` editor's comma-separated text keeps unchanged: string values
+  of one value type, each non-empty, without surrounding whitespace and without a comma;
+- a literal function argument is non-blank, because a blank literal reads as unfilled and drops the call;
+- a plain column `select` entry carries no alias, or one equal to its own name, because a column entry
+  has no alias editor in either mode;
+- `distinct` appears only on an `aggregate`-mode `select` entry calling a non-scalar function, the one
+  place the builder offers a Distinct toggle;
+- a `having` tree appears only in `aggregate` mode, the only mode with a Having section; and
+- in `aggregate` mode, the `select` entries and `group_by` agree both ways: every key names an output
+  column, and every plain column and every scalar call is a key — the builder files each of them under
+  Group by, so one that is not a key would become one (a scalar call wrapping an aggregate would put the
+  aggregate into GROUP BY). Output columns are named as the service names them: an explicit alias, else a
+  field's own name or a call's lowercase function name, suffixed `_1`, `_2`, … for uniqueness.
+
+A call that arrives without an alias is prefilled with its derived alias. Every sort key and every
+`having` condition that named that column by the service's name for it SHALL be rewritten to the
+prefilled alias, so the rebuilt query still sorts and filters on the same column.
 
 A query failing any of these SHALL be handled exactly as filter nesting deeper than two levels
 already is: it stays in the written view, fully editable and runnable, a non-blocking message states
@@ -981,7 +1033,8 @@ the builder has no editor for either, so showing them was showing something the 
 Two shapes move the other way, because the condition editor now produces them: a predicate compared
 against a function call, and a call nested one level inside an `expression` argument. A query
 carrying either — a bound relative to the current instant is the shape that motivated both — SHALL
-hydrate into the Builder rather than be pushed into the written views. A call nested two or more
+hydrate into the Builder rather than be pushed into the written views. So SHALL an aggregate query
+grouped by an unaliased scalar call, whose `group_by` key is the service's name for that call. A call nested two or more
 levels deep SHALL NOT: the argument editor stops at one, so showing it would again show less than
 the query says.
 
@@ -1028,6 +1081,42 @@ the query says.
 - **WHEN** a query's predicate carries a call whose `expression` argument is a call whose own `expression` argument is a third call
 - **THEN** the query is not builder-representable and is not hydrated with the deepest call dropped
 - **AND** Run stays enabled and executes the query as written
+
+#### Scenario: A renamed plain column stays in the written view
+
+- **WHEN** the SQL view holds `SELECT project_id AS project …` and the user switches to the Builder view
+- **THEN** the written-mode confirmation is shown instead of hydrating the builder without the alias
+- **AND** cancelling keeps the SQL text as written
+
+#### Scenario: Distinct outside an aggregate metric stays in the written view
+
+- **WHEN** a query sets `distinct` on a row-mode `select` call, a scalar group-by call, or a predicate operand
+- **THEN** the query is not builder-representable
+
+#### Scenario: A predicate with other than two operands stays in the written view
+
+- **WHEN** a query's predicate carries one operand, or three
+- **THEN** the query is not builder-representable
+
+#### Scenario: A list the `in` editor would rewrite stays in the written view
+
+- **WHEN** a query's array operand is used under an operator other than `in`, or holds an item containing a comma, an empty or padded item, or items of different value types
+- **THEN** the query is not builder-representable
+
+#### Scenario: A scalar call wrapping an aggregate stays in the written view
+
+- **WHEN** an aggregate-mode query selects `model` and `round(avg(latency))`, grouped by `model` only
+- **THEN** the query is not builder-representable
+
+#### Scenario: References to an unaliased call follow its prefilled alias
+
+- **WHEN** an aggregate-mode query selects `count(*)` without an alias and sorts by `count`
+- **THEN** the query hydrates into the Builder, and the rebuilt query sorts by the alias the count column now carries
+
+#### Scenario: A list the `in` editor keeps is representable
+
+- **WHEN** a query compares a column under `in` against an array of trimmed, comma-free string items
+- **THEN** the query is representable and comes back from the builder unchanged
 
 ### Requirement: The SQL editor reads the selected source from the builder context
 
@@ -1288,4 +1377,55 @@ happens only through the per-message actions on the transcript.
 
 - **WHEN** the AI view is active
 - **THEN** the entity selector and time filter controls are still shown and usable
+
+### Requirement: The AI conversation outlives leaving the AI view
+
+The AI conversation and which of its messages is the loaded query SHALL persist while the user shows another
+view (Form, JSON, SQL) or collapses and restores the rail, and SHALL be shown unchanged on returning to the
+AI view. Only selecting a different entity clears them (see "Changing the entity clears the conversation
+and loaded state"); a reply still in flight from a cleared conversation SHALL NOT appear in the next one.
+
+#### Scenario: Returning from another view shows the same conversation
+
+- **WHEN** the user has run a message in the AI view, switches to the SQL view, and returns to the AI view
+- **THEN** the earlier messages are shown and the run message's Run action is still disabled
+
+#### Scenario: A new reply after returning is runnable
+
+- **WHEN** the user returns to the AI view after running a message and sends a new request whose reply
+  carries SQL
+- **THEN** the new reply's Run action is enabled
+
+#### Scenario: Collapsing the rail keeps the conversation
+
+- **WHEN** the user collapses and restores the rail while the AI view holds a conversation
+- **THEN** the conversation is shown unchanged
+
+#### Scenario: A reply for a cleared conversation is dropped
+
+- **WHEN** the user selects a different entity while a reply is still in flight
+- **THEN** the late reply does not appear and the prompt is usable again
+
+#### Scenario: A send that fails in transit
+
+- **WHEN** the request for a reply fails in transit
+- **THEN** a failure notification is shown and the prompt and Send remain usable
+
+### Requirement: Running a message survives a failed translation round trip
+
+When translating a message's SQL, or reading the schema its query targets, fails in transit, running that
+message SHALL behave as for a refused translation: the raw SQL is shown in the SQL view and executed via
+the SQL path. A failure while loading a
+message's query SHALL NOT leave the transcript's Run actions disabled.
+
+#### Scenario: Translation rejected in transit
+
+- **WHEN** the user clicks Run on a message and the translation request fails in transit
+- **THEN** the query executes via the SQL path and Run actions on other messages remain enabled
+
+#### Scenario: Schema read rejected in transit
+
+- **WHEN** the user clicks Run on a representable message targeting another entity and that entity's schema
+  read fails in transit
+- **THEN** the query executes via the SQL path
 

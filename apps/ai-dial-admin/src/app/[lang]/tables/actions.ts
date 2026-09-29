@@ -65,7 +65,7 @@ export async function replaceTableAccess(name: string, access: TableAccess): Pro
 
 export async function getRoles(): Promise<AnalyticsRoleCatalog> {
   const warnings: EntitiesI18nKey[] = [];
-  const roles = await readConfigEntities<ConfigEntityRow>(await token(), ConfigFileEntityType.Roles, warnings, false);
+  const roles = await readConfigEntities<ConfigEntityRow>(await token(), ConfigFileEntityType.Roles, warnings);
 
   return { roles, warnings };
 }
