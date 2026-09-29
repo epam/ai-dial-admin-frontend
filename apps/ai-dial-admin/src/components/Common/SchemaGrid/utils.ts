@@ -1,7 +1,17 @@
 import { JSONSchema7, JSONSchema7Definition, JSONSchema7TypeName } from 'json-schema';
 
+import { CATALOG_META_SECTION, CATALOG_META_TAB } from '@/src/constants/catalog-schemas';
 import { resolveRef } from '@/src/utils/schema';
-import { NEW_FIELD_NAME_PREFIX } from './constants';
+import { DEFAULT_SCHEMA_FIELD_INPUT_PROPS, NEW_FIELD_NAME_PREFIX } from './constants';
+import {
+  ResolvedSchemaFieldInputProps,
+  SchemaConstraintRule,
+  SchemaConstraintViolation,
+  SchemaFieldInputConfig,
+  SchemaFieldInputProps,
+  SchemaInputField,
+  SchemaMetaColumn,
+} from './models';
 
 export interface SchemaFieldRow {
   id: string;
@@ -617,4 +627,96 @@ export const schemaToTreeNodes = (
         : undefined;
     return { path, name, type, children, ...(dialMeta && Object.keys(dialMeta).length > 0 && { dialMeta }) };
   });
+};
+
+/**
+ * `undefined` keeps the defaults and `false` drops them all; otherwise each field's attributes are merged
+ * over its defaults, `null` drops that field, and an attribute set to `undefined` renders as absent.
+ */
+export const resolveSchemaFieldInputProps = (
+  config?: SchemaFieldInputConfig | false,
+): ResolvedSchemaFieldInputProps => {
+  if (config === false) return {};
+  if (!config) return { ...DEFAULT_SCHEMA_FIELD_INPUT_PROPS } as ResolvedSchemaFieldInputProps;
+
+  const fields = new Set([
+    ...Object.keys(DEFAULT_SCHEMA_FIELD_INPUT_PROPS),
+    ...Object.keys(config),
+  ]) as Set<SchemaInputField>;
+  const resolved: ResolvedSchemaFieldInputProps = {};
+  fields.forEach((field) => {
+    const override = config[field];
+    if (override === null) return;
+    resolved[field] = { ...DEFAULT_SCHEMA_FIELD_INPUT_PROPS[field], ...override };
+  });
+  return resolved;
+};
+
+/** `<input pattern>` matches the whole value in `u` mode; a pattern that cannot compile checks nothing. */
+const compilePattern = (pattern: string): RegExp | null => {
+  try {
+    return new RegExp(`^(?:${pattern})$`, 'u');
+  } catch {
+    return null;
+  }
+};
+
+const getRuleViolations = (
+  field: SchemaInputField,
+  value: string,
+  props: SchemaFieldInputProps | undefined,
+): SchemaConstraintViolation[] => {
+  if (!props) return [];
+  const violations: SchemaConstraintViolation[] = [];
+  const { maxLength, minLength, pattern } = props;
+
+  if (maxLength != null && value.length > maxLength) {
+    violations.push({ field, rule: SchemaConstraintRule.MaxLength, limit: maxLength });
+  }
+  // As in HTML, an empty value is emptiness's concern, not a length or format one.
+  if (!value) return violations;
+  if (minLength != null && value.length < minLength) {
+    violations.push({ field, rule: SchemaConstraintRule.MinLength, limit: minLength });
+  }
+  if (pattern && compilePattern(pattern)?.test(value) === false) {
+    violations.push({ field, rule: SchemaConstraintRule.Pattern, limit: pattern });
+  }
+  return violations;
+};
+
+const toText = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+/**
+ * The values an input's own `maxLength` cannot stop — from the raw JSON editor, an import, or a schema
+ * stored before the limits — checked the way the browser would. Tab and Section are checked only where
+ * their cells exist: on first-level rows of a consumer that shows those columns.
+ */
+export const getFieldConstraintViolations = (
+  fields: SchemaFieldRow[],
+  resolved: ResolvedSchemaFieldInputProps,
+  metaColumns: SchemaMetaColumn[] = [],
+): SchemaConstraintViolation[] => {
+  const hasTab = metaColumns.includes(SchemaMetaColumn.Tab);
+  const hasSection = metaColumns.includes(SchemaMetaColumn.Section);
+  const found = new Map<string, SchemaConstraintViolation>();
+
+  const check = (field: SchemaInputField, value: unknown) =>
+    getRuleViolations(field, toText(value), resolved[field]).forEach((violation) =>
+      found.set(`${violation.field}:${violation.rule}`, violation),
+    );
+
+  const walk = (rows: SchemaFieldRow[]) =>
+    rows.forEach((row) => {
+      check(SchemaInputField.Name, row.name);
+      check(SchemaInputField.Title, row.title);
+      check(SchemaInputField.Description, row.description);
+      if (row.parentId === null) {
+        if (hasTab) check(SchemaInputField.Tab, row.dialMeta?.[CATALOG_META_TAB]);
+        if (hasSection) check(SchemaInputField.Section, row.dialMeta?.[CATALOG_META_SECTION]);
+      }
+      walk(row.children ?? []);
+    });
+
+  walk(fields);
+  return [...found.values()];
 };

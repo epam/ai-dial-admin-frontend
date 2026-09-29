@@ -23,17 +23,25 @@ import { useI18n } from '@/src/locales/client';
 import { DialErrorText, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { getSchemaGridColumns } from './columns';
 import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from './constants';
-import { SchemaMetaColumn, SchemaMetaHandlers } from './models';
+import { SchemaConstraintRule, SchemaFieldInputConfig, SchemaMetaColumn, SchemaMetaHandlers } from './models';
 import {
   SchemaFieldRow,
   createEmptyField,
   fieldsToJsonSchema,
   flattenFields,
   getGridSchemaPart,
+  getFieldConstraintViolations,
   getNextFieldName,
   hasInvalidFieldNames,
   jsonSchemaToFields,
+  resolveSchemaFieldInputProps,
 } from './utils';
+
+const CONSTRAINT_MESSAGE_KEYS: Record<SchemaConstraintRule, BasicI18nKey> = {
+  [SchemaConstraintRule.MaxLength]: BasicI18nKey.FieldValueTooLong,
+  [SchemaConstraintRule.MinLength]: BasicI18nKey.FieldValueTooShort,
+  [SchemaConstraintRule.Pattern]: BasicI18nKey.FieldValueFormatInvalid,
+};
 
 interface SchemaGridProps {
   schema?: JSONSchema7;
@@ -43,6 +51,12 @@ interface SchemaGridProps {
   metaColumns?: SchemaMetaColumn[];
   /** Which of those columns the schema kind requires a value in, on every top-level property. */
   requiredMetaColumns?: SchemaMetaColumn[];
+  /**
+   * Native attributes per free-text cell, merged over `DEFAULT_SCHEMA_FIELD_INPUT_PROPS`; `false` drops
+   * the defaults. Their `maxLength`, `minLength` and `pattern` also gate save. Pass a stable value (a
+   * named constant): the column definitions are rebuilt whenever it changes.
+   */
+  fieldInputProps?: SchemaFieldInputConfig | false;
   isReadonly?: boolean;
 }
 
@@ -52,6 +66,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({
   isSkipRefresh,
   metaColumns,
   requiredMetaColumns,
+  fieldInputProps,
   isReadonly,
 }) => {
   const t = useI18n();
@@ -257,11 +272,18 @@ const SchemaGrid: FC<SchemaGridProps> = ({
   const validationField = useId();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const hasNameErrors = useMemo(() => hasInvalidFieldNames(fields), [fields]);
+  const resolvedInputProps = useMemo(() => resolveSchemaFieldInputProps(fieldInputProps), [fieldInputProps]);
+  // A read-only grid holds a schema nobody here can edit, so its values must not block the save.
+  const constraintViolations = useMemo(
+    () => (isReadonlyGrid ? [] : getFieldConstraintViolations(fields, resolvedInputProps, metaColumns)),
+    [isReadonlyGrid, fields, resolvedInputProps, metaColumns],
+  );
+  const isValid = !hasNameErrors && !constraintViolations.length;
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: !hasNameErrors });
+    dispatch({ type: ValidationActionType.SetField, field: validationField, isValid });
     // A Reset from a modal closing over this grid clears every field, so the grid reports itself again.
-  }, [dispatch, validationField, hasNameErrors, resetCounter]);
+  }, [dispatch, validationField, isValid, resetCounter]);
 
   useEffect(
     () => () => dispatch({ type: ValidationActionType.RemoveField, field: validationField }),
@@ -302,6 +324,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({
         isReadonlyGrid,
         metaHandlers,
         requiredMetaColumns,
+        resolvedInputProps,
       ),
     [
       onToggleExpand,
@@ -315,6 +338,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({
       isReadonlyGrid,
       metaHandlers,
       requiredMetaColumns,
+      resolvedInputProps,
     ],
   );
 
@@ -360,6 +384,13 @@ const SchemaGrid: FC<SchemaGridProps> = ({
   return (
     <div className="flex flex-col h-full">
       {hasNameErrors && <DialErrorText className="mb-2" text={t(BasicI18nKey.FieldNamesInvalid)} />}
+      {constraintViolations.map(({ field, rule, limit }) => (
+        <DialErrorText
+          key={`${field}-${rule}`}
+          className="mb-2"
+          text={t(CONSTRAINT_MESSAGE_KEYS[rule], { field, limit })}
+        />
+      ))}
       <div className="flex-1 min-h-0">
         <GridView<SchemaFieldRow>
           getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
