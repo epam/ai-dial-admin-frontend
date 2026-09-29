@@ -9,6 +9,7 @@ describe('GitLab', () => {
     expect(config.name).toBe('GitLab');
     expect(config.type).toBe('oauth');
     expect(config.token).toBe('https://gitlab.com/oauth/token');
+    expect(config.wellKnown).toBe('https://gitlab.com/.well-known/openid-configuration');
     expect(config.userinfo).toBe('https://gitlab.com/api/v4/user');
     expect(config.options).toBe(options);
     expect(config.style.logo).toBe('/gitlab.svg');
