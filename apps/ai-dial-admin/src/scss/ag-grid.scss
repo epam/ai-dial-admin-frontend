@@ -122,6 +122,18 @@
           height: 24px !important;
         }
       }
+      // A filter row with no input (see EmptyFloatingFilter): drop the empty body so the button
+      // centres in the cell instead of hanging off its right edge.
+      .ag-floating-filter:has(.ag-grid-filter-button-only) {
+        .ag-floating-filter-body {
+          @apply hidden;
+        }
+
+        .ag-floating-filter-button {
+          @apply flex h-full w-full items-center justify-center;
+          margin: 0;
+        }
+      }
     }
   }
 

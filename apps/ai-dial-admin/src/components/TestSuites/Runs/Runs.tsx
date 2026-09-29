@@ -4,6 +4,7 @@ import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { useRouter } from 'next/navigation';
 
 import { cancelRun, removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
@@ -12,6 +13,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
+import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
@@ -21,7 +23,7 @@ import {
   getExportOperation,
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
-import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { SUITE_RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
@@ -40,6 +42,7 @@ interface Props {
 
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
+  const router = useRouter();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -63,10 +66,11 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       'ag-activity-row-clickable': () => true,
     },
     onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        e.node.setSelected(true, true);
-        onOpenInNewTab(ApplicationRoute.Runs, e.data);
+      if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) {
+        return;
       }
+      e.node.setSelected(true, true);
+      onCellClicked(e, ApplicationRoute.Runs, router.push);
     },
   };
 
@@ -218,7 +222,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const columnDefs = useMemo(
     () => [
-      ...RUNS_COLUMN,
+      ...SUITE_RUNS_COLUMN,
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),

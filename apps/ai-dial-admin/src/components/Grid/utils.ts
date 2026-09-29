@@ -16,7 +16,9 @@ export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) 
 export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: ColumnState[]): GridModel => {
   const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const parsed = JSON.parse(model);
-  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
+  // `filters` must stay an object: `applyGridState` hands it straight to `setFilterModel`, which
+  // reads it as a colId -> model map.
+  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: {} };
 };
 
 export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
