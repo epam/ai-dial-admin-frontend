@@ -22,7 +22,7 @@ const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange })
         <IdControl
           label={EntityFieldsI18nKey.name}
           inputId="name"
-          entity={{ name: runner._metadata?.name }}
+          entity={{ name: runner._metadata?.name || runner.name }}
           disabled
           isFullWidth={false}
           onChangeEntity={() => undefined}
@@ -33,6 +33,7 @@ const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange })
           disabled
           isFullWidth={false}
           onChangeEntity={() => undefined}
+          isUrlId
         />
         <SchemeProperties
           names={[]}
