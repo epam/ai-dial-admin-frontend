@@ -59,3 +59,23 @@ describe('SimpleButtonsWrapper :: getAssetContext forwarding', () => {
     expect(screen.getByText('received-getAssetContext:false')).toBeInTheDocument();
   });
 });
+
+describe('SimpleButtonsWrapper :: isSaving', () => {
+  test('disables Save while isSaving is true, so a spammed click cannot fire a second save', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaving />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  test('leaves Save enabled once isSaving clears, following isValid as before', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged isSaving={false} />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+
+  test('leaves Save enabled when isSaving is omitted, unchanged for callers that do not guard saves', () => {
+    render(<SimpleButtonsWrapper {...baseProps} isChanged />);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
+  });
+});
