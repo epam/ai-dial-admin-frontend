@@ -1,4 +1,4 @@
-import { ChangeEvent, ComponentProps, KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, ComponentProps, InputHTMLAttributes, KeyboardEvent, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -26,6 +26,11 @@ interface EditableCellRendererParams extends ICellRendererParams {
   min?: string | number;
   max?: string | number;
   isRightAligned?: boolean;
+  /** Native attributes for the input; the ones the renderer sets itself always win. */
+  inputProps?: Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    'value' | 'defaultValue' | 'onChange' | 'onKeyDown' | 'type' | 'id' | 'className'
+  >;
 }
 
 const EditableCellRenderer = ({
@@ -50,6 +55,7 @@ const EditableCellRenderer = ({
   min,
   max,
   isRightAligned,
+  inputProps,
 }: EditableCellRendererParams) => {
   const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
@@ -113,16 +119,17 @@ const EditableCellRenderer = ({
   return (
     <>
       <input
+        {...inputProps}
         id="editable-cell-renderer"
         type={inputType}
-        inputMode={inputMode}
+        inputMode={inputMode ?? inputProps?.inputMode}
         value={correctValue}
-        placeholder={correctPlaceholder}
+        placeholder={correctPlaceholder || inputProps?.placeholder}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        step={step}
-        min={min}
-        max={max}
+        step={step ?? inputProps?.step}
+        min={min ?? inputProps?.min}
+        max={max ?? inputProps?.max}
         className={classNames(
           'leading-[18px] h-[32px] dial-input px-2 py-1',
           !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
