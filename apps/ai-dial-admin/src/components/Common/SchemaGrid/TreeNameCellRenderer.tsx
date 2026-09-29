@@ -4,10 +4,14 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
+import { SchemaFieldInputProps } from '@/src/components/Common/SchemaGrid/models';
+
 interface TreeNameCellRendererParams extends ICellRendererParams {
   onToggleExpand: (data: unknown) => void;
   onChangeName: (value: string, data: unknown) => void;
   isReadonly?: boolean;
+  /** Native attributes for the name input; the ones the renderer sets itself always win. */
+  inputProps?: SchemaFieldInputProps;
 }
 
 const TreeNameCellRenderer = ({
@@ -16,6 +20,7 @@ const TreeNameCellRenderer = ({
   onToggleExpand,
   onChangeName,
   setValue,
+  inputProps,
 }: TreeNameCellRendererParams) => {
   const [inputValue, setInputValue] = useState(data?.name || '');
 
@@ -49,6 +54,7 @@ const TreeNameCellRenderer = ({
       </div>
       {!isReadonly ? (
         <input
+          {...inputProps}
           type="text"
           value={inputValue}
           placeholder="field_name"

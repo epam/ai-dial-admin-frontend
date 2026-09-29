@@ -9,6 +9,8 @@ import { getStatusLabel, isTransitionalRunStatus } from './utils';
 
 interface Props {
   status?: RunStatus | string;
+  /** Dense surfaces (a list row) show the indicator only; the label stays in the tooltip and the a11y tree. */
+  isLabelHidden?: boolean;
 }
 
 const SETTLED_STATUS_DOT_CLASS: Partial<Record<RunStatus, string>> = {
@@ -17,7 +19,7 @@ const SETTLED_STATUS_DOT_CLASS: Partial<Record<RunStatus, string>> = {
   [RunStatus.CANCELLED]: 'bg-secondary',
 };
 
-const RunStatusComponent: FC<Props> = ({ status }) => {
+const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
   const t = useI18n();
 
   if (!status) {
@@ -26,21 +28,36 @@ const RunStatusComponent: FC<Props> = ({ status }) => {
 
   const statusLabel = getStatusLabel(status, t);
   const dotClass = SETTLED_STATUS_DOT_CLASS[status as RunStatus] ?? 'bg-secondary';
+  const isTransitional = isTransitionalRunStatus(status);
+
+  const indicator = isTransitional ? (
+    <DialLoader size={12} className="size-2" />
+  ) : (
+    <div className={classNames('size-[10px] rounded-full', dotClass)}></div>
+  );
+
+  if (isLabelHidden) {
+    return (
+      <div className="flex size-full items-center">
+        <DialTooltip tooltip={statusLabel}>
+          <span className="flex items-center">
+            {indicator}
+            <span className="sr-only">{statusLabel}</span>
+          </span>
+        </DialTooltip>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">
-      {isTransitionalRunStatus(status) ? (
-        <>
-          <DialLoader size={12} className="size-2" />
-          <span className="whitespace-nowrap">{statusLabel}</span>
-        </>
+      {indicator}
+      {isTransitional ? (
+        <span className="whitespace-nowrap">{statusLabel}</span>
       ) : (
-        <>
-          <div className={classNames('size-[10px] rounded-full', dotClass)}></div>
-          <DialTooltip tooltip={statusLabel}>
-            <span>{statusLabel}</span>
-          </DialTooltip>
-        </>
+        <DialTooltip tooltip={statusLabel}>
+          <span>{statusLabel}</span>
+        </DialTooltip>
       )}
     </div>
   );

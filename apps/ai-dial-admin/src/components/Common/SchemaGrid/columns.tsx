@@ -3,7 +3,12 @@ import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-communit
 import { FC } from 'react';
 
 import { DIAL_META_PROPERTY_KIND, DIAL_META_PROPERTY_ORDER } from '@/src/components/Common/SchemaGrid/constants';
-import { SchemaMetaColumn, SchemaMetaHandlers } from '@/src/components/Common/SchemaGrid/models';
+import {
+  ResolvedSchemaFieldInputProps,
+  SchemaInputField,
+  SchemaMetaColumn,
+  SchemaMetaHandlers,
+} from '@/src/components/Common/SchemaGrid/models';
 import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import {
   CATALOG_META_LOCALIZED,
@@ -81,6 +86,7 @@ export const getSchemaGridColumns = (
   isReadonly?: boolean,
   metaHandlers: SchemaMetaHandlers = {},
   requiredMetaColumns: SchemaMetaColumn[] = [],
+  fieldInputProps: ResolvedSchemaFieldInputProps = {},
 ): ColDef<SchemaFieldRow>[] => {
   const onChangeOrder = metaHandlers[SchemaMetaColumn.Order];
   const onChangePropertyKind = metaHandlers[SchemaMetaColumn.PropertyKind];
@@ -106,6 +112,7 @@ export const getSchemaGridColumns = (
         onToggleExpand,
         onChangeName,
         isReadonly,
+        inputProps: fieldInputProps[SchemaInputField.Name],
       },
     },
     {
@@ -123,6 +130,7 @@ export const getSchemaGridColumns = (
         skipRequired: true,
         isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeTitle(value, data),
+        inputProps: fieldInputProps[SchemaInputField.Title],
       },
     },
     {
@@ -140,6 +148,7 @@ export const getSchemaGridColumns = (
         skipRequired: true,
         isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeDescription(value, data),
+        inputProps: fieldInputProps[SchemaInputField.Description],
       },
     },
     {
@@ -205,6 +214,7 @@ export const getSchemaGridColumns = (
         required: requiredMetaColumns.includes(SchemaMetaColumn.Order),
         isReadonly,
         onChange: (value: number | string, data: SchemaFieldRow) => onChangeOrder(value, data),
+        inputProps: fieldInputProps[SchemaInputField.Order],
       },
     });
   }
@@ -248,6 +258,7 @@ export const getSchemaGridColumns = (
         skipRequired: true,
         isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeTab(value, data),
+        inputProps: fieldInputProps[SchemaInputField.Tab],
       },
     });
   }
@@ -270,6 +281,7 @@ export const getSchemaGridColumns = (
         skipRequired: true,
         isReadonly,
         onChange: (value: string, data: SchemaFieldRow) => onChangeSection(value, data),
+        inputProps: fieldInputProps[SchemaInputField.Section],
       },
     });
   }

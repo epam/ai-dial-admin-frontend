@@ -1,4 +1,4 @@
-import { SchemaMetaColumn } from './models';
+import { SchemaFieldInputConfig, SchemaInputField, SchemaMetaColumn } from './models';
 
 export const DIAL_META_PROPERTY_ORDER = 'dial:propertyOrder';
 export const DIAL_META_PROPERTY_KIND = 'dial:propertyKind';
@@ -21,3 +21,16 @@ export const CATALOG_SCHEMA_META_COLUMNS: SchemaMetaColumn[] = [
   SchemaMetaColumn.Widget,
   SchemaMetaColumn.Localized,
 ];
+
+/**
+ * Applied to every consumer unless it passes its own `fieldInputProps`. Core's catalog meta-schema
+ * declares `title` and `description` as plain strings with no `maxLength`; if it ever adds one, these
+ * must follow it.
+ */
+export const DEFAULT_SCHEMA_FIELD_INPUT_PROPS: SchemaFieldInputConfig = {
+  [SchemaInputField.Name]: { maxLength: 255 },
+  [SchemaInputField.Title]: { maxLength: 255 },
+  [SchemaInputField.Tab]: { maxLength: 255 },
+  [SchemaInputField.Section]: { maxLength: 255 },
+  [SchemaInputField.Description]: { maxLength: 1024 },
+};

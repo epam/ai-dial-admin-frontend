@@ -1,3 +1,5 @@
+import { InputHTMLAttributes } from 'react';
+
 import { SchemaFieldRow } from './utils';
 
 export enum SchemaMetaColumn {
@@ -17,4 +19,38 @@ export interface SchemaMetaHandlers {
   [SchemaMetaColumn.Section]?: (value: string, data: SchemaFieldRow) => void;
   [SchemaMetaColumn.Widget]?: (value: string, data: SchemaFieldRow) => void;
   [SchemaMetaColumn.Localized]?: (value: boolean, data: SchemaFieldRow) => void;
+}
+
+/** The grid's free-text cells a consumer can hand native input attributes to. */
+export enum SchemaInputField {
+  Name = 'Name',
+  Title = 'Title',
+  Description = 'Description',
+  Tab = 'Tab',
+  Section = 'Section',
+  Order = 'Order',
+}
+
+/** The cell drives value, change, keys, type, id and styling itself, so those stay out of reach. */
+export type SchemaFieldInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'defaultValue' | 'onChange' | 'onKeyDown' | 'type' | 'id' | 'className'
+>;
+
+/** `null` drops that field's defaults; a field left out keeps them. */
+export type SchemaFieldInputConfig = Partial<Record<SchemaInputField, SchemaFieldInputProps | null>>;
+
+export type ResolvedSchemaFieldInputProps = Partial<Record<SchemaInputField, SchemaFieldInputProps>>;
+
+export enum SchemaConstraintRule {
+  MaxLength = 'maxLength',
+  MinLength = 'minLength',
+  Pattern = 'pattern',
+}
+
+export interface SchemaConstraintViolation {
+  field: SchemaInputField;
+  rule: SchemaConstraintRule;
+  /** The length for the length rules, the pattern source for `pattern`. */
+  limit: number | string;
 }

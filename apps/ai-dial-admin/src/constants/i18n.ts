@@ -150,6 +150,9 @@ export enum BasicI18nKey {
   AddField = 'Basic.AddField',
   AddSubField = 'Basic.AddSubField',
   FieldNamesInvalid = 'Basic.FieldNamesInvalid',
+  FieldValueTooLong = 'Basic.FieldValueTooLong',
+  FieldValueTooShort = 'Basic.FieldValueTooShort',
+  FieldValueFormatInvalid = 'Basic.FieldValueFormatInvalid',
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
   SelectAll = 'Basic.SelectAll',
@@ -2471,7 +2474,6 @@ export enum QueryBuilderI18nKey {
   ComparedAgainst = 'QueryBuilder.ComparedAgainst',
   Direction = 'QueryBuilder.Direction',
   Nulls = 'QueryBuilder.Nulls',
-  NullsPrefix = 'QueryBuilder.NullsPrefix',
   Select = 'QueryBuilder.Select',
   Untagged = 'QueryBuilder.Untagged',
   NoFields = 'QueryBuilder.NoFields',
@@ -2585,6 +2587,12 @@ export enum QueryBuilderI18nKey {
   DirectionAscDescription = 'QueryBuilder.DirectionAscDescription',
   DirectionDesc = 'QueryBuilder.DirectionDesc',
   DirectionDescDescription = 'QueryBuilder.DirectionDescDescription',
+  NullsDefault = 'QueryBuilder.NullsDefault',
+  NullsDefaultDescription = 'QueryBuilder.NullsDefaultDescription',
+  NullsFirst = 'QueryBuilder.NullsFirst',
+  NullsFirstDescription = 'QueryBuilder.NullsFirstDescription',
+  NullsLast = 'QueryBuilder.NullsLast',
+  NullsLastDescription = 'QueryBuilder.NullsLastDescription',
 }
 
 export enum QueriesI18nKey {

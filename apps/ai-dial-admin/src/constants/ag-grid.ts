@@ -18,6 +18,8 @@ export const infiniteGridOptions: Partial<GridOptions> = {
 };
 
 export const NO_BORDER_CLASS = 'ag-grid-no-border';
+/** Marks a filter row whose body is empty, so `ag-grid.scss` can centre its filter button. */
+export const FILTER_BUTTON_ONLY_CLASS = 'ag-grid-filter-button-only';
 export const NO_CHECKBOX_CLASS = 'ag-grid-no-checkbox';
 
 export const ACTIONS_COLUMN_CEL_ID = 'actionsColumn';

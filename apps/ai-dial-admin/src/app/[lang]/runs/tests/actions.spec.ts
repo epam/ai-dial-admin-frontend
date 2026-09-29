@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { structuredQueryApi } from '@/src/app/api/api';
 import { QueryMode, StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { RunStatus } from '@/src/models/evaluation/run';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { executeStructuredQuery } from '../actions';
+import { executeStructuredQuery, getRunsQuery } from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -36,5 +37,33 @@ describe('Runs server actions', () => {
     const result = await executeStructuredQuery(QUERY_MOCK);
 
     expect(result).toBe(null);
+  });
+
+  test('getRunsQuery maps the structured-query result into page data, not the raw result', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue({
+      rows: [{ id: 'run-1', status: 'COMPLETED' }],
+      totalCount: 1,
+    });
+
+    const result = await getRunsQuery(0, 10, [], []);
+
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ entity: 'test_suite_runs' }),
+      TOKEN_MOCK,
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        page: 0,
+        size: 10,
+        totalElements: 1,
+        content: [expect.objectContaining({ id: 'run-1', status: RunStatus.COMPLETED })],
+      }),
+    );
+  });
+
+  test('getRunsQuery returns null when the query result is null', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue(null);
+
+    expect(await getRunsQuery(0, 10, [], [])).toBeNull();
   });
 });
