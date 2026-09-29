@@ -348,6 +348,31 @@ describe('QueryBuilder', () => {
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT bad');
   });
 
+  // Regression: a renamed column passed the check and hydrated without its alias, and the SQL buffer
+  // holding the original text was cleared.
+  test('SQL whose translation the builder would hold only in part → Builder prompts instead of hydrating', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' }, as: 'project' }],
+        },
+      },
+    });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id AS project');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT project_id AS project');
+  });
+
   test('confirming the prompt discards the untranslatable SQL and resets the builder', async () => {
     const user = userEvent.setup();
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
