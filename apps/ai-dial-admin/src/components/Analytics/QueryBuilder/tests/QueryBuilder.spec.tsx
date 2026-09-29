@@ -348,6 +348,31 @@ describe('QueryBuilder', () => {
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT bad');
   });
 
+  // Regression: a renamed column passed the check and hydrated without its alias, and the SQL buffer
+  // holding the original text was cleared.
+  test('SQL whose translation the builder would hold only in part → Builder prompts instead of hydrating', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          select: [{ expr: { type: QueryExprType.Field, name: 'project_id' }, as: 'project' }],
+        },
+      },
+    });
+    renderBuilder();
+
+    await typeSql(user, 'SELECT project_id AS project');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT project_id AS project');
+  });
+
   test('confirming the prompt discards the untranslatable SQL and resets the builder', async () => {
     const user = userEvent.setup();
     vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
@@ -694,6 +719,137 @@ describe('QueryBuilder AI view', () => {
 
     expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
+  });
+
+  test('leaving the AI view and coming back keeps the conversation and which message is loaded', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } } as never);
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled());
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+
+    expect(screen.getByText('cost by deployment')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+
+    // Regression: the transcript used to restart empty while the loaded index survived, so the first
+    // new reply at that index came up disabled although it had never been run.
+    vi.mocked(generateQuery).mockResolvedValue({
+      success: true,
+      response: {
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '```sql\nSELECT 2\n```' } },
+        ],
+      },
+    } as never);
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'now by project');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+    await screen.findByText('SELECT 2');
+
+    expect(screen.getAllByRole('button', { name: 'QueryBuilder.Run' })[1]).toBeEnabled();
+  });
+
+  test('collapsing and restoring the rail keeps the conversation', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+
+    renderBuilder();
+    await sendMessage(user, '```sql\nSELECT 1\n```');
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.CollapsePanel' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.OpenPanel/ }));
+
+    expect(screen.getByText('cost by deployment')).toBeInTheDocument();
+    expect(screen.getByText('SELECT 1')).toBeInTheDocument();
+  });
+
+  test('a send that fails in transit notifies and leaves the prompt usable', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(generateQuery).mockRejectedValue(new Error('network'));
+
+    renderBuilder();
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
+    expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled();
+  });
+
+  test('a reply still in flight when the entity changes does not land in the new conversation', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
+    let resolveReply: (value: unknown) => void = () => undefined;
+    vi.mocked(generateQuery).mockReturnValue(new Promise((resolve) => (resolveReply = resolve)) as never);
+
+    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+
+    await user.click(screen.getByRole('button', { name: /dial_usage_log/ }));
+    await user.click(await screen.findByRole('option', { name: 'feedback' }));
+    resolveReply({
+      success: true,
+      response: {
+        choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'late reply' } }],
+      },
+    });
+
+    await vi.waitFor(() => expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled());
+    expect(screen.queryByText('late reply')).not.toBeInTheDocument();
+    expect(screen.queryByText('cost by deployment')).not.toBeInTheDocument();
+  });
+
+  test('a message whose schema read fails in transit still runs as SQL', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: { query: { entity: 'feedback', mode: QueryMode.Row } },
+    } as never);
+    vi.mocked(getEntitySchema).mockRejectedValue(new Error('network'));
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+
+    await vi.waitFor(() => expect(runSqlMock).toHaveBeenCalledWith('SELECT 1'));
+    expect(runQueryMock).not.toHaveBeenCalled();
+  });
+
+  test('a translation that fails in transit still runs the message as SQL and leaves Run usable', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network'));
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(await sendMessage(user, '```sql\nSELECT 1\n```'));
+
+    expect(runSqlMock).toHaveBeenCalledWith('SELECT 1');
+
+    vi.mocked(generateQuery).mockResolvedValue({
+      success: true,
+      response: {
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '```sql\nSELECT 2\n```' } },
+        ],
+      },
+    } as never);
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'now by project');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
+    await screen.findByText('SELECT 2');
+
+    await vi.waitFor(() => expect(screen.getAllByRole('button', { name: 'QueryBuilder.Run' })[1]).toBeEnabled());
   });
 
   test('leaving the AI view for the Builder after a message ran as raw SQL asks for confirmation', async () => {
