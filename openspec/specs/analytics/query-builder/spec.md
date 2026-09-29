@@ -957,13 +957,31 @@ the existing two-level nesting rule, a structured query SHALL be treated as repr
   **either** operand of a `filter` or `having` predicate — names a function the served catalog
   lists;
 - each such call carries no argument beyond the ones its catalog entry declares (a variadic call
-  carries more, and the builder has exactly one slot per declared argument); and
+  carries more, and the builder has exactly one slot per declared argument);
 - each argument is of the kind its position expects — a literal for a literal argument, and for an
   `expression` argument either a field reference or a call to a served catalog function nested no
   more than one level deep, whose own `expression` arguments are field references — because those
-  are the only forms the argument editor produces and therefore the only ones it can show back.
-- a predicate's right operand is a literal value, an array of them, or a call to a served catalog
-  function — the right-hand shapes the condition editor produces.
+  are the only forms the argument editor produces and therefore the only ones it can show back;
+- a predicate carries exactly two operands, and its right operand is a literal value, a call to a served
+  catalog function, or — under `in`, and only there — an array of values; these are the right-hand shapes
+  the condition editor produces;
+- an array operand holds only items the `in` editor's comma-separated text keeps unchanged: string values
+  of one value type, each non-empty, without surrounding whitespace and without a comma;
+- a literal function argument is non-blank, because a blank literal reads as unfilled and drops the call;
+- a plain column `select` entry carries no alias, or one equal to its own name, because a column entry
+  has no alias editor in either mode;
+- `distinct` appears only on an `aggregate`-mode `select` entry calling a non-scalar function, the one
+  place the builder offers a Distinct toggle;
+- a `having` tree appears only in `aggregate` mode, the only mode with a Having section; and
+- in `aggregate` mode, the `select` entries and `group_by` agree both ways: every key names an output
+  column, and every plain column and every scalar call is a key — the builder files each of them under
+  Group by, so one that is not a key would become one (a scalar call wrapping an aggregate would put the
+  aggregate into GROUP BY). Output columns are named as the service names them: an explicit alias, else a
+  field's own name or a call's lowercase function name, suffixed `_1`, `_2`, … for uniqueness.
+
+A call that arrives without an alias is prefilled with its derived alias. Every sort key and every
+`having` condition that named that column by the service's name for it SHALL be rewritten to the
+prefilled alias, so the rebuilt query still sorts and filters on the same column.
 
 A query failing any of these SHALL be handled exactly as filter nesting deeper than two levels
 already is: it stays in the written view, fully editable and runnable, a non-blocking message states
@@ -981,7 +999,8 @@ the builder has no editor for either, so showing them was showing something the 
 Two shapes move the other way, because the condition editor now produces them: a predicate compared
 against a function call, and a call nested one level inside an `expression` argument. A query
 carrying either — a bound relative to the current instant is the shape that motivated both — SHALL
-hydrate into the Builder rather than be pushed into the written views. A call nested two or more
+hydrate into the Builder rather than be pushed into the written views. So SHALL an aggregate query
+grouped by an unaliased scalar call, whose `group_by` key is the service's name for that call. A call nested two or more
 levels deep SHALL NOT: the argument editor stops at one, so showing it would again show less than
 the query says.
 
@@ -1028,6 +1047,42 @@ the query says.
 - **WHEN** a query's predicate carries a call whose `expression` argument is a call whose own `expression` argument is a third call
 - **THEN** the query is not builder-representable and is not hydrated with the deepest call dropped
 - **AND** Run stays enabled and executes the query as written
+
+#### Scenario: A renamed plain column stays in the written view
+
+- **WHEN** the SQL view holds `SELECT project_id AS project …` and the user switches to the Builder view
+- **THEN** the written-mode confirmation is shown instead of hydrating the builder without the alias
+- **AND** cancelling keeps the SQL text as written
+
+#### Scenario: Distinct outside an aggregate metric stays in the written view
+
+- **WHEN** a query sets `distinct` on a row-mode `select` call, a scalar group-by call, or a predicate operand
+- **THEN** the query is not builder-representable
+
+#### Scenario: A predicate with other than two operands stays in the written view
+
+- **WHEN** a query's predicate carries one operand, or three
+- **THEN** the query is not builder-representable
+
+#### Scenario: A list the `in` editor would rewrite stays in the written view
+
+- **WHEN** a query's array operand is used under an operator other than `in`, or holds an item containing a comma, an empty or padded item, or items of different value types
+- **THEN** the query is not builder-representable
+
+#### Scenario: A scalar call wrapping an aggregate stays in the written view
+
+- **WHEN** an aggregate-mode query selects `model` and `round(avg(latency))`, grouped by `model` only
+- **THEN** the query is not builder-representable
+
+#### Scenario: References to an unaliased call follow its prefilled alias
+
+- **WHEN** an aggregate-mode query selects `count(*)` without an alias and sorts by `count`
+- **THEN** the query hydrates into the Builder, and the rebuilt query sorts by the alias the count column now carries
+
+#### Scenario: A list the `in` editor keeps is representable
+
+- **WHEN** a query compares a column under `in` against an array of trimmed, comma-free string items
+- **THEN** the query is representable and comes back from the builder unchanged
 
 ### Requirement: The SQL editor reads the selected source from the builder context
 
