@@ -14,6 +14,12 @@ import Columns from './Columns/Columns';
 
 const COLUMN_UNIQUENESS_FIELD = 'columnUniqueness';
 
+// Stable fallbacks so a request with no columns/schema yet hands Columns the same reference on every
+// render, instead of a new empty array/object each time — the latter fed Columns' memoized grid props
+// a "changed" dependency every render, which (via its own effects) fed back into a re-render loop.
+const EMPTY_RESPONSE_COLUMNS: ResponseColumn[] = [];
+const EMPTY_RESPONSE_SCHEMA: JSONSchema7 = {};
+
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
@@ -61,9 +67,9 @@ const EndpointSchema: FC<Props> = ({
       <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
 
       <Columns
-        responseColumns={testSuite.responseColumns || []}
+        responseColumns={testSuite.responseColumns || EMPTY_RESPONSE_COLUMNS}
         onChangeResponseColumns={onChangeResponseColumns}
-        responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
+        responseSchema={(testSuite.endpointRef?.responseBodySchema || EMPTY_RESPONSE_SCHEMA) as JSONSchema7}
         isSkipRefresh={isSkipRefresh}
         jsonataVariables={jsonataVariables}
         duplicateColumn={duplicateColumn}
