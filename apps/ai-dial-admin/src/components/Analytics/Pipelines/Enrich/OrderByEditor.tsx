@@ -1,8 +1,10 @@
 'use client';
 
+import SelectField from '@/src/components/Common/SelectField/SelectField';
+
 import { FC } from 'react';
 
-import { DialGhostButton, DialGhostIconButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
@@ -45,24 +47,24 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
           aria-label={`${t(AnalyticsPipelinesI18nKey.OrderBy)} ${index + 1}`}
           className="flex items-end gap-2"
         >
-          <DialSelectField
+          <SelectField
             id={`order-by-column-${index}`}
-            label={index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByColumn) : undefined}
+            labelProps={{ label: index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByColumn) : undefined }}
             options={withStrandedOption(fieldOptions, row.column)}
             invalid={isStranded(row.column)}
             value={row.column}
-            containerClassName="flex-1"
+            className="flex-1"
             onChange={(v) => updateRow(index, { column: v as string })}
           />
-          <DialSelectField
+          <SelectField
             id={`order-by-direction-${index}`}
-            label={index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByDirection) : undefined}
+            labelProps={{ label: index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByDirection) : undefined }}
             options={directionOptions}
             value={row.direction}
-            containerClassName="flex-1"
+            className="flex-1"
             onChange={(v) => updateRow(index, { direction: v as SortDirection })}
           />
-          <DialGhostIconButton
+          <GhostIconButton
             icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
             aria-label={`${t(ButtonsI18nKey.Delete)} ${t(AnalyticsPipelinesI18nKey.OrderBy)} ${index + 1}`}
             onClick={() => onChange(rows.filter((_, i) => i !== index))}
@@ -70,7 +72,7 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
         </div>
       ))}
 
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddOrderBy)}
         disabled={!fields.length}

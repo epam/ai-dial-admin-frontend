@@ -169,8 +169,9 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    // The ui-kit select is a custom listbox, not a native one: its options exist only while it is open.
-    await user.click(within(boundField('turn_feedback')).getByRole('button', { name: /turn_feedback/ }));
+    // The ui-kit select is a custom listbox, not a native one: its options exist only while it is open,
+    // and the 2.0 field exposes the trigger as a combobox carrying the chosen value.
+    await user.click(within(boundField('turn_feedback')).getByRole('combobox'));
     await user.click(await screen.findByRole('option', { name: 'session_summary' }));
 
     await waitFor(() => expect(within(facts()).getByText('chat_id')).toBeTruthy());
@@ -574,7 +575,7 @@ describe('PipelineDetailView', () => {
       'danger',
     );
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }).className).toContain(
-      'dial-danger-outlined-button',
+      'dial-kit-danger',
     );
   });
 
@@ -582,7 +583,7 @@ describe('PipelineDetailView', () => {
     renderView({ enabled: false });
 
     const toggle = screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.EnablePipeline });
-    expect(toggle.className).toContain('dial-primary-solid-button');
+    expect(toggle.className).toContain('dial-kit-primary');
   });
 
   test('confirms before disabling a rule', async () => {
@@ -622,8 +623,14 @@ describe('PipelineDetailView', () => {
 
     await editScanEvery(user, 'PT2H');
 
-    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline })).toBeNull();
-    expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline })).toBeNull();
+    // They keep their space rather than leaving the flow — otherwise the JSON toggle beside them
+    // shifted on every keystroke that raised or cleared the change bar.
+    expect(
+      screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }).closest('[inert]'),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }).closest('[inert]'),
+    ).toBeTruthy();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
   });
 
@@ -637,6 +644,7 @@ describe('PipelineDetailView', () => {
   test('still offers the rule its own target even though it is taken', async () => {
     renderView();
 
-    await waitFor(() => expect(screen.getByText('turn_feedback')).toBeTruthy());
+    // The 2.0 select carries the chosen option as the value of its readonly combobox, not as text.
+    await waitFor(() => expect(screen.getByDisplayValue('turn_feedback')).toBeTruthy());
   });
 });

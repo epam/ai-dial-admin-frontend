@@ -2,10 +2,11 @@
 
 import { FC } from 'react';
 
-import { DialRadioGroup, DialSelectField, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioGroupItem, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import CreatePipelineShell from '@/src/components/Analytics/Pipelines/Common/CreatePipelineShell';
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
+import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
@@ -23,9 +24,9 @@ const CreatePipelinePopup: FC<Props> = ({ takenTargets, onClose, onCreated }) =>
   const form = usePipelineForm({ takenTargets, initialDraft: { kind: PipelineKind.Enrich } });
   const { draft, onChange, availableTargets, isRegistrationValid, buildDto } = form;
 
-  const kindRadios: RadioButtonWithContent[] = [
-    { id: PipelineKind.Enrich, name: t(AnalyticsPipelinesI18nKey.KindEnrich) },
-    { id: PipelineKind.Aggregate, name: t(AnalyticsPipelinesI18nKey.KindAggregate) },
+  const kindRadios: RadioGroupItem[] = [
+    { value: PipelineKind.Enrich, label: t(AnalyticsPipelinesI18nKey.KindEnrich) },
+    { value: PipelineKind.Aggregate, label: t(AnalyticsPipelinesI18nKey.KindAggregate) },
   ];
 
   // The target belongs to the kind, so switching kind leaves a selection the new list does not carry.
@@ -40,19 +41,18 @@ const CreatePipelinePopup: FC<Props> = ({ takenTargets, onClose, onCreated }) =>
       onClose={onClose}
       onCreated={onCreated}
     >
-      <DialRadioGroup
-        elementId="pipeline-kind"
-        fieldTitle={t(AnalyticsPipelinesI18nKey.Kind)}
+      <RadioGroup
+        id="pipeline-kind"
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.Kind) }}
         orientation={RadioGroupOrientation.Column}
-        radioButtons={kindRadios}
-        activeRadioButton={draft.kind ?? ''}
+        items={kindRadios}
+        value={draft.kind ?? ''}
         onChange={(id) => onChangeKind(id as PipelineKind)}
       />
 
-      <DialSelectField
+      <SelectField
         id="pipeline-target"
-        required
-        label={t(AnalyticsPipelinesI18nKey.Target)}
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.Target), required: true }}
         options={availableTargets.map((table) => ({ value: table.name, label: table.name }))}
         value={draft.target ?? ''}
         onChange={(value) => onChange({ target: value as string })}

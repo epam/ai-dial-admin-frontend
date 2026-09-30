@@ -1,9 +1,29 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
+import { CRON_CUSTOM_PRESET } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
+
+// The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
+// options can be read out of — as the specs did when this was the 1.0 `DialSelectField`.
+vi.mock('@/src/components/Common/SelectField/SelectField', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default: ({ id, labelProps, options, value, onChange }: any) => (
+    <label>
+      <span>{labelProps?.label}</span>
+      <select id={id} aria-label={labelProps?.label ?? id} value={value} onChange={(e) => onChange(e.target.value)}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {options.map((option: any) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  ),
+}));
 
 const HOURLY = '0 0 * * * *';
 const EVERY_FIVE_MINUTES = '0 */5 * * * *';
@@ -22,16 +42,20 @@ describe('CronField', () => {
   const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
     render(<CronField value="" onChange={vi.fn()} {...props} />);
 
+  const preset = () => screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.CronPreset });
+
   test('offers the named presets and a custom entry', async () => {
     const user = userEvent.setup();
     renderField({ value: HOURLY });
 
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.CronHourly));
+    const offered = within(preset())
+      .getAllByRole('option')
+      .map((option) => option.textContent);
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.CronEveryFiveMinutes)).toBeTruthy();
-    expect(screen.getAllByText(AnalyticsPipelinesI18nKey.CronHourly).length).toBeGreaterThan(1);
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.CronDailyMidnight)).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.CronCustom)).toBeTruthy();
+    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronEveryFiveMinutes);
+    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronHourly);
+    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronDailyMidnight);
+    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronCustom);
   });
 
   test('reports a six-field expression when a preset is chosen', async () => {
@@ -39,8 +63,7 @@ describe('CronField', () => {
     const user = userEvent.setup();
     renderField({ value: EVERY_FIVE_MINUTES, onChange });
 
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.CronEveryFiveMinutes));
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.CronHourly));
+    await user.selectOptions(preset(), HOURLY);
 
     expect(onChange).toHaveBeenCalledWith('0 0 * * * *');
     expect(onChange.mock.calls[0][0].split(' ')).toHaveLength(6);
@@ -56,10 +79,9 @@ describe('CronField', () => {
     const user = userEvent.setup();
     renderField({ value: HOURLY });
 
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.CronHourly));
-    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.CronCustom));
+    await user.selectOptions(preset(), CRON_CUSTOM_PRESET);
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.CronExpression)).toBeTruthy();
+    expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.CronExpression, { exact: false })).toBeTruthy();
   });
 
   test('reports a five-field custom expression as invalid', () => {

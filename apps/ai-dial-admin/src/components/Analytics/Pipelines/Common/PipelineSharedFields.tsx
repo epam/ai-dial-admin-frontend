@@ -2,12 +2,11 @@
 
 import { FC } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
-
 import BoundTableField from '@/src/components/Analytics/Pipelines/Common/BoundTableField';
 import SourceField from '@/src/components/Analytics/Pipelines/Common/SourceField';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
+import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
@@ -51,26 +50,24 @@ const PipelineSharedFields: FC<Props> = ({ form }) => {
 
       {isAggregate && (
         <BoundTableField table={getPipelineInput(draft.inputs)}>
-          <DialSelectField
+          <SelectField
             id="pipeline-inputs"
-            required
-            label={t(AnalyticsPipelinesI18nKey.Inputs)}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.Inputs), required: true }}
             options={inputOptions}
             value={getPipelineInput(draft.inputs) ?? ''}
-            containerClassName="flex-1"
+            className="flex-1"
             onChange={(v) => onChangeInput(v as string)}
           />
         </BoundTableField>
       )}
 
       <BoundTableField table={draft.target}>
-        <DialSelectField
+        <SelectField
           id="pipeline-target"
-          required
-          label={t(AnalyticsPipelinesI18nKey.Target)}
+          labelProps={{ label: t(AnalyticsPipelinesI18nKey.Target), required: true }}
           options={targetOptions}
           value={draft.target ?? ''}
-          containerClassName="flex-1"
+          className="flex-1"
           onChange={(v) => onChange({ target: v as string })}
         />
       </BoundTableField>

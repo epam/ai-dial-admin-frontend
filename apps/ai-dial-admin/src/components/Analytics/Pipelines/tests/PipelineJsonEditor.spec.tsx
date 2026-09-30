@@ -74,7 +74,7 @@ const rule: Pipeline = {
 const renderView = () => render(<PipelineDetailView pipeline={rule} takenTargets={[]} />);
 
 const queryToggleRow = () => screen.queryByRole('switch');
-const toggle = () => within(screen.getByRole('switch')).getByRole('checkbox');
+const toggle = () => screen.getByRole('switch');
 const enableEditor = (user: ReturnType<typeof userEvent.setup>) => user.click(toggle());
 const saveButton = () => screen.queryByRole('button', { name: ButtonsI18nKey.Save });
 const discardButton = () => screen.queryByRole('button', { name: ButtonsI18nKey.Discard });

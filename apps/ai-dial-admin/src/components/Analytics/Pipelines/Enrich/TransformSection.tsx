@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialInput, DialLabel, DialSelectField, DialTextarea, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { Input, Label, Textarea, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
@@ -14,6 +14,7 @@ import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderToke
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import { MEMBERS_PLACEHOLDER, MEMBER_BUILT_IN_PLACEHOLDERS } from '@/src/constants/analytics/pipelines';
+import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
@@ -102,20 +103,19 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
 
   return (
     <div className="flex flex-col gap-y-6">
-      <DialSelectField
+      <SelectField
         id="transform-type"
-        label={t(AnalyticsPipelinesI18nKey.TransformType)}
-        required
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.TransformType), required: true }}
         options={withStrandedOption(typeOptions, transform?.type)}
         value={transform?.type ?? ''}
         disabled={isDisabled}
-        containerClassName={controlClassName}
+        className={controlClassName}
         onChange={(value) => onTransformChange({ type: value as TransformType })}
       />
 
       {!isSql && (
         <>
-          <DialInput
+          <Input
             id="transform-model"
             labelProps={{ label: t(AnalyticsPipelinesI18nKey.Model) }}
             value={transform?.model ?? ''}
@@ -135,15 +135,15 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
           </section>
 
           <section aria-label={t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)} className="flex flex-col gap-2">
-            <DialLabel
+            <Label
               htmlFor="transform-request-template"
               label={
                 <span className="flex flex-row items-center gap-1">
                   {t(AnalyticsPipelinesI18nKey.SectionRequestTemplate)}
-                  <DialTooltip tooltip={t(AnalyticsPipelinesI18nKey.TemplatePlaceholders)}>
+                  <Tooltip tooltip={t(AnalyticsPipelinesI18nKey.TemplatePlaceholders)}>
                     {/* Sized to the label rather than to a button: it sits in the text, not beside it. */}
                     <IconInfoCircle size={LABEL_ICON_SIZE} stroke={2} className="text-secondary" />
-                  </DialTooltip>
+                  </Tooltip>
                 </span>
               }
             />
@@ -159,7 +159,7 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
                 onChangeValue={(value) => onTransformChange({ request_template: JSON.stringify(value) })}
               />
             ) : (
-              <DialTextarea
+              <Textarea
                 id="transform-request-template"
                 value={transform?.request_template ?? ''}
                 disabled={isDisabled}

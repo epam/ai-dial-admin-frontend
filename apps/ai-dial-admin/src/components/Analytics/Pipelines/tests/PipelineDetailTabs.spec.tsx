@@ -76,7 +76,7 @@ const renderView = (override?: Partial<Pipeline>) =>
 const auditTab = () => screen.getByRole('tab', { name: TabsI18nKey.Audit });
 const propertiesTab = () => screen.getByRole('tab', { name: TabsI18nKey.Properties });
 const facts = () => screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.ReadOnlyFacts });
-const jsonToggle = () => within(screen.getByRole('switch')).getByRole('checkbox');
+const jsonToggle = () => screen.getByRole('switch');
 // The read filter is the plainest editable member: an unvalidated textarea bound straight to the
 // draft, so what it presents after a tab switch is what the draft still holds.
 const filterField = () => screen.getByLabelText(AnalyticsPipelinesI18nKey.Filter, { exact: false });

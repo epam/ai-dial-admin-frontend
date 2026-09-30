@@ -5,13 +5,15 @@ import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
 import { TransformCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TransformCell';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
+import PipelineRuntimeBadge from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeBadge';
+import { runtimeStatusOf, usePausedPipelines } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
 import { PipelineKindCellRenderer } from '@/src/components/Analytics/Pipelines/Common/PipelineKindCell';
 import { TriggerCellRenderer } from '@/src/components/Analytics/Pipelines/Common/TriggerCell';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
@@ -28,7 +30,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { PipelineListItem } from '@/src/models/analytics/pipeline';
+import { PipelineKind, PipelineListItem } from '@/src/models/analytics/pipeline';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -43,6 +45,9 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isFullAdmin } = useAppContext();
+  // One read for the page: the runner answers with every paused pipeline at once and offers no
+  // per-pipeline read, so a request per row would ask for an answer already given whole.
+  const runtime = usePausedPipelines();
 
   const [pipelines, setPipelines] = useState<PipelineListItem[]>(initialPipelines);
   const [deleteTarget, setDeleteTarget] = useState<PipelineListItem | null>(null);
@@ -134,7 +139,16 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
         headerName: t(AnalyticsPipelinesI18nKey.Inputs),
         colId: 'inputs',
         flex: 2,
-        valueGetter: (params) => (params.data as PipelineListItem | undefined)?.inputs?.join(', ') ?? UNAVAILABLE_VALUE,
+        // An enrichment pipeline that declares no input is not one without a source — it reads whatever
+        // its target enrichment reads. An em dash said the opposite; the resolved table itself is on the
+        // pipeline's own page, which is the only read that resolves it.
+        valueGetter: (params) => {
+          const row = params.data as PipelineListItem | undefined;
+          if (row?.inputs?.length) return row.inputs.join(', ');
+          return row?.kind === PipelineKind.Enrich
+            ? t(AnalyticsPipelinesI18nKey.SourceFollowsTarget)
+            : UNAVAILABLE_VALUE;
+        },
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Trigger),
@@ -159,6 +173,26 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
           <PipelineEnabledBadge enabled={data?.enabled} />
         ),
       },
+      // Withheld whole rather than filled with identical failures: a column of them states nothing
+      // about any row and implies a per-row fact the page does not have.
+      ...(runtime.isRead
+        ? [
+            {
+              headerName: t(AnalyticsPipelinesI18nKey.Runtime),
+              colId: 'runtime',
+              flex: 1,
+              cellDataType: false,
+              // A disabled pipeline has no runtime answer — the runner is not driving it at all, and
+              // "not running" would read as a fault where there is a configuration.
+              cellRenderer: ({ data }: ICellRendererParams<PipelineListItem>) =>
+                data?.enabled ? (
+                  <PipelineRuntimeBadge status={runtimeStatusOf(runtime, data.name, data.enabled, data.kind)} />
+                ) : (
+                  UNAVAILABLE_VALUE
+                ),
+            },
+          ]
+        : []),
       { headerName: t(AnalyticsPipelinesI18nKey.Generation), field: 'generation', flex: 1 },
       {
         headerName: t(AnalyticsPipelinesI18nKey.UpdatedAt),
@@ -169,14 +203,14 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
     ];
 
     return [...dataColumns, ACTION_COLUMN(rowActions)];
-  }, [t, rowActions]);
+  }, [t, rowActions, runtime]);
 
   return (
     <div className="relative flex w-full flex-1 flex-col min-h-0 rounded bg-layer-2 p-4">
       <div className="mb-8 flex h-[40px] flex-row items-center justify-between gap-4">
         <h1>{t(MenuI18nKey.Pipelines)}</h1>
         {isFullAdmin && (
-          <DialPrimaryButton
+          <PrimaryButton
             label={t(AnalyticsPipelinesI18nKey.CreatePipeline)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={() => setIsCreateOpen(true)}

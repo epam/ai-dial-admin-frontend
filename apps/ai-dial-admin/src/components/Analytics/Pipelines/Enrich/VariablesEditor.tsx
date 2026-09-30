@@ -1,8 +1,10 @@
 'use client';
 
+import SelectField from '@/src/components/Common/SelectField/SelectField';
+
 import { FC, Fragment, useEffect, useState } from 'react';
 
-import { DialGhostButton, DialGhostIconButton, DialInput, DialLabel, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Label } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import { createVarRow, getTakenVarNames, toVarRows, toVars } from '@/src/components/Analytics/Pipelines/Enrich/vars';
@@ -69,9 +71,9 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
         {/* The headings label rows; with none to label they are three words over an empty grid. */}
         {rows.length > 0 && (
           <>
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarName)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.VarValue)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.VarName)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.VarBinding)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.VarValue)} />
             <span />
           </>
         )}
@@ -83,7 +85,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
 
           return (
             <Fragment key={row.id}>
-              <DialInput
+              <Input
                 id={`pipeline-var-name-${index}`}
                 aria-label={`${t(AnalyticsPipelinesI18nKey.VarName)} ${index + 1}`}
                 value={row.name}
@@ -93,7 +95,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
               />
 
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.VarBinding)} ${index + 1}`}>
-                <DialSelectField
+                <SelectField
                   id={`pipeline-var-binding-${index}`}
                   options={bindingOptions}
                   value={row.kind}
@@ -105,7 +107,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
                   selection comes first and the field that belongs to it follows. */}
               {isColumnBinding ? (
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.VarValue)} ${index + 1}`}>
-                  <DialSelectField
+                  <SelectField
                     id={`pipeline-var-column-${index}`}
                     options={
                       isFieldStranded ? [...fieldOptions, { value: row.column, label: row.column }] : fieldOptions
@@ -116,7 +118,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
                   />
                 </div>
               ) : (
-                <DialInput
+                <Input
                   id={`pipeline-var-jsonata-${index}`}
                   aria-label={`${t(AnalyticsPipelinesI18nKey.VarValue)} ${index + 1}`}
                   value={row.jsonata}
@@ -125,7 +127,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
                 />
               )}
 
-              <DialGhostIconButton
+              <GhostIconButton
                 icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
@@ -135,7 +137,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
         })}
       </div>
 
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddVariable)}
         onClick={() => commit([...rows, createVarRow()])}

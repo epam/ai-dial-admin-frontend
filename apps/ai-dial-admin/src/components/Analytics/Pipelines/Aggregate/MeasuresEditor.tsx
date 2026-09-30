@@ -1,15 +1,8 @@
 'use client';
+
+import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { FC, Fragment, useEffect, useRef, useState } from 'react';
-import {
-  DialCheckbox,
-  DialGhostButton,
-  DialGhostIconButton,
-  DialLabel,
-  DialSelectField,
-  DialInput,
-  DialTooltip,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { Checkbox, GhostButton, GhostIconButton, Label, Input, Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import { createMeasureRow, toMeasureRows, toMeasures } from '@/src/components/Analytics/Pipelines/Aggregate/measures';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -38,9 +31,9 @@ const toFunctionOption = (name: string, signature: string, description?: string)
   value: name,
   label: signature,
   labelNode: description ? (
-    <DialTooltip tooltip={description} triggerClassName="w-full text-left">
+    <Tooltip tooltip={description} triggerClassName="w-full text-left">
       <span>{signature}</span>
-    </DialTooltip>
+    </Tooltip>
   ) : undefined,
 });
 
@@ -79,11 +72,11 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
       <div className="grid grid-cols-[minmax(104px,1fr)_minmax(104px,1fr)_minmax(104px,1fr)_minmax(120px,1.3fr)_2rem_2rem] items-center gap-x-2 gap-y-2 overflow-x-auto">
         {rows.length > 0 && (
           <>
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureName)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureFn)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureColumn)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureWhere)} />
-            <DialLabel label={t(AnalyticsPipelinesI18nKey.MeasureDistinct)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.MeasureName)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.MeasureFn)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.MeasureColumn)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.MeasureWhere)} />
+            <Label label={t(AnalyticsPipelinesI18nKey.MeasureDistinct)} />
             <span />
           </>
         )}
@@ -97,7 +90,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
           return (
             <Fragment key={row.id}>
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureName)} ${index + 1}`}>
-                <DialSelectField
+                <SelectField
                   id={`measure-name-${index}`}
                   options={withStrandedOption(nameOptions, row.name)}
                   value={row.name}
@@ -107,7 +100,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
               </div>
 
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureFn)} ${index + 1}`}>
-                <DialSelectField
+                <SelectField
                   id={`measure-fn-${index}`}
                   options={withStrandedOption(fnOptions, row.fn)}
                   value={row.fn}
@@ -119,7 +112,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
                 <span />
               ) : (
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureColumn)} ${index + 1}`}>
-                  <DialSelectField
+                  <SelectField
                     id={`measure-column-${index}`}
                     options={withStrandedOption(columnOptions, row.column)}
                     value={row.column ?? ''}
@@ -129,7 +122,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
                 </div>
               )}
 
-              <DialInput
+              <Input
                 id={`measure-where-${index}`}
                 aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureWhere)} ${index + 1}`}
                 value={row.where ?? ''}
@@ -140,9 +133,9 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
 
               {fn?.distinct_supported ? (
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureDistinct)} ${index + 1}`}>
-                  <DialCheckbox
+                  <Checkbox
                     id={`measure-distinct-${index}`}
-                    checked={Boolean(row.distinct)}
+                    isSelected={Boolean(row.distinct)}
                     onChange={(checked) => updateRow(row.id, { distinct: Boolean(checked) })}
                   />
                 </div>
@@ -150,7 +143,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
                 <span />
               )}
 
-              <DialGhostIconButton
+              <GhostIconButton
                 className="shrink-0"
                 icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
@@ -172,7 +165,7 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
         })}
       </div>
 
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddMeasure)}
         onClick={() => commit([...rows, createMeasureRow()])}

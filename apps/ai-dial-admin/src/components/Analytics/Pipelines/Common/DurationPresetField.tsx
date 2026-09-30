@@ -2,9 +2,10 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialInput, DialSelect } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { DURATION_CUSTOM_PRESET } from '@/src/constants/analytics/pipelines';
+import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -57,8 +58,8 @@ const DurationPresetField: FC<Props> = ({ id, label, presets, value, caption, is
   return (
     <div className="flex flex-col gap-1" role="group" aria-label={label}>
       <div className="flex flex-row flex-wrap items-center gap-2">
-        <DialSelect
-          elementId={id}
+        <SelectField
+          id={id}
           className="w-[140px]"
           options={options}
           value={isCustom ? DURATION_CUSTOM_PRESET : (matchingPreset ?? '')}
@@ -66,7 +67,7 @@ const DurationPresetField: FC<Props> = ({ id, label, presets, value, caption, is
           onChange={(v) => onPresetChange(v as string)}
         />
         {isCustom && (
-          <DialInput
+          <Input
             id={`${id}-custom`}
             wrapperClassName="w-[180px]"
             aria-label={`${label} ${t(AnalyticsPipelinesI18nKey.DurationCustom)}`}
