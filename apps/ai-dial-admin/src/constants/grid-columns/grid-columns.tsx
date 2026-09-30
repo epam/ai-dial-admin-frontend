@@ -1439,11 +1439,11 @@ export const RUNS_COLUMN: ColDef[] = [
 ];
 
 const SUITE_SCOPED_RUN_COL_IDS = ['testSuiteId'];
+const SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS = ['target'];
 
-/** For a list already scoped to one test suite, where repeating the suite id on every row says nothing. */
 export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
   (col) => !SUITE_SCOPED_RUN_COL_IDS.includes(col.colId ?? ''),
-);
+).map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col));
 
 const COMPARE_RUN_PICKER_COL_IDS = [
   'status',

@@ -510,5 +510,47 @@ describe('RequestTemplate', () => {
         screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify(content, null, 4))}`, exactText),
       ).toBeInTheDocument();
     });
+
+    test('a bumped resetSignal reseeds body text from the parent even without an endpoint change', () => {
+      const content = { model: 'gpt-4' };
+      const { rerender } = render(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, content: {} })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+          resetSignal={0}
+        />,
+      );
+
+      rerender(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, content })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+          resetSignal={1}
+        />,
+      );
+
+      expect(
+        screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify(content, null, 4))}`, exactText),
+      ).toBeInTheDocument();
+    });
+
+    test('an unchanged resetSignal does not clobber in-progress typing on an unrelated re-render', () => {
+      const testSuite = createSuiteWithBody({ contentType: ContentType.JSON, content: {} });
+      const { rerender } = render(
+        <RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} resetSignal={0} />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'TypeBody' }));
+
+      rerender(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, content: { unrelated: true } })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+          resetSignal={0}
+        />,
+      );
+
+      expect(screen.getByText(`BodyText: ${JSON.stringify(TYPED_BODY_TEXT)}`, exactText)).toBeInTheDocument();
+    });
   });
 });

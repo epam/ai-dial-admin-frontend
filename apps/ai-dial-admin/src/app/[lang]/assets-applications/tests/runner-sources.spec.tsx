@@ -14,7 +14,7 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
 
 vi.mock('@/src/utils/auth/auth-request', () => ({ getUserToken: vi.fn().mockResolvedValue('token') }));
 vi.mock('@/src/utils/env/get-auth-toggle', () => ({ getIsEnableAuthToggle: () => false }));
-vi.mock('@/src/components/Assets/Apps/PageList', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Apps/List', () => ({ __esModule: true, default: () => null }));
 
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi } from '@/src/app/api/api';

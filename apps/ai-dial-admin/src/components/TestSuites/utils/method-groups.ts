@@ -25,7 +25,7 @@ import { BuildMethodGroupsParams, MethodGroup, MethodOption } from '@/src/compon
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
 import { Deployment } from '@/src/models/evaluation/deployment';
-import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
+import { TestSuiteEndpointRef, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
 import { uniquifyResponseColumns } from '@/src/utils/evaluation/request-chain';
 
 const RESPONSES_URL_PATTERNS = new Set([
@@ -157,3 +157,26 @@ export const buildMethodGroups = ({
 };
 
 export const flattenMethodGroups = (groups: MethodGroup[]): MethodOption[] => groups.flatMap((group) => group.options);
+
+/**
+ * The request template a method starts with, as applied by `Methods.onMethodClick` when the method is
+ * first selected — the same seed this endpoint resolves to in the method sidebar, so a Responses or
+ * Anthropic Messages method resets to its own default body instead of the generic empty one. Falls
+ * back to an empty JSON body when the endpoint matches no known group (e.g. `deployment` is missing,
+ * or a custom route no longer listed in `deployment.routes`). Used to power "Reset to default" on an
+ * already-configured request without changing its method.
+ */
+export const getDefaultRequestTemplateFor = (
+  deployment: Deployment | null | undefined,
+  endpointRef?: TestSuiteEndpointRef,
+): TestSuiteRequestTemplate | undefined => {
+  if (!endpointRef?.method || !endpointRef?.relativeUrlPattern) {
+    return undefined;
+  }
+
+  const option = flattenMethodGroups(buildMethodGroups({ deployment, endpointRef })).find(
+    ({ ref }) => ref.method === endpointRef.method && ref.relativeUrlPattern === endpointRef.relativeUrlPattern,
+  );
+
+  return option?.seed.requestTemplate ?? DEFAULT_SUITE(endpointRef).requestTemplate;
+};

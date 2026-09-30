@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { buildMethodGroups, flattenMethodGroups } from '@/src/components/TestSuites/utils/method-groups';
+import { CHAT_COMPLETION_SUITE } from '@/src/components/TestSuites/constants/methods';
+import {
+  buildMethodGroups,
+  flattenMethodGroups,
+  getDefaultRequestTemplateFor,
+} from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
 import { Deployment } from '@/src/models/evaluation/deployment';
@@ -343,5 +348,78 @@ describe('flattenMethodGroups', () => {
       '/openai/v1/responses/{response_id}/cancel',
       '/api/users',
     ]);
+  });
+});
+
+describe('getDefaultRequestTemplateFor', () => {
+  test('returns the chat completion default template for the chat completion endpoint', () => {
+    const result = getDefaultRequestTemplateFor(undefined, { method: 'POST', relativeUrlPattern: '/chat/completions' });
+
+    expect(result).toEqual(CHAT_COMPLETION_SUITE.requestTemplate);
+  });
+
+  test('returns the create-response default, seeded from the deployment id, for the Responses create endpoint', () => {
+    const result = getDefaultRequestTemplateFor(deployment([DeploymentApiInterface.OpenAIResponses]), {
+      method: 'POST',
+      relativeUrlPattern: '/openai/v1/responses',
+    });
+
+    expect(result?.body?.content).toEqual({ model: 'gpt-4o', input: '${{user_message}}' });
+  });
+
+  test('returns the create-response default for a suite already selecting it, without the interface reported', () => {
+    const endpointRef = { method: 'POST', relativeUrlPattern: '/openai/v1/responses' };
+    const result = getDefaultRequestTemplateFor(deployment(), endpointRef);
+
+    expect(result?.body?.content).toEqual({ model: 'gpt-4o', input: '${{user_message}}' });
+  });
+
+  test('returns the create-message default, seeded from the deployment id, for the Anthropic Messages endpoint', () => {
+    const result = getDefaultRequestTemplateFor(deployment([DeploymentApiInterface.AnthropicMessages]), {
+      method: 'POST',
+      relativeUrlPattern: '/anthropic/v1/messages',
+    });
+
+    expect(result?.body?.content).toEqual({
+      model: 'gpt-4o',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: '${{user_message}}' }],
+    });
+  });
+
+  test('returns an empty body default for a response-scoped method (get/delete/cancel)', () => {
+    const result = getDefaultRequestTemplateFor(deployment([DeploymentApiInterface.OpenAIResponses]), {
+      method: 'GET',
+      relativeUrlPattern: '^/openai/v1/responses/[^/]+$',
+    });
+
+    expect(result?.body?.content).toEqual({});
+  });
+
+  test('returns an empty JSON body template for a custom route declared on the deployment', () => {
+    const result = getDefaultRequestTemplateFor(deployment(undefined, ROUTES), {
+      method: 'GET',
+      relativeUrlPattern: '/api/users',
+    });
+
+    expect(result).toEqual({
+      urlTemplate: '/api/users',
+      body: { contentType: 'application/json', content: {} },
+    });
+  });
+
+  test('falls back to an empty JSON body template when the endpoint matches no known group', () => {
+    const result = getDefaultRequestTemplateFor(undefined, { method: 'GET', relativeUrlPattern: '/search/request' });
+
+    expect(result).toEqual({
+      urlTemplate: '/search/request',
+      body: { contentType: 'application/json', content: {} },
+    });
+  });
+
+  test('returns undefined when the endpoint is not fully configured', () => {
+    expect(getDefaultRequestTemplateFor(undefined, undefined)).toBeUndefined();
+    expect(getDefaultRequestTemplateFor(undefined, { method: 'GET' })).toBeUndefined();
+    expect(getDefaultRequestTemplateFor(undefined, { relativeUrlPattern: '/search' })).toBeUndefined();
   });
 });

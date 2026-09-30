@@ -111,6 +111,11 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
       sortable: true,
       editable: false,
       cellRenderer: IncludeInRunCellRenderer,
+      // Declared here (not only applied imperatively) so AgGridWrapper's own columnDefs/rowData sync
+      // re-derives this as the default sort on every grid remount or refresh — the imperative
+      // `applyColumnState` call in TestCasesList only re-fires when the run condition itself changes,
+      // not when the grid is torn down and recreated (e.g. switching tabs away and back).
+      sort: suite.testCaseFilter ? 'desc' : null,
       valueGetter: (params) => {
         const ids = resolveIncludedIds();
         if (ids == null) {

@@ -49,6 +49,7 @@ const Columns: FC<ColumnsProps> = ({
   const { isValid, dispatch } = useSaveValidationContext();
 
   const columnsRef = useRef(responseColumns);
+  const onChangeResponseColumnsRef = useRef(onChangeResponseColumns);
   const gridApiRef = useRef<GridApi | null>(null);
 
   const [isDocumentationModalOpen, setIsDocumentationModalOpen] = useState(false);
@@ -57,39 +58,37 @@ const Columns: FC<ColumnsProps> = ({
     columnsRef.current = responseColumns;
   }, [responseColumns]);
 
-  const onAddColumn = useCallback(() => {
-    const columns = [...columnsRef.current, { name: '', displayName: '', expression: '', type: '' }];
-    onChangeResponseColumns(columns);
+  useEffect(() => {
+    onChangeResponseColumnsRef.current = onChangeResponseColumns;
   }, [onChangeResponseColumns]);
 
-  const onRemoveColumn = useCallback(
-    (_?: ResponseColumn, index?: number) => {
-      if (index != null) {
-        const columns = [...columnsRef.current];
-        columns.splice(index, 1);
-        onChangeResponseColumns(columns);
-      }
-    },
-    [onChangeResponseColumns],
-  );
+  const onAddColumn = useCallback(() => {
+    const columns = [...columnsRef.current, { name: '', displayName: '', expression: '', type: '' }];
+    onChangeResponseColumnsRef.current(columns);
+  }, []);
 
-  const onChangeColumn = useCallback(
-    (value: string, _data: ResponseColumn, column: string, index?: number) => {
+  const onRemoveColumn = useCallback((_?: ResponseColumn, index?: number) => {
+    if (index != null) {
       const columns = [...columnsRef.current];
-      const columnToUpdate = columns[index || 0];
-      if (columnToUpdate) {
-        if (column === 'displayName') {
-          columnToUpdate.displayName = value;
-          columnToUpdate.name = value;
-          onChangeResponseColumns(columns, true);
-        } else if (column === 'type') {
-          columnToUpdate.type = value;
-          onChangeResponseColumns(columns);
-        }
+      columns.splice(index, 1);
+      onChangeResponseColumnsRef.current(columns);
+    }
+  }, []);
+
+  const onChangeColumn = useCallback((value: string, _data: ResponseColumn, column: string, index?: number) => {
+    const columns = [...columnsRef.current];
+    const columnToUpdate = columns[index || 0];
+    if (columnToUpdate) {
+      if (column === 'displayName') {
+        columnToUpdate.displayName = value;
+        columnToUpdate.name = value;
+        onChangeResponseColumnsRef.current(columns, true);
+      } else if (column === 'type') {
+        columnToUpdate.type = value;
+        onChangeResponseColumnsRef.current(columns);
       }
-    },
-    [onChangeResponseColumns],
-  );
+    }
+  }, []);
 
   const onChangeExpression = useCallback(
     (value: { expression: string; type?: string }, _data: ResponseColumn, column: string, index?: number) => {
@@ -98,10 +97,10 @@ const Columns: FC<ColumnsProps> = ({
       if (columnToUpdate) {
         columnToUpdate.expression = value.expression;
         columnToUpdate.type = value.type?.toUpperCase() || columnToUpdate.type;
-        onChangeResponseColumns(columns);
+        onChangeResponseColumnsRef.current(columns);
       }
     },
-    [onChangeResponseColumns],
+    [],
   );
 
   const rowData = useMemo(() => responseColumns, [responseColumns]);
@@ -124,6 +123,12 @@ const Columns: FC<ColumnsProps> = ({
     },
     [columnDefs, rowData],
   );
+
+  useEffect(() => {
+    if (!gridApiRef.current?.isDestroyed()) {
+      gridApiRef.current?.updateGridOptions({ columnDefs });
+    }
+  }, [columnDefs]);
 
   useEffect(() => {
     if (!isSkipRefresh && !gridApiRef.current?.isDestroyed()) {
