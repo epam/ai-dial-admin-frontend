@@ -12,9 +12,10 @@ import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 // Swapped for a native select so the binding choice can be made the way a user makes it.
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select
 // the options can be read out of — as it was when this field was the 1.0 `DialSelectField`.
-vi.mock('@/src/components/Common/SelectField/SelectField', () => ({
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default: ({ id, options, value, invalid, onChange }: any) => (
+  Select: ({ id, options, value, invalid, onChange }: any) => (
     <select id={id} value={value} data-invalid={Boolean(invalid)} onChange={(e: any) => onChange(e.target.value)}>
       {options.map((o: any) => (
         <option key={o.value} value={o.value}>

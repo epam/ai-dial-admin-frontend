@@ -2,14 +2,14 @@
 
 import { FC } from 'react';
 
-import { RadioGroup, RadioGroupItem, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { RadioGroup, RadioGroupItem, RadioGroupOrientation, Select } from '@epam/ai-dial-ui-kit';
 
 import CreatePipelineShell from '@/src/components/Analytics/Pipelines/Common/CreatePipelineShell';
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
-import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
   takenTargets: string[];
@@ -50,7 +50,8 @@ const CreatePipelinePopup: FC<Props> = ({ takenTargets, onClose, onCreated }) =>
         onChange={(id) => onChangeKind(id as PipelineKind)}
       />
 
-      <SelectField
+      <Select
+        {...PIPELINE_SELECT_DEFAULTS}
         id="pipeline-target"
         labelProps={{ label: t(AnalyticsPipelinesI18nKey.Target), required: true }}
         options={availableTargets.map((table) => ({ value: table.name, label: table.name }))}

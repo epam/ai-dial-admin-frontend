@@ -2,10 +2,9 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { Input } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 
-import { DURATION_CUSTOM_PRESET } from '@/src/constants/analytics/pipelines';
-import SelectField from '@/src/components/Common/SelectField/SelectField';
+import { DURATION_CUSTOM_PRESET, PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -58,7 +57,8 @@ const DurationPresetField: FC<Props> = ({ id, label, presets, value, caption, is
   return (
     <div className="flex flex-col gap-1" role="group" aria-label={label}>
       <div className="flex flex-row flex-wrap items-center gap-2">
-        <SelectField
+        <Select
+          {...PIPELINE_SELECT_DEFAULTS}
           id={id}
           className="w-[140px]"
           options={options}

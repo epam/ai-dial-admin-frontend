@@ -1,18 +1,20 @@
 'use client';
 
+import { Select } from '@epam/ai-dial-ui-kit';
+
 import { FC } from 'react';
 
 import BoundTableField from '@/src/components/Analytics/Pipelines/Common/BoundTableField';
 import SourceField from '@/src/components/Analytics/Pipelines/Common/SourceField';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
-import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTableType } from '@/src/models/analytics/table';
 import { getPipelineInput } from '@/src/utils/analytics/pipeline-dto';
 import { getControlClassName } from '@/src/utils/entities/view';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
   form: PipelineFormState;
@@ -50,7 +52,8 @@ const PipelineSharedFields: FC<Props> = ({ form }) => {
 
       {isAggregate && (
         <BoundTableField table={getPipelineInput(draft.inputs)}>
-          <SelectField
+          <Select
+            {...PIPELINE_SELECT_DEFAULTS}
             id="pipeline-inputs"
             labelProps={{ label: t(AnalyticsPipelinesI18nKey.Inputs), required: true }}
             options={inputOptions}
@@ -62,7 +65,8 @@ const PipelineSharedFields: FC<Props> = ({ form }) => {
       )}
 
       <BoundTableField table={draft.target}>
-        <SelectField
+        <Select
+          {...PIPELINE_SELECT_DEFAULTS}
           id="pipeline-target"
           labelProps={{ label: t(AnalyticsPipelinesI18nKey.Target), required: true }}
           options={targetOptions}

@@ -17,9 +17,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select
 // the options can be read out of — as it was when this field was the 1.0 `DialSelectField`.
-vi.mock('@/src/components/Common/SelectField/SelectField', () => ({
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default: ({ id, labelProps, options, value, onChange }: any) => (
+  Select: ({ id, labelProps, options, value, onChange }: any) => (
     <label>
       <span>{labelProps?.label}</span>
       <select

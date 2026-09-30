@@ -1,8 +1,16 @@
 'use client';
 
-import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { FC, Fragment, useEffect, useRef, useState } from 'react';
-import { Checkbox, GhostButton, GhostIconButton, Label, Input, Tooltip, SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  Checkbox,
+  GhostButton,
+  GhostIconButton,
+  Label,
+  Input,
+  Tooltip,
+  SelectOption,
+  Select,
+} from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import { createMeasureRow, toMeasureRows, toMeasures } from '@/src/components/Analytics/Pipelines/Aggregate/measures';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -15,6 +23,7 @@ import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { findMeasureFunction, isColumnlessFunction, toMeasureFunctions } from '@/src/utils/analytics/measure-functions';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
   measures?: Measure[];
@@ -90,7 +99,8 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
           return (
             <Fragment key={row.id}>
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureName)} ${index + 1}`}>
-                <SelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`measure-name-${index}`}
                   options={withStrandedOption(nameOptions, row.name)}
                   value={row.name}
@@ -100,7 +110,8 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
               </div>
 
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureFn)} ${index + 1}`}>
-                <SelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`measure-fn-${index}`}
                   options={withStrandedOption(fnOptions, row.fn)}
                   value={row.fn}
@@ -112,7 +123,8 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
                 <span />
               ) : (
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.MeasureColumn)} ${index + 1}`}>
-                  <SelectField
+                  <Select
+                    {...PIPELINE_SELECT_DEFAULTS}
                     id={`measure-column-${index}`}
                     options={withStrandedOption(columnOptions, row.column)}
                     value={row.column ?? ''}

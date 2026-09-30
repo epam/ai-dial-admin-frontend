@@ -1,3 +1,4 @@
+import { MenuItemMark } from '@epam/ai-dial-ui-kit';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 
 export const LATEST_VERSION = 'latest';
@@ -47,3 +48,20 @@ export const SYSTEM_COLUMN_TAG = 'system';
 // The read-scope select's first entry. A reserved value rather than the followed table's name: following
 // omits `inputs` from the request and pinning sends it, and the service validates the two differently.
 export const FOLLOW_TARGET_SOURCE = '__follow_target__';
+
+/**
+ * What every select on the pipeline pages passes to the 2.0 `Select`, and why.
+ *
+ * `Check` rather than the list's default tint: the tint is a background token this deployment's theme
+ * does not define, so the chosen row came out indistinguishable from the rest. The list classes give
+ * the options room and stop them being squeezed — the list is a bounded flex column, so a long one
+ * shrank its rows instead of scrolling, and a select over every source table drew visibly tighter rows
+ * than one over four.
+ *
+ * Both are workarounds for something outside this repo. When the theme defines the tint and the kit
+ * pins its own option height, this constant goes away.
+ */
+export const PIPELINE_SELECT_DEFAULTS = {
+  selectedOptionMark: MenuItemMark.Check,
+  listClassName: '[&_[role="option"]]:shrink-0 [&_[role="option"]]:py-2',
+} as const;

@@ -1,10 +1,8 @@
 'use client';
 
-import SelectField from '@/src/components/Common/SelectField/SelectField';
-
 import { FC } from 'react';
 
-import { GhostButton, GhostIconButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
@@ -13,6 +11,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { MemberSelectOrderBy, SortDirection } from '@/src/models/analytics/pipeline';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
   orderBy?: MemberSelectOrderBy[];
@@ -47,7 +46,8 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
           aria-label={`${t(AnalyticsPipelinesI18nKey.OrderBy)} ${index + 1}`}
           className="flex items-end gap-2"
         >
-          <SelectField
+          <Select
+            {...PIPELINE_SELECT_DEFAULTS}
             id={`order-by-column-${index}`}
             labelProps={{ label: index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByColumn) : undefined }}
             options={withStrandedOption(fieldOptions, row.column)}
@@ -56,7 +56,8 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
             className="flex-1"
             onChange={(v) => updateRow(index, { column: v as string })}
           />
-          <SelectField
+          <Select
+            {...PIPELINE_SELECT_DEFAULTS}
             id={`order-by-direction-${index}`}
             labelProps={{ label: index === 0 ? t(AnalyticsPipelinesI18nKey.OrderByDirection) : undefined }}
             options={directionOptions}

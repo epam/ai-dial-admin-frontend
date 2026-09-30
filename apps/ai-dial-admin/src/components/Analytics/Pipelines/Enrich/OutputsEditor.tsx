@@ -1,12 +1,10 @@
 'use client';
 
-import SelectField from '@/src/components/Common/SelectField/SelectField';
-
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { GhostButton, GhostIconButton, Input, Label, Textarea } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import AllowedValuesField from '@/src/components/Analytics/Pipelines/Enrich/AllowedValuesField';
@@ -18,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { TransformOutput, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind, OutputRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
-import { SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
+import { PIPELINE_SELECT_DEFAULTS, SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
 
 const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? []);
@@ -153,11 +151,14 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
             const nameField = (
               <div className="min-w-[180px] flex-1">
-                <SelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`transform-output-name-${index}`}
-                  labelProps={{ label: isSql ? undefined : t(AnalyticsPipelinesI18nKey.OutputColumn) }}
+                  labelProps={{
+                    label: isSql ? undefined : t(AnalyticsPipelinesI18nKey.OutputColumn),
+                    required: !isSql,
+                  }}
                   aria-label={named(AnalyticsPipelinesI18nKey.OutputColumn)}
-                  required={!isSql}
                   options={isStranded ? [...columnOptions, { value: row.name, label: row.name }] : columnOptions}
                   value={row.name}
                   disabled={isDisabled}
@@ -229,7 +230,8 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                   {/* One at a time, so the selection comes first and the field that belongs to it follows. */}
                   {hasRefinement && (
                     <div className="flex flex-row items-end gap-3">
-                      <SelectField
+                      <Select
+                        {...PIPELINE_SELECT_DEFAULTS}
                         id={`transform-output-refinement-${index}`}
                         className={REFINEMENT_SELECT_CLASS}
                         labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputRefinement) }}

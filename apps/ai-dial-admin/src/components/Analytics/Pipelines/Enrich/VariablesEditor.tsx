@@ -1,10 +1,8 @@
 'use client';
 
-import SelectField from '@/src/components/Common/SelectField/SelectField';
-
 import { FC, Fragment, useEffect, useState } from 'react';
 
-import { GhostButton, GhostIconButton, Input, Label } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Label, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import { createVarRow, getTakenVarNames, toVarRows, toVars } from '@/src/components/Analytics/Pipelines/Enrich/vars';
@@ -14,6 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { PipelineVar } from '@/src/models/analytics/pipeline';
 import { VarBindingKind, VarRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 const isSameDeclaration = (a: Record<string, PipelineVar>, b?: Record<string, PipelineVar>): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? {});
@@ -95,7 +94,8 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
               />
 
               <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.VarBinding)} ${index + 1}`}>
-                <SelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`pipeline-var-binding-${index}`}
                   options={bindingOptions}
                   value={row.kind}
@@ -107,7 +107,8 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
                   selection comes first and the field that belongs to it follows. */}
               {isColumnBinding ? (
                 <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.VarValue)} ${index + 1}`}>
-                  <SelectField
+                  <Select
+                    {...PIPELINE_SELECT_DEFAULTS}
                     id={`pipeline-var-column-${index}`}
                     options={
                       isFieldStranded ? [...fieldOptions, { value: row.column, label: row.column }] : fieldOptions

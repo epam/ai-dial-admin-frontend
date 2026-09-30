@@ -2,10 +2,9 @@
 
 import { FC, useState } from 'react';
 
-import { Input } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 
-import { CRON_CUSTOM_PRESET, CRON_PRESETS } from '@/src/constants/analytics/pipelines';
-import SelectField from '@/src/components/Common/SelectField/SelectField';
+import { CRON_CUSTOM_PRESET, CRON_PRESETS, PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -46,7 +45,8 @@ const CronField: FC<Props> = ({ value, onChange }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <SelectField
+      <Select
+        {...PIPELINE_SELECT_DEFAULTS}
         id="rule-cron-preset"
         className={getControlClassName()}
         labelProps={{ label: t(AnalyticsPipelinesI18nKey.CronPreset), required: true }}

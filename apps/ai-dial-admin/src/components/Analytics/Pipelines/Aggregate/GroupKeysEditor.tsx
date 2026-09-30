@@ -1,8 +1,7 @@
 'use client';
 
-import SelectField from '@/src/components/Common/SelectField/SelectField';
 import { FC, useEffect, useRef, useState } from 'react';
-import { GhostButton, GhostIconButton, Input } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import {
   createGroupKeyRow,
@@ -18,6 +17,7 @@ import { GroupKey } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind, GroupKeyRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 interface Props {
   groupKeys?: GroupKey[];
   /** The source's entity, so a column an enrichment supplies is offered under its qualified name. */
@@ -51,7 +51,8 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
         return (
           <div key={row.id} className="flex flex-col gap-2">
             <div className="flex flex-row flex-wrap items-end gap-3">
-              <SelectField
+              <Select
+                {...PIPELINE_SELECT_DEFAULTS}
                 id={`group-key-column-${index}`}
                 className="min-w-[180px] flex-1"
                 labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyColumn) }}
@@ -59,7 +60,8 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
                 value={row.column}
                 onChange={(v) => updateRow(row.id, { column: v as string, unit: undefined })}
               />
-              <SelectField
+              <Select
+                {...PIPELINE_SELECT_DEFAULTS}
                 id={`group-key-kind-${index}`}
                 className="min-w-[180px] flex-1"
                 labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyKind) }}
@@ -71,7 +73,8 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
                 onChange={(v) => updateRow(row.id, { kind: v as GroupKeyKind, unit: undefined })}
               />
               {row.kind === GroupKeyKind.Trunc && (
-                <SelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`group-key-unit-${index}`}
                   className="min-w-[180px] flex-1"
                   labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyUnit) }}

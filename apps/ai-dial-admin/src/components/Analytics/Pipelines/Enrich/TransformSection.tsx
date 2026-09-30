@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { Input, Label, Textarea, Tooltip } from '@epam/ai-dial-ui-kit';
+import { Input, Label, Textarea, Tooltip, Select } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
@@ -13,8 +13,11 @@ import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
 import PipelineSection from '@/src/components/Analytics/Pipelines/Common/PipelineSection';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
-import { MEMBERS_PLACEHOLDER, MEMBER_BUILT_IN_PLACEHOLDERS } from '@/src/constants/analytics/pipelines';
-import SelectField from '@/src/components/Common/SelectField/SelectField';
+import {
+  MEMBERS_PLACEHOLDER,
+  MEMBER_BUILT_IN_PLACEHOLDERS,
+  PIPELINE_SELECT_DEFAULTS,
+} from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
@@ -103,7 +106,8 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
 
   return (
     <div className="flex flex-col gap-y-6">
-      <SelectField
+      <Select
+        {...PIPELINE_SELECT_DEFAULTS}
         id="transform-type"
         labelProps={{ label: t(AnalyticsPipelinesI18nKey.TransformType), required: true }}
         options={withStrandedOption(typeOptions, transform?.type)}
