@@ -98,7 +98,7 @@ describe('CreateApplication', () => {
         view: ApplicationRoute.AssetsApplications,
       }),
     );
-    expect(screen.getByText('resource-source-field').closest('[role="dialog"]')).toHaveClass('max-h-[540px]');
+    expect(screen.getByText('resource-source-field').closest('[role="dialog"]')).toHaveClass('max-h-[750px]');
   });
 
   test('keeps the creation modal open after a failed submit', async () => {
