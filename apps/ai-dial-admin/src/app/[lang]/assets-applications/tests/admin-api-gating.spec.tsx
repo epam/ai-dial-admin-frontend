@@ -10,7 +10,7 @@ vi.mock('@/src/app/api/api', () => ({
   applicationsApi: { getApplicationsList: vi.fn().mockResolvedValue([]) },
 }));
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({ getAllRunners: vi.fn().mockResolvedValue([]) }));
-vi.mock('@/src/components/Assets/Apps/PageList', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/src/components/Assets/Apps/List', () => ({ __esModule: true, default: () => null }));
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getApp: vi.fn().mockResolvedValue({ etag: 'e', response: { name: 'my-app', folderId: 'f' } }),

@@ -1,4 +1,4 @@
-import AssetsToolsetsPageList from '@/src/components/Assets/Toolsets/PageList';
+import AssetsToolsetsList from '@/src/components/Assets/Toolsets/List';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export default async function Page() {
   return (
     <SaveValidationContextProvider>
-      <AssetsToolsetsPageList />
+      <AssetsToolsetsList />
     </SaveValidationContextProvider>
   );
 }

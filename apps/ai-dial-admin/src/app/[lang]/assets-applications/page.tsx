@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 
 import { applicationRunnersApi } from '@/src/app/api/api';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
-import AppsList from '@/src/components/Assets/Apps/PageList';
+import AppsList from '@/src/components/Assets/Apps/List';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { AppRunnerOption } from '@/src/components/SourceField/Application/models';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
