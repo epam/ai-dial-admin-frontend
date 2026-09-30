@@ -24,11 +24,15 @@ import {
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
   TEST_SUITES_COLUMN,
   RUNS_COLUMN,
+  SUITE_RUNS_COLUMN,
+  COMPARE_RUN_PICKER_COLUMN,
 } from '../grid-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
+import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { GridFilterType } from '@/src/types/grid-filter';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -434,5 +438,147 @@ describe('Constants :: grid columns', () => {
 
     expect(numberOfRuns).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
     expect(numberOfTestCases).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+  });
+});
+
+const RUNS_COLUMN_ORDER = [
+  'status',
+  'testRunName',
+  'runConfig.numberOfRuns',
+  'numberOfTestCases',
+  'testSuiteId',
+  'target',
+  'metrics',
+  'startedAt',
+  'completedAt',
+  'duration',
+  'cost',
+  'overallScore',
+];
+
+/**
+ * Neither sortable nor filterable: Duration/Cost/Overall score are not raw query-API fields (Duration
+ * is derived client-side, Cost/Overall score are appended to a row after the query runs). The two
+ * counts are real, sortable fields and are asserted separately below.
+ */
+const DERIVED_COL_IDS = ['duration', 'cost', 'overallScore'];
+
+/** Columns capped narrower than `defaultColDef`'s `minWidth` in `AgGridWrapper`. */
+const GRID_DEFAULT_MIN_WIDTH = 150;
+const CAPPED_COL_IDS = ['runConfig.numberOfRuns', 'numberOfTestCases', 'duration', 'cost', 'overallScore'];
+
+const colIdsOf = (columns: ColDef[]) => columns.map((col) => col.colId);
+
+describe('RUNS_COLUMN', () => {
+  test('lists the runs columns in the order the list is specified to show them', () => {
+    expect(colIdsOf(RUNS_COLUMN)).toEqual(RUNS_COLUMN_ORDER);
+  });
+
+  test('no longer carries a created date column', () => {
+    expect(RUNS_COLUMN.some((col) => col.field === 'createdAt')).toBe(false);
+  });
+
+  test('offers neither a sort control nor a filter where the endpoint can do neither', () => {
+    const derived = RUNS_COLUMN.filter((col) => DERIVED_COL_IDS.includes(col.colId ?? ''));
+
+    expect(derived).toHaveLength(DERIVED_COL_IDS.length);
+    derived.forEach((col) => {
+      expect(col.sortable).toBe(false);
+      expect(col.filter).toBe(false);
+    });
+  });
+
+  test('the two counts are sortable against their real query-API fields, but offer no filter', () => {
+    const runs = RUNS_COLUMN.find((col) => col.colId === 'runConfig.numberOfRuns');
+    const testCases = RUNS_COLUMN.find((col) => col.colId === 'numberOfTestCases');
+
+    // Left to the grid default (sortable), since both map to a real, single query-API field.
+    expect(runs?.sortable).toBeUndefined();
+    expect(testCases?.sortable).toBeUndefined();
+    expect(runs?.filter).toBe(false);
+    expect(testCases?.filter).toBe(false);
+  });
+
+  test('caps the narrow columns, so the grid-wide flex cannot stretch them to the default width', () => {
+    const capped = RUNS_COLUMN.filter((col) => CAPPED_COL_IDS.includes(col.colId ?? ''));
+
+    expect(capped).toHaveLength(CAPPED_COL_IDS.length);
+    capped.forEach((col) => {
+      expect(col.maxWidth).toBeLessThan(GRID_DEFAULT_MIN_WIDTH);
+    });
+  });
+
+  test('gives every column a field, so column state and the column panel can address it', () => {
+    RUNS_COLUMN.forEach((col) => {
+      expect(col.field).toBeTruthy();
+    });
+  });
+
+  test('keeps the status header visible and sortable, and its filter button in the filter row', () => {
+    const status = RUNS_COLUMN.find((col) => col.colId === 'status');
+
+    expect(status?.headerName).toBe('Status');
+    // No header component overriding the default, so the label and the sort control both render.
+    expect(status?.headerComponent).toBeUndefined();
+    // Left to the grid defaults: sorting on, the text filter, and a filter row carrying its button.
+    expect(status?.sortable).toBeUndefined();
+    expect(status?.filter).toBeUndefined();
+    expect(status?.floatingFilter).toBeUndefined();
+    // An empty filter body leaves the filter row with the button alone, no search input.
+    expect(status?.floatingFilterComponent).toBe(EmptyFloatingFilter);
+  });
+
+  test('pins the status column to the indicator width, whatever its header and filter row hold', () => {
+    const status = RUNS_COLUMN.find((col) => col.colId === 'status');
+
+    expect(status?.width).toBe(65);
+    expect(status?.minWidth).toBe(65);
+    expect(status?.maxWidth).toBe(65);
+  });
+
+  test('Target is both filterable and sortable, though sort only approximates its two-field OR shape', () => {
+    const target = RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    // Left to the grid default (sortable): `buildRunsSort` approximates it by the deployment name alone.
+    expect(target?.sortable).toBeUndefined();
+    expect(target?.filter).toBeUndefined();
+    expect((target?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
+  test('Metrics is both sortable and filterable against the real metric_names field', () => {
+    const metrics = RUNS_COLUMN.find((col) => col.colId === 'metrics');
+
+    // Left to the grid default (sortable), since `metric_names` is a real, single query-API field.
+    expect(metrics?.sortable).toBeUndefined();
+    expect((metrics?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.CONTAINS,
+    ]);
+  });
+});
+
+describe('SUITE_RUNS_COLUMN', () => {
+  test('omits the test suite id, which every row of a suite-scoped list would repeat', () => {
+    expect(colIdsOf(SUITE_RUNS_COLUMN)).not.toContain('testSuiteId');
+  });
+
+  test('keeps the remaining columns in the same relative order as the full list', () => {
+    expect(colIdsOf(SUITE_RUNS_COLUMN)).toEqual(RUNS_COLUMN_ORDER.filter((colId) => colId !== 'testSuiteId'));
+  });
+});
+
+describe('COMPARE_RUN_PICKER_COLUMN', () => {
+  test('carries only the columns that identify a run, leaving out the mock-backed ones', () => {
+    expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
+      'status',
+      'testRunName',
+      'runConfig.numberOfRuns',
+      'numberOfTestCases',
+      'startedAt',
+      'completedAt',
+    ]);
   });
 });

@@ -62,6 +62,14 @@ export interface Run {
   };
   numberOfTestCases?: number;
   suiteSnapshot?: SuiteSnapshot;
+  metricNames?: string[];
+  /**
+   * Purely display values: the eval service appends these to a `test_suite_runs` query row after the
+   * query itself runs, so neither is selectable, sortable, or filterable through the query DSL, and
+   * either may be absent.
+   */
+  overallScoreValue?: number;
+  totalCost?: number;
   grafanaExploreUrl?: string;
   startedAt?: number;
   completedAt?: number;
@@ -84,6 +92,23 @@ export enum RunStatus {
   FAILED = 'FAILED',
   CANCELLING = 'CANCELLING',
   CANCELLED = 'CANCELLED',
+}
+
+/** Display label for a run target's kind — the second line of the runs-list Target cell. */
+export enum RunTargetKind {
+  Application = 'Application',
+  Model = 'Model',
+  Mcp = 'MCP',
+}
+
+/**
+ * The entity a run evaluated, resolved from its `suiteSnapshot`. `kind` is left unset rather than
+ * guessed when the snapshot's deployment ref carries no recognizable type (see
+ * `resolveRunTarget` in `Runs/utils/run-list-values.ts`).
+ */
+export interface RunTarget {
+  name: string;
+  kind?: RunTargetKind;
 }
 
 /** Averages from GET /api/v1/test-suite-runs/{id}/costs (null when no usage-log rows for that phase). */

@@ -184,20 +184,25 @@ const FileManager: FC<Props> = ({
 
   // TODO: move common functions into context files
 
-  const handleCreateFolder = useCallback(
-    async (_: DialUploadFileItem | undefined, folderPath: string) => {
+  /**
+   * `isOpenCreatedFolder` is false for the move-destination popup: its own `DialFileManager` reads
+   * the same items, so the refetch is what makes the new folder appear there — but navigating the
+   * list underneath an open modal is not wanted.
+   */
+  const createFolder = useCallback(
+    async (_: DialUploadFileItem | undefined, folderPath: string, isOpenCreatedFolder: boolean) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
-      onCreateFolder?.(_, folderPath).then((res) => {
+      // Awaited, not fire-and-forget: ui-kit awaits this before tearing down the inline editor, so
+      // dropping the promise made every create look instantly successful — including the ones Core
+      // rejected.
+      await onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
           const parentPath = getParentPathByFullPath(newPath) || `${getRootFolder(view)}/`;
 
           fetchFiles(parentPath);
-
-          const newExpanded = new Set(expandedFolders.add(parentPath).add(newPath));
-          setExpandedFolders(newExpanded);
-          setFilePath(newPath);
           setLoadedPaths((prev) => new Set(prev).add(newPath));
+
           const results = (res.response as { importResults: ImportResult[] }).importResults;
           const translatedType = t(getImportTitle(view)).toLowerCase();
           showNotification(
@@ -208,7 +213,11 @@ const FileManager: FC<Props> = ({
           );
           getImportResults(results, getFolderName(filePath) as string, translatedType, t);
 
-          scrollToNewFolder();
+          if (isOpenCreatedFolder) {
+            setExpandedFolders(new Set(expandedFolders.add(parentPath).add(newPath)));
+            setFilePath(newPath);
+            scrollToNewFolder();
+          }
         }
       });
     },
@@ -224,6 +233,16 @@ const FileManager: FC<Props> = ({
       t,
       view,
     ],
+  );
+
+  const handleCreateFolder = useCallback(
+    (file: DialUploadFileItem | undefined, folderPath: string) => createFolder(file, folderPath, true),
+    [createFolder],
+  );
+
+  const handleDestinationFolderCreate = useCallback(
+    (file: DialUploadFileItem | undefined, folderPath: string) => createFolder(file, folderPath, false),
+    [createFolder],
   );
 
   const handleOnPathChange = useCallback(
@@ -452,7 +471,12 @@ const FileManager: FC<Props> = ({
         onUploadFiles={isReadOnlyAdmin || isFileRootActive ? undefined : handleDragAndDropFiles}
         folderCreationValidationMessages={getValidationMessages(t)}
         renameValidationMessages={getValidationMessages(t)}
-        destinationFolderPopupOptions={getDestinationFolderPopupOptions(view, t, handleFolderNestingDepthExceeded)}
+        destinationFolderPopupOptions={getDestinationFolderPopupOptions(
+          view,
+          t,
+          handleFolderNestingDepthExceeded,
+          isReadOnlyAdmin || isFileRootActive ? undefined : handleDestinationFolderCreate,
+        )}
         isRenameFileAvailable={false}
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
