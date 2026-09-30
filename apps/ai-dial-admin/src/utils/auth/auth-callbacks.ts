@@ -6,10 +6,9 @@ import { TokenSet } from 'openid-client';
 
 import { NextAuthToken, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
-import { NextClient, RefreshToken } from './nextauth-client';
+import { NextClient } from './nextauth-client';
 import { getListProvidersPassIdToken } from './token';
-
-const waitRefreshTokenTimeout = 5;
+import { isAccessTokenExpired } from './token-expiry';
 
 export const safeDecodeJwt = (jwtToken: string) => {
   try {
@@ -61,9 +60,14 @@ export const tokenConfig: TokenEndpointHandler = {
 /**
  * Takes a token, and returns a new token with updated
  * `accessToken` and `accessTokenExpires`. If an error occurs,
- * returns the old token and an error property
+ * returns the old token and an error property.
+ * Concurrent calls for the same sign-in share one IdP request (see `NextClient.refreshOnce`).
  */
-export async function refreshAccessToken(token: NextAuthToken) {
+export function refreshAccessToken(token: NextAuthToken): Promise<NextAuthToken> {
+  return NextClient.refreshOnce(token, requestTokenRefresh);
+}
+
+async function requestTokenRefresh(token: NextAuthToken): Promise<NextAuthToken> {
   const displayedTokenSub = process.env.SHOW_TOKEN_SUB === 'true' ? token.sub : '******';
   try {
     if (!token.providerId) {
@@ -72,34 +76,6 @@ export async function refreshAccessToken(token: NextAuthToken) {
     const client = await NextClient.getOrCreateClient(token.providerId);
     if (!client) {
       throw new Error(`No client for appropriate provider set`);
-    }
-
-    let msWaiting = 0;
-    while (true) {
-      const refresh = NextClient.getRefreshToken(token.userId);
-
-      if (!refresh || !refresh.isRefreshing) {
-        const localToken: RefreshToken = refresh || {
-          isRefreshing: true,
-          token,
-        };
-        if (
-          typeof localToken.token?.accessTokenExpires === 'number' &&
-          Date.now() < localToken.token.accessTokenExpires
-        ) {
-          return localToken.token;
-        }
-
-        NextClient.setIsRefreshTokenStart(token.userId, localToken);
-        break;
-      }
-
-      await NextClient.delay();
-      msWaiting += 50;
-
-      if (msWaiting >= waitRefreshTokenTimeout * 1000) {
-        throw new Error(`Waiting more than ${waitRefreshTokenTimeout} seconds for refreshing token`);
-      }
     }
 
     const refreshedTokens = await client.refresh(token.refreshToken as string | TokenSet);
@@ -116,8 +92,9 @@ export async function refreshAccessToken(token: NextAuthToken) {
       throw new Error('No refresh tokens exists');
     }
 
-    const returnToken = {
+    return {
       ...token,
+      error: undefined, // A successful refresh supersedes any earlier refresh error
       user: getUser(refreshedTokens.access_token as string, refreshedTokens.idToken as string, token.providerId),
       access_token: refreshedTokens.access_token,
       accessTokenExpires: refreshedTokens.expires_in
@@ -125,12 +102,6 @@ export async function refreshAccessToken(token: NextAuthToken) {
         : (refreshedTokens.expires_at as number) * 1000,
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
     };
-
-    NextClient.setIsRefreshTokenStart(token.userId, {
-      isRefreshing: false,
-      token: returnToken,
-    });
-    return returnToken;
   } catch (error: unknown) {
     errorObjLog(error, `Error when refreshing token: ${(error as Error).message}. Sub: ${displayedTokenSub}`);
 
@@ -162,14 +133,12 @@ export const callbacks: Partial<CallbacksOptions<Profile & { job_title?: string 
         providerId: options.account.provider,
         userId: options.user.id,
         idToken: options.account.id_token,
+        sessionKey: crypto.randomUUID(),
       };
     }
 
     // Return previous token if the access token has not expired yet
-    if (
-      options.token.providerId === 'credentials' ||
-      (typeof options.token.accessTokenExpires === 'number' && Date.now() < options.token.accessTokenExpires)
-    ) {
+    if (options.token.providerId === 'credentials' || !isAccessTokenExpired(options.token)) {
       return {
         ...options.token,
         user: getUser(
