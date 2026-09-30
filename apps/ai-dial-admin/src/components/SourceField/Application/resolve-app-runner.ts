@@ -39,9 +39,17 @@ export const resolveAppRunnerScheme = async (runner?: DialApplicationScheme): Pr
     };
   }
 
-  const schemeRes = await getResolvedApplicationScheme(runner.$id ?? '');
+  if (process.env.DIAL_ADMIN_API_URL) {
+    const schemeRes = await getResolvedApplicationScheme(runner.$id ?? '');
+    return {
+      runner,
+      scheme: schemeRes.success ? (schemeRes.response as { schema?: DialApplicationScheme })?.schema : runner,
+    };
+  }
+
+  const schemeRes = await getResolvedRunnerSchema(runner.$id ?? '');
   return {
     runner,
-    scheme: schemeRes.success ? (schemeRes.response as { schema?: DialApplicationScheme })?.schema : runner,
+    scheme: schemeRes.success ? (schemeRes.response as DialApplicationScheme) : runner,
   };
 };

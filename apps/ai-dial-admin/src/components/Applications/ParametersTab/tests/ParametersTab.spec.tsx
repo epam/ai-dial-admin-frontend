@@ -11,7 +11,7 @@ vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
-  getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: true, response: { properties: { propA: {} } } }),
+  getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: false }),
   getRunner: vi.fn().mockResolvedValue({
     success: true,
     response: { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe' },

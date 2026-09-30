@@ -1,15 +1,17 @@
 import { cookies, headers } from 'next/headers';
 
-import { applicationRunnersApi } from '@/src/app/api/api';
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
+import { applicationRunnersApi } from '@/src/app/api/api';
 import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import AppsList from '@/src/components/Assets/Apps/List';
-import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { AppRunnerOption } from '@/src/components/SourceField/Application/models';
+import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -31,6 +33,10 @@ export default async function Page() {
     } catch (e) {
       errorObjLog(e, 'Failed to fetch applications data');
     }
+  } else {
+    [runners] = await Promise.all([
+      readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true),
+    ]);
   }
 
   try {
