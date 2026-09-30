@@ -19,6 +19,7 @@ const PriceControl: FC<Props> = ({ elementId, label, ...props }) => {
       id={elementId}
       labelProps={{ label }}
       iconBefore={<IconCurrencyDollar className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />}
+      min={0}
       {...props}
     />
   );
