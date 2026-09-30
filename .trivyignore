@@ -14,6 +14,13 @@ CVE-2026-12151 exp:2026-09-01
 CVE-2026-69152 exp:2026-10-01
 CVE-2026-69192 exp:2026-10-01
 
+# brace-expansion@5.0.7 + undici@6.27.0 are npm's own bundled deps in node:24-alpine
+# (/usr/local/lib/node_modules/npm/node_modules) — package.json overrides cannot reach them.
+# Remove once npm bundles brace-expansion >=5.0.11 and undici >=6.28.1.
+CVE-2026-102276 exp:2026-10-31
+CVE-2026-102278 exp:2026-10-31
+CVE-2026-19534 exp:2026-10-31
+
 CVE-2026-13149
 CVE-2026-59869
 CVE-2026-59869
