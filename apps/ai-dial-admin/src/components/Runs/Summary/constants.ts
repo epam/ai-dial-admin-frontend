@@ -55,11 +55,9 @@ export const SUMMARY_PANELS_GRID_CLASS =
 
 export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
 
-export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1';
+export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
 
 export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
-
-export const COST_ELAPSED_TICK_MS = 1_000;
 
 export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 

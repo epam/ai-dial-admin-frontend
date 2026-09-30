@@ -10,16 +10,12 @@ import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
-import {
-  formatAvgRunTimeSeconds,
-  formatElapsedMmSs,
-  formatRunCost,
-  hasOverallScoreThreshold,
-} from '@/src/components/Runs/Summary/utils';
+import { formatAvgRunTimeSeconds, formatRunCost, hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
+import classNames from 'classnames';
 
 const NO_DATA_VALUE = '—';
 
@@ -32,29 +28,32 @@ interface Props {
 }
 
 const CostCalculatingValue: FC<{ label: string }> = ({ label }) => (
-  <div className="flex items-center gap-1" role="status">
-    <span aria-hidden>
-      <DialLoader size={20} fullWidth={false} />
+  <div className="flex flex-col justify-center">
+    <span className="p-1 rounded bg-layer-4 dial-small-text text-secondary w-fit" role="status">
+      {label}
     </span>
-    <span className="dial-small-text text-secondary">{label}</span>
   </div>
 );
+
+const getCardClassNames = (error?: boolean) =>
+  classNames(ANALYTICS_KPI_CARD_CLASS, {
+    'justify-start gap-2': !!error,
+  });
 
 const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
 
   const isRunInProgress = isTransitionalRunStatus(run?.status);
-  const hasNoResults = data?.statusCounts.total === 0;
+  // Sourced from `avgRunTimeMs` (eval_summaries), not `statusCounts` (test_case_eval_scores):
+  // the latter can lag behind execution finishing, and gating the cost fetch on a signal that
+  // arrives late would leave `useRunCosts` stuck at canHaveCosts=false — and thus permanently
+  // unfetched — for a run that already has real cost data.
+  const hasNoResults = data != null && data.avgRunTimeMs == null;
   // An MCP row carries no price at all, so an MCP-tool suite bills only through its metrics.
   const isUnpricedMcpRun = run?.suiteSnapshot?.suiteType === SuiteType.McpTool && metricSnapshotCount === 0;
   const canHaveCosts = !isRunInProgress && !hasNoResults && !isUnpricedMcpRun;
-  const {
-    costs,
-    isPending: areCostsPending,
-    unavailable: costsUnavailable,
-    elapsedMs: costsElapsedMs,
-  } = useRunCosts(run?.id, canHaveCosts);
+  const { costs, isPending: areCostsPending, unavailable: costsUnavailable } = useRunCosts(run?.id, canHaveCosts);
 
   if (!data) {
     return (
@@ -71,12 +70,16 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
 
   const testCaseCostDisplay = formatRunCost(costs?.avgTestCaseCost);
   const metricEvalCostDisplay = formatRunCost(costs?.avgMetricEvalCost);
+
   const showTestCasesPassed = hasOverallScoreThreshold(run.suiteSnapshot?.overallScoreThreshold);
   const hasStatusCounts = statusCounts.total > 0;
   const isRunIncomplete = isIncompleteRunStatus(run.status);
-  const hasCostError = costsUnavailable || (!hasStatusCounts && !isRunIncomplete);
+  // Reuses `hasNoResults` (eval_summaries-backed) rather than `hasStatusCounts`
+  // (test_case_eval_scores-backed) so the cost cards' error state can't disagree with the signal
+  // that decided whether `useRunCosts` even attempted a fetch.
+  const hasCostError = costsUnavailable || (hasNoResults && !isRunIncomplete);
   const costDescription = areCostsPending
-    ? t(RunsI18nKey.CostCalculatingElapsed, { elapsed: formatElapsedMmSs(costsElapsedMs) })
+    ? t(RunsI18nKey.CostCalculatingElapsed)
     : hasCostError
       ? t(RunsI18nKey.CostDataUnavailable)
       : t(RunsI18nKey.AvgPerTestCase);
@@ -96,7 +99,7 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
     <div className={ANALYTICS_KPI_GRID_CLASS}>
       {overallScore != null && (
         <DialAnalyticsCard
-          className={ANALYTICS_KPI_CARD_CLASS}
+          className={getCardClassNames()}
           title={t(RunsI18nKey.OverallScore)}
           value={String(overallScore)}
           description={t(RunsI18nKey.OverallScoreDescription)}
@@ -104,36 +107,36 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
       )}
       {showTestCasesPassed && (
         <DialAnalyticsCard
-          className={ANALYTICS_KPI_CARD_CLASS}
+          className={getCardClassNames(!hasStatusCounts && !isRunIncomplete)}
           title={t(RunsI18nKey.TestCasesPassed)}
           value={hasStatusCounts ? <PassFailFraction counts={statusCounts} /> : NO_DATA_VALUE}
-          description={hasStatusCounts ? <PassFailStatusBreakdown counts={statusCounts} /> : undefined}
+          description={hasStatusCounts ? <PassFailStatusBreakdown counts={statusCounts} /> : <div />}
           error={!hasStatusCounts && !isRunIncomplete}
         />
       )}
       <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
+        className={getCardClassNames(avgSeconds == null && !isRunIncomplete)}
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgSeconds == null && !isRunIncomplete}
       />
       <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
+        className={getCardClassNames(avgMetricEvalSeconds == null && !isRunIncomplete)}
         title={t(RunsI18nKey.AvgMetricEvalLatency)}
         value={avgMetricEvalSeconds != null ? `${avgMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : NO_DATA_VALUE}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgMetricEvalSeconds == null && !isRunIncomplete}
       />
       <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
+        className={getCardClassNames(hasCostError)}
         title={t(RunsI18nKey.TestCaseLlmCost)}
         value={costCardValue(testCaseCostDisplay)}
         description={costDescription}
         error={hasCostError}
       />
       <DialAnalyticsCard
-        className={ANALYTICS_KPI_CARD_CLASS}
+        className={getCardClassNames(hasCostError)}
         title={t(RunsI18nKey.MetricEvalCost)}
         value={costCardValue(metricEvalCostDisplay)}
         description={costDescription}
