@@ -568,6 +568,21 @@ describe('SUITE_RUNS_COLUMN', () => {
   test('keeps the remaining columns in the same relative order as the full list', () => {
     expect(colIdsOf(SUITE_RUNS_COLUMN)).toEqual(RUNS_COLUMN_ORDER.filter((colId) => colId !== 'testSuiteId'));
   });
+
+  test('hides Target by default, reachable again from the columns panel', () => {
+    const target = SUITE_RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    expect(target?.hide).toBe(true);
+    expect(target?.field).toBeTruthy();
+    expect(target?.headerName).toBeTruthy();
+    expect(target?.suppressColumnsToolPanel).toBeFalsy();
+  });
+
+  test('does not leak the hidden Target default onto the unscoped list', () => {
+    const target = RUNS_COLUMN.find((col) => col.colId === 'target');
+
+    expect(target?.hide).toBe(false);
+  });
 });
 
 describe('COMPARE_RUN_PICKER_COLUMN', () => {

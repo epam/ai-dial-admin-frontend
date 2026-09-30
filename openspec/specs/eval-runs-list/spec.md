@@ -5,8 +5,8 @@
 Defines what the evaluation runs list presents and how — its column set and order, each column's cell
 view, truncation and overflow behaviour, content-based sizing, and row activation — across the `/runs`
 list, the Test Suite view's Runs tab, and the compare-run picker, all of which render the same run
-shape. `/runs` reads it via the structured-query API (`test_suite_runs`); the Test Suite Runs tab and
-the compare picker still read it via `GET /api/v1/test-suite-runs`.
+shape. `/runs` and the Test Suite Runs tab both read it via the structured-query API
+(`test_suite_runs`); the compare-run picker still reads it via `GET /api/v1/test-suite-runs`.
 
 ## Requirements
 
@@ -41,6 +41,27 @@ carries no information.
 - **WHEN** the operator opens a test suite's Runs tab
 - **THEN** the eleven remaining columns are present in the same relative order
 - **AND** no Test Suite ID column is present
+
+### Requirement: The suite-scoped runs list sources the same data as the unscoped list
+
+The Test Suite Runs tab SHALL read run rows from the same query-backed source as the unscoped runs
+list, so a suite-scoped row carries the same Target, Metrics, Cost, and Overall score values a
+corresponding unscoped row would carry for the same run — never a missing-value indication caused
+only by which view rendered it.
+
+#### Scenario: Suite tab shows the same target, metrics, cost, and score as the unscoped list
+
+- **WHEN** a run has a resolvable target, metric names, a recorded cost, or an overall score
+- **AND** the operator views that run from its test suite's Runs tab
+- **THEN** the Target, Metrics, Cost, and Overall score cells show the same values they would show on
+  the unscoped runs list
+
+#### Scenario: A run genuinely lacking a value still shows the missing-value indication
+
+- **WHEN** a run has no resolvable target, no metrics, no cost, or no overall score
+- **AND** the operator views that run from its test suite's Runs tab
+- **THEN** the corresponding cell shows the missing-value indication, matching the unscoped list's
+  behavior for the same run
 
 ### Requirement: Run name and run id share one column
 
