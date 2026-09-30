@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { DialLabel, DialPrimaryButton, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
@@ -137,36 +137,37 @@ const InterfacesField = <V extends InterfaceValue>({
           className ?? STANDARD_CONTROL_WIDTH,
         )}
       >
-        {usedTypes.map((type) =>
-          isEndpointVariant ? (
-            <InterfaceEndpointRow
-              key={type}
-              fieldId={`interface-${type}`}
-              typeLabel={getInterfaceTypeLabel(t, type)}
-              value={(interfaces[type] as DialUpstreamInterface) || {}}
-              disabled={isReadonly}
-              onChange={(value) => onChangeValue(type, value as V)}
-              onDelete={() => onDeleteType(type)}
-            />
-          ) : (
-            <InterfaceRow
-              key={type}
-              fieldId={`interface-${type}`}
-              type={type}
-              typeLabel={getInterfaceTypeLabel(t, type)}
-              value={(interfaces[type] as BaseUrlInterfaceValue) || {}}
-              baseUrlKey={baseUrlKey}
-              defaultHeadersKey={defaultHeadersKey}
-              disabled={isReadonly}
-              onChange={(value) => onChangeValue(type, value as V)}
-              onDelete={() => onDeleteType(type)}
-              isAsset={isAsset}
-              translators={translators}
-              entityBaseUrl={entityBaseUrl}
-              view={view}
-            />
-          ),
-        )}
+        {usedTypes.map((type, index) => (
+          <Fragment key={type}>
+            {index > 0 && <hr className="border-t border-primary" />}
+            {isEndpointVariant ? (
+              <InterfaceEndpointRow
+                fieldId={`interface-${type}`}
+                typeLabel={getInterfaceTypeLabel(t, type)}
+                value={(interfaces[type] as DialUpstreamInterface) || {}}
+                disabled={isReadonly}
+                onChange={(value) => onChangeValue(type, value as V)}
+                onDelete={() => onDeleteType(type)}
+              />
+            ) : (
+              <InterfaceRow
+                fieldId={`interface-${type}`}
+                type={type}
+                typeLabel={getInterfaceTypeLabel(t, type)}
+                value={(interfaces[type] as BaseUrlInterfaceValue) || {}}
+                baseUrlKey={baseUrlKey}
+                defaultHeadersKey={defaultHeadersKey}
+                disabled={isReadonly}
+                onChange={(value) => onChangeValue(type, value as V)}
+                onDelete={() => onDeleteType(type)}
+                isAsset={isAsset}
+                translators={translators}
+                entityBaseUrl={entityBaseUrl}
+                view={view}
+              />
+            )}
+          </Fragment>
+        ))}
 
         {!isReadonly && isSelectingType && (
           <DialSelectField

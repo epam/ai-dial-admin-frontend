@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 
 import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi } from '@/src/app/api/api';
+import { getTranslators } from '@/src/app/[lang]/platform-translators/actions';
 import AppsList from '@/src/components/Assets/Apps/List';
 import { AppRunnerOption } from '@/src/components/SourceField/Application/models';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
@@ -21,6 +22,7 @@ export default async function Page() {
 
   let runners: DialApplicationScheme[] | null = [];
   let assetRunners: ResourceInfo[] = [];
+  let translators: ResourceInfo[] = [];
 
   // Admin-backend enrichment only: this page is otherwise Core-direct (assetRunners below), so when
   // DIAL_ADMIN_API_URL is unset there is no host to call and `runners` stays empty rather than
@@ -39,15 +41,16 @@ export default async function Page() {
 
   try {
     assetRunners = await getAllRunners();
+    translators = (await getTranslators('')) || [];
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch asset app runners');
+    errorObjLog(e, 'Failed to fetch asset app runners and translators');
   }
 
   const options: AppRunnerOption[] = buildAppRunnerOptions(runners, assetRunners);
 
   return (
     <SaveValidationContextProvider>
-      <AppsList runners={options} />
+      <AppsList runners={options} translators={translators} />
     </SaveValidationContextProvider>
   );
 }

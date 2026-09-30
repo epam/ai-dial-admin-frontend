@@ -1,6 +1,7 @@
 'use client';
 import { FC } from 'react';
 
+import CreateApplication from '@/src/components/Assets/Apps/CreateApplication';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -20,6 +21,7 @@ import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 import DeleteAssetsModal from '@/src/components/Assets/Modals/DeleteAssetsModal';
 
@@ -32,6 +34,7 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   selectedVersionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
+  translators?: ResourceInfo[];
   duplicateItem?: AssetWithVersion | null;
   deletedItems?: DialFile[] | null;
   hasSelectedItems: boolean;
@@ -45,7 +48,12 @@ interface Props {
     ignorePaths?: boolean,
   ) => void;
   onExport?: (fileType: ImportFileType) => void;
-  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
+  onCreate?: (
+    asset: AssetWithVersion,
+    path?: string,
+    isCreateDuplicate?: boolean,
+    shouldCloseModal?: boolean,
+  ) => Promise<ServerActionResponse>;
   onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;
   onRemove: () => Promise<void>;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
@@ -59,6 +67,7 @@ const Modals: FC<Props> = ({
   versionsMap,
   selectedVersionsMap,
   runners,
+  translators,
   preselectedItems,
   duplicateItem,
   deletedItems,
@@ -87,19 +96,34 @@ const Modals: FC<Props> = ({
       {isModalOpen && modalType === ModalType.create && view === ApplicationRoute.PlatformKeys && (
         <CreateKeyModal isOpen={isModalOpen} names={names || []} onClose={onClose} />
       )}
-      {isModalOpen && modalType === ModalType.create && view !== ApplicationRoute.PlatformKeys && (
-        <CreateEntity
-          context={getContext}
-          route={view}
-          isModalOpen={isModalOpen}
-          onClose={onClose}
-          createEntity={onCreate}
+      {isModalOpen && modalType === ModalType.create && view === ApplicationRoute.AssetsApplications && (
+        <CreateApplication
+          isOpen={isModalOpen}
           names={names || []}
           versionsMap={versionsMap}
           runners={runners}
-          isModal
+          translators={translators}
+          getContext={getContext}
+          onClose={onClose}
+          onCreate={onCreate}
         />
       )}
+      {isModalOpen &&
+        modalType === ModalType.create &&
+        view !== ApplicationRoute.PlatformKeys &&
+        view !== ApplicationRoute.AssetsApplications && (
+          <CreateEntity
+            context={getContext}
+            route={view}
+            isModalOpen={isModalOpen}
+            onClose={onClose}
+            createEntity={onCreate}
+            names={names || []}
+            versionsMap={versionsMap}
+            runners={runners}
+            isModal
+          />
+        )}
       {isModalOpen && modalType === ModalType.duplicate && view === ApplicationRoute.PlatformKeys && duplicateItem && (
         <DuplicatePlatformKeyModal
           isOpen={isModalOpen}

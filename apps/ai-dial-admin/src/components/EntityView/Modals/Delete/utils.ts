@@ -26,6 +26,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.PlatformTranslators]: DeleteI18nKey.Translator,
   [ApplicationRoute.PlatformRoutes]: DeleteI18nKey.Route,
   [ApplicationRoute.PlatformRoles]: DeleteI18nKey.Role,
+  [ApplicationRoute.PlatformKeys]: DeleteI18nKey.Key,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
