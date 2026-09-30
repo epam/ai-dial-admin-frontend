@@ -25,6 +25,7 @@ vi.mock('@/src/locales/client', () => {
 // ------------------ NextAuth ------------------
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => ({ session: { providerId: 'provider' } })),
+  SessionProvider: vi.fn(({ children }: { children: ReactNode }) => children),
 }));
 
 // ------------------ Next.js hooks ------------------
