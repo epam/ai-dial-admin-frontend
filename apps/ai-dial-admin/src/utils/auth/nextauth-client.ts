@@ -125,25 +125,28 @@ export class NextClient {
       return state.inFlight;
     }
 
-    const runRefresh = async () => {
+    const current: SessionRefreshState = { ...state };
+    refreshStates.set(key, current);
+    current.inFlight = (async () => {
       try {
-        const refreshed = await refresh(base);
-        if (refreshed.error == null) {
+        // Deferred, so even a synchronous throw from `refresh` settles this promise and reaches `finally`
+        const refreshed = await Promise.resolve().then(() => refresh(base));
+        // Skip storing if the session was cleared (signed out) while the refresh was running
+        if (refreshed.error == null && refreshStates.get(key) === current) {
           evictAbandonedStates(refreshStates);
-          refreshStates.set(key, { ...refreshStates.get(key), latest: refreshed });
+          current.latest = refreshed;
         }
         return refreshed;
       } finally {
-        const current = refreshStates.get(key);
-        if (current?.inFlight === inFlight) {
-          delete current.inFlight;
+        delete current.inFlight;
+        // A session that never refreshed successfully has nothing worth keeping
+        if (!current.latest && refreshStates.get(key) === current) {
+          refreshStates.delete(key);
         }
       }
-    };
-    const inFlight = runRefresh();
-    refreshStates.set(key, { ...state, inFlight });
+    })();
 
-    return inFlight;
+    return current.inFlight;
   }
 
   public static clearRefreshState(token: NextAuthToken | null | undefined): void {

@@ -200,6 +200,39 @@ describe('NextClient.refreshOnce', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  test('drops the entry of a session whose first refresh failed', async () => {
+    await NextClient.refreshOnce(expiredToken(), async (base) => ({ ...base, error: 'RefreshAccessTokenError' }));
+
+    expect((globalThis as any)._refreshStates.has('session-1')).toBe(false);
+  });
+
+  test('releases the refresh when it throws synchronously', async () => {
+    const token = expiredToken();
+    await expect(
+      NextClient.refreshOnce(token, (() => {
+        throw new Error('sync');
+      }) as any),
+    ).rejects.toThrow('sync');
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base));
+
+    await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not restore a session signed out while its refresh was running', async () => {
+    const token = expiredToken();
+    const pending = deferred<any>();
+    const call = NextClient.refreshOnce(token, () => pending.promise);
+
+    NextClient.clearRefreshState(token);
+    pending.resolve(refreshedFrom(token));
+    const result = await call;
+
+    expect(result.access_token).toBe('access-new');
+    expect((globalThis as any)._refreshStates.has('session-1')).toBe(false);
+  });
+
   test('returns the newer refreshed token for a stale cookie without calling the IdP', async () => {
     const token = expiredToken();
     await NextClient.refreshOnce(token, async (base) => refreshedFrom(base));

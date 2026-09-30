@@ -43,7 +43,7 @@ The problems this change solves:
 ## What Changes
 
 - Server-side token reads refresh an expired access token before returning it (single-flight per
-  refresh token, with the result reused until it expires). Pages, layouts, route handlers and server
+  sign-in, with the result reused until it expires). Pages, layouts, route handlers and server
   actions receive a valid access token even when the cookie holds an expired one.
 - Session validity in the layouts is decided by the refresh outcome (`error` on the token or
   session), not by the expiry time stored in the cookie. A refreshable session no longer triggers a
@@ -51,9 +51,10 @@ The problems this change solves:
 - The client `SessionProvider` refetches the session on a fixed interval shorter than the access-token
   lifespan, so the session cookie is renewed while any tab is open. Refetching when a tab gains focus
   stays as it is.
-- The flag-and-poll refresh lock is replaced by a single-flight promise keyed by the refresh token. It
-  is always released, failures are not cached, and callers that present a refresh token that was
-  already exchanged reuse that result instead of calling the IdP again.
+- The flag-and-poll refresh lock is replaced by a single-flight promise keyed by sign-in (a random key
+  assigned at sign-in). It is always released, failures are not cached, and callers that present a
+  token older than one already refreshed for that sign-in reuse the newer result instead of calling
+  the IdP again.
 - A successful refresh clears any earlier `error` on the token.
 - Signing out clears only the signing-out user's refresh state.
 - An access token is treated as expired a short safety margin before its actual expiry, so it does not
@@ -90,6 +91,6 @@ _None._ `oidc-refresh-client-recovery` covers obtaining the OIDC client and is u
 - `apps/ai-dial-admin/src/context/NextAuthProvider.tsx` (`SessionProvider` refetch interval).
 - Every server action, page and layout that calls `getUserToken`, and `app/api/files/preview/route.ts`
   (`getFullToken`), now receives a refreshed token on expiry. No call-site changes are needed.
-- IdP load: at most one refresh per refresh token per process while its result is valid, plus one
+- IdP load: at most one refresh per sign-in per process while its result is valid, plus one
   `/api/auth/session` call per open tab per refetch interval.
 - No new dependencies and no environment-variable changes.
