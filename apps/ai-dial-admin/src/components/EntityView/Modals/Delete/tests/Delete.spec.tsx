@@ -27,7 +27,7 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
     'shows the plain name, not the full platform/ path, when a platform-bucket %s entity is removed',
     async (view) => {
-      vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof useRouter>);
+      vi.mocked(useRouter).mockReturnValue({ push: vi.fn(), refresh: vi.fn() } as unknown as ReturnType<typeof useRouter>);
       const onRemoveEntity = vi.fn().mockResolvedValue({ success: true });
 
       render(
