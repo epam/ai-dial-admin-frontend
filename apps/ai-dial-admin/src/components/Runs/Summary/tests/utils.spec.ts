@@ -48,7 +48,7 @@ describe('Runs Summary :: query builders', () => {
   test('buildTestCasesStatusQuery groups by passed and execution_status and counts within the run', () => {
     const query = buildTestCasesStatusQuery('run-1');
 
-    expect(query.entity).toBe('eval_summaries');
+    expect(query.entity).toBe('test_case_eval_scores');
     expect(query.mode).toBe(QueryMode.Aggregate);
     expect(query.group_by).toEqual([PASSED_FIELD, EXECUTION_STATUS_FIELD]);
     expect(query.select).toEqual([
@@ -66,8 +66,9 @@ describe('Runs Summary :: query builders', () => {
   });
 
   test('buildTestCasesStatusQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
-    const query = buildTestCasesStatusQuery('run-1', ['id-1', 'id-2']);
+    const query = buildTestCasesStatusQuery('run-1', ['case-1', 'case-2']);
 
+    expect(query.entity).toBe('test_case_eval_scores');
     expect(query.filter).toEqual({
       op: LogicalOp.And,
       args: [
@@ -84,12 +85,12 @@ describe('Runs Summary :: query builders', () => {
             {
               op: ComparisonOp.In,
               args: [
-                { type: ExprType.Field, name: 'id' },
+                { type: ExprType.Field, name: 'test_case_id' },
                 {
                   type: ExprType.Array,
                   items: [
-                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
-                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-2' },
                   ],
                 },
               ],

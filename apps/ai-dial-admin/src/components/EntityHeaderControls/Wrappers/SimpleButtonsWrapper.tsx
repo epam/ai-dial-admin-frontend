@@ -43,6 +43,7 @@ export interface SimpleButtonsWrapperProps<T> {
   entity: T;
   etag?: string;
   getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
+  isSaving?: boolean;
 
   onDiscard: () => void;
   onSave: () => void;
@@ -58,6 +59,7 @@ const SimpleButtonsWrapper = <T extends object>({
   leadingActions,
   adaptiveActions,
   isChanged,
+  isSaving,
   onDiscard,
   onSave,
   onRemove,
@@ -75,7 +77,10 @@ const SimpleButtonsWrapper = <T extends object>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
-  const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
+  const isDisableSave = useMemo(
+    () => (isEditorEnabled ? false : !isValid || !!isSaving),
+    [isEditorEnabled, isValid, isSaving],
+  );
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);

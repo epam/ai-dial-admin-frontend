@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
+import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import EditRequestWizard from '../EditRequestWizard';
 
@@ -22,9 +24,11 @@ vi.mock('@/src/components/TestSuites/Methods/Methods', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/RequestTemplate', () => ({
-  default: ({ testSuite, onChangeTestSuite }: any) => (
+  default: ({ testSuite, onChangeTestSuite, resetSignal }: any) => (
     <div>
       <span>RequestTemplate:{testSuite.requestTemplate?.urlTemplate ?? 'none'}</span>
+      <span>Body:{JSON.stringify(testSuite.requestTemplate?.body?.content ?? null)}</span>
+      <span>ResetSignal:{resetSignal}</span>
       <button
         type="button"
         onClick={() => onChangeTestSuite({ ...testSuite, requestTemplate: { urlTemplate: 'edited' } })}
@@ -185,6 +189,51 @@ describe('EditRequestWizard', () => {
 
     expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetToDefault })).not.toBeInTheDocument();
+  });
+
+  test('Reset to default bumps the reset signal so the body editor refreshes even though the endpoint is unchanged', async () => {
+    const user = userEvent.setup();
+    renderWizard();
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
+    expect(screen.getByText('ResetSignal:0')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'edit-body' }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.ResetToDefault }));
+
+    expect(screen.getByText('ResetSignal:1')).toBeInTheDocument();
+  });
+
+  test('Reset to default restores a Responses API method to its own seeded body, not an empty one', async () => {
+    const user = userEvent.setup();
+    const suite: TestSuite = {
+      id: 'suite-1',
+      endpointRef: { method: 'POST', relativeUrlPattern: '/openai/v1/responses' },
+      requestTemplate: {
+        urlTemplate: '/openai/v1/responses',
+        body: { contentType: 'application/json', content: { model: 'glm-5.2', input: '${{user_message}}' } },
+      },
+    };
+    const selectedApplication = {
+      $type: 'dial-model',
+      deploymentId: 'glm-5.2',
+      interfaces: [DeploymentApiInterface.OpenAIResponses],
+    } as Deployment;
+
+    renderWizard({ testSuite: suite, selectedApplication });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
+
+    // An unmodified, already-correct template should not offer Reset — this is the "always visible"
+    // regression: comparing against a generic empty default made every non-chat-completion method
+    // look edited from the moment the wizard opened.
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ResetToDefault })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'edit-body' }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.ResetToDefault }));
+
+    expect(
+      screen.getByText(`Body:${JSON.stringify({ model: 'glm-5.2', input: '${{user_message}}' })}`),
+    ).toBeInTheDocument();
   });
 
   test('shows Configuration as incomplete for a new request until the user visits it', async () => {

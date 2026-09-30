@@ -2,7 +2,13 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialPrimaryButton, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import {
+  DialCollapsibleSidebar,
+  DialPrimaryButton,
+  DialTooltip,
+  ElementSize,
+  EllipsisTooltip,
+} from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical, IconInfoCircle, IconPencilMinus, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -111,7 +117,7 @@ const RequestsSidebar: FC<Props> = ({
                     className="flex-1 min-w-0 text-left px-3 py-2 truncate disabled:cursor-not-allowed"
                     onClick={() => onSelect(index)}
                   >
-                    {label}
+                    <EllipsisTooltip text={label} />
                   </button>
                   {!disabled && (
                     <ActionsDropdown

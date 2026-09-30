@@ -48,8 +48,10 @@ describe('Pricing', () => {
     cacheWrite: '0.0000003',
   };
 
-  const cacheReadField = () => screen.getByRole('spinbutton', { name: ModelViewI18nKey.CacheReadPrice });
-  const cacheWriteField = () => screen.getByRole('spinbutton', { name: ModelViewI18nKey.CacheWritePrice });
+  const cacheReadField = () =>
+    screen.getByRole<HTMLInputElement>('spinbutton', { name: ModelViewI18nKey.CacheReadPrice });
+  const cacheWriteField = () =>
+    screen.getByRole<HTMLInputElement>('spinbutton', { name: ModelViewI18nKey.CacheWritePrice });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -134,6 +136,28 @@ describe('Pricing', () => {
     expect(onChangeModel).toHaveBeenLastCalledWith({
       pricing: { unit: PricingType.Token, cacheWrite: '0' },
     });
+  });
+
+  test('retains repeated fractional zeroes while entering a cache rate', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({ unit: PricingType.Token });
+
+    await user.type(cacheReadField(), '0.0002');
+
+    expect(cacheReadField().value).toBe('0.0002');
+    expect(onChangeModel).toHaveBeenLastCalledWith({
+      pricing: { unit: PricingType.Token, cacheRead: '2e-10' },
+    });
+  });
+
+  test('does not accept a negative cache rate', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({ unit: PricingType.Token });
+
+    await user.type(cacheReadField(), '-1');
+
+    expect(cacheReadField()).toHaveValue(null);
+    expect(onChangeModel).not.toHaveBeenCalled();
   });
 
   test('clears every rate when the cost unit changes', async () => {
