@@ -32,13 +32,12 @@ vi.mock('openid-client', () => ({
   Issuer: mockIssuer,
 }));
 
-import { NextClient, RefreshToken } from '../nextauth-client';
+import { NextClient } from '../nextauth-client';
 
 describe('NextClient', () => {
   beforeEach(() => {
     const globalObj = globalThis as any;
     globalObj._client = {};
-    globalObj._refreshTokenMap = {};
     mockAuthProviders.length = 0;
     mockDiscover.mockClear();
     mockIssuer.mockClear();
@@ -111,20 +110,212 @@ describe('NextClient', () => {
     expect(mockDiscover).not.toHaveBeenCalled();
     expect(mockIssuer).not.toHaveBeenCalled();
   });
+});
 
-  test('setIsRefreshTokenStart and getRefreshToken store and retrieve refresh token', () => {
-    const refreshToken: RefreshToken = { isRefreshing: true, token: { access_token: 'abc' } as any };
-    NextClient.setIsRefreshTokenStart('user1', refreshToken);
-    expect(NextClient.getRefreshToken('user1')).toEqual(refreshToken);
-    expect(NextClient.getRefreshToken('user2')).toBeUndefined();
+const HOUR = 60 * 60 * 1000;
+
+const expiredToken = (overrides: Record<string, unknown> = {}) =>
+  ({
+    access_token: 'expired-access-token',
+    accessTokenExpires: Date.now() - 1000,
+    providerId: 'keycloak',
+    refreshToken: 'refresh-1',
+    sessionKey: 'session-1',
+    userId: 'user-1',
+    ...overrides,
+  }) as any;
+
+const refreshedFrom = (base: any, suffix = 'new') => ({
+  ...base,
+  access_token: `access-${suffix}`,
+  accessTokenExpires: Date.now() + HOUR,
+  refreshToken: `refresh-${suffix}`,
+});
+
+const deferred = <T>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve };
+};
+
+describe('NextClient.refreshOnce', () => {
+  beforeEach(() => {
+    (globalThis as any)._refreshStates = new Map();
   });
 
-  test('getRefreshToken returns undefined if not set', () => {
-    expect(NextClient.getRefreshToken('unknown')).toBeUndefined();
+  test('runs one refresh for parallel callers of the same session', async () => {
+    const pending = deferred<any>();
+    const refresh = vi.fn(() => pending.promise);
+    const token = expiredToken();
+
+    const calls = [1, 2, 3].map(() => NextClient.refreshOnce(token, refresh));
+    pending.resolve(refreshedFrom(token));
+    const results = await Promise.all(calls);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(new Set(results.map((result) => result.access_token))).toEqual(new Set(['access-new']));
   });
 
-  test('delay resolves after timeout', async () => {
-    const result = await NextClient.delay();
-    expect(result).toBeUndefined();
+  test('keeps later refreshes single-flight after the first one completed', async () => {
+    const token = expiredToken();
+    const first = await NextClient.refreshOnce(token, async (base) => refreshedFrom(base, 'first'));
+    const expiredAgain = { ...first, accessTokenExpires: Date.now() - 1000 };
+    (globalThis as any)._refreshStates.set('session-1', { latest: expiredAgain });
+    const pending = deferred<any>();
+    const refresh = vi.fn(() => pending.promise);
+
+    const calls = [1, 2].map(() => NextClient.refreshOnce(expiredAgain, refresh));
+    pending.resolve(refreshedFrom(expiredAgain, 'second'));
+    const results = await Promise.all(calls);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(results.map((result) => result.access_token)).toEqual(['access-second', 'access-second']);
+  });
+
+  test('releases the refresh after a failure and does not cache it', async () => {
+    const token = expiredToken();
+    const failed = await NextClient.refreshOnce(token, async (base) => ({ ...base, error: 'RefreshAccessTokenError' }));
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base));
+
+    const result = await NextClient.refreshOnce(token, refresh);
+
+    expect(failed.error).toBe('RefreshAccessTokenError');
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(result.error).toBeUndefined();
+  });
+
+  test('releases the refresh when it throws', async () => {
+    const token = expiredToken();
+    await expect(
+      NextClient.refreshOnce(token, async () => {
+        throw new Error('network');
+      }),
+    ).rejects.toThrow('network');
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base));
+
+    await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  test('drops the entry of a session whose first refresh failed', async () => {
+    await NextClient.refreshOnce(expiredToken(), async (base) => ({ ...base, error: 'RefreshAccessTokenError' }));
+
+    expect((globalThis as any)._refreshStates.has('session-1')).toBe(false);
+  });
+
+  test('releases the refresh when it throws synchronously', async () => {
+    const token = expiredToken();
+    await expect(
+      NextClient.refreshOnce(token, (() => {
+        throw new Error('sync');
+      }) as any),
+    ).rejects.toThrow('sync');
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base));
+
+    await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not restore a session signed out while its refresh was running', async () => {
+    const token = expiredToken();
+    const pending = deferred<any>();
+    const call = NextClient.refreshOnce(token, () => pending.promise);
+
+    NextClient.clearRefreshState(token);
+    pending.resolve(refreshedFrom(token));
+    const result = await call;
+
+    expect(result.access_token).toBe('access-new');
+    expect((globalThis as any)._refreshStates.has('session-1')).toBe(false);
+  });
+
+  test('returns the newer refreshed token for a stale cookie without calling the IdP', async () => {
+    const token = expiredToken();
+    await NextClient.refreshOnce(token, async (base) => refreshedFrom(base));
+    const refresh = vi.fn();
+
+    const result = await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(result.access_token).toBe('access-new');
+  });
+
+  test('refreshes with the newest known refresh token', async () => {
+    const token = expiredToken();
+    const first = await NextClient.refreshOnce(token, async (base) => refreshedFrom(base, 'first'));
+    (globalThis as any)._refreshStates.set('session-1', { latest: { ...first, accessTokenExpires: Date.now() - 500 } });
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base, 'second'));
+
+    await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: 'refresh-first' }));
+  });
+
+  test('returns a still-valid presented token as is', async () => {
+    const token = expiredToken({ accessTokenExpires: Date.now() + HOUR });
+    const refresh = vi.fn();
+
+    const result = await NextClient.refreshOnce(token, refresh);
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(result).toBe(token);
+  });
+
+  test('keeps separate sign-ins of the same user apart', async () => {
+    await NextClient.refreshOnce(expiredToken(), async (base) => refreshedFrom(base, 'browser-a'));
+    const other = expiredToken({ sessionKey: 'session-2', refreshToken: 'refresh-2' });
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base, 'browser-b'));
+
+    const result = await NextClient.refreshOnce(other, refresh);
+
+    expect(refresh).toHaveBeenCalledWith(expect.objectContaining({ refreshToken: 'refresh-2' }));
+    expect(result.access_token).toBe('access-browser-b');
+  });
+
+  test('falls back to the refresh token as key for sessions without a session key', async () => {
+    const legacy = expiredToken({ sessionKey: undefined });
+    await NextClient.refreshOnce(legacy, async (base) => refreshedFrom(base));
+    const refresh = vi.fn();
+
+    const result = await NextClient.refreshOnce(legacy, refresh);
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(result.access_token).toBe('access-new');
+  });
+
+  test('refreshes directly when the token has no key at all', async () => {
+    const keyless = expiredToken({ sessionKey: undefined, refreshToken: undefined });
+    const refresh = vi.fn(async (base: any) => refreshedFrom(base));
+
+    await NextClient.refreshOnce(keyless, refresh);
+
+    expect(refresh).toHaveBeenCalledWith(keyless);
+  });
+
+  test('evicts states of sessions abandoned for more than a day', async () => {
+    const states = (globalThis as any)._refreshStates as Map<string, any>;
+    states.set('abandoned', { latest: { accessTokenExpires: Date.now() - 25 * HOUR } });
+    states.set('recent', { latest: { accessTokenExpires: Date.now() - HOUR } });
+
+    await NextClient.refreshOnce(expiredToken(), async (base) => refreshedFrom(base));
+
+    expect(states.has('abandoned')).toBe(false);
+    expect(states.has('recent')).toBe(true);
+  });
+
+  test('clearRefreshState removes only the given session', async () => {
+    await NextClient.refreshOnce(expiredToken(), async (base) => refreshedFrom(base, 'a'));
+    await NextClient.refreshOnce(expiredToken({ sessionKey: 'session-2' }), async (base) => refreshedFrom(base, 'b'));
+
+    NextClient.clearRefreshState(expiredToken());
+    NextClient.clearRefreshState(undefined);
+
+    const states = (globalThis as any)._refreshStates as Map<string, any>;
+    expect(states.has('session-1')).toBe(false);
+    expect(states.has('session-2')).toBe(true);
   });
 });

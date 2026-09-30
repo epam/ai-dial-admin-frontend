@@ -1,18 +1,11 @@
 import { Token } from '@/src/models/auth';
-import { DefaultSession, getServerSession } from 'next-auth';
-import { authOptions } from './auth-options';
 
+// `token` comes from `getUserToken`, which has already refreshed an expired access token, so only a
+// missing session or a failed refresh makes it invalid — never the expiry stored in the cookie.
 export const getIsInvalidSession = async (isEnableAuth: boolean, token?: Token | null) => {
   if (!isEnableAuth) {
     return false;
   }
-  const session = (await getServerSession(authOptions)) as DefaultSession & {
-    error?: string;
-  };
-  const isInvalidSession = session == null || session.error != null;
 
-  const isTokenInvalid =
-    token == null || (typeof token.accessTokenExpires === 'number' && Date.now() > token.accessTokenExpires);
-
-  return isInvalidSession || isTokenInvalid;
+  return token == null || token.error != null;
 };
