@@ -20,6 +20,12 @@ import { convertSchemaToTable } from '@/src/utils/schema';
 
 const COLUMN_UNIQUENESS_FIELD = 'columnUniqueness';
 
+// Stable fallbacks — see EndpointSchema.tsx for why an inline `|| []` / `|| {}` here is unsafe: it
+// hands Columns' memoized grid props a "changed" dependency on every render, which fed back into a
+// re-render loop via Columns' own effects and SaveValidationContext.
+const EMPTY_RESPONSE_COLUMNS: ResponseColumn[] = [];
+const EMPTY_RESPONSE_SCHEMA: JSONSchema7 = {};
+
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
@@ -129,9 +135,9 @@ const McpToolSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh 
         )
       ) : (
         <Columns
-          responseColumns={testSuite.responseColumns || []}
+          responseColumns={testSuite.responseColumns || EMPTY_RESPONSE_COLUMNS}
           onChangeResponseColumns={onChangeResponseColumns}
-          responseSchema={(toolRef?.outputSchema || {}) as JSONSchema7}
+          responseSchema={(toolRef?.outputSchema || EMPTY_RESPONSE_SCHEMA) as JSONSchema7}
           isSkipRefresh={isSkipRefresh}
           duplicateColumn={duplicateColumn}
         />

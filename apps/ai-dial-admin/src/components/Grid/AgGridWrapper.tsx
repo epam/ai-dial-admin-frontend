@@ -17,6 +17,7 @@ import {
   CustomFilterModule,
   DateFilterModule,
   EventApiModule,
+  ExternalFilterModule,
   GetRowIdParams,
   GridApi,
   GridOptions,
@@ -88,6 +89,7 @@ ModuleRegistry.registerModules([
   PinnedRowModule,
   DateFilterModule,
   CustomFilterModule,
+  ExternalFilterModule,
 ]);
 
 const GRID_SIZED_RESIZE_SOURCES: ColumnResizedEvent['source'][] = ['autosizeColumns', 'sizeColumnsToFit'];

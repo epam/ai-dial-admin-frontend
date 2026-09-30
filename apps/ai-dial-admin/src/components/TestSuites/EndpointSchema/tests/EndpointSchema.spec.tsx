@@ -16,19 +16,32 @@ vi.mock('@/src/context/SaveValidationContext', () => ({
   },
 }));
 
+let capturedColumnsProps: { responseColumns: unknown; responseSchema: unknown } | undefined;
+
 vi.mock('../Columns/Columns', () => ({
-  default: ({ duplicateColumn }: { duplicateColumn?: { name: string; inPreviousRequest: boolean } }) => (
-    <div>
-      Columns
-      {duplicateColumn && (
-        <div>
-          {duplicateColumn.inPreviousRequest
-            ? TestSuitesI18nKey.DuplicateResponseColumnNameInPreviousRequest
-            : TestSuitesI18nKey.DuplicateResponseColumnName}
-        </div>
-      )}
-    </div>
-  ),
+  default: ({
+    duplicateColumn,
+    responseColumns,
+    responseSchema,
+  }: {
+    duplicateColumn?: { name: string; inPreviousRequest: boolean };
+    responseColumns: unknown;
+    responseSchema: unknown;
+  }) => {
+    capturedColumnsProps = { responseColumns, responseSchema };
+    return (
+      <div>
+        Columns
+        {duplicateColumn && (
+          <div>
+            {duplicateColumn.inPreviousRequest
+              ? TestSuitesI18nKey.DuplicateResponseColumnNameInPreviousRequest
+              : TestSuitesI18nKey.DuplicateResponseColumnName}
+          </div>
+        )}
+      </div>
+    );
+  },
 }));
 
 const configuredSuite: TestSuite = {
@@ -44,6 +57,7 @@ const suiteWithDuplicateAnswer: TestSuite = {
 describe('EndpointSchema', () => {
   beforeEach(() => {
     mockDispatch.mockClear();
+    capturedColumnsProps = undefined;
   });
 
   test('renders the "Extracted response fields" title and the Columns view, with no method-picker guidance', () => {
@@ -101,5 +115,19 @@ describe('EndpointSchema', () => {
       type: ValidationActionType.RemoveField,
       field: 'columnUniqueness',
     });
+  });
+
+  test('passes Columns the same empty responseColumns/responseSchema reference across re-renders for a request with neither yet', () => {
+    // A brand-new request has no `responseColumns`/`endpointRef.responseBodySchema` yet. Regression for
+    // a bug where `testSuite.responseColumns || []` (and the schema equivalent) handed Columns a new
+    // array/object every render, which fed its memoized grid props a "changed" dependency on every
+    // render and looped back into a re-render via SaveValidationContext ("Maximum update depth exceeded").
+    const { rerender } = render(<EndpointSchema testSuite={{ id: 'suite-1' }} onChangeTestSuite={vi.fn()} />);
+    const firstRenderProps = capturedColumnsProps;
+
+    rerender(<EndpointSchema testSuite={{ id: 'suite-1' }} onChangeTestSuite={vi.fn()} takenColumnNames={[]} />);
+
+    expect(capturedColumnsProps?.responseColumns).toBe(firstRenderProps?.responseColumns);
+    expect(capturedColumnsProps?.responseSchema).toBe(firstRenderProps?.responseSchema);
   });
 });

@@ -56,7 +56,7 @@ const AttributeSelect: FC<Props> = ({ schema, value, samples, disabled, onChange
       placement="bottom-start"
       matchReferenceWidth
       renderOverlay={() => (
-        <div className="flex max-h-[352px] min-w-[144px] flex-col overflow-hidden rounded border border-primary bg-layer-0 shadow-lg">
+        <div className="flex max-h-[352px] min-w-[144px] flex-col overflow-hidden rounded bg-layer-0 shadow-lg">
           <div className="shrink-0 px-3 py-1">
             <DialSearch
               id={`${listboxId}-search`}
