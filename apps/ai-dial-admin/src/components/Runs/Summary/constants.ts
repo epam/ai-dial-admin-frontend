@@ -12,7 +12,7 @@ export const LATEST_COMPUTATION = 'latest';
 export const RUN_ID_FIELD = 'test_suite_run_id';
 export const COMPUTATION_ID_FIELD = 'computation_id';
 export const EXECUTION_STATUS_FIELD = 'execution_status';
-/** Per-row threshold outcome on `eval_summaries` (`score >= snapshotted overallScoreThreshold`). */
+/** Per-test-case threshold outcome (`score >= snapshotted overallScoreThreshold`); read from `test_case_eval_scores`. */
 export const PASSED_FIELD = 'passed';
 export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
 export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
@@ -42,6 +42,11 @@ export const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
 /** Eval-summary row id field for matched-only distribution exclusion filters. */
 export const EVAL_SUMMARY_ID_FIELD = 'id';
+
+/** Structured-query entity for per-test-case eval score/passed/execution_status (backend `test_case_eval_scores`). */
+export const TEST_CASE_EVAL_SCORES_ENTITY = 'test_case_eval_scores';
+/** Test-case identity field on `test_case_eval_scores`, used for the matched-only exclusion filter. */
+export const TEST_CASE_ID_FIELD = 'test_case_id';
 
 export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
 

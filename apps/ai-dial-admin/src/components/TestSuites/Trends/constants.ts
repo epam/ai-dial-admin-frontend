@@ -1,22 +1,22 @@
 import {
-  EVAL_SUMMARIES_ENTITY,
   METRIC_NAME_FIELD,
   METRIC_SCORE_NAME_FIELD,
   METRIC_SCORE_RESULTS_ENTITY,
   OVERALL_METRIC_SCORE_NAME,
   PASSED_FIELD,
   RUN_ID_FIELD,
+  TEST_CASE_EVAL_SCORES_ENTITY,
   VALUE_FIELD,
 } from '@/src/components/Runs/Summary/constants';
 
 export {
-  EVAL_SUMMARIES_ENTITY,
   METRIC_NAME_FIELD,
   METRIC_SCORE_NAME_FIELD,
   METRIC_SCORE_RESULTS_ENTITY,
   OVERALL_METRIC_SCORE_NAME,
   PASSED_FIELD,
   RUN_ID_FIELD,
+  TEST_CASE_EVAL_SCORES_ENTITY,
   VALUE_FIELD,
 };
 
@@ -32,7 +32,7 @@ export const TRENDS_RUN_WINDOW = 10;
 /** Cap on metric_score_results rows returned for the Trends window. */
 export const TRENDS_SCORE_ROW_LIMIT = 1000;
 
-/** Cap on eval_summaries rows for Test Case Stability (BE contract). */
+/** Cap on test_case_eval_scores rows for Test Case Stability (BE contract). */
 export const TRENDS_STABILITY_ROW_LIMIT = 200;
 
 /** CSS class on the Overall Score Trend sticky tooltip (outside-click dismiss). */
