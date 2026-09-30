@@ -59,11 +59,20 @@ export const getValidationMessages = (t: (key: string) => string) => {
   return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
 };
 
+/**
+ * The popup embeds its own `DialFileManager`, which takes its own `onCreateFolder` — leaving it
+ * out is why "Add folder" there rendered an input that saved nothing. It is the same
+ * handler and the same validation the outer manager uses, so the two surfaces stay in step.
+ */
 export const getDestinationFolderPopupOptions = (
   view: ApplicationRoute,
   t: (key: string, options?: Record<string, string | number> | undefined) => string,
   handleFolderNestingDepthExceeded: () => void,
+  onCreateFolder?: (file: DialUploadFileItem, folderPath: string) => void | Promise<void>,
 ) => ({
+  onCreateFolder,
+  onCreateFolderValidate: (name: string) => validateCreateFolder(name, t),
+  folderCreationValidationMessages: getValidationMessages(t),
   emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
     items: t(assetEntityMap[view]).toLowerCase(),
