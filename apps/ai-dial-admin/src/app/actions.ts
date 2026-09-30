@@ -12,7 +12,7 @@ export async function checkIsUniqueDeploymentName(name: string): Promise<boolean
 
   const [deploymentResponse, interceptorResponse] = await Promise.all([
     coreUtilityApi.checkDeploymentByName(name, token),
-    interceptorsApi.checkInterceptorByName(name, token),
+    !process.env.DIAL_ADMIN_API_URL ? Promise.resolve<null>(null) : interceptorsApi.checkInterceptorByName(name, token),
   ]);
 
   return deploymentResponse === null && interceptorResponse === null;

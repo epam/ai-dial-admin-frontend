@@ -1,12 +1,16 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
+import { ASSET_APPLICATION_INTERFACES_SOURCE_TYPE } from '@/src/components/SourceField/constants';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ASSET_APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
 
@@ -22,6 +26,9 @@ interface Props {
   isModal?: boolean;
   disabled?: boolean;
   codeAppEditorUrl?: string;
+  initialSource?: string;
+  onSourceChange?: (source: string) => void;
+  translators?: ResourceInfo[];
 }
 
 /**
@@ -53,12 +60,15 @@ const ResourceSourceField: FC<Props> = ({
   isModal,
   disabled,
   codeAppEditorUrl,
+  initialSource,
+  onSourceChange,
+  translators,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
 
   // Source is UI-only state: derived once from the resource fields and never written back.
-  const [source, setSource] = useState<string>(() => getInitialSource(entity, codeAppEditorUrl));
+  const [source, setSource] = useState<string>(() => initialSource ?? getInitialSource(entity, codeAppEditorUrl));
 
   // The Code App option is only available when CODE_APP_EDITOR_URL is configured.
   const visibleSourceItems = useMemo(
@@ -79,6 +89,11 @@ const ResourceSourceField: FC<Props> = ({
         return;
       }
       setSource(sourceType);
+      onSourceChange?.(sourceType);
+
+      if (sourceType === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE) {
+        return;
+      }
 
       if (sourceType === CODE_APP_SOURCE_TYPE) {
         onChange({ ...entity, endpoint: codeAppEditorUrl, editor_url: codeAppEditorUrl });
@@ -93,7 +108,7 @@ const ResourceSourceField: FC<Props> = ({
       // Endpoints
       onChange({ ...entity, application_type_schema_id: undefined as unknown as string, endpoint: '' });
     },
-    [source, entity, onChange, codeAppEditorUrl],
+    [source, entity, onChange, onSourceChange, codeAppEditorUrl],
   );
 
   return (
@@ -107,6 +122,18 @@ const ResourceSourceField: FC<Props> = ({
         value={source}
         disabled={isReadonly}
       />
+
+      {source === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE && (
+        <InterfacesField
+          interfaces={entity.interfaces}
+          onChangeInterfaces={(interfaces) => onChange({ ...entity, interfaces })}
+          allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
+          translators={translators}
+          entityBaseUrl={entity.base_url}
+          view={view}
+          isAsset
+        />
+      )}
 
       {(source === SOURCE_TYPE.ENDPOINTS || source === CODE_APP_SOURCE_TYPE) && (
         <Endpoints
@@ -128,7 +155,7 @@ const ResourceSourceField: FC<Props> = ({
             onChangeEntity({
               ...entity,
               application_type_schema_id: value,
-              applicationProperties: { ...application_properties, ...entity.application_properties },
+              application_properties: { ...application_properties, ...entity.application_properties },
             } as DialApplication)
           }
           runners={runners}

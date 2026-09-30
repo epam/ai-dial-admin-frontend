@@ -29,7 +29,9 @@ describe('Server actions', () => {
     vi.unstubAllEnvs();
   });
 
-  test('Should call both deployment and interceptor endpoints for unique name check', async () => {
+  test('Should call both deployment and interceptor endpoints for unique name check when Admin API is configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
+
     const result = await checkIsUniqueDeploymentName('my-id');
 
     expect(getUserToken).toHaveBeenCalled();
@@ -38,7 +40,19 @@ describe('Server actions', () => {
     expect(result).toBe(true);
   });
 
+  test('Should skip deployment check and call only interceptor endpoint when Admin API is not configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+
+    const result = await checkIsUniqueDeploymentName('my-id');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorsApi.checkInterceptorByName).not.toHaveBeenCalled();
+    expect(coreUtilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
+    expect(result).toBe(true);
+  });
+
   test('Should return false when deployment already exists', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
     (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-id');
@@ -47,6 +61,7 @@ describe('Server actions', () => {
   });
 
   test('Should return false when interceptor already exists', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-id');
@@ -55,6 +70,7 @@ describe('Server actions', () => {
   });
 
   test('Should return false when both deployment and interceptor already exist', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
     (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
 
