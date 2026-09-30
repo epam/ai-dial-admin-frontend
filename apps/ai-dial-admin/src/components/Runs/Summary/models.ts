@@ -3,7 +3,7 @@ import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/mode
 
 export { MetricStatistic };
 
-/** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
+/** Aggregated test-case execution outcome counts for a run, derived from `test_case_eval_scores`. */
 export type TestCaseStatusCounts = PassFailErrorCounts;
 
 /**
