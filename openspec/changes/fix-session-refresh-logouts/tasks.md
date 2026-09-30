@@ -21,10 +21,6 @@
 
 - [x] 5.1 Confirm every new and updated module above has unit coverage per `.claude/rules/testing.md`, including a regression test that reproduces problem 1 (a cookie token past `accessTokenExpires` with a refreshable session is not treated as invalid); verify with `npx vitest run src/utils/auth src/context` from `apps/ai-dial-admin/`
 
-## 6. Browser verification
+## 6. Quality checks
 
-- [ ] 6.1 Run the `spec-browser-verify` skill for this change against the local app signed in to the dev Keycloak, with the admin client's `access.token.lifespan` set short (e.g. `120`) so expiry happens during the run, and scope it to the "Session validity is decided by the refresh outcome" and "Browser keeps the session cookie renewed" scenarios (reload, new tab, save-triggered refresh, idle tab, several tabs); resolve every `fail` verdict before the change is complete
-
-## 7. Quality checks
-
-- [x] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test` and verify all pass with zero errors
+- [x] 6.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test` and verify all pass with zero errors
