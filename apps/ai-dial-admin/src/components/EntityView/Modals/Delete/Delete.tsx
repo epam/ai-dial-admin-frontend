@@ -20,6 +20,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { DialResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
@@ -72,7 +73,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const getReqRef = useRef(useProtectedRequest());
   const modalSize = hasRelatedArtefacts(view) ? PopupSize.Md : PopupSize.Sm;
 
-  const [selectedVersion, setSelectedVersion] = useState(entity?.version);
+  const [selectedVersion, setSelectedVersion] = useState(
+    (entity as unknown as DialResource)?._metadata?.version || entity.version,
+  );
   const [isRemoving, setIsRemoving] = useState(false);
   const isRemovingRef = useRef(false);
 

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
@@ -67,6 +67,10 @@ const selectRunner = async (value: string) => {
 };
 
 describe('AppRunners :: merged picker', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   test('offers both populations, labelling every row by its $id', () => {
     render(
       <AppRunners
@@ -171,6 +175,7 @@ describe('AppRunners :: merged picker', () => {
   });
 
   test('an entity selection resolves against the admin BE', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
     vi.mocked(getResolvedRunnerSchema).mockClear();
     vi.mocked(getResolvedApplicationScheme).mockClear();
 

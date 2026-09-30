@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AppRunnerOrigin } from '../models';
@@ -17,6 +17,7 @@ import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runne
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 const configRunner = { $id: 'urn:runner:config', origin: AppRunnerOrigin.Config } as DialApplicationScheme;
+const originlessRunner = { $id: 'urn:runner:originless' } as DialApplicationScheme;
 
 const platformRunner = {
   $id: 'http://asdqwe',
@@ -29,6 +30,10 @@ describe('resolveAppRunnerScheme', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   test('returns an empty result for no runner', async () => {
     const result = await resolveAppRunnerScheme(undefined);
 
@@ -38,28 +43,70 @@ describe('resolveAppRunnerScheme', () => {
     expect(getRunner).not.toHaveBeenCalled();
   });
 
-  test('resolves a Config runner via the admin BE, unchanged on success', async () => {
+  test('resolves a Config runner via the admin BE when configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
     const scheme = { $id: 'urn:runner:config', properties: {} };
     vi.mocked(getResolvedApplicationScheme).mockResolvedValue({ success: true, response: { schema: scheme } });
 
     const result = await resolveAppRunnerScheme(configRunner);
 
     expect(getResolvedApplicationScheme).toHaveBeenCalledWith('urn:runner:config');
+    expect(getResolvedRunnerSchema).not.toHaveBeenCalled();
     expect(getRunner).not.toHaveBeenCalled();
     expect(result.runner).toBe(configRunner);
     expect(result.scheme).toBe(scheme);
   });
 
-  test('falls back to the Config runner itself when the admin BE resolve fails', async () => {
+  test('falls back to the Config runner itself when the configured admin BE resolve fails', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
     vi.mocked(getResolvedApplicationScheme).mockResolvedValue({ success: false });
 
     const result = await resolveAppRunnerScheme(configRunner);
 
+    expect(getResolvedRunnerSchema).not.toHaveBeenCalled();
     expect(result.runner).toBe(configRunner);
     expect(result.scheme).toBe(configRunner);
   });
 
+  test('resolves a Config runner through Core when the admin BE is not configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    const scheme = { $id: 'urn:runner:config', properties: {} };
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: true, response: scheme });
+
+    const result = await resolveAppRunnerScheme(configRunner);
+
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('urn:runner:config');
+    expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
+    expect(result.runner).toBe(configRunner);
+    expect(result.scheme).toBe(scheme);
+  });
+
+  test('falls back to the Config runner itself when the Core resolve fails', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', undefined);
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: false });
+
+    const result = await resolveAppRunnerScheme(configRunner);
+
+    expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
+    expect(result.runner).toBe(configRunner);
+    expect(result.scheme).toBe(configRunner);
+  });
+
+  test('resolves an originless runner through Core when the admin BE is not configured', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', undefined);
+    const scheme = { $id: 'urn:runner:originless', properties: {} };
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: true, response: scheme });
+
+    const result = await resolveAppRunnerScheme(originlessRunner);
+
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('urn:runner:originless');
+    expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
+    expect(result.runner).toBe(originlessRunner);
+    expect(result.scheme).toBe(scheme);
+  });
+
   test('resolves a Platform runner against its content $id, not the picker option $id', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-be');
     const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe', name: 'edited', folderId: 'public' };
     const scheme = { $id: 'http://asdqwe/edited', properties: {} };
     vi.mocked(getRunner).mockResolvedValue({ success: true, response: detail });
@@ -85,7 +132,7 @@ describe('resolveAppRunnerScheme', () => {
     expect(result.scheme).toBe(platformRunner);
   });
 
-  test('falls back to the (possibly corrected) runner when the resolved-schema call fails', async () => {
+  test('falls back to the corrected runner when the resolved-schema call fails', async () => {
     const detail = { $id: 'http://asdqwe/edited', path: 'http%3A%2F%2Fasdqwe', name: 'edited', folderId: 'public' };
     vi.mocked(getRunner).mockResolvedValue({ success: true, response: detail });
     vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: false });
