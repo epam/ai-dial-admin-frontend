@@ -2350,7 +2350,7 @@ export default {
     MetricEvalCost: 'Metric-Eval Cost',
     CostDataUnavailable: 'Cost data unavailable',
     Calculating: 'Calculating…',
-    CostCalculatingElapsed: '{elapsed} elapsed · usually under 2 min',
+    CostCalculatingElapsed: 'Usually under 10 min',
     AvgPerTestCase: 'avg per test case',
     Pass: 'pass',
     Fail: 'fail',

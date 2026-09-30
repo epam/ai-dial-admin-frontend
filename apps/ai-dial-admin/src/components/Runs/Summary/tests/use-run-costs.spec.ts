@@ -79,7 +79,6 @@ describe('useRunCosts', () => {
     expect(result.current.costs).toBeNull();
     expect(result.current.isPending).toBe(false);
     expect(result.current.unavailable).toBe(false);
-    expect(result.current.elapsedMs).toBe(0);
     expect(getRunCostsMock).not.toHaveBeenCalled();
   });
 
@@ -108,20 +107,18 @@ describe('useRunCosts', () => {
     expect(result.current.isPending).toBe(false);
   });
 
-  test('ticks elapsedMs while the fetch is pending', async () => {
+  test('stays pending without settling while the fetch is outstanding', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     getRunCostsMock.mockReturnValue(new Promise(() => undefined));
 
     const { result } = renderHook(() => useRunCosts('run-1'));
 
     expect(result.current.isPending).toBe(true);
-    expect(result.current.elapsedMs).toBe(0);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(15_000);
     });
 
-    expect(result.current.elapsedMs).toBeGreaterThanOrEqual(15_000);
     expect(result.current.isPending).toBe(true);
     expect(result.current.unavailable).toBe(false);
   });

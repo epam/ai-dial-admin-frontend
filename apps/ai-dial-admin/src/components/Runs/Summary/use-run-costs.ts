@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { getRunCosts } from '@/src/app/[lang]/runs/actions';
-import { COST_ELAPSED_TICK_MS, COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
 import { hasRunCostFigure } from '@/src/components/Runs/Summary/utils';
 import { RunCosts } from '@/src/models/evaluation/run';
 
@@ -11,7 +11,6 @@ export interface UseRunCostsResult {
   costs: RunCosts | null;
   isPending: boolean;
   unavailable: boolean;
-  elapsedMs: number;
 }
 
 /**
@@ -37,14 +36,12 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
   /** True whenever a fetch is due until the first effect flush — avoids an idle frame that paints as "—". */
   const [isPending, setIsPending] = useState(() => Boolean(runId) && canHaveCosts);
   const [unavailable, setUnavailable] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {
     if (!runId || !canHaveCosts) {
       setCosts(null);
       setIsPending(false);
       setUnavailable(false);
-      setElapsedMs(0);
       return;
     }
 
@@ -52,28 +49,18 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
     /** True once a definitive outcome (figures / null / throw) has been applied. */
     let hasSettled = false;
     let retryId = 0;
-    const startedAt = Date.now();
 
     setCosts(null);
     setIsPending(true);
     setUnavailable(false);
-    setElapsedMs(0);
-
-    const tickId = window.setInterval(() => {
-      if (!cancelled && !hasSettled) {
-        setElapsedMs(Date.now() - startedAt);
-      }
-    }, COST_ELAPSED_TICK_MS);
 
     const stopTimers = () => {
-      window.clearInterval(tickId);
       window.clearTimeout(retryId);
     };
 
     const settle = (result: RunCosts | null) => {
       hasSettled = true;
       stopTimers();
-      setElapsedMs(Date.now() - startedAt);
       setCosts(result);
       setUnavailable(result == null);
       setIsPending(false);
@@ -82,6 +69,7 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
     const attempt = async () => {
       try {
         const result = await getRunCosts(runId);
+
         if (cancelled || hasSettled) {
           return;
         }
@@ -117,8 +105,8 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
    * itself for the case where the guess holds.
    */
   if (!canHaveCosts) {
-    return { costs: null, isPending: false, unavailable: false, elapsedMs: 0 };
+    return { costs: null, isPending: false, unavailable: false };
   }
 
-  return { costs, isPending, unavailable, elapsedMs };
+  return { costs, isPending, unavailable };
 };
