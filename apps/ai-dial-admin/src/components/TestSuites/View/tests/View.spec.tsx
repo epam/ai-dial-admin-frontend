@@ -1,6 +1,7 @@
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import TestSuiteView from '../View';
 
@@ -72,12 +73,24 @@ vi.mock('./TabsContent', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ entity, isChanged, onDiscard, onSave, tabs, activeTab, onChangeActiveTab, jsonConfiguration }: any) => (
+  default: ({
+    entity,
+    isChanged,
+    isSaving,
+    onDiscard,
+    onSave,
+    tabs,
+    activeTab,
+    onChangeActiveTab,
+    jsonConfiguration,
+  }: any) => (
     <div>
       <div>Entity: {entity.name}</div>
       <div>Changed: {isChanged.toString()}</div>
       <button onClick={onDiscard}>Discard</button>
-      <button onClick={onSave}>Save</button>
+      <button onClick={onSave} disabled={isSaving}>
+        Save
+      </button>
       <button onClick={() => onChangeActiveTab(EntityViewTab.TestCases)}>Change Tab</button>
       <button onClick={jsonConfiguration.onToggleEditor}>Toggle Editor</button>
     </div>
@@ -124,5 +137,50 @@ describe('TestSuiteView', () => {
 
     expect(screen.getByText('Entity: Test Suite 1')).toBeInTheDocument();
     expect(screen.getByText('Changed: false')).toBeInTheDocument();
+  });
+
+  describe('Save double-click guard', () => {
+    test('ignores a second Save click while the first request is in flight', async () => {
+      const user = userEvent.setup();
+      const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
+      (updateTestSuite as Mock).mockImplementation(() => new Promise(() => undefined));
+
+      render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
+
+      const saveButton = screen.getByRole('button', { name: 'Save' });
+      await user.click(saveButton);
+      await user.click(saveButton);
+
+      expect(updateTestSuite).toHaveBeenCalledOnce();
+      expect(saveButton).toBeDisabled();
+    });
+
+    test('re-enables Save once the request completes', async () => {
+      const user = userEvent.setup();
+      const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
+      (updateTestSuite as Mock).mockResolvedValue({ success: true });
+
+      render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
+
+      const saveButton = screen.getByRole('button', { name: 'Save' });
+      await user.click(saveButton);
+
+      await waitFor(() => expect(saveButton).not.toBeDisabled());
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+
+    test('re-enables Save after a failed request, so the user can retry', async () => {
+      const user = userEvent.setup();
+      const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
+      (updateTestSuite as Mock).mockResolvedValue({ success: false, errorHeader: 'Error', errorMessage: 'Conflict' });
+
+      render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
+
+      const saveButton = screen.getByRole('button', { name: 'Save' });
+      await user.click(saveButton);
+
+      await waitFor(() => expect(saveButton).not.toBeDisabled());
+      expect(updateTestSuite).toHaveBeenCalledOnce();
+    });
   });
 });

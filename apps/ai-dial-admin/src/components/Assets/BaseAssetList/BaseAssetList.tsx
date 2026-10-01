@@ -30,6 +30,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
+import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
@@ -77,9 +78,10 @@ import { compareVersions } from '@/src/utils/entities/versions';
 interface Props {
   view: ApplicationRoute;
   runners?: DialApplicationScheme[];
+  translators?: ResourceInfo[];
 }
 
-const BaseAssetList: FC<Props> = ({ view, runners }) => {
+const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
@@ -282,7 +284,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   );
 
   const handleCreateAsset = useCallback(
-    async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
+    async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean, shouldCloseModal = true) => {
       const folderPath = path || destinationFolder || `${getRootFolder(view)}/`;
 
       // A real skill and its folder marker are different Core operations for this type (design D2),
@@ -341,7 +343,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
 
-        handleModalClose();
+        if (shouldCloseModal) {
+          handleModalClose();
+        }
 
         return res;
       });
@@ -720,6 +724,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         modalType={modalType}
         names={names}
         runners={runners || []}
+        translators={translators}
         versionsMap={versionsMap}
         selectedVersionsMap={selectedVersionsMap}
         preselectedItems={dragAndDropsItems}

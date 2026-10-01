@@ -20,7 +20,7 @@ import { isEqual } from 'lodash';
 
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import RequestTemplate from '@/src/components/TestSuites/RequestTemplate/RequestTemplate';
-import { getDefaultRequestTemplateFor } from '@/src/components/TestSuites/utils/method';
+import { getDefaultRequestTemplateFor } from '@/src/components/TestSuites/utils/method-groups';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -60,12 +60,14 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
   const [currentStepId, setCurrentStepId] = useState<string>(EditRequestStep.Methods);
   const [hasVisitedConfiguration, setHasVisitedConfiguration] = useState(false);
   const [showVarReferences, setShowVarReferences] = useState(false);
+  const [bodyResetSignal, setBodyResetSignal] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
       setCurrentSuite(structuredClone(testSuite));
       setCurrentStepId(EditRequestStep.Methods);
       setHasVisitedConfiguration(false);
+      setBodyResetSignal(0);
     }
   }, [isOpen, testSuite]);
 
@@ -90,13 +92,14 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
   );
 
   const defaultRequestTemplate = useMemo(
-    () => getDefaultRequestTemplateFor(currentSuite.endpointRef),
-    [currentSuite.endpointRef],
+    () => getDefaultRequestTemplateFor(selectedApplication, currentSuite.endpointRef),
+    [selectedApplication, currentSuite.endpointRef],
   );
   const isBodyEdited = !!defaultRequestTemplate && !isEqual(currentSuite.requestTemplate, defaultRequestTemplate);
 
   const onResetToDefault = useCallback(() => {
     setCurrentSuite((prev) => ({ ...prev, requestTemplate: defaultRequestTemplate }));
+    setBodyResetSignal((signal) => signal + 1);
   }, [defaultRequestTemplate]);
 
   const handleSave = useCallback(() => {
@@ -193,6 +196,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
               onChangeTestSuite={setCurrentSuite}
               onShowVariableDocsClick={() => setShowVarReferences(true)}
               jsonataVariables={jsonataVariables}
+              resetSignal={bodyResetSignal}
             />
           )}
         </div>

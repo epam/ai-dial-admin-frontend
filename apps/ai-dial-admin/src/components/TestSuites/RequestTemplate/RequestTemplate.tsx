@@ -27,9 +27,16 @@ interface Props {
   onChangeTestSuite: (testSuite: TestSuite) => void;
   jsonataVariables?: JsonataVariable[];
   onShowVariableDocsClick?: () => void;
+  resetSignal?: number;
 }
 
-const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVariables, onShowVariableDocsClick }) => {
+const RequestTemplate: FC<Props> = ({
+  testSuite,
+  onChangeTestSuite,
+  jsonataVariables,
+  onShowVariableDocsClick,
+  resetSignal,
+}) => {
   const t = useI18n();
   const tabs = getTestSuiteRequestTemplateTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Body);
@@ -37,14 +44,20 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVaria
   const [bodyText, setBodyText] = useState(() => getBodyText(testSuite.requestTemplate?.body));
   const endpointKey = `${testSuite.endpointRef?.method ?? ''}:${testSuite.endpointRef?.relativeUrlPattern ?? ''}`;
   const previousEndpointKeyRef = useRef(endpointKey);
+  const previousResetSignalRef = useRef(resetSignal);
 
   useEffect(() => {
-    if (previousEndpointKeyRef.current === endpointKey) {
+    const hasEndpointChanged = previousEndpointKeyRef.current !== endpointKey;
+    const hasBeenReset = resetSignal != null && previousResetSignalRef.current !== resetSignal;
+
+    if (!hasEndpointChanged && !hasBeenReset) {
       return;
     }
+
     previousEndpointKeyRef.current = endpointKey;
+    previousResetSignalRef.current = resetSignal;
     setBodyText(getBodyText(testSuite.requestTemplate?.body));
-  }, [endpointKey, testSuite.requestTemplate?.body]);
+  }, [endpointKey, resetSignal, testSuite.requestTemplate?.body]);
 
   const onChangeActiveTab = useCallback((id: string) => {
     setActiveTab(id as EntityViewTab);
