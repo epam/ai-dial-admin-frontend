@@ -2,9 +2,8 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialTag } from '@epam/ai-dial-ui-kit';
-import { IconArrowRight, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { DialIconButton, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import { SchemaTreeNode } from './utils';
 
@@ -32,38 +31,30 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
   }, [hasChildren, node.path, onToggleExpand]);
 
   const handleSelect = useCallback(() => {
+    toggleExpand();
     onSelect({ expression: node.path, type: node.type.toUpperCase() });
-  }, [node.path, node.type, onSelect]);
+  }, [node.path, node.type, onSelect, toggleExpand]);
 
   return (
     <div className="flex flex-col">
       <div
-        className="flex flex-row gap-x-2 mb-1 items-center rounded hover:bg-layer-2 group"
-        style={{ paddingLeft: depth * 20 }}
+        className="flex flex-row items-center gap-x-2 py-1 pr-1 rounded hover:bg-accent-primary-alpha group"
+        style={{ paddingLeft: depth ? depth * 20 : 4 }}
       >
-        <div
-          className={classNames(
-            'flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded',
-            hasChildren && 'cursor-pointer hover:bg-layer-3',
-          )}
-          onClick={toggleExpand}
-        >
-          {hasChildren &&
-            (isExpanded ? (
-              <IconChevronDown size={14} className="text-secondary" />
-            ) : (
-              <IconChevronRight size={14} className="text-secondary" />
-            ))}
+        {hasChildren ? (
+          <DialIconButton
+            className="flex items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha hover:text-accent-primary cursor-pointer"
+            onClick={toggleExpand}
+            size={ElementSize.Small}
+            icon={isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+          />
+        ) : (
+          <div className="w-[24px] h-[24px]" />
+        )}
+        <div className="flex-1 min-w-0 flex justify-between items-center truncate" onClick={handleSelect}>
+          <span className="flex-1 min-w-0 small truncate">{node.name}</span>
+          <DialTag label={node.type} className="rounded" />
         </div>
-        <span className="flex-1 min-w-0 small truncate">{node.name}</span>
-        <DialTag label={node.type} />
-        <button
-          type="button"
-          onClick={handleSelect}
-          className="shrink-0 p-1 rounded text-tertiary hover:text-primary hover:bg-layer-3 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <IconArrowRight size={14} stroke={2} />
-        </button>
       </div>
       {hasChildren &&
         isExpanded &&
