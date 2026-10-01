@@ -56,7 +56,7 @@ const DisplayNameControl: FC<Props> = ({
     (value?: string) => {
       const error = alphanumericOnly
         ? getErrorForAppRouteName(value, names, t)
-        : getErrorForName(value, names, t, false, !allowWhitespace, true);
+        : getErrorForName(value, names, t, false, !allowWhitespace, t(EntityFieldsI18nKey.displayName));
       setDisplayNameError(error);
       if (trackGlobalValidity) {
         dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });

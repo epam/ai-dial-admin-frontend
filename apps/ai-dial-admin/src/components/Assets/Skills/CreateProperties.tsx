@@ -43,7 +43,7 @@ const SkillCreateProperties: FC<Props> = ({ entity, names, onChangeEntity }) => 
       const isDuplicate = !!name && names.includes(name);
       const error = isDuplicate
         ? { type: ErrorType.EXISTING, text: t(ErrorI18nKey.SkillNameExists) }
-        : getErrorForName(name, undefined, t, false, true, false, true);
+        : getErrorForName(name, undefined, t, false, true, undefined, true);
       setNameError(name ? error : null);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error && !!name });
     },
