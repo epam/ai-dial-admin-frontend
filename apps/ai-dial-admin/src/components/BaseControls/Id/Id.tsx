@@ -52,16 +52,7 @@ const IdControl = <T extends { name?: string }>({
     (name?: string) => {
       const error = isUrlId
         ? getErrorForUrlId(name, names, t, forbiddenChars)
-        : getErrorForName(
-            name,
-            names,
-            t,
-            isUniqueNameError,
-            true,
-            !!label && label !== t(EntityFieldsI18nKey.id),
-            isDeploymentId,
-            checkEmptySymbols,
-          );
+        : getErrorForName(name, names, t, isUniqueNameError, true, label, isDeploymentId, checkEmptySymbols);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: !error });
     },

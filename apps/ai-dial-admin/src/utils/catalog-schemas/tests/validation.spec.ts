@@ -53,18 +53,15 @@ describe('Catalog Schema Utils :: validateCatalogSchema', () => {
     );
 
     expect(errors[0].field).toEqual('dial:catalogEntityType');
-    expect(errors[0].message).toContain('model, agent, toolset, skill, interceptor');
+    expect(errors[0].message).toContain('model, agent, toolset');
   });
 
-  test.each([
-    CatalogEntityType.Model,
-    CatalogEntityType.Agent,
-    CatalogEntityType.Toolset,
-    CatalogEntityType.Skill,
-    CatalogEntityType.Interceptor,
-  ])('Should accept the %s entity type', (entityType) => {
-    expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': entityType }))).toEqual([]);
-  });
+  test.each([CatalogEntityType.Model, CatalogEntityType.Agent, CatalogEntityType.Toolset])(
+    'Should accept the %s entity type',
+    (entityType) => {
+      expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': entityType }))).toEqual([]);
+    },
+  );
 
   test.each([undefined, '', '   '])('Should report a blank display name (%s)', (displayName) => {
     const errors = validateCatalogSchema(schema({ 'dial:catalogDisplayName': displayName }));

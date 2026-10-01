@@ -6,6 +6,10 @@ export interface NextAuthToken extends JWT {
   providerId: string;
   userId: string;
   refreshToken: string | TokenSet;
+  // Random id assigned at sign-in; keeps the refresh state of separate sign-ins of the same user apart.
+  sessionKey?: string;
+  accessTokenExpires?: number;
+  error?: string;
   token?: string;
 }
 

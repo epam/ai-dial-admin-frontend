@@ -113,6 +113,13 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
           endpoint={asset.endpoint}
           onChange={(endpoint) => onChange({ ...asset, endpoint })}
         />
+        <EndpointControl
+          id="responsesEndpoint"
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+          endpoint={asset.responsesEndpoint}
+          onChange={(responsesEndpoint) => onChange({ ...asset, responsesEndpoint })}
+        />
         <UpstreamEndpoints
           entity={asset}
           onChangeEntity={onChange}

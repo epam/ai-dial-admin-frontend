@@ -162,6 +162,10 @@ export class CorePublicationsApi extends CoreApi {
     }
 
     for (const { asset, type } of resourcePuts) {
+      if (type === ResourceType.CONVERSATION) {
+        continue;
+      }
+
       const putRes = await this.clients.updateAsset(token, asset, type, DEFAULT_ETAG);
       if (!putRes.success) {
         return putRes;

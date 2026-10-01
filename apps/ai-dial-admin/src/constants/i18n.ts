@@ -1159,6 +1159,7 @@ export enum ErrorI18nKey {
   IntroLength = 'Error.IntroLength',
   DisplayNameErrorVersion = 'Error.DisplayNameErrorVersion',
   NameExists = 'Error.NameExists',
+  LabelExists = 'Error.LabelExists',
   DisplayNameExists = 'Error.DisplayNameExists',
   SkillNameExists = 'Error.SkillNameExists',
   Unique = 'Error.Unique',

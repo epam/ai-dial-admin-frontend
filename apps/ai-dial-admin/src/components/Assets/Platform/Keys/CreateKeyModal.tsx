@@ -198,6 +198,7 @@ const CreateKeyModal: FC<Props> = ({ isOpen, names, onClose }) => {
         disableSubmitButton={!isRolesValid}
         cancelLabel={t(ButtonsI18nKey.Back)}
         submitLabel={t(ButtonsI18nKey.Create)}
+        className="max-h-[540px]"
       >
         <div className="flex flex-col px-6 py-4 h-full min-h-0">
           <p className="text-secondary small-150 mb-4">{t(KeysI18nKey.BearerRolesDescription)}</p>
