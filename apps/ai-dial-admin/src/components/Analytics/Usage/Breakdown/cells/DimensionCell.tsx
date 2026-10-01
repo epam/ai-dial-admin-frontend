@@ -26,17 +26,18 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
     <div className="flex min-w-0 flex-col justify-center">
       <div className="flex min-w-0 items-center gap-2">
         {/*
-         * The truncation and its tooltip belong to one element. With the button clipping the text
-         * as well, two elements each believed they were the one cut: the pointer got two tooltips
-         * at once, both repeating the same name, and a third from the icon beside them.
+         * The label and the info icon are sibling tooltip triggers, so the pointer on the icon shows
+         * only its explanation and anywhere else on the cell shows only the name.
          */}
-        <button
-          type="button"
-          className="flex min-w-0 flex-1 text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
-          onClick={() => onOpenRow(data)}
-        >
-          <EllipsisTooltip text={data.displayLabel} />
-        </button>
+        <DialTooltip triggerClassName="flex min-w-0 grow" tooltip={data.displayLabel}>
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
+            onClick={() => onOpenRow(data)}
+          >
+            <span className="truncate">{data.displayLabel}</span>
+          </button>
+        </DialTooltip>
         {data.isFallbackLabel && data.fallbackTooltip && (
           <DialTooltip tooltip={data.fallbackTooltip}>
             <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="shrink-0 text-secondary" aria-hidden />
