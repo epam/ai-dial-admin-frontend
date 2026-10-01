@@ -1532,6 +1532,7 @@ export default {
     DescriptionLength: 'User can add any characters, but not more than 2048.',
     IntroLength: 'User can add any characters, but not more than 2048.',
     NameExists: 'This ID already exists.',
+    LabelExists: 'This {label} already exists.',
     DisplayNameExists: 'This Display name already exists.',
     SkillNameExists: 'A skill or folder with this name already exists in this location',
     Unique: 'This field must be unique.',
