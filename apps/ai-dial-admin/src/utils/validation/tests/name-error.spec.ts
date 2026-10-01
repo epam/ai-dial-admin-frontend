@@ -256,8 +256,8 @@ describe('getErrorForName', () => {
   });
 
   test('Should return translated error for not unique display name', () => {
-    const res1 = getErrorForName('displayName', ['displayName'], mockT, true, true, true);
-    const res2 = getErrorForName('displayName', ['displayName'], undefined, true, true, true);
+    const res1 = getErrorForName('displayName', ['displayName'], mockT, true, true, 'Display Name');
+    const res2 = getErrorForName('displayName', ['displayName'], undefined, true, true, 'Display Name');
 
     expect(res1).toEqual({
       type: ErrorType.EXISTING,
