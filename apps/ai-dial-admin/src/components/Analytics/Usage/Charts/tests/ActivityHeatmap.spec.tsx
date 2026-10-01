@@ -102,6 +102,12 @@ describe('ActivityHeatmap', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
   });
 
+  test('offers no cost in the Routes view, whose rows carry no price', () => {
+    renderHeatmap({ buckets: loaded(busyWeek) }, UsageView.Routes);
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
+  });
+
   test('offers no cost in the MCP view, whose rows carry no price', () => {
     renderHeatmap({ buckets: loaded(busyWeek) }, UsageView.Mcp);
 

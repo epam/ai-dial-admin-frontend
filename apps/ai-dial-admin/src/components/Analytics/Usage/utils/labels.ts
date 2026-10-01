@@ -1,4 +1,4 @@
-import { BreakdownTab, ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, ComparePeriod, RouteKind, UsageView } from '@/src/components/Analytics/Usage/models';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 
 const TOOLSET_PREFIX = 'toolsets/';
@@ -14,7 +14,7 @@ export const getFallbackLabelKey = (tab: BreakdownTab): AnalyticsUsageI18nKey | 
     return AnalyticsUsageI18nKey.NoProject;
   }
 
-  if (tab === BreakdownTab.Applications) {
+  if (tab === BreakdownTab.Applications || tab === BreakdownTab.Callers) {
     return AnalyticsUsageI18nKey.DirectCall;
   }
 
@@ -33,7 +33,7 @@ export const getFallbackTooltipKey = (tab: BreakdownTab, view: UsageView): Analy
     return AnalyticsUsageI18nKey.NoProjectTooltip;
   }
 
-  if (tab !== BreakdownTab.Applications) {
+  if (tab !== BreakdownTab.Applications && tab !== BreakdownTab.Callers) {
     return null;
   }
 
@@ -66,6 +66,9 @@ export const BREAKDOWN_TAB_LABEL_KEY: Record<BreakdownTab, AnalyticsUsageI18nKey
   [BreakdownTab.Projects]: AnalyticsUsageI18nKey.BreakdownTabProjects,
   [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.BreakdownTabMcpServers,
   [BreakdownTab.Tools]: AnalyticsUsageI18nKey.BreakdownTabTools,
+  [BreakdownTab.Owners]: AnalyticsUsageI18nKey.BreakdownTabOwners,
+  [BreakdownTab.Paths]: AnalyticsUsageI18nKey.BreakdownTabPaths,
+  [BreakdownTab.Callers]: AnalyticsUsageI18nKey.BreakdownTabCallers,
 };
 
 export const BREAKDOWN_TAB_COLUMN_LABEL_KEY: Record<BreakdownTab, AnalyticsUsageI18nKey> = {
@@ -74,6 +77,9 @@ export const BREAKDOWN_TAB_COLUMN_LABEL_KEY: Record<BreakdownTab, AnalyticsUsage
   [BreakdownTab.Projects]: AnalyticsUsageI18nKey.ColumnProject,
   [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.ColumnMcpServer,
   [BreakdownTab.Tools]: AnalyticsUsageI18nKey.ColumnTool,
+  [BreakdownTab.Owners]: AnalyticsUsageI18nKey.ColumnOwner,
+  [BreakdownTab.Paths]: AnalyticsUsageI18nKey.ColumnPath,
+  [BreakdownTab.Callers]: AnalyticsUsageI18nKey.ColumnCaller,
 };
 
 /** What each tab counts and what one of its rows aggregates, stated under the card's title. */
@@ -83,6 +89,14 @@ export const BREAKDOWN_TAB_DESCRIPTION_KEY: Record<BreakdownTab, AnalyticsUsageI
   [BreakdownTab.Projects]: AnalyticsUsageI18nKey.BreakdownDescriptionProjects,
   [BreakdownTab.McpServers]: AnalyticsUsageI18nKey.BreakdownDescriptionMcpServers,
   [BreakdownTab.Tools]: AnalyticsUsageI18nKey.BreakdownDescriptionTools,
+  [BreakdownTab.Owners]: AnalyticsUsageI18nKey.BreakdownDescriptionOwners,
+  [BreakdownTab.Paths]: AnalyticsUsageI18nKey.BreakdownDescriptionPaths,
+  [BreakdownTab.Callers]: AnalyticsUsageI18nKey.BreakdownDescriptionCallers,
+};
+
+export const ROUTE_KIND_LABEL_KEY: Record<RouteKind, AnalyticsUsageI18nKey> = {
+  [RouteKind.Application]: AnalyticsUsageI18nKey.RouteKindApplication,
+  [RouteKind.Global]: AnalyticsUsageI18nKey.RouteKindGlobal,
 };
 
 /**

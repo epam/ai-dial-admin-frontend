@@ -989,8 +989,8 @@ cursor, which reads as the pointer having left the slice it is on.
 ### Requirement: The donut follows the view's primary dimension
 
 The donut's dimension SHALL be the active view's leading breakdown dimension — models in the LLM
-view, MCP servers in the MCP view — matching the breakdown table's default tab, so the two widgets
-never disagree about what the page is about.
+view, MCP servers in the MCP view, owners in the Routes view — matching the breakdown table's
+default tab, so the two widgets never disagree about what the page is about.
 
 The donut SHALL read that dimension from a request of its own rather than from the breakdown
 table's. Sharing the table's response would make the ring reload, and change what it splits by,
@@ -1007,6 +1007,11 @@ every time a reader switched the tab below it.
 - **WHEN** the user switches `View by` to MCP
 - **THEN** the donut splits by MCP server
 
+#### Scenario: The Routes view splits by owner
+
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** the donut splits by owner
+
 #### Scenario: Switching the breakdown tab leaves the donut alone
 
 - **GIVEN** the donut splits by model
@@ -1021,12 +1026,17 @@ by. The tab sets SHALL be:
 
 - **LLM view**: `Models`, `Applications`, `Projects`
 - **MCP view**: `MCP Servers`, `Tools`, `Applications`, `Projects`
+- **Routes view**: `Owners`, `Paths`, `Callers`, `Projects`
 
 The first tab of each set SHALL be the default. Switching tab SHALL issue exactly one request — the
 tab request named under the request contract above, grouped by that tab's dimension and ordered and
 limited server-side — and SHALL NOT re-issue the view's other requests. A tab is grouped and ranked
 by the backend rather than regrouped on the client because a top-N taken over rows grouped by every
 dimension at once ranks combinations, not the dimension the tab is about.
+
+The Routes view's `Callers` tab SHALL rank the deployment that called the route, and SHALL carry the
+`Direct call` fallback for a route called by a key or a user rather than by a deployment, with the
+tooltip that names such a call.
 
 The selected period SHALL apply to every tab.
 
@@ -1035,6 +1045,19 @@ The selected period SHALL apply to every tab.
 - **WHEN** the MCP view loads
 - **THEN** the breakdown table shows the `MCP Servers` tab
 - **AND** tabs for `Tools`, `Applications` and `Projects` are offered
+
+#### Scenario: The Routes view opens on owners
+
+- **WHEN** the Routes view loads
+- **THEN** the breakdown table shows the `Owners` tab
+- **AND** tabs for `Paths`, `Callers` and `Projects` are offered
+
+#### Scenario: A route called by a client is a direct call
+
+- **GIVEN** a route call with no calling deployment
+- **WHEN** the Routes view's `Callers` tab renders
+- **THEN** the call is counted under `Direct call`
+- **AND** its tooltip names a call made by a key or a user
 
 #### Scenario: Switching tab issues exactly one request
 
@@ -1439,9 +1462,9 @@ question from what the row is called.
 The share chart SHALL offer the measure it splits by: `Calls` and `Cost`. `Calls` SHALL be listed
 first and SHALL be the selection the card opens with, so the default reading is unchanged.
 
-The MCP view SHALL offer no such choice and SHALL split by calls alone: no `mcp` row carries a
-price, so a cost ring there would be empty whatever the window. Switching the view SHALL return the
-selection to `Calls`.
+The MCP and Routes views SHALL offer no such choice and SHALL split by calls alone: no `mcp` row and
+no route row carries a price, so a cost ring there would be empty whatever the window. Switching
+the view SHALL return the selection to `Calls`.
 
 Choosing a measure SHALL re-issue the chart's ranking request **ordered by that measure**. The top-N
 cut is taken by the backend, so a ring ranked on calls and rendered on spend would show the five
@@ -1473,6 +1496,11 @@ the new. The selection flips the figures when its rows arrive.
 #### Scenario: The MCP view offers no cost split
 
 - **WHEN** the share chart renders in the MCP view
+- **THEN** it offers no cost measure
+
+#### Scenario: The Routes view offers no cost split
+
+- **WHEN** the share chart renders in the Routes view
 - **THEN** it offers no cost measure
 
 #### Scenario: Choosing cost re-ranks on the backend
@@ -1601,6 +1629,158 @@ its rows.
 - **GIVEN** a server a client connects to often and calls rarely
 - **WHEN** the share chart and the breakdown rank the view's servers
 - **THEN** that server is ranked by the calls it served, not by the connections it received
+
+### Requirement: View by offers LLM, MCP and Routes
+
+The page's `View by` control SHALL offer three views, in this order: `LLM`, `MCP` and `Routes`.
+`LLM` SHALL remain the view the page opens with.
+
+Switching to `Routes` SHALL re-issue every request shape against the Routes view's rows, exactly as
+switching between LLM and MCP does, and SHALL keep the period and the `Compare` selection.
+
+#### Scenario: Routes is offered last
+
+- **WHEN** the page renders
+- **THEN** `View by` offers `LLM`, `MCP` and `Routes` in that order
+- **AND** `LLM` is selected
+
+#### Scenario: Switching to Routes keeps the window
+
+- **GIVEN** a custom period with comparison on
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** every widget reloads from the Routes view's rows
+- **AND** the period and the comparison are unchanged
+
+### Requirement: The Routes view reads application-route and global-route calls
+
+The Routes view SHALL read two kinds of row and no other:
+
+- an **application route** call: a row whose event kind is `route`. Its request URI has the shape
+  `/v1/deployments/<deployment>/route/<path>`, and its deployment is the deployment that declares
+  the route;
+- a **global route** call: a row whose event kind is empty and whose deployment is missing. Core
+  resolved it against its global routes map, and the log records neither a route name nor a
+  deployment for it.
+
+Every request the view issues SHALL carry that clause, so each of its figures rests on the same
+rows.
+
+#### Scenario: Both kinds are counted
+
+- **GIVEN** the window holds application-route calls and global-route calls
+- **WHEN** the Routes view loads
+- **THEN** its call count includes both
+
+#### Scenario: Model and MCP traffic is not counted
+
+- **GIVEN** the window holds LLM calls and MCP tool calls
+- **WHEN** the Routes view loads
+- **THEN** none of them is counted in any of its figures
+
+### Requirement: The LLM view does not count global route calls
+
+The LLM view SHALL exclude global route calls as defined above. Their event kind is empty, which
+the LLM view otherwise reads as an LLM call made through an API that carries no classified kind,
+so without the exclusion router and proxy traffic is counted as model calls, ranked as a model row
+with no name, and its latency is averaged into the models'.
+
+Excluding them SHALL NOT change the LLM view's spend or tokens, since no route row carries a price
+or a token count. It SHALL change the view's request count, error rate and latency by exactly the
+excluded rows.
+
+An LLM call whose event kind is empty and whose deployment is present SHALL still be counted.
+
+#### Scenario: A global route call is not an LLM call
+
+- **GIVEN** the window holds a global route call
+- **WHEN** the LLM view loads
+- **THEN** that call is counted in none of the LLM view's figures
+
+#### Scenario: An unclassified model call is still counted
+
+- **GIVEN** a call to a model through an API that carries no event kind
+- **WHEN** the LLM view loads
+- **THEN** that call is counted
+
+### Requirement: A route row states its owner, its path and its kind
+
+Every Routes view figure SHALL be grouped through three values derived from the row, computed by
+the backend so that grouping, ranking and paging rest on the same value:
+
+- **kind** — `Application` for an application route, `Global` for a global route;
+- **owner** — the declaring deployment for an application route; for a global route, the first
+  segment of the request path with its leading slash, since the log names no route;
+- **path** — for an application route, the part of the request URI after `/route/`, with a leading
+  slash; for a global route, the whole request path. A query string SHALL be dropped from both, so
+  one path called with different parameters is one path.
+
+Two global routes whose paths share a first segment SHALL rank as one owner. This is the stated cost
+of the log carrying no route name, and the `Owners` tab's description SHALL say so.
+
+#### Scenario: An application route is owned by its deployment
+
+- **GIVEN** a call to `/v1/deployments/app-a/route/v1/search?q=x`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Application`, its owner is `app-a` and its path is `/v1/search`
+
+#### Scenario: A global route is owned by its first path segment
+
+- **GIVEN** a global route call to `/proxy/v1/messages`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Global`, its owner is `/proxy` and its path is `/proxy/v1/messages`
+
+#### Scenario: The query string does not split a path
+
+- **GIVEN** two calls to one route path with different query strings
+- **WHEN** the `Paths` tab renders
+- **THEN** they are one row
+
+### Requirement: The Routes view states what route rows carry and nothing else
+
+The Routes view SHALL render the KPI row with four cards, in this order: `Requests`,
+`Unique callers`, `Error rate`, `Avg latency`. It SHALL NOT render spend, tokens or cost per token:
+no route row carries a price or a token count, so each would read zero for every window.
+
+Its time series SHALL offer the requests plot, the split plot by owner and the latency plot, and
+SHALL NOT offer the spend plot. Its heatmap SHALL paint requests alone. Its share chart SHALL split
+by calls alone.
+
+#### Scenario: Four cards head the Routes view
+
+- **WHEN** the Routes view loads
+- **THEN** the KPI row shows `Requests`, `Unique callers`, `Error rate` and `Avg latency` in that order
+- **AND** no spend, token or cost-per-token card is shown
+
+#### Scenario: No spend plot in the Routes view
+
+- **WHEN** the Routes view's time series renders
+- **THEN** it offers the requests, by-owner and latency plots
+- **AND** it offers no spend plot
+
+#### Scenario: The heatmap offers no cost
+
+- **WHEN** the Routes view's heatmap renders
+- **THEN** it offers requests alone
+
+### Requirement: Each Routes row states its kind
+
+The `Owners` and `Paths` tabs SHALL state each row's kind, `Application` or `Global`, in a column of
+its own beside the dimension, because the two kinds derive owner and path differently and a reader
+cannot tell them apart from the value alone. The kind SHALL be text, not colour or an icon alone.
+
+A row's identity on the `Paths` tab SHALL be its owner, path and request method together, so one
+path on two owners, or under two methods, is two rows.
+
+#### Scenario: The kind is stated as text
+
+- **WHEN** the `Owners` tab renders a global route's row
+- **THEN** its kind column reads `Global`
+
+#### Scenario: One path under two methods is two rows
+
+- **GIVEN** an owner's path is called with `GET` and with `POST`
+- **WHEN** the `Paths` tab renders
+- **THEN** it shows two rows, each stating its method
 
 ### Requirement: A missing dimension value carries its tab's fallback label
 

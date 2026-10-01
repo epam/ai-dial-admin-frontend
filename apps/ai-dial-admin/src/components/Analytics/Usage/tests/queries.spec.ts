@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { BUCKET_ROW_LIMIT, USAGE_ENTITY, USAGE_VIEW_EVENT_KINDS } from '@/src/components/Analytics/Usage/constants';
+import { BUCKET_ROW_LIMIT, USAGE_ENTITY } from '@/src/components/Analytics/Usage/constants';
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   BUCKET_ALIAS,
@@ -47,6 +47,32 @@ const aliasesOf = (query: StructuredQuery) => (query.select ?? []).map((entry) =
 
 const clausesOf = (query: StructuredQuery) => (query.filter as { args: { op: string }[] }).args;
 
+/** The view's own clause, which leads every filter. */
+const viewClauseOf = (view: UsageView) => clausesOf({ filter: buildFilter(scope({ view })) } as StructuredQuery)[0];
+
+const fieldExpr = (name: string) => ({ type: QueryExprType.Field, name });
+const text = (value: string) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value });
+
+/** A global route call: no event kind, and no deployment named on the row. */
+const GLOBAL_ROUTE_CALL = {
+  op: QueryLogicalOperator.And,
+  args: [
+    { op: QueryOperator.Eq, args: [fieldExpr('event_kind'), text('')] },
+    {
+      op: QueryLogicalOperator.Not,
+      args: [
+        {
+          op: QueryOperator.Eq,
+          args: [
+            { type: QueryExprType.Fn, name: 'not_empty', args: [fieldExpr('deployment')] },
+            { type: QueryExprType.Value, value_type: QueryValueType.Boolean, value: 'true' },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 describe('buildFilter', () => {
   test('bounds the window with epoch-millis literals, which is the only form the backend parses', () => {
     const [, from, to] = clausesOf({ filter: buildFilter(scope()) } as StructuredQuery);
@@ -61,8 +87,27 @@ describe('buildFilter', () => {
     expect(to).toMatchObject({ op: QueryOperator.Lt });
   });
 
-  test('takes the LLM view to include the rows whose event kind is empty', () => {
-    expect(USAGE_VIEW_EVENT_KINDS[UsageView.Llm]).toContain('');
+  test('takes the LLM view to include the rows whose event kind is empty, global route calls aside', () => {
+    expect(viewClauseOf(UsageView.Llm)).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [
+        {
+          op: QueryOperator.In,
+          args: [
+            fieldExpr('event_kind'),
+            { type: QueryExprType.Array, items: [text('llm_call'), text('embedding'), text('')] },
+          ],
+        },
+        { op: QueryLogicalOperator.Not, args: [GLOBAL_ROUTE_CALL] },
+      ],
+    });
+  });
+
+  test('takes the Routes view to read deployment routes and global route calls', () => {
+    expect(viewClauseOf(UsageView.Routes)).toEqual({
+      op: QueryLogicalOperator.Or,
+      args: [{ op: QueryOperator.Eq, args: [fieldExpr('event_kind'), text('route')] }, GLOBAL_ROUTE_CALL],
+    });
   });
 
   test('adds a deployment clause only when one is asked for', () => {
@@ -140,15 +185,16 @@ describe('buildTotalsQuery', () => {
   });
 
   test('narrows the MCP view to tool calls, so its figures describe work and not connections', () => {
-    const clauses = clausesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
+    const [viewClause] = clausesOf(buildTotalsQuery(scope({ view: UsageView.Mcp })));
 
-    expect(clauses).toContainEqual({
+    expect((viewClause as unknown as { args: unknown[] }).args).toContainEqual({
       op: QueryOperator.Eq,
-      args: [
-        { type: QueryExprType.Field, name: 'mcp_method' },
-        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'tools/call' },
-      ],
+      args: [fieldExpr('mcp_method'), text('tools/call')],
     });
+  });
+
+  test('carries no price in the Routes view, which records none', () => {
+    expect(aliasesOf(buildTotalsQuery(scope({ view: UsageView.Routes })))).not.toContain(SPEND_ALIAS);
   });
 
   test('adds no method clause in the LLM view', () => {
@@ -336,5 +382,125 @@ describe('buildDimensionSearchClause', () => {
 
   test('searches the dimension alone elsewhere', () => {
     expect(buildDimensionSearchClause(BreakdownTab.Models, 'gpt')).toMatchObject({ op: QueryOperator.Ico });
+  });
+});
+
+describe('the Routes view dimensions', () => {
+  const routes = scope({ view: UsageView.Routes });
+
+  test('computes the owner under its column name and groups and ranks by that name', () => {
+    const query = buildTabQuery(routes, BreakdownTab.Owners, 10);
+    const owner = (query.select ?? []).find((entry) => entry.as === 'route_owner');
+
+    expect(owner?.expr).toMatchObject({ type: QueryExprType.Fn, name: 'if' });
+    expect(JSON.stringify(owner?.expr)).toContain('request_uri');
+    expect(query.group_by).toEqual(['route_owner']);
+    expect(query.sort?.[1]).toEqual({ field: 'route_owner', dir: QuerySortDirection.Asc });
+  });
+
+  test('cuts the query string off a path, so one path is one row whatever its parameters', () => {
+    const path = (buildTabQuery(routes, BreakdownTab.Paths, 10).select ?? []).find(
+      (entry) => entry.as === 'route_path',
+    );
+
+    expect(JSON.stringify(path?.expr)).toContain('"value":"?"');
+    expect(JSON.stringify(path?.expr)).toContain('"value":"/route/"');
+  });
+
+  /**
+   * Reads a derived expression against one row, over the DSL subset the Routes expressions use and
+   * with the service's documented semantics — so the spec's owner and path examples are pinned by
+   * value rather than by the shape of the tree.
+   */
+  const evaluate = (expr: unknown, row: Record<string, string>): unknown => {
+    const node = expr as { type: string; name?: string; value?: string; value_type?: string; args?: unknown[] };
+
+    if (node.type === QueryExprType.Field) return row[node.name ?? ''] ?? '';
+    if (node.type === QueryExprType.Value) {
+      return node.value_type === QueryValueType.Integer ? Number(node.value) : node.value;
+    }
+
+    const args = (node.args ?? []).map((arg) => evaluate(arg, row));
+    const functions: Record<string, () => unknown> = {
+      if: () => (args[0] ? args[1] : args[2]),
+      not_empty: () => String(args[0]).length > 0,
+      concat: () => args.join(''),
+      split_string: () => String(args[0]).split(String(args[1])),
+      array_slice: () => (args[0] as string[]).slice(Number(args[1]) - 1, Number(args[1]) - 1 + Number(args[2])),
+      array_to_string: () => (args[0] as string[]).join(String(args[1])),
+    };
+
+    return functions[node.name ?? '']();
+  };
+
+  const derive = (row: Record<string, string>) => {
+    const select = buildTabQuery(routes, BreakdownTab.Paths, 10).select ?? [];
+    const read = (alias: string) => evaluate(select.find((entry) => entry.as === alias)?.expr, row);
+
+    return { owner: read('route_owner'), path: read('route_path') };
+  };
+
+  test('owns an application route by its deployment and keeps the path after /route/', () => {
+    expect(derive({ deployment: 'app-a', request_uri: '/v1/deployments/app-a/route/v1/search?q=x' })).toEqual({
+      owner: 'app-a',
+      path: '/v1/search',
+    });
+  });
+
+  test('keeps an application route path whole when it carries /route/ itself', () => {
+    expect(derive({ deployment: 'app-a', request_uri: '/v1/deployments/app-a/route/api/route/x' })).toEqual({
+      owner: 'app-a',
+      path: '/api/route/x',
+    });
+  });
+
+  test('owns a global route by its first path segment and keeps the whole path', () => {
+    expect(derive({ deployment: '', request_uri: '/proxy/v1/messages' })).toEqual({
+      owner: '/proxy',
+      path: '/proxy/v1/messages',
+    });
+  });
+
+  test('keeps the query string off a global route owner, as off its path', () => {
+    expect(derive({ deployment: '', request_uri: '/proxy?x=1' })).toEqual({ owner: '/proxy', path: '/proxy' });
+  });
+
+  test('identifies a path by its owner and method as well', () => {
+    expect(buildTabQuery(routes, BreakdownTab.Paths, 10).group_by).toEqual([
+      'route_owner',
+      'request_method',
+      'route_path',
+    ]);
+  });
+
+  test('ranks callers by the calling deployment', () => {
+    expect(buildTabQuery(routes, BreakdownTab.Callers, 10).group_by).toEqual(['parent_deployment']);
+  });
+
+  test('compares a block by the expression, since a filter does not see select aliases', () => {
+    const query = buildTabKeysQuery(routes, BreakdownTab.Paths, ['app-a\u0000GET\u0000/v1/search']);
+    const ownerClause = clausesOf(query).at(-3) as unknown as { op: string; args: { type: string }[] };
+
+    expect(ownerClause.op).toBe(QueryOperator.In);
+    expect(ownerClause.args[0].type).toBe(QueryExprType.Fn);
+    expect(clausesOf(query).at(-2)).toEqual({
+      op: QueryOperator.In,
+      args: [fieldExpr('request_method'), { type: QueryExprType.Array, items: [text('GET')] }],
+    });
+  });
+
+  test('bounds the split plot by the owner expression', () => {
+    const query = buildDimensionBucketedQuery(routes, RESOLUTION, BreakdownTab.Owners, ['app-a', '/proxy']);
+    const clause = clausesOf(query).at(-1) as unknown as { args: { type: string }[] };
+
+    expect(clause.args[0].type).toBe(QueryExprType.Fn);
+    expect(query.group_by).toEqual([BUCKET_ALIAS, 'route_owner']);
+  });
+
+  test('searches a path by its owner and method too', () => {
+    const clause = buildDimensionSearchClause(BreakdownTab.Paths, 'search') as { op: string; args: unknown[] };
+
+    expect(clause.op).toBe(QueryLogicalOperator.Or);
+    expect(clause.args).toHaveLength(3);
   });
 });

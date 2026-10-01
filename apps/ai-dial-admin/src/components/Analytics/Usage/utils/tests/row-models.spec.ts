@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { BreakdownRow, UsageMeasures } from '@/src/components/Analytics/Usage/models';
+import { BreakdownRow, RouteKind, UsageMeasures } from '@/src/components/Analytics/Usage/models';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import {
   RowModelContext,
@@ -114,6 +114,26 @@ describe('toRowModels', () => {
     const models = toRowModels([fallback(90), row('a', 10)], context({ isFallbackPinnedLast: true }));
 
     expect(models.map((model) => model.id)).toEqual(['a', 'column:missing']);
+  });
+});
+
+describe('toRowModels on qualified Routes rows', () => {
+  const pathRow: BreakdownRow = { ...row('a', 3), qualifiers: ['/proxy', 'POST'] };
+
+  test("states a qualified row's sub-label from its qualifiers", () => {
+    const [model] = toRowModels(
+      [pathRow],
+      context({ readQualifierSubLabel: ([owner, method]) => ({ text: `${method} ${owner}` }) }),
+    );
+
+    expect(model.subLabel).toBe('POST /proxy');
+  });
+
+  test('states the kind where the tab reads one, and leaves it out elsewhere', () => {
+    expect(toRowModels([pathRow], context({ readRouteKind: () => RouteKind.Global }))[0].routeKind).toBe(
+      RouteKind.Global,
+    );
+    expect(toRowModels([pathRow], context())[0].routeKind).toBeUndefined();
   });
 });
 
