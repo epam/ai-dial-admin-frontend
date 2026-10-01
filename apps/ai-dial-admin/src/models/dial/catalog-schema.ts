@@ -9,8 +9,6 @@ export enum CatalogEntityType {
   Model = 'model',
   Agent = 'agent',
   Toolset = 'toolset',
-  Skill = 'skill',
-  Interceptor = 'interceptor',
 }
 
 /** Values Core's catalog meta-schema allows in a property's `dial:meta`.`dial:widget`. */
