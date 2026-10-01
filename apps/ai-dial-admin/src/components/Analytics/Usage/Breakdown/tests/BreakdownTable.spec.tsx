@@ -17,7 +17,7 @@ import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-qu
 interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
   rowData?: BreakdownRowModel[];
-  columnDefs: { colId?: string; filter?: boolean | string }[];
+  columnDefs: { colId?: string; filter?: boolean | string; tooltipValueGetter?: () => unknown }[];
 }
 
 const RUNNER = {
@@ -214,6 +214,15 @@ describe('BreakdownTable', () => {
     expect(card.columnDefs.every((column) => column.filter === false)).toBe(true);
     expect(dialog.columnDefs.every((column) => column.filter === false)).toBe(true);
     expect(screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder })).toBeTruthy();
+  });
+
+  test("leaves the dimension cell's tooltips to the cell, not the grid's default one", () => {
+    renderTable({ isShowingAll: true });
+
+    for (const grid of grids) {
+      const dimension = grid.columnDefs.find((column) => column.colId === 'dimension');
+      expect(dimension?.tooltipValueGetter?.()).toBeNull();
+    }
   });
 
   test('holds the term the reader typed, which the dialog reads the dimension again with', () => {

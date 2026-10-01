@@ -196,6 +196,8 @@ const BreakdownTable: FC<Props> = ({
         headerClass: void 0,
         cellRenderer: DimensionCell,
         cellRendererParams: { onOpenRow },
+        // The grid's tooltip covers the whole cell, info icon included; the cell shows the name itself.
+        tooltipValueGetter: () => null,
       },
       {
         ...MEASURE_COLUMN_BASE,
