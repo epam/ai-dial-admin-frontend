@@ -51,6 +51,12 @@ export interface TestCaseColumnsOptions {
   includedIds?: Set<string> | null | (() => Set<string> | null);
 }
 
+export const INCLUDED_IN_RUN_COLUMN_ID = 'includedInRun';
+export const VALIDITY_STATUS_COLUMN_ID = 'status';
+export const CONTENT_FIT_COLUMN_IDS = [INCLUDED_IN_RUN_COLUMN_ID, VALIDITY_STATUS_COLUMN_ID];
+
+const ID_COLUMN_MAX_WIDTH = 200;
+
 const getIncludeInRunFilterOptions = (
   allLabel: string,
   includedLabel: string,
@@ -89,13 +95,14 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
       ? { entityId: dataset.id, view: ApplicationRoute.Datasets }
       : { entityId: suite.id, view: ApplicationRoute.TestSuites };
 
-  return [
+  const columns: ColDef[] = [
     getTurnExpanderColumn(onToggleExpand),
     {
       ...UTILITY_COLUMN,
       headerName: t?.(TestSuitesI18nKey.IncludeInRun) ?? 'Include in run',
       field: 'includedInRun',
-      colId: 'includedInRun',
+      colId: INCLUDED_IN_RUN_COLUMN_ID,
+      suppressSizeToFit: true,
       minWidth: 140,
       width: 140,
       maxWidth: 180,
@@ -124,11 +131,24 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
         return ids.has(String(params.data?.id));
       },
     } as ColDef,
-    getGroupedIdColumn(),
+    // IDs are short and of a fairly uniform length, so a share of the available width would waste
+    // space next to a long schema/JSON column — grow with the rest of the grid, but never past a
+    // readable cap.
+    { ...getGroupedIdColumn(), maxWidth: ID_COLUMN_MAX_WIDTH },
     getGroupedNameColumn(onCellChange, isReadOnly),
     ...resolvedSchema.map((param) => getGroupedSchemaColumn(param, onCellChange, fileContext, isReadOnly)),
-    getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
+    {
+      ...getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
+      colId: VALIDITY_STATUS_COLUMN_ID,
+      // Fit to content (see CONTENT_FIT_COLUMN_IDS): a status dot plus a short label, occasionally an
+      // icon — min/max just keep it from collapsing or, on an unusually long label, overgrowing.
+      suppressSizeToFit: true,
+      minWidth: 70,
+      maxWidth: 180,
+    },
   ];
+
+  return columns;
 };
 
 export const getValidityStatusColumn = (label?: string): ColDef => {
