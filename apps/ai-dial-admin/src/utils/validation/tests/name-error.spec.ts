@@ -286,8 +286,8 @@ describe('getErrorForName', () => {
   });
 
   test('Should return INVALID error for deployment id with invalid chars', () => {
-    const res1 = getErrorForName('test_id', [], mockT, false, true, false, true);
-    const res2 = getErrorForName('test_id', [], undefined, false, true, false, true);
+    const res1 = getErrorForName('test_id', [], mockT, false, true, undefined, true);
+    const res2 = getErrorForName('test_id', [], undefined, false, true, undefined, true);
 
     expect(res1).toEqual({
       type: ErrorType.INVALID,
@@ -301,13 +301,13 @@ describe('getErrorForName', () => {
   });
 
   test('Should allow valid deployment id characters', () => {
-    const res = getErrorForName('test-id-123', [], mockT, false, true, false, true);
+    const res = getErrorForName('test-id-123', [], mockT, false, true, undefined, true);
 
     expect(res).toBeNull();
   });
 
   test('Should handle all parameters set to false', () => {
-    const res = getErrorForName('validname', ['other'], mockT, false, false, false, false);
+    const res = getErrorForName('validname', ['other'], mockT, false, false, undefined, false);
 
     expect(res).toBeNull();
   });
