@@ -7,7 +7,6 @@ import {
   BREAKDOWN_TAB_COLUMN,
   BREAKDOWN_TAB_QUALIFIER,
   DONUT_SLICE_COUNT,
-  VIEW_BREAKDOWN_TABS,
 } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
@@ -20,6 +19,7 @@ import {
   SpendBucket,
   TimeSeriesView,
   UsageMeasures,
+  UsageScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import {
@@ -50,9 +50,12 @@ const loaded = <T>(data: T): RequestState<T> => ({ data, isLoading: false, hasFa
 
 interface Params {
   view: UsageView;
+  scope: UsageScope;
   windows: ComparedWindows;
   resolution: ChartResolution;
   tab: BreakdownTab;
+  /** The tab the share chart and the split plot rank by: the block's first. */
+  leadingTab: BreakdownTab;
   tabLimit: number;
   donutLimit: number;
   donutMetric: DonutMetric;
@@ -81,9 +84,11 @@ export interface UsageDashboardData {
 
 export const useUsageDashboardData = ({
   view,
+  scope,
   windows,
   resolution,
   tab,
+  leadingTab,
   tabLimit,
   donutLimit,
   donutMetric,
@@ -118,12 +123,16 @@ export const useUsageDashboardData = ({
   const spendGeneration = useRef(0);
   const donutGeneration = useRef(0);
   /** What the donut is reading, apart from how many rows of it: a change here empties the rows. */
-  const donutScope = [view, windows.current.startDate.getTime(), windows.current.endDate.getTime(), refreshToken].join(
-    '|',
-  );
+  const donutScope = [
+    view,
+    leadingTab,
+    windows.current.startDate.getTime(),
+    windows.current.endDate.getTime(),
+    refreshToken,
+  ].join('|');
   const donutScopeKey = useRef(donutScope);
 
-  const baseScope = useMemo(() => ({ view }), [view]);
+  const baseScope = useMemo(() => ({ view, entityClauses: scope.own }), [view, scope]);
 
   /** A failure states itself once, in a notification; the widget it feeds falls back to empty. */
   const reportFailed = useCallback(
@@ -184,7 +193,7 @@ export const useUsageDashboardData = ({
 
   // The stack plots the same entities the share chart names, so it waits for that ranking rather
   // than ranking again — and it is issued only while the split view is the one being read.
-  const donutTab = VIEW_BREAKDOWN_TABS[view][0];
+  const donutTab = leadingTab;
   const seriesIds = useMemo(
     () => (donutRows.data ?? []).slice(0, DONUT_SLICE_COUNT).map((row) => row.id),
     [donutRows.data],
@@ -226,7 +235,6 @@ export const useUsageDashboardData = ({
   useEffect(() => {
     donutGeneration.current += 1;
     const generation = donutGeneration.current;
-    const leadingTab = VIEW_BREAKDOWN_TABS[view][0];
     const isSameScope = donutScopeKey.current === donutScope;
     donutScopeKey.current = donutScope;
 
@@ -255,7 +263,7 @@ export const useUsageDashboardData = ({
     });
     // `donutScope` is read through a ref, so it is not a dependency of its own effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseScope, view, donutMetric, windows, donutLimit, refreshToken, runQuery, reportFailed]);
+  }, [baseScope, view, leadingTab, donutMetric, windows, donutLimit, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     spendGeneration.current += 1;

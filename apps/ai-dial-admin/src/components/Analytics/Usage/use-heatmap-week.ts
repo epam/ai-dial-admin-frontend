@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
-import { BucketPoint, RequestState, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BucketPoint, RequestState, UsageScope, UsageView } from '@/src/components/Analytics/Usage/models';
 import { buildBucketedQuery } from '@/src/components/Analytics/Usage/queries';
 import { foldBucketPoints } from '@/src/components/Analytics/Usage/utils/folds';
 import { getWeekRange } from '@/src/components/Analytics/Usage/utils/weeks';
@@ -14,6 +14,7 @@ const HOURLY: { value: number; unit: 'h' } = { value: 1, unit: 'h' };
 
 interface Params {
   view: UsageView;
+  scope: UsageScope;
   refreshToken: number;
   notice: LoadFailureNotice;
 }
@@ -31,7 +32,7 @@ export interface HeatmapWeek {
  * The heatmap keeps its own week rather than following the page period: a grid of hour by day is
  * only readable over exactly seven days, and the page's period is free to be an hour or a month.
  */
-export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapWeek => {
+export const useHeatmapWeek = ({ view, scope, refreshToken, notice }: Params): HeatmapWeek => {
   const { report, reset } = notice;
 
   const { runQuery } = useAnalyticsQuery();
@@ -62,19 +63,21 @@ export const useHeatmapWeek = ({ view, refreshToken, notice }: Params): HeatmapW
     reset();
     setBuckets({ data: null, isLoading: true, hasFailed: false });
 
-    void runQuery(buildBucketedQuery({ view, window: week }, HOURLY)).then(({ result, error, isCancelled }) => {
-      // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
-      if (current !== generation.current || isCancelled) return;
+    void runQuery(buildBucketedQuery({ view, window: week, entityClauses: scope.own }, HOURLY)).then(
+      ({ result, error, isCancelled }) => {
+        // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
+        if (current !== generation.current || isCancelled) return;
 
-      if (result) {
-        setBuckets({ data: foldBucketPoints(result), isLoading: false, hasFailed: false });
-        return;
-      }
+        if (result) {
+          setBuckets({ data: foldBucketPoints(result), isLoading: false, hasFailed: false });
+          return;
+        }
 
-      report(error);
-      setBuckets({ data: null, isLoading: false, hasFailed: true });
-    });
-  }, [view, week, report, reset, runQuery]);
+        report(error);
+        setBuckets({ data: null, isLoading: false, hasFailed: true });
+      },
+    );
+  }, [view, scope, week, report, reset, runQuery]);
 
   const onPreviousWeek = useCallback(() => setWeekOffset((offset) => offset + 1), []);
   const onNextWeek = useCallback(() => setWeekOffset((offset) => Math.max(0, offset - 1)), []);

@@ -10,6 +10,7 @@ import {
   BreakdownTab,
   ComparedWindows,
   UsageMeasures,
+  UsageScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import {
@@ -25,6 +26,7 @@ import { RowModelContext, toPreviousMeasures, toRowModels } from '@/src/componen
 
 interface Params {
   view: UsageView;
+  scope: UsageScope;
   windows: ComparedWindows;
   tab: BreakdownTab;
   windowTotal: number | null;
@@ -53,6 +55,7 @@ export interface BreakdownDialogRows {
  */
 export const useBreakdownDialogRows = ({
   view,
+  scope,
   windows,
   tab,
   windowTotal,
@@ -91,7 +94,7 @@ export const useBreakdownDialogRows = ({
   const datasource = useMemo<IDatasource>(() => {
     const column = BREAKDOWN_TAB_COLUMN[tab];
     const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
-    const baseScope = { view, window: windows.current } as QueryScope;
+    const baseScope: QueryScope = { view, window: windows.current, entityClauses: scope.own };
 
     const readPreviousMeasures = async (rows: BreakdownRow[]): Promise<Map<string, UsageMeasures>> => {
       const keys = rows.filter((row) => !row.isFallbackLabel).map((row) => row.id);
@@ -100,7 +103,9 @@ export const useBreakdownDialogRows = ({
         return new Map();
       }
 
-      const { result, isCancelled } = await runQuery(buildTabKeysQuery({ view, window: windows.previous }, tab, keys));
+      const { result, isCancelled } = await runQuery(
+        buildTabKeysQuery({ ...baseScope, window: windows.previous }, tab, keys),
+      );
 
       // Without this a cancelled comparison would read as "the previous window has nothing", and the block
       // would render deltas that say every row is new.
@@ -175,7 +180,7 @@ export const useBreakdownDialogRows = ({
         }
       },
     };
-  }, [view, tab, windows, searchTerm, report, runQuery]);
+  }, [view, scope, tab, windows, searchTerm, report, runQuery]);
 
   return { datasource, datasourceKey, isLoadingBlock };
 };

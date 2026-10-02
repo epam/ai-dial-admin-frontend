@@ -60,6 +60,12 @@ export const formatDeploymentName = (raw: string): string => {
   }
 };
 
+/** What a view is called, in `View by` and over an entity dashboard's block. */
+export const VIEW_LABEL_KEY: Record<UsageView, AnalyticsUsageI18nKey> = {
+  [UsageView.Llm]: AnalyticsUsageI18nKey.ViewLlm,
+  [UsageView.Mcp]: AnalyticsUsageI18nKey.ViewMcp,
+};
+
 export const BREAKDOWN_TAB_LABEL_KEY: Record<BreakdownTab, AnalyticsUsageI18nKey> = {
   [BreakdownTab.Models]: AnalyticsUsageI18nKey.BreakdownTabModels,
   [BreakdownTab.Applications]: AnalyticsUsageI18nKey.BreakdownTabApplications,

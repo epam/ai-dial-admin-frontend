@@ -50,6 +50,13 @@ describe('UsageControls', () => {
     expect(compareField.value).toContain(AnalyticsUsageI18nKey.ComparePreviousPeriod);
   });
 
+  test('offers no View by where the page names no view, as an entity dashboard does', () => {
+    renderControls({ view: undefined, onViewChange: undefined });
+
+    expect(screen.queryByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeNull();
+    expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
+  });
+
   test('re-reads every window from the refresh control', async () => {
     const user = userEvent.setup();
     const onRefresh = vi.fn();

@@ -1,6 +1,16 @@
-import { BreakdownTab, TimeSeriesView, UsageView } from '@/src/components/Analytics/Usage/models';
+import {
+  BreakdownTab,
+  EntityBlock,
+  TimeSeriesView,
+  UsageScope,
+  UsageView,
+} from '@/src/components/Analytics/Usage/models';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const USAGE_ENTITY = 'dial_usage_log';
+
+/** The standalone page reads every row of its view. */
+export const PAGE_SCOPE: UsageScope = { own: [] };
 
 /**
  * Rows the card's breakdown states. Ten is the ranked head a reader can take in without scrolling
@@ -134,4 +144,15 @@ export const VIEW_TIME_SERIES_VIEWS: Record<UsageView, TimeSeriesView[]> = {
 export const VIEW_BREAKDOWN_TABS: Record<UsageView, BreakdownTab[]> = {
   [UsageView.Llm]: [BreakdownTab.Models, BreakdownTab.Applications, BreakdownTab.Projects],
   [UsageView.Mcp]: [BreakdownTab.McpServers, BreakdownTab.Tools, BreakdownTab.Applications, BreakdownTab.Projects],
+};
+
+/**
+ * The blocks an entity's dashboard renders, in order. Each leaves out the tab whose rows would be the
+ * entity alone: a model's `Models` tab is one row, the model itself.
+ */
+export const ENTITY_BLOCKS: Partial<Record<ApplicationRoute, EntityBlock[]>> = {
+  [ApplicationRoute.Models]: [{ view: UsageView.Llm, hiddenTab: BreakdownTab.Models }],
+  [ApplicationRoute.PlatformModels]: [{ view: UsageView.Llm, hiddenTab: BreakdownTab.Models }],
+  [ApplicationRoute.Toolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
+  [ApplicationRoute.AssetsToolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
 };

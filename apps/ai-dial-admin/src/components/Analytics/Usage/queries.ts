@@ -26,8 +26,8 @@ import { ChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 export interface QueryScope {
   view: UsageView;
   window: TimeRange;
-  entityFilter?: string | null;
-  projectFilter?: string | null;
+  /** The entity's clauses for the rows this request reads. */
+  entityClauses?: QueryFilterNode[];
 }
 
 const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
@@ -77,14 +77,8 @@ export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): Q
     { op: QueryOperator.Ge, args: [field('request_time'), timestampValue(scope.window.startDate)] },
     { op: QueryOperator.Lt, args: [field('request_time'), timestampValue(scope.window.endDate)] },
     ...extra,
+    ...(scope.entityClauses ?? []),
   ];
-
-  if (scope.entityFilter) {
-    clauses.push({ op: QueryOperator.Eq, args: [field('deployment'), value(scope.entityFilter)] });
-  }
-  if (scope.projectFilter) {
-    clauses.push({ op: QueryOperator.Eq, args: [field('project_id'), value(scope.projectFilter)] });
-  }
 
   return { op: QueryLogicalOperator.And, args: clauses };
 };

@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { PAGE_SCOPE } from '@/src/components/Analytics/Usage/constants';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
 import { StructuredQuery } from '@/src/models/analytics/query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -53,6 +54,7 @@ const renderRows = (overrides: Partial<Parameters<typeof useBreakdownDialogRows>
   renderHook(() =>
     useBreakdownDialogRows({
       view: UsageView.Llm,
+      scope: PAGE_SCOPE,
       windows: { current: WINDOW },
       tab: BreakdownTab.Models,
       windowTotal: 100,
@@ -196,6 +198,7 @@ describe('useBreakdownDialogRows', () => {
       ({ windowTotal }: { windowTotal: number | null }) =>
         useBreakdownDialogRows({
           view: UsageView.Llm,
+          scope: PAGE_SCOPE,
           windows,
           tab: BreakdownTab.Models,
           windowTotal,
