@@ -29,6 +29,7 @@ import {
   isFutureCell,
 } from '@/src/components/Analytics/Usage/utils/heatmap';
 import { formatWeekLabel } from '@/src/components/Analytics/Usage/utils/weeks';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import {
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
@@ -86,7 +87,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view }) => {
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
-  const isCostOffered = view === UsageView.Llm;
+  const isCostOffered = isPricedView(view);
   const activeMetric = isCostOffered ? metric : HeatmapMetric.Calls;
 
   const matrix = useMemo(

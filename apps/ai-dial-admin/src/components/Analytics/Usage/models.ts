@@ -4,6 +4,7 @@ import { TimeRange } from '@/src/models/time-range';
 export enum UsageView {
   Llm = 'llm',
   Mcp = 'mcp',
+  Routes = 'routes',
 }
 
 export enum ComparePeriod {
@@ -25,6 +26,15 @@ export enum BreakdownTab {
   Projects = 'projects',
   McpServers = 'mcp-servers',
   Tools = 'tools',
+  Owners = 'owners',
+  Paths = 'paths',
+  Callers = 'callers',
+}
+
+/** Which of the two route mechanisms a Routes view row was served by. */
+export enum RouteKind {
+  Application = 'application',
+  Global = 'global',
 }
 
 export enum HeatmapMetric {
@@ -119,6 +129,8 @@ export interface BreakdownRow {
   groupNames?: string[];
   /** How many there are altogether, which a capped list cannot say. */
   groupCount?: number | null;
+  /** The values of the tab's qualifier columns, in their order; set only on a qualified tab. */
+  qualifiers?: string[];
 }
 
 /**
@@ -189,4 +201,6 @@ export interface BreakdownRowModel {
   avgLatencyMs: number | null;
   /** Null in the MCP view, where a row carries no price at all. */
   spend: number | null;
+  /** Set only on the Routes view's tabs that state a row's kind. */
+  routeKind?: RouteKind;
 }

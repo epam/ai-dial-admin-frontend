@@ -59,6 +59,22 @@ describe('KpiRow', () => {
     expect(screen.queryByText(AnalyticsUsageI18nKey.KpiTotalSpend)).toBeNull();
   });
 
+  test('heads the Routes view with requests, callers, error rate and latency, and no money or tokens', () => {
+    renderRow({ view: UsageView.Routes, totals: loaded<UsageMeasures | null>(measures({ calls: 10 })) });
+
+    for (const key of [
+      AnalyticsUsageI18nKey.KpiRequests,
+      AnalyticsUsageI18nKey.KpiUniqueCallers,
+      AnalyticsUsageI18nKey.KpiErrorRate,
+      AnalyticsUsageI18nKey.KpiAvgLatency,
+    ]) {
+      expect(screen.getByText(key)).toBeTruthy();
+    }
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiTotalSpend)).toBeNull();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiTokens)).toBeNull();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.KpiCostPerMillionTokens)).toBeNull();
+  });
+
   test('abbreviates a headline figure and carries its unit beside it', () => {
     renderRow();
 

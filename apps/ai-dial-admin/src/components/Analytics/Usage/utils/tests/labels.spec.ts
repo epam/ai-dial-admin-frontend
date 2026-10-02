@@ -19,9 +19,16 @@ describe('getFallbackLabelKey', () => {
     expect(getFallbackLabelKey(BreakdownTab.Applications)).toBe(AnalyticsUsageI18nKey.DirectCall);
   });
 
-  test.each([BreakdownTab.Models, BreakdownTab.McpServers])('leaves %s to its own value', (tab) => {
-    expect(getFallbackLabelKey(tab)).toBeNull();
+  test('names a route called by no deployment a direct call', () => {
+    expect(getFallbackLabelKey(BreakdownTab.Callers)).toBe(AnalyticsUsageI18nKey.DirectCall);
   });
+
+  test.each([BreakdownTab.Models, BreakdownTab.McpServers, BreakdownTab.Owners, BreakdownTab.Paths])(
+    'leaves %s to its own value',
+    (tab) => {
+      expect(getFallbackLabelKey(tab)).toBeNull();
+    },
+  );
 });
 
 describe('getFallbackTooltipKey', () => {
@@ -34,6 +41,12 @@ describe('getFallbackTooltipKey', () => {
       AnalyticsUsageI18nKey.DirectCallMcpTooltip,
     );
     expect(getFallbackTooltipKey(BreakdownTab.Applications, UsageView.Llm)).toBe(
+      AnalyticsUsageI18nKey.DirectCallRouteTooltip,
+    );
+  });
+
+  test('explains a direct route call as one made by a key or user', () => {
+    expect(getFallbackTooltipKey(BreakdownTab.Callers, UsageView.Routes)).toBe(
       AnalyticsUsageI18nKey.DirectCallRouteTooltip,
     );
   });

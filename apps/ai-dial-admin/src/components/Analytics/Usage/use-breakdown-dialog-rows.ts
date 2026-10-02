@@ -3,7 +3,7 @@
 import { IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { useMemo, useRef, useState } from 'react';
 
-import { BREAKDOWN_TAB_COLUMN, BREAKDOWN_TAB_QUALIFIER } from '@/src/components/Analytics/Usage/constants';
+import { BREAKDOWN_TAB_COLUMN, BREAKDOWN_TAB_QUALIFIERS } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -33,6 +33,8 @@ interface Params {
   fallbackLabel?: string;
   fallbackTooltip?: string;
   readSubLabel?: RowModelContext['readSubLabel'];
+  readQualifierSubLabel?: RowModelContext['readQualifierSubLabel'];
+  readRouteKind?: RowModelContext['readRouteKind'];
   /** The dialog's own term, already settled; empty reads the whole dimension. */
   searchTerm: string;
   notice: LoadFailureNotice;
@@ -62,6 +64,8 @@ export const useBreakdownDialogRows = ({
   fallbackLabel,
   fallbackTooltip,
   readSubLabel,
+  readQualifierSubLabel,
+  readRouteKind,
   searchTerm,
   notice,
 }: Params): BreakdownDialogRows => {
@@ -81,8 +85,22 @@ export const useBreakdownDialogRows = ({
    * first — and the window total arrives after the rows do, so a dialog opened early was thrown
    * back to the top the moment the totals request landed.
    */
-  const presentation = useRef({ windowTotal, fallbackLabel, fallbackTooltip, readSubLabel });
-  presentation.current = { windowTotal, fallbackLabel, fallbackTooltip, readSubLabel };
+  const presentation = useRef({
+    windowTotal,
+    fallbackLabel,
+    fallbackTooltip,
+    readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
+  });
+  presentation.current = {
+    windowTotal,
+    fallbackLabel,
+    fallbackTooltip,
+    readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
+  };
 
   // The term is part of the key: a new one is a different list, so the grid drops the blocks it
   // holds and reads the first one again.
@@ -93,7 +111,7 @@ export const useBreakdownDialogRows = ({
 
   const datasource = useMemo<IDatasource>(() => {
     const column = BREAKDOWN_TAB_COLUMN[tab];
-    const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+    const qualifiers = BREAKDOWN_TAB_QUALIFIERS[tab];
     const baseScope: QueryScope = { view, window: windows.current, entityClauses: scope.own };
 
     const readPreviousMeasures = async (rows: BreakdownRow[]): Promise<Map<string, UsageMeasures>> => {
@@ -113,7 +131,7 @@ export const useBreakdownDialogRows = ({
         return new Map();
       }
 
-      return toPreviousMeasures(foldBreakdownRows(result, column, qualifier));
+      return toPreviousMeasures(foldBreakdownRows(result, column, qualifiers));
     };
 
     return {
@@ -144,7 +162,7 @@ export const useBreakdownDialogRows = ({
             return;
           }
 
-          const rows = foldBreakdownRows(result, column, qualifier);
+          const rows = foldBreakdownRows(result, column, qualifiers);
           const previousMeasures = await readPreviousMeasures(rows);
           const models: BreakdownRowModel[] = toRowModels(rows, {
             windowTotal: presentation.current.windowTotal,
@@ -159,6 +177,8 @@ export const useBreakdownDialogRows = ({
             // end of its own block, which is a position in the middle of the list.
             isFallbackPinnedLast: false,
             readSubLabel: presentation.current.readSubLabel,
+            readQualifierSubLabel: presentation.current.readQualifierSubLabel,
+            readRouteKind: presentation.current.readRouteKind,
           });
 
           // A block shorter than the one asked for is the end of the list; AG Grid needs that

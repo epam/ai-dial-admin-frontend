@@ -20,6 +20,7 @@ export const VIEW_KPI_METRICS: Record<UsageView, KpiMetric[]> = {
     KpiMetric.AvgLatency,
   ],
   [UsageView.Mcp]: [KpiMetric.Requests, KpiMetric.UniqueCallers, KpiMetric.ErrorRate, KpiMetric.AvgLatency],
+  [UsageView.Routes]: [KpiMetric.Requests, KpiMetric.UniqueCallers, KpiMetric.ErrorRate, KpiMetric.AvgLatency],
 };
 
 const tokensOf = (measures: UsageMeasures | null): number | null => {

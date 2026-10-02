@@ -10,7 +10,7 @@ import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/Dime
 import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import ShareCell from '@/src/components/Analytics/Usage/Breakdown/cells/ShareCell';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import { DIALOG_BLOCK_SIZE, SEARCH_DEBOUNCE_MS } from '@/src/components/Analytics/Usage/constants';
+import { DIALOG_BLOCK_SIZE, ROUTE_KIND_TABS, SEARCH_DEBOUNCE_MS } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -43,7 +43,10 @@ import {
   getFallbackLabelKey,
   getFallbackTooltipKey,
   isFallbackRowPinnedLast,
+  ROUTE_KIND_LABEL_KEY,
 } from '@/src/components/Analytics/Usage/utils/labels';
+import { getRouteKind, getRowRouteOwner } from '@/src/components/Analytics/Usage/utils/routes';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -153,6 +156,27 @@ const BreakdownTable: FC<Props> = ({
     [t],
   );
 
+  /**
+   * A route path's row is one path on one owner under one method; its sub-label names the last two.
+   * The owner is stated as the `Owners` tab states it, so the two tabs name one owner alike.
+   */
+  const readQualifierSubLabel = useMemo(
+    () => (tab === BreakdownTab.Paths ? ([owner, method]: string[]) => ({ text: `${method} · ${owner}` }) : void 0),
+    [tab],
+  );
+
+  const readRouteKind = useMemo(() => {
+    if (!ROUTE_KIND_TABS.includes(tab)) {
+      return void 0;
+    }
+
+    return (row: BreakdownRow) => {
+      const owner = getRowRouteOwner(tab, row);
+
+      return owner ? getRouteKind(owner) : null;
+    };
+  }, [tab]);
+
   const rowModels = useMemo<BreakdownRowModel[]>(() => {
     const previousData = previousRows.data ?? [];
 
@@ -165,6 +189,8 @@ const BreakdownTable: FC<Props> = ({
       isMissingPreviousEmpty: readMissingPreviousEmpty(previousData, rowLimit),
       isFallbackPinnedLast,
       readSubLabel,
+      readQualifierSubLabel,
+      readRouteKind,
     });
   }, [
     rows.data,
@@ -176,6 +202,8 @@ const BreakdownTable: FC<Props> = ({
     fallbackTooltip,
     isFallbackPinnedLast,
     readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
   ]);
 
   const { datasource, datasourceKey, isLoadingBlock } = useBreakdownDialogRows({
@@ -187,6 +215,8 @@ const BreakdownTable: FC<Props> = ({
     fallbackLabel,
     fallbackTooltip,
     readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
     searchTerm: settledTerm,
     notice,
   });
@@ -206,6 +236,19 @@ const BreakdownTable: FC<Props> = ({
         // The grid's tooltip covers the whole cell, info icon included; the cell shows the name itself.
         tooltipValueGetter: () => null,
       },
+      ...(ROUTE_KIND_TABS.includes(tab)
+        ? [
+            {
+              ...BREAKDOWN_COLUMN_BASE,
+              colId: 'routeKind',
+              headerName: t(AnalyticsUsageI18nKey.ColumnRouteKind),
+              // Text, not a badge colour: the kind is read, never inferred from a swatch.
+              valueGetter: ({ data }: { data?: BreakdownRowModel }) =>
+                data?.routeKind ? t(ROUTE_KIND_LABEL_KEY[data.routeKind]) : '',
+              width: 130,
+            } satisfies ColDef<BreakdownRowModel>,
+          ]
+        : []),
       {
         ...MEASURE_COLUMN_BASE,
         colId: 'share',
@@ -270,7 +313,7 @@ const BreakdownTable: FC<Props> = ({
       },
     ];
 
-    if (view === UsageView.Llm) {
+    if (isPricedView(view)) {
       columns.push({
         ...MEASURE_COLUMN_BASE,
         colId: 'cost',

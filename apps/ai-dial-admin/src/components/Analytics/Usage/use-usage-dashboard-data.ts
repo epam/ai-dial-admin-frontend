@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import {
   BREAKDOWN_TAB_COLUMN,
-  BREAKDOWN_TAB_QUALIFIER,
+  BREAKDOWN_TAB_QUALIFIERS,
   DONUT_SLICE_COUNT,
 } from '@/src/components/Analytics/Usage/constants';
 import {
@@ -257,7 +257,7 @@ export const useUsageDashboardData = ({
       setDonutRowsMetric(donutMetric);
       setDonutRows(
         result
-          ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab], BREAKDOWN_TAB_QUALIFIER[leadingTab]))
+          ? loaded(foldBreakdownRows(result, BREAKDOWN_TAB_COLUMN[leadingTab], BREAKDOWN_TAB_QUALIFIERS[leadingTab]))
           : reportFailed(error),
       );
     });
@@ -295,13 +295,13 @@ export const useUsageDashboardData = ({
     const generation = tabGeneration.current;
     const isCurrent = () => generation === tabGeneration.current;
     const column = BREAKDOWN_TAB_COLUMN[tab];
-    const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
+    const qualifiers = BREAKDOWN_TAB_QUALIFIERS[tab];
 
     setTabRows(pending);
     void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(
       ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
-        setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
+        setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifiers)) : reportFailed(error));
       },
     );
 
@@ -314,7 +314,7 @@ export const useUsageDashboardData = ({
     void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit)).then(
       ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
-        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifier)) : reportFailed(error));
+        setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifiers)) : reportFailed(error));
       },
     );
   }, [baseScope, windows, tab, tabLimit, refreshToken, runQuery, reportFailed]);
