@@ -1,9 +1,7 @@
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
-import { DialAppRoute } from '@/src/models/dial/route';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
-import { CORE_ROUTE_METHODS, REQUIRED_PARAMETER_META_KEYS } from './constants';
-import { CORE_ROUTE_NAME_PATTERN, getCoreRouteName } from './core-app-routes';
 import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
+import { CORE_ROUTE_METHODS, REQUIRED_PARAMETER_META_KEYS } from './constants';
 
 export interface AppRunnerValidationError {
   field: string;
@@ -11,9 +9,13 @@ export interface AppRunnerValidationError {
 }
 
 const DIAL_META_KEY = 'dial:meta';
+const DIAL_APP_RUNNER_ROUTES_KEY = 'dial:applicationTypeRoutes';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
 
 const validateParameters = (runner: DialAppRunnerResource): AppRunnerValidationError[] => {
   const properties: unknown = runner.properties;
@@ -34,52 +36,61 @@ const validateParameters = (runner: DialAppRunnerResource): AppRunnerValidationE
   });
 };
 
-const validateRoute = (route: DialAppRoute, seen: Set<string>): AppRunnerValidationError[] => {
+const validateCoreRoute = (name: string, route: unknown): AppRunnerValidationError[] => {
+  const field = `${DIAL_APP_RUNNER_ROUTES_KEY}.${name || '(unnamed)'}`;
   const errors: AppRunnerValidationError[] = [];
-  const name = getCoreRouteName(route);
-  const field = `dial:applicationTypeRoutes.${name || '(unnamed)'}`;
 
-  if (!CORE_ROUTE_NAME_PATTERN.test(name)) {
-    errors.push({ field, message: `Route name "${name}" must match ${CORE_ROUTE_NAME_PATTERN.source}` });
+  if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+    errors.push({ field, message: 'Route name must contain only letters, numbers, and underscores' });
   }
-  if (seen.has(name)) {
-    errors.push({ field, message: `Route name "${name}" is used more than once` });
+  if (!isRecord(route)) {
+    return [...errors, { field, message: 'Route must be an object' }];
   }
-  seen.add(name);
 
-  if (!Array.isArray(route.paths) || !route.paths.length) {
-    errors.push({ field, message: 'At least one path is required' });
+  const paths = route['dial:paths'];
+  if (!isStringArray(paths) || !paths.length) {
+    errors.push({ field, message: 'At least one dial:paths entry is required' });
   }
-  if (!Array.isArray(route.methods) || !route.methods.length) {
-    errors.push({ field, message: 'At least one method is required' });
+
+  const methods = route['dial:methods'];
+  if (!isStringArray(methods) || !methods.length) {
+    errors.push({ field, message: 'At least one dial:methods entry is required' });
+  } else {
+    const invalidMethods = methods.filter((method) => !CORE_ROUTE_METHODS.includes(method));
+    if (invalidMethods.length) {
+      errors.push({ field, message: `Unsupported method(s): ${invalidMethods.join(', ')}` });
+    }
   }
-  const methods = Array.isArray(route.methods) ? route.methods : [];
-  const invalidMethods = methods.filter((method) => !CORE_ROUTE_METHODS.includes(method));
-  if (invalidMethods.length) {
-    errors.push({ field, message: `Unsupported method(s): ${invalidMethods.join(', ')}` });
+
+  const upstreams = route['dial:upstreams'];
+  const response = route['dial:response'];
+  if (!Array.isArray(upstreams) && !isRecord(response)) {
+    errors.push({ field, message: 'Either dial:upstreams or dial:response is required' });
   }
-  const upstreams = Array.isArray(route.upstreams) ? route.upstreams : [];
-  if (!upstreams.length && !route.response) {
-    errors.push({ field, message: 'Either an upstream or a response is required' });
+  if (Array.isArray(upstreams) && upstreams.some((upstream) => !isRecord(upstream) || !upstream['dial:endpoint'])) {
+    errors.push({ field, message: 'Every dial:upstreams entry requires dial:endpoint' });
   }
-  if (upstreams.some((upstream) => !upstream?.endpoint)) {
-    errors.push({ field, message: 'Every upstream requires an endpoint' });
+  if (response != null && (!isRecord(response) || response['dial:status'] == null || response['dial:body'] == null)) {
+    errors.push({ field, message: 'A dial:response requires both dial:status and dial:body' });
   }
-  if (route.response && (route.response.status == null || route.response.body == null)) {
-    errors.push({ field, message: 'A response requires both a status and a body' });
-  }
+
   return errors;
 };
 
+const validateRoutes = (routes: unknown): AppRunnerValidationError[] => {
+  if (routes == null) {
+    return [];
+  }
+  if (!isRecord(routes)) {
+    return [{ field: DIAL_APP_RUNNER_ROUTES_KEY, message: 'Routes must be an object keyed by route name' }];
+  }
+  return Object.entries(routes).flatMap(([name, route]) => validateCoreRoute(name, route));
+};
+
 /**
- * Core performs no validation when writing an app-runner (its request body is stored verbatim), so
- * every meta-schema constraint this surface can violate is checked here instead. A violation must
- * block the save rather than reach Core, where it would be accepted and only surface later as an
- * `invalid` status on read.
- *
- * The raw JSON editor can hand this arbitrary parsed JSON, and it is the only save gate while that
- * editor is open. So every field is shape-checked before use: a wrong type must come back as a
- * validation error the user sees, never as a thrown `TypeError` that leaves the save button inert.
+ * Core stores the App Runner body verbatim, so the platform editor validates the raw Core-shaped
+ * schema before saving. In particular, JSON editor changes keep the keyed, `dial:`-prefixed route
+ * map instead of being converted to a form-only array.
  */
 export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValidationError[] => {
   const errors: AppRunnerValidationError[] = [];
@@ -95,21 +106,7 @@ export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValid
     errors.push({ field: '$id', message: `Id must not contain any of ${CORE_UNENCODABLE_ID_CHARS.join(' ')}` });
   }
 
-  const routes = runner['dial:applicationTypeRoutes'];
-  if (routes != null && !Array.isArray(routes)) {
-    // Core's own wire form is an object keyed by route name — the natural thing to paste into the raw
-    // editor, and the shape the converters exist to translate. Report it instead of iterating it.
-    errors.push({
-      field: 'dial:applicationTypeRoutes',
-      message: 'Routes must be a list; the name-keyed object form Core stores is not accepted here',
-    });
-  } else {
-    const seen = new Set<string>();
-    for (const route of routes ?? []) {
-      errors.push(...validateRoute(route ?? {}, seen));
-    }
-  }
-
+  errors.push(...validateRoutes(runner[DIAL_APP_RUNNER_ROUTES_KEY]));
   errors.push(...validateParameters(runner));
 
   return errors;

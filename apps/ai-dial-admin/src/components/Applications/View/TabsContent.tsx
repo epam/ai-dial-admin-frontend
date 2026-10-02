@@ -11,6 +11,7 @@ import { useCatalogProperties } from '@/src/components/CatalogProperties/use-cat
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
+import AssetApplicationAppRoutes from '@/src/components/Assets/ObjectAppRoutes/AssetApplicationAppRoutes';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
@@ -213,16 +214,25 @@ const TabsContent: FC<Props> = ({
           onChange={onChangeApplication}
         />
       )}
-      {activeTab === EntityViewTab.AppRoutes && (
-        <ApplicationAppRoutes
-          key={discardKey}
-          view={view}
-          roles={roles}
-          applicationRunners={applicationSchemes || []}
-          selectedEntity={selectedApplication}
-          onChangeEntity={onChangeApplication}
-        />
-      )}
+      {activeTab === EntityViewTab.AppRoutes &&
+        (view === ApplicationRoute.AssetsApplications ? (
+          <AssetApplicationAppRoutes
+            key={discardKey}
+            roles={roles}
+            applicationRunners={applicationSchemes || []}
+            selectedEntity={selectedApplication as DialApplicationResource}
+            onChangeEntity={onChangeApplication}
+          />
+        ) : (
+          <ApplicationAppRoutes
+            key={discardKey}
+            view={view}
+            roles={roles}
+            applicationRunners={applicationSchemes || []}
+            selectedEntity={selectedApplication}
+            onChangeEntity={onChangeApplication}
+          />
+        ))}
       {activeTab === EntityViewTab.Roles &&
         (view === ApplicationRoute.AssetsApplications ? (
           <AssetRoles

@@ -36,7 +36,7 @@ const AppRunnerCreateProperties: FC<Props> = ({ entity, names, isModal, onChange
       )}
       <SchemeProperties
         names={[]}
-        runner={entity}
+        runner={entity as unknown as DialApplicationScheme}
         isModal={isModal}
         idForbiddenChars={CORE_UNENCODABLE_ID_CHARS}
         onChangeRunner={(scheme: DialApplicationScheme) => onChangeEntity({ ...entity, ...scheme })}

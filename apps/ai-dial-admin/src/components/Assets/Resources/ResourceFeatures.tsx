@@ -6,7 +6,6 @@ import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asse
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';
-import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -32,7 +31,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   const { features, isLoading } = useAssetRunnerDetails(appRunner);
 
   const fullRunner = useMemo(() => {
-    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Platform) {
+    if (features) {
       return {
         ...appRunner,
         ...features,
@@ -41,12 +40,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
     return appRunner;
   }, [appRunner, features]);
 
-  const isFeaturesLoading = useMemo(() => {
-    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Platform) {
-      return isLoading;
-    }
-    return false;
-  }, [appRunner, isLoading]);
+  const isFeaturesLoading = isLoading && !!appRunner;
 
   const onSwitch = useCallback(
     (value: boolean, key: keyof DialApplicationResourceFeatures) => {

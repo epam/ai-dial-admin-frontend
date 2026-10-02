@@ -39,7 +39,7 @@ const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange })
         />
         <SchemeProperties
           names={[]}
-          runner={runner}
+          runner={runner as unknown as DialApplicationScheme}
           isImmutable
           view={ApplicationRoute.PlatformAppRunners}
           onChangeRunner={(scheme: DialApplicationScheme) =>
