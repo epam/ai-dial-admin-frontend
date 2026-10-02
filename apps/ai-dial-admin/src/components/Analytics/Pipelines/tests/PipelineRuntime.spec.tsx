@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntime';
+import { dlqItem, failuresRead } from '@/src/components/Analytics/Pipelines/Failures/tests/mock';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { Pipeline, PipelineKind, PipelineState, TriggerKind } from '@/src/models/analytics/pipeline';
 
@@ -32,8 +33,20 @@ const RAN: PipelineState = {
 
 const onReload = vi.fn();
 
+/**
+ * No failures read at all, which is what an aggregate pipeline and an unconfigured runner both look
+ * like. The failures card's own behaviour is covered in `PipelineFailuresCard.spec.tsx`.
+ */
 const renderRuntime = (state?: PipelineState) =>
-  render(<PipelineRuntime pipeline={pipeline(state)} onReload={onReload} />);
+  render(
+    <PipelineRuntime
+      pipeline={pipeline(state)}
+      failures={failuresRead()}
+      canDeadLetter={false}
+      isPaused={false}
+      onReload={onReload}
+    />,
+  );
 
 describe('PipelineRuntime', () => {
   beforeEach(() => {
@@ -136,15 +149,65 @@ describe('PipelineRuntime', () => {
     expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionState })).toBeTruthy();
   });
 
-  // A pipeline that has never failed says so by this group being absent, as one with no schedule does.
-  test('draws no failures group when nothing has failed', () => {
+  // A pipeline that has never failed says so by this card being absent, as one with no schedule does.
+  test('draws no failures card when nothing has failed and the kind dead-letters nothing', () => {
+    renderRuntime(RAN);
+
+    expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeNull();
+  });
+
+  // The registry's own group, which is a different thing from the card above and has to disappear on
+  // its own terms: a heading over an empty card reads as a fault.
+  test('draws no run-level failures group when the last run did not fail', () => {
     renderRuntime(RAN);
 
     expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.SectionFailures })).toBeNull();
   });
 
+  // The failures come from the other service, so the card follows that service and not `state` — a
+  // pipeline whose state was reset can still hold dead letters from before.
+  test('presents the failures card for a model-calling pipeline that has never run', () => {
+    render(
+      <PipelineRuntime
+        pipeline={pipeline({})}
+        failures={failuresRead({ items: [dlqItem()] })}
+        canDeadLetter
+        isPaused={false}
+        onReload={onReload}
+      />,
+    );
+
+    expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeTruthy();
+    // And the registry's own verdict stands beside it: the two services answer different questions.
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeTruthy();
+  });
+
+  // The screen the operator actually meets first: nothing has failed, so no heading over an empty card.
+  test('draws no failures card for a pipeline with no dead letters', () => {
+    render(
+      <PipelineRuntime
+        pipeline={pipeline({})}
+        failures={failuresRead()}
+        canDeadLetter
+        isPaused={false}
+        onReload={onReload}
+      />,
+    );
+
+    expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.FailuresTitle })).toBeNull();
+  });
+
   test('renders the actions its caller supplies in the control bar', () => {
-    render(<PipelineRuntime pipeline={pipeline(RAN)} onReload={onReload} actions={<button>Pause</button>} />);
+    render(
+      <PipelineRuntime
+        pipeline={pipeline(RAN)}
+        failures={failuresRead()}
+        canDeadLetter={false}
+        isPaused={false}
+        onReload={onReload}
+        actions={<button>Pause</button>}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: 'Pause' })).toBeTruthy();
   });

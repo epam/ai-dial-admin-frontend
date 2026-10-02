@@ -3,6 +3,16 @@
  * the declaration, the runner holds whether its enqueue is currently being driven.
  */
 
+/**
+ * What the console answers with instead of calling a runner it has no host for.
+ *
+ * An installation without a runner is a deployment choice, not a fault, so the two must be told apart by
+ * whoever presents the result: a failed read is worth an error and a retry, an absent service is worth
+ * nothing at all. It is carried in `errorHeader`, where the runner's own machine codes arrive, so the
+ * caller reads one field either way.
+ */
+export const RUNNER_NOT_CONFIGURED = 'runner_not_configured';
+
 /** Who paused a pipeline, which decides whether the pause can expire. */
 export enum PauseOrigin {
   /** A deliberate decision. It never expires and is lifted only by resuming. */
