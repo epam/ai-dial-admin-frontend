@@ -236,8 +236,12 @@ Every request an entity dashboard issues SHALL carry its view's clause, the wind
 | Models, Platform models | `deployment` = the model | the model's name |
 | Toolsets | `deployment` = the toolset | the toolset's name |
 | Assets toolsets | `deployment` = the toolset | `toolsets/` + the toolset's path, each segment URI-encoded |
-| Applications | own calls: `deployment` = the application; calls it made: `parent_deployment` = the application | the application's name |
+| Applications | own calls: `deployment` = the application; its call tree: `execution_path` contains the application | the application's name |
 | Assets applications | as Applications | `applications/` + the application's path, each segment URI-encoded |
+
+An application's call tree SHALL be every row whose `execution_path` — the chain of deployments the
+request passed through — contains the application, at any depth: the calls it made, and the calls
+the applications it called made in turn.
 
 An application's Routes view SHALL read its own route calls: `deployment` = the application,
 within the Routes view's rows.
@@ -254,21 +258,38 @@ within the Routes view's rows.
 - **WHEN** its entity dashboard issues a request
 - **THEN** the deployment it matches is `toolsets/` + the path with the space encoded as `%20`
 
+#### Scenario: A nested application's calls are in the tree
+
+- **GIVEN** application A called application B, and B called a model
+- **WHEN** A's entity dashboard reads its call tree
+- **THEN** B's model call is among the rows it reads
+
 ### Requirement: An application's figures rest on its own calls
 
 An application's LLM view SHALL compute `Requests`, `Unique callers`, `Error rate`, `Avg latency`,
-the time series and the heatmap from the calls made *to* the application, so one user request is one
-request however many model calls it fanned out into.
+the requests and latency plots and the heatmap from the calls made *to* the application, so one user
+request is one request however many model calls it fanned out into.
 
-`Total spend` SHALL be the sum of those calls' total price: the cost of each request together with
-every call it set off, nested applications included. A model call's own price is not summed here —
-it is part of the total already.
+Every money and token figure SHALL rest on one set of rows instead: the **priced model calls in the
+application's call tree** — the rows of its call tree that carry a price of their own.
 
-`Tokens` and `Cost per 1M tokens` SHALL be read from the application's direct model calls, and the
-`Tokens` card SHALL say so in its caption, because a model called through a nested application is
-not among them.
+- `Total spend` SHALL be the sum of their prices. It covers every model call the application caused,
+  however the application was invoked — as a chat, or by another application as an MCP server, whose
+  calls carry no total price.
+- `Tokens` SHALL be their prompt and completion tokens, with no caption.
+- `Cost per 1M tokens` SHALL divide `Total spend` by `Tokens`, both from those rows.
+- The spend plot SHALL plot their prices.
 
-The application's MCP view SHALL read the tool calls the application made.
+A figure that rests on those rows and has no buckets of them SHALL draw no sparkline, and the
+heatmap of an application's LLM view SHALL offer requests alone, rather than draw the application's
+own calls beside a card that counts its call tree.
+
+A breakdown tab of an application's LLM view that ranks the application's own calls — `Projects` —
+SHALL state no cost: those calls carry no price of their own, and the cost the cards state rests on
+the call tree.
+
+An application's MCP view SHALL read the tool calls in its call tree, leaving out calls made to the
+application itself as an MCP server: those are other callers' use of the application.
 
 #### Scenario: One request fanned out is one request
 
@@ -280,12 +301,42 @@ The application's MCP view SHALL read the tool calls the application made.
 
 - **GIVEN** the application called a nested application that called a model
 - **WHEN** the LLM view's KPI row renders
-- **THEN** `Total spend` includes the nested model call's price
+- **THEN** `Total spend` includes that model call's price
+- **AND** `Tokens` includes its tokens
+
+#### Scenario: Work done as an MCP server is spend too
+
+- **GIVEN** another application invoked the application as an MCP server, and the application called a model to answer
+- **WHEN** the application's LLM view renders its KPI row
+- **THEN** `Total spend` includes that model call's price
 
 #### Scenario: Tokens name what they count
 
 - **WHEN** an application's LLM view renders its KPI row
-- **THEN** the `Tokens` card's caption states that it counts direct model calls
+- **THEN** the `Tokens` card carries no caption, since it counts the whole call tree as its title says
+
+#### Scenario: The application's heatmap offers no cost
+
+- **WHEN** an application's LLM view renders its heatmap
+- **THEN** it offers requests alone
+
+#### Scenario: A tab of the application's own calls states no cost
+
+- **WHEN** an application's LLM view renders its `Projects` tab
+- **THEN** the breakdown has no cost column
+- **AND** its `Models` tab keeps one
+
+#### Scenario: Tools called by a nested application are the application's tools
+
+- **GIVEN** application A called application B, and B called a tool
+- **WHEN** A's MCP view renders
+- **THEN** that tool call is counted
+
+#### Scenario: Tools the application serves are not its tools
+
+- **GIVEN** another caller called a tool the application serves as an MCP server
+- **WHEN** the application's MCP view renders
+- **THEN** that tool call is not counted
 
 ### Requirement: An entity's view hides the tab that would rank its entity against itself
 
@@ -302,9 +353,9 @@ entity alone:
 
 The view's share donut and its split plot SHALL lead with its first offered tab.
 
-On an application's LLM view the `Models` tab and its donut SHALL rank the models the application
-called, and their shares SHALL be shares of the application's direct model calls rather than of its
-own calls — the two counts differ, and a share of the wrong total can exceed one hundred per cent.
+On an application's LLM view the `Models` tab and its donut SHALL rank the priced model calls in the
+application's call tree by model, their shares SHALL be shares of those calls rather than of the
+application's own calls, and the tab's cost column SHALL sum to the view's `Total spend`.
 
 #### Scenario: A model's view opens on its callers
 
@@ -317,6 +368,17 @@ own calls — the two counts differ, and a share of the wrong total can exceed o
 - **GIVEN** an application whose calls fanned out into many model calls
 - **WHEN** its LLM view's `Models` tab renders
 - **THEN** the shares of its rows sum to no more than one hundred per cent
+
+#### Scenario: A model reached through a nested application is ranked
+
+- **GIVEN** application A called application B, and B called model M
+- **WHEN** A's `Models` tab renders
+- **THEN** M is ranked among A's models
+
+#### Scenario: The models tab costs what the application spent
+
+- **WHEN** an application's `Models` tab renders every row of the window
+- **THEN** its rows' costs sum to the view's `Total spend`
 
 ### Requirement: The Dashboards page is unchanged by the entity dashboards
 

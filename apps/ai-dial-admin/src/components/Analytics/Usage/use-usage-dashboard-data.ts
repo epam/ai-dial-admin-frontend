@@ -54,6 +54,8 @@ interface Params {
   madeRows: RowScope | null;
   /** The tabs read from `madeRows` rather than from `rows`. */
   madeTabs: BreakdownTab[];
+  /** The spend plot reads `madeRows`, as the money cards do. */
+  isMoneyFromMade: boolean;
   windows: ComparedWindows;
   resolution: ChartResolution;
   tab: BreakdownTab;
@@ -93,6 +95,7 @@ export const useUsageDashboardData = ({
   rows,
   madeRows,
   madeTabs,
+  isMoneyFromMade,
   windows,
   resolution,
   tab,
@@ -155,6 +158,7 @@ export const useUsageDashboardData = ({
   );
   const donutBaseScope = scopeOf(leadingTab);
   const tabBaseScope = scopeOf(tab);
+  const spendBaseScope = isMoneyFromMade && madeScope ? madeScope : baseScope;
 
   /** A failure states itself once, in a notification; the widget it feeds falls back to empty. */
   const reportFailed = useCallback(
@@ -300,7 +304,7 @@ export const useUsageDashboardData = ({
     setSpendBuckets(pending);
     const spendResolution = getSpendResolution(windows.current);
 
-    void runQuery(buildSpendBucketedQuery({ ...baseScope, window: windows.current }, spendResolution)).then(
+    void runQuery(buildSpendBucketedQuery({ ...spendBaseScope, window: windows.current }, spendResolution)).then(
       ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
         setSpendBuckets(
@@ -310,7 +314,7 @@ export const useUsageDashboardData = ({
         );
       },
     );
-  }, [baseScope, windows, timeSeriesView, refreshToken, runQuery, reportFailed]);
+  }, [spendBaseScope, windows, timeSeriesView, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     tabGeneration.current += 1;

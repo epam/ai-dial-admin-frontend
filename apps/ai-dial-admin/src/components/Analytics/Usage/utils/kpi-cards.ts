@@ -78,16 +78,16 @@ interface FigureInput {
   previous: UsageMeasures | null;
   buckets: BucketPoint[];
   /**
-   * Where the token figures come from instead of `current` / `previous`. They draw no sparkline,
-   * having no buckets of those rows to draw it from.
+   * Where the money and token figures come from instead of `current` / `previous`. They draw no
+   * sparkline, having no buckets of those rows to draw it from.
    */
-  tokens?: ComparedMeasures;
+  made?: ComparedMeasures;
 }
 
-const TOKEN_METRICS = new Set([KpiMetric.Tokens, KpiMetric.CostPerMillionTokens]);
+const MADE_METRICS = new Set([KpiMetric.TotalSpend, KpiMetric.Tokens, KpiMetric.CostPerMillionTokens]);
 
-/** Whether a card reads the token source where a block hands one. */
-export const isTokenMetric = (metric: KpiMetric): boolean => TOKEN_METRICS.has(metric);
+/** Whether a card reads the `made` source where a block hands one. */
+export const isMadeMetric = (metric: KpiMetric): boolean => MADE_METRICS.has(metric);
 
 /**
  * A window with no calls reported nothing, so every card shows a dash rather than a zero.
@@ -100,10 +100,10 @@ export const isTokenMetric = (metric: KpiMetric): boolean => TOKEN_METRICS.has(m
 const measuresOfWindow = (measures: UsageMeasures | null): UsageMeasures | null =>
   measures && measures.calls > 0 ? measures : null;
 
-export const buildKpiFigures = ({ view, current, previous, buckets, tokens }: FigureInput): KpiFigure[] =>
+export const buildKpiFigures = ({ view, current, previous, buckets, made }: FigureInput): KpiFigure[] =>
   VIEW_KPI_METRICS[view].map((metric) => {
-    const source = tokens && isTokenMetric(metric) ? tokens : { current, previous };
-    const toSparkPoint = source === tokens ? void 0 : METRIC_SPARKLINE[metric];
+    const source = made && isMadeMetric(metric) ? made : { current, previous };
+    const toSparkPoint = source === made ? void 0 : METRIC_SPARKLINE[metric];
     const value: WindowedValue = {
       current: METRIC_VALUE[metric](measuresOfWindow(source.current)),
       previous: source.previous ? METRIC_VALUE[metric](measuresOfWindow(source.previous)) : null,

@@ -9,7 +9,6 @@ import {
   BreakdownTab,
   RequestState,
   RouteKind,
-  SpendColumn,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
@@ -42,7 +41,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   },
 }));
 
-const ALL_ROWS = { entityClauses: [], spendColumn: SpendColumn.Deployment };
+const ALL_ROWS = { entityClauses: [] };
 
 const loaded = <T,>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
 
@@ -262,6 +261,12 @@ describe('BreakdownTable cost column and tab description', () => {
 
   test('omits the cost column in the MCP view, where a row carries no price', () => {
     renderTable({ view: UsageView.Mcp, tab: BreakdownTab.McpServers });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
+  });
+
+  test('omits the cost column in a priced view when its block says so', () => {
+    renderTable({ isCostOffered: false });
 
     expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
   });

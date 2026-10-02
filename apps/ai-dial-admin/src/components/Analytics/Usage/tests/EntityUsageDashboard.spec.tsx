@@ -67,14 +67,20 @@ describe('EntityUsageDashboard', () => {
     }
   });
 
-  test('reads no calls the model made, having none', async () => {
+  test('reads no call tree for a model, having none', async () => {
     renderModel();
 
     await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
 
     for (const query of queriesSent()) {
-      expect(JSON.stringify(query.filter)).not.toContain('"name":"parent_deployment"');
+      expect(JSON.stringify(query.filter)).not.toContain('"name":"execution_path"');
     }
+  });
+
+  test('offers cost on its heatmap, whose hours count the calls its spend counts', async () => {
+    renderModel();
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
   });
 
   test('ranks its share chart by caller, never by the model it is scoped to', async () => {
@@ -153,7 +159,7 @@ describe('EntityUsageDashboard on an application', () => {
     ]);
   });
 
-  test('switches to the MCP view, reading the tool calls the application made', async () => {
+  test('switches to the MCP view, reading the tool calls in its call tree', async () => {
     const user = userEvent.setup();
     renderApplication();
 
@@ -163,23 +169,46 @@ describe('EntityUsageDashboard on an application', () => {
 
     await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     for (const query of queriesSent()) {
-      expect(JSON.stringify(query.filter)).toContain('"name":"parent_deployment"');
+      expect(JSON.stringify(query.filter)).toContain('"name":"execution_path"');
     }
   });
 
-  test('reads its own calls with their total price, and the calls it made with their own', async () => {
+  test('reads its own calls and the priced model calls in its tree, and never a total price', async () => {
     renderApplication();
 
     await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
     const sent = queriesSent().map((query) => JSON.stringify(query));
 
-    expect(sent.some((query) => query.includes('total_price') && query.includes('"name":"deployment"'))).toBe(true);
-    expect(sent.some((query) => query.includes('"name":"parent_deployment"'))).toBe(true);
+    expect(
+      sent.some((query) => query.includes('"name":"execution_path"') && query.includes('"name":"deployment_price"')),
+    ).toBe(true);
+    expect(sent.some((query) => !query.includes('"name":"execution_path"'))).toBe(true);
+    expect(sent.some((query) => query.includes('total_price'))).toBe(false);
   });
 
-  test('says its token card counts direct model calls', async () => {
+  test('plots spend from the priced model calls in its tree, as its spend card counts', async () => {
+    const user = userEvent.setup();
     renderApplication();
 
-    expect(await screen.findByText(AnalyticsUsageI18nKey.KpiTokensDirectCalls)).toBeTruthy();
+    await user.click(await screen.findByText(AnalyticsUsageI18nKey.TimeSeriesTabCost));
+
+    await waitFor(() =>
+      expect(
+        queriesSent().some(
+          (query) =>
+            query.select?.length === 2 &&
+            query.group_by?.join() === 'bucket' &&
+            JSON.stringify(query.filter).includes('"name":"execution_path"'),
+        ),
+      ).toBe(true),
+    );
+  });
+
+  test('offers no cost on its heatmap, whose hours count its own calls', async () => {
+    renderApplication();
+
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
 });

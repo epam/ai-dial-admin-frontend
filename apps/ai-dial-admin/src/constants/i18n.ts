@@ -3226,7 +3226,6 @@ export enum AnalyticsUsageI18nKey {
   KpiTotalSpend = 'AnalyticsUsage.KpiTotalSpend',
   KpiRequests = 'AnalyticsUsage.KpiRequests',
   KpiTokens = 'AnalyticsUsage.KpiTokens',
-  KpiTokensDirectCalls = 'AnalyticsUsage.KpiTokensDirectCalls',
   KpiCostPerMillionTokens = 'AnalyticsUsage.KpiCostPerMillionTokens',
   KpiUniqueCallers = 'AnalyticsUsage.KpiUniqueCallers',
   KpiErrorRate = 'AnalyticsUsage.KpiErrorRate',

@@ -3088,7 +3088,6 @@ export default {
     KpiTotalSpend: 'Total spend',
     KpiRequests: 'Requests',
     KpiTokens: 'Tokens',
-    KpiTokensDirectCalls: 'Direct model calls',
     KpiCostPerMillionTokens: 'Cost per 1M tokens',
     KpiUniqueCallers: 'Unique callers',
     KpiErrorRate: 'Error rate',

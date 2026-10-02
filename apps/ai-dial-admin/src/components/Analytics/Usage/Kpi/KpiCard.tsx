@@ -80,8 +80,6 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed }) =>
 
       {renderFigure()}
 
-      {card.caption && <span className="dial-tiny-text text-secondary">{card.caption}</span>}
-
       {card.footnote && <span className="mt-auto dial-tiny-text text-secondary">{card.footnote}</span>}
     </div>
   );

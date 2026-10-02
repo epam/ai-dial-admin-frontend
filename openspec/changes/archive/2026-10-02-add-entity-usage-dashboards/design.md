@@ -100,6 +100,9 @@ leading tab with a block input.
 
 ### D4. An application's spend and token figures
 
+*Superseded by `2026-10-02-count-application-usage-by-call-tree`: an application's money, tokens, `Models` tab and
+MCP view read its call tree (`execution_path`), not `parent_deployment` and `total_price`.*
+
 `commonMeasures` gains a `spendColumn` input: `deployment_price` by default, `total_price` for a
 block whose totals read `own` rows of an application — those rows carry no `deployment_price` and
 a `total_price` covering the tree. Tokens and cost per 1M come from a second totals request over

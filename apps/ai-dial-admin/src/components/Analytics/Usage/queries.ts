@@ -13,7 +13,7 @@ import {
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
 } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, SpendColumn, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import {
   QueryExpr,
@@ -35,8 +35,6 @@ export interface QueryScope {
   window: TimeRange;
   /** The entity's clauses for the rows this request reads. */
   entityClauses?: QueryFilterNode[];
-  /** Absent: each row's own price. */
-  spendColumn?: SpendColumn;
 }
 
 const field = (name: string): QueryExpr => ({ type: QueryExprType.Field, name });
@@ -235,7 +233,7 @@ const pricedOnly = (column: string): QueryExpr =>
  * no comparison in expression position, but `success` is already a boolean, so `if` takes it
  * directly.
  */
-const commonMeasures = (view: UsageView, spendColumn = SpendColumn.Deployment) => {
+const commonMeasures = (view: UsageView) => {
   const measures = [
     { expr: fn('count', []), as: CALLS_ALIAS },
     /*
@@ -275,7 +273,7 @@ const commonMeasures = (view: UsageView, spendColumn = SpendColumn.Deployment) =
     // rows it was meant to drop, which fill it.
     return [
       ...measures,
-      { expr: fn('sum', [field(spendColumn)]), as: SPEND_ALIAS },
+      { expr: fn('sum', [field('deployment_price')]), as: SPEND_ALIAS },
       { expr: fn('sum', [pricedOnly('prompt_tokens')]), as: PROMPT_TOKENS_ALIAS },
       { expr: fn('sum', [pricedOnly('completion_tokens')]), as: COMPLETION_TOKENS_ALIAS },
     ];
@@ -322,7 +320,7 @@ export const buildBucketedQuery = (scope: QueryScope, resolution: ChartResolutio
       ]),
       as: BUCKET_ALIAS,
     },
-    ...commonMeasures(scope.view, scope.spendColumn),
+    ...commonMeasures(scope.view),
     ...latencyPercentiles(),
   ],
   group_by: [BUCKET_ALIAS],
@@ -338,7 +336,7 @@ export const buildTotalsQuery = (scope: QueryScope): StructuredQuery => ({
   entity: USAGE_ENTITY,
   mode: QueryMode.Aggregate,
   filter: buildFilter(scope),
-  select: commonMeasures(scope.view, scope.spendColumn),
+  select: commonMeasures(scope.view),
 });
 
 /**
@@ -413,7 +411,7 @@ export const buildTabQuery = (
     filter: buildFilter(scope, shape.rowClauses ?? []),
     select: [
       ...columns.map(selectColumn),
-      ...commonMeasures(scope.view, scope.spendColumn),
+      ...commonMeasures(scope.view),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
     ],
     group_by: columns,
@@ -470,7 +468,7 @@ export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: st
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, keyClauses),
-    select: [...columns.map(selectColumn), ...commonMeasures(scope.view, scope.spendColumn)],
+    select: [...columns.map(selectColumn), ...commonMeasures(scope.view)],
     group_by: columns,
     sort: columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
     page: {
@@ -499,7 +497,7 @@ export const buildSpendBucketedQuery = (scope: QueryScope, resolution: ChartReso
       ]),
       as: BUCKET_ALIAS,
     },
-    { expr: fn('sum', [field(scope.spendColumn ?? SpendColumn.Deployment)]), as: SPEND_ALIAS },
+    { expr: fn('sum', [field('deployment_price')]), as: SPEND_ALIAS },
   ],
   group_by: [BUCKET_ALIAS],
   sort: [{ field: BUCKET_ALIAS, dir: QuerySortDirection.Asc }],

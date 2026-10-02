@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { BreakdownTab, SpendColumn, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   getBlockTabs,
   getEntityBlocks,
@@ -78,27 +78,24 @@ describe('hasDeclaredRoutes', () => {
   });
 });
 
+const TOOLS = [{ op: 'in', args: [] }] as unknown as QueryFilterNode[];
+
 describe('resolveBlockRows', () => {
   const [llm, mcp] = getEntityBlocks(ApplicationRoute.Applications);
+  const appScope = { own: OWN, made: MADE, tools: TOOLS };
 
-  test("reads an application's own figures from its own calls, with spend over the whole tree", () => {
-    const { rows, madeRows } = resolveBlockRows({ own: OWN, made: MADE }, llm);
-
-    expect(rows).toEqual({ entityClauses: OWN, spendColumn: SpendColumn.Total });
-    expect(madeRows).toEqual({ entityClauses: MADE, spendColumn: SpendColumn.Deployment });
-  });
-
-  test("reads an application's MCP block from the tool calls it made, and nothing else", () => {
-    expect(resolveBlockRows({ own: OWN, made: MADE }, mcp)).toEqual({
-      rows: { entityClauses: MADE, spendColumn: SpendColumn.Deployment },
-      madeRows: null,
+  test("reads an application's own figures from its own calls, and its money from its call tree", () => {
+    expect(resolveBlockRows(appScope, llm)).toEqual({
+      rows: { entityClauses: OWN },
+      madeRows: { entityClauses: MADE },
     });
   });
 
-  test('reads one set of rows where the block reads nothing from the calls made', () => {
-    expect(resolveBlockRows({ own: OWN })).toEqual({
-      rows: { entityClauses: OWN, spendColumn: SpendColumn.Deployment },
-      madeRows: null,
-    });
+  test("reads an application's MCP block from the tool calls in its tree, and nothing else", () => {
+    expect(resolveBlockRows(appScope, mcp)).toEqual({ rows: { entityClauses: TOOLS }, madeRows: null });
+  });
+
+  test('reads one set of rows where the block reads nothing from the tree', () => {
+    expect(resolveBlockRows({ own: OWN })).toEqual({ rows: { entityClauses: OWN }, madeRows: null });
   });
 });

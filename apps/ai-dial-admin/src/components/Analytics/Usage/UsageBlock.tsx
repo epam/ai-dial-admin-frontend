@@ -30,8 +30,7 @@ import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-fai
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
 import { UsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
 import { resolveBlockRows } from '@/src/components/Analytics/Usage/utils/entity-blocks';
-import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 
 const NO_MADE_TABS: BreakdownTab[] = [];
 
@@ -65,7 +64,6 @@ const UsageBlock: FC<Props> = ({
   notice,
   onRefreshingChange,
 }) => {
-  const t = useI18n();
   const leadingTab = tabs[0];
   const madeTabs = reads?.madeTabs ?? NO_MADE_TABS;
   const { rows, madeRows } = useMemo(() => resolveBlockRows(scope, reads), [scope, reads]);
@@ -120,6 +118,7 @@ const UsageBlock: FC<Props> = ({
     rows,
     madeRows,
     madeTabs,
+    isMoneyFromMade: Boolean(reads?.isMoneyFromMade),
     windows,
     resolution,
     tab,
@@ -144,10 +143,10 @@ const UsageBlock: FC<Props> = ({
   const totalsOf = (of: BreakdownTab) => (isMadeTab(of) ? madeTotals : totals);
   const donutTotals = totalsOf(leadingTab).data;
   const tabTotals = totalsOf(tab).data;
-  const hasMadeTokens = Boolean(reads?.hasMadeTokens && madeRows);
-  const tokenTotals = useMemo(
-    () => (hasMadeTokens ? { current: madeTotals, previous: previousMadeTotals } : void 0),
-    [hasMadeTokens, madeTotals, previousMadeTotals],
+  const isMoneyFromMade = Boolean(reads?.isMoneyFromMade && madeRows);
+  const moneyTotals = useMemo(
+    () => (isMoneyFromMade ? { current: madeTotals, previous: previousMadeTotals } : void 0),
+    [isMoneyFromMade, madeTotals, previousMadeTotals],
   );
 
   const onTabChange = useCallback((next: BreakdownTab) => {
@@ -173,8 +172,7 @@ const UsageBlock: FC<Props> = ({
         previousTotals={previousTotals}
         buckets={buckets}
         compare={compare}
-        tokenTotals={tokenTotals}
-        tokenCaption={tokenTotals ? t(AnalyticsUsageI18nKey.KpiTokensDirectCalls) : void 0}
+        madeTotals={moneyTotals}
       />
 
       <div className="flex shrink-0 flex-wrap items-stretch gap-3">
@@ -211,7 +209,9 @@ const UsageBlock: FC<Props> = ({
         />
       </div>
 
-      <ActivityHeatmap heatmap={heatmap} view={view} />
+      {/* Its hourly response is over the entity's own calls; a block counting money on its call tree
+          offers no cost there rather than paint a second basis beside the cards. */}
+      <ActivityHeatmap heatmap={heatmap} view={view} isCostOffered={isPricedView(view) && !isMoneyFromMade} />
 
       <BreakdownTable
         view={view}
@@ -229,6 +229,9 @@ const UsageBlock: FC<Props> = ({
         onHideAll={onHideAll}
         onOpenRow={setSelectedRow}
         notice={notice}
+        // An application's own calls carry no price of their own, so where its money is read from its
+        // call tree, a tab ranking its own calls has no cost to state.
+        isCostOffered={isPricedView(view) && (!isMoneyFromMade || isMadeTab(tab))}
       />
 
       <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />

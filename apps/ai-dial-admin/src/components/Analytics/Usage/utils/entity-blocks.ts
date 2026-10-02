@@ -1,12 +1,5 @@
 import { ENTITY_BLOCKS, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
-import {
-  BlockReads,
-  BreakdownTab,
-  EntityBlock,
-  RowScope,
-  SpendColumn,
-  UsageScope,
-} from '@/src/components/Analytics/Usage/models';
+import { BlockReads, BreakdownTab, EntityBlock, RowScope, UsageScope } from '@/src/components/Analytics/Usage/models';
 import { ApplicationRoute } from '@/src/types/routes';
 
 /** Whether an entity declares routes: a list on an admin application, a map on an asset one. */
@@ -40,18 +33,14 @@ export interface BlockRows {
 
 /** Resolves a scope into the rows each of a block's requests carries. */
 export const resolveBlockRows = (scope: UsageScope, reads: BlockReads = {}): BlockRows => {
-  const madeRows: RowScope | null = scope.made
-    ? { entityClauses: scope.made, spendColumn: SpendColumn.Deployment }
-    : null;
-
-  if (reads.isMadeOnly && madeRows) {
-    return { rows: madeRows, madeRows: null };
+  if (reads.isToolsOnly && scope.tools) {
+    return { rows: { entityClauses: scope.tools }, madeRows: null };
   }
 
-  const isMadeRead = Boolean(reads.madeTabs?.length || reads.hasMadeTokens);
+  const isMadeRead = Boolean(reads.madeTabs?.length || reads.isMoneyFromMade);
 
   return {
-    rows: { entityClauses: scope.own, spendColumn: reads.ownSpendColumn ?? SpendColumn.Deployment },
-    madeRows: isMadeRead ? madeRows : null,
+    rows: { entityClauses: scope.own },
+    madeRows: isMadeRead && scope.made ? { entityClauses: scope.made } : null,
   };
 };

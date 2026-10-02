@@ -45,7 +45,7 @@ const WINDOWS = { current: { startDate: new Date('2026-01-01'), endDate: new Dat
 const NOTICE = { report: vi.fn(), reset: vi.fn() };
 
 const isTotals = (query: StructuredQuery) => !query.group_by?.length;
-const isMade = (query: StructuredQuery) => JSON.stringify(query.filter).includes('"name":"parent_deployment"');
+const isMade = (query: StructuredQuery) => JSON.stringify(query.filter).includes('"name":"execution_path"');
 
 const onTabChangeOfLastRender = () => (breakdownPropsSpy.mock.lastCall?.[0] as BreakdownProps).onTabChange;
 
@@ -100,5 +100,16 @@ describe("UsageBlock on an application's LLM view", () => {
 
     await waitFor(() => expectBreakdownTotal(BreakdownTab.Projects, OWN_CALLS));
     expectDonutTotal(MADE_CALLS);
+  });
+
+  test('states cost on the Models tab, read from its call tree, and none on its own-call Projects tab', async () => {
+    renderApplicationLlm();
+    await waitFor(() => expectBreakdownTotal(BreakdownTab.Models, MADE_CALLS));
+    expect(breakdownPropsSpy).toHaveBeenLastCalledWith(expect.objectContaining({ isCostOffered: true }));
+
+    act(() => onTabChangeOfLastRender()(BreakdownTab.Projects));
+
+    await waitFor(() => expectBreakdownTotal(BreakdownTab.Projects, OWN_CALLS));
+    expect(breakdownPropsSpy).toHaveBeenLastCalledWith(expect.objectContaining({ isCostOffered: false }));
   });
 });

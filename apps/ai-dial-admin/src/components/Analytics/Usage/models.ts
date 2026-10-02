@@ -54,37 +54,28 @@ export enum KpiMetric {
 
 /**
  * Which rows a block reads beyond its view and window. `own` is the entity's own rows — calls made
- * to it; `made` is the calls it made, where a figure reads those instead. The page has neither.
+ * to it. An application also has a call tree, read two ways: `made` is the priced model calls in it,
+ * `tools` the tool calls in it that the application does not serve itself. The page has none.
  */
 export interface UsageScope {
   own: QueryFilterNode[];
   made?: QueryFilterNode[];
+  tools?: QueryFilterNode[];
 }
 
-/** Which column a request sums spend from. */
-export enum SpendColumn {
-  /** The price of the row's own call. */
-  Deployment = 'deployment_price',
-  /** The price of the row's call together with every call it set off. */
-  Total = 'total_price',
-}
-
-/** The rows one request reads beyond its view and window, and the column its spend is summed from. */
+/** The rows one request reads beyond its view and window. */
 export interface RowScope {
   entityClauses: QueryFilterNode[];
-  spendColumn: SpendColumn;
 }
 
 /** Where a block reads each of its figures from. The page reads every row, as an empty scope. */
 export interface BlockReads {
-  /** Read every figure from the calls the entity made, rather than from the calls made to it. */
-  isMadeOnly?: boolean;
-  /** Tabs ranked from the calls the entity made. */
+  /** Read every figure from the tool calls in the entity's call tree. */
+  isToolsOnly?: boolean;
+  /** Tabs ranked from the priced model calls in the entity's call tree. */
   madeTabs?: BreakdownTab[];
-  /** Tokens and cost per 1M come from the calls the entity made, with a caption saying so. */
-  hasMadeTokens?: boolean;
-  /** The column spend on the entity's own rows is summed from. */
-  ownSpendColumn?: SpendColumn;
+  /** Spend, tokens, cost per 1M and the spend plot come from those calls too. */
+  isMoneyFromMade?: boolean;
 }
 
 /** One block of an entity dashboard; `ENTITY_BLOCKS` says why a tab is hidden. */
@@ -209,8 +200,6 @@ export interface KpiCardModel {
   /** The previous window held nothing and this one does: a change with nothing to divide by. */
   isNew: boolean;
   footnote?: string;
-  /** What the figure counts, where the title alone would overstate it. */
-  caption?: string;
   sparkline: number[];
 }
 

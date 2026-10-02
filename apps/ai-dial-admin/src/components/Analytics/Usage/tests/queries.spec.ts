@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { BUCKET_ROW_LIMIT, USAGE_ENTITY } from '@/src/components/Analytics/Usage/constants';
-import { BreakdownTab, SpendColumn, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   BUCKET_ALIAS,
   CALLERS_ALIAS,
@@ -541,17 +541,14 @@ describe('the Routes view dimensions', () => {
 describe('the spend column', () => {
   const spendOf = (query: StructuredQuery) => (query.select ?? []).find((entry) => entry.as === SPEND_ALIAS)?.expr;
 
-  test("sums a row's own price unless the request asks for another column", () => {
-    expect(spendOf(buildTotalsQuery(scope()))).toMatchObject({ args: [{ name: 'deployment_price' }] });
-  });
-
-  test("sums the whole tree's price where a request reads an application's own calls", () => {
-    const tree = scope({ spendColumn: SpendColumn.Total });
-
-    expect(spendOf(buildTotalsQuery(tree))).toMatchObject({ args: [{ name: 'total_price' }] });
-    expect(spendOf(buildTabQuery(tree, BreakdownTab.Projects, 10))).toMatchObject({ args: [{ name: 'total_price' }] });
-    expect(spendOf(buildSpendBucketedQuery(tree, { value: 1, unit: 'd' }))).toMatchObject({
-      args: [{ name: 'total_price' }],
-    });
+  test("sums each row's own price on every request that carries spend, never a row's total", () => {
+    for (const query of [
+      buildTotalsQuery(scope()),
+      buildTabQuery(scope(), BreakdownTab.Projects, 10),
+      buildSpendBucketedQuery(scope(), { value: 1, unit: 'd' }),
+    ]) {
+      expect(spendOf(query)).toMatchObject({ args: [{ name: 'deployment_price' }] });
+      expect(JSON.stringify(query)).not.toContain('total_price');
+    }
   });
 });

@@ -1,7 +1,6 @@
 import {
   BreakdownTab,
   EntityBlock,
-  SpendColumn,
   TimeSeriesView,
   UsageScope,
   UsageView,
@@ -168,22 +167,22 @@ export const VIEW_BREAKDOWN_TABS: Record<UsageView, BreakdownTab[]> = {
 };
 
 /**
- * An application is read two ways. Its own rows are the calls users made to it: one row per request,
- * carrying the cost of everything the request set off in `total_price` and no price of its own. The
- * calls it made — to models, to tools — are separate rows naming it as their parent, and they are
- * what its `Models` tab and its token figures count. Counting requests over those instead would
- * count each user request once per model call it fanned out into.
+ * An application is read two ways. Its own rows are the calls made to it, one row per request, and
+ * they are what its request, caller, error and latency figures count. Its money and tokens are the
+ * priced model calls in its call tree — however deep, and however it was invoked — and they are what
+ * its `Models` tab ranks. Counting requests over those instead would count each user request once
+ * per model call it fanned out into; summing the total price of its own rows missed the work it did
+ * when another application invoked it as an MCP server, whose rows carry no total.
  */
 const APPLICATION_BLOCKS: EntityBlock[] = [
   {
     view: UsageView.Llm,
     hiddenTab: BreakdownTab.Applications,
     madeTabs: [BreakdownTab.Models],
-    hasMadeTokens: true,
-    ownSpendColumn: SpendColumn.Total,
+    isMoneyFromMade: true,
   },
-  // An application's own rows are never tool calls: what it did with tools is the calls it made.
-  { view: UsageView.Mcp, hiddenTab: BreakdownTab.Applications, isMadeOnly: true },
+  // An application's own rows are never tool calls: what it did with tools is the calls in its tree.
+  { view: UsageView.Mcp, hiddenTab: BreakdownTab.Applications, isToolsOnly: true },
   { view: UsageView.Routes, hiddenTab: BreakdownTab.Owners, isRoutesOnly: true },
 ];
 
