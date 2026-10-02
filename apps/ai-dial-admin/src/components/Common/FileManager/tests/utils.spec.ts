@@ -8,7 +8,9 @@ import {
   createEmptyFile,
   findFolderByPath,
   getBulkActionsToolbarOptions,
+  getDestinationFolderPopupOptions,
   getEmptyFile,
+  getValidationMessages,
   isItemNameValid,
   validateCreateFolder,
 } from '../utils';
@@ -46,6 +48,21 @@ describe('FileManager', () => {
       expect(uploadFileItem.name).toBe(fileName);
       expect(uploadFileItem.fileContent.name).toBe(emptyFile.name);
       expect(uploadFileItem.fileContent.type).toBe(emptyFile.type);
+    });
+  });
+
+  describe('getValidationMessages', () => {
+    test('returns the dot message without the non-blocking warning prefix', () => {
+      const messages = getValidationMessages(translate);
+
+      expect(messages.hiddenItemWarning).toBe(FileManagerI18nKey.CreateFolderValidateFirstSymbol);
+      expect(messages.hiddenItemWarning.startsWith('warning__')).toBe(false);
+    });
+
+    test('passes the same validation messages to the destination folder popup', () => {
+      const options = getDestinationFolderPopupOptions(ApplicationRoute.Files, translate, vi.fn());
+
+      expect(options.folderCreationValidationMessages).toEqual(getValidationMessages(translate));
     });
   });
 
