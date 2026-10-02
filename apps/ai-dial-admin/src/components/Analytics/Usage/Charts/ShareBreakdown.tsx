@@ -25,6 +25,7 @@ import {
   getSliceSpend,
 } from '@/src/components/Analytics/Usage/utils/donut';
 import { formatGroupedMoney, formatGroupedNumber, formatPercent } from '@/src/components/Analytics/Usage/utils/format';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY, getFallbackLabelKey } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -82,7 +83,7 @@ const ShareBreakdown: FC<Props> = ({
 
   const otherLabel = t(AnalyticsUsageI18nKey.DonutOther);
   const fallbackKey = getFallbackLabelKey(tab);
-  const hasCostMetric = view === UsageView.Llm;
+  const hasCostMetric = isPricedView(view);
 
   const isCostMetric = renderedMetric === DonutMetric.Cost;
   const windowTotal = isCostMetric ? windowTotalSpend : windowTotalCalls;
@@ -167,7 +168,9 @@ const ShareBreakdown: FC<Props> = ({
   const isEmptyWindow = !rows.isLoading && (rows.hasFailed || cardSlices.length === 0);
   const centerValue = windowTotal == null ? null : formatMetricValue(windowTotal, renderedMetric);
   const centerCaption = t(isCostMetric ? AnalyticsUsageI18nKey.DonutTotalCost : AnalyticsUsageI18nKey.DonutTotal);
-  const countSubtitleKey = hasCostMetric ? AnalyticsUsageI18nKey.DonutSubtitle : AnalyticsUsageI18nKey.DonutSubtitleMcp;
+  // Only the MCP view counts tool calls; every other view's ring splits plain calls.
+  const countSubtitleKey =
+    view === UsageView.Mcp ? AnalyticsUsageI18nKey.DonutSubtitleMcp : AnalyticsUsageI18nKey.DonutSubtitle;
   const subtitleKey = isCostMetric ? AnalyticsUsageI18nKey.DonutSubtitleCost : countSubtitleKey;
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, {
     dimension: t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]),

@@ -1,14 +1,20 @@
 import {
   BREAKDOWN_TAB_COLUMN,
-  BREAKDOWN_TAB_QUALIFIER,
+  BREAKDOWN_TAB_QUALIFIERS,
+  DEPLOYMENT_ROUTE_SEGMENT,
+  LLM_EVENT_KINDS,
+  MCP_EVENT_KIND,
   MCP_TOOL_CALL_METHOD,
   QUERY_ROW_LIMIT,
+  ROUTE_EVENT_KIND,
+  ROUTE_OWNER_COLUMN,
+  ROUTE_PATH_COLUMN,
   ROW_KEY_SEPARATOR,
   BUCKET_ROW_LIMIT,
   USAGE_ENTITY,
-  USAGE_VIEW_EVENT_KINDS,
 } from '@/src/components/Analytics/Usage/constants';
 import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import {
   QueryExpr,
   QueryExprType,
@@ -16,6 +22,7 @@ import {
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
+  QueryOutputColumn,
   QuerySortDirection,
   QueryValueType,
   StructuredQuery,
@@ -45,18 +52,121 @@ const fn = (name: string, args: QueryExpr[], distinct?: boolean): QueryExpr => (
   ...(distinct ? { distinct } : {}),
 });
 
-const eventKindFilter = (view: UsageView): QueryFilterNode => ({
-  op: QueryOperator.In,
-  args: [
-    field('event_kind'),
-    {
-      type: QueryExprType.Array,
-      items: USAGE_VIEW_EVENT_KINDS[view].map(
-        (kind) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value: kind }) as const,
-      ),
-    },
-  ],
+const stringArray = (values: string[]): QueryExpr => ({
+  type: QueryExprType.Array,
+  items: values.map((item) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value: item }) as const),
 });
+
+const and = (...args: QueryFilterNode[]): QueryFilterNode => ({ op: QueryLogicalOperator.And, args });
+const or = (...args: QueryFilterNode[]): QueryFilterNode => ({ op: QueryLogicalOperator.Or, args });
+const not = (node: QueryFilterNode): QueryFilterNode => ({ op: QueryLogicalOperator.Not, args: [node] });
+const eq = (left: QueryExpr, right: QueryExpr): QueryFilterNode => ({ op: QueryOperator.Eq, args: [left, right] });
+
+/**
+ * A deployment is named on the row. A boolean call is a filter predicate only as a comparison with
+ * `true` — the shape the service's own SQL translation emits for one.
+ */
+const hasDeployment = (): QueryExpr => fn('not_empty', [field('deployment')]);
+const deploymentPresent = (): QueryFilterNode => eq(hasDeployment(), value('true', QueryValueType.Boolean));
+
+/**
+ * A call Core resolved against its global routes map. The log records neither a route name nor a
+ * deployment for it, and gives it no event kind — the kind the LLM view also reads for model calls
+ * through an API that carries none. The missing deployment is what tells the two apart: no priced
+ * row lacks one.
+ */
+const globalRouteCall = (): QueryFilterNode => and(eq(field('event_kind'), value('')), not(deploymentPresent()));
+
+/**
+ * Which rows each view is about. LLM and Routes share one predicate for the global route calls, so a
+ * row cannot fall into both views, or into neither, by the two definitions drifting apart.
+ */
+const viewFilter = (view: UsageView): QueryFilterNode => {
+  if (view === UsageView.Mcp) {
+    return and(eq(field('event_kind'), value(MCP_EVENT_KIND)), eq(field('mcp_method'), value(MCP_TOOL_CALL_METHOD)));
+  }
+
+  if (view === UsageView.Routes) {
+    return or(eq(field('event_kind'), value(ROUTE_EVENT_KIND)), globalRouteCall());
+  }
+
+  return and(
+    { op: QueryOperator.In, args: [field('event_kind'), stringArray(LLM_EVENT_KINDS)] },
+    not(globalRouteCall()),
+  );
+};
+
+/**
+ * `array_slice` takes a length literal and no "to the end", but a slice reaching past the end returns
+ * what exists — so a bound no request URI comes near reads the rest of the text.
+ */
+const REST_OF_TEXT_SEGMENTS = 1000;
+
+/** The `index`-th element (1-based) of a text cut on a delimiter, as text. */
+const segment = (text: QueryExpr, delimiter: string, index: number): QueryExpr =>
+  fn('array_to_string', [
+    fn('array_slice', [
+      fn('split_string', [text, value(delimiter)]),
+      value(String(index), QueryValueType.Integer),
+      value('1', QueryValueType.Integer),
+    ]),
+    value(''),
+  ]);
+
+/**
+ * Everything after the first delimiter, rejoined by it — the old writer's lazy `(.+?)/route/(.+?)$`,
+ * which keeps a path that itself carries the delimiter whole rather than cutting it at the next one.
+ */
+const afterFirst = (text: QueryExpr, delimiter: string): QueryExpr =>
+  fn('array_to_string', [
+    fn('array_slice', [
+      fn('split_string', [text, value(delimiter)]),
+      value('2', QueryValueType.Integer),
+      value(String(REST_OF_TEXT_SEGMENTS), QueryValueType.Integer),
+    ]),
+    value(delimiter),
+  ]);
+
+/** The request path without its query: one path called with different parameters is one path. */
+const requestPath = (): QueryExpr => segment(field('request_uri'), '?', 1);
+
+/*
+ * The Routes view's derived dimensions. Each branches on the deployment rather than on the event
+ * kind because the grammar has no comparison in expression position. Inside the Routes view the two
+ * tests agree: a row without a deployment is admitted only as a global route, and every deployment
+ * route carries the deployment that declares it.
+ */
+const DERIVED_COLUMNS: Record<string, QueryExpr> = {
+  // The declaring deployment, or a global route's first path segment — the log names no route. Cut
+  // from the path, not the URI, so a query on a one-segment path stays off the owner as it does the path.
+  [ROUTE_OWNER_COLUMN]: fn('if', [
+    hasDeployment(),
+    field('deployment'),
+    fn('concat', [value('/'), segment(requestPath(), '/', 2)]),
+  ]),
+  // What follows `/route/` on a deployment route, and the whole path on a global one.
+  [ROUTE_PATH_COLUMN]: fn('if', [
+    hasDeployment(),
+    fn('concat', [value('/'), afterFirst(requestPath(), DEPLOYMENT_ROUTE_SEGMENT)]),
+    requestPath(),
+  ]),
+};
+
+/**
+ * What a dimension column is read as. A filter does not see select aliases, so a clause over a
+ * derived column repeats its expression.
+ */
+const columnExpr = (name: string): QueryExpr => DERIVED_COLUMNS[name] ?? field(name);
+
+/** A dimension in a select list: a derived one is computed under its column's name. */
+const selectColumn = (name: string): QueryOutputColumn =>
+  name in DERIVED_COLUMNS ? { expr: DERIVED_COLUMNS[name], as: name } : { expr: field(name) };
+
+/** The qualifiers lead, so rows of one server — or one owner — sit together where the ranking allows it. */
+const tabColumns = (tab: BreakdownTab): string[] => [
+  ...(BREAKDOWN_TAB_QUALIFIERS[tab] ?? []),
+  BREAKDOWN_TAB_COLUMN[tab],
+];
 
 /**
  * The backend parses a timestamp literal as epoch millis and rejects an ISO string with
@@ -70,10 +180,7 @@ const timestampValue = (date: Date): QueryExpr => ({
 
 export const buildFilter = (scope: QueryScope, extra: QueryFilterNode[] = []): QueryFilterNode => {
   const clauses: QueryFilterNode[] = [
-    eventKindFilter(scope.view),
-    ...(scope.view === UsageView.Mcp
-      ? [{ op: QueryOperator.Eq, args: [field('mcp_method'), value(MCP_TOOL_CALL_METHOD)] } as QueryFilterNode]
-      : []),
+    viewFilter(scope.view),
     { op: QueryOperator.Ge, args: [field('request_time'), timestampValue(scope.window.startDate)] },
     { op: QueryOperator.Lt, args: [field('request_time'), timestampValue(scope.window.endDate)] },
     ...extra,
@@ -161,7 +268,7 @@ const commonMeasures = (view: UsageView) => {
     { expr: fn('avg', [field('operation_duration_ms')]), as: AVG_LATENCY_ALIAS },
   ];
 
-  if (view === UsageView.Llm) {
+  if (isPricedView(view)) {
     // Tokens are counted once per call, on the row that made it. An application calling a model
     // gets a row of its own carrying the tokens of the call it made, so summing every row counts
     // those twice — and spend, summed over the same rows, does not, because only the row that
@@ -283,11 +390,10 @@ const groupNameMeasures = () => [
  * typing a server name means the tools it serves, not nothing at all.
  */
 export const buildDimensionSearchClause = (tab: BreakdownTab, term: string): QueryFilterNode => {
-  const column = BREAKDOWN_TAB_COLUMN[tab];
-  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
-  const match = (name: string): QueryFilterNode => ({ op: QueryOperator.Ico, args: [field(name), value(term)] });
+  const match = (name: string): QueryFilterNode => ({ op: QueryOperator.Ico, args: [columnExpr(name), value(term)] });
+  const columns = tabColumns(tab);
 
-  return qualifier ? { op: QueryLogicalOperator.Or, args: [match(column), match(qualifier)] } : match(column);
+  return columns.length > 1 ? or(...columns.map(match)) : match(columns[0]);
 };
 
 /**
@@ -303,17 +409,14 @@ export const buildTabQuery = (
   limit: number,
   shape: TabQueryShape = {},
 ): StructuredQuery => {
-  const column = BREAKDOWN_TAB_COLUMN[tab];
-  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
-  // The qualifier leads, so rows of one server sit together where the ranking allows it.
-  const columns = qualifier ? [qualifier, column] : [column];
+  const columns = tabColumns(tab);
 
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, shape.rowClauses ?? []),
     select: [
-      ...columns.map((name) => ({ expr: field(name) })),
+      ...columns.map(selectColumn),
       ...commonMeasures(scope.view),
       ...(NAMES_GROUPED_DEPLOYMENTS.includes(tab) ? groupNameMeasures() : []),
     ],
@@ -346,26 +449,16 @@ export const buildTabQuery = (
  * the dimension alone returned nothing at all, and every row's change read as absent.
  */
 export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: string[]): StructuredQuery => {
-  const column = BREAKDOWN_TAB_COLUMN[tab];
-  const qualifier = BREAKDOWN_TAB_QUALIFIER[tab];
-  const columns = qualifier ? [qualifier, column] : [column];
+  const columns = tabColumns(tab);
 
   const inClause = (name: string, values: string[]): QueryFilterNode => ({
     op: QueryOperator.In,
-    args: [
-      field(name),
-      {
-        type: QueryExprType.Array,
-        items: [...new Set(values)].map(
-          (value) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value }) as const,
-        ),
-      },
-    ],
+    args: [columnExpr(name), stringArray([...new Set(values)])],
   });
 
   /*
-   * One clause per column rather than a set of pairs: the grammar has no tuple comparison, so the
-   * filter is the cross product of the two sets. It can admit a pair nobody asked for — a tool that
+   * One clause per column rather than a set of tuples: the grammar has no tuple comparison, so the
+   * filter is the cross product of the sets. It can admit a pair nobody asked for — a tool that
    * also exists on another named server — and that is harmless: the extra group folds to an id the
    * caller never looks up.
    */
@@ -381,7 +474,7 @@ export const buildTabKeysQuery = (scope: QueryScope, tab: BreakdownTab, keys: st
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
     filter: buildFilter(scope, keyClauses),
-    select: [...columns.map((name) => ({ expr: field(name) })), ...commonMeasures(scope.view)],
+    select: [...columns.map(selectColumn), ...commonMeasures(scope.view)],
     group_by: columns,
     sort: columns.map((name) => ({ field: name, dir: QuerySortDirection.Asc })),
     page: {
@@ -433,20 +526,7 @@ export const buildDimensionBucketedQuery = (
   return {
     entity: USAGE_ENTITY,
     mode: QueryMode.Aggregate,
-    filter: buildFilter(scope, [
-      {
-        op: QueryOperator.In,
-        args: [
-          field(column),
-          {
-            type: QueryExprType.Array,
-            items: ids.map(
-              (id) => ({ type: QueryExprType.Value, value_type: QueryValueType.String, value: id }) as const,
-            ),
-          },
-        ],
-      },
-    ]),
+    filter: buildFilter(scope, [{ op: QueryOperator.In, args: [columnExpr(column), stringArray(ids)] }]),
     select: [
       {
         expr: fn('date_bin', [
@@ -456,7 +536,7 @@ export const buildDimensionBucketedQuery = (
         ]),
         as: BUCKET_ALIAS,
       },
-      { expr: field(column) },
+      selectColumn(column),
       { expr: fn('count', []), as: CALLS_ALIAS },
     ],
     group_by: [BUCKET_ALIAS, column],

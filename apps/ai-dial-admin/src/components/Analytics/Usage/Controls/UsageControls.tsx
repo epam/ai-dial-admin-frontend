@@ -53,6 +53,7 @@ const UsageControls: FC<Props> = ({
     () => [
       { value: UsageView.Llm, label: t(AnalyticsUsageI18nKey.ViewLlm) },
       { value: UsageView.Mcp, label: t(AnalyticsUsageI18nKey.ViewMcp) },
+      { value: UsageView.Routes, label: t(AnalyticsUsageI18nKey.ViewRoutes) },
     ],
     [t],
   );
