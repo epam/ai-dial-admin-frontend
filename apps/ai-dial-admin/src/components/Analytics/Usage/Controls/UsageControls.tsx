@@ -12,11 +12,15 @@ import { AnalyticsUsageI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
+import { VIEW_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
+
+const ALL_VIEWS: UsageView[] = [UsageView.Llm, UsageView.Mcp, UsageView.Routes];
 
 interface Props {
-  /** Absent on an entity dashboard, which shows only its entity's views and offers no `View by`. */
-  view?: UsageView;
-  onViewChange?: (view: UsageView) => void;
+  view: UsageView;
+  onViewChange: (view: UsageView) => void;
+  /** The views `View by` offers, in order; an entity offers only the ones it has traffic of. */
+  views?: UsageView[];
   compare: ComparePeriod;
   onCompareChange: (compare: ComparePeriod) => void;
   timePeriod: string;
@@ -38,6 +42,7 @@ const COMPARE_SELECT_WIDTH = 'w-[200px]';
 
 const UsageControls: FC<Props> = ({
   view,
+  views = ALL_VIEWS,
   onViewChange,
   compare,
   onCompareChange,
@@ -51,12 +56,8 @@ const UsageControls: FC<Props> = ({
   const t = useI18n();
 
   const viewOptions = useMemo(
-    () => [
-      { value: UsageView.Llm, label: t(AnalyticsUsageI18nKey.ViewLlm) },
-      { value: UsageView.Mcp, label: t(AnalyticsUsageI18nKey.ViewMcp) },
-      { value: UsageView.Routes, label: t(AnalyticsUsageI18nKey.ViewRoutes) },
-    ],
-    [t],
+    () => views.map((option) => ({ value: option, label: t(VIEW_LABEL_KEY[option]) })),
+    [views, t],
   );
 
   const compareOptions = useMemo(
@@ -71,17 +72,15 @@ const UsageControls: FC<Props> = ({
 
   return (
     <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-2">
-      {view && onViewChange && (
-        <Select
-          size={ElementSize.Small}
-          className={`!w-auto ${VIEW_SELECT_WIDTH}`}
-          options={viewOptions}
-          value={view}
-          prefix={t(AnalyticsUsageI18nKey.ViewByLabel)}
-          ariaLabel={t(AnalyticsUsageI18nKey.ViewByLabel)}
-          onChange={(next) => onViewChange(next as UsageView)}
-        />
-      )}
+      <Select
+        size={ElementSize.Small}
+        className={`!w-auto ${VIEW_SELECT_WIDTH}`}
+        options={viewOptions}
+        value={view}
+        prefix={t(AnalyticsUsageI18nKey.ViewByLabel)}
+        ariaLabel={t(AnalyticsUsageI18nKey.ViewByLabel)}
+        onChange={(next) => onViewChange(next as UsageView)}
+      />
       <TimeFilter
         timePeriod={timePeriod}
         onTimePeriodChange={onTimePeriodChange}

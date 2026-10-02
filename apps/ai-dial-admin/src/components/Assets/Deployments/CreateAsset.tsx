@@ -62,7 +62,10 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   // Both bucket roots for dual-bucket views (platform only when the Catalog menu group is enabled),
   // the single root for every other view — the same resolution the file manager sidebar uses.
   const rootPaths = useMemo(
-    () => getRootFolders(view, featureFlags.catalogEnabled).map((root) => `${root}/`),
+    () =>
+      getRootFolders(view, featureFlags.catalogEnabled)
+        .map((root) => `${root}/`)
+        .slice(1),
     [view, featureFlags.catalogEnabled],
   );
 

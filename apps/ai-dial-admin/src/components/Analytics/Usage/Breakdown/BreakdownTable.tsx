@@ -18,7 +18,7 @@ import {
   ComparedWindows,
   KpiMetric,
   RequestState,
-  UsageScope,
+  RowScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
@@ -84,7 +84,8 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
 
 interface Props {
   view: UsageView;
-  scope: UsageScope;
+  /** The rows the active tab ranks; the full-list dialog reads the same. */
+  rowScope: RowScope;
   /** The tabs offered, in order. */
   tabs: BreakdownTab[];
   tab: BreakdownTab;
@@ -101,11 +102,13 @@ interface Props {
   onOpenRow: (row: BreakdownRowModel) => void;
   /** The dialog reads its own blocks, so it reports its own failures. */
   notice: LoadFailureNotice;
+  /** Overrides the view's own answer; absent, a priced view states cost. */
+  isCostOffered?: boolean;
 }
 
 const BreakdownTable: FC<Props> = ({
   view,
-  scope,
+  rowScope,
   tabs: tabIds,
   tab,
   onTabChange,
@@ -119,11 +122,13 @@ const BreakdownTable: FC<Props> = ({
   onHideAll,
   onOpenRow,
   notice,
+  isCostOffered: isCostOfferedOverride,
 }) => {
   const t = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const settledTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
   const hasComparison = Boolean(windows.previous);
+  const isCostOffered = isCostOfferedOverride ?? isPricedView(view);
 
   const tabs = useMemo(
     () => tabIds.map((option) => ({ id: option, label: t(BREAKDOWN_TAB_LABEL_KEY[option]) })),
@@ -208,7 +213,7 @@ const BreakdownTable: FC<Props> = ({
 
   const { datasource, datasourceKey, isLoadingBlock } = useBreakdownDialogRows({
     view,
-    scope,
+    rowScope,
     windows,
     tab,
     windowTotal,
@@ -313,7 +318,7 @@ const BreakdownTable: FC<Props> = ({
       },
     ];
 
-    if (isPricedView(view)) {
+    if (isCostOffered) {
       columns.push({
         ...MEASURE_COLUMN_BASE,
         colId: 'cost',
@@ -331,7 +336,7 @@ const BreakdownTable: FC<Props> = ({
     }
 
     return columns;
-  }, [tab, view, onOpenRow, t]);
+  }, [tab, isCostOffered, onOpenRow, t]);
 
   const columnLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, { dimension: columnLabel });

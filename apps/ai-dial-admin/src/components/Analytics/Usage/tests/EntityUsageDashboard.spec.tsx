@@ -38,19 +38,20 @@ beforeEach(() => {
 });
 
 describe('EntityUsageDashboard', () => {
-  test("shows a model's one LLM block and no View by", async () => {
+  test("offers View by with a model's one view, as the page does", async () => {
+    const user = userEvent.setup();
     renderModel();
 
-    expect(await screen.findByRole('region', { name: AnalyticsUsageI18nKey.ViewLlm })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: AnalyticsUsageI18nKey.ViewMcp })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeNull();
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
     expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
   });
 
   test('leaves out the tab that would rank the model against itself', async () => {
     renderModel();
 
-    await screen.findByRole('region', { name: AnalyticsUsageI18nKey.ViewLlm });
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
     expect(screen.getAllByText(AnalyticsUsageI18nKey.BreakdownTabApplications).length).toBeGreaterThan(0);
@@ -64,6 +65,22 @@ describe('EntityUsageDashboard', () => {
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).toContain('"value":"gpt-4o"');
     }
+  });
+
+  test('reads no call tree for a model, having none', async () => {
+    renderModel();
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).not.toContain('"name":"execution_path"');
+    }
+  });
+
+  test('offers cost on its heatmap, whose hours count the calls its spend counts', async () => {
+    renderModel();
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
   });
 
   test('ranks its share chart by caller, never by the model it is scoped to', async () => {
@@ -108,5 +125,90 @@ describe('EntityUsageDashboard', () => {
     await waitFor(() => expect(isForbiddenMock).toHaveBeenCalled());
 
     expect(runQueryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('EntityUsageDashboard on an application', () => {
+  const renderApplication = (routes?: unknown) =>
+    render(
+      <EntityUsageDashboard
+        route={ApplicationRoute.Applications}
+        entity={{ name: 'rag', routes } as unknown as Parameters<typeof EntityUsageDashboard>[0]['entity']}
+      />,
+    );
+
+  const optionsOf = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    return screen.getAllByRole('option').map((option) => option.textContent);
+  };
+
+  test('offers LLM and MCP, and Routes only for an application that declares routes', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderApplication();
+
+    expect(await optionsOf(user)).toEqual([AnalyticsUsageI18nKey.ViewLlm, AnalyticsUsageI18nKey.ViewMcp]);
+    unmount();
+
+    renderApplication([{ paths: ['/search'] }]);
+
+    expect(await optionsOf(user)).toEqual([
+      AnalyticsUsageI18nKey.ViewLlm,
+      AnalyticsUsageI18nKey.ViewMcp,
+      AnalyticsUsageI18nKey.ViewRoutes,
+    ]);
+  });
+
+  test('switches to the MCP view, reading the tool calls in its call tree', async () => {
+    const user = userEvent.setup();
+    renderApplication();
+
+    await optionsOf(user);
+    runQueryMock.mockClear();
+    await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).toContain('"name":"execution_path"');
+    }
+  });
+
+  test('reads its own calls and the priced model calls in its tree, and never a total price', async () => {
+    renderApplication();
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    const sent = queriesSent().map((query) => JSON.stringify(query));
+
+    expect(
+      sent.some((query) => query.includes('"name":"execution_path"') && query.includes('"name":"deployment_price"')),
+    ).toBe(true);
+    expect(sent.some((query) => !query.includes('"name":"execution_path"'))).toBe(true);
+    expect(sent.some((query) => query.includes('total_price'))).toBe(false);
+  });
+
+  test('plots spend from the priced model calls in its tree, as its spend card counts', async () => {
+    const user = userEvent.setup();
+    renderApplication();
+
+    await user.click(await screen.findByText(AnalyticsUsageI18nKey.TimeSeriesTabCost));
+
+    await waitFor(() =>
+      expect(
+        queriesSent().some(
+          (query) =>
+            query.select?.length === 2 &&
+            query.group_by?.join() === 'bucket' &&
+            JSON.stringify(query.filter).includes('"name":"execution_path"'),
+        ),
+      ).toBe(true),
+    );
+  });
+
+  test('offers no cost on its heatmap, whose hours count its own calls', async () => {
+    renderApplication();
+
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
 });

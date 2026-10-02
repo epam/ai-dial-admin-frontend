@@ -10,7 +10,7 @@ import {
   BreakdownTab,
   ComparedWindows,
   UsageMeasures,
-  UsageScope,
+  RowScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import {
@@ -26,7 +26,8 @@ import { RowModelContext, toPreviousMeasures, toRowModels } from '@/src/componen
 
 interface Params {
   view: UsageView;
-  scope: UsageScope;
+  /** The rows the tab ranks. */
+  rowScope: RowScope;
   windows: ComparedWindows;
   tab: BreakdownTab;
   windowTotal: number | null;
@@ -57,7 +58,7 @@ export interface BreakdownDialogRows {
  */
 export const useBreakdownDialogRows = ({
   view,
-  scope,
+  rowScope,
   windows,
   tab,
   windowTotal,
@@ -112,7 +113,7 @@ export const useBreakdownDialogRows = ({
   const datasource = useMemo<IDatasource>(() => {
     const column = BREAKDOWN_TAB_COLUMN[tab];
     const qualifiers = BREAKDOWN_TAB_QUALIFIERS[tab];
-    const baseScope: QueryScope = { view, window: windows.current, entityClauses: scope.own };
+    const baseScope: QueryScope = { view, window: windows.current, ...rowScope };
 
     const readPreviousMeasures = async (rows: BreakdownRow[]): Promise<Map<string, UsageMeasures>> => {
       const keys = rows.filter((row) => !row.isFallbackLabel).map((row) => row.id);
@@ -200,7 +201,7 @@ export const useBreakdownDialogRows = ({
         }
       },
     };
-  }, [view, scope, tab, windows, searchTerm, report, runQuery]);
+  }, [view, rowScope, tab, windows, searchTerm, report, runQuery]);
 
   return { datasource, datasourceKey, isLoadingBlock };
 };

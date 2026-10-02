@@ -108,6 +108,19 @@ describe('ActivityHeatmap', () => {
     expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
 
+  test('offers no cost in a priced view when its block says so', () => {
+    render(
+      <ActivityHeatmap
+        heatmap={{ ...week(0), buckets: loaded(busyWeek) }}
+        view={UsageView.Llm}
+        isCostOffered={false}
+      />,
+    );
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCalls)).toBeNull();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
+  });
+
   test('offers no cost in the MCP view, whose rows carry no price', () => {
     renderHeatmap({ buckets: loaded(busyWeek) }, UsageView.Mcp);
 

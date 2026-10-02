@@ -167,6 +167,26 @@ export const VIEW_BREAKDOWN_TABS: Record<UsageView, BreakdownTab[]> = {
 };
 
 /**
+ * An application is read two ways. Its own rows are the calls made to it, one row per request, and
+ * they are what its request, caller, error and latency figures count. Its money and tokens are the
+ * priced model calls in its call tree — however deep, and however it was invoked — and they are what
+ * its `Models` tab ranks. Counting requests over those instead would count each user request once
+ * per model call it fanned out into; summing the total price of its own rows missed the work it did
+ * when another application invoked it as an MCP server, whose rows carry no total.
+ */
+const APPLICATION_BLOCKS: EntityBlock[] = [
+  {
+    view: UsageView.Llm,
+    hiddenTab: BreakdownTab.Applications,
+    madeTabs: [BreakdownTab.Models],
+    isMoneyFromMade: true,
+  },
+  // An application's own rows are never tool calls: what it did with tools is the calls in its tree.
+  { view: UsageView.Mcp, hiddenTab: BreakdownTab.Applications, isToolsOnly: true },
+  { view: UsageView.Routes, hiddenTab: BreakdownTab.Owners, isRoutesOnly: true },
+];
+
+/**
  * The blocks an entity's dashboard renders, in order. Each leaves out the tab whose rows would be the
  * entity alone: a model's `Models` tab is one row, the model itself.
  */
@@ -175,6 +195,8 @@ export const ENTITY_BLOCKS: Partial<Record<ApplicationRoute, EntityBlock[]>> = {
   [ApplicationRoute.PlatformModels]: [{ view: UsageView.Llm, hiddenTab: BreakdownTab.Models }],
   [ApplicationRoute.Toolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
   [ApplicationRoute.AssetsToolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
+  [ApplicationRoute.Applications]: APPLICATION_BLOCKS,
+  [ApplicationRoute.AssetsApplications]: APPLICATION_BLOCKS,
 };
 
 /** The views whose rows carry a price, and so the only ones that offer cost. */

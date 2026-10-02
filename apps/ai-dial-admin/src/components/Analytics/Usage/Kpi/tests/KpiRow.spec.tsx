@@ -125,3 +125,22 @@ describe('KpiRow', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.KpiTotalSpend)).toBeTruthy();
   });
 });
+
+describe('KpiRow with a separate money source', () => {
+  const PENDING: RequestState<UsageMeasures | null> = { data: null, isLoading: true, hasFailed: false };
+
+  test('shows the money and token cards loading while their own source is, and the rest settled', () => {
+    render(
+      <KpiRow
+        view={UsageView.Llm}
+        totals={loaded<UsageMeasures | null>(FULL)}
+        previousTotals={loaded<UsageMeasures | null>(null)}
+        buckets={loaded<BucketPoint[]>([])}
+        compare={ComparePeriod.Off}
+        madeTotals={{ current: PENDING, previous: loaded<UsageMeasures | null>(null) }}
+      />,
+    );
+
+    expect(screen.getAllByRole('status')).toHaveLength(3);
+  });
+});
