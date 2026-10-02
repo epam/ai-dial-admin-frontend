@@ -75,14 +75,7 @@ describe('BaseEntityList — rendered row hrefs', () => {
   });
 
   const renderList = (route: ApplicationRoute) =>
-    render(
-      <BaseEntityList
-        data={[{ name: 'my-model' }]}
-        baseColumns={[]}
-        route={route}
-        onRemoveEntity={vi.fn()}
-      />,
-    );
+    render(<BaseEntityList data={[{ name: 'my-model' }]} baseColumns={[]} route={route} onRemoveEntity={vi.fn()} />);
 
   test('renders a config-file dual-bucket href with the flag and no path param', () => {
     renderList(ApplicationRoute.AssetsApplications);
