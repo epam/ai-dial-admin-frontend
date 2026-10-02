@@ -443,6 +443,8 @@ export const getTabsForAsset = (
       interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
+      // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
+      ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
     ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
@@ -489,6 +491,13 @@ export const getAuditTabs = (
   view: ApplicationRoute,
 ): TabModel[] => {
   const tabs: TabModel[] = [];
+
+  // Asset applications have no telemetry dashboard to fall back to, and the admin audit records no
+  // activity for a Core asset — as for asset toolsets — so their Audit tab holds the usage dashboard
+  // alone.
+  if (view === ApplicationRoute.AssetsApplications) {
+    return [dashboardTab(t)];
+  }
 
   if (featureFlags.dashboardEnabled) {
     if (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) {

@@ -537,3 +537,18 @@ describe('the Routes view dimensions', () => {
     expect(clause.args).toHaveLength(3);
   });
 });
+
+describe('the spend column', () => {
+  const spendOf = (query: StructuredQuery) => (query.select ?? []).find((entry) => entry.as === SPEND_ALIAS)?.expr;
+
+  test("sums each row's own price on every request that carries spend, never a row's total", () => {
+    for (const query of [
+      buildTotalsQuery(scope()),
+      buildTabQuery(scope(), BreakdownTab.Projects, 10),
+      buildSpendBucketedQuery(scope(), { value: 1, unit: 'd' }),
+    ]) {
+      expect(spendOf(query)).toMatchObject({ args: [{ name: 'deployment_price' }] });
+      expect(JSON.stringify(query)).not.toContain('total_price');
+    }
+  });
+});

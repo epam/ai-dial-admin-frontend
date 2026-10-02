@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import BreakdownTable from '@/src/components/Analytics/Usage/Breakdown/BreakdownTable';
 import RowDetailPanel from '@/src/components/Analytics/Usage/Breakdown/RowDetailPanel';
@@ -16,6 +16,7 @@ import {
   VIEW_TIME_SERIES_VIEWS,
 } from '@/src/components/Analytics/Usage/constants';
 import {
+  BlockReads,
   BreakdownRowModel,
   BreakdownTab,
   ComparePeriod,
@@ -28,10 +29,16 @@ import { useHeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-wee
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
 import { UsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
+import { resolveBlockRows } from '@/src/components/Analytics/Usage/utils/entity-blocks';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
+
+const NO_MADE_TABS: BreakdownTab[] = [];
 
 interface Props extends UsageWindows {
   view: UsageView;
   scope: UsageScope;
+  /** Where each figure is read from; absent on the page, which reads one set of rows for all of them. */
+  reads?: BlockReads;
   /** The breakdown tabs this block offers; the first leads the share chart and the split plot. */
   tabs: BreakdownTab[];
   compare: ComparePeriod;
@@ -48,6 +55,7 @@ interface Props extends UsageWindows {
 const UsageBlock: FC<Props> = ({
   view,
   scope,
+  reads,
   tabs,
   windows,
   resolution,
@@ -57,6 +65,8 @@ const UsageBlock: FC<Props> = ({
   onRefreshingChange,
 }) => {
   const leadingTab = tabs[0];
+  const madeTabs = reads?.madeTabs ?? NO_MADE_TABS;
+  const { rows, madeRows } = useMemo(() => resolveBlockRows(scope, reads), [scope, reads]);
 
   const [tab, setTab] = useState<BreakdownTab>(leadingTab);
   const [isShowingAll, setIsShowingAll] = useState(false);
@@ -99,11 +109,16 @@ const UsageBlock: FC<Props> = ({
     spendBuckets,
     tabRows,
     previousTabRows,
+    madeTotals,
+    previousMadeTotals,
     isDonutReadingMore,
     isRefreshing,
   } = useUsageDashboardData({
     view,
-    scope,
+    rows,
+    madeRows,
+    madeTabs,
+    isMoneyFromMade: Boolean(reads?.isMoneyFromMade),
     windows,
     resolution,
     tab,
@@ -120,9 +135,19 @@ const UsageBlock: FC<Props> = ({
     onRefreshingChange(isRefreshing);
   }, [isRefreshing, onRefreshingChange]);
 
-  const heatmap = useHeatmapWeek({ view, scope, refreshToken, notice });
+  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice });
 
-  const windowTotalCalls = totals.data?.calls ?? null;
+  // A tab read from the calls the entity made states its shares of those calls: a share of the
+  // entity's own requests would read past a hundred per cent wherever one request fanned out.
+  const isMadeTab = (of: BreakdownTab) => madeRows != null && madeTabs.includes(of);
+  const totalsOf = (of: BreakdownTab) => (isMadeTab(of) ? madeTotals : totals);
+  const donutTotals = totalsOf(leadingTab).data;
+  const tabTotals = totalsOf(tab).data;
+  const isMoneyFromMade = Boolean(reads?.isMoneyFromMade && madeRows);
+  const moneyTotals = useMemo(
+    () => (isMoneyFromMade ? { current: madeTotals, previous: previousMadeTotals } : void 0),
+    [isMoneyFromMade, madeTotals, previousMadeTotals],
+  );
 
   const onTabChange = useCallback((next: BreakdownTab) => {
     setTab(next);
@@ -141,7 +166,14 @@ const UsageBlock: FC<Props> = ({
 
   return (
     <>
-      <KpiRow view={view} totals={totals} previousTotals={previousTotals} buckets={buckets} compare={compare} />
+      <KpiRow
+        view={view}
+        totals={totals}
+        previousTotals={previousTotals}
+        buckets={buckets}
+        compare={compare}
+        madeTotals={moneyTotals}
+      />
 
       <div className="flex shrink-0 flex-wrap items-stretch gap-3">
         <TimeSeries
@@ -163,8 +195,8 @@ const UsageBlock: FC<Props> = ({
           metric={donutMetric}
           renderedMetric={donutRowsMetric}
           onMetricChange={setDonutMetric}
-          windowTotalCalls={windowTotalCalls}
-          windowTotalSpend={totals.data?.spend ?? null}
+          windowTotalCalls={donutTotals?.calls ?? null}
+          windowTotalSpend={donutTotals?.spend ?? null}
           isFullOpen={isDonutFullOpen}
           // A response filled to the limit is the signal that the window holds further rows — but
           // only while the limit can still grow: at the query surface's own ceiling it never will,
@@ -177,17 +209,19 @@ const UsageBlock: FC<Props> = ({
         />
       </div>
 
-      <ActivityHeatmap heatmap={heatmap} view={view} />
+      {/* Its hourly response is over the entity's own calls; a block counting money on its call tree
+          offers no cost there rather than paint a second basis beside the cards. */}
+      <ActivityHeatmap heatmap={heatmap} view={view} isCostOffered={isPricedView(view) && !isMoneyFromMade} />
 
       <BreakdownTable
         view={view}
-        scope={scope}
+        rowScope={madeRows && isMadeTab(tab) ? madeRows : rows}
         tabs={tabs}
         tab={tab}
         onTabChange={onTabChange}
         rows={tabRows}
         previousRows={previousTabRows}
-        windowTotal={windowTotalCalls}
+        windowTotal={tabTotals?.calls ?? null}
         windows={windows}
         rowLimit={rowLimit}
         isShowingAll={isShowingAll}
@@ -195,6 +229,9 @@ const UsageBlock: FC<Props> = ({
         onHideAll={onHideAll}
         onOpenRow={setSelectedRow}
         notice={notice}
+        // An application's own calls carry no price of their own, so where its money is read from its
+        // call tree, a tab ranking its own calls has no cost to state.
+        isCostOffered={isPricedView(view) && (!isMoneyFromMade || isMadeTab(tab))}
       />
 
       <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />

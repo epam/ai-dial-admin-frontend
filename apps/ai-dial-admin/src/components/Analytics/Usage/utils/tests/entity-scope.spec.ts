@@ -49,11 +49,52 @@ describe('buildEntityScope', () => {
     });
   });
 
-  test('reads an application by the calls made to it and the calls it made', () => {
-    expect(buildEntityScope(ApplicationRoute.Applications, 'rag')).toEqual({
-      own: [columnIs('deployment', 'rag')],
-      made: [columnIs('parent_deployment', 'rag')],
+  test('reads an application by the calls made to it, and by its call tree two ways', () => {
+    const scopeOfApp = buildEntityScope(ApplicationRoute.Applications, 'rag');
+    const isTrue = (call: object) => ({
+      op: QueryOperator.Eq,
+      args: [call, { type: QueryExprType.Value, value_type: QueryValueType.Boolean, value: 'true' }],
     });
+    const inTree = isTrue({
+      type: QueryExprType.Fn,
+      name: 'array_has',
+      args: [
+        { type: QueryExprType.Field, name: 'execution_path' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'rag' },
+      ],
+    });
+
+    expect(scopeOfApp?.own).toEqual([columnIs('deployment', 'rag')]);
+    // The priced model calls anywhere below it: what its money, tokens and models count.
+    expect(scopeOfApp?.made).toEqual([
+      inTree,
+      isTrue({
+        type: QueryExprType.Fn,
+        name: 'not_empty',
+        args: [
+          {
+            type: QueryExprType.Fn,
+            name: 'to_string',
+            args: [{ type: QueryExprType.Field, name: 'deployment_price' }],
+          },
+        ],
+      }),
+    ]);
+    // The tool calls anywhere below it, less the calls to tools the application serves itself.
+    expect(scopeOfApp?.tools).toEqual([
+      inTree,
+      {
+        op: QueryOperator.Ne,
+        args: [
+          { type: QueryExprType.Field, name: 'deployment' },
+          { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'rag' },
+        ],
+      },
+    ]);
+  });
+
+  test('gives a toolset no call tree', () => {
+    expect(buildEntityScope(ApplicationRoute.Toolsets, 'search')).toEqual({ own: [columnIs('deployment', 'search')] });
   });
 
   test('gives no scope where there is no name to match, rather than the whole log', () => {
