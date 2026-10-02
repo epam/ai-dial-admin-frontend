@@ -1,10 +1,10 @@
 import { RadioButtonWithContent, Step } from '@epam/ai-dial-ui-kit';
 
-import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { isAssetWithVersion } from '@/src/utils/is-view';
 
 export const ROW_IMPORT_META_KEY = '__import' as const;
@@ -28,32 +28,38 @@ export const IMPORT_CONFIG_STEPS = (t: TranslateFn): Step[] => [
   { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.Configuration) },
 ];
 
-export const ARCHIVE_IMPORT_TYPE = (t: TranslateFn) => ({
+export const ARCHIVE_IMPORT_TYPE = (t: TranslateFn, route?: ApplicationRoute) => ({
   id: ImportFileType.ARCHIVE,
   name: t(ImportI18nKey.DialArchive),
   content: (
     <div className="dial-tiny-text ml-[33px]">
-      {t(ImportI18nKey.DialArchiveDescription, { size: MAX_FILE_SIZE_MB })}
+      {route === ApplicationRoute.Files
+        ? t(ImportI18nKey.DialArchiveWithLimitDescription, { size: getImportSizeLimits(route).maxFileSizeMb })
+        : t(ImportI18nKey.DialArchiveDescription)}
     </div>
   ),
 });
 
-export const DIAL_JSON_IMPORT_TYPE = (t: TranslateFn) => ({
-  id: ImportFileType.JSON,
-  name: t(ImportI18nKey.DialCoreFiles),
-  content: (
-    <div className="dial-tiny-text ml-[33px]">
-      {t(ImportI18nKey.SeparateFilesDescription, { totalSize: MAX_MULTI_FILES_SIZE_MB })}
-    </div>
-  ),
-});
+export const DIAL_JSON_IMPORT_TYPE = (t: TranslateFn, route?: ApplicationRoute) => {
+  const { maxFileSizeMb, maxMultiFilesSizeMb } = getImportSizeLimits(route);
 
-export const SEPARATE_FILES_IMPORT_TYPE = (t: TranslateFn) => ({
+  return {
+    id: ImportFileType.JSON,
+    name: t(ImportI18nKey.DialCoreFiles),
+    content: (
+      <div className="dial-tiny-text ml-[33px]">
+        {t(ImportI18nKey.JsonFilesDescription, { size: maxFileSizeMb, totalSize: maxMultiFilesSizeMb })}
+      </div>
+    ),
+  };
+};
+
+export const SEPARATE_FILES_IMPORT_TYPE = (t: TranslateFn, route?: ApplicationRoute) => ({
   id: ImportFileType.FILES,
   name: t(ImportI18nKey.SeparateFiles),
   content: (
     <div className="dial-tiny-text ml-[33px]">
-      {t(ImportI18nKey.SeparateFilesDescription, { totalSize: MAX_MULTI_FILES_SIZE_MB })}
+      {t(ImportI18nKey.SeparateFilesDescription, { totalSize: getImportSizeLimits(route).maxMultiFilesSizeMb })}
     </div>
   ),
 });
@@ -64,15 +70,15 @@ export const DEPLOYMENT_IMPORT_RESOLUTIONS = (t: TranslateFn): RadioButtonWithCo
 ];
 
 export const IMPORT_FILE_TYPES = (t: TranslateFn, route?: ApplicationRoute): RadioButtonWithContent[] => {
-  const buttons = [ARCHIVE_IMPORT_TYPE(t)];
+  const buttons = [ARCHIVE_IMPORT_TYPE(t, route)];
 
   // Prompts are versionless but keep the aggregate JSON import (a `{ prompts: [...] }`
   // document); apps/toolsets keep theirs.
   if (isAssetWithVersion(route) || route === ApplicationRoute.Prompts) {
-    return [...buttons, DIAL_JSON_IMPORT_TYPE(t)];
+    return [...buttons, DIAL_JSON_IMPORT_TYPE(t, route)];
   }
   if (route === ApplicationRoute.Files) {
-    return [...buttons, SEPARATE_FILES_IMPORT_TYPE(t)];
+    return [...buttons, SEPARATE_FILES_IMPORT_TYPE(t, route)];
   }
 
   return buttons;
