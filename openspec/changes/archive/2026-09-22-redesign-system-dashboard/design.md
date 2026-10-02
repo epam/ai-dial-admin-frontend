@@ -52,6 +52,8 @@ nor a normalized route". Two of those three claims are false, measured against t
 - **Route.** This one holds. There is no `route_path` and no ADAS equivalent of the telemetry
   dataset's `routes_analytics`; `event_kind = 'route'` names the routed deployment, not the path.
   Hence the Routes view is a non-goal rather than a third view.
+  *Superseded by `2026-10-01-add-usage-routes-view`: the path is extractable from `request_uri`, and the old
+  table was never templated.*
 
 What the move buys: `success` and `operation_duration_ms`, and so the error-rate card, the average
 latency card and the p50/p95 latency plot — all three deferred in the original plan for want of the
@@ -251,6 +253,6 @@ Rollback is the flag.
 
 - **Routes.** Answering "which route path, how often" needs `route_path` in the usage log, or an
   ADAS entity equivalent to `routes_analytics`. Until then the question belongs to the old
-  dashboard. Raised with the ADAS side; not blocking.
+  dashboard. Raised with the ADAS side; not blocking. *Answered by `2026-10-01-add-usage-routes-view`.*
 - **Auto-refresh.** Worth revisiting only if the ingestion lag drops; at ~11 minutes an interval
   buys nothing. If it is added, 5 minutes is the floor, paused on a hidden tab.

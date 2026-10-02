@@ -39,6 +39,7 @@ interface Artefact {
   version?: string;
   $id?: string;
   'dial:applicationTypeDisplayName'?: string;
+  'dial:catalogDisplayName'?: string;
 }
 interface Props<T> {
   view: ApplicationRoute;
@@ -79,16 +80,20 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const [isRemoving, setIsRemoving] = useState(false);
   const isRemovingRef = useRef(false);
 
+  const displayName = useMemo(() => {
+    return entity.displayName || entity['dial:applicationTypeDisplayName'] || entity['dial:catalogDisplayName'];
+  }, [entity]);
+
   const name = useMemo(() => {
-    if (view === ApplicationRoute.Datasets) return entity.name;
-    return entity.displayName || entity['dial:applicationTypeDisplayName'];
-  }, [entity, view]);
+    return entity.name;
+  }, [entity]);
+
   const id = useMemo(() => {
-    if (view === ApplicationRoute.Datasets) return (entity as { id?: string }).id;
     // App-runner assets carry `name` as the percent-encoded Core resource name, so `$id` is the only
     // readable identity for them.
-    if (view === ApplicationRoute.PlatformAppRunners) return entity.$id || entity.name;
-    return entity.name || entity.$id || (entity as { id?: string }).id;
+    if (view === ApplicationRoute.PlatformAppRunners || view === ApplicationRoute.PlatformCatalogSchemas)
+      return entity.$id || entity.name;
+    return (entity as { id?: string }).id;
   }, [entity, view]);
 
   const showSuccessNotification = useCallback(
@@ -156,8 +161,8 @@ const DeleteConfirmationModal = <T extends Artefact>({
         resArr.forEach((res, index) => {
           if (res.success) {
             showSuccessNotification(entityKeys[index]);
-            if (view === ApplicationRoute.TestSuites && id) {
-              removeTryoutResponseFromStorage(id);
+            if (view === ApplicationRoute.TestSuites && name) {
+              removeTryoutResponseFromStorage(name);
             }
           } else {
             isAllSuccess = false;
@@ -187,20 +192,20 @@ const DeleteConfirmationModal = <T extends Artefact>({
         showNotification(getErrorNotification(error.message));
       });
   }, [
+    selectedVersion,
     view,
     entity,
-    id,
+    existingVersions,
+    etag,
     onRemoveEntity,
+    showSuccessNotification,
+    name,
+    showNotification,
     onCloseModal,
     onResetEntity,
-    showSuccessNotification,
     isSelectedView,
     router,
     folderContext,
-    showNotification,
-    selectedVersion,
-    existingVersions,
-    etag,
   ]);
 
   const onVersionChange = useCallback((value: string) => {
@@ -221,16 +226,22 @@ const DeleteConfirmationModal = <T extends Artefact>({
       <div className="flex flex-col gap-y-4 px-6 py-2 size-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
         <div className="flex flex-col gap-y-2 bg-layer-4 rounded px-4 py-3">
+          {name && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.name)}:</span>
+              <DialEllipsisTooltip text={name} />
+            </div>
+          )}
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
               <DialEllipsisTooltip text={id} />
             </div>
           )}
-          {name && (
+          {displayName && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
-              <DialEllipsisTooltip text={name} />
+              <DialEllipsisTooltip text={displayName} />
             </div>
           )}
           {existingVersions && existingVersions.length > 0 ? (

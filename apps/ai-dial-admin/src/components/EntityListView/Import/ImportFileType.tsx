@@ -10,7 +10,6 @@ import {
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES_STR } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
@@ -18,6 +17,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { isAssetView } from '@/src/utils/is-view';
 
 interface Props {
@@ -47,6 +47,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   route,
 }) => {
   const t = useI18n();
+  const { maxFileSizeMb, maxMultiFilesSizeMb } = getImportSizeLimits(route);
 
   const ignorePathsTitle = useMemo(() => {
     return route ? getIgnorePathTitles(route, t) : '';
@@ -96,8 +97,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes={APPLICATION_ZIP_TYPES_STR}
             onChange={onChangeFile}
-            fileSizeError={t(ImportI18nKey.ArchiveSizeErrorDescription, { size: MAX_FILE_SIZE_MB })}
-            maxFileSize={MAX_FILE_SIZE_MB}
+            fileSizeError={t(ImportI18nKey.ArchiveSizeErrorDescription, { size: maxFileSizeMb })}
+            maxFileSize={maxFileSizeMb}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
             addButtonLabel={t(ButtonsI18nKey.Add)}
           />
@@ -115,8 +116,10 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
-            maxMultiFilesSize={MAX_MULTI_FILES_SIZE_MB}
-            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: MAX_MULTI_FILES_SIZE_MB })}
+            maxFileSize={maxFileSizeMb}
+            maxMultiFilesSize={maxMultiFilesSizeMb}
+            fileSizeError={t(ImportI18nKey.FileSizeErrorDescription, { size: maxFileSizeMb })}
+            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: maxMultiFilesSizeMb })}
             onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
@@ -137,8 +140,8 @@ const ImportFileTypeSelector: FC<Props> = ({
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             maxFilesCount={maxFilesCount}
-            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: MAX_MULTI_FILES_SIZE_MB })}
-            maxMultiFilesSize={MAX_MULTI_FILES_SIZE_MB}
+            multiFilesSizeError={t(ImportI18nKey.TotalFileSizeErrorDescription, { size: maxMultiFilesSizeMb })}
+            maxMultiFilesSize={maxMultiFilesSizeMb}
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
             addButtonLabel={t(ButtonsI18nKey.Add)}
           />

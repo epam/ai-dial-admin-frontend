@@ -4,6 +4,8 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
+import EntityUsageDashboard from '@/src/components/Analytics/Usage/EntityUsageDashboard';
+import { hasEntityDashboard } from '@/src/components/Analytics/Usage/utils/entity-blocks';
 import { resolveEntityAuditType } from '@/src/components/ActivityAudit/View/Header/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import UsageLog from '@/src/components/UsageLog/UsageLog';
@@ -33,6 +35,8 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>(DEFAULT_TIME_PERIOD);
   const sharableTimeFilter = getSharableTimeFilter(timeFilter);
+  // The same pair of flags that decides what `/dashboards` serves, so the page and the entity agree.
+  const isUsageDashboard = featureFlags.analyticsUsageEnabled && hasEntityDashboard(view);
 
   return (
     <div className="flex flex-row gap-4 size-full">
@@ -48,7 +52,15 @@ const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
         </div>
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
-        {activeTab === EntityViewTab.Dashboard && (
+        {activeTab === EntityViewTab.Dashboard && isUsageDashboard && (
+          <EntityUsageDashboard
+            defaultTimeFilter={sharableTimeFilter}
+            onTimeFilterChange={setTimeFilter}
+            entity={entity}
+            route={view}
+          />
+        )}
+        {activeTab === EntityViewTab.Dashboard && !isUsageDashboard && (
           <Dashboard
             defaultTimeFilter={sharableTimeFilter}
             onTimeFilterChange={setTimeFilter}
