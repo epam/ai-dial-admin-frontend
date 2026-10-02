@@ -24,10 +24,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
-import { MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 
 const MAX_FILES_COUNT = 30;
-const MAX_TOTAL_FILE_SIZE_BYTES = MAX_MULTI_FILES_SIZE_MB * 1024 * 1024;
 
 interface Props {
   isModalOpen: boolean;
@@ -89,8 +88,8 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     }
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    return totalSize > MAX_TOTAL_FILE_SIZE_BYTES;
-  }, [fileType, files]);
+    return totalSize > getImportSizeLimits(route).maxMultiFilesSizeMb * 1024 * 1024;
+  }, [fileType, files, route]);
 
   const onReadJsonFile = useCallback(
     (file: File | null, urlToRemove?: string) => {
