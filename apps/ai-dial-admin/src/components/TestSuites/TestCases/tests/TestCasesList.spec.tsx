@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
-import { CONTENT_FIT_COLUMN_IDS } from '@/src/components/TestSuites/utils/columns';
+import { CONTENT_FIT_COLUMN_IDS, VALIDITY_STATUS_COLUMN_ID } from '@/src/components/TestSuites/utils/columns';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -272,7 +272,10 @@ describe('TestCasesList — column auto-fit', () => {
     const handler = getHandler() as (event: { api: unknown }) => void;
     handler({ api: { autoSizeColumns, sizeColumnsToFit } });
 
-    expect(autoSizeColumns).toHaveBeenCalledWith({ colIds: CONTENT_FIT_COLUMN_IDS });
+    expect(autoSizeColumns).toHaveBeenCalledWith({
+      colIds: CONTENT_FIT_COLUMN_IDS,
+      columnLimits: [{ colId: VALIDITY_STATUS_COLUMN_ID, minWidth: 130 }],
+    });
     expect(sizeColumnsToFit).toHaveBeenCalledOnce();
     expect(autoSizeColumns.mock.invocationCallOrder[0]).toBeLessThan(sizeColumnsToFit.mock.invocationCallOrder[0]);
   });
