@@ -1,7 +1,14 @@
 import { ColDef, ICellRendererParams, ValueGetterFunc, ValueGetterParams } from 'ag-grid-community';
 import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { getTestCaseColumns, getSchemaFieldGridColumns, getValidityStatusColumn } from '../columns';
+import {
+  CONTENT_FIT_COLUMN_IDS,
+  getTestCaseColumns,
+  getSchemaFieldGridColumns,
+  getValidityStatusColumn,
+  INCLUDED_IN_RUN_COLUMN_ID,
+  VALIDITY_STATUS_COLUMN_ID,
+} from '../columns';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -173,6 +180,33 @@ describe('getTestCaseColumns', () => {
     const includedInRunColumn = result.find((column) => column.colId === 'includedInRun');
 
     expect(includedInRunColumn?.sort).toBeFalsy();
+  });
+
+  test('caps the ID column width instead of giving it a share of the available space', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const idColumn = result.find((column) => column.colId === 'id');
+
+    expect(idColumn?.maxWidth).toBe(200);
+  });
+
+  test('excludes includedInRun and status from fitGridWidth so they can be sized to their content', () => {
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema: [] });
+    const includedInRunColumn = result.find((column) => column.colId === INCLUDED_IN_RUN_COLUMN_ID);
+    const statusColumn = result.find((column) => column.colId === VALIDITY_STATUS_COLUMN_ID);
+
+    expect(includedInRunColumn?.suppressSizeToFit).toBe(true);
+    expect(statusColumn?.suppressSizeToFit).toBe(true);
+    expect(CONTENT_FIT_COLUMN_IDS).toEqual([INCLUDED_IN_RUN_COLUMN_ID, VALIDITY_STATUS_COLUMN_ID]);
+  });
+
+  test('leaves name and schema columns to stretch or shrink with the rest of the grid', () => {
+    const schema = [makeSchema('temperature')];
+    const result = getTestCaseColumns({ suite: makeSuite(), onCellChange, onToggleExpand: () => {}, schema });
+    const nameColumn = result.find((column) => column.colId === 'testCaseName');
+    const schemaColumn = result.find((column) => column.field === 'temperature');
+
+    expect(nameColumn?.suppressSizeToFit).toBeFalsy();
+    expect(schemaColumn?.suppressSizeToFit).toBeFalsy();
   });
 
   describe('file field context', () => {
