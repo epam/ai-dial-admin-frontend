@@ -1,4 +1,5 @@
 import { Token } from '@/src/models/auth';
+import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
 import {
   PausedPipeline,
   PausedPipelinesResponse,
@@ -13,6 +14,50 @@ export const RUNNER_PAUSED_URL = `${RUNNER_PIPELINES_URL}/paused`;
 export const RUNNER_CACHE_URL = `${RUNNER_PIPELINES_URL}/cache`;
 export const RUNNER_PAUSE_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/pause`;
 export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/resume`;
+
+export const RUNNER_DLQ_URL = 'v1/dlq';
+
+/**
+ * The listing's query, for one keyset page.
+ *
+ * `run_id` wins over `lane`: the service refuses `lane=live` together with a run, and a run's items are
+ * backfill items anyway — so naming the run is the narrower of the two and the lane it would imply adds
+ * nothing. Enforced here rather than only in the UI, because a 400 the console built for itself is a
+ * report nobody can act on.
+ *
+ * The cursor is the previous page's `next_cursor`, passed back opaquely. It is not bound to the filters,
+ * but a page walked under one filter and continued under another would read "older than that item" in a
+ * set the reader never saw, so the caller starts a new walk whenever the filter changes.
+ */
+export const RUNNER_DLQ_LIST_URL = (
+  pipelineName: string,
+  filters: DlqFilters,
+  limit: number,
+  cursor?: string,
+): string => {
+  const params = new URLSearchParams({ pipeline_name: pipelineName, limit: String(limit) });
+
+  if (filters.runId) params.set('run_id', filters.runId);
+  else if (filters.lane) params.set('lane', filters.lane);
+
+  if (cursor) params.set('cursor', cursor);
+
+  return `${RUNNER_DLQ_URL}?${params.toString()}`;
+};
+
+export const RUNNER_DLQ_REQUEUE_ITEM_URL = (id: number): string => `${RUNNER_DLQ_URL}/${id}/requeue`;
+
+/**
+ * The bulk requeue selects by pipeline and, optionally, by run — and by nothing else. The service
+ * re-runs every matching item it holds, so this URL carries no trace of whatever the grid is filtered to.
+ */
+export const RUNNER_DLQ_REQUEUE_URL = (pipelineName: string, runId?: string): string => {
+  const params = new URLSearchParams({ pipeline_name: pipelineName });
+
+  if (runId) params.set('run_id', runId);
+
+  return `${RUNNER_DLQ_URL}/requeue?${params.toString()}`;
+};
 
 /**
  * The enrichment runner: a second analytics upstream, separate from the registry, serving the runtime
@@ -63,5 +108,56 @@ export class AnalyticsRunnerApi extends BaseApi {
 
   resume(name: string, token: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(RUNNER_RESUME_URL(name), 'POST', token);
+  }
+
+  /**
+   * One page of a pipeline's dead letters, newest first, with the counts of everything the filter
+   * matches. The counts come back with the page, read in the same snapshot, so the summary a caller
+   * states and the rows it lists can never disagree.
+   */
+  async getDlq(
+    pipelineName: string,
+    filters: DlqFilters,
+    limit: number,
+    cursor: string | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<DlqPage>> {
+    const res = await this.getAction(RUNNER_DLQ_LIST_URL(pipelineName, filters, limit, cursor), token);
+
+    if (!res.success) return res;
+
+    const page = res.response as Partial<DlqPage> | null;
+    if (!Array.isArray(page?.items)) return { ...res, success: false };
+
+    // Normalised here rather than trusted. A deployment still running the build before the listing
+    // was paged answers `{items}` alone, and an absent counter would reach the card as `undefined`,
+    // which compares false against zero and renders a heading over nothing. Falling back to the page
+    // itself states a floor rather than a lie, and `has_more` false ends the walk after one page.
+    return {
+      ...res,
+      response: {
+        items: page.items,
+        next_cursor: page.next_cursor ?? null,
+        has_more: page.has_more ?? false,
+        total: typeof page.total === 'number' ? page.total : page.items.length,
+        requeueable_total:
+          typeof page.requeueable_total === 'number'
+            ? page.requeueable_total
+            : page.items.filter((item) => item.requeueable).length,
+      },
+    };
+  }
+
+  // Both requeues answer `{requeued}` and read no body, so neither sends one.
+  requeueDlqItem(id: number, token: Token): Promise<ServerActionResponse<DlqRequeueResponse>> {
+    return this.sendActionRequest(RUNNER_DLQ_REQUEUE_ITEM_URL(id), 'POST', token);
+  }
+
+  requeueDlq(
+    pipelineName: string,
+    runId: string | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<DlqRequeueResponse>> {
+    return this.sendActionRequest(RUNNER_DLQ_REQUEUE_URL(pipelineName, runId), 'POST', token);
   }
 }

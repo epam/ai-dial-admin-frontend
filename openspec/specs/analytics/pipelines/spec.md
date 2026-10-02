@@ -661,20 +661,41 @@ Each alert SHALL be drawn to what it is: the failure as an error, the rebuild as
 information. None SHALL interrupt a screen reader, the page rendering all three as it loads rather than
 raising them while it is read.
 
-Everything the state reports SHALL be presented in the **Runtime** tab, in three sections grouped by the
-question each answers:
+Everything the state reports SHALL be presented in the **Runtime** tab, grouped by the question each
+group answers:
 
 - **Schedule** — when it last ran and when it next runs.
 - **State** — how far behind its input it is, whether it is working through a backlog, the cursor
   position (version and identity), the materialized-through position (version and identity), and when it
   was last drained. Named for what it is: a pipeline is a standing process rather than a job with an
   end, so none of these counts towards a finish and "progress" would promise one.
-- **Failures and notices** — when the last failure happened. The service reports no timestamp of its own
-  for it — `last_error` is the last run's failure — so the run's time is what places it, and the tab
-  SHALL NOT invent one. The tab SHALL NOT restate the message of the failure, the clamp or the required
-  rebuild: all three are already raised as alerts above the tab strip, in the same words, and a reader
-  who has just read the alert would meet it twice on one screen. What the tab adds is the timing the
-  alert has no room for.
+
+Each group SHALL be presented as a **card**, stacked, each taking the full width. Rules between groups
+left the tab one undifferentiated column under its control bar, and the failures card below them is a
+card: two presentation idioms on one tab read as two unrelated screens. Side by side the cards were
+forced to a shared height, so the schedule — two values against the state's seven — stood above a
+card's worth of empty space, while the failures card beneath them was full width either way.
+
+A card SHALL carry no rim. It is a raised layer against the panel behind it, and that fill is already
+its boundary; a border on top of it draws the same box twice.
+
+
+- **Failures and notices** — when the last run failed. This is the registry's own verdict on a whole
+  run, which is a different kind of fact from the per-row dead letters the failures card lists: the
+  kinds that dead-letter are model-calling enrichments, and the kinds that report a run-level failure
+  are the ones the registry drives itself, so the two are never the same pipeline's answer to the same
+  question.
+
+The service reports no timestamp of its own for that failure — `last_error` is the last run's failure —
+so the run's time is what places it, and the console SHALL NOT invent one. Whether to present the group
+SHALL be judged on the raw member rather than on the formatted time: the formatting lands after the
+first render, so a gate read from it withholds the group on first paint and then pops it in, and drops
+it entirely for a pipeline that failed before it ever recorded a run.
+
+The console SHALL NOT restate the message of the failure, the clamp or the required rebuild anywhere in
+the tab: all three are already raised as alerts above the tab strip, in the same words, and a reader who
+has just read the alert would meet it twice on one screen. What the tab adds is the timing the alert has
+no room for.
 
 `drained_at` SHALL be presented under state rather than under schedule, and SHALL NOT be presented as a
 sign that the pipeline is alive. It records when a probe last found nothing matching the filter left to
@@ -690,10 +711,11 @@ control bar. The tab SHALL NOT state how old its answer is: an age beside every 
 values themselves, and re-reading is one click away.
 
 Reading again SHALL read **both** upstreams — the pipeline, which carries the state, and the runtime
-service, which carries the pause — because the tab presents facts from both and a control that refreshed
-one of them would leave the other stale behind a chip that says otherwise. A lag figure is measured against
-the present, so a value that is minutes old is a different statement from the same value read now, and a
-reader who cannot tell them apart cannot tell a stalled pipeline from a stale page.
+service, which carries the pause and the failures — because the tab presents facts from both and a
+control that refreshed one of them would leave the other stale behind a chip that says otherwise. A lag
+figure is measured against the present, so a value that is minutes old is a different statement from the
+same value read now, and a reader who cannot tell them apart cannot tell a stalled pipeline from a stale
+page.
 
 The **read-only facts row** above the tab strip SHALL carry no runtime value at all. It keeps what the
 declaration derives — grain key, version column, generation, created, updated. Four values fitted that
@@ -702,20 +724,25 @@ pipeline from a slow one. `drained_at` in particular SHALL NOT stay there: besid
 the pipeline's last sign of life, which is the one thing it does not report.
 
 A group whose every member the service omitted SHALL render nothing at all — not a heading over an empty
-row. An on-ingest pipeline has no schedule, and a pipeline that has never failed has no failure: a bare
-heading above white space reads as a fault rather than as an absence that is ordinary for that kind.
+card. An on-ingest pipeline has no schedule: a bare heading above white space reads as a fault rather
+than as an absence that is ordinary for that kind.
 
 The tab SHALL present exactly one of these content states:
 
 - **Loaded** — the state reports at least one run, and its values are presented.
-- **Never run** — a state from which no group has anything to draw. The tab SHALL state that the pipeline
-  has not run yet, in the console's own empty-state treatment, rather than presenting a row of
-  placeholders. This SHALL NOT be judged on `last_run_at`: ADAS records that member only for the kinds it
+- **Never run** — a state from which no group has anything to draw, **a reported failure included**: a
+  pipeline that failed has run, and telling its reader otherwise sends them looking for a pipeline that
+  never started. The tab SHALL state that the pipeline has not run yet, in the console's own empty-state
+  treatment, rather than presenting a row of placeholders. This SHALL NOT be judged on `last_run_at`: ADAS records that member only for the kinds it
   drives on a schedule, so an on-ingest pipeline the runner drives has none of it while working
   perfectly, and judging by it alone told a running pipeline it had never run.
 - **Unavailable** — the pipeline was read but carries no state at all. The tab SHALL state that the runtime
   state could not be read and SHALL state that the pipeline's configuration is unaffected, so the reader
   does not act on the absence as if the pipeline were broken.
+
+The failures card is governed by its own requirements and SHALL be presented independently of these three:
+it reads a different service, and a pipeline that has never run can still hold dead letters from before
+its state was reset.
 
 `unclamped_reads` SHALL NOT be presented. It reports, per enrichment the pipeline reads, why the window was
 **not** held — six closed-dictionary reasons, one of them simply "this pipeline does not read it" — and
@@ -726,8 +753,9 @@ measured against the moment it is read, so two reads of an unchanged position di
 them and both are correct; a clamp is progress rather than an error. Presenting either as a fault would be
 the console inventing a judgement the service does not make.
 
-A value SHALL be presented in full rather than truncated. The tab gives each one a third of the page,
-and a cursor identity cut short is one nobody can read or copy.
+A value SHALL be presented in full rather than truncated, with the whole of it reachable where the
+column it sits in is narrower than the value. A cursor identity cut short with no way to read the rest
+is one nobody can use.
 
 A member the service omits SHALL be **left out** rather than presented as a zero or as an em dash. These
 values appear as the pipeline runs, so a row of placeholders would state absence where there is simply
@@ -738,9 +766,10 @@ State SHALL NOT be sent when the pipeline is saved.
 #### Scenario: Execution state is presented
 
 - **WHEN** a full admin opens the `Runtime` tab of a pipeline that has run
-- **THEN** its last run and next run are presented under the schedule section
+- **THEN** its last run and next run are presented in the schedule card
 - **AND** its lag, backlog, cursor position, materialized-through position and drained-at are presented
-  under the state section
+  in the state card
+- **AND** the two cards are stacked, each the full width
 
 #### Scenario: The measured values are no longer among the read-only facts
 
@@ -753,7 +782,7 @@ State SHALL NOT be sent when the pipeline is saved.
 - **GIVEN** a pipeline with steady input whose `drained_at` is months old while its materialized-through
   position advances
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** `drained_at` is presented under state rather than under schedule
+- **THEN** `drained_at` is presented in the state card rather than the schedule card
 - **AND** it is not presented as the pipeline's last activity or as evidence that it has stalled
 
 #### Scenario: The tab offers to read the values again
@@ -787,21 +816,21 @@ State SHALL NOT be sent when the pipeline is saved.
 
 - **WHEN** a pipeline whose last run failed is opened
 - **THEN** the failure reported by the service is presented as an alert, worded by the service
-- **AND** the `Runtime` tab states when it happened without repeating the alert's message
+- **AND** the `Runtime` tab's failures group states when it happened without repeating the alert's message
 
 #### Scenario: A running on-ingest pipeline is not called never-run
 
 - **GIVEN** a pipeline the service reports with a materialized-through position and no `last_run_at`
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the tab does not state that the pipeline has not run yet
-- **AND** its state group is presented
+- **AND** its state card is presented
 
 #### Scenario: A group with nothing to report is not drawn
 
-- **GIVEN** an on-ingest pipeline that has never failed, for which the service records no run schedule
+- **GIVEN** an on-ingest pipeline for which the service records no run schedule
 - **WHEN** a full admin opens its `Runtime` tab
-- **THEN** neither a schedule group nor a failures group is rendered
-- **AND** no empty heading is presented in their place
+- **THEN** no schedule card is rendered
+- **AND** no empty heading is presented in its place
 
 #### Scenario: A clamp is presented as progress
 
@@ -821,10 +850,17 @@ State SHALL NOT be sent when the pipeline is saved.
 - **THEN** no alert is presented
 - **AND** its `Runtime` tab draws no failures group at all
 
+#### Scenario: A pipeline whose only recorded fact is a failure is not called never-run
+
+- **GIVEN** a pipeline whose state carries a failure and no run timestamp
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab does not state that the pipeline has not run yet
+- **AND** the failure is presented in the failures group
+
 #### Scenario: Unclamped reads are not presented
 
 - **WHEN** a pipeline whose state reports `unclamped_reads` is opened
-- **THEN** none of them is presented among the facts, as an alert, or in any Runtime section
+- **THEN** none of them is presented among the facts, as an alert, or in any Runtime card
 - **AND** the member remains readable in the JSON editor
 
 #### Scenario: State is not sent on save
@@ -1707,6 +1743,12 @@ controlled through a service that authorizes every one of its endpoints, reads i
 rights and offers no consumer-facing read — so for anyone else there is nothing to present read-only and
 the tab is withheld in full rather than shown empty.
 
+The **Runtime tab SHALL carry an error mark** once the dead-lettered failures have been read and there
+is at least one, with their number stated in text beside the strip for a reader who cannot see it. A
+reader who opens the view on `Properties` would otherwise have to open the tab to discover there is
+anything to act on. No other tab carries one: the state the Runtime tab reports is a position rather
+than a fault, and the Audit tab's activity list is unbounded and grows with every edit.
+
 The identity row — the enabled-state badge, the runtime status chip, the pipeline name, its copy control,
 the `Discard` / `Save` change bar, the enable/disable control, the delete control and the JSON editor
 toggle — SHALL render **above** the tab strip, presented whichever tab is
@@ -1774,6 +1816,13 @@ NOT be gated on full-admin rights, which the save, the enable/disable control an
 - **WHEN** the user opens the pipeline detail view
 - **THEN** the tab strip carries `Properties` and `Audit` only
 - **AND** no runtime state is presented anywhere on the page
+
+#### Scenario: The Runtime tab marks that something has failed
+
+- **GIVEN** a model-calling enrichment the runtime service reports dead-lettered failures for
+- **WHEN** a full admin opens the detail view on `Properties`
+- **THEN** the `Runtime` tab carries an error mark and the count is stated beside the strip
+- **AND** neither the `Properties` nor the `Audit` tab carries one
 
 #### Scenario: The identity row and its actions stay above the tab strip
 
@@ -2872,9 +2921,12 @@ modal to explain: an enrichment pipeline is registered from what the operator ty
 
 ### Requirement: Runtime control is reached through a second analytics service
 
-Pausing a pipeline, resuming it, reading which pipelines are paused and reading which ones the runner
-has taken on are served by the **analytics enrichment runner**, a service distinct from the one that
-holds the pipeline registry. The console SHALL
+Pausing a pipeline, resuming it, reading which pipelines are paused, reading which ones the runner
+has taken on, and reading and re-running its dead-lettered failures are served by the **analytics
+enrichment runner**, a service distinct from the one that holds the pipeline registry. Its failures
+listing is **paged by cursor and counted by the service**: every page carries the number of items the
+filter matches and the number of them it would re-run, read in the page's own snapshot, so a caller
+never has to count rows to state a total. The console SHALL
 reach it at its own configured host and SHALL treat it as a separate upstream throughout: a registry read
 that succeeds while the runner is unreachable SHALL still present the pipeline.
 
@@ -2885,7 +2937,9 @@ refused.
 
 An installation that has not configured the runner's host SHALL behave exactly as one whose runner did not
 answer: no runtime affordance is presented, and no error is raised for the absence. Runtime control is an
-addition to the console, not a precondition for reading a pipeline.
+addition to the console, not a precondition for reading a pipeline. The failures card is a runtime
+affordance like the rest: with no host configured it SHALL NOT be presented and no request SHALL be
+issued for it.
 
 The runner reports failures in the same envelope the registry does — a status, a stable machine code, a
 human-readable message, the path and the method — so a refusal SHALL be surfaced the way a registry refusal
@@ -2921,6 +2975,7 @@ can act on and SHALL be distinguished from a generic failure:
 - **GIVEN** no runtime service host is configured
 - **WHEN** a full admin opens a pipeline's detail view
 - **THEN** no runtime affordance is presented
+- **AND** no failures card is presented and no failures request is issued
 - **AND** no error notification is raised
 
 #### Scenario: A cold runner is distinguished from a broken one
@@ -3025,6 +3080,16 @@ responses:
 - a **breaker** pause was taken by the service's own dead-letter circuit breaker, and it lifts itself. The
   banner SHALL state when it lifts.
 
+A **breaker** pause SHALL additionally state the reason the service recorded when it took the pause. That
+reason names the evidence the breaker tripped on — how many of the last N units of work were
+dead-lettered — which is the first thing a reader needs and the one fact the banner cannot derive. It
+SHALL be presented as the service worded it and SHALL NOT be re-phrased: the threshold and the window are
+the service's configuration, and a console that restated them would be quoting a copy.
+
+An **operator** pause SHALL NOT state a reason. The service records a fixed string for it that says only
+that an operator paused the pipeline, which the banner already states by naming the origin, so presenting
+it would be the same sentence twice.
+
 The banner SHALL NOT name who paused the pipeline. The runtime service records the origin and the reason it
 wrote at the time, and no user identity, so a name in this banner could only be invented.
 
@@ -3039,6 +3104,7 @@ and an unread runtime does not support it.
 - **THEN** a banner states that the pipeline is paused and how long it has been
 - **AND** it states that input keeps arriving and is worked through on resume
 - **AND** it offers a resume control
+- **AND** it states no reason
 
 #### Scenario: A breaker pause states when it lifts
 
@@ -3047,6 +3113,13 @@ and an unread runtime does not support it.
 - **WHEN** a full admin opens its detail view
 - **THEN** the banner states that the pause was taken by the service rather than by an operator
 - **AND** it states when the pause lifts by itself
+
+#### Scenario: A breaker pause states the evidence it tripped on
+
+- **GIVEN** a pipeline the runtime service reports as paused by its circuit breaker, with a recorded
+  reason
+- **WHEN** a full admin opens its detail view
+- **THEN** the banner presents that reason as the service worded it
 
 #### Scenario: The banner names no author
 
@@ -3155,3 +3228,456 @@ never disabled.
 - **WHEN** a full admin opens an enabled pipeline's detail view
 - **THEN** the header states that it is enabled
 - **AND** no runtime chip is presented
+
+### Requirement: The Runtime tab presents the pipeline's dead-lettered failures
+
+A **model-calling** enrichment dead-letters the work it could not finish, and the runtime service serves
+those items per pipeline. The console SHALL present them on the **Runtime** tab, in a single
+**Failures** card below the schedule and state cards, and SHALL NOT file them under a tab of their own:
+the pause a dead-letter burst triggers is already stated on this page, and the failures are the reason
+for it.
+
+The card SHALL be presented for a model-calling enrichment and for **no other kind**. A SQL enrichment
+and an aggregate are all-or-nothing — the statement either applies to the whole batch or fails it — so
+their failure is the run's, reported as `last_error` and presented as this requirement's sibling states.
+A per-row queue of them would list either nothing or everything, and in neither case would a single row
+be the thing to act on.
+
+The card SHALL open collapsed, as a summary of the pipeline's failures:
+
+- the **total**, and the time of the newest failure stated as an age;
+- the **retryable** and the **not-retryable** counts, each saying in a phrase what the split means, with
+  the bulk retry offered on the retryable one and nothing offered on the other.
+
+Those figures SHALL be the **service's own counters**, which it reports with every page of the listing
+and counts over the whole filter in the page's own snapshot. The console SHALL NOT derive them from the
+rows it holds: the listing is paged, so the rows are a window, and a total taken from them would
+describe the window.
+
+The summary SHALL describe **the pipeline**, not the grid. A path or a run chosen inside the card
+narrows the rows listed beneath it and SHALL NOT change the total, the age of the newest failure or the
+retryable split above them: those answer what is wrong with this pipeline, and a headline that fell from
+sixty to ten because the reader looked at one path would be reporting the filter. The console SHALL
+therefore read the summary unnarrowed, and SHALL re-read it whenever a re-run changes what the pipeline
+holds.
+
+The card SHALL NOT present a breakdown of the failures by stage, and the grid SHALL NOT offer a stage
+filter. The stage of each failure is stated on its own row, which is where it is acted on; a
+proportional bar above the card and a row of chips inside it are a second and a third place to read the
+same facts, and neither tells an operator anything the rows do not.
+
+Whether an item can be re-run SHALL be taken from the service's own flag and **SHALL NOT be predicted**.
+The service refuses a second class of item at requeue time — one whose archived payload predates the
+evaluator fold — but it decides that on the payload, which it does not serve, and no served member
+stands in for it: the declaration revision an item carries was renamed into that column by a migration
+that deliberately left the rows alone, so a pre-fold item shows an ordinary-looking revision there. The
+console SHALL offer the re-run and report the refusal the service answers with.
+
+A dead letter's **path** SHALL be derived from the run it names: an item naming a backfill run came from
+that replay, an item naming none came from the live path.
+
+A dead letter's **scope** — whether re-running it re-runs a chunk, a single row, or only the write-back —
+SHALL be derived from the stage and the grain key, and SHALL be presented **only for a pipeline whose
+trigger is not a group**. On a group pipeline the grain key carries the group key, which makes the same
+derivation state the opposite of the truth; the service exposes nothing else that distinguishes them, so
+the console SHALL omit the value rather than compute one it cannot stand behind.
+
+The **Runtime tab SHALL carry an error mark** once the failures have been read and there is at least
+one, so a reader on `Properties` sees that there is something to act on without opening the tab. A mark
+rather than a number: the strip answers whether something is wrong, which is a severity, and the tab
+strip's own count badge is drawn in the accent — a quantity worth noticing rather than a fault — with
+no way to re-colour it.
+
+Because the mark is decorative to assistive technology, the count SHALL be stated in text beside the
+strip as a status. A fault signalled by colour alone is signalled to nobody.
+
+The card SHALL be presented only where the failures can be read at all: a caller who is not a full admin
+is issued no runtime request, an installation with no runtime host has none to issue, and a deployment
+with analytics disabled renders neither the tab strip nor the tab the answer would reach.
+
+#### Scenario: Failures are summarized on the Runtime tab
+
+- **GIVEN** a model-calling enrichment with dead-lettered items
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** a failures card states the total and the age of the newest failure
+- **AND** it states how many items are retryable and how many are not
+- **AND** both figures are the ones the service counted, not a count of the rows on screen
+
+#### Scenario: A SQL enrichment has no failures card
+
+- **GIVEN** an enrichment pipeline whose transform is SQL
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no failures card is presented
+- **AND** no request is issued for its dead letters
+
+#### Scenario: An aggregate has no failures card
+
+- **GIVEN** an aggregate pipeline
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no failures card is presented
+- **AND** its run-level failure is presented as this tab's own failures group
+
+#### Scenario: No stage breakdown and no stage filter are presented
+
+- **GIVEN** a pipeline whose failures span several stages
+- **WHEN** a full admin opens the failures card and expands it
+- **THEN** no breakdown of the failures by stage is presented
+- **AND** no control filters the rows by stage
+- **AND** each row still states its own stage
+
+#### Scenario: An item the service may still refuse is offered and the refusal reported
+
+- **GIVEN** a dead letter the service marks requeueable whose archived payload it would refuse
+- **WHEN** the failures card is presented
+- **THEN** the item is counted as retryable and offered a re-run
+- **AND** activating it reports the refusal the service answered with
+
+#### Scenario: Scope is withheld on a group pipeline
+
+- **GIVEN** a pipeline whose trigger is a group
+- **WHEN** a dead letter's detail is opened
+- **THEN** no scope is stated for it
+
+#### Scenario: The tab marks that something has failed
+
+- **GIVEN** a model-calling enrichment with dead-lettered items
+- **WHEN** a full admin opens the detail view on `Properties`
+- **THEN** the `Runtime` tab carries an error mark
+- **AND** the number of failures is stated in text beside the tab strip
+
+#### Scenario: No failures read where its answer could not be presented
+
+- **GIVEN** a deployment with analytics disabled
+- **WHEN** a full admin opens a model-calling enrichment's detail view
+- **THEN** no request is issued for its dead letters
+
+### Requirement: Dead-lettered failures are listed in a grid inside the failures card
+
+Activating the card's expand control SHALL open a grid of the failures **inside the same card**, under
+the summary, and SHALL change the control to withdraw it again. The expansion SHALL be stated
+programmatically, not by the label alone. No overlay SHALL be opened for it: the card is already on the
+page the reader asked for, and a sheet over it would hide the pause and the state it has to be read
+against.
+
+The grid SHALL carry a filter row of two controls:
+
+- a **path** control choosing live, backfill, or both. It SHALL narrow the request rather than the
+  loaded rows, because the service applies it before it pages: filtering locally would narrow one page
+  and call the result the path's failures. **Every path** SHALL be the initial choice. The control
+  SHALL be named for assistive technology without repeating that name on screen beside its three
+  self-describing values.
+- a **search** over the failure message and the grain key, applied to the rows loaded so far. Its
+  placeholder SHALL name those two fields rather than restating where the reader is: a term that
+  matches nothing is usually one typed for a field the search does not read. The field SHALL be open
+  rather than behind a toggle, so the term and the control that holds it cannot outlive each other.
+
+When a **run filter** is in force the path control SHALL be replaced by a dismissible indicator naming
+that run, and the request SHALL carry the run rather than a path: the service refuses a request that
+names both the live path and a run, and a run's items are backfill items by definition.
+
+The grid SHALL present, for each failure: when it failed, as an age with the exact time reachable; the
+stage, marked by a colour and named; the failure message on one line; and, for a retryable item, a
+re-run control. A not-retryable row SHALL offer no control in its place rather than a disabled one.
+
+Rows SHALL be ordered newest first, as the service returns them.
+
+The listing SHALL be **paged**. The grid SHALL ask for one page at a time and append the next when the
+reader scrolls to the end of what is loaded, carrying the cursor the previous page answered with. A
+page that does not arrive SHALL stop the walk rather than being asked for again on every further
+scroll. Changing the path or the run SHALL start a new walk from the newest item, because a cursor
+means "older than this item" in whatever set is being read and continuing one across filters would
+place the reader in a set they never saw.
+
+Activating a row anywhere but on its **two control cells** SHALL open or close that row's detail. The
+chevron and the re-run control are excluded, each because the cell carries its own action: the service
+that draws the grid listens for a click on the row itself, below the point where the console's own
+handlers run, so a chevron left in both toggles twice and cancels itself out.
+
+#### Scenario: The failures grid opens inside the card
+
+- **WHEN** a full admin activates the card's expand control
+- **THEN** a grid of the failures is presented inside the same card
+- **AND** the control states that the card is expanded
+- **AND** no overlay or side sheet is opened
+
+#### Scenario: The path filter narrows the request
+
+- **GIVEN** the failures grid, showing every path
+- **WHEN** the user chooses the backfill path
+- **THEN** the failures are read again for that path
+- **AND** the rows presented are the ones the service returned for it
+
+#### Scenario: The card summarizes every path, not just the live one
+
+- **GIVEN** a pipeline whose failures are split between the live path and a backfill run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the card's total counts both
+- **AND** the path control states that every path is selected
+
+#### Scenario: The chevron opens the detail exactly once
+
+- **GIVEN** the failures grid
+- **WHEN** the user activates a row's chevron
+- **THEN** that row's detail is presented
+- **AND** activating the chevron again withdraws it
+
+#### Scenario: A scroll to the end of the listing asks for the next page
+
+- **GIVEN** the failures grid showing a page the service reports more after
+- **WHEN** the reader scrolls to the end of what is loaded
+- **THEN** the next page is read and appended beneath it
+- **AND** a scroll that does not reach the end asks for nothing
+
+#### Scenario: Changing the filter starts a new walk
+
+- **GIVEN** the failures grid with several pages loaded
+- **WHEN** the reader chooses a different path
+- **THEN** the listing restarts from that path's newest item
+- **AND** no cursor from the previous walk is sent
+
+#### Scenario: Narrowing the grid does not move the summary
+
+- **GIVEN** the failures card of a pipeline holding failures on both paths
+- **WHEN** the user narrows the grid to one path
+- **THEN** the rows listed are that path's
+- **AND** the total, the age of the newest failure and the retryable split are unchanged
+
+#### Scenario: The search narrows the loaded rows
+
+- **GIVEN** the failures grid
+- **WHEN** the user opens the search and enters a term
+- **THEN** only the rows whose message or grain key contains it are presented
+
+#### Scenario: A run filter replaces the path control
+
+- **GIVEN** the failures grid filtered to one backfill run
+- **THEN** the path control is replaced by a dismissible indicator naming the run
+- **AND** the request carries the run and no path
+- **AND** dismissing the indicator restores the path control
+
+#### Scenario: A not-retryable row offers no re-run
+
+- **GIVEN** a failure the console presents as not retryable
+- **WHEN** its row is presented
+- **THEN** no re-run control is offered on it
+
+### Requirement: A dead letter's detail is opened in place
+
+Activating a failure's row SHALL open its detail as a full-width region directly beneath it, inside the
+grid, and activating it again SHALL close it. The detail SHALL state, as labelled values: the item's
+identifier, with a control that copies it; its scope and what re-running it would re-run, where a scope
+is stated at all; its path; the run that produced it, where it has one, as plain text rather than a link,
+because the console has no page for a run; its grain key, or what the absence of one means; and the
+declaration revision it was recorded against.
+
+The detail SHALL state the **failure message in full**, wrapped rather than truncated, with a control
+that copies it. A message that reports several validation failures at once SHALL be presented as one
+line per failure rather than as a single run-on line. A failure the service recorded **no** message for
+SHALL say so: the column is nullable and some exceptions carry none, and a blank where a message
+belongs reads as a rendering fault.
+
+For a failure from a backfill run the detail SHALL additionally offer to narrow the grid to that run,
+and to re-run every retryable failure of that run. The first SHALL be withheld when that run's filter is
+already in force. The second SHALL be offered on the **run's** own population rather than on this row's
+— a poison row opened first must not hide an action that would re-run four hundred others — and its
+count SHALL be the service's answer for that run, the same number the confirmation then states.
+
+#### Scenario: A failure's detail opens beneath its row
+
+- **WHEN** the user activates a failure's row
+- **THEN** its detail is presented directly beneath that row
+- **AND** the row states that it is expanded
+- **AND** activating the row again closes the detail
+
+#### Scenario: The detail states the item's identity and message in full
+
+- **GIVEN** an open failure detail
+- **THEN** the item's identifier is stated with a control that copies it
+- **AND** the failure message is presented in full, wrapped, with a control that copies it
+
+#### Scenario: A multi-part validation message is presented one failure per line
+
+- **GIVEN** a failure whose message reports several validation failures at once
+- **WHEN** its detail is opened
+- **THEN** each failure is presented on its own line
+
+#### Scenario: A backfill failure's run is named but not linked
+
+- **GIVEN** an open detail of a failure produced by a backfill run
+- **THEN** the run is stated as plain text
+- **AND** it is not presented as a link
+
+#### Scenario: A failure with no message says so
+
+- **GIVEN** a dead letter the service recorded no message for
+- **WHEN** its detail is opened
+- **THEN** the detail states that no message was recorded
+- **AND** nothing on the card fails to render
+
+#### Scenario: The run re-run is offered from a row that cannot be re-run on its own
+
+- **GIVEN** an open detail of a failure the service stored no payload for, in a run that has others
+- **THEN** the control that re-runs the run is offered
+- **AND** it states the count the service answered for that run
+
+#### Scenario: A backfill failure offers to narrow the grid to its run
+
+- **GIVEN** an open detail of a failure produced by a backfill run, with no run filter in force
+- **WHEN** the user activates the control that filters by that run
+- **THEN** the grid is narrowed to that run
+- **AND** the control is no longer offered while that filter is in force
+
+### Requirement: A dead-lettered failure can be re-run
+
+The console SHALL offer three re-runs, each sending exactly what the reader asked for:
+
+- **one failure**, from its row. This is a single reversible act on one item, so it SHALL be sent
+  without confirmation.
+- **every retryable failure of the pipeline**, from the card's retryable tile.
+- **every retryable failure of one backfill run**, from a failure's detail.
+
+Both bulk re-runs SHALL be confirmed in a **dialog**, the way the console already confirms a pause and a
+delete. A bulk re-run reaches items the reader cannot see, which is more than a tile has room to say and
+more than a reader should have to infer from a count; the dialog is where that is stated in sentences.
+
+A bulk re-run SHALL be sent for the **pipeline**, and for the run where a run is named — never for the
+filters the grid happens to be showing. The service selects the items itself and re-runs every matching
+one, so a dialog that implied the on-screen rows would mis-state what was about to happen. Each dialog
+SHALL therefore state:
+
+- how many items it will send;
+- that the selection is the whole pipeline — or the whole run — and **not** what the grid is filtered to,
+  naming the filters in force when there are any, so the mismatch is stated rather than discovered;
+- for a run, that the items return to the ordinary queue rather than as a continuation of the replay,
+  and that they compete with the pipeline's live work while they drain;
+- **when the pipeline is paused**, that the re-run items wait in the queue until it is resumed. A re-run
+  into a paused pipeline is accepted and does nothing visible, and an operator who has just paused a
+  pipeline because of these failures is exactly the one about to ask for it.
+
+No other overlay SHALL be open when one of these dialogs is: the failures card and its grid are page
+content rather than a layer, so the dialog is the only layer in play.
+
+After any re-run the console SHALL read the failures again — **whether or not it succeeded**. A refusal
+of one item can mean the item is already gone, re-run by the retention sweep or by whoever else has the
+page open, and a listing left untouched then invites the same click again.
+
+The console SHALL report the outcome as a status message rather than silently: how many items were sent
+back, the paused caveat where it applies, and — when fewer were sent than were asked for — that the
+remainder could not be re-run. The service skips what it refuses rather than failing the batch, so a
+count lower than the request is an ordinary outcome and not an error.
+
+#### Scenario: One failure is re-run without confirmation
+
+- **GIVEN** a retryable failure's row
+- **WHEN** the user activates its re-run control
+- **THEN** that item alone is sent back to the queue
+- **AND** no confirmation is presented first
+- **AND** the failures are read again
+
+#### Scenario: A bulk re-run is confirmed in a dialog
+
+- **GIVEN** the failures card with retryable items
+- **WHEN** the user activates the bulk re-run
+- **THEN** a dialog is presented, stating how many items it will send
+- **AND** cancelling it sends nothing
+
+#### Scenario: A bulk re-run sends the pipeline, not the filtered rows
+
+- **GIVEN** the failures grid narrowed by a search term
+- **WHEN** the user activates the bulk re-run
+- **THEN** the dialog states that the whole pipeline is re-run and names the filter that is in force
+- **AND** confirming it sends a request naming the pipeline and no filter
+
+#### Scenario: A run's failures are re-run from a failure's detail
+
+- **GIVEN** an open detail of a failure produced by a backfill run
+- **WHEN** the user activates the control that re-runs that run's failures and confirms it
+- **THEN** the request names the pipeline and that run
+- **AND** the dialog stated that the items return to the ordinary queue rather than as a
+  continuation of the replay, competing with the pipeline's live work
+
+#### Scenario: A re-run into a paused pipeline says the items will wait
+
+- **GIVEN** a paused pipeline with retryable failures
+- **WHEN** the user activates a bulk re-run
+- **THEN** the dialog states that the items wait in the queue until the pipeline is resumed
+
+#### Scenario: A partial re-run states what was left
+
+- **GIVEN** a bulk re-run of ten items of which the service re-runs seven
+- **WHEN** it answers
+- **THEN** a status message states that seven were sent back and that the rest could not be re-run
+- **AND** it is not presented as a failed action
+
+### Requirement: The failures card states why it has nothing to show
+
+The card SHALL distinguish the reasons it is empty, because they call for different acts:
+
+- **no failures at all** — the card SHALL NOT be rendered. A heading over an empty card states that
+  something is missing, where the truth is that nothing has failed; this is the same rule the schedule
+  group follows on a pipeline that has no schedule. The card SHALL likewise be absent before the first
+  read has answered, so it does not appear as an empty frame and then fill.
+- **none on the chosen path, but some on another** — the card SHALL say so and SHALL offer to widen the
+  path.
+- **none matching the search** — the card SHALL say so and SHALL offer to clear it.
+- **none left in the filtered run** — the card SHALL say so and SHALL offer to clear the run filter.
+- **the read failed** — the card SHALL state that the failures could not be read and SHALL offer to read
+  them again. It SHALL NOT present a failed read as "no failures": on a failure listing the two are
+  opposite conclusions and the quiet one is the dangerous one.
+- **no runtime service is configured** — the card SHALL be absent, and nothing SHALL be called a
+  failure. An installation without a runner is a deployment choice; the console already treats it as
+  indistinguishable from one whose runner did not answer for every other runtime affordance, and an
+  error with a retry that can never succeed is the one reading that choice does not support.
+
+Each of these SHALL be announced to assistive technology rather than only drawn, so a reader who changed
+a filter learns the result without hunting for it.
+
+#### Scenario: A pipeline with no failures draws no card
+
+- **GIVEN** an enrichment pipeline the service reports no dead letters for
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no failures card is rendered
+- **AND** no heading for one is rendered in its place
+
+#### Scenario: The card does not appear before the read answers
+
+- **GIVEN** a model-calling enrichment whose failures have been asked for and not yet answered
+- **WHEN** the `Runtime` tab is rendered
+- **THEN** no failures card is rendered
+- **AND** it appears only once the service has reported a count
+
+#### Scenario: An empty live path offers to widen it
+
+- **GIVEN** a pipeline whose failures are all from backfill runs
+- **WHEN** the user narrows the failures grid to the live path
+- **THEN** it states that there are no live failures
+- **AND** it offers to show every path
+
+#### Scenario: A search that matches nothing offers to clear itself
+
+- **GIVEN** the failures grid with a search term entered
+- **WHEN** no loaded row matches it
+- **THEN** the grid states that no failure matches the filters
+- **AND** it offers to clear them
+
+#### Scenario: An unconfigured runtime service raises no card and no error
+
+- **GIVEN** no runtime service host is configured
+- **WHEN** a full admin opens a model-calling enrichment's `Runtime` tab
+- **THEN** no failures card is presented
+- **AND** nothing states that the failures could not be read
+
+#### Scenario: A run emptied by a re-run says so
+
+- **GIVEN** the failures grid filtered to one run, whose every failure has been re-run
+- **WHEN** the failures are read again
+- **THEN** the grid states that no failure is left in that run
+- **AND** it offers to clear the run filter
+
+#### Scenario: A failed read is not presented as no failures
+
+- **GIVEN** the runtime service refuses the failures read
+- **WHEN** the failures card is presented
+- **THEN** it states that the failures could not be read
+- **AND** it offers to read them again
+- **AND** it does not state that there are no failures

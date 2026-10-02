@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 
 import {
   Button,
@@ -16,12 +16,10 @@ import { IconPlayerPlay } from '@tabler/icons-react';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
+import { useMinuteTick } from '@/src/hooks/use-minute-tick';
 import { useI18n } from '@/src/locales/client';
 import { PausedPipeline, PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 import { formatRelativeTime } from '@/src/utils/analytics/session-formatting';
-
-/** The banner states the pause's age in minutes, so it re-reads the clock at that resolution. */
-const MINUTE_TICK_MS = 60_000;
 
 interface Props {
   pause: PausedPipeline;
@@ -46,20 +44,18 @@ const PipelinePauseBanner: FC<Props> = ({ pause, isResuming, onResume }) => {
 
   const resumesAt = useLocalDateTimeString(pause.resumesAt);
 
-  const [now, setNow] = useState(() => Date.now());
-
-  // Once a minute, not once a second: `formatRelativeTime`'s smallest unit is the minute, so a 1 Hz
-  // tick re-rendered the banner sixty times for every string it could change.
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), MINUTE_TICK_MS);
-    return () => clearInterval(timer);
-  }, []);
+  const now = useMinuteTick();
 
   const isBreaker = pause.origin === PauseOrigin.Breaker;
 
   const message = [
     t(AnalyticsPipelinesI18nKey.PausedBanner),
     isBreaker ? t(AnalyticsPipelinesI18nKey.PausedByBreaker) : null,
+    // The evidence the breaker tripped on — how much of the recent work was dead-lettered — presented as
+    // the service worded it, because the threshold and the window are its configuration and a console
+    // that restated them would be quoting a copy. Not for an operator pause: the service records a fixed
+    // string there saying only that an operator paused it, which the sentence above already says.
+    isBreaker && pause.reason ? t(AnalyticsPipelinesI18nKey.PausedReason, { reason: pause.reason }) : null,
     isBreaker && resumesAt ? t(AnalyticsPipelinesI18nKey.PausedResumesAt, { time: resumesAt }) : null,
   ]
     .filter(Boolean)
