@@ -72,7 +72,11 @@ describe('AppRunnerAssetView :: save validation', () => {
     await clickSave(
       runner({
         'dial:applicationTypeRoutes': {
-          my_route: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }] },
+          my_route: {
+            'dial:paths': ['/a'],
+            'dial:methods': ['GET'],
+            'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }],
+          },
         },
       }),
     );
@@ -97,7 +101,10 @@ describe('AppRunnerAssetView :: save validation', () => {
     ['no methods', { my_route: { 'dial:paths': ['/a'], 'dial:methods': [], 'dial:upstreams': [] } }],
     ['no paths', { my_route: { 'dial:paths': [], 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
     ['an unsupported method', { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['TRACE'], 'dial:upstreams': [] } }],
-    ['an upstream without an endpoint', { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [{}] } }],
+    [
+      'an upstream without an endpoint',
+      { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [{}] } },
+    ],
   ])('Should block save when a route has %s', async (_label, routes) => {
     await clickSave(runner({ 'dial:applicationTypeRoutes': routes }));
 

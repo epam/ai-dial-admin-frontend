@@ -37,7 +37,10 @@ describe('App runner asset :: validation survives arbitrary JSON', () => {
   test.each([
     ['methods as a string', { r: { 'dial:paths': ['/a'], 'dial:methods': 'GET', 'dial:upstreams': [] } }],
     ['paths as a string', { r: { 'dial:paths': '/a', 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
-    ['upstreams as an object', { r: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': { endpoint: 'x' } } }],
+    [
+      'upstreams as an object',
+      { r: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': { endpoint: 'x' } } },
+    ],
     ['a null route', { r: null }],
   ])('Should reject %s instead of throwing on it', (_label, routes) => {
     const bad = runner({

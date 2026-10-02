@@ -12,7 +12,13 @@ let capturedRoutesProps: { routes?: DialAppRoute[]; disabled?: boolean } | null 
 vi.mock('@/src/components/EntityView/AppRoute/AppRoute', () => ({
   default: (props: { routes?: DialAppRoute[]; disabled?: boolean }) => {
     capturedRoutesProps = props;
-    return <ul aria-label="routes">{props.routes?.map((route) => <li key={route.name}>{route.name}</li>)}</ul>;
+    return (
+      <ul aria-label="routes">
+        {props.routes?.map((route) => (
+          <li key={route.name}>{route.name}</li>
+        ))}
+      </ul>
+    );
   },
 }));
 

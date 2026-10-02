@@ -39,11 +39,13 @@ describe('AssetApplicationAppRoutes', () => {
     );
 
     expect(screen.getByRole('status')).toHaveTextContent('object routes');
-    expect(capturedProps.current).toEqual(expect.objectContaining({
-      routes: runnerRoutes,
-      format: ObjectAppRouteFormat.AppRunner,
-      disabled: true,
-    }));
+    expect(capturedProps.current).toEqual(
+      expect.objectContaining({
+        routes: runnerRoutes,
+        format: ObjectAppRouteFormat.AppRunner,
+        disabled: true,
+      }),
+    );
   });
 
   test('renders an own asset route object as editable', () => {
@@ -58,10 +60,12 @@ describe('AssetApplicationAppRoutes', () => {
       />,
     );
 
-    expect(capturedProps.current).toEqual(expect.objectContaining({
-      routes,
-      format: ObjectAppRouteFormat.AssetApplication,
-      disabled: false,
-    }));
+    expect(capturedProps.current).toEqual(
+      expect.objectContaining({
+        routes,
+        format: ObjectAppRouteFormat.AssetApplication,
+        disabled: false,
+      }),
+    );
   });
 });

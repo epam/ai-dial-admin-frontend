@@ -3,7 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import ObjectAppRoutes from '@/src/components/Assets/ObjectAppRoutes/ObjectAppRoutes';
-import { ObjectAppRouteFormat, ObjectAppRoutes as ObjectAppRoutesModel } from '@/src/components/Assets/ObjectAppRoutes/models';
+import {
+  ObjectAppRouteFormat,
+  ObjectAppRoutes as ObjectAppRoutesModel,
+} from '@/src/components/Assets/ObjectAppRoutes/models';
 
 vi.mock('@/src/components/EntityView/AppRoute/Content/RouteContent', () => ({
   default: ({ route, onChangeRoute }: any) => (
@@ -30,13 +33,7 @@ describe('ObjectAppRoutes', () => {
     const onChangeRoutes = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <ObjectAppRoutes
-        routes={routes}
-        format={ObjectAppRouteFormat.AppRunner}
-        onChangeRoutes={onChangeRoutes}
-      />,
-    );
+    render(<ObjectAppRoutes routes={routes} format={ObjectAppRouteFormat.AppRunner} onChangeRoutes={onChangeRoutes} />);
 
     await user.click(screen.getByRole('button', { name: 'Edit health' }));
 
@@ -50,11 +47,7 @@ describe('ObjectAppRoutes', () => {
     const user = userEvent.setup();
 
     render(
-      <ObjectAppRoutes
-        routes={{}}
-        format={ObjectAppRouteFormat.AssetApplication}
-        onChangeRoutes={onChangeRoutes}
-      />,
+      <ObjectAppRoutes routes={{}} format={ObjectAppRouteFormat.AssetApplication} onChangeRoutes={onChangeRoutes} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Add' }));

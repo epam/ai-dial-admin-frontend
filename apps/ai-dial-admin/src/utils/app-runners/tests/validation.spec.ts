@@ -98,7 +98,9 @@ describe('App Runner Utils :: validateAppRunner', () => {
       }),
     );
 
-    expect(errors.some((error) => error.message === 'A dial:response requires both dial:status and dial:body')).toBe(true);
+    expect(errors.some((error) => error.message === 'A dial:response requires both dial:status and dial:body')).toBe(
+      true,
+    );
   });
 
   describe('parameters', () => {
