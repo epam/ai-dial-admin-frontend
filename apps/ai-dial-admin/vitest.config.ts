@@ -1,6 +1,8 @@
+import { resolve } from 'node:path';
+import autoprefixer from 'autoprefixer';
+import tailwindcss from 'tailwindcss';
 import { configDefaults, coverageConfigDefaults, defineConfig } from 'vitest/config';
-import { DotReporter } from 'vitest/node';
-import type { TestCase } from 'vitest/node';
+import { InlineReporter } from './vitest-reporter';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // `@vitejs/plugin-react` ships only an `exports` map — no `types`, no `main` — so the inherited
@@ -10,23 +12,14 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // @ts-expect-error -- unresolvable under node resolution only
 import react from '@vitejs/plugin-react';
 
-class InlineReporter extends DotReporter {
-  override onTestCaseResult(testCase: TestCase) {
-    const result = testCase.result();
-
-    if (result.state === 'failed') {
-      const error = result.errors[0];
-      const message = error?.message?.split('\n')[0]?.trim();
-      process.stdout.write(`\n❌ ${testCase.fullName}${message ? ` — ${message}` : ''}\n`);
-    }
-
-    super.onTestCaseResult(testCase);
-  }
-}
-
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ai-dial-admin',
+  css: {
+    postcss: {
+      plugins: [tailwindcss({ config: resolve(__dirname, 'tailwind.config.js') }), autoprefixer()],
+    },
+  },
   plugins: [
     nxViteTsPaths(),
     react(),
