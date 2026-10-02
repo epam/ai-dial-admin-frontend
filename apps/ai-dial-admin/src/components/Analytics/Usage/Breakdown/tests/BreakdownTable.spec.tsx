@@ -11,6 +11,7 @@ import {
   RouteKind,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
+import { PAGE_SCOPE, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -76,6 +77,8 @@ const renderTable = (props: Partial<Props> = {}) =>
   render(
     <BreakdownTable
       view={UsageView.Llm}
+      scope={PAGE_SCOPE}
+      tabs={VIEW_BREAKDOWN_TABS[props.view ?? UsageView.Llm]}
       tab={BreakdownTab.Models}
       onTabChange={vi.fn()}
       rows={loaded<BreakdownRow[]>(ROWS)}
@@ -105,6 +108,13 @@ describe('BreakdownTable', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeTruthy();
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabApplications)).toBeTruthy();
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabProjects)).toBeTruthy();
+  });
+
+  test('offers only the tabs it is handed, which is how an entity block drops one', () => {
+    renderTable({ tabs: [BreakdownTab.Applications, BreakdownTab.Projects], tab: BreakdownTab.Applications });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabApplications)).toBeTruthy();
   });
 
   test('offers the MCP dimensions instead in that view', () => {
@@ -261,6 +271,8 @@ describe('BreakdownTable cost column and tab description', () => {
     rerender(
       <BreakdownTable
         view={UsageView.Llm}
+        scope={PAGE_SCOPE}
+        tabs={VIEW_BREAKDOWN_TABS[UsageView.Llm]}
         tab={BreakdownTab.Projects}
         onTabChange={vi.fn()}
         rows={loaded<BreakdownRow[]>(ROWS)}

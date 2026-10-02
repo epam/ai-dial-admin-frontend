@@ -14,8 +14,9 @@ import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 
 interface Props {
-  view: UsageView;
-  onViewChange: (view: UsageView) => void;
+  /** Absent on an entity dashboard, which shows only its entity's views and offers no `View by`. */
+  view?: UsageView;
+  onViewChange?: (view: UsageView) => void;
   compare: ComparePeriod;
   onCompareChange: (compare: ComparePeriod) => void;
   timePeriod: string;
@@ -70,15 +71,17 @@ const UsageControls: FC<Props> = ({
 
   return (
     <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-2">
-      <Select
-        size={ElementSize.Small}
-        className={`!w-auto ${VIEW_SELECT_WIDTH}`}
-        options={viewOptions}
-        value={view}
-        prefix={t(AnalyticsUsageI18nKey.ViewByLabel)}
-        ariaLabel={t(AnalyticsUsageI18nKey.ViewByLabel)}
-        onChange={(next) => onViewChange(next as UsageView)}
-      />
+      {view && onViewChange && (
+        <Select
+          size={ElementSize.Small}
+          className={`!w-auto ${VIEW_SELECT_WIDTH}`}
+          options={viewOptions}
+          value={view}
+          prefix={t(AnalyticsUsageI18nKey.ViewByLabel)}
+          ariaLabel={t(AnalyticsUsageI18nKey.ViewByLabel)}
+          onChange={(next) => onViewChange(next as UsageView)}
+        />
+      )}
       <TimeFilter
         timePeriod={timePeriod}
         onTimePeriodChange={onTimePeriodChange}

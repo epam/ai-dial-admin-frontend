@@ -23,6 +23,7 @@ import {
 } from '@/src/components/Analytics/Usage/queries';
 import {
   QueryExprType,
+  QueryFilterNode,
   QueryLogicalOperator,
   QueryOperator,
   QuerySortDirection,
@@ -110,9 +111,41 @@ describe('buildFilter', () => {
     });
   });
 
-  test('adds a deployment clause only when one is asked for', () => {
+  test("adds the entity's clauses only when a scope carries them", () => {
+    const clause: QueryFilterNode = {
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'deployment' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'gpt-4o' },
+      ],
+    };
+
     expect(clausesOf({ filter: buildFilter(scope()) } as StructuredQuery)).toHaveLength(3);
-    expect(clausesOf({ filter: buildFilter(scope({ entityFilter: 'gpt-4o' })) } as StructuredQuery)).toHaveLength(4);
+    expect(clausesOf({ filter: buildFilter(scope({ entityClauses: [clause] })) } as StructuredQuery).at(-1)).toEqual(
+      clause,
+    );
+  });
+
+  test.each<[string, (scoped: QueryScope) => StructuredQuery]>([
+    ['buildTotalsQuery', (scoped) => buildTotalsQuery(scoped)],
+    ['buildBucketedQuery', (scoped) => buildBucketedQuery(scoped, RESOLUTION)],
+    ['buildSpendBucketedQuery', (scoped) => buildSpendBucketedQuery(scoped, RESOLUTION)],
+    ['buildTabQuery', (scoped) => buildTabQuery(scoped, BreakdownTab.Applications, 10)],
+    ['buildTabKeysQuery', (scoped) => buildTabKeysQuery(scoped, BreakdownTab.Applications, ['rag'])],
+    [
+      'buildDimensionBucketedQuery',
+      (scoped) => buildDimensionBucketedQuery(scoped, RESOLUTION, BreakdownTab.Applications, ['rag']),
+    ],
+  ])("%s carries the entity's clause", (_, build) => {
+    const clause: QueryFilterNode = {
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'deployment' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'gpt-4o' },
+      ],
+    };
+
+    expect(JSON.stringify(build(scope({ entityClauses: [clause] })).filter)).toContain(JSON.stringify(clause));
   });
 });
 

@@ -1,3 +1,4 @@
+import { QueryFilterNode } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 
 export enum UsageView {
@@ -49,6 +50,21 @@ export enum KpiMetric {
   UniqueCallers = 'unique-callers',
   ErrorRate = 'error-rate',
   AvgLatency = 'avg-latency',
+}
+
+/**
+ * Which rows a block reads beyond its view and window. `own` is the entity's own rows — calls made
+ * to it; `made` is the calls it made, where a figure reads those instead. The page has neither.
+ */
+export interface UsageScope {
+  own: QueryFilterNode[];
+  made?: QueryFilterNode[];
+}
+
+/** One block of an entity dashboard; `ENTITY_BLOCKS` says why a tab is hidden. */
+export interface EntityBlock {
+  view: UsageView;
+  hiddenTab: BreakdownTab;
 }
 
 export interface RequestState<T> {

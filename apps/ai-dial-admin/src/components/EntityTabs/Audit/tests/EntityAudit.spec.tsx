@@ -33,6 +33,15 @@ vi.mock('@/src/components/Telemetry/Dashboard', () => ({
   },
 }));
 
+const usageDashboardPropsSpy = vi.fn();
+vi.mock('@/src/components/Analytics/Usage/EntityUsageDashboard', () => ({
+  __esModule: true,
+  default: (props: Record<string, unknown>) => {
+    usageDashboardPropsSpy(props);
+    return <section aria-label="usage dashboard" />;
+  },
+}));
+
 const usageLogPropsSpy = vi.fn();
 vi.mock('@/src/components/UsageLog/UsageLog', () => ({
   __esModule: true,
@@ -120,5 +129,45 @@ describe('EntityAudit', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
     expect(listPropsSpy.mock.calls.at(-1)?.[0]).toMatchObject({ defaultTimeFilter: SINCE_CREATION_PERIOD_ID });
+  });
+});
+
+describe('EntityAudit behind the analytics flags', () => {
+  beforeEach(() => {
+    dashboardPropsSpy.mockClear();
+    usageDashboardPropsSpy.mockClear();
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: true },
+    } as unknown as ReturnType<typeof useAppContext>);
+  });
+
+  test("serves the usage dashboard on a model's Dashboard tab, with the shared period", () => {
+    const entity = { name: 'gpt-4o' };
+
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
+
+    expect(screen.getByRole('region', { name: 'usage dashboard' })).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ entity, route: ApplicationRoute.Models, defaultTimeFilter: DEFAULT_TIME_PERIOD }),
+    );
+    expect(dashboardPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test('keeps the telemetry dashboard where the usage dashboard serves no blocks yet', () => {
+    render(<EntityAudit entity={{ name: 'rag' }} view={ApplicationRoute.Applications} />);
+
+    expect(screen.getByRole('dashboards')).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).not.toHaveBeenCalled();
+  });
+
+  test('keeps the telemetry dashboard with the usage flag off', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      featureFlags: { dashboardEnabled: true, analyticsUsageEnabled: false },
+    } as unknown as ReturnType<typeof useAppContext>);
+
+    render(<EntityAudit entity={{ name: 'gpt-4o' }} view={ApplicationRoute.Models} />);
+
+    expect(screen.getByRole('dashboards')).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).not.toHaveBeenCalled();
   });
 });

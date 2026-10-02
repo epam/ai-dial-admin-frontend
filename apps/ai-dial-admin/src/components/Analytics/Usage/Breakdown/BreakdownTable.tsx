@@ -10,12 +10,7 @@ import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/Dime
 import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import ShareCell from '@/src/components/Analytics/Usage/Breakdown/cells/ShareCell';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import {
-  DIALOG_BLOCK_SIZE,
-  ROUTE_KIND_TABS,
-  SEARCH_DEBOUNCE_MS,
-  VIEW_BREAKDOWN_TABS,
-} from '@/src/components/Analytics/Usage/constants';
+import { DIALOG_BLOCK_SIZE, ROUTE_KIND_TABS, SEARCH_DEBOUNCE_MS } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -23,6 +18,7 @@ import {
   ComparedWindows,
   KpiMetric,
   RequestState,
+  UsageScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
@@ -88,6 +84,9 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
 
 interface Props {
   view: UsageView;
+  scope: UsageScope;
+  /** The tabs offered, in order. */
+  tabs: BreakdownTab[];
   tab: BreakdownTab;
   onTabChange: (tab: BreakdownTab) => void;
   rows: RequestState<BreakdownRow[]>;
@@ -106,6 +105,8 @@ interface Props {
 
 const BreakdownTable: FC<Props> = ({
   view,
+  scope,
+  tabs: tabIds,
   tab,
   onTabChange,
   rows,
@@ -125,8 +126,8 @@ const BreakdownTable: FC<Props> = ({
   const hasComparison = Boolean(windows.previous);
 
   const tabs = useMemo(
-    () => VIEW_BREAKDOWN_TABS[view].map((option) => ({ id: option, label: t(BREAKDOWN_TAB_LABEL_KEY[option]) })),
-    [view, t],
+    () => tabIds.map((option) => ({ id: option, label: t(BREAKDOWN_TAB_LABEL_KEY[option]) })),
+    [tabIds, t],
   );
 
   const fallbackLabelKey = getFallbackLabelKey(tab);
@@ -207,6 +208,7 @@ const BreakdownTable: FC<Props> = ({
 
   const { datasource, datasourceKey, isLoadingBlock } = useBreakdownDialogRows({
     view,
+    scope,
     windows,
     tab,
     windowTotal,
