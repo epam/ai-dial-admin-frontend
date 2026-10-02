@@ -56,7 +56,12 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
-  return { emptyName: t(FileManagerI18nKey.EnterFolderName), duplicateName: t(FileManagerI18nKey.NameExists) };
+  return {
+    emptyName: t(FileManagerI18nKey.EnterFolderName),
+    duplicateName: t(FileManagerI18nKey.NameExists),
+    // Deliberately without the kit's `warning__` prefix: that would make the dot check non-blocking.
+    hiddenItemWarning: t(FileManagerI18nKey.CreateFolderValidateFirstSymbol),
+  };
 };
 
 /**
