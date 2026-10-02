@@ -45,7 +45,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import CellContextMenu, { ContextMenuPosition } from './CellContextMenu/CellContextMenu';
 import { baseColumnComparator } from './comparators/base-column-comparator';
-import { ROW_HEIGHT } from './constants';
+import { HEADER_HEIGHT, ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage, toColumnLeaves } from './utils';
 
@@ -265,7 +265,7 @@ const AgGridWrapper = <T extends object>({
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
         rowModelType="clientSide"
-        headerHeight={30}
+        headerHeight={HEADER_HEIGHT}
         rowHeight={ROW_HEIGHT}
         cellSelection={false}
         theme={themeBalham.withPart(colorSchemeDark).withParams({ ...GRID_THEME_COLORS })}

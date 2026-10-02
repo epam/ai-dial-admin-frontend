@@ -3,11 +3,15 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { analyticsRunnerApi } from '@/src/app/api/api';
 import {
   getPausedPipelines,
+  getPipelineFailures,
   getRunnerPipelines,
   pausePipeline,
+  requeueFailure,
+  requeueFailures,
   resumePipeline,
 } from '@/src/app/[lang]/pipelines/actions';
-import { PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
+import { DlqLane } from '@/src/models/analytics/pipeline-dlq';
+import { PauseOrigin, RUNNER_NOT_CONFIGURED } from '@/src/models/analytics/pipeline-runtime';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -47,7 +51,7 @@ describe('Pipeline runtime server actions', () => {
     const res = await getPausedPipelines();
 
     expect(runner.getPaused).not.toHaveBeenCalled();
-    expect(res).toEqual({ success: false });
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
   });
 
   test('getPausedPipelines carries a refusal through untouched', async () => {
@@ -74,7 +78,7 @@ describe('Pipeline runtime server actions', () => {
     const res = await getRunnerPipelines();
 
     expect(runner.getCache).not.toHaveBeenCalled();
-    expect(res).toEqual({ success: false });
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
   });
 
   test('pausePipeline pauses the named pipeline with the caller token', async () => {
@@ -93,5 +97,77 @@ describe('Pipeline runtime server actions', () => {
 
     expect(runner.resume).toHaveBeenCalledWith('usage-live', TOKEN_MOCK);
     expect(res.success).toBe(true);
+  });
+  const EMPTY_PAGE = { items: [], has_more: false, total: 0, requeueable_total: 0 };
+
+  test('getPipelineFailures reads one page with the caller token, the filters and the cursor', async () => {
+    runner.getDlq.mockResolvedValue({ success: true, response: EMPTY_PAGE });
+
+    await getPipelineFailures('usage-live', { lane: DlqLane.Backfill }, 20, 'djE6MQ');
+
+    expect(runner.getDlq).toHaveBeenCalledWith('usage-live', { lane: DlqLane.Backfill }, 20, 'djE6MQ', TOKEN_MOCK);
+  });
+
+  test('getPipelineFailures issues no request when no runner host is configured', async () => {
+    asConfigured(false);
+
+    const res = await getPipelineFailures('usage-live', {}, 20);
+
+    expect(runner.getDlq).not.toHaveBeenCalled();
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
+  });
+
+  // A failed read must not reach the card as an empty list: on a failure listing the two are opposite
+  // conclusions.
+  test('getPipelineFailures carries a refusal through rather than an empty list', async () => {
+    runner.getDlq.mockResolvedValue({ success: false, status: 503, errorHeader: 'postgres_unavailable' });
+
+    const res = await getPipelineFailures('usage-live', {}, 20);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'postgres_unavailable' }));
+    expect(res.response).toBeUndefined();
+  });
+
+  test('requeueFailure re-runs one item with the caller token', async () => {
+    runner.requeueDlqItem.mockResolvedValue({ success: true, response: { requeued: 1 } });
+
+    const res = await requeueFailure(48226);
+
+    expect(runner.requeueDlqItem).toHaveBeenCalledWith(48226, TOKEN_MOCK);
+    expect(res.response).toEqual({ requeued: 1 });
+  });
+
+  test('requeueFailure issues no request when no runner host is configured', async () => {
+    asConfigured(false);
+
+    const res = await requeueFailure(48226);
+
+    expect(runner.requeueDlqItem).not.toHaveBeenCalled();
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
+  });
+
+  test('requeueFailures re-runs the whole pipeline when no run is named', async () => {
+    runner.requeueDlq.mockResolvedValue({ success: true, response: { requeued: 4 } });
+
+    await requeueFailures('usage-live');
+
+    expect(runner.requeueDlq).toHaveBeenCalledWith('usage-live', undefined, TOKEN_MOCK);
+  });
+
+  test('requeueFailures scopes the re-run to a named run', async () => {
+    runner.requeueDlq.mockResolvedValue({ success: true, response: { requeued: 2 } });
+
+    await requeueFailures('usage-live', 'run-7');
+
+    expect(runner.requeueDlq).toHaveBeenCalledWith('usage-live', 'run-7', TOKEN_MOCK);
+  });
+
+  test('requeueFailures issues no request when no runner host is configured', async () => {
+    asConfigured(false);
+
+    const res = await requeueFailures('usage-live');
+
+    expect(runner.requeueDlq).not.toHaveBeenCalled();
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
   });
 });
