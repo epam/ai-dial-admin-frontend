@@ -11,7 +11,6 @@ import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -107,7 +106,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const interceptorsRef = useRef(entityInterceptors);
 
   useEffect(() => {
-    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Platform && appRunnerInterceptors) {
+    if (appRunnerInterceptors) {
       setRunnerInterceptors(appRunnerInterceptors);
     }
   }, [appRunnerInterceptors, appRunner, interceptors]);

@@ -20,16 +20,11 @@ const runner = (fields: Partial<DialAppRunnerResource>) =>
  * shown, and the button just looks dead.
  */
 describe('App runner asset :: validation survives arbitrary JSON', () => {
-  test('Should reject Core’s name-keyed route object instead of throwing on it', () => {
-    const routes = {
-      my_route: { 'dial:paths': ['/a'] },
-    } as unknown as DialAppRunnerResource['dial:applicationTypeRoutes'];
+  test('Should reject malformed Core route objects instead of throwing on them', () => {
+    const routes = { my_route: { 'dial:paths': ['/a'] } };
 
     expect(() => validateAppRunner(runner({ 'dial:applicationTypeRoutes': routes }))).not.toThrow();
-    expect(validateAppRunner(runner({ 'dial:applicationTypeRoutes': routes }))).toContainEqual({
-      field: 'dial:applicationTypeRoutes',
-      message: 'Routes must be a list; the name-keyed object form Core stores is not accepted here',
-    });
+    expect(validateAppRunner(runner({ 'dial:applicationTypeRoutes': routes })).length).toBeGreaterThan(0);
   });
 
   test('Should reject a non-string id instead of throwing on it', () => {
@@ -40,24 +35,24 @@ describe('App runner asset :: validation survives arbitrary JSON', () => {
   });
 
   test.each([
-    ['methods as a string', { name: 'r', paths: ['/a'], methods: 'GET' }],
-    ['paths as a string', { name: 'r', paths: '/a', methods: ['GET'] }],
-    ['upstreams as an object', { name: 'r', paths: ['/a'], methods: ['GET'], upstreams: { endpoint: 'x' } }],
-    ['a null route', null],
-  ])('Should reject %s instead of throwing on it', (_label, route) => {
+    ['methods as a string', { r: { 'dial:paths': ['/a'], 'dial:methods': 'GET', 'dial:upstreams': [] } }],
+    ['paths as a string', { r: { 'dial:paths': '/a', 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
+    ['upstreams as an object', { r: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': { endpoint: 'x' } } }],
+    ['a null route', { r: null }],
+  ])('Should reject %s instead of throwing on it', (_label, routes) => {
     const bad = runner({
-      'dial:applicationTypeRoutes': [route] as unknown as DialAppRunnerResource['dial:applicationTypeRoutes'],
+      'dial:applicationTypeRoutes': routes as unknown as DialAppRunnerResource['dial:applicationTypeRoutes'],
     });
 
     expect(() => validateAppRunner(bad)).not.toThrow();
     expect(validateAppRunner(bad).length).toBeGreaterThan(0);
   });
 
-  test('Should not accept a numeric route name via implicit stringification', () => {
+  test('Should reject a route key outside Core’s allowed pattern without throwing', () => {
     const bad = runner({
-      'dial:applicationTypeRoutes': [
-        { name: 123, paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'x' }] },
-      ] as unknown as DialAppRunnerResource['dial:applicationTypeRoutes'],
+      'dial:applicationTypeRoutes': {
+        'bad-route': { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [] },
+      },
     });
 
     expect(() => validateAppRunner(bad)).not.toThrow();

@@ -7,7 +7,8 @@ import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/
 import { DeploymentInterfaceType, DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
-import { AttachmentPaths, DialAppRoute, RouteResponse } from '@/src/models/dial/route';
+import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
+import { AttachmentPaths, RouteResponse } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 /**
@@ -207,7 +208,7 @@ export interface DialAppRunnerResource extends Omit<
    */
   name?: string;
   _metadata?: CoreResourceEntityMetadata;
-  ['dial:applicationTypeRoutes']?: DialAppRoute[];
+  ['dial:applicationTypeRoutes']?: CoreAppRunnerRoutes;
 }
 
 /**

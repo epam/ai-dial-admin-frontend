@@ -3,8 +3,12 @@
 import { FC } from 'react';
 
 import AppRunnerFeatures from '@/src/components/ApplicationRunners/ConfigurationView/Features';
+import ObjectAppRoutes from '@/src/components/Assets/ObjectAppRoutes/ObjectAppRoutes';
+import {
+  ObjectAppRouteFormat,
+  ObjectAppRoutes as ObjectAppRoutesModel,
+} from '@/src/components/Assets/ObjectAppRoutes/models';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
-import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
@@ -31,7 +35,7 @@ const TabsContent: FC<AppRunnerAssetTabsProps> = ({
 
       {activeTab === EntityViewTab.Features && (
         <AppRunnerFeatures
-          runner={runner}
+          runner={runner as unknown as DialApplicationScheme}
           onChangeRunner={(scheme: DialApplicationScheme) =>
             onChange({ ...runner, ...scheme } as DialAppRunnerResource)
           }
@@ -43,12 +47,13 @@ const TabsContent: FC<AppRunnerAssetTabsProps> = ({
       )}
 
       {activeTab === EntityViewTab.AppRoutes && (
-        <EntityRoutes
+        <ObjectAppRoutes
           roles={roles}
-          routes={runner['dial:applicationTypeRoutes']}
-          isAppRunnerView
-          isAssetView
-          onChangeRoutes={(routes) => onChange({ ...runner, 'dial:applicationTypeRoutes': routes })}
+          routes={runner['dial:applicationTypeRoutes'] as ObjectAppRoutesModel | undefined}
+          format={ObjectAppRouteFormat.AppRunner}
+          onChangeRoutes={(routes) =>
+            onChange({ ...runner, 'dial:applicationTypeRoutes': routes } as DialAppRunnerResource)
+          }
           disabled={isReadOnlyAdmin}
         />
       )}
