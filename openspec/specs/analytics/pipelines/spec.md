@@ -109,7 +109,7 @@ grid's standard column controls, and the page SHALL NOT carry a separate filter 
 is unpaged, those controls act on the whole registry.
 
 Columns SHALL be: **name**, **kind**, **target**, **inputs**, **trigger**, **transform**, **enabled**,
-**generation**, and **updated at**.
+**runtime**, **generation**, and **updated at**.
 
 The grain key and the version column are **not** among them. The service resolves those only for a listing
 narrowed to the enrichment kind that also asks for the compiled projection, and it refuses that projection
@@ -127,12 +127,27 @@ itself.
   carries, now that the transform is on it. It SHALL NOT name an evaluator or a version, and the grid SHALL
   NOT issue a per-row request of any kind to fill it.
 - The **inputs** cell SHALL render the read source the pipeline declared. An enrichment pipeline that
-  declared none — inheriting the source from its target's parent — SHALL render an em dash here, and its
-  resolved source SHALL be read on its own detail page, which asks for the compiled projection.
+  declared none — inheriting the source from its target's parent — SHALL state that it **follows its
+  target** rather than rendering an em dash: an em dash here reads as "no source", where the truth is a
+  source this listing cannot resolve. The resolved table SHALL be read on the pipeline's own detail
+  page, which asks for the compiled projection.
 - A column belonging to one kind SHALL render an em dash on a row of the other kind, which is an ordinary
   state rather than a failure: the service omits such a member rather than sending it empty.
 - The **enabled** cell SHALL render as a badge distinguishing an enabled from a disabled pipeline; colour
   alone SHALL NOT be the only carrier of that distinction.
+- The **runtime** cell SHALL state whether the pipeline's enqueue is running or paused, as a badge, with
+  colour not the only carrier. It SHALL render an em dash for a disabled pipeline, whose enqueue the runner
+  is not driving at all — configuration and runtime are separate axes, and a disabled pipeline has no
+  runtime answer rather than a negative one.
+
+The **runtime** column SHALL be filled from a **single** read of the runtime service for the whole page.
+The service answers with the paused pipelines as one list, so a pipeline's runtime is decided by whether
+its name is in that list; a request per row would be a request per pipeline for an answer already given
+whole.
+
+The **runtime** column SHALL be omitted entirely — rather than rendered with empty or error cells — when
+the runtime service is not configured, did not answer, or the caller is not a full admin. A column of
+identical failures states nothing about any row and implies a per-row fact the page does not have.
 
 Each row SHALL offer an action menu with a **delete** entry, whose confirmation dialog SHALL use the danger
 (red confirm) variant and SHALL identify the pipeline by name. After a successful delete the listing SHALL
@@ -164,7 +179,7 @@ refresh client-side, preserving the filters currently applied.
 #### Scenario: A resolved input is presented
 
 - **WHEN** the listing renders an enrichment pipeline that declared no input of its own
-- **THEN** its inputs cell shows an em dash rather than a resolved source
+- **THEN** its inputs cell states that the pipeline follows its target, rather than showing an em dash
 - **AND** the source resolved from its target is presented on that pipeline's detail page
 
 #### Scenario: An aggregate row leaves the enrichment column empty
@@ -183,6 +198,38 @@ refresh client-side, preserving the filters currently applied.
 - **WHEN** the listing renders a `schedule` pipeline and a `group` pipeline
 - **THEN** each row shows its trigger kind as a badge
 - **AND** neither shows the cron expression or the grouping key
+
+#### Scenario: A paused pipeline is stated as paused in the listing
+
+- **GIVEN** the runtime service reports one pipeline as paused, and has taken on the rest
+- **WHEN** a full admin opens the listing
+- **THEN** that pipeline's runtime cell states that it is paused
+- **AND** every other enabled pipeline's runtime cell states that it is running
+
+#### Scenario: A pipeline the runner has not taken on is marked in the listing
+
+- **GIVEN** an enabled `enrich` pipeline the runtime service does not report among the ones it has taken
+  on
+- **WHEN** a full admin opens the listing
+- **THEN** that pipeline's runtime cell states that it is not running
+
+#### Scenario: One runtime read serves the whole page
+
+- **WHEN** a full admin opens a listing of many pipelines
+- **THEN** each of the runtime service's two listings is read once
+- **AND** no request is issued per row
+
+#### Scenario: A disabled pipeline has no runtime answer
+
+- **WHEN** the listing renders a pipeline whose `enabled` is false
+- **THEN** its runtime cell shows an em dash rather than `running` or `paused`
+
+#### Scenario: The runtime column is omitted when the runtime service cannot be read
+
+- **GIVEN** the runtime service is not configured or does not answer
+- **WHEN** the listing renders
+- **THEN** no runtime column is presented
+- **AND** every other column renders as it otherwise would
 
 #### Scenario: Navigating to a pipeline
 
@@ -598,16 +645,12 @@ These members SHALL NOT be sent when the pipeline is saved.
 
 ### Requirement: A pipeline's runtime state is presented read-only
 
-Every pipeline carries a server-owned `state` reporting how its execution is going: when it last ran, when
-it will next run, how far behind its input it is, the last failure, whether the last run left input behind,
-what held its window short of its input, and whether an enrichment it reads has been re-derived beneath it.
-The console SHALL present this state on the detail page, read-only, and SHALL present it in two places
-according to what the reader does with it.
-
-The **measured values** — last run, next run, lag, backlog, drained-at — SHALL be presented among the
-read-only facts, in the same row as the declaration's own derived members. They are read at a glance and
-belong beside `generation` and `updated_at` rather than under a heading of their own; the section that
-carried them was a heading over four short values.
+Every pipeline carries a server-owned `state` reporting how its execution is going: the scan position it
+has reached, when it last ran, when it will next run, how far behind its input it is, the last failure,
+whether the last run left input behind, what held its window short of its input, how far its output has
+been materialized, when it was last probed and found drained, and whether an enrichment it reads has been
+re-derived beneath it. The console SHALL present this state on the detail page, read-only, and SHALL
+present it in two places according to what the reader does with it.
 
 The **three states an operator acts on** — the last failure, a window held short by an enrichment the
 pipeline reads, and an output a re-derived input has left behind — SHALL be presented as **alerts**, above
@@ -618,6 +661,62 @@ Each alert SHALL be drawn to what it is: the failure as an error, the rebuild as
 information. None SHALL interrupt a screen reader, the page rendering all three as it loads rather than
 raising them while it is read.
 
+Everything the state reports SHALL be presented in the **Runtime** tab, in three sections grouped by the
+question each answers:
+
+- **Schedule** — when it last ran and when it next runs.
+- **State** — how far behind its input it is, whether it is working through a backlog, the cursor
+  position (version and identity), the materialized-through position (version and identity), and when it
+  was last drained. Named for what it is: a pipeline is a standing process rather than a job with an
+  end, so none of these counts towards a finish and "progress" would promise one.
+- **Failures and notices** — when the last failure happened. The service reports no timestamp of its own
+  for it — `last_error` is the last run's failure — so the run's time is what places it, and the tab
+  SHALL NOT invent one. The tab SHALL NOT restate the message of the failure, the clamp or the required
+  rebuild: all three are already raised as alerts above the tab strip, in the same words, and a reader
+  who has just read the alert would meet it twice on one screen. What the tab adds is the timing the
+  alert has no room for.
+
+`drained_at` SHALL be presented under state rather than under schedule, and SHALL NOT be presented as a
+sign that the pipeline is alive. It records when a probe last found nothing matching the filter left to
+do, and it advances **only** on an empty probe — so a pipeline with steady input, working perfectly, holds
+a `drained_at` frozen at its last quiet moment for months, while one with sparse input re-stamps it every
+tick. Read as a heartbeat it inverts the truth: the healthy busy pipeline looks stalled and the idle one
+looks lively. It is a horizon for the rollups that read this pipeline, which is why it is stated at all,
+and the value that says the pipeline is advancing is the materialized-through position beside it.
+
+The tab SHALL offer to read the values again without leaving the page. That control SHALL carry a label
+rather than being icon-only, so it reads as a peer of the pause control beside it in the tab's own
+control bar. The tab SHALL NOT state how old its answer is: an age beside every value competed with the
+values themselves, and re-reading is one click away.
+
+Reading again SHALL read **both** upstreams — the pipeline, which carries the state, and the runtime
+service, which carries the pause — because the tab presents facts from both and a control that refreshed
+one of them would leave the other stale behind a chip that says otherwise. A lag figure is measured against
+the present, so a value that is minutes old is a different statement from the same value read now, and a
+reader who cannot tell them apart cannot tell a stalled pipeline from a stale page.
+
+The **read-only facts row** above the tab strip SHALL carry no runtime value at all. It keeps what the
+declaration derives — grain key, version column, generation, created, updated. Four values fitted that
+row; the cursor pair and the materialized-through pair do not, and they are what distinguishes a stalled
+pipeline from a slow one. `drained_at` in particular SHALL NOT stay there: beside `updated_at` it reads as
+the pipeline's last sign of life, which is the one thing it does not report.
+
+A group whose every member the service omitted SHALL render nothing at all — not a heading over an empty
+row. An on-ingest pipeline has no schedule, and a pipeline that has never failed has no failure: a bare
+heading above white space reads as a fault rather than as an absence that is ordinary for that kind.
+
+The tab SHALL present exactly one of these content states:
+
+- **Loaded** — the state reports at least one run, and its values are presented.
+- **Never run** — a state from which no group has anything to draw. The tab SHALL state that the pipeline
+  has not run yet, in the console's own empty-state treatment, rather than presenting a row of
+  placeholders. This SHALL NOT be judged on `last_run_at`: ADAS records that member only for the kinds it
+  drives on a schedule, so an on-ingest pipeline the runner drives has none of it while working
+  perfectly, and judging by it alone told a running pipeline it had never run.
+- **Unavailable** — the pipeline was read but carries no state at all. The tab SHALL state that the runtime
+  state could not be read and SHALL state that the pipeline's configuration is unaffected, so the reader
+  does not act on the absence as if the pipeline were broken.
+
 `unclamped_reads` SHALL NOT be presented. It reports, per enrichment the pipeline reads, why the window was
 **not** held — six closed-dictionary reasons, one of them simply "this pipeline does not read it" — and
 every one of them is the ordinary case. The member stays readable in the JSON editor.
@@ -627,6 +726,9 @@ measured against the moment it is read, so two reads of an unchanged position di
 them and both are correct; a clamp is progress rather than an error. Presenting either as a fault would be
 the console inventing a judgement the service does not make.
 
+A value SHALL be presented in full rather than truncated. The tab gives each one a third of the page,
+and a cursor identity cut short is one nobody can read or copy.
+
 A member the service omits SHALL be **left out** rather than presented as a zero or as an em dash. These
 values appear as the pipeline runs, so a row of placeholders would state absence where there is simply
 nothing yet — unlike the declaration's own facts, whose blank means the declaration names none.
@@ -635,24 +737,77 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: Execution state is presented
 
-- **WHEN** a pipeline that has run is opened
-- **THEN** its last run, next run and lag are presented among the read-only facts
+- **WHEN** a full admin opens the `Runtime` tab of a pipeline that has run
+- **THEN** its last run and next run are presented under the schedule section
+- **AND** its lag, backlog, cursor position, materialized-through position and drained-at are presented
+  under the state section
+
+#### Scenario: The measured values are no longer among the read-only facts
+
+- **WHEN** a pipeline that has run is opened on `Properties`
+- **THEN** its last run, next run, lag, backlog and drained-at are not presented among the read-only facts
+- **AND** its grain key, version column, generation, created and updated still are
+
+#### Scenario: Drained-at is not presented as a sign of life
+
+- **GIVEN** a pipeline with steady input whose `drained_at` is months old while its materialized-through
+  position advances
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** `drained_at` is presented under state rather than under schedule
+- **AND** it is not presented as the pipeline's last activity or as evidence that it has stalled
+
+#### Scenario: The tab offers to read the values again
+
+- **WHEN** a full admin opens the `Runtime` tab
+- **THEN** a labelled control is offered that reads them again
+- **AND** no age of the previous read is stated
+
+#### Scenario: Reading again refreshes both upstreams
+
+- **GIVEN** a full admin on the `Runtime` tab
+- **WHEN** the user activates the re-read control
+- **THEN** the pipeline is read again
+- **AND** the runtime service is read again
+- **AND** an answer from an earlier read that lands later SHALL NOT replace it
 
 #### Scenario: A pipeline that has never run says so
 
-- **WHEN** a pipeline with no recorded run is opened
-- **THEN** its last run is left out of the facts rather than presented as a zero, an epoch date or an em
-  dash
+- **WHEN** a pipeline with no recorded run is opened on `Runtime`
+- **THEN** the tab states that the pipeline has not run yet, in the console's own empty-state treatment
+- **AND** no measured value is presented as a zero, an epoch date or an em dash
+
+#### Scenario: A pipeline carrying no state at all says the read failed
+
+- **GIVEN** a pipeline whose response carries no `state`
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the runtime state could not be read
+- **AND** it states that the pipeline's configuration is unaffected
 
 #### Scenario: The last failure is presented
 
 - **WHEN** a pipeline whose last run failed is opened
 - **THEN** the failure reported by the service is presented as an alert, worded by the service
+- **AND** the `Runtime` tab states when it happened without repeating the alert's message
+
+#### Scenario: A running on-ingest pipeline is not called never-run
+
+- **GIVEN** a pipeline the service reports with a materialized-through position and no `last_run_at`
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab does not state that the pipeline has not run yet
+- **AND** its state group is presented
+
+#### Scenario: A group with nothing to report is not drawn
+
+- **GIVEN** an on-ingest pipeline that has never failed, for which the service records no run schedule
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** neither a schedule group nor a failures group is rendered
+- **AND** no empty heading is presented in their place
 
 #### Scenario: A clamp is presented as progress
 
 - **WHEN** a pipeline whose window was held short by an enrichment it reads is opened
 - **THEN** the clamp and the enrichment holding it are presented as an informational alert
+- **AND** the `Runtime` tab does not repeat it
 - **AND** the pipeline is not presented as failing on that account
 
 #### Scenario: A required rebuild is presented as an instruction
@@ -664,11 +819,12 @@ State SHALL NOT be sent when the pipeline is saved.
 
 - **WHEN** a pipeline reporting neither a failure, a clamp nor a required rebuild is opened
 - **THEN** no alert is presented
+- **AND** its `Runtime` tab draws no failures group at all
 
 #### Scenario: Unclamped reads are not presented
 
 - **WHEN** a pipeline whose state reports `unclamped_reads` is opened
-- **THEN** none of them is presented among the facts or as an alert
+- **THEN** none of them is presented among the facts, as an alert, or in any Runtime section
 - **AND** the member remains readable in the JSON editor
 
 #### Scenario: State is not sent on save
@@ -1540,46 +1696,62 @@ controls SHALL withdraw again once the document parses.
 - **THEN** the page continues to present the document and the controls
 - **AND** saving reports the service's refusal rather than failing in the console
 
-### Requirement: Pipeline detail view is organized into Properties and Audit tabs
+### Requirement: Pipeline detail view is organized into Properties, Runtime and Audit tabs
 
-The pipeline detail view (`/pipelines/{name}`) SHALL present its content under a horizontal tab strip with
-exactly two tabs, **Properties** and **Audit**, in that order. `Properties` SHALL be the selected tab when
-the view is first opened.
+The pipeline detail view (`/pipelines/{name}`) SHALL present its content under a horizontal tab strip whose
+tabs are **Properties**, **Runtime** and **Audit**, in that order. `Properties` SHALL be the selected tab
+when the view is first opened.
 
-The identity row — the enabled-state badge, the pipeline name, its copy control, the `Discard` / `Save`
-change bar, the enable/disable control, the delete control and the JSON editor toggle — SHALL render
-**above** the tab strip and SHALL be unchanged by this reorganization: the same controls, in the same
-order, under the same permission and pending-edit conditions the "The pipeline detail header states the
-pipeline's status before its name" requirement already states, presented whichever tab is selected.
+The **Runtime** tab SHALL be present only for a caller who is a full admin. The runtime it reports is
+controlled through a service that authorizes every one of its endpoints, reads included, on full-admin
+rights and offers no consumer-facing read — so for anyone else there is nothing to present read-only and
+the tab is withheld in full rather than shown empty.
+
+The identity row — the enabled-state badge, the runtime status chip, the pipeline name, its copy control,
+the `Discard` / `Save` change bar, the enable/disable control, the delete control and the JSON editor
+toggle — SHALL render **above** the tab strip, presented whichever tab is
+selected, under the permission and pending-edit conditions the "The pipeline detail header states the
+pipeline's status before its name" and "Runtime status is stated beside configuration status"
+requirements state.
 
 The **runtime alerts** — the last failure, the clamp and the required rebuild, as "A pipeline's runtime
 state is presented read-only" states them — SHALL render between the identity row and the tab strip, and
 SHALL therefore be presented whichever tab is selected. They are true of the pipeline rather than of the
-tab in view: filed under `Properties` they vanished the moment the reader opened the history, which is
-exactly where a reader goes to find out what a failing pipeline has been doing.
+tab in view: filed under one tab they vanished the moment the reader opened another, which is exactly
+where a reader goes to find out what a failing pipeline has been doing. The Runtime tab restates the same
+three conditions as dated facts beside the values they qualify; the alert is the signal, the fact is the
+record, and the tab is not a substitute for the alert.
+
+The **pause banner** — the pipeline's own pause, as "A paused pipeline states its pause above the tab
+strip" states it — SHALL render in the same place, between the identity row and the tab strip, above the
+runtime alerts. A pipeline that is not consuming its input is the first thing a reader needs to know,
+including a reader of the alerts: a failure reported by a run that no longer happens is read differently
+from one reported by a pipeline still trying.
 
 Everything else the frame presents below the identity row — the read-only facts, the scope, the trigger and
 the kind's transform section — SHALL render inside the **Properties** tab where a tab strip is rendered,
 and directly beneath the identity row where it is not.
 
-Selecting the `Audit` tab SHALL NOT discard a pending edit. The draft the fields and the document share
-SHALL survive a tab switch, and the change bar SHALL stay offered from either tab, so a caller who reads
-the history mid-edit does not lose the edit by reading it.
+Selecting another tab SHALL NOT discard a pending edit. The draft the fields and the document share SHALL
+survive a tab switch, and the change bar SHALL stay offered from any tab, so a caller who reads the history
+or the runtime mid-edit does not lose the edit by reading it.
 
 The JSON editor and the tab strip SHALL NOT be presented together. Enabling the editor withdraws the tab
-strip along with everything else below the identity row — the runtime alerts included, since the document
-on screen is a draft the alerts may already contradict — as "The pipeline JSON editor takes the whole view,
-and an unsaved change closes the way out" already requires, and leaving the editor SHALL restore the strip
-with `Properties` selected. The toggle itself is unchanged and stays offered to every caller.
+strip along with everything else below the identity row — the runtime alerts and the pause banner
+included, since the document on screen is a draft the alerts may already contradict and which says nothing
+about the runner — as "The pipeline JSON editor takes the whole view, and an unsaved change closes the way
+out" already requires, and leaving the editor SHALL restore the strip with `Properties` selected. The
+toggle itself is unchanged and stays offered to every caller.
 
 The tab strip SHALL be rendered only when `featureFlags.analyticsEnabled` is true. With analytics disabled
-the detail view SHALL render the Properties content directly, with no tab strip and no Audit tab, and SHALL
-issue no request to the analytics activity feed. The route itself is not guarded on that flag —
-`/pipelines/{name}` guards only on `isAnalyticsForbidden()`, which is an authorization check against the
-analytics service and not the client feature flag, so a bookmarked or pasted link still opens this view on
-an analytics-disabled installation and the tab condition is what keeps it from issuing an activity request.
+the detail view SHALL render the Properties content directly, with no tab strip, no Runtime tab and no
+Audit tab, and SHALL issue no request to the analytics activity feed and none to the runtime service. The
+route itself is not guarded on that flag — `/pipelines/{name}` guards only on `isAnalyticsForbidden()`,
+which is an authorization check against the analytics service and not the client feature flag, so a
+bookmarked or pasted link still opens this view on an analytics-disabled installation and the tab condition
+is what keeps it from issuing either request.
 
-There SHALL be **no** pipeline-status condition on the tab, unlike the table detail view's, which
+There SHALL be **no** pipeline-status condition on the Audit tab, unlike the table detail view's, which
 additionally requires an `ACTIVE` table. A pipeline has no registration lifecycle to mirror one: the service
 creates it whole in a single `POST /v1/pipelines`, so every registered pipeline already carries at least a
 `Create` activity. `enabled` is a pipeline's runtime toggle and not a registration state — a disabled
@@ -1587,14 +1759,21 @@ pipeline is fully registered, and disabling or enabling it is itself an audited 
 SHALL be offered on a disabled pipeline exactly as on an enabled one.
 
 The Audit tab SHALL require no permission beyond the one that already allows reading the pipeline. It SHALL
-NOT be gated on full-admin rights, which the save and the enable/disable control are.
+NOT be gated on full-admin rights, which the save, the enable/disable control and the Runtime tab are.
 
 #### Scenario: Properties is the selected tab when the pipeline detail view opens
 
-- **WHEN** the user opens the detail view of a registered pipeline
-- **THEN** a tab strip showing `Properties` and `Audit` is rendered
+- **WHEN** a full admin opens the detail view of a registered pipeline
+- **THEN** a tab strip showing `Properties`, `Runtime` and `Audit` is rendered
 - **AND** `Properties` is the selected tab
 - **AND** the read-only facts, the trigger and the kind's transform section are shown beneath it
+
+#### Scenario: The Runtime tab is withheld from a caller who is not a full admin
+
+- **GIVEN** a caller who is not a full admin
+- **WHEN** the user opens the pipeline detail view
+- **THEN** the tab strip carries `Properties` and `Audit` only
+- **AND** no runtime state is presented anywhere on the page
 
 #### Scenario: The identity row and its actions stay above the tab strip
 
@@ -1608,6 +1787,13 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **GIVEN** the detail view of a pipeline whose read enrichment has been re-derived beneath it
 - **WHEN** the user switches from `Properties` to `Audit`
 - **THEN** the alert stays presented, above the tab strip
+
+#### Scenario: A pause banner is presented on every tab
+
+- **GIVEN** the detail view of a paused pipeline
+- **WHEN** the user switches from `Properties` to `Audit`
+- **THEN** the pause banner stays presented, above the tab strip
+- **AND** it is presented above the runtime alerts
 
 #### Scenario: The Audit tab is offered on a disabled pipeline
 
@@ -1629,22 +1815,29 @@ NOT be gated on full-admin rights, which the save and the enable/disable control
 - **THEN** the edited value is still presented
 - **AND** the `Discard` / `Save` bar is still offered
 
+#### Scenario: A pending field edit survives a switch to the Runtime tab
+
+- **GIVEN** the detail view of a pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** a full admin selects `Runtime` and then `Properties` again
+- **THEN** the edited value is still presented
+- **AND** the `Discard` / `Save` bar is still offered
+
 #### Scenario: The JSON editor and the tab strip are not presented together
 
 - **GIVEN** the detail view of a registered pipeline
 - **WHEN** the caller enables the JSON editor
 - **THEN** the pipeline is presented as one JSON document
 - **AND** no tab strip is rendered
-- **AND** no runtime alert is presented
+- **AND** no runtime alert and no pause banner are presented
 - **AND** turning the editor off again renders the tab strip with `Properties` selected
 
 #### Scenario: Audit tab absent when analytics is disabled
 
 - **GIVEN** `featureFlags.analyticsEnabled` is false
 - **WHEN** the user reaches `/pipelines/{name}` by a direct link
-- **THEN** no tab strip and no `Audit` tab are rendered
+- **THEN** no tab strip, no `Runtime` tab and no `Audit` tab are rendered
 - **AND** the read-only facts, the trigger and the transform section are shown directly
-- **AND** no request is issued to the analytics activity feed
+- **AND** no request is issued to the analytics activity feed or to the runtime service
 
 ### Requirement: Pipeline Audit tab lists the pipeline's own activities
 
@@ -2676,3 +2869,289 @@ modal to explain: an enrichment pipeline is registered from what the operator ty
 
 - **WHEN** a full admin opens the listing
 - **THEN** the create action is enabled and the modal blocks neither kind on the state of another registry
+
+### Requirement: Runtime control is reached through a second analytics service
+
+Pausing a pipeline, resuming it, reading which pipelines are paused and reading which ones the runner
+has taken on are served by the **analytics enrichment runner**, a service distinct from the one that
+holds the pipeline registry. The console SHALL
+reach it at its own configured host and SHALL treat it as a separate upstream throughout: a registry read
+that succeeds while the runner is unreachable SHALL still present the pipeline.
+
+The runner authorizes **every** endpoint, reads included, on full-admin rights, and offers no
+consumer-facing read. The console SHALL therefore issue no request to it for a caller who is not a full
+admin, and SHALL present no runtime affordance to such a caller rather than presenting one that would be
+refused.
+
+An installation that has not configured the runner's host SHALL behave exactly as one whose runner did not
+answer: no runtime affordance is presented, and no error is raised for the absence. Runtime control is an
+addition to the console, not a precondition for reading a pipeline.
+
+The runner reports failures in the same envelope the registry does — a status, a stable machine code, a
+human-readable message, the path and the method — so a refusal SHALL be surfaced the way a registry refusal
+already is, by the service's own message with its request id. Two of its codes name conditions the operator
+can act on and SHALL be distinguished from a generic failure:
+
+- the runner has not yet loaded the pipeline list since it started, which resolves by itself shortly;
+- the runtime-state database is unavailable, which does not.
+
+#### Scenario: Pausing survives a runner that does not serve the cache listing
+
+- **GIVEN** the runtime service answers the paused listing but refuses the cache listing
+- **WHEN** a full admin opens an enabled `enrich` pipeline
+- **THEN** its runtime is stated as running
+- **AND** the pause control is offered
+- **AND** no warning states that nothing is running it
+
+#### Scenario: A pipeline reads even when the runner is unreachable
+
+- **GIVEN** the runtime service does not answer
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** the pipeline, its facts and its form are presented
+- **AND** no runtime status is stated
+
+#### Scenario: No runtime request is issued for a caller who is not a full admin
+
+- **GIVEN** a caller who is not a full admin
+- **WHEN** the user opens the pipelines listing and a pipeline's detail view
+- **THEN** no request is issued to the runtime service
+
+#### Scenario: An unconfigured runner is not an error
+
+- **GIVEN** no runtime service host is configured
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** no runtime affordance is presented
+- **AND** no error notification is raised
+
+#### Scenario: A cold runner is distinguished from a broken one
+
+- **GIVEN** the runner answers that it has not loaded the pipeline list yet
+- **WHEN** a full admin attempts to pause a pipeline
+- **THEN** the failure states that the service is still starting and that the action can be retried shortly
+- **AND** the pipeline is not presented as paused
+
+### Requirement: A pipeline's enqueue can be paused and resumed
+
+A full admin SHALL be offered a control that pauses the pipeline's enqueue, and — while it is paused — one
+that resumes it. Pausing suspends the work the runner drives for that pipeline; it does not change the
+pipeline's declaration, and the pipeline SHALL remain `enabled` throughout.
+
+The control SHALL be presented in the Runtime tab's control bar, beside the statement of when the state
+was read, and — while the pipeline is paused — in the pause banner, which is where a reader who arrived on
+any tab meets the pause itself.
+
+Unlike the delete and enable/disable controls in the identity row, the pause control SHALL NOT be withheld
+while the `Discard` / `Save` change bar is up. Those two are withheld while edits are pending because they
+re-read the pipeline; a pause does not, and an incident is exactly when the form is most likely to be
+half-edited.
+
+Pausing SHALL be confirmed before it applies. The confirmation SHALL state what stops and what does not:
+input is no longer consumed, input keeps arriving and the backlog grows until the pipeline is resumed, the
+pipeline stays enabled and its definition is unchanged. It SHALL state that the pause is a runtime action
+and is not recorded as a change to the pipeline document. It SHALL state that the pause does not survive a
+restart of the runtime service, which is a consequence an operator cannot discover from the console and
+would otherwise meet as a pipeline that resumed itself overnight. The confirmation SHALL be the
+informational variant, not the danger one: a pause is reversible, and the danger treatment is reserved for
+delete.
+
+Resuming SHALL NOT be confirmed. It restores the ordinary state and is itself the undo of the action that
+was confirmed.
+
+Neither control SHALL be withheld while the pipeline has unsaved edits, unlike the enable/disable control:
+pausing sends no part of the document, so there is nothing for an unsaved edit to be discarded by. While a
+request is in flight the control SHALL state that and SHALL NOT be actionable, so a second request cannot
+be issued for the same decision.
+
+Each outcome SHALL be reported: a success as a notification stating the pipeline was paused or resumed, a
+failure as an error notification carrying the service's own message and its request id.
+
+#### Scenario: Pausing a running pipeline
+
+- **GIVEN** a full admin on the `Runtime` tab of a running pipeline
+- **WHEN** the user activates the pause control and confirms
+- **THEN** the pipeline is paused
+- **AND** a notification states that it was paused
+- **AND** the page states the pipeline as paused without a reload
+
+#### Scenario: The confirmation states what a pause does and does not do
+
+- **WHEN** a full admin activates the pause control
+- **THEN** the confirmation states that input stops being consumed and that the backlog grows until resumed
+- **AND** it states that the pipeline stays enabled and its definition is unchanged
+- **AND** it states that the pause does not survive a restart of the runtime service
+
+#### Scenario: Resuming takes no confirmation
+
+- **GIVEN** a full admin on a paused pipeline
+- **WHEN** the user activates the resume control
+- **THEN** the pipeline is resumed without a confirmation step
+- **AND** a notification states that it was resumed
+
+#### Scenario: A pause is offered while the form has unsaved edits
+
+- **GIVEN** a pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** a full admin opens the `Runtime` tab
+- **THEN** the delete and enable/disable controls have stepped aside for the change bar
+- **AND** the pause control is still presented and actionable
+
+#### Scenario: A request in flight cannot be issued twice
+
+- **WHEN** a full admin confirms a pause and the request has not yet answered
+- **THEN** the control states that the request is in progress and is not actionable
+
+#### Scenario: A refused pause reports the service's own message
+
+- **GIVEN** the runtime service refuses the pause
+- **WHEN** a full admin confirms it
+- **THEN** an error notification carries the service's message and its request id
+- **AND** the pipeline is not presented as paused
+
+#### Scenario: Pausing is not offered to a caller who is not a full admin
+
+- **GIVEN** a caller who is not a full admin
+- **WHEN** the user opens the pipeline detail view
+- **THEN** no pause or resume control is presented
+
+### Requirement: A paused pipeline states its pause above the tab strip
+
+While a pipeline is paused, a banner SHALL render between the identity row and the tab strip, stating that
+the pipeline is paused, how long it has been paused, that input is still arriving and that the backlog it
+builds is worked through on resume. The banner SHALL carry a resume control.
+
+The banner SHALL distinguish the two origins the runtime service reports, because they call for opposite
+responses:
+
+- an **operator** pause is a decision, and it never expires — it is lifted only by someone resuming it;
+- a **breaker** pause was taken by the service's own dead-letter circuit breaker, and it lifts itself. The
+  banner SHALL state when it lifts.
+
+The banner SHALL NOT name who paused the pipeline. The runtime service records the origin and the reason it
+wrote at the time, and no user identity, so a name in this banner could only be invented.
+
+A pipeline the runtime service does not report as paused SHALL raise no banner, and a pipeline whose
+runtime could not be read SHALL raise none either: a banner is a statement that the pipeline is stopped,
+and an unread runtime does not support it.
+
+#### Scenario: An operator pause is stated as one that will not lift itself
+
+- **GIVEN** a pipeline the runtime service reports as paused by an operator
+- **WHEN** a full admin opens its detail view
+- **THEN** a banner states that the pipeline is paused and how long it has been
+- **AND** it states that input keeps arriving and is worked through on resume
+- **AND** it offers a resume control
+
+#### Scenario: A breaker pause states when it lifts
+
+- **GIVEN** a pipeline the runtime service reports as paused by its circuit breaker, with the time it
+  resumes
+- **WHEN** a full admin opens its detail view
+- **THEN** the banner states that the pause was taken by the service rather than by an operator
+- **AND** it states when the pause lifts by itself
+
+#### Scenario: The banner names no author
+
+- **GIVEN** a paused pipeline
+- **WHEN** a full admin opens its detail view
+- **THEN** the banner attributes the pause to no named user
+
+#### Scenario: No banner without a read runtime
+
+- **GIVEN** the runtime service did not answer
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** no pause banner is presented
+
+### Requirement: Runtime status is stated beside configuration status
+
+The pipeline detail header states two facts that are commonly confused and are not the same axis: whether
+the pipeline is **enabled**, which is its declaration, and what the runner is doing with it, which is its
+runtime. The header SHALL state both, the runtime status as a chip beside the enabled badge.
+
+Runtime status SHALL be stated **only for an `enrich` pipeline**, which is the kind the runner drives.
+An `aggregate` pipeline is run by the registry service itself, on its own scheduler — it is absent from
+the runner's listings by construction, and reading that absence as a fault flagged every healthy rollup
+as one nothing was running. For an aggregate pipeline the console SHALL state no runtime status, raise
+no warning about one, and offer no pause: the runner would accept a pause for it and answer success,
+but only the runner's own executors consult that registry, so nothing would stop.
+
+For an `enrich` pipeline the runtime status SHALL be derived from **two** reads of the runtime service,
+taken together:
+
+- the pipelines it has **taken on** — it admits one only when the pipeline is enabled and it can execute
+  that declaration, and it schedules the recurring work from exactly that set;
+- the pipelines it has **paused**.
+
+From those, three states are stateable, and no other:
+
+| State | Condition |
+| --- | --- |
+| `running` | taken on, and not paused |
+| `paused` | paused |
+| `not running` | enabled, an `enrich` pipeline, and **not** taken on |
+
+`running` SHALL mean that the runner has the pipeline and schedules its fires — **not** that rows are
+moving through it at this moment. Neither service reports that, and the console SHALL NOT imply it.
+
+The third state is the one the registry cannot show: an enabled pipeline the runner has not taken on is
+presented by the registry exactly like a healthy one, while nothing is driving it — the runner either
+refused the declaration as one it cannot execute, or has not synced since it started. The console SHALL
+state it as a **warning above the tab strip**, not as a chip alone, and SHALL say both possible causes,
+since it cannot tell them apart from outside. It SHALL NOT offer to pause such a pipeline: there is no
+work to withhold.
+
+The two reads SHALL fail **independently**. The pauses are load-bearing: without them the console
+states no runtime at all. The cache listing only adds `not running`, so where it is missing — an older
+runner build, a route that answers 404 — the console SHALL keep stating `running` and SHALL keep
+offering the pause, rather than withholding every runtime affordance because one of two reads failed.
+It SHALL NOT state `not running` on an unread cache: that would withhold the pause on a guess.
+
+The runtime chip SHALL be withheld — not rendered as unknown — when the pipeline is disabled, when the
+pauses could not be read, or when the caller is not a full admin. A disabled pipeline has no runtime answer: the runner
+is not driving it at all, and stating it as "not running" would read as a fault where there is a
+configuration.
+
+A paused pipeline SHALL still be stated as **enabled**. Pausing leaves the declaration untouched, and a
+console that showed a paused pipeline as disabled would send an operator to re-enable something that was
+never disabled.
+
+#### Scenario: A running pipeline states both facts
+
+- **GIVEN** an enabled pipeline the runtime service does not report as paused
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is enabled and that it is running
+
+#### Scenario: A paused pipeline is still enabled
+
+- **GIVEN** an enabled pipeline the runtime service reports as paused
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is enabled
+- **AND** it states that it is paused
+
+#### Scenario: An aggregate pipeline states no runtime status
+
+- **GIVEN** an enabled `aggregate` pipeline, which the registry service runs on its own scheduler
+- **WHEN** a full admin opens its detail view
+- **THEN** no runtime chip is presented
+- **AND** no warning states that nothing is running it
+- **AND** no pause control is offered
+
+#### Scenario: An enabled enrichment pipeline the runner has not taken on is flagged
+
+- **GIVEN** an enabled `enrich` pipeline the runtime service does not report among the ones it has taken on
+- **WHEN** a full admin opens its detail view
+- **THEN** a warning states that nothing is running the pipeline
+- **AND** it states that the service either cannot execute the declaration or has not picked it up yet
+- **AND** no pause control is offered
+
+#### Scenario: A disabled pipeline states no runtime status
+
+- **GIVEN** a pipeline whose `enabled` is false
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is disabled
+- **AND** no runtime chip is presented
+
+#### Scenario: An unread runtime states no runtime status
+
+- **GIVEN** the runtime service did not answer
+- **WHEN** a full admin opens an enabled pipeline's detail view
+- **THEN** the header states that it is enabled
+- **AND** no runtime chip is presented

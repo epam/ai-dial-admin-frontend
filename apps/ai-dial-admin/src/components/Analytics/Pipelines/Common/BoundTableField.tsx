@@ -2,7 +2,7 @@
 
 import { FC, ReactNode, useCallback } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { NeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
@@ -42,7 +42,7 @@ const BoundTableField: FC<Props> = ({ table, caption, children }) => {
       <div className="flex items-end gap-2">
         <div className={getControlClassName()}>{children}</div>
         {table && (
-          <DialNeutralButton
+          <NeutralButton
             label={t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
             onClick={openInNewTab}

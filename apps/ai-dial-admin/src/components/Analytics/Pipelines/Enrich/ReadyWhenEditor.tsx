@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialCheckbox, DialInput } from '@epam/ai-dial-ui-kit';
+import { Checkbox, Input } from '@epam/ai-dial-ui-kit';
 
 import DurationPresetField from '@/src/components/Analytics/Pipelines/Common/DurationPresetField';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
@@ -90,10 +90,10 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
         <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.ReadyWhenTitleCaption)}</span>
 
         <div className="flex flex-col gap-2">
-          <DialCheckbox
+          <Checkbox
             id="pipeline-ready-idle-enabled"
-            label={t(AnalyticsPipelinesI18nKey.ReadyWhenIdleLabel)}
-            checked={enabled.has(ReadyWhenCondition.Idle)}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.ReadyWhenIdleLabel) }}
+            isSelected={enabled.has(ReadyWhenCondition.Idle)}
             onChange={(isChecked) => onToggle(ReadyWhenCondition.Idle, Boolean(isChecked))}
           />
           <div className={CONDITION_CONTROL_INDENT}>
@@ -110,10 +110,10 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
         </div>
 
         <div className="flex flex-col gap-2">
-          <DialCheckbox
+          <Checkbox
             id="pipeline-ready-signal-enabled"
-            label={t(AnalyticsPipelinesI18nKey.ReadyWhenSignalLabel)}
-            checked={enabled.has(ReadyWhenCondition.Signal)}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.ReadyWhenSignalLabel) }}
+            isSelected={enabled.has(ReadyWhenCondition.Signal)}
             onChange={(isChecked) => onToggle(ReadyWhenCondition.Signal, Boolean(isChecked))}
           />
           <div className={CONDITION_CONTROL_INDENT}>
@@ -133,10 +133,10 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
         </div>
 
         <div className="flex flex-col gap-2">
-          <DialCheckbox
+          <Checkbox
             id="pipeline-ready-staleness-enabled"
-            label={t(AnalyticsPipelinesI18nKey.ReadyWhenStalenessLabel)}
-            checked={enabled.has(ReadyWhenCondition.MaxStaleness)}
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.ReadyWhenStalenessLabel) }}
+            isSelected={enabled.has(ReadyWhenCondition.MaxStaleness)}
             onChange={(isChecked) => onToggle(ReadyWhenCondition.MaxStaleness, Boolean(isChecked))}
           />
           <div className={CONDITION_CONTROL_INDENT}>
@@ -161,7 +161,7 @@ const ReadyWhenEditor: FC<Props> = ({ readyWhen, sourceName, isCostCeilingValid,
           <label htmlFor="pipeline-cost-ceiling" className="text-secondary dial-tiny-text">
             {t(AnalyticsPipelinesI18nKey.CostCeilingLabel)}
           </label>
-          <DialInput
+          <Input
             id="pipeline-cost-ceiling"
             wrapperClassName={NUMBER_INPUT_WIDTH}
             type="number"

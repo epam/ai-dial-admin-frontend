@@ -51,7 +51,7 @@ const area = () => screen.getByLabelText('json document');
 
 const openEditor = async (user: ReturnType<typeof userEvent.setup>) => {
   renderView();
-  await user.click(within(screen.getByRole('switch')).getByRole('checkbox'));
+  await user.click(screen.getByRole('switch'));
 };
 
 const documentOf = () => JSON.parse((area() as HTMLTextAreaElement).value);

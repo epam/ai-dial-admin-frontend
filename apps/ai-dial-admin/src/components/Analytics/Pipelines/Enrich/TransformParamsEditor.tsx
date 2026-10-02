@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialGhostButton, DialGhostIconButton, DialInput } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -62,7 +62,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
             aria-label={`${t(AnalyticsPipelinesI18nKey.SectionParams)} ${position}`}
             className="flex flex-row items-end gap-3"
           >
-            <DialInput
+            <Input
               id={`transform-param-key-${index}`}
               labelProps={isFirstRow ? { label: t(AnalyticsPipelinesI18nKey.ParamKey) } : undefined}
               aria-label={`${t(AnalyticsPipelinesI18nKey.ParamKey)} ${position}`}
@@ -71,7 +71,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
               containerClassName="max-w-[220px]"
               onChange={(v) => onChangeRow(row.id, { key: v ?? '' })}
             />
-            <DialInput
+            <Input
               id={`transform-param-value-${index}`}
               labelProps={isFirstRow ? { label: t(AnalyticsPipelinesI18nKey.ParamValue) } : undefined}
               aria-label={`${t(AnalyticsPipelinesI18nKey.ParamValue)} ${position}`}
@@ -80,7 +80,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
               containerClassName="max-w-[220px]"
               onChange={(v) => onChangeRow(row.id, { value: v ?? '' })}
             />
-            <DialGhostIconButton
+            <GhostIconButton
               icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
               aria-label={`${t(ButtonsI18nKey.Delete)} ${row.key || position}`}
               disabled={isDisabled}
@@ -90,7 +90,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
         );
       })}
 
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddParam)}
         disabled={isDisabled}

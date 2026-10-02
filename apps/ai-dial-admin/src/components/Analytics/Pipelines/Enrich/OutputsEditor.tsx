@@ -4,14 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import {
-  DialGhostButton,
-  DialGhostIconButton,
-  DialInput,
-  DialLabel,
-  DialSelectField,
-  DialTextarea,
-} from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import AllowedValuesField from '@/src/components/Analytics/Pipelines/Enrich/AllowedValuesField';
@@ -23,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { TransformOutput, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind, OutputRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
-import { SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
+import { PIPELINE_SELECT_DEFAULTS, SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
 
 const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? []);
@@ -105,7 +98,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
     new Set(rows.filter((row) => row.id !== currentId && row.name).map((row) => row.name));
 
   const deleteButton = (row: OutputRow) => (
-    <DialGhostIconButton
+    <GhostIconButton
       className="mb-1 shrink-0"
       icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
       aria-label={t(ButtonsI18nKey.Delete)}
@@ -128,8 +121,8 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
           of several fields, where a heading row names nothing that lines up — each row labels its own. */}
       {isSql && rows.length > 0 && (
         <div className="flex flex-row items-end gap-3 pl-7">
-          <DialLabel label={t(AnalyticsPipelinesI18nKey.OutputColumn)} className="min-w-[180px] flex-1" required />
-          <DialLabel label={t(AnalyticsPipelinesI18nKey.VarExpression)} className="min-w-[220px] flex-[2]" required />
+          <Label label={t(AnalyticsPipelinesI18nKey.OutputColumn)} className="min-w-[180px] flex-1" required />
+          <Label label={t(AnalyticsPipelinesI18nKey.VarExpression)} className="min-w-[220px] flex-[2]" required />
           <span className="w-9 shrink-0" />
         </div>
       )}
@@ -158,11 +151,14 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
             const nameField = (
               <div className="min-w-[180px] flex-1">
-                <DialSelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`transform-output-name-${index}`}
-                  label={isSql ? undefined : t(AnalyticsPipelinesI18nKey.OutputColumn)}
+                  labelProps={{
+                    label: isSql ? undefined : t(AnalyticsPipelinesI18nKey.OutputColumn),
+                    required: !isSql,
+                  }}
                   aria-label={named(AnalyticsPipelinesI18nKey.OutputColumn)}
-                  required={!isSql}
                   options={isStranded ? [...columnOptions, { value: row.name, label: row.name }] : columnOptions}
                   value={row.name}
                   disabled={isDisabled}
@@ -178,7 +174,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                 <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
                   <div className="flex w-full flex-row items-end gap-3">
                     {nameField}
-                    <DialInput
+                    <Input
                       id={`transform-output-expression-${index}`}
                       containerClassName="min-w-[220px] flex-[2]"
                       aria-label={named(AnalyticsPipelinesI18nKey.VarExpression)}
@@ -218,7 +214,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                     </span>
                   )}
 
-                  <DialTextarea
+                  <Textarea
                     id={`transform-output-prose-${index}`}
                     labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputProse) }}
                     aria-label={named(AnalyticsPipelinesI18nKey.OutputProse)}
@@ -234,10 +230,11 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                   {/* One at a time, so the selection comes first and the field that belongs to it follows. */}
                   {hasRefinement && (
                     <div className="flex flex-row items-end gap-3">
-                      <DialSelectField
+                      <Select
+                        {...PIPELINE_SELECT_DEFAULTS}
                         id={`transform-output-refinement-${index}`}
-                        containerClassName={REFINEMENT_SELECT_CLASS}
-                        label={t(AnalyticsPipelinesI18nKey.OutputRefinement)}
+                        className={REFINEMENT_SELECT_CLASS}
+                        labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputRefinement) }}
                         options={refinements}
                         value={hasColumnDomain ? OutputRefinementKind.Jsonata : row.refinement}
                         disabled={isDisabled}
@@ -254,7 +251,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                       )}
 
                       {(hasColumnDomain || row.refinement !== OutputRefinementKind.Values) && (
-                        <DialInput
+                        <Input
                           id={`transform-output-jsonata-${index}`}
                           containerClassName={REFINEMENT_FIELD_CLASS}
                           labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputJsonata) }}
@@ -276,7 +273,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
         </div>
       </DndProvider>
 
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddOutput)}
         disabled={isDisabled}
