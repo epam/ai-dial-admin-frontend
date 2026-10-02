@@ -16,7 +16,7 @@ export const getGridColumns = (
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
-    headerName: 'Display name',
+    headerName: 'Name',
     width: 200,
   };
 
