@@ -79,5 +79,7 @@ export const contentTypes: Record<string, string> = {
   '.zip': 'application/zip',
 };
 
-export const MAX_FILE_SIZE_MB = 100;
-export const MAX_MULTI_FILES_SIZE_MB = 100;
+export const MAX_FILE_SIZE_MB = 4;
+export const MAX_MULTI_FILES_SIZE_MB = 64;
+export const MAX_FILES_ROUTE_FILE_SIZE_MB = 100;
+export const MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB = 100;
