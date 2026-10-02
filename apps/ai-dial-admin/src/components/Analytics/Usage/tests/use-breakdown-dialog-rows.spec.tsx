@@ -2,8 +2,7 @@ import { IGetRowsParams } from 'ag-grid-community';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
-import { PAGE_SCOPE } from '@/src/components/Analytics/Usage/constants';
+import { BreakdownTab, SpendColumn, UsageView } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
 import { StructuredQuery } from '@/src/models/analytics/query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -54,7 +53,7 @@ const renderRows = (overrides: Partial<Parameters<typeof useBreakdownDialogRows>
   renderHook(() =>
     useBreakdownDialogRows({
       view: UsageView.Llm,
-      scope: PAGE_SCOPE,
+      rowScope: { entityClauses: [], spendColumn: SpendColumn.Deployment },
       windows: { current: WINDOW },
       tab: BreakdownTab.Models,
       windowTotal: 100,
@@ -194,11 +193,13 @@ describe('useBreakdownDialogRows', () => {
     // The page memoizes its windows, so the only input changing here is the total — which arrives
     // after the rows do, and used to reset the grid and re-read from the first block.
     const windows = { current: WINDOW };
+    // The block hands a memoized scope, as it hands memoized windows.
+    const rowScope = { entityClauses: [], spendColumn: SpendColumn.Deployment };
     const { result, rerender } = renderHook(
       ({ windowTotal }: { windowTotal: number | null }) =>
         useBreakdownDialogRows({
           view: UsageView.Llm,
-          scope: PAGE_SCOPE,
+          rowScope,
           windows,
           tab: BreakdownTab.Models,
           windowTotal,

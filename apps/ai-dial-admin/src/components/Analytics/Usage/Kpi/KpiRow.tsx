@@ -6,6 +6,7 @@ import KpiCard from '@/src/components/Analytics/Usage/Kpi/KpiCard';
 import { KPI_CARD_MIN_WIDTH } from '@/src/components/Analytics/Usage/constants';
 import {
   BucketPoint,
+  ComparedTotals,
   ComparePeriod,
   KpiCardModel,
   KpiFigure,
@@ -21,7 +22,7 @@ import {
   formatPercent,
   getDeltaRatio,
 } from '@/src/components/Analytics/Usage/utils/format';
-import { buildKpiFigures } from '@/src/components/Analytics/Usage/utils/kpi-cards';
+import { buildKpiFigures, isTokenMetric } from '@/src/components/Analytics/Usage/utils/kpi-cards';
 import { COMPARE_NAME_KEY } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -32,6 +33,9 @@ interface Props {
   previousTotals: RequestState<UsageMeasures | null>;
   buckets: RequestState<BucketPoint[]>;
   compare: ComparePeriod;
+  /** Where the token cards read from instead of `totals`, loading included; the caption says what they count. */
+  tokenTotals?: ComparedTotals;
+  tokenCaption?: string;
 }
 
 const TITLE_KEY: Record<KpiMetric, AnalyticsUsageI18nKey> = {
@@ -86,7 +90,7 @@ const formatFootnoteValue = (metric: KpiMetric, value: number): string => {
   return `${formatted.value}${formatted.unit ?? ''}`;
 };
 
-const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) => {
+const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare, tokenTotals, tokenCaption }) => {
   const isComparisonOn = compare !== ComparePeriod.Off;
   const t = useI18n();
   const rowRef = useRef<HTMLDivElement>(null);
@@ -112,8 +116,12 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
         current: totals.data ?? null,
         previous: isComparisonOn ? (previousTotals.data ?? null) : null,
         buckets: buckets.data ?? [],
+        tokens: tokenTotals && {
+          current: tokenTotals.current.data ?? null,
+          previous: isComparisonOn ? (tokenTotals.previous.data ?? null) : null,
+        },
       }),
-    [view, totals.data, previousTotals.data, buckets.data, isComparisonOn],
+    [view, totals.data, previousTotals.data, buckets.data, isComparisonOn, tokenTotals],
   );
 
   const cardBasis = getCardBasis(getCardsPerRow(figures.length, rowWidth));
@@ -140,6 +148,7 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
             value: previous == null ? '—' : formatFootnoteValue(figure.metric, previous),
             period: t(COMPARE_NAME_KEY[compare]),
           }),
+      ...(tokenCaption && figure.metric === KpiMetric.Tokens ? { caption: tokenCaption } : {}),
       sparkline: figure.sparkline,
     };
   };
@@ -152,16 +161,20 @@ const KpiRow: FC<Props> = ({ view, totals, previousTotals, buckets, compare }) =
      * items grow into whatever their own row has left, so every row is full whatever the count.
      */
     <div ref={rowRef} className="flex flex-wrap gap-3">
-      {figures.map((figure) => (
-        <KpiCard
-          key={figure.metric}
-          card={toCard(figure)}
-          className="min-w-[196px] grow"
-          style={{ flexBasis: cardBasis }}
-          isLoading={totals.isLoading}
-          hasFailed={totals.hasFailed}
-        />
-      ))}
+      {figures.map((figure) => {
+        const request = tokenTotals && isTokenMetric(figure.metric) ? tokenTotals.current : totals;
+
+        return (
+          <KpiCard
+            key={figure.metric}
+            card={toCard(figure)}
+            className="min-w-[196px] grow"
+            style={{ flexBasis: cardBasis }}
+            isLoading={request.isLoading}
+            hasFailed={request.hasFailed}
+          />
+        );
+      })}
     </div>
   );
 };

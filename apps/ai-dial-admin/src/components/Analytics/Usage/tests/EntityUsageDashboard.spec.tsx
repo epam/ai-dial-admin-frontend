@@ -38,19 +38,20 @@ beforeEach(() => {
 });
 
 describe('EntityUsageDashboard', () => {
-  test("shows a model's one LLM block and no View by", async () => {
+  test("offers View by with a model's one view, as the page does", async () => {
+    const user = userEvent.setup();
     renderModel();
 
-    expect(await screen.findByRole('region', { name: AnalyticsUsageI18nKey.ViewLlm })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: AnalyticsUsageI18nKey.ViewMcp })).toBeNull();
-    expect(screen.queryByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeNull();
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
     expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
   });
 
   test('leaves out the tab that would rank the model against itself', async () => {
     renderModel();
 
-    await screen.findByRole('region', { name: AnalyticsUsageI18nKey.ViewLlm });
+    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
     expect(screen.getAllByText(AnalyticsUsageI18nKey.BreakdownTabApplications).length).toBeGreaterThan(0);
@@ -63,6 +64,16 @@ describe('EntityUsageDashboard', () => {
 
     for (const query of queriesSent()) {
       expect(JSON.stringify(query.filter)).toContain('"value":"gpt-4o"');
+    }
+  });
+
+  test('reads no calls the model made, having none', async () => {
+    renderModel();
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).not.toContain('"name":"parent_deployment"');
     }
   });
 
@@ -108,5 +119,67 @@ describe('EntityUsageDashboard', () => {
     await waitFor(() => expect(isForbiddenMock).toHaveBeenCalled());
 
     expect(runQueryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('EntityUsageDashboard on an application', () => {
+  const renderApplication = (routes?: unknown) =>
+    render(
+      <EntityUsageDashboard
+        route={ApplicationRoute.Applications}
+        entity={{ name: 'rag', routes } as unknown as Parameters<typeof EntityUsageDashboard>[0]['entity']}
+      />,
+    );
+
+  const optionsOf = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    return screen.getAllByRole('option').map((option) => option.textContent);
+  };
+
+  test('offers LLM and MCP, and Routes only for an application that declares routes', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderApplication();
+
+    expect(await optionsOf(user)).toEqual([AnalyticsUsageI18nKey.ViewLlm, AnalyticsUsageI18nKey.ViewMcp]);
+    unmount();
+
+    renderApplication([{ paths: ['/search'] }]);
+
+    expect(await optionsOf(user)).toEqual([
+      AnalyticsUsageI18nKey.ViewLlm,
+      AnalyticsUsageI18nKey.ViewMcp,
+      AnalyticsUsageI18nKey.ViewRoutes,
+    ]);
+  });
+
+  test('switches to the MCP view, reading the tool calls the application made', async () => {
+    const user = userEvent.setup();
+    renderApplication();
+
+    await optionsOf(user);
+    runQueryMock.mockClear();
+    await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    for (const query of queriesSent()) {
+      expect(JSON.stringify(query.filter)).toContain('"name":"parent_deployment"');
+    }
+  });
+
+  test('reads its own calls with their total price, and the calls it made with their own', async () => {
+    renderApplication();
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    const sent = queriesSent().map((query) => JSON.stringify(query));
+
+    expect(sent.some((query) => query.includes('total_price') && query.includes('"name":"deployment"'))).toBe(true);
+    expect(sent.some((query) => query.includes('"name":"parent_deployment"'))).toBe(true);
+  });
+
+  test('says its token card counts direct model calls', async () => {
+    renderApplication();
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.KpiTokensDirectCalls)).toBeTruthy();
   });
 });

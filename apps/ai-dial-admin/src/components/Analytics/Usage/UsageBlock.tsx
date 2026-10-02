@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import BreakdownTable from '@/src/components/Analytics/Usage/Breakdown/BreakdownTable';
 import RowDetailPanel from '@/src/components/Analytics/Usage/Breakdown/RowDetailPanel';
@@ -16,6 +16,7 @@ import {
   VIEW_TIME_SERIES_VIEWS,
 } from '@/src/components/Analytics/Usage/constants';
 import {
+  BlockReads,
   BreakdownRowModel,
   BreakdownTab,
   ComparePeriod,
@@ -28,10 +29,17 @@ import { useHeatmapWeek } from '@/src/components/Analytics/Usage/use-heatmap-wee
 import { LoadFailureNotice } from '@/src/components/Analytics/Usage/use-load-failure-notice';
 import { useUsageDashboardData } from '@/src/components/Analytics/Usage/use-usage-dashboard-data';
 import { UsageWindows } from '@/src/components/Analytics/Usage/use-usage-windows';
+import { resolveBlockRows } from '@/src/components/Analytics/Usage/utils/entity-blocks';
+import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+
+const NO_MADE_TABS: BreakdownTab[] = [];
 
 interface Props extends UsageWindows {
   view: UsageView;
   scope: UsageScope;
+  /** Where each figure is read from; absent on the page, which reads one set of rows for all of them. */
+  reads?: BlockReads;
   /** The breakdown tabs this block offers; the first leads the share chart and the split plot. */
   tabs: BreakdownTab[];
   compare: ComparePeriod;
@@ -48,6 +56,7 @@ interface Props extends UsageWindows {
 const UsageBlock: FC<Props> = ({
   view,
   scope,
+  reads,
   tabs,
   windows,
   resolution,
@@ -56,7 +65,10 @@ const UsageBlock: FC<Props> = ({
   notice,
   onRefreshingChange,
 }) => {
+  const t = useI18n();
   const leadingTab = tabs[0];
+  const madeTabs = reads?.madeTabs ?? NO_MADE_TABS;
+  const { rows, madeRows } = useMemo(() => resolveBlockRows(scope, reads), [scope, reads]);
 
   const [tab, setTab] = useState<BreakdownTab>(leadingTab);
   const [isShowingAll, setIsShowingAll] = useState(false);
@@ -99,11 +111,15 @@ const UsageBlock: FC<Props> = ({
     spendBuckets,
     tabRows,
     previousTabRows,
+    madeTotals,
+    previousMadeTotals,
     isDonutReadingMore,
     isRefreshing,
   } = useUsageDashboardData({
     view,
-    scope,
+    rows,
+    madeRows,
+    madeTabs,
     windows,
     resolution,
     tab,
@@ -120,9 +136,19 @@ const UsageBlock: FC<Props> = ({
     onRefreshingChange(isRefreshing);
   }, [isRefreshing, onRefreshingChange]);
 
-  const heatmap = useHeatmapWeek({ view, scope, refreshToken, notice });
+  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice });
 
-  const windowTotalCalls = totals.data?.calls ?? null;
+  // A tab read from the calls the entity made states its shares of those calls: a share of the
+  // entity's own requests would read past a hundred per cent wherever one request fanned out.
+  const isMadeTab = (of: BreakdownTab) => madeRows != null && madeTabs.includes(of);
+  const totalsOf = (of: BreakdownTab) => (isMadeTab(of) ? madeTotals : totals);
+  const donutTotals = totalsOf(leadingTab).data;
+  const tabTotals = totalsOf(tab).data;
+  const hasMadeTokens = Boolean(reads?.hasMadeTokens && madeRows);
+  const tokenTotals = useMemo(
+    () => (hasMadeTokens ? { current: madeTotals, previous: previousMadeTotals } : void 0),
+    [hasMadeTokens, madeTotals, previousMadeTotals],
+  );
 
   const onTabChange = useCallback((next: BreakdownTab) => {
     setTab(next);
@@ -141,7 +167,15 @@ const UsageBlock: FC<Props> = ({
 
   return (
     <>
-      <KpiRow view={view} totals={totals} previousTotals={previousTotals} buckets={buckets} compare={compare} />
+      <KpiRow
+        view={view}
+        totals={totals}
+        previousTotals={previousTotals}
+        buckets={buckets}
+        compare={compare}
+        tokenTotals={tokenTotals}
+        tokenCaption={tokenTotals ? t(AnalyticsUsageI18nKey.KpiTokensDirectCalls) : void 0}
+      />
 
       <div className="flex shrink-0 flex-wrap items-stretch gap-3">
         <TimeSeries
@@ -163,8 +197,8 @@ const UsageBlock: FC<Props> = ({
           metric={donutMetric}
           renderedMetric={donutRowsMetric}
           onMetricChange={setDonutMetric}
-          windowTotalCalls={windowTotalCalls}
-          windowTotalSpend={totals.data?.spend ?? null}
+          windowTotalCalls={donutTotals?.calls ?? null}
+          windowTotalSpend={donutTotals?.spend ?? null}
           isFullOpen={isDonutFullOpen}
           // A response filled to the limit is the signal that the window holds further rows — but
           // only while the limit can still grow: at the query surface's own ceiling it never will,
@@ -181,13 +215,13 @@ const UsageBlock: FC<Props> = ({
 
       <BreakdownTable
         view={view}
-        scope={scope}
+        rowScope={madeRows && isMadeTab(tab) ? madeRows : rows}
         tabs={tabs}
         tab={tab}
         onTabChange={onTabChange}
         rows={tabRows}
         previousRows={previousTabRows}
-        windowTotal={windowTotalCalls}
+        windowTotal={tabTotals?.calls ?? null}
         windows={windows}
         rowLimit={rowLimit}
         isShowingAll={isShowingAll}

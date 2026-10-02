@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
-import { BreakdownTab, UsageView } from '@/src/components/Analytics/Usage/models';
+import { BreakdownTab, SpendColumn, UsageView } from '@/src/components/Analytics/Usage/models';
 import {
   getBlockTabs,
   getEntityBlocks,
+  hasDeclaredRoutes,
   hasEntityDashboard,
+  resolveBlockRows,
 } from '@/src/components/Analytics/Usage/utils/entity-blocks';
+import { QueryFilterNode } from '@/src/models/analytics/query';
 import { ApplicationRoute } from '@/src/types/routes';
 
 describe('getEntityBlocks', () => {
@@ -35,5 +38,67 @@ describe('getBlockTabs', () => {
       BreakdownTab.Applications,
       BreakdownTab.Projects,
     ]);
+  });
+});
+
+const OWN = [{ op: 'eq', args: [] }] as unknown as QueryFilterNode[];
+const MADE = [{ op: 'ne', args: [] }] as unknown as QueryFilterNode[];
+
+describe('getEntityBlocks for applications', () => {
+  test.each([ApplicationRoute.Applications, ApplicationRoute.AssetsApplications])(
+    'gives a %s LLM, MCP and Routes blocks when it declares routes, in that order',
+    (route) => {
+      expect(getEntityBlocks(route, true).map((block) => block.view)).toEqual([
+        UsageView.Llm,
+        UsageView.Mcp,
+        UsageView.Routes,
+      ]);
+    },
+  );
+
+  test('leaves the Routes block out for an application that declares none', () => {
+    expect(getEntityBlocks(ApplicationRoute.Applications).map((block) => block.view)).toEqual([
+      UsageView.Llm,
+      UsageView.Mcp,
+    ]);
+  });
+});
+
+describe('hasDeclaredRoutes', () => {
+  test('reads a list on an admin application and a map on an asset one', () => {
+    expect(hasDeclaredRoutes({ routes: [{}] })).toBe(true);
+    expect(hasDeclaredRoutes({ routes: { search: {} } })).toBe(true);
+  });
+
+  test('reads nothing declared as no routes', () => {
+    expect(hasDeclaredRoutes({ routes: [] })).toBe(false);
+    expect(hasDeclaredRoutes({ routes: {} })).toBe(false);
+    expect(hasDeclaredRoutes({})).toBe(false);
+    expect(hasDeclaredRoutes()).toBe(false);
+  });
+});
+
+describe('resolveBlockRows', () => {
+  const [llm, mcp] = getEntityBlocks(ApplicationRoute.Applications);
+
+  test("reads an application's own figures from its own calls, with spend over the whole tree", () => {
+    const { rows, madeRows } = resolveBlockRows({ own: OWN, made: MADE }, llm);
+
+    expect(rows).toEqual({ entityClauses: OWN, spendColumn: SpendColumn.Total });
+    expect(madeRows).toEqual({ entityClauses: MADE, spendColumn: SpendColumn.Deployment });
+  });
+
+  test("reads an application's MCP block from the tool calls it made, and nothing else", () => {
+    expect(resolveBlockRows({ own: OWN, made: MADE }, mcp)).toEqual({
+      rows: { entityClauses: MADE, spendColumn: SpendColumn.Deployment },
+      madeRows: null,
+    });
+  });
+
+  test('reads one set of rows where the block reads nothing from the calls made', () => {
+    expect(resolveBlockRows({ own: OWN })).toEqual({
+      rows: { entityClauses: OWN, spendColumn: SpendColumn.Deployment },
+      madeRows: null,
+    });
   });
 });

@@ -101,3 +101,37 @@ describe('getShareOfTotal', () => {
     expect(getShareOfTotal(value, total)).toBeNull();
   });
 });
+
+describe('buildKpiFigures with a separate token source', () => {
+  const own = { ...EMPTY_MEASURES, calls: 2, spend: 9, promptTokens: 0, completionTokens: 0 };
+  const made = { ...EMPTY_MEASURES, calls: 6, spend: 3, promptTokens: 1_000, completionTokens: 500 };
+
+  test('reads the token cards from the calls made, and every other card from the own rows', () => {
+    const figures = buildKpiFigures({
+      view: UsageView.Llm,
+      current: own,
+      previous: null,
+      buckets: [],
+      tokens: { current: made, previous: null },
+    });
+    const valueOf = (metric: KpiMetric) => figures.find((figure) => figure.metric === metric)?.value.current;
+
+    expect(valueOf(KpiMetric.Tokens)).toBe(1_500);
+    expect(valueOf(KpiMetric.CostPerMillionTokens)).toBe((3 / 1_500) * 1_000_000);
+    expect(valueOf(KpiMetric.TotalSpend)).toBe(9);
+    expect(valueOf(KpiMetric.Requests)).toBe(2);
+  });
+
+  test('draws no sparkline for a card read from another source', () => {
+    const figures = buildKpiFigures({
+      view: UsageView.Llm,
+      current: own,
+      previous: null,
+      buckets: [bucket(0, own)],
+      tokens: { current: made, previous: null },
+    });
+
+    expect(figures.find((figure) => figure.metric === KpiMetric.Tokens)?.sparkline).toEqual([]);
+    expect(figures.find((figure) => figure.metric === KpiMetric.Requests)?.sparkline).toEqual([2]);
+  });
+});

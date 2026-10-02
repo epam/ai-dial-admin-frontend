@@ -9,9 +9,10 @@ import {
   BreakdownTab,
   RequestState,
   RouteKind,
+  SpendColumn,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
-import { PAGE_SCOPE, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
+import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -40,6 +41,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     return <div role="grid" aria-rowcount={props.rowData?.length ?? 0} />;
   },
 }));
+
+const ALL_ROWS = { entityClauses: [], spendColumn: SpendColumn.Deployment };
 
 const loaded = <T,>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
 
@@ -77,7 +80,7 @@ const renderTable = (props: Partial<Props> = {}) =>
   render(
     <BreakdownTable
       view={UsageView.Llm}
-      scope={PAGE_SCOPE}
+      rowScope={ALL_ROWS}
       tabs={VIEW_BREAKDOWN_TABS[props.view ?? UsageView.Llm]}
       tab={BreakdownTab.Models}
       onTabChange={vi.fn()}
@@ -271,7 +274,7 @@ describe('BreakdownTable cost column and tab description', () => {
     rerender(
       <BreakdownTable
         view={UsageView.Llm}
-        scope={PAGE_SCOPE}
+        rowScope={ALL_ROWS}
         tabs={VIEW_BREAKDOWN_TABS[UsageView.Llm]}
         tab={BreakdownTab.Projects}
         onTabChange={vi.fn()}

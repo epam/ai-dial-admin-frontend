@@ -41,9 +41,13 @@ heatmap and breakdown. `UsageDashboard` keeps the heading, `UsageControls`, the 
 renders one `UsageBlock` with the selected view and an empty scope — so the page renders what it
 renders now.
 
-`EntityUsageDashboard` is the second shell: period, `Compare` and refresh (`UsageControls` without
-`View by` — D5), the window snapshot seeded from and written back to the Audit tab's shared period,
-and one `UsageBlock` per block the entity has (D3), each under a heading.
+`EntityUsageDashboard` is the second shell: the same `UsageControls` with `View by` limited to the
+entity's views (D5), the window snapshot seeded from and written back to the Audit tab's shared
+period, and one `UsageBlock` for the selected view's entry in `ENTITY_BLOCKS` (D3).
+
+*Alternative rejected:* every view stacked under its own heading, with no `View by`. It made an
+entity dashboard read differently from the page, and an application's three stacked views issued
+three times the requests on every load.
 
 *Alternative rejected:* pass an `entity` prop into `UsageDashboard` and branch inside. Every widget
 would learn about entities, and the page would carry entity branches it never takes.
@@ -110,10 +114,11 @@ page's card does.
 application. It would cover nested calls, but `execution_path`'s completeness is an open question to
 the backend (backend requests document, question 2); the change takes it up once answered.
 
-### D5. `UsageControls` without `View by`
+### D5. `UsageControls` takes the views `View by` offers
 
-`UsageControls` takes `view` and `onViewChange` as optional: absent, it renders no `View by`. Its
-existing callers pass both and render as today.
+`UsageControls` gains `views`, defaulting to every view; the entity dashboard passes its entity's.
+`View by` is shown whatever the count, so a one-view entity reads like the page. The option labels
+come from `VIEW_LABEL_KEY` in `utils/labels.ts`, one record for every place a view is named.
 
 ### D6. The flag decision lives in `EntityAudit`; the Assets applications tab in `getAuditTabs`
 
@@ -121,7 +126,11 @@ existing callers pass both and render as today.
 `featureFlags.analyticsUsageEnabled` — which the layout already builds from both flags, as
 `/dashboards` reads them — and `ENTITY_BLOCKS` serves the route; the telemetry `Dashboard`
 otherwise. Where the tab appears is unchanged for the five routes that have it today.
-`getAuditTabs` gains the Assets applications route, offering `Dashboard` only under that flag.
+Assets applications have no Audit tab today: `getTabsForAsset` adds one under that flag, and
+`getAuditTabs` gives it `Dashboard` alone — no `Activities`, which the admin audit does not record for
+a Core asset, as for asset toolsets. The platform-bucket view does not pass the flags yet: its
+applications are addressed by name rather than by a bucket path, and which deployment name the usage
+log records for them is unconfirmed.
 
 The 403 check reuses the page's `isAnalyticsForbidden` through a `getIsAnalyticsForbidden` server
 action, asked once per tab mount; the tab draws a loader until it answers and `Page403` on a
@@ -133,8 +142,8 @@ refusal.
   a unit test pins which column the application block sums, so a correction is one constant.
 - [Asset names are built on the client] → The rule is the one asset toolsets already rely on; a unit
   test pins the encoding of a path with a space. Backend request 2 removes the heuristic.
-- [An application dashboard issues more requests: up to three blocks, plus the `made` totals] → Each
-  block issues the page's shapes; the Routes block is skipped for an application without routes.
+- [An application's LLM view issues two more totals requests, over the calls it made] → Only that
+  view, and only once per window; the other views issue the page's shapes.
 - [`Tokens` on an application undercounts nested calls] → Stated on the card itself.
 
 ## Migration Plan

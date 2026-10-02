@@ -18,8 +18,8 @@ import {
   RequestState,
   SpendBucket,
   TimeSeriesView,
+  RowScope,
   UsageMeasures,
-  UsageScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import {
@@ -50,7 +50,10 @@ const loaded = <T>(data: T): RequestState<T> => ({ data, isLoading: false, hasFa
 
 interface Params {
   view: UsageView;
-  scope: UsageScope;
+  rows: RowScope;
+  madeRows: RowScope | null;
+  /** The tabs read from `madeRows` rather than from `rows`. */
+  madeTabs: BreakdownTab[];
   windows: ComparedWindows;
   resolution: ChartResolution;
   tab: BreakdownTab;
@@ -77,6 +80,9 @@ export interface UsageDashboardData {
   spendBuckets: RequestState<SpendBucket[]>;
   tabRows: RequestState<BreakdownRow[]>;
   previousTabRows: RequestState<BreakdownRow[]>;
+  /** Totals over `madeRows`; loaded empty where the block reads none. */
+  madeTotals: RequestState<UsageMeasures | null>;
+  previousMadeTotals: RequestState<UsageMeasures | null>;
   /** A widened donut limit is read without clearing the rows, so it says it is reading separately. */
   isDonutReadingMore: boolean;
   isRefreshing: boolean;
@@ -84,7 +90,9 @@ export interface UsageDashboardData {
 
 export const useUsageDashboardData = ({
   view,
-  scope,
+  rows,
+  madeRows,
+  madeTabs,
   windows,
   resolution,
   tab,
@@ -115,6 +123,8 @@ export const useUsageDashboardData = ({
   const [spendBuckets, setSpendBuckets] = useState<RequestState<SpendBucket[]>>(loaded([]));
   const [tabRows, setTabRows] = useState<RequestState<BreakdownRow[]>>(pending);
   const [previousTabRows, setPreviousTabRows] = useState<RequestState<BreakdownRow[]>>(loaded([]));
+  const [madeTotals, setMadeTotals] = useState<RequestState<UsageMeasures | null>>(loaded(null));
+  const [previousMadeTotals, setPreviousMadeTotals] = useState<RequestState<UsageMeasures | null>>(loaded(null));
 
   // A superseded response must not overwrite a newer one.
   const viewGeneration = useRef(0);
@@ -122,6 +132,7 @@ export const useUsageDashboardData = ({
   const splitGeneration = useRef(0);
   const spendGeneration = useRef(0);
   const donutGeneration = useRef(0);
+  const madeGeneration = useRef(0);
   /** What the donut is reading, apart from how many rows of it: a change here empties the rows. */
   const donutScope = [
     view,
@@ -132,7 +143,18 @@ export const useUsageDashboardData = ({
   ].join('|');
   const donutScopeKey = useRef(donutScope);
 
-  const baseScope = useMemo(() => ({ view, entityClauses: scope.own }), [view, scope]);
+  const baseScope = useMemo(() => ({ view, ...rows }), [view, rows]);
+  const madeScope = useMemo(() => (madeRows ? { view, ...madeRows } : null), [view, madeRows]);
+  const madeTabsKey = madeTabs.join('|');
+  /** The rows a tab ranks: the calls the entity made for a tab that reads those, its own rows otherwise. */
+  const scopeOf = useCallback(
+    (of: BreakdownTab) => (madeScope && madeTabs.includes(of) ? madeScope : baseScope),
+    // `madeTabsKey` stands in for `madeTabs`, which a caller may build afresh on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [baseScope, madeScope, madeTabsKey],
+  );
+  const donutBaseScope = scopeOf(leadingTab);
+  const tabBaseScope = scopeOf(tab);
 
   /** A failure states itself once, in a notification; the widget it feeds falls back to empty. */
   const reportFailed = useCallback(
@@ -212,7 +234,7 @@ export const useUsageDashboardData = ({
 
     setDimensionBuckets(pending);
     void runQuery(
-      buildDimensionBucketedQuery({ ...baseScope, window: windows.current }, resolution, donutTab, seriesIds),
+      buildDimensionBucketedQuery({ ...donutBaseScope, window: windows.current }, resolution, donutTab, seriesIds),
     ).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
       setDimensionBuckets(
@@ -221,7 +243,7 @@ export const useUsageDashboardData = ({
     });
     // `seriesKey` stands in for `seriesIds`, which is a fresh array on every response.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseScope, windows, resolution, donutTab, seriesKey, timeSeriesView, refreshToken, runQuery, reportFailed]);
+  }, [donutBaseScope, windows, resolution, donutTab, seriesKey, timeSeriesView, refreshToken, runQuery, reportFailed]);
 
   /**
    * The share chart names the view's leading dimension. Driving it from the breakdown tab made it
@@ -248,7 +270,7 @@ export const useUsageDashboardData = ({
     }
 
     void runQuery(
-      buildTabQuery({ ...baseScope, window: windows.current }, leadingTab, donutLimit, {
+      buildTabQuery({ ...donutBaseScope, window: windows.current }, leadingTab, donutLimit, {
         orderBy: donutMetric === DonutMetric.Cost ? SPEND_ALIAS : CALLS_ALIAS,
       }),
     ).then(({ result, error, isCancelled }) => {
@@ -263,7 +285,7 @@ export const useUsageDashboardData = ({
     });
     // `donutScope` is read through a ref, so it is not a dependency of its own effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseScope, view, leadingTab, donutMetric, windows, donutLimit, refreshToken, runQuery, reportFailed]);
+  }, [donutBaseScope, view, leadingTab, donutMetric, windows, donutLimit, refreshToken, runQuery, reportFailed]);
 
   useEffect(() => {
     spendGeneration.current += 1;
@@ -298,7 +320,7 @@ export const useUsageDashboardData = ({
     const qualifiers = BREAKDOWN_TAB_QUALIFIERS[tab];
 
     setTabRows(pending);
-    void runQuery(buildTabQuery({ ...baseScope, window: windows.current }, tab, tabLimit)).then(
+    void runQuery(buildTabQuery({ ...tabBaseScope, window: windows.current }, tab, tabLimit)).then(
       ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
         setTabRows(result ? loaded(foldBreakdownRows(result, column, qualifiers)) : reportFailed(error));
@@ -311,13 +333,52 @@ export const useUsageDashboardData = ({
     }
 
     setPreviousTabRows(pending);
-    void runQuery(buildTabQuery({ ...baseScope, window: windows.previous }, tab, tabLimit)).then(
+    void runQuery(buildTabQuery({ ...tabBaseScope, window: windows.previous }, tab, tabLimit)).then(
       ({ result, error, isCancelled }) => {
         if (!isCurrent() || isCancelled) return;
         setPreviousTabRows(result ? loaded(foldBreakdownRows(result, column, qualifiers)) : reportFailed(error));
       },
     );
-  }, [baseScope, windows, tab, tabLimit, refreshToken, runQuery, reportFailed]);
+  }, [tabBaseScope, windows, tab, tabLimit, refreshToken, runQuery, reportFailed]);
+
+  /**
+   * Totals over the calls the entity made: the token figures, and the total a share of those calls is
+   * taken of. One per window, as the block's own totals are; none where the block reads no `made` row.
+   */
+  useEffect(() => {
+    madeGeneration.current += 1;
+    const generation = madeGeneration.current;
+    const isCurrent = () => generation === madeGeneration.current;
+
+    if (!madeScope) {
+      setMadeTotals(loaded(null));
+      setPreviousMadeTotals(loaded(null));
+      return;
+    }
+
+    setMadeTotals(pending);
+    void runQuery(buildTotalsQuery({ ...madeScope, window: windows.current })).then(
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
+        const row = result?.rows?.[0];
+        setMadeTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
+      },
+    );
+
+    if (!windows.previous) {
+      setPreviousMadeTotals(loaded(null));
+      return;
+    }
+
+    setPreviousMadeTotals(pending);
+    void runQuery(buildTotalsQuery({ ...madeScope, window: windows.previous })).then(
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
+        const row = result?.rows?.[0];
+        setPreviousMadeTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
+      },
+    );
+  }, [madeScope, windows, refreshToken, runQuery, reportFailed]);
 
   // Every request the page has in flight, not just the ones behind the first widget: the control
   // re-enabling while a window is still arriving invites a second round of the same reads.
@@ -331,6 +392,8 @@ export const useUsageDashboardData = ({
     spendBuckets,
     tabRows,
     previousTabRows,
+    madeTotals,
+    previousMadeTotals,
   ].some((request) => request.isLoading);
 
   return {
@@ -344,6 +407,8 @@ export const useUsageDashboardData = ({
     spendBuckets,
     tabRows,
     previousTabRows,
+    madeTotals,
+    previousMadeTotals,
     isDonutReadingMore,
     isRefreshing,
   };

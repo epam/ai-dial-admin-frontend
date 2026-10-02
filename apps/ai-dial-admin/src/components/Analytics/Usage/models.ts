@@ -61,16 +61,56 @@ export interface UsageScope {
   made?: QueryFilterNode[];
 }
 
+/** Which column a request sums spend from. */
+export enum SpendColumn {
+  /** The price of the row's own call. */
+  Deployment = 'deployment_price',
+  /** The price of the row's call together with every call it set off. */
+  Total = 'total_price',
+}
+
+/** The rows one request reads beyond its view and window, and the column its spend is summed from. */
+export interface RowScope {
+  entityClauses: QueryFilterNode[];
+  spendColumn: SpendColumn;
+}
+
+/** Where a block reads each of its figures from. The page reads every row, as an empty scope. */
+export interface BlockReads {
+  /** Read every figure from the calls the entity made, rather than from the calls made to it. */
+  isMadeOnly?: boolean;
+  /** Tabs ranked from the calls the entity made. */
+  madeTabs?: BreakdownTab[];
+  /** Tokens and cost per 1M come from the calls the entity made, with a caption saying so. */
+  hasMadeTokens?: boolean;
+  /** The column spend on the entity's own rows is summed from. */
+  ownSpendColumn?: SpendColumn;
+}
+
 /** One block of an entity dashboard; `ENTITY_BLOCKS` says why a tab is hidden. */
-export interface EntityBlock {
+export interface EntityBlock extends BlockReads {
   view: UsageView;
   hiddenTab: BreakdownTab;
+  /** Rendered only for an entity that declares routes. */
+  isRoutesOnly?: boolean;
 }
 
 export interface RequestState<T> {
   data: T | null;
   isLoading: boolean;
   hasFailed: boolean;
+}
+
+/** Measures over the current window and the one it is compared against. */
+export interface ComparedMeasures {
+  current: UsageMeasures | null;
+  previous: UsageMeasures | null;
+}
+
+/** The requests behind a `ComparedMeasures`. */
+export interface ComparedTotals {
+  current: RequestState<UsageMeasures | null>;
+  previous: RequestState<UsageMeasures | null>;
 }
 
 export interface ComparedWindows {
@@ -169,6 +209,8 @@ export interface KpiCardModel {
   /** The previous window held nothing and this one does: a change with nothing to divide by. */
   isNew: boolean;
   footnote?: string;
+  /** What the figure counts, where the title alone would overstate it. */
+  caption?: string;
   sparkline: number[];
 }
 

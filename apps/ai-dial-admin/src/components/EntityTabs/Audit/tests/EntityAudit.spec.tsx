@@ -153,11 +153,14 @@ describe('EntityAudit behind the analytics flags', () => {
     expect(dashboardPropsSpy).not.toHaveBeenCalled();
   });
 
-  test('keeps the telemetry dashboard where the usage dashboard serves no blocks yet', () => {
+  test("serves the usage dashboard on an application's Dashboard tab too", () => {
     render(<EntityAudit entity={{ name: 'rag' }} view={ApplicationRoute.Applications} />);
 
-    expect(screen.getByRole('dashboards')).toBeInTheDocument();
-    expect(usageDashboardPropsSpy).not.toHaveBeenCalled();
+    expect(screen.getByRole('region', { name: 'usage dashboard' })).toBeInTheDocument();
+    expect(usageDashboardPropsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ route: ApplicationRoute.Applications }),
+    );
+    expect(dashboardPropsSpy).not.toHaveBeenCalled();
   });
 
   test('keeps the telemetry dashboard with the usage flag off', () => {

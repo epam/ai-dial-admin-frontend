@@ -18,7 +18,7 @@ import {
   ComparedWindows,
   KpiMetric,
   RequestState,
-  UsageScope,
+  RowScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
@@ -84,7 +84,8 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
 
 interface Props {
   view: UsageView;
-  scope: UsageScope;
+  /** The rows the active tab ranks; the full-list dialog reads the same. */
+  rowScope: RowScope;
   /** The tabs offered, in order. */
   tabs: BreakdownTab[];
   tab: BreakdownTab;
@@ -105,7 +106,7 @@ interface Props {
 
 const BreakdownTable: FC<Props> = ({
   view,
-  scope,
+  rowScope,
   tabs: tabIds,
   tab,
   onTabChange,
@@ -208,7 +209,7 @@ const BreakdownTable: FC<Props> = ({
 
   const { datasource, datasourceKey, isLoadingBlock } = useBreakdownDialogRows({
     view,
-    scope,
+    rowScope,
     windows,
     tab,
     windowTotal,
