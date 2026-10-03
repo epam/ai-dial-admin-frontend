@@ -6,10 +6,6 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
-import DescriptionControl from '@/src/components/BaseControls/Description';
-import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import IdControl from '@/src/components/BaseControls/Id/Id';
-import VersionControl from '@/src/components/BaseControls/Version';
 import {
   ASSET_APPLICATION_CREATE_SOURCE_ITEMS,
   ASSET_APPLICATION_INTERFACES_SOURCE_TYPE,
@@ -17,13 +13,14 @@ import {
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
@@ -38,6 +35,7 @@ import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
+import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 
 enum CreateStep {
   Details = 'details',
@@ -74,6 +72,7 @@ const CreateApplication: FC<Props> = ({
   const router = useRouter();
   const { codeAppEditorUrl } = useAppContext();
   const { showNotification } = useNotification();
+  const { isValid } = useSaveValidationContext();
   const protectedRequest = useProtectedRequest();
   const folderContext = getContext();
   const isPlatform = isPlatformBucketPath(folderContext.filePath);
@@ -81,7 +80,7 @@ const CreateApplication: FC<Props> = ({
     () =>
       ({
         name: '',
-        display_name: '',
+        displayName: '',
         description: '',
         interfaces: {},
         ...(isPlatform ? { user_roles: [] } : { version: DEFAULT_NEW_ENTITY_VERSION }),
@@ -103,10 +102,15 @@ const CreateApplication: FC<Props> = ({
   }, [initialAsset, onClose]);
 
   const onNext = useCallback(async () => {
+    if (!isPlatform) {
+      setStep(CreateStep.Source);
+      return;
+    }
+
     const isUnique = await checkIsUniqueDeploymentName(asset.name?.trim() || '');
     setIsUniqueNameError(!isUnique);
     if (isUnique) setStep(CreateStep.Source);
-  }, [asset.name]);
+  }, [asset.name, isPlatform]);
 
   const onCreateApplication = useCallback(async () => {
     if (!onCreate) return;
@@ -134,13 +138,15 @@ const CreateApplication: FC<Props> = ({
     ? getAssetVersionBusinessError(versionsMap, asset.name, t, asset.version)
     : undefined;
   const isDetailsValid =
-    !!asset.name && !!asset.display_name && !isUniqueNameError && (isPlatform || (!!asset.version && !versionError));
+    !!asset.name &&
+    !!asset.displayName &&
+    !isUniqueNameError &&
+    (!isPlatform ? isValid && !!asset.version && !versionError : true);
   const isSourceValid =
-    source === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE ||
+    (source === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE && Object.keys(asset.interfaces ?? {}).length) ||
     (source === 'schema' && !!asset.application_type_schema_id) ||
     (source === 'code-app' && !!codeAppEditorUrl) ||
     (source === 'endpoints' && !!asset.endpoint && isValidEndpoint(asset.endpoint));
-
   if (step === CreateStep.Details) {
     return (
       <DialFormPopup
@@ -155,29 +161,17 @@ const CreateApplication: FC<Props> = ({
         disableSubmitButton={!isDetailsValid}
       >
         <div className="flex flex-col gap-y-8 px-6 py-4">
-          <IdControl
-            entity={asset}
+          <AssetProperties
+            view={ApplicationRoute.AssetsApplications}
+            versionsMap={versionsMap}
+            entity={asset as unknown as DeploymentAsset}
             names={names}
-            onChangeEntity={(entity) => setAsset({ ...asset, ...entity } as DialApplicationResource)}
-            checkEmptySymbols={false}
-          />
-          <DisplayNameControl
-            displayName={asset.display_name}
-            required
-            isFullWidth
-            onChange={(display_name) => setAsset({ ...asset, display_name })}
-          />
-          {!isPlatform && (
-            <VersionControl
-              isFullWidth
-              version={asset.version}
-              error={versionError?.text}
-              onChange={(version) => setAsset({ ...asset, version })}
-            />
-          )}
-          <DescriptionControl
-            entity={asset}
-            onChangeEntity={(entity) => setAsset({ ...asset, ...entity } as DialApplicationResource)}
+            hideVersionField={isPlatform}
+            isUniqueNameError={isUniqueNameError}
+            onChangeEntity={(entity) => {
+              setAsset(entity as DialApplicationResource);
+              setIsUniqueNameError(false);
+            }}
           />
         </div>
       </DialFormPopup>
@@ -196,7 +190,7 @@ const CreateApplication: FC<Props> = ({
       onSubmit={onCreateApplication}
       cancelLabel={t(ButtonsI18nKey.Back)}
       submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isSourceValid}
+      disableSubmitButton={!isSourceValid || !isValid}
     >
       <div className="flex min-h-0 flex-col overflow-auto px-6 py-4">
         <ResourceSourceField
