@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { ButtonsI18nKey, EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import CreateApplication from '../CreateApplication';
 
@@ -94,7 +95,6 @@ const configureInterfaces = async (user: ReturnType<typeof userEvent.setup>) => 
   await waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeEnabled());
 };
 
-
 describe('CreateApplication', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -123,7 +123,7 @@ describe('CreateApplication', () => {
     expect(mockSourceField).toHaveBeenCalledWith(
       expect.objectContaining({
         initialSource: 'interfaces',
-        sourceItems: expect.arrayContaining([expect.objectContaining({ label: InterfacesI18nKey.Interfaces })]),
+        sourceItems: ASSET_APPLICATION_CREATE_SOURCE_ITEMS,
         view: ApplicationRoute.AssetsApplications,
       }),
     );
