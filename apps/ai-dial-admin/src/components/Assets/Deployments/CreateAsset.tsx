@@ -184,7 +184,6 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
                 onChangeEntity={onChangeEntity}
                 names={names}
                 versionsMap={versionsMap}
-                initialValues={initialValues}
                 hideVersionField={isPlatformDualBucketCreate}
               />
             )}

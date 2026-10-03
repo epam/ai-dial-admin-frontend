@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import CreateApplication from '../CreateApplication';
 
@@ -13,8 +13,13 @@ const mockSourceField = vi.fn();
 
 vi.mock('@/src/app/actions', () => ({ checkIsUniqueDeploymentName: vi.fn().mockResolvedValue(true) }));
 vi.mock('@/src/components/BaseControls/Id/Id', () => ({
-  default: ({ onChangeEntity }: { onChangeEntity: (entity: { name: string }) => void }) =>
-    createElement('button', { onClick: () => onChangeEntity({ name: 'app' }) }, 'set id'),
+  default: ({
+    entity,
+    onChangeEntity,
+  }: {
+    entity: { name?: string; interfaces?: Record<string, unknown> };
+    onChangeEntity: (entity: { name: string; interfaces?: Record<string, unknown> }) => void;
+  }) => createElement('button', { onClick: () => onChangeEntity({ ...entity, name: 'app' }) }, 'set id'),
 }));
 vi.mock('@/src/components/BaseControls/DisplayName', () => ({
   default: ({ onChange }: { onChange: (value: string) => void }) =>
@@ -27,9 +32,27 @@ vi.mock('@/src/components/BaseControls/Description', () => ({
   default: () => createElement('div', null, EntityFieldsI18nKey.description),
 }));
 vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
-  default: (props: unknown) => {
+  default: (props: {
+    entity: { interfaces?: Record<string, unknown> };
+    onChange: (entity: { interfaces?: Record<string, unknown> }) => void;
+  }) => {
     mockSourceField(props);
-    return createElement('div', null, 'resource-source-field');
+    return createElement(
+      'div',
+      null,
+      'resource-source-field',
+      createElement(
+        'button',
+        {
+          onClick: () =>
+            props.onChange({
+              ...props.entity,
+              interfaces: { 'test-interface': { base_url: 'https://example.com' } },
+            }),
+        },
+        'configure interfaces',
+      ),
+    );
   },
 }));
 
@@ -66,6 +89,12 @@ const advanceToSource = async () => {
   return user;
 };
 
+const configureInterfaces = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByRole('button', { name: 'configure interfaces' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeEnabled());
+};
+
+
 describe('CreateApplication', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -94,17 +123,27 @@ describe('CreateApplication', () => {
     expect(mockSourceField).toHaveBeenCalledWith(
       expect.objectContaining({
         initialSource: 'interfaces',
-        sourceItems: expect.arrayContaining([expect.objectContaining({ label: 'Interfaces' })]),
+        sourceItems: expect.arrayContaining([expect.objectContaining({ label: InterfacesI18nKey.Interfaces })]),
         view: ApplicationRoute.AssetsApplications,
       }),
     );
     expect(screen.getByText('resource-source-field').closest('[role="dialog"]')).toHaveClass('max-h-[750px]');
   });
 
+  test('disables creation until an Interfaces source is configured', async () => {
+    renderCreateApplication();
+    const user = await advanceToSource();
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
+
+    await configureInterfaces(user);
+  });
+
   test('keeps the creation modal open after a failed submit', async () => {
     const onCreate = vi.fn().mockResolvedValue({ success: false, status: 400 });
     renderCreateApplication({ onCreate });
     const user = await advanceToSource();
+    await configureInterfaces(user);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
@@ -117,12 +156,17 @@ describe('CreateApplication', () => {
     const onClose = vi.fn();
     renderCreateApplication({ onCreate, onClose });
     const user = await advanceToSource();
+    await configureInterfaces(user);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
     await waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
     expect(onCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ folderId: 'public/', interfaces: {}, name: 'app' }),
+      expect.objectContaining({
+        folderId: 'public/',
+        interfaces: { 'test-interface': { base_url: 'https://example.com' } },
+        name: 'app',
+      }),
       undefined,
       undefined,
       false,

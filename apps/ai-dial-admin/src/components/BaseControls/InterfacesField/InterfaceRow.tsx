@@ -69,25 +69,32 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   const effectiveMode = value.mode ?? InterfaceMode.Passthrough;
   const isPassthrough = !isAsset || effectiveMode === InterfaceMode.Passthrough;
   const isRequired = !entityBaseUrl;
+  const baseUrlValidationField = `${fieldId}-base-url`;
+  const translatorValidationField = `${fieldId}-translator`;
 
   const validate = useCallback(
     (url?: string, shouldShowError = true) => {
       const urlError = getUrlError(url, t, isRequired);
-      dispatch({ type: ValidationActionType.SetField, field: fieldId, isValid: !urlError });
+      dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: !urlError });
       if (shouldShowError) {
         setError(urlError);
       }
     },
-    [dispatch, fieldId, isRequired, t],
+    [baseUrlValidationField, dispatch, isRequired, t],
   );
 
   useEffect(() => {
     if (isPassthrough) {
       validate(baseUrl, false);
+      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: true });
+      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: !!value.translator });
     }
 
     return () => {
-      dispatch({ type: ValidationActionType.RemoveField, field: fieldId });
+      dispatch({ type: ValidationActionType.RemoveField, field: baseUrlValidationField });
+      dispatch({ type: ValidationActionType.RemoveField, field: translatorValidationField });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,21 +134,29 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   );
 
   // base_url and translator are mutually exclusive on the wire (Core's DeploymentInterface carries
-  // one or the other), so switching mode drops whichever field the new mode doesn't use.
+  // one or the other), so switching mode drops whichever field the new mode doesn't use and clears
+  // validation for that inactive field.
   const onChangeMode = useCallback(
     (mode: InterfaceMode) => {
       if (mode === InterfaceMode.Translator) {
+        dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: true });
+        dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: false });
         onChange({ ...value, mode, [baseUrlKey]: undefined });
       } else {
+        validate(baseUrl);
+        dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
         onChange({ ...value, mode, translator: undefined });
       }
     },
-    [value, baseUrlKey, onChange],
+    [baseUrl, baseUrlKey, baseUrlValidationField, dispatch, onChange, translatorValidationField, validate, value],
   );
 
   const onChangeTranslator = useCallback(
-    (translator: TranslatorReference) => onChange({ ...value, translator }),
-    [value, onChange],
+    (translator: TranslatorReference) => {
+      dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
+      onChange({ ...value, translator });
+    },
+    [dispatch, onChange, translatorValidationField, value],
   );
 
   const onChangeDefaultHeaders = useCallback(
