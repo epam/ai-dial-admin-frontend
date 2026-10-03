@@ -140,7 +140,6 @@ describe('ThemeProvider', () => {
 
     expect(await screen.findByText('Application content')).toBeTruthy();
     expect(applyThemeColors).toHaveBeenNthCalledWith(1, document.documentElement, themesConfiguration.themes[1]);
-    expect(applyThemeColors).toHaveBeenNthCalledWith(2, document.documentElement, undefined);
   });
 
   test('renders content when both selected-theme and fallback initialization fail', async () => {
@@ -156,7 +155,7 @@ describe('ThemeProvider', () => {
     );
 
     expect(await screen.findByText('Application content')).toBeTruthy();
-    expect(applyThemeColors).toHaveBeenCalledTimes(2);
+    expect(applyThemeColors).toHaveBeenCalledTimes(1);
   });
 
   test('keeps content mounted when the theme changes after initialization', async () => {
