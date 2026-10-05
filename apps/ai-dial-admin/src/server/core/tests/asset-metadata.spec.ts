@@ -329,7 +329,7 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result[0].bucket).toBe('public');
     expect(result[1].bucket).toBe('platform');
   });
-  test('mergeAppRunnerResource decodes the resource name back into $id and flattens Core routes', () => {
+  test('mergeAppRunnerResource decodes the resource name while preserving Core routes', () => {
     const content = {
       $schema: 'https://dial.epam.com/application_type_schemas/schema#',
       'dial:applicationTypeDisplayName': 'QQ',
@@ -357,9 +357,7 @@ describe('Server :: Core :: asset-metadata', () => {
     expect(result._metadata?.author).toEqual('ivy');
     expect(result._metadata?.createdAt).toEqual('100');
     expect(result._metadata?.updatedAt).toEqual('200');
-    expect(result['dial:applicationTypeRoutes']).toEqual([
-      { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'http://svc' }] },
-    ]);
+    expect(result['dial:applicationTypeRoutes']).toEqual(content['dial:applicationTypeRoutes']);
   });
 
   test('mergeAppRunnerResource omits routes when Core returned none', () => {

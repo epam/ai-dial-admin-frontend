@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { appRunnerSchemaApi, assetApi, configFileApi } from '@/src/app/api/api';
 import { DialAppRunnerResource, DialModelResourceStatus } from '@/src/models/dial/resource';
-import { RoutePermission } from '@/src/models/dial/route';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -171,32 +170,19 @@ describe('Assets app runner :: server actions', () => {
       expect(payload.topics).toEqual(['a']);
     });
 
-    test('Should convert routes to Core name-keyed objects', async () => {
-      await updateRunner(
-        {
-          ...runner,
-          'dial:applicationTypeRoutes': [
-            {
-              name: 'my_route',
-              paths: ['/a'],
-              methods: ['GET'],
-              upstreams: [{ endpoint: 'http://svc' }],
-              permissions: [RoutePermission.READ],
-            },
-          ],
-        } as DialAppRunnerResource,
-        'etag',
-      );
-
-      const payload = (assetApi.put as any).mock.calls[0][3];
-      expect(payload['dial:applicationTypeRoutes']).toEqual({
+    test('Should preserve Core route objects in the write payload', async () => {
+      const routes = {
         my_route: {
           'dial:paths': ['/a'],
           'dial:methods': ['GET'],
           'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }],
           'dial:permissions': ['READ'],
         },
-      });
+      };
+      await updateRunner({ ...runner, 'dial:applicationTypeRoutes': routes } as DialAppRunnerResource, 'etag');
+
+      const payload = (assetApi.put as any).mock.calls[0][3];
+      expect(payload['dial:applicationTypeRoutes']).toEqual(routes);
     });
 
     test('Should omit routes entirely when the runner has none', async () => {
