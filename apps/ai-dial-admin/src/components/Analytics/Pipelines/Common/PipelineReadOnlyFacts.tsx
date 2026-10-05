@@ -19,31 +19,31 @@ interface Props {
 }
 
 /**
- * Everything the service derived, in one row above the form: what the declaration resolved to, and what
- * the runtime has done with it since.
+ * What the declaration resolved to, in one row above the form.
+ *
+ * Nothing the runtime measures is here. Those values live in the Runtime tab: four of them fitted this
+ * row, but the cursor pair and the materialized-through position do not, and they are what distinguishes
+ * a stalled pipeline from a slow one. `drained_at` left with them rather than staying as the one
+ * survivor — beside `updated_at` it read as the pipeline's last sign of life, which is the one thing it
+ * does not report: it advances only on an empty probe, so a busy pipeline holds an old value while
+ * running perfectly.
  *
  * The three states worth acting on — a failed run, a pipeline held at its input's watermark, and an output
- * left behind by a rebuilt input — are not here: `PipelineRuntimeAlerts` raises them above the tab strip.
+ * left behind by a rebuilt input — are not here either: `PipelineRuntimeAlerts` raises them above the tab
+ * strip.
  *
  * The grain key is the one fact read from the draft's resolution rather than from the pipeline: it is the
  * only place the page states it since the group trigger stopped repeating it, and the grouping key has to
  * re-derive with a target the caller has changed but not yet saved. It stays read-only and unsent.
  *
- * A runtime value the service has not reported is left out rather than printed as an em dash. Those values
- * appear as the pipeline runs — a pipeline that has never run has none of them — so a row of placeholders
- * would state absence where there is simply nothing yet. The declaration's own facts keep their em dash:
- * there the blank means the declaration does not name one, which is worth reading.
+ * These facts keep their em dash: here a blank means the declaration does not name one, which is worth
+ * reading.
  */
 const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, grainKey }) => {
   const t = useI18n();
 
-  const state = pipeline.state;
-
   const createdAt = useLocalDateTimeString(pipeline.created_at);
   const updatedAt = useLocalDateTimeString(pipeline.updated_at);
-  const lastRunAt = useLocalDateTimeString(state?.last_run_at);
-  const nextRunAt = useLocalDateTimeString(state?.next_run_at);
-  const drainedAt = useLocalDateTimeString(state?.drained_at);
 
   const notSet = t(AnalyticsPipelinesI18nKey.NotSet);
 
@@ -83,22 +83,6 @@ const PipelineReadOnlyFacts: FC<Props> = ({ pipeline, grainKey }) => {
         <LabelledText label={t(AnalyticsPipelinesI18nKey.Generation)} text={String(pipeline.generation)} />
         <LabelledText label={t(AnalyticsPipelinesI18nKey.CreatedAt)} text={createdAt || notSet} />
         <LabelledText label={t(AnalyticsPipelinesI18nKey.Updated)} text={updatedAt || notSet} />
-
-        {lastRunAt && <LabelledText label={t(AnalyticsPipelinesI18nKey.LastRun)} text={lastRunAt} />}
-        {nextRunAt && <LabelledText label={t(AnalyticsPipelinesI18nKey.NextRun)} text={nextRunAt} />}
-        {state?.lag_seconds != null && (
-          <LabelledText
-            label={t(AnalyticsPipelinesI18nKey.Lag)}
-            text={t(AnalyticsPipelinesI18nKey.LagSeconds, { count: state.lag_seconds })}
-          />
-        )}
-        {state?.has_more != null && (
-          <LabelledText
-            label={t(AnalyticsPipelinesI18nKey.Backlog)}
-            text={t(state.has_more ? AnalyticsPipelinesI18nKey.BacklogYes : AnalyticsPipelinesI18nKey.BacklogNo)}
-          />
-        )}
-        {drainedAt && <LabelledText label={t(AnalyticsPipelinesI18nKey.DrainedAt)} text={drainedAt} />}
       </div>
     </section>
   );

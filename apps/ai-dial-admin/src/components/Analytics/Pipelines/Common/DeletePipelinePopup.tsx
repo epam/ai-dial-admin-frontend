@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, ConfirmationPopup, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -24,7 +24,7 @@ const DeletePipelinePopup: FC<Props> = ({ name, kind, onConfirm, onClose }) => {
   const t = useI18n();
 
   return (
-    <DialConfirmationPopup
+    <ConfirmationPopup
       open
       variant={ConfirmationPopupVariant.Danger}
       header={t(AnalyticsPipelinesI18nKey.DeleteConfirmTitle)}
@@ -39,7 +39,7 @@ const DeletePipelinePopup: FC<Props> = ({ name, kind, onConfirm, onClose }) => {
           </span>
           <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
             <span className="shrink-0 text-secondary">{t(AnalyticsPipelinesI18nKey.Name)}:</span>
-            <DialEllipsisTooltip text={name} />
+            <EllipsisTooltip text={name} />
           </div>
         </div>
       }

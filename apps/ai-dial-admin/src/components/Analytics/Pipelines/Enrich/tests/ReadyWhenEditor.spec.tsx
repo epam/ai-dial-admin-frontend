@@ -51,9 +51,10 @@ describe('ReadyWhenEditor', () => {
     fireEvent.click(idleCheckbox());
 
     // The member is dropped from the request while what was entered stays on screen, so switching the
-    // condition back on does not mean retyping it.
+    // condition back on does not mean retyping it. The 2.0 select carries its choice as the value of a
+    // readonly combobox rather than as text, so this reads it the way a user sees it.
     expect(onChange).toHaveBeenCalledWith({});
-    expect(screen.getByText('10m')).toBeTruthy();
+    expect(screen.getByDisplayValue('10m')).toBeTruthy();
   });
 
   test('presents the predicate only once its condition is enabled', () => {
