@@ -5,8 +5,8 @@ import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { PrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { GhostButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2, IconPlus } from '@tabler/icons-react';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
@@ -23,9 +23,10 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { useAppContext } from '@/src/context/AppContext';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { PIPELINES_NO_RUNTIME_STORAGE_KEY, PIPELINES_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsPipelinesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -52,6 +53,9 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const [pipelines, setPipelines] = useState<PipelineListItem[]>(initialPipelines);
   const [deleteTarget, setDeleteTarget] = useState<PipelineListItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
+
+  const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
 
   useReadFailureNotification(loadFailure, AnalyticsPipelinesI18nKey.PipelinesLoadFailed);
 
@@ -78,7 +82,10 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
       if (requestId !== requestIdRef.current) return;
 
       if (result.success) {
-        setPipelines(result.response ?? []);
+        const next = result.response ?? [];
+        setPipelines(next);
+        // The button goes with the last row; a panel left open would reappear on its own with the next one.
+        if (!next.length) setIsColumnsPanelOpen(false);
         return;
       }
       reportFailure(result);
@@ -125,40 +132,37 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   const columns: ColDef[] = useMemo(() => {
     // The service's ordering is total, so client-side re-sorting would present an order the response
     // never had.
+    //
+    // Every column sets `field` equal to its `colId`: the columns panel addresses a column by `field` and
+    // the grid's saved state by `colId`, so a column keyed by one alone could be listed but never toggled.
+    // Where that field resolves to a raw row value the cell renders as something else, the default
+    // tooltip is suppressed so the raw value is not repeated over the rendered badge. The leading seven
+    // are shown by default; the rest stay available in the columns panel.
     const dataColumns: ColDef[] = [
-      { headerName: t(AnalyticsPipelinesI18nKey.Name), field: 'name', flex: 2 },
+      { headerName: t(AnalyticsPipelinesI18nKey.Name), field: 'name', colId: 'name', flex: 2 },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Kind),
+        field: 'kind',
         colId: 'kind',
         flex: 1,
         cellDataType: false,
         cellRenderer: PipelineKindCellRenderer,
-      },
-      { headerName: t(AnalyticsPipelinesI18nKey.Target), field: 'target', flex: 2 },
-      {
-        headerName: t(AnalyticsPipelinesI18nKey.Inputs),
-        colId: 'inputs',
-        flex: 2,
-        // An enrichment pipeline that declares no input is not one without a source — it reads whatever
-        // its target enrichment reads. An em dash said the opposite; the resolved table itself is on the
-        // pipeline's own page, which is the only read that resolves it.
-        valueGetter: (params) => {
-          const row = params.data as PipelineListItem | undefined;
-          if (row?.inputs?.length) return row.inputs.join(', ');
-          return row?.kind === PipelineKind.Enrich
-            ? t(AnalyticsPipelinesI18nKey.SourceFollowsTarget)
-            : UNAVAILABLE_VALUE;
-        },
+        tooltipValueGetter: () => undefined,
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Trigger),
+        field: 'trigger',
         colId: 'trigger',
         flex: 2,
         cellDataType: false,
+        // `trigger` is an object, which the grid's comparator cannot order; sort and filter on its kind.
+        valueGetter: (params) => (params.data as PipelineListItem | undefined)?.trigger?.kind,
         cellRenderer: TriggerCellRenderer,
+        tooltipValueGetter: () => undefined,
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.SectionTransform),
+        field: 'transform',
         colId: 'transform',
         flex: 2,
         cellDataType: false,
@@ -166,12 +170,14 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
       },
       {
         headerName: t(AnalyticsPipelinesI18nKey.Enabled),
+        field: 'enabled',
         colId: 'enabled',
         flex: 1,
         cellDataType: false,
         cellRenderer: ({ data }: ICellRendererParams<PipelineListItem>) => (
           <PipelineEnabledBadge enabled={data?.enabled} />
         ),
+        tooltipValueGetter: () => undefined,
       },
       // Withheld whole rather than filled with identical failures: a column of them states nothing
       // about any row and implies a per-row fact the page does not have.
@@ -179,6 +185,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
         ? [
             {
               headerName: t(AnalyticsPipelinesI18nKey.Runtime),
+              field: 'runtime',
               colId: 'runtime',
               flex: 1,
               cellDataType: false,
@@ -193,11 +200,32 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
             },
           ]
         : []),
-      { headerName: t(AnalyticsPipelinesI18nKey.Generation), field: 'generation', flex: 1 },
+      { headerName: t(AnalyticsPipelinesI18nKey.Generation), field: 'generation', colId: 'generation', flex: 1 },
+      { headerName: t(AnalyticsPipelinesI18nKey.Target), field: 'target', colId: 'target', flex: 2, hide: true },
+      {
+        headerName: t(AnalyticsPipelinesI18nKey.Inputs),
+        field: 'inputs',
+        colId: 'inputs',
+        flex: 2,
+        hide: true,
+        // An enrichment pipeline that declares no input is not one without a source — it reads whatever
+        // its target enrichment reads. An em dash said the opposite; the resolved table itself is on the
+        // pipeline's own page, which is the only read that resolves it.
+        valueGetter: (params) => {
+          const row = params.data as PipelineListItem | undefined;
+          if (row?.inputs?.length) return row.inputs.join(', ');
+          return row?.kind === PipelineKind.Enrich
+            ? t(AnalyticsPipelinesI18nKey.SourceFollowsTarget)
+            : UNAVAILABLE_VALUE;
+        },
+        tooltipValueGetter: () => undefined,
+      },
       {
         headerName: t(AnalyticsPipelinesI18nKey.UpdatedAt),
+        field: 'updatedAt',
         colId: 'updatedAt',
         flex: 2,
+        hide: true,
         valueGetter: (params) => formatDateTimeToLocalString((params.data as PipelineListItem | undefined)?.updated_at),
       },
     ];
@@ -209,13 +237,24 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
     <div className="relative flex w-full flex-1 flex-col min-h-0 rounded bg-layer-2 p-4">
       <div className="mb-8 flex h-[40px] flex-row items-center justify-between gap-4">
         <h1>{t(MenuI18nKey.Pipelines)}</h1>
-        {isFullAdmin && (
-          <PrimaryButton
-            label={t(AnalyticsPipelinesI18nKey.CreatePipeline)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsCreateOpen(true)}
-          />
-        )}
+        <div className="flex items-center gap-4">
+          {/* The grid does not mount the panel over its empty state, so there is nothing to configure. */}
+          {pipelines.length > 0 && (
+            <GhostButton
+              label={t(ButtonsI18nKey.Columns)}
+              iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+              aria-pressed={isColumnsPanelOpen}
+              onClick={onToggleColumnsPanel}
+            />
+          )}
+          {isFullAdmin && (
+            <PrimaryButton
+              label={t(AnalyticsPipelinesI18nKey.CreatePipeline)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setIsCreateOpen(true)}
+            />
+          )}
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
@@ -230,6 +269,9 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
             },
           }}
           emptyDataProps={{ title: t(AnalyticsPipelinesI18nKey.NoPipelines) }}
+          storageKey={runtime.isRead ? PIPELINES_STORAGE_KEY : PIPELINES_NO_RUNTIME_STORAGE_KEY}
+          showColumnsPanel={isColumnsPanelOpen}
+          toggleColumnsPanel={onToggleColumnsPanel}
         />
       </div>
 
