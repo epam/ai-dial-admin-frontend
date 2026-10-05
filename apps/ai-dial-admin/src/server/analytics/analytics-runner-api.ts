@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
+import { PipelineGroup, PipelineGroupsResponse } from '@/src/models/analytics/pipeline-groups';
 import {
   PausedPipeline,
   PausedPipelinesResponse,
@@ -17,6 +18,12 @@ export const RUNNER_PAUSE_URL = (name: string): string => `${RUNNER_PIPELINES_UR
 export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/resume`;
 export const RUNNER_RUNTIME_URL = (name: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/runtime`;
+
+/** The runner clamps `limit` to 1..500 and lists oldest activity first; there is no cursor. */
+export const RUNNER_GROUPS_URL = (name: string, limit: number): string =>
+  `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups?${new URLSearchParams({ limit: String(limit) }).toString()}`;
+export const RUNNER_GROUP_REQUEUE_URL = (name: string, groupKey: string): string =>
+  `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups/${encodeURIComponent(groupKey)}/requeue`;
 
 export const RUNNER_DLQ_URL = 'v1/dlq';
 
@@ -179,5 +186,24 @@ export class AnalyticsRunnerApi extends BaseApi {
     token: Token,
   ): Promise<ServerActionResponse<DlqRequeueResponse>> {
     return this.sendActionRequest(RUNNER_DLQ_REQUEUE_URL(pipelineName, runId), 'POST', token);
+  }
+
+  /**
+   * The groups the runner tracks for a group pipeline. A 404 means either that the runner does not hold the
+   * pipeline or that it is not a group pipeline; the two are indistinguishable here, and both mean there are
+   * no groups to show.
+   */
+  async getGroups(pipelineName: string, limit: number, token: Token): Promise<ServerActionResponse<PipelineGroup[]>> {
+    const res = await this.getAction(RUNNER_GROUPS_URL(pipelineName, limit), token);
+
+    if (!res.success) return res;
+
+    const groups = (res.response as PipelineGroupsResponse | null)?.groups;
+    return Array.isArray(groups) ? { ...res, response: groups } : { ...res, success: false };
+  }
+
+  // Answers 202 with no body: the evaluation is queued, and its result is never reported here.
+  requeueGroup(pipelineName: string, groupKey: string, token: Token): Promise<ServerActionResponse> {
+    return this.sendActionRequest(RUNNER_GROUP_REQUEUE_URL(pipelineName, groupKey), 'POST', token);
   }
 }

@@ -16,7 +16,7 @@ const pipeline: PipelineListItem = {
   name: 'turn-feedback-live',
   kind: PipelineKind.Enrich,
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',

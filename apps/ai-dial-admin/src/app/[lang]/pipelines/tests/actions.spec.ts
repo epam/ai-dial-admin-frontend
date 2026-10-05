@@ -4,8 +4,10 @@ import { analyticsRunnerApi } from '@/src/app/api/api';
 import {
   getPausedPipelines,
   getPipelineFailures,
+  getPipelineGroups,
   getRunnerPipelines,
   pausePipeline,
+  queueGroupEvaluation,
   requeueFailure,
   requeueFailures,
   resumePipeline,
@@ -169,5 +171,36 @@ describe('Pipeline runtime server actions', () => {
 
     expect(runner.requeueDlq).not.toHaveBeenCalled();
     expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
+  });
+
+  test('getPipelineGroups reads the runner with the requested limit and the caller token', async () => {
+    runner.getGroups.mockResolvedValue({ success: true, response: [] });
+
+    await getPipelineGroups('retrieval-quality', 500);
+
+    expect(runner.getGroups).toHaveBeenCalledWith('retrieval-quality', 500, TOKEN_MOCK);
+  });
+
+  test('queueGroupEvaluation queues the named group with the caller token', async () => {
+    runner.requeueGroup.mockResolvedValue({ success: true });
+
+    await queueGroupEvaluation('retrieval-quality', 'sess_A');
+
+    expect(runner.requeueGroup).toHaveBeenCalledWith('retrieval-quality', 'sess_A', TOKEN_MOCK);
+  });
+
+  test('the group actions issue no request when no runner host is configured', async () => {
+    asConfigured(false);
+
+    expect(await getPipelineGroups('retrieval-quality', 1)).toEqual({
+      success: false,
+      errorHeader: RUNNER_NOT_CONFIGURED,
+    });
+    expect(await queueGroupEvaluation('retrieval-quality', 'sess_A')).toEqual({
+      success: false,
+      errorHeader: RUNNER_NOT_CONFIGURED,
+    });
+    expect(runner.getGroups).not.toHaveBeenCalled();
+    expect(runner.requeueGroup).not.toHaveBeenCalled();
   });
 });

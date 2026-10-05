@@ -467,7 +467,8 @@ const FailuresGrid: FC<Props> = ({
 
       {/* The reason, and the way out of it. The reason is repeated here rather than left to the grid's
           own empty state: that one is drawn by `DialNoDataContent`, which is not a live region, so a
-          reader who narrowed the list would be told nothing about what the narrowing did. */}
+          reader who narrowed the list would be told nothing about what the narrowing did. An empty path
+          offers no way out of its own: the path select that narrowed it sits right above. */}
       {visible.length === 0 && !isLoading && !isSilent && (
         <div className="flex flex-row flex-wrap items-center gap-3" role="status" aria-live="polite">
           <span className="sr-only">{emptyMessage()}</span>
@@ -485,14 +486,6 @@ const FailuresGrid: FC<Props> = ({
               size={ElementSize.Small}
               label={t(AnalyticsPipelinesI18nKey.FailuresClearRun)}
               onClick={() => setRun(undefined)}
-            />
-          )}
-          {isLaneEmpty && (
-            <Button
-              variant={ButtonVariant.Neutral}
-              size={ElementSize.Small}
-              label={t(AnalyticsPipelinesI18nKey.FailuresShowAllPaths)}
-              onClick={() => setLane(undefined)}
             />
           )}
         </div>

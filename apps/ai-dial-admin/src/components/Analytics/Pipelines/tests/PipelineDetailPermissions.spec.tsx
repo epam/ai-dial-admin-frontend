@@ -33,7 +33,7 @@ const rule: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   grain_key: 'response_id',
   generation: 7,
@@ -66,9 +66,9 @@ describe('PipelineDetailView — without full-admin rights', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    const scanEvery = screen.getByLabelText(AnalyticsPipelinesI18nKey.ScanEvery, { exact: false });
-    await user.clear(scanEvery);
-    await user.type(scanEvery, 'PT2H');
+    const rowsPerScan = screen.getByLabelText(AnalyticsPipelinesI18nKey.RowsPerScan, { exact: false });
+    await user.clear(rowsPerScan);
+    await user.type(rowsPerScan, '200');
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();

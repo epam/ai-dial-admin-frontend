@@ -113,7 +113,7 @@ const rule = (overrides: Partial<PipelineListItem> = {}): PipelineListItem => ({
   transform_type: TransformType.Sql,
   target: 'turn_feedback',
   inputs: ['response_ratings'],
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',
@@ -212,14 +212,14 @@ describe('Pipelines :: PipelinesView', () => {
     render(
       <PipelinesView
         initialPipelines={[
-          rule(),
+          rule({ trigger: { kind: TriggerKind.Group, group_by: 'chat_id' } }),
           rule({ name: 'sessions-rollup', trigger: { kind: TriggerKind.Schedule, cron: '0 * * * *' } }),
           rule({ name: 'untriggered', trigger: undefined }),
         ]}
       />,
     );
 
-    expect(screen.getByText(`trigger-value-turn-feedback-live: ${TriggerKind.OnIngest}`)).toBeInTheDocument();
+    expect(screen.getByText(`trigger-value-turn-feedback-live: ${TriggerKind.Group}`)).toBeInTheDocument();
     expect(screen.getByText(`trigger-value-sessions-rollup: ${TriggerKind.Schedule}`)).toBeInTheDocument();
     expect(screen.getByText('trigger-value-untriggered: undefined')).toBeInTheDocument();
   });

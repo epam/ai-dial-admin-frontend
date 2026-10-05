@@ -40,3 +40,35 @@ export const parseDuration = (value?: string): ParsedDuration | null => {
 };
 
 export const formatDuration = ({ amount, unit }: ParsedDuration): string => `${amount}${unit}`;
+
+const UNIT_MS: Record<DurationUnit, number> = {
+  [DurationUnit.Milliseconds]: 1,
+  [DurationUnit.Seconds]: 1000,
+  [DurationUnit.Minutes]: 60_000,
+  [DurationUnit.Hours]: 3_600_000,
+  [DurationUnit.Days]: 86_400_000,
+};
+
+// Everything the services accept, compound ISO included: `parseDuration` returns a single-unit value for an
+// editor to show and refuses `PT1H30M`, which the runner still honours.
+const ISO_DURATION = /^P(?:(\d+)D)?(?:T(?=\d)(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i;
+
+/** A duration in either accepted spelling as milliseconds, or `undefined` when it is neither. */
+export const durationToMs = (value?: string): number | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+
+  const short = SHORT_FORM.exec(trimmed);
+  if (short) return Number(short[1]) * UNIT_MS[short[2] as DurationUnit];
+
+  const iso = ISO_DURATION.exec(trimmed);
+  if (!iso || iso.slice(1).every((part) => part == null)) return undefined;
+
+  const [, days, hours, minutes, seconds] = iso;
+  return (
+    Number(days ?? 0) * UNIT_MS[DurationUnit.Days] +
+    Number(hours ?? 0) * UNIT_MS[DurationUnit.Hours] +
+    Number(minutes ?? 0) * UNIT_MS[DurationUnit.Minutes] +
+    Number(seconds ?? 0) * UNIT_MS[DurationUnit.Seconds]
+  );
+};

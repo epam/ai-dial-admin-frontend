@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
-import { CRON_CUSTOM_PRESET } from '@/src/constants/analytics/pipelines';
+import { CRON_CUSTOM_PRESET, CRON_EVERY_MINUTE_PRESET } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
@@ -14,7 +14,13 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   Select: ({ id, labelProps, options, value, onChange }: any) => (
     <label>
       <span>{labelProps?.label}</span>
-      <select id={id} aria-label={labelProps?.label ?? id} value={value} onChange={(e) => onChange(e.target.value)}>
+      <select
+        id={id}
+        aria-label={labelProps?.label ?? id}
+        aria-required={labelProps?.required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {options.map((option: any) => (
           <option key={option.value} value={option.value}>
@@ -107,5 +113,57 @@ describe('CronField', () => {
     renderField();
 
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronInvalid)).toBeNull();
+  });
+
+  test('offers no every-minute preset and keeps the cron required when it is not defaultable', () => {
+    renderField({ value: HOURLY });
+
+    const offered = within(preset())
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+
+    expect(offered).not.toContain(AnalyticsPipelinesI18nKey.CronEveryMinute);
+    expect(preset()).toBeRequired();
+  });
+});
+
+describe('CronField — defaultable', () => {
+  const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
+    render(<CronField value="" isDefaultable onChange={vi.fn()} {...props} />);
+
+  const preset = () => screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.CronPreset });
+
+  test.each(['', '37 * * * * *'])('reads %j as every minute, with no custom input', (value) => {
+    renderField({ value });
+
+    expect(preset()).toHaveValue(CRON_EVERY_MINUTE_PRESET);
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronExpression)).toBeNull();
+  });
+
+  test('does not mark the cron as required', () => {
+    renderField();
+
+    expect(preset()).not.toBeRequired();
+  });
+
+  test('clears the cron when every minute is chosen over another preset', async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    renderField({ value: HOURLY, onChange });
+
+    await user.selectOptions(preset(), CRON_EVERY_MINUTE_PRESET);
+
+    expect(onChange).toHaveBeenCalledWith('');
+  });
+
+  test('keeps a cron that already fires every minute', async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    renderField({ value: '37 * * * * *', onChange });
+
+    await user.selectOptions(preset(), CRON_CUSTOM_PRESET);
+    await user.selectOptions(preset(), CRON_EVERY_MINUTE_PRESET);
+
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

@@ -67,7 +67,8 @@ const UNCAPPED = 'max-w-none';
  *
  * A group whose every member the service omitted renders nothing at all. A heading over an empty card
  * states that something is missing, where the truth is that this kind of pipeline has no such facts —
- * an on-ingest pipeline has no schedule, and a bare `SCHEDULE` above white space reads as a fault.
+ * an enrichment the runner drives has no registry schedule, and a bare `SCHEDULE` above white space reads
+ * as a fault.
  */
 const RuntimeSection: FC<{ title: string; children: ReactNode }> = ({ title, children }) => {
   const rendered = Array.isArray(children) ? children.flat() : [children];

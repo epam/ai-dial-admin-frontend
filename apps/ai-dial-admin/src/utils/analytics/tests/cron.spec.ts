@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { isValidSixFieldCron } from '@/src/utils/analytics/cron';
+import { isEveryMinuteCron, isValidSixFieldCron } from '@/src/utils/analytics/cron';
 
 describe('Utils :: analytics :: isValidSixFieldCron', () => {
   test.each(['0 */5 * * * *', '0 0 * * * *', '0 0 0 * * *', '0 0 1 * * *', '0 * * * * *'])(
@@ -49,6 +49,19 @@ describe('Utils :: analytics :: isValidSixFieldCron', () => {
     'accepts the list, range and last-day expression %s',
     (expression) => {
       expect(isValidSixFieldCron(expression)).toBe(true);
+    },
+  );
+});
+
+describe('Utils :: analytics :: isEveryMinuteCron', () => {
+  test.each(['0 * * * * *', '7 * * * * *', '59 * * * * *', '  37 * * * * *  '])('accepts %j', (expression) => {
+    expect(isEveryMinuteCron(expression)).toBe(true);
+  });
+
+  test.each(['60 * * * * *', '0 */5 * * * *', '0 0 * * * *', '* * * * *', '*/30 * * * * *', ''])(
+    'rejects %j',
+    (expression) => {
+      expect(isEveryMinuteCron(expression)).toBe(false);
     },
   );
 });

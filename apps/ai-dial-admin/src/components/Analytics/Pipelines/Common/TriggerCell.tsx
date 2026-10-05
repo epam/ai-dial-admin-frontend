@@ -9,13 +9,11 @@ import { useI18n } from '@/src/locales/client';
 import { PipelineListItem, TriggerKind } from '@/src/models/analytics/pipeline';
 
 const TRIGGER_LABEL: Record<TriggerKind, AnalyticsPipelinesI18nKey> = {
-  [TriggerKind.OnIngest]: AnalyticsPipelinesI18nKey.TriggerOnIngest,
   [TriggerKind.Schedule]: AnalyticsPipelinesI18nKey.TriggerSchedule,
   [TriggerKind.Group]: AnalyticsPipelinesI18nKey.TriggerGroup,
 };
 
 const TRIGGER_COLOR: Record<TriggerKind, string> = {
-  [TriggerKind.OnIngest]: 'text-info',
   [TriggerKind.Schedule]: 'text-accent-primary',
   [TriggerKind.Group]: 'text-warning',
 };

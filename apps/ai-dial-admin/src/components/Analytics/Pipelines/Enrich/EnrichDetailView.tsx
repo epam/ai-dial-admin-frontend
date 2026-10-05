@@ -10,13 +10,14 @@ import { Pipeline } from '@/src/models/analytics/pipeline';
 interface Props {
   pipeline: Pipeline;
   takenTargets: string[];
+  hasGroups?: boolean;
 }
 
-const EnrichDetailView: FC<Props> = ({ pipeline, takenTargets }) => {
+const EnrichDetailView: FC<Props> = ({ pipeline, takenTargets, hasGroups }) => {
   const form = useEnrichForm({ pipeline, takenTargets });
 
   return (
-    <PipelineDetailFrame pipeline={pipeline} form={form}>
+    <PipelineDetailFrame pipeline={pipeline} form={form} hasGroups={hasGroups}>
       <EnrichSection form={form} />
     </PipelineDetailFrame>
   );

@@ -72,11 +72,11 @@ describe('pathOf', () => {
 
 describe('scopeOf', () => {
   test('reads an item carrying a grain key as one row', () => {
-    expect(scopeOf(item({ grain_key: 'chat-1' }), TriggerKind.OnIngest)).toBe(DlqScope.Row);
+    expect(scopeOf(item({ grain_key: 'chat-1' }), TriggerKind.Schedule)).toBe(DlqScope.Row);
   });
 
   test('reads a keyless write as the write-back', () => {
-    expect(scopeOf(item({ stage: DlqStage.Upsert }), TriggerKind.OnIngest)).toBe(DlqScope.Write);
+    expect(scopeOf(item({ stage: DlqStage.Upsert }), TriggerKind.Schedule)).toBe(DlqScope.Write);
   });
 
   test('reads any other keyless item as its chunk', () => {
