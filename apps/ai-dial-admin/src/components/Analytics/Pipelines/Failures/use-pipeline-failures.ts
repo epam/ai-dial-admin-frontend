@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getPipelineFailures } from '@/src/app/[lang]/pipelines/actions';
 import { DLQ_PAGE_SIZE, DLQ_SUMMARY_LIMIT } from '@/src/constants/analytics/pipeline-dlq';
 import { useAppContext } from '@/src/context/AppContext';
+import { useGuardedRead } from '@/src/hooks/use-guarded-read';
 import { countsOf } from '@/src/components/Analytics/Pipelines/Failures/failures';
 import { DlqCounts, DlqFilters, DlqItem, DlqLane, DlqPage } from '@/src/models/analytics/pipeline-dlq';
 import { RUNNER_NOT_CONFIGURED } from '@/src/models/analytics/pipeline-runtime';
@@ -79,19 +80,11 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
   const [isUnavailable, setIsUnavailable] = useState(false);
   const [filters, setFilters] = useState<DlqFilters>(EVERY_PATH);
 
-  const isMounted = useRef(true);
   // Only the newest walk may write. A filter changed twice in quick succession, or a reload racing a
   // filter change, lands in whichever order the service answers; the loser would leave the grid showing
-  // a page nobody asked for.
-  const latestWalk = useRef(0);
-
-  useEffect(() => {
-    isMounted.current = true;
-
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+  // a page nobody asked for. `loadMore` extends the current walk rather than starting one, which is
+  // what `follow` is for.
+  const guard = useGuardedRead();
 
   const canAsk = isFullAdmin && isAsked;
 
@@ -116,65 +109,50 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
    * put the pre-requeue total back on the card, and a failed summary could clear the `hasFailed` its
    * own listing had just set.
    */
-  const readSummary = useCallback(
-    async (walk: number) => {
-      const res = await fetchPage(EVERY_PATH, DLQ_SUMMARY_LIMIT);
-
-      if (!isMounted.current || walk !== latestWalk.current) return;
-
-      // Nothing the card states survives a read it cannot vouch for: a stale total under a vanished
-      // card is what kept the red mark on the tab after the runner went away.
-      if (isNoRunner(res ?? undefined)) {
-        setIsUnavailable(true);
-        setHasFailed(false);
-        setCounts(NO_COUNTS);
-        setNewestAt(undefined);
-        return;
-      }
-
-      setIsUnavailable(false);
-
-      if (!res?.success || !res.response) {
-        setHasFailed(true);
-        setCounts(NO_COUNTS);
-        setNewestAt(undefined);
-        return;
-      }
-
+  const applySummary = useCallback((res: ServerActionResponse<DlqPage> | null) => {
+    // Nothing the card states survives a read it cannot vouch for: a stale total under a vanished
+    // card is what kept the red mark on the tab after the runner went away.
+    if (isNoRunner(res ?? undefined)) {
+      setIsUnavailable(true);
       setHasFailed(false);
-      setCounts(countsOf(res.response));
-      setNewestAt(res.response.items[0]?.created_at);
-    },
-    [fetchPage],
-  );
+      setCounts(NO_COUNTS);
+      setNewestAt(undefined);
+      return;
+    }
+
+    setIsUnavailable(false);
+
+    if (!res?.success || !res.response) {
+      setHasFailed(true);
+      setCounts(NO_COUNTS);
+      setNewestAt(undefined);
+      return;
+    }
+
+    setHasFailed(false);
+    setCounts(countsOf(res.response));
+    setNewestAt(res.response.items[0]?.created_at);
+  }, []);
 
   /** The first page under a filter, replacing whatever was listed. */
-  const readFirstPage = useCallback(
-    async (next: DlqFilters, walk: number) => {
-      const res = await fetchPage(next, DLQ_PAGE_SIZE);
+  const applyFirstPage = useCallback((res: ServerActionResponse<DlqPage> | null) => {
+    if (!res?.success || !res.response) {
+      setItems([]);
+      setCursor(undefined);
+      setHasMore(false);
+      if (!isNoRunner(res ?? undefined)) setHasFailed(true);
+      return;
+    }
 
-      if (!isMounted.current || walk !== latestWalk.current) return;
-
-      if (!res?.success || !res.response) {
-        setItems([]);
-        setCursor(undefined);
-        setHasMore(false);
-        if (!isNoRunner(res ?? undefined)) setHasFailed(true);
-        return;
-      }
-
-      setItems(res.response.items);
-      setCursor(res.response.next_cursor ?? undefined);
-      setHasMore(res.response.has_more);
-    },
-    [fetchPage],
-  );
+    setItems(res.response.items);
+    setCursor(res.response.next_cursor ?? undefined);
+    setHasMore(res.response.has_more);
+  }, []);
 
   const read = useCallback(
     async (next: DlqFilters) => {
       if (!canAsk) return;
 
-      const walk = ++latestWalk.current;
       setIsLoading(true);
       // Dropped before the request, not after it answers: between the two the filter is already the
       // new one while the cursor is still the old one's, and a scroll in that window paged a
@@ -183,13 +161,18 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
       setCursor(undefined);
       setHasMore(false);
 
-      try {
-        await Promise.all([readSummary(walk), readFirstPage(next, walk)]);
-      } finally {
-        if (isMounted.current && walk === latestWalk.current) setIsLoading(false);
-      }
+      const answer = await guard.run(() =>
+        Promise.all([fetchPage(EVERY_PATH, DLQ_SUMMARY_LIMIT), fetchPage(next, DLQ_PAGE_SIZE)]),
+      );
+
+      if (!answer) return;
+
+      const [summary, firstPage] = answer;
+      applySummary(summary);
+      applyFirstPage(firstPage);
+      setIsLoading(false);
     },
-    [canAsk, readSummary, readFirstPage],
+    [canAsk, guard, fetchPage, applySummary, applyFirstPage],
   );
 
   useEffect(() => {
@@ -199,13 +182,14 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
   const loadMore = useCallback(async () => {
     if (!canAsk || !hasMore || !cursor || isLoadingMore || isLoading) return;
 
-    const walk = latestWalk.current;
     setIsLoadingMore(true);
 
     try {
-      const res = await fetchPage(filters, DLQ_PAGE_SIZE, cursor);
+      // `follow`, not `run`: this extends the walk on screen rather than starting one, so a filter
+      // change that lands mid-scroll invalidates the page instead of it joining a set nobody asked for.
+      const res = await guard.follow(() => fetchPage(filters, DLQ_PAGE_SIZE, cursor));
 
-      if (!isMounted.current || walk !== latestWalk.current) return;
+      if (res === undefined) return;
 
       if (!res?.success || !res.response) {
         // A page that did not arrive ends the walk rather than being asked for again by every further
@@ -218,9 +202,9 @@ export const usePipelineFailures = (name: string, isAsked: boolean): PipelineFai
       setCursor((res.response as DlqPage).next_cursor ?? undefined);
       setHasMore((res.response as DlqPage).has_more);
     } finally {
-      if (isMounted.current) setIsLoadingMore(false);
+      if (guard.isMounted()) setIsLoadingMore(false);
     }
-  }, [canAsk, hasMore, cursor, isLoadingMore, isLoading, fetchPage, filters]);
+  }, [canAsk, hasMore, cursor, isLoadingMore, isLoading, guard, fetchPage, filters]);
 
   const reload = useCallback(() => read(filters), [read, filters]);
 

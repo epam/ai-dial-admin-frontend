@@ -73,7 +73,7 @@ describe('PipelinesView — runtime column', () => {
     asFullAdmin(true);
     vi.mocked(getPausedPipelines).mockResolvedValue({
       success: true,
-      response: [{ pipelineName: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }],
+      response: [{ pipeline_name: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }],
     });
     vi.mocked(getRunnerPipelines).mockResolvedValue({
       success: true,

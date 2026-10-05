@@ -34,7 +34,7 @@ describe('Pipeline runtime server actions', () => {
   });
 
   test('getPausedPipelines reads the runner with the caller token', async () => {
-    const paused = [{ pipelineName: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }];
+    const paused = [{ pipeline_name: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }];
     runner.getPaused.mockResolvedValue({ success: true, response: paused });
 
     const res = await getPausedPipelines();
