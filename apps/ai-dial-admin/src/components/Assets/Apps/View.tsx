@@ -255,7 +255,6 @@ const AppView: FC<Props> = ({
           />
         ) : (
           <TabsContent
-            key={discardKey}
             activeTab={activeTab}
             names={[]}
             models={models}
