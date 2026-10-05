@@ -45,6 +45,9 @@ const getInitialSource = (entity: DialApplicationResource, codeAppEditorUrl?: st
   if (entity.application_type_schema_id) {
     return SOURCE_TYPE.SCHEMA;
   }
+  if (entity.interfaces && Object.keys(entity.interfaces).length) {
+    return ASSET_APPLICATION_INTERFACES_SOURCE_TYPE;
+  }
   return SOURCE_TYPE.ENDPOINTS;
 };
 

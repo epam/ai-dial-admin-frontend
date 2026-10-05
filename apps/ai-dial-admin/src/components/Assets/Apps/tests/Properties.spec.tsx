@@ -5,18 +5,19 @@ import ApplicationAssetProperties from '../Properties';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 
+const mockSourceField = vi.fn();
+
 vi.mock('@/src/components/Assets/Header/FolderStorage', () => ({ default: () => <div>folders-storage-label</div> }));
 vi.mock('@/src/components/Assets/Resources/ResourceInfoHeader', () => ({
   default: () => <div>resource-info-header</div>,
 }));
 vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
-  default: () => <div>resource-source-field</div>,
+  default: (props: unknown) => {
+    mockSourceField(props);
+    return <div>resource-source-field</div>;
+  },
 }));
 vi.mock('@/src/components/BaseControls/Icon', () => ({ default: () => <div>icon-control</div> }));
-vi.mock('@/src/components/BaseControls/InterfacesField/InterfacesField', () => ({
-  // Renders the entityBaseUrl prop so the wiring test can see what the view passed through.
-  default: ({ entityBaseUrl }: { entityBaseUrl?: string }) => <div>interfaces-field:{entityBaseUrl ?? 'none'}</div>,
-}));
 vi.mock('@/src/components/BaseControls/MaxRetryAttempts', () => ({ default: () => <div>max-retry-attempts</div> }));
 vi.mock('@/src/components/BaseControls/Topics', () => ({ default: () => <div>topics-control</div> }));
 vi.mock('@/src/components/Common/FilePath/FilePath', () => ({ default: () => <div>file-path</div> }));
@@ -63,16 +64,11 @@ describe('ApplicationAssetProperties', () => {
     expect(screen.getByDisplayValue('http://app-base')).toBeInTheDocument();
   });
 
-  test('passes the entity-level base_url to InterfacesField as the per-interface fallback', () => {
-    render(<ApplicationAssetProperties asset={{ ...baseAsset, base_url: 'http://app-base' }} onChange={vi.fn()} />);
+  test('passes the entity to ResourceSourceField so interfaces can use its base_url fallback', () => {
+    const asset = { ...baseAsset, base_url: 'http://app-base' };
+    render(<ApplicationAssetProperties asset={asset} onChange={vi.fn()} />);
 
-    expect(screen.getByText('interfaces-field:http://app-base')).toBeInTheDocument();
-  });
-
-  test('passes no fallback to InterfacesField when the entity-level base_url is empty', () => {
-    render(<ApplicationAssetProperties asset={baseAsset} onChange={vi.fn()} />);
-
-    expect(screen.getByText('interfaces-field:none')).toBeInTheDocument();
+    expect(mockSourceField).toHaveBeenCalledWith(expect.objectContaining({ entity: asset }));
   });
 
   test('renders a default headers editor', () => {
