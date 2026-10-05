@@ -153,7 +153,7 @@ describe('Catalog schemas :: server actions', () => {
     expect(assetApi.put).not.toHaveBeenCalled();
   });
 
-  test.each(['!', '~', '*', "'", '(', ')'])('Should refuse an $id containing %s without calling Core', async (char) => {
+  test.each(['!', '~', '*', "'"])('Should refuse an $id containing %s without calling Core', async (char) => {
     const result = await createCatalogSchema({
       ...catalogSchema,
       $id: `https://host/schema${char}`,

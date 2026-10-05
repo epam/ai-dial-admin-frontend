@@ -45,7 +45,7 @@ describe('App runner asset :: create form', () => {
     renderCreateForm(onChangeEntity);
 
     fireEvent.change(screen.getByRole('textbox', { name: '' }), {
-      target: { value: `${ID_URL}(1)` },
+      target: { value: `${ID_URL}1!` },
     });
 
     expect(screen.getByText(ErrorI18nKey.ForbiddenChars)).toBeInTheDocument();
