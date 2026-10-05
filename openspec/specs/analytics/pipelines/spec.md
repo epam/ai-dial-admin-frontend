@@ -1853,22 +1853,26 @@ controls SHALL withdraw again once the document parses.
 - **THEN** the page continues to present the document and the controls
 - **AND** saving reports the service's refusal rather than failing in the console
 
-### Requirement: Pipeline detail view is organized into Properties, Runtime and Audit tabs
+### Requirement: Pipeline detail view is organized into Properties, Runtime, Groups and Audit tabs
 
 The pipeline detail view (`/pipelines/{name}`) SHALL present its content under a horizontal tab strip whose
-tabs are **Properties**, **Runtime** and **Audit**, in that order. `Properties` SHALL be the selected tab
-when the view is first opened.
+tabs are **Properties**, **Runtime**, **Groups** and **Audit**, in that order. `Properties` SHALL be the selected
+tab when the view is first opened.
 
 The **Runtime** tab SHALL be present only for a caller who is a full admin. The runtime it reports is
 controlled through a service that authorizes every one of its endpoints, reads included, on full-admin
 rights and offers no consumer-facing read — so for anyone else there is nothing to present read-only and
 the tab is withheld in full rather than shown empty.
 
+The **Groups** tab SHALL be present only under the conditions "The Groups tab is offered only for a group
+pipeline the runner holds groups for" states. Where it is absent the remaining tabs keep their order.
+
 The **Runtime tab SHALL carry an error mark** once the dead-lettered failures have been read and there
 is at least one, with their number stated in text beside the strip for a reader who cannot see it. A
 reader who opens the view on `Properties` would otherwise have to open the tab to discover there is
 anything to act on. No other tab carries one: the state the Runtime tab reports is a position rather
-than a fault, and the Audit tab's activity list is unbounded and grows with every edit.
+than a fault, the Groups tab's states are positions as well, and the Audit tab's activity list is unbounded
+and grows with every edit.
 
 The identity row — the enabled-state badge, the runtime status chip, the pipeline name, its copy control,
 the `Discard` / `Save` change bar, the enable/disable control, the delete control and the JSON editor
@@ -1896,8 +1900,8 @@ the kind's transform section — SHALL render inside the **Properties** tab wher
 and directly beneath the identity row where it is not.
 
 Selecting another tab SHALL NOT discard a pending edit. The draft the fields and the document share SHALL
-survive a tab switch, and the change bar SHALL stay offered from any tab, so a caller who reads the history
-or the runtime mid-edit does not lose the edit by reading it.
+survive a tab switch, and the change bar SHALL stay offered from any tab, so a caller who reads the history,
+the runtime or the groups mid-edit does not lose the edit by reading it.
 
 The JSON editor and the tab strip SHALL NOT be presented together. Enabling the editor withdraws the tab
 strip along with everything else below the identity row — the runtime alerts and the pause banner
@@ -1907,12 +1911,12 @@ out" already requires, and leaving the editor SHALL restore the strip with `Prop
 toggle itself is unchanged and stays offered to every caller.
 
 The tab strip SHALL be rendered only when `featureFlags.analyticsEnabled` is true. With analytics disabled
-the detail view SHALL render the Properties content directly, with no tab strip, no Runtime tab and no
-Audit tab, and SHALL issue no request to the analytics activity feed and none to the runtime service. The
-route itself is not guarded on that flag — `/pipelines/{name}` guards only on `isAnalyticsForbidden()`,
-which is an authorization check against the analytics service and not the client feature flag, so a
-bookmarked or pasted link still opens this view on an analytics-disabled installation and the tab condition
-is what keeps it from issuing either request.
+the detail view SHALL render the Properties content directly, with no tab strip, no Runtime tab, no Groups
+tab and no Audit tab, and SHALL issue no request to the analytics activity feed and none to the runtime
+service. The route itself is not guarded on that flag — `/pipelines/{name}` guards only on
+`isAnalyticsForbidden()`, which is an authorization check against the analytics service and not the client
+feature flag, so a bookmarked or pasted link still opens this view on an analytics-disabled installation and
+the tab condition is what keeps it from issuing either request.
 
 There SHALL be **no** pipeline-status condition on the Audit tab, unlike the table detail view's, which
 additionally requires an `ACTIVE` table. A pipeline has no registration lifecycle to mirror one: the service
@@ -1922,7 +1926,8 @@ pipeline is fully registered, and disabling or enabling it is itself an audited 
 SHALL be offered on a disabled pipeline exactly as on an enabled one.
 
 The Audit tab SHALL require no permission beyond the one that already allows reading the pipeline. It SHALL
-NOT be gated on full-admin rights, which the save, the enable/disable control and the Runtime tab are.
+NOT be gated on full-admin rights, which the save, the enable/disable control, the Runtime tab and the Groups
+tab are.
 
 #### Scenario: Properties is the selected tab when the pipeline detail view opens
 
@@ -1930,6 +1935,12 @@ NOT be gated on full-admin rights, which the save, the enable/disable control an
 - **THEN** a tab strip showing `Properties`, `Runtime` and `Audit` is rendered
 - **AND** `Properties` is the selected tab
 - **AND** the read-only facts, the trigger and the kind's transform section are shown beneath it
+
+#### Scenario: The Groups tab sits between Runtime and Audit
+
+- **GIVEN** a group pipeline the runner holds at least one group for
+- **WHEN** a full admin opens its detail view
+- **THEN** the tab strip shows `Properties`, `Runtime`, `Groups` and `Audit`, in that order
 
 #### Scenario: The Runtime tab is withheld from a caller who is not a full admin
 
@@ -1943,7 +1954,7 @@ NOT be gated on full-admin rights, which the save, the enable/disable control an
 - **GIVEN** a model-calling enrichment the runtime service reports dead-lettered failures for
 - **WHEN** a full admin opens the detail view on `Properties`
 - **THEN** the `Runtime` tab carries an error mark and the count is stated beside the strip
-- **AND** neither the `Properties` nor the `Audit` tab carries one
+- **AND** neither the `Properties`, the `Groups` nor the `Audit` tab carries one
 
 #### Scenario: The identity row and its actions stay above the tab strip
 
@@ -2005,7 +2016,7 @@ NOT be gated on full-admin rights, which the save, the enable/disable control an
 
 - **GIVEN** `featureFlags.analyticsEnabled` is false
 - **WHEN** the user reaches `/pipelines/{name}` by a direct link
-- **THEN** no tab strip, no `Runtime` tab and no `Audit` tab are rendered
+- **THEN** no tab strip, no `Runtime` tab, no `Groups` tab and no `Audit` tab are rendered
 - **AND** the read-only facts, the trigger and the transform section are shown directly
 - **AND** no request is issued to the analytics activity feed or to the runtime service
 
@@ -3840,8 +3851,10 @@ The card SHALL distinguish the reasons it is empty, because they call for differ
   something is missing, where the truth is that nothing has failed; this is the same rule the schedule
   group follows on a pipeline that has no schedule. The card SHALL likewise be absent before the first
   read has answered, so it does not appear as an empty frame and then fill.
-- **none on the chosen path, but some on another** — the card SHALL say so and SHALL offer to widen the
-  path.
+- **none on the chosen path, but some on another** — the card SHALL say so, and SHALL NOT offer a second
+  control to widen the path. The path select that narrowed it sits directly above the message, already states
+  the chosen path, and is the way back; a button beside it repeating the same act was a second control for
+  one choice, on a view that is not the card's default.
 - **none matching the search** — the card SHALL say so and SHALL offer to clear it.
 - **none left in the filtered run** — the card SHALL say so and SHALL offer to clear the run filter.
 - **the read failed** — the card SHALL state that the failures could not be read and SHALL offer to read
@@ -3874,7 +3887,8 @@ a filter learns the result without hunting for it.
 - **GIVEN** a pipeline whose failures are all from backfill runs
 - **WHEN** the user narrows the failures grid to the live path
 - **THEN** it states that there are no live failures
-- **AND** it offers to show every path
+- **AND** no control beside the message offers to show every path
+- **AND** the path select still offers every path
 
 #### Scenario: A search that matches nothing offers to clear itself
 
@@ -4158,3 +4172,426 @@ difference immediately after a save is the ordinary case and resolves without in
 - **GIVEN** a pipeline whose registry and runtime revisions are the same
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** nothing is stated about the declaration revision
+
+### Requirement: The Groups tab is offered only for a group pipeline the runner holds groups for
+
+A group-trigger pipeline evaluates whole groups — every row sharing its `group_by` key — and the enrichment
+runner keeps one state record per group it is tracking. The runner serves that state at
+`GET /v1/pipelines/{name}/groups?limit=` (at most 500 groups, oldest activity first, no cursor) and answers
+404 both for a pipeline it does not hold and for a pipeline that is not a group pipeline.
+
+The **Groups** tab SHALL be offered only when **all** of these hold:
+
+- the caller is a full admin;
+- `featureFlags.analyticsEnabled` is true and the runner's host is configured;
+- the pipeline's trigger kind is `group`;
+- the runner reports **at least one** group for the pipeline.
+
+Whether the runner holds any group SHALL be decided **on the server, while the page loads**, by a group read
+limited to one group, and passed to the view as a flag. Deciding it on the client would insert a tab after the
+strip had already rendered and shift every tab to its right. The read SHALL be issued only when the first three
+conditions hold, so no other pipeline and no other caller costs a runner request.
+
+A read that fails for any reason — the runner unreachable, refusing, not holding the pipeline, or answering a
+shape the console cannot read — SHALL withhold the tab and SHALL NOT raise an error: the tab is an addition to
+the page, and the page reads in full without it.
+
+A group pipeline with no groups is an ordinary state rather than a fault — its scan has not reached any rows,
+every row lacked a group key, sampling excluded every group, or every quiet group was evicted — so the tab is
+withheld rather than shown empty.
+
+#### Scenario: A group pipeline with groups offers the tab
+
+- **GIVEN** a full admin and a group pipeline the runner reports one or more groups for
+- **WHEN** the detail view opens
+- **THEN** the `Groups` tab is present in the strip as the strip first renders
+
+#### Scenario: A group pipeline without groups withholds the tab
+
+- **GIVEN** a full admin and a group pipeline the runner reports no groups for
+- **WHEN** the detail view opens
+- **THEN** no `Groups` tab is present
+- **AND** no error is raised
+
+#### Scenario: A pipeline that is not a group pipeline is never probed
+
+- **GIVEN** a full admin and a pipeline whose trigger kind is not `group`
+- **WHEN** the detail view opens
+- **THEN** no group read is issued
+- **AND** no `Groups` tab is present
+
+#### Scenario: A caller who is not a full admin is never probed
+
+- **GIVEN** a caller who is not a full admin and a group pipeline
+- **WHEN** the user opens its detail view
+- **THEN** no group read is issued
+- **AND** no `Groups` tab is present
+
+#### Scenario: An unreachable runner withholds the tab silently
+
+- **GIVEN** a full admin, a group pipeline, and a runner that does not answer the group read
+- **WHEN** the detail view opens
+- **THEN** the pipeline, its facts and its form are presented
+- **AND** no `Groups` tab is present and no error notification is raised
+
+### Requirement: The Groups tab states the pipeline's readiness rule
+
+The Groups tab SHALL open with a summary of the pipeline's `ready_when`, generated from the declaration rather
+than written per condition, so a pipeline declaring one condition, all three, with or without a limit, is
+presented by the same summary. It SHALL hold two lists:
+
+- **Triggers** — titled to say a group is evaluated when **any one** of them occurs, with a description beneath
+  the title stating that only groups with new rows since their last evaluation are considered. One item per
+  declared condition, worded as the readiness editor words it: *quiet for* the `idle` duration, *finished by a
+  row* matching the `signal` predicate (the predicate shown as code), *result older than* the `max_staleness`
+  duration.
+- **Limits** — titled to say a group stops being evaluated once a limit is reached. One item for a declared
+  `cost_ceiling`, stating in plain words that each group is evaluated at most that many times per UTC day.
+  The list SHALL be omitted when no limit is declared.
+
+A pipeline declaring no `idle` SHALL show an **`Idle (default)`** trigger with no duration. The runner applies
+its own configured idle window to such a pipeline — a signal-only one included — and does not report its
+value, so the console states that a default applies without guessing what it is.
+
+The summary SHALL describe the declaration as saved, not a pending edit of it.
+
+#### Scenario: Every declared trigger is listed
+
+- **GIVEN** a group pipeline declaring `idle` 10m, a `signal`, and `max_staleness` 24h
+- **WHEN** the Groups tab is opened
+- **THEN** the triggers list carries three items: quiet for 10m, finished by a row matching the predicate,
+  result older than 24h
+- **AND** the description beneath its title states that only groups with new rows are considered
+
+#### Scenario: A signal-only pipeline shows the default idle
+
+- **GIVEN** a group pipeline declaring only a `signal`
+- **WHEN** the Groups tab is opened
+- **THEN** the triggers list carries the signal item and an `Idle (default)` item with no duration
+
+#### Scenario: A declared ceiling is listed as a limit
+
+- **GIVEN** a group pipeline declaring a `cost_ceiling` of 20
+- **WHEN** the Groups tab is opened
+- **THEN** the limits list states that each group is evaluated at most 20 times per UTC day
+
+#### Scenario: No limit list without a ceiling
+
+- **GIVEN** a group pipeline declaring no `cost_ceiling`
+- **WHEN** the Groups tab is opened
+- **THEN** no limits list is rendered
+
+### Requirement: A pipeline's groups are listed in a grid
+
+Beneath the readiness summary the Groups tab SHALL list the pipeline's groups in a grid, read in **one** request
+of 500 groups — the most the runner serves. The runner's listing has no cursor and always starts from the oldest
+activity, so there is nothing further to page to; a larger window needs a change on the runner.
+
+The grid SHALL carry these columns, each with a real header name:
+
+- **Group key** — the group's `group_key`, truncated with its full value reachable;
+- **State** — the group's state, as "Each group's state is derived from the runner's facts" defines it;
+- **Last activity** — `last_activity_at`;
+- **Last evaluated** — `computed_at`, or `Never` when the group has not been evaluated;
+- **Evaluations today** — the group's evaluations for the current UTC day, as `used / ceiling` when the pipeline
+  declares a `cost_ceiling` and as a bare count when it does not. A count the runner recorded against an earlier
+  UTC day SHALL be presented as zero, because the runner resets the count by the day it belongs to rather than on
+  a schedule. A group whose count has reached its ceiling SHALL have the cell highlighted with the warning colour;
+- **an action column** — the group's evaluation control, as "A group can be queued for evaluation" states it.
+
+Rows SHALL be presented in the runner's order, oldest activity first.
+
+Above the grid the tab SHALL offer a **search by group key** — a case-insensitive substring match — and a
+**filter by state**, with `All` and each of the four states. Both SHALL narrow the rows already read and SHALL
+NOT issue a request. The tab SHALL NOT state a row count.
+
+When the read returns the full 500, a note beneath the grid SHALL state that the oldest 500 groups are shown and
+newer groups are not listed. With the window full, the newest groups — the ones an operator just saw arrive — are
+exactly the ones missing, and the search cannot find them; without the note that absence reads as the group not
+existing.
+
+A read that fails SHALL be stated in place of the grid with the service's own message, and SHALL offer reading
+again. A read that returns no groups — every group evicted since the page loaded — SHALL state that the runner
+holds no groups for the pipeline.
+
+#### Scenario: The grid presents each group's facts
+
+- **GIVEN** a group pipeline with a `cost_ceiling` of 20 and a group evaluated 7 times today
+- **WHEN** the Groups tab is opened
+- **THEN** that group's row states its key, its state, its last activity, its last evaluation time and `7 / 20`
+
+#### Scenario: A group never evaluated says so
+
+- **GIVEN** a group with no `computed_at`
+- **WHEN** the grid is rendered
+- **THEN** its last-evaluated cell states `Never`
+
+#### Scenario: Yesterday's count reads as zero
+
+- **GIVEN** a group whose `evaluations` is 20 recorded against the previous UTC day, in a pipeline with a
+  `cost_ceiling` of 20
+- **WHEN** the grid is rendered
+- **THEN** its evaluations cell states `0 / 20` and is not highlighted
+
+#### Scenario: A group at its ceiling is highlighted
+
+- **GIVEN** a group whose evaluations today equal its pipeline's `cost_ceiling`
+- **WHEN** the grid is rendered
+- **THEN** its evaluations cell is highlighted with the warning colour
+
+#### Scenario: Search and state filter narrow the rows without a request
+
+- **GIVEN** the grid with groups in several states
+- **WHEN** the user types part of a group key and selects the `Waiting` state
+- **THEN** only waiting groups whose key contains the typed text, ignoring case, are presented
+- **AND** no request is issued
+
+#### Scenario: A full window says newer groups are not listed
+
+- **GIVEN** a group read that returns 500 groups
+- **WHEN** the grid is rendered
+- **THEN** a note states that the oldest 500 groups are shown and newer groups are not listed
+
+#### Scenario: A failed read is stated in place of the grid
+
+- **GIVEN** a group read the runner refuses
+- **WHEN** the Groups tab is opened
+- **THEN** the service's message is stated where the grid would be
+- **AND** a control to read again is offered
+
+### Requirement: Each group's state is derived from the runner's facts
+
+The runner reports facts about a group — whether it has rows not yet evaluated (`dirty`), its last activity,
+whether a row matched the signal (`signalled`), its last evaluation time and its evaluations today — and no
+verdict. The console SHALL derive one of four states from those facts against the pipeline's saved `ready_when`,
+checked in this order:
+
+1. **Up to date** — the group is not dirty: its last evaluation saw every row it now holds.
+2. **At cap** — the pipeline declares a `cost_ceiling` and the group's evaluations for the current UTC day have
+   reached it. A limit holds a group back whatever trigger it meets.
+3. **Ready** — at least one declared trigger holds: the time since last activity has reached `idle`; or the
+   pipeline declares a `signal` and the group is signalled; or the group has been evaluated and the time since
+   that evaluation has reached `max_staleness`.
+4. **Waiting** — none of the above.
+
+The `Idle (default)` trigger SHALL count as **not met** for a dirty group. The runner takes a ready group on its
+next pass, within seconds, and stamps it up to date once written; a group still dirty has therefore not been
+taken, which is the only thing the console can know about a window whose length it is not told.
+
+Time-based checks SHALL be made against **one clock for the whole tab**, read again every minute rather than
+fixed at the read, so a state does not stay `Waiting` after its threshold passes while the tab is open. The badge,
+its tooltip, the dialog and the state filter SHALL all judge against that same clock; each reading its own moment
+let a badge say `Waiting` while its tooltip explained `Ready`.
+
+Durations SHALL be read in every spelling the services accept — the short form and ISO-8601, compound ISO
+(`PT1H30M`, `P1D`) included. A threshold the console cannot read SHALL count as not met rather than fail.
+
+#### Scenario: A clean group is up to date whatever else holds
+
+- **GIVEN** a group that is not dirty, signalled, and quiet far past `idle`
+- **WHEN** its state is derived
+- **THEN** it is `Up to date`
+
+#### Scenario: The ceiling outranks a met trigger
+
+- **GIVEN** a dirty group quiet past `idle` whose evaluations today have reached the `cost_ceiling`
+- **WHEN** its state is derived
+- **THEN** it is `At cap`
+
+#### Scenario: A signalled group is ready before its idle window
+
+- **GIVEN** a dirty, signalled group in a pipeline declaring a `signal` and an `idle` not yet reached
+- **WHEN** its state is derived
+- **THEN** it is `Ready`
+
+#### Scenario: A signal is ignored where none is declared
+
+- **GIVEN** a dirty, signalled group in a pipeline declaring only `idle`, not yet reached
+- **WHEN** its state is derived
+- **THEN** it is `Waiting`
+
+#### Scenario: Staleness needs a previous evaluation
+
+- **GIVEN** a dirty group never evaluated, in a pipeline declaring only `max_staleness`
+- **WHEN** its state is derived
+- **THEN** it is `Waiting`
+
+#### Scenario: A compound ISO threshold is honoured
+
+- **GIVEN** a dirty group quiet for two hours in a pipeline declaring `idle` as `PT1H30M`
+- **WHEN** its state is derived
+- **THEN** it is `Ready`
+
+#### Scenario: A dirty group on a default idle is waiting
+
+- **GIVEN** a dirty, unsignalled group in a pipeline declaring only a `signal`
+- **WHEN** its state is derived
+- **THEN** it is `Waiting`
+
+### Requirement: A group's state explains itself
+
+Each state SHALL be presented as a badge that opens a tooltip on hover **and on keyboard focus**, the tooltip
+text reaching assistive technology through the badge itself. The tooltip SHALL explain the state from the same
+checks that derived it, so the badge and its explanation cannot disagree:
+
+- **Waiting** and **At cap** — every declared trigger with the group's own value against its threshold, marked
+  met or not met: the quiet time against `idle` with the time left until it is reached; whether a row has matched
+  the signal; the age of the last result against `max_staleness`, or that there is none yet; `Idle (default)`
+  with the quiet time as a fact and no threshold. Then the declared limit, as evaluations used of the ceiling.
+  `At cap` SHALL also state when the count resets — the next UTC midnight and the time until it.
+- **Ready** — which trigger is met, and that the runner takes the group on its next pass.
+- **Up to date** — when the group was last evaluated, and that no rows have arrived since.
+
+Times left SHALL be stated against the tab's clock, so they agree with the badge they explain.
+
+When the pipeline is **paused**, the tooltip of a `Ready` or `Waiting` group SHALL state first that the runner
+evaluates none of the pipeline's groups on its own until it is resumed: a pause skips the readiness sweep, so a met
+trigger on a paused pipeline does nothing, and a checklist alone would say otherwise.
+
+#### Scenario: A waiting group lists its triggers with time left
+
+- **GIVEN** a waiting group quiet for 2 minutes in a pipeline declaring `idle` 10m and a `signal`
+- **WHEN** the user focuses its state badge
+- **THEN** a tooltip lists quiet for 2m of 10m as not met with 8m left, and no matching row as not met
+
+#### Scenario: An at-cap group states its reset
+
+- **GIVEN** a group at its ceiling of 20
+- **WHEN** the user hovers its state badge
+- **THEN** the tooltip states 20 of 20 evaluations used and the time until the next UTC midnight
+
+#### Scenario: A default idle is a fact without a threshold
+
+- **GIVEN** a waiting group quiet for 40 minutes in a signal-only pipeline
+- **WHEN** the user hovers its state badge
+- **THEN** the tooltip lists `Idle (default)` with 40m of quiet and no threshold or time left
+
+#### Scenario: A paused pipeline is stated before the checklist
+
+- **GIVEN** a paused pipeline and a group in it that is `Ready`
+- **WHEN** the user hovers its state badge
+- **THEN** the tooltip first states that the runner evaluates no group on its own until the pipeline is resumed
+
+### Requirement: A group can be queued for evaluation
+
+The runner accepts `POST /v1/pipelines/{name}/groups/{key}/requeue`, which queues one evaluation of the group at
+its current version, without waiting for any trigger, and answers `202` with no result. Queuing the same version
+twice adds nothing. The evaluation is charged against the group's daily ceiling like any other.
+
+The action column SHALL offer a **Queue evaluation** control per row, by state:
+
+- **Waiting** — offered.
+- **Up to date** — offered: after an edit to the pipeline's prompt or model, a clean group is not evaluated again
+  until a new row arrives, and this is the only way to re-evaluate it.
+- **At cap** — presented but not operable, staying focusable, with a tooltip stating that the daily limit is
+  reached and when it resets. The runner does not refuse an evaluation past the ceiling, so the console is the
+  guard.
+- **any group whose evaluations today have reached the ceiling** — held back the same way, an `Up to date` one
+  included. Only a dirty group can be `At cap`, yet re-evaluating a clean group is charged like any other.
+- **Ready** — not offered: the runner takes the group on its next pass.
+
+The control SHALL open a confirmation dialog, which SHALL state:
+
+- for **Waiting** — the triggers checklist the tooltip states, and that the group is evaluated without waiting
+  for them;
+- the group's facts — its key, last activity, last evaluation and evaluations today, as `used / ceiling` where a
+  `cost_ceiling` is declared;
+- for **Up to date** — **as a warning, in place of the lead sentence** — that no rows have arrived since the last
+  evaluation, so the group is evaluated again on the same rows and the model call is spent. Re-evaluating
+  unchanged input is the case where the action is most likely pointless, and the dialog says so first;
+- for either, a warning **only when this evaluation spends the group's last one of the day**, stating that the
+  group is held back until the next UTC midnight after it. Below that the usage is a fact among the others, and a
+  warning at `0 of 20` cried wolf;
+- for either, when the runner still executes an **older revision** of the declaration than the one saved, that
+  this evaluation runs on that older revision. The dialog is reached most often right after a prompt or model
+  edit, which is exactly when the runner may not have synced it, and the call is then spent on the declaration
+  being replaced;
+- for either, when the pipeline is paused, that the evaluation **still runs**. A pause gates what the runner
+  enqueues — its scan, its readiness sweep — and not the execution of work already queued, and this request queues
+  the work directly. An operator who paused a pipeline to stop spending is exactly the one who needs to know;
+- nothing further about the queue: the confirm control is labelled `Queue evaluation`, which already says it.
+
+Cancelling SHALL send nothing. Confirming SHALL send the request for that group and close the dialog.
+
+After the request the console SHALL read the groups again, **whether or not it succeeded**. Success SHALL be
+announced as a polite status message naming the group as queued — not as evaluated. A failure SHALL be reported
+by the service's own message with its request id, and a group the runner no longer holds SHALL be reported as no
+longer tracked.
+
+#### Scenario: A waiting group can be queued
+
+- **GIVEN** a waiting group
+- **WHEN** the user activates its `Queue evaluation` control
+- **THEN** a confirmation dialog lists the group's triggers and states that it is evaluated without waiting
+- **AND** confirming sends a request naming the pipeline and that group's key
+
+#### Scenario: Re-evaluating an up-to-date group warns that nothing is new
+
+- **GIVEN** an up-to-date group
+- **WHEN** the user activates its `Queue evaluation` control
+- **THEN** the dialog opens with a warning that no rows have arrived since the last evaluation and the model call is
+  spent
+
+#### Scenario: An at-cap group cannot be queued
+
+- **GIVEN** a group at its ceiling
+- **WHEN** the user focuses its `Queue evaluation` control
+- **THEN** the control does not operate
+- **AND** a tooltip states that the daily limit is reached and when it resets
+
+#### Scenario: An up-to-date group at its ceiling cannot be queued
+
+- **GIVEN** an up-to-date group whose evaluations today equal its pipeline's `cost_ceiling`
+- **WHEN** the grid is rendered
+- **THEN** its `Queue evaluation` control does not operate and states that the daily limit is reached
+
+#### Scenario: A ready group offers no control
+
+- **GIVEN** a ready group
+- **WHEN** the grid is rendered
+- **THEN** its action cell offers no `Queue evaluation` control
+
+#### Scenario: The dialog states the limit in use
+
+- **GIVEN** a waiting group in a pipeline with a `cost_ceiling` of 20, evaluated 7 times today
+- **WHEN** the dialog opens
+- **THEN** its facts state `7 / 20`
+- **AND** no warning about the limit is presented
+
+#### Scenario: The dialog warns before the last evaluation of the day
+
+- **GIVEN** a waiting group in a pipeline with a `cost_ceiling` of 20, evaluated 19 times today
+- **WHEN** the dialog opens
+- **THEN** a warning states that this is the group's last evaluation today and it is held back until 00:00 UTC
+
+#### Scenario: The dialog says a paused pipeline still runs the evaluation
+
+- **GIVEN** a waiting group in a paused pipeline
+- **WHEN** the dialog opens
+- **THEN** it states that the evaluation runs even though the pipeline is paused
+
+#### Scenario: The dialog says the runner is still on an older revision
+
+- **GIVEN** a group pipeline saved at a revision the runner has not yet synced
+- **WHEN** the dialog opens
+- **THEN** a warning states that the evaluation runs on the previous revision
+
+#### Scenario: Cancelling sends nothing
+
+- **GIVEN** an open `Queue evaluation` dialog
+- **WHEN** the user cancels it
+- **THEN** no request is sent
+
+#### Scenario: A queued evaluation is announced and the groups are read again
+
+- **GIVEN** a confirmed `Queue evaluation` the runner accepts
+- **WHEN** it answers
+- **THEN** a status message states that the group's evaluation is queued
+- **AND** the groups are read again
+
+#### Scenario: A refused evaluation reports the service's message and reads again
+
+- **GIVEN** a confirmed `Queue evaluation` the runner refuses
+- **WHEN** it answers
+- **THEN** an error notification carries the service's message and request id
+- **AND** the groups are read again

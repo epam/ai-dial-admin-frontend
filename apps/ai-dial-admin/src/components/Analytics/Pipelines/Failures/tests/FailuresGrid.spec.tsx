@@ -178,13 +178,13 @@ describe('FailuresGrid', () => {
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.FailuresClearFilters })).toBeTruthy();
   });
 
-  test('offers to widen a live path that holds nothing', () => {
+  test('states an empty live path without a second control to widen it', () => {
     renderGrid(failuresRead({ items: [], filters: { lane: DlqLane.Live } }));
 
     expect(screen.getByRole('region', { name: 'empty' }).textContent).toContain(
       AnalyticsPipelinesI18nKey.FailuresNoneLive,
     );
-    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.FailuresShowAllPaths })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /path/i })).toBeNull();
   });
 
   test('offers to clear a run filter whose failures have all been re-run', () => {
