@@ -282,4 +282,49 @@ describe('Server :: AnalyticsRunnerApi', () => {
 
     expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'not_found', status: 404 }));
   });
+
+  test("getGroups asks for the limit on the pipeline's own groups route and unwraps the envelope", async () => {
+    const groups = [{ group_key: 'sess_A', dirty: true }];
+    fetch.mockResponseOnce(JSON.stringify({ groups }), JSON_HEADERS);
+
+    const res = await instance.getGroups('retrieval/quality', 500, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: groups }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/pipelines/retrieval%2Fquality/groups?limit=500'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('getGroups reports a body without the envelope as a failure', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+    const res = await instance.getGroups('retrieval-quality', 1, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+  });
+
+  // 404 covers both a pipeline the runner does not hold and one that is not a group pipeline.
+  test('getGroups carries a 404 through by its own code', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 404, error: 'not_found', message: 'No such pipeline' }), {
+      status: 404,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getGroups('retrieval-quality', 1, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'not_found', status: 404 }));
+  });
+
+  test("requeueGroup posts to the group's requeue route with both segments escaped", async () => {
+    fetch.mockResponseOnce(() => Promise.resolve(new Response(null, { status: 202 })));
+
+    const res = await instance.requeueGroup('retrieval-quality', 'sess A/1', TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/pipelines/retrieval-quality/groups/sess%20A%2F1/requeue'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

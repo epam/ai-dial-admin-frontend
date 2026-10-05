@@ -9,6 +9,7 @@ import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { UserInfo, UserRole } from '@/src/models/user-info';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { resolveIsFullAdmin } from '@/src/utils/auth/full-admin';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -132,9 +133,7 @@ export const AppContextProvider = ({
       !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) &&
       !userInfo?.roles?.includes(UserRole.FULL_ADMIN));
 
-  // Auth off → nothing is enforced, so treat as full admin; otherwise only a mapped FULL_ADMIN.
-  const isFullAdmin =
-    !featureFlags.adminApiEnabled || !isEnableAuth || !!userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+  const isFullAdmin = resolveIsFullAdmin(featureFlags.adminApiEnabled, isEnableAuth, userInfo?.roles);
 
   const value = {
     sidebarOpen,

@@ -37,6 +37,8 @@ import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
+import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
+import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
@@ -53,8 +55,9 @@ export default async function Layout({ children, params }: { children: ReactNode
     return redirect(SIGN_IN_LINK);
   }
 
+  const isAnalyticsEnabled = getIsAnalyticsEnabled();
   const featureFlags: FeatureFlags = {
-    adminApiEnabled: process.env.DIAL_ADMIN_API_URL != null,
+    adminApiEnabled: getIsAdminApiEnabled(),
     catalogEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('catalog'),
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
     deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
@@ -62,13 +65,10 @@ export default async function Layout({ children, params }: { children: ReactNode
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
     nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
-    analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
-    analyticsSessionsEnabled:
-      isValueTruthy(process.env.ANALYTICS_ENABLED) && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED),
-    analyticsUsageEnabled:
-      isValueTruthy(process.env.ANALYTICS_ENABLED) && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
-    queryAssistantEnabled:
-      isValueTruthy(process.env.ANALYTICS_ENABLED) && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
+    analyticsEnabled: isAnalyticsEnabled,
+    analyticsSessionsEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_SESSIONS_ENABLED),
+    analyticsUsageEnabled: isAnalyticsEnabled && isValueTruthy(process.env.ANALYTICS_USAGE_ENABLED),
+    queryAssistantEnabled: isAnalyticsEnabled && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();

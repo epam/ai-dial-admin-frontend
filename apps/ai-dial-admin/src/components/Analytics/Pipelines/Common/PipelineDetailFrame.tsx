@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 
 import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
+import PipelineGroups from '@/src/components/Analytics/Pipelines/Groups/PipelineGroups';
 import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntime';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
@@ -55,7 +56,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineRuntimeStatus } from '@/src/models/analytics/pipeline-runtime';
 import { ApplicationRoute } from '@/src/types/routes';
-import { auditTab, EntityViewTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
+import { auditTab, EntityViewTab, groupsTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { buildPipelineDto, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
@@ -66,6 +67,8 @@ interface Props {
   pipeline: Pipeline;
   form: PipelineFormLike;
   children: ReactNode;
+  /** Whether the runner tracks any group for the pipeline; see the detail page for why it is decided there. */
+  hasGroups?: boolean;
 }
 
 // A predicate naming a sensitive column fails with 403 rather than the 422 a bad expression gets, and the
@@ -80,7 +83,7 @@ const pauseLabelKey = (isPaused: boolean, isBusy: boolean): AnalyticsPipelinesI1
   return isBusy ? AnalyticsPipelinesI18nKey.Pausing : AnalyticsPipelinesI18nKey.Pause;
 };
 
-const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
+const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = false }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin, featureFlags } = useAppContext();
@@ -142,8 +145,10 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         }
       : runtimeTab(t);
 
-    return [propertiesTab(t), runtime, auditTab(t)];
-  }, [t, isFullAdmin, failureCount]);
+    return hasGroups
+      ? [propertiesTab(t), runtime, groupsTab(t), auditTab(t)]
+      : [propertiesTab(t), runtime, auditTab(t)];
+  }, [t, isFullAdmin, failureCount, hasGroups]);
 
   const assemblyContext = useMemo(
     () => ({ grainKey: form.grainKey, sourceTable: target?.source_table }),
@@ -313,6 +318,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const isTabStripShown = !!featureFlags.analyticsEnabled && !isEditorEnabled;
   const isAuditShown = isTabStripShown && activeTab === EntityViewTab.Audit;
   const isRuntimeShown = isTabStripShown && isFullAdmin && activeTab === EntityViewTab.Runtime;
+  const isGroupsShown = isTabStripShown && isFullAdmin && hasGroups && activeTab === EntityViewTab.Groups;
 
   const properties = (
     <>
@@ -490,12 +496,15 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
             }
           />
         )}
+        {isGroupsShown && (
+          <PipelineGroups pipeline={pipeline} isPaused={Boolean(pausedEntry)} isGenerationBehind={isBehind} />
+        )}
         {isAuditShown && (
           <div className="flex min-h-0 flex-1 flex-col">
             <PipelineAudit pipeline={pipeline} />
           </div>
         )}
-        {!isEditorEnabled && !isAuditShown && !isRuntimeShown && properties}
+        {!isEditorEnabled && !isAuditShown && !isRuntimeShown && !isGroupsShown && properties}
       </div>
     </div>
   );

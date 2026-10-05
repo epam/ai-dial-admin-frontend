@@ -38,6 +38,11 @@ vi.mock('@/src/components/Analytics/Pipelines/PipelineAudit', () => ({
   },
 }));
 
+// The Groups tab's own contract is covered under Groups/tests; here it only marks that the tab body rendered.
+vi.mock('@/src/components/Analytics/Pipelines/Groups/PipelineGroups', () => ({
+  default: () => <div>pipeline-groups</div>,
+}));
+
 // Monaco is heavy and meaningless in jsdom — the editor only has to occupy the body here.
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: () => <div role="application" aria-label="JSON editor" />,
@@ -70,8 +75,10 @@ const rule: Pipeline = {
   state: { lag_seconds: 12, has_more: false },
 };
 
-const renderView = (override?: Partial<Pipeline>) =>
-  render(<PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} />);
+const renderView = (override?: Partial<Pipeline>, hasGroups = false) =>
+  render(
+    <PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} hasGroups={hasGroups} />,
+  );
 
 const auditTab = () => screen.getByRole('tab', { name: TabsI18nKey.Audit });
 const propertiesTab = () => screen.getByRole('tab', { name: TabsI18nKey.Properties });
@@ -238,5 +245,38 @@ describe('PipelineDetailFrame — the Properties and Audit tabs', () => {
     expect(screen.queryByText('pipeline-audit')).not.toBeInTheDocument();
     expect(auditPropsSpy).not.toHaveBeenCalled();
     expect(facts()).toBeInTheDocument();
+  });
+});
+
+describe('PipelineDetailFrame — the Groups tab', () => {
+  const tabNames = () => screen.getAllByRole('tab').map((tab) => tab.textContent);
+
+  test('sits between Runtime and Audit when the runner holds groups', () => {
+    renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } }, true);
+
+    expect(tabNames()).toEqual([TabsI18nKey.Properties, TabsI18nKey.Runtime, TabsI18nKey.Groups, TabsI18nKey.Audit]);
+  });
+
+  test('is absent when the page found no groups', () => {
+    renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } });
+
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Groups })).toBeNull();
+  });
+
+  test('is withheld from a caller who is not a full admin', () => {
+    context.isFullAdmin = false;
+    renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } }, true);
+
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Groups })).toBeNull();
+  });
+
+  test('replaces the Properties body with the groups when selected', async () => {
+    const user = userEvent.setup();
+    renderView({ trigger: { kind: TriggerKind.Group, group_by: 'response_id', ready_when: { idle: '10m' } } }, true);
+
+    await user.click(screen.getByRole('tab', { name: TabsI18nKey.Groups }));
+
+    expect(screen.getByText('pipeline-groups')).toBeInTheDocument();
+    expect(facts()).toBeNull();
   });
 });
