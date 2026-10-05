@@ -108,8 +108,10 @@ reordering are the grid's own affordances: every data column SHALL remain sortab
 grid's standard column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing
 is unpaged, those controls act on the whole registry.
 
-Columns SHALL be: **name**, **kind**, **target**, **inputs**, **trigger**, **transform**, **enabled**,
-**runtime**, **generation**, and **updated at**.
+Columns SHALL be: **name**, **kind**, **trigger**, **transform**, **enabled**, **runtime**, **generation**,
+**target**, **inputs**, and **updated at**. The first seven — **name**, **kind**, **trigger**,
+**transform**, **enabled**, **runtime**, **generation**, in that order — SHALL be visible by default;
+**target**, **inputs** and **updated at** SHALL be hidden by default and remain available to show.
 
 The grain key and the version column are **not** among them. The service resolves those only for a listing
 narrowed to the enrichment kind that also asks for the compiled projection, and it refuses that projection
@@ -148,6 +150,15 @@ whole.
 The **runtime** column SHALL be omitted entirely — rather than rendered with empty or error cells — when
 the runtime service is not configured, did not answer, or the caller is not a full admin. A column of
 identical failures states nothing about any row and implies a per-row fact the page does not have.
+
+The page header SHALL carry a **Columns** button that opens the grid's standard columns panel, the same
+panel the other listings offer, in which every column above is listed under its header name and can be
+shown, hidden or reordered, and the defaults restored. The choice SHALL persist in the browser under the
+listing's own grid storage key, alongside the grid's saved sort and filter state, so it survives a reload
+and is not shared with any other listing. A listing without the runtime column SHALL keep its choice under a separate key from one
+that carries it: the grid appends a column its saved state does not know, so a choice saved before the
+runtime service answered would otherwise move **runtime** to the end for good. The button SHALL expose whether the panel is open, and SHALL NOT
+be offered over an empty listing, where the grid shows its empty state rather than columns.
 
 Each row SHALL offer an action menu with a **delete** entry, whose confirmation dialog SHALL use the danger
 (red confirm) variant and SHALL identify the pipeline by name. After a successful delete the listing SHALL
@@ -246,6 +257,30 @@ refresh client-side, preserving the filters currently applied.
 - **WHEN** the listing renders
 - **THEN** no data column disables sorting or filtering
 - **AND** no separate filter toolbar is rendered above the grid
+
+#### Scenario: Default columns
+
+- **WHEN** the listing renders for a browser with no saved column choice
+- **THEN** the visible columns are name, kind, trigger, transform, enabled, runtime and generation, in that
+  order
+- **AND** target, inputs and updated at are hidden but listed in the columns panel
+
+#### Scenario: Showing a hidden column from the columns panel
+
+- **WHEN** the user activates the Columns button and checks a hidden column such as target
+- **THEN** that column is shown in the grid
+- **AND** the panel offers to restore the defaults
+
+#### Scenario: The column choice survives a reload
+
+- **GIVEN** the user has hidden a default column through the columns panel
+- **WHEN** the Pipelines page is reloaded in the same browser
+- **THEN** that column stays hidden
+
+#### Scenario: No columns button over an empty listing
+
+- **WHEN** the registry holds no pipeline
+- **THEN** the empty state is shown and no Columns button is offered
 
 #### Scenario: Delete a pipeline
 

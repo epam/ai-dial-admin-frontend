@@ -67,3 +67,9 @@ export const PIPELINE_SELECT_DEFAULTS = {
   selectedOptionMark: MenuItemMark.Check,
   listClassName: '[&_[role="option"]]:shrink-0 [&_[role="option"]]:py-2',
 } as const;
+
+export const PIPELINES_STORAGE_KEY = 'analytics/pipelines';
+// The runtime column exists only once the runner answers, and the grid appends a column its saved state
+// does not know. A layout saved without it would push Runtime to the end for good, so each column set
+// keeps its own.
+export const PIPELINES_NO_RUNTIME_STORAGE_KEY = 'analytics/pipelines/no-runtime';

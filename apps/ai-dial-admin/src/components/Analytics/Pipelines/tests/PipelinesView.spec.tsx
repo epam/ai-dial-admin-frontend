@@ -5,8 +5,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { PIPELINES_NO_RUNTIME_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
-import { ActionMenuOperationI18nKey, AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { PipelineListItem, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
@@ -33,20 +34,57 @@ interface MockActionItem {
 interface MockColDef {
   colId?: string;
   field?: string;
+  headerName?: string;
+  hide?: boolean;
   sortable?: boolean;
   valueGetter?: (params: { data: PipelineListItem }) => unknown;
   cellRendererParams?: { items?: MockActionItem[] };
 }
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData, columnDefs }: { rowData?: PipelineListItem[]; columnDefs?: MockColDef[] }) => {
+  default: ({
+    rowData,
+    columnDefs,
+    storageKey,
+    showColumnsPanel,
+    toggleColumnsPanel,
+  }: {
+    rowData?: PipelineListItem[];
+    columnDefs?: MockColDef[];
+    storageKey?: string;
+    showColumnsPanel?: boolean;
+    toggleColumnsPanel?: () => void;
+  }) => {
     const items = columnDefs?.find((c) => c.field === ACTIONS_COLUMN_CEL_ID)?.cellRendererParams?.items ?? [];
     const versionColumn = columnDefs?.find((c) => c.colId === 'versionColumn');
+    const triggerColumn = columnDefs?.find((c) => c.colId === 'trigger');
+    const dataColumns = columnDefs?.filter((c) => c.field !== ACTIONS_COLUMN_CEL_ID) ?? [];
 
     return (
       <div>
         <div>rows: {rowData?.length ?? 0}</div>
         <div>cols: {columnDefs?.map((c) => c.colId ?? c.field).join('|')}</div>
+        <div>
+          visible:{' '}
+          {dataColumns
+            .filter((c) => !c.hide)
+            .map((c) => c.colId)
+            .join('|')}
+        </div>
+        <div>
+          hidden:{' '}
+          {dataColumns
+            .filter((c) => c.hide)
+            .map((c) => c.colId)
+            .join('|')}
+        </div>
+        <div>
+          addressable:{' '}
+          {dataColumns.every((c) => !!c.field && c.field === c.colId && !!c.headerName) ? 'all' : 'not-all'}
+        </div>
+        <div>storage: {storageKey}</div>
+        <div>panel: {showColumnsPanel ? 'open' : 'closed'}</div>
+        <button onClick={toggleColumnsPanel}>close-panel</button>
         <div>
           sortable:{' '}
           {columnDefs?.filter((c) => c.field !== ACTIONS_COLUMN_CEL_ID).some((c) => c.sortable === false)
@@ -56,6 +94,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
         {rowData?.map((row) => (
           <div key={row.name}>
             <span>{`version-column-${row.name}: ${versionColumn?.valueGetter?.({ data: row })}`}</span>
+            <span>{`trigger-value-${row.name}: ${String(triggerColumn?.valueGetter?.({ data: row }))}`}</span>
             {items.map((item) => (
               <button key={item.id} onClick={() => item.onClick?.(row)}>
                 {item.id}:{row.name}
@@ -83,6 +122,7 @@ const rule = (overrides: Partial<PipelineListItem> = {}): PipelineListItem => ({
 
 describe('Pipelines :: PipelinesView', () => {
   beforeEach(() => {
+    vi.mocked(getPipelines).mockClear();
     vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [rule()] });
     vi.mocked(deletePipeline).mockResolvedValue({ success: true });
     showNotification.mockClear();
@@ -140,8 +180,85 @@ describe('Pipelines :: PipelinesView', () => {
 
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
     expect(screen.getByText(/cols:/)).toHaveTextContent(
-      'name|kind|target|inputs|trigger|transform|enabled|generation|updatedAt',
+      'name|kind|trigger|transform|enabled|generation|target|inputs|updatedAt',
     );
+  });
+
+  test('shows the default columns in order and keeps the rest hidden but available', () => {
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    expect(screen.getByText(/visible:/)).toHaveTextContent('visible: name|kind|trigger|transform|enabled|generation');
+    expect(screen.getByText(/hidden:/)).toHaveTextContent('hidden: target|inputs|updatedAt');
+  });
+
+  // The columns panel toggles a column by its `field` and the saved state keys it by `colId`; a column
+  // with only one of them would be listed but could never be shown or hidden.
+  test('gives every data column a header and a field matching its id', () => {
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    expect(screen.getByText(/addressable:/)).toHaveTextContent('addressable: all');
+  });
+
+  // Without the runner's answer there is no runtime column, and a layout saved without it would push
+  // Runtime to the end once it appears; the runtime spec covers the key used once it is read.
+  test('keeps a layout saved without the runtime column under its own storage key', () => {
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    expect(screen.getByText(`storage: ${PIPELINES_NO_RUNTIME_STORAGE_KEY}`)).toBeInTheDocument();
+  });
+
+  // The grid's comparator cannot order the trigger object, so sort and filter read its kind.
+  test('sorts and filters the trigger column on the trigger kind', () => {
+    render(
+      <PipelinesView
+        initialPipelines={[
+          rule(),
+          rule({ name: 'sessions-rollup', trigger: { kind: TriggerKind.Schedule, cron: '0 * * * *' } }),
+          rule({ name: 'untriggered', trigger: undefined }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText(`trigger-value-turn-feedback-live: ${TriggerKind.OnIngest}`)).toBeInTheDocument();
+    expect(screen.getByText(`trigger-value-sessions-rollup: ${TriggerKind.Schedule}`)).toBeInTheDocument();
+    expect(screen.getByText('trigger-value-untriggered: undefined')).toBeInTheDocument();
+  });
+
+  test('closes the columns panel when the last pipeline is deleted', async () => {
+    vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [] });
+    const user = userEvent.setup();
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Columns }));
+    expect(screen.getByText('panel: open')).toBeInTheDocument();
+
+    await user.click(screen.getByText(`${ActionMenuOperationI18nKey.Delete}:turn-feedback-live`));
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.DeletePipeline));
+
+    await waitFor(() => expect(screen.getByText('rows: 0')).toBeInTheDocument());
+    expect(screen.getByText('panel: closed')).toBeInTheDocument();
+  });
+
+  test('opens and closes the columns panel from the toolbar button', async () => {
+    const user = userEvent.setup();
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    const button = screen.getByRole('button', { name: ButtonsI18nKey.Columns });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('panel: closed')).toBeInTheDocument();
+
+    await user.click(button);
+    expect(screen.getByText('panel: open')).toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByText('close-panel'));
+    expect(screen.getByText('panel: closed')).toBeInTheDocument();
+  });
+
+  test('offers no columns button over an empty listing', () => {
+    render(<PipelinesView initialPipelines={[]} />);
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
   });
 
   test('carries no resolved-only columns', () => {
