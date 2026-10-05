@@ -8,8 +8,10 @@ import {
   BreakdownRowModel,
   BreakdownTab,
   RequestState,
+  RouteKind,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
+import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
 import { EMPTY_MEASURES } from '@/src/components/Analytics/Usage/utils/folds';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -17,7 +19,7 @@ import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-qu
 interface CapturedGrid {
   /** Absent on the dialog's grid, which reads its rows through a datasource instead. */
   rowData?: BreakdownRowModel[];
-  columnDefs: { colId?: string; filter?: boolean | string }[];
+  columnDefs: { colId?: string; filter?: boolean | string; tooltipValueGetter?: () => unknown }[];
 }
 
 const RUNNER = {
@@ -38,6 +40,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     return <div role="grid" aria-rowcount={props.rowData?.length ?? 0} />;
   },
 }));
+
+const ALL_ROWS = { entityClauses: [] };
 
 const loaded = <T,>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
 
@@ -75,6 +79,8 @@ const renderTable = (props: Partial<Props> = {}) =>
   render(
     <BreakdownTable
       view={UsageView.Llm}
+      rowScope={ALL_ROWS}
+      tabs={VIEW_BREAKDOWN_TABS[props.view ?? UsageView.Llm]}
       tab={BreakdownTab.Models}
       onTabChange={vi.fn()}
       rows={loaded<BreakdownRow[]>(ROWS)}
@@ -104,6 +110,13 @@ describe('BreakdownTable', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeTruthy();
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabApplications)).toBeTruthy();
     expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabProjects)).toBeTruthy();
+  });
+
+  test('offers only the tabs it is handed, which is how an entity block drops one', () => {
+    renderTable({ tabs: [BreakdownTab.Applications, BreakdownTab.Projects], tab: BreakdownTab.Applications });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
+    expect(screen.getByText(AnalyticsUsageI18nKey.BreakdownTabApplications)).toBeTruthy();
   });
 
   test('offers the MCP dimensions instead in that view', () => {
@@ -216,6 +229,15 @@ describe('BreakdownTable', () => {
     expect(screen.getByRole('textbox', { name: AnalyticsUsageI18nKey.SearchPlaceholder })).toBeTruthy();
   });
 
+  test("leaves the dimension cell's tooltips to the cell, not the grid's default one", () => {
+    renderTable({ isShowingAll: true });
+
+    for (const grid of grids) {
+      const dimension = grid.columnDefs.find((column) => column.colId === 'dimension');
+      expect(dimension?.tooltipValueGetter?.()).toBeNull();
+    }
+  });
+
   test('holds the term the reader typed, which the dialog reads the dimension again with', () => {
     renderTable({ isShowingAll: true });
 
@@ -243,6 +265,12 @@ describe('BreakdownTable cost column and tab description', () => {
     expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
   });
 
+  test('omits the cost column in a priced view when its block says so', () => {
+    renderTable({ isCostOffered: false });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
+  });
+
   test('describes what the active tab counts, so a reader knows what one row aggregates', () => {
     const { rerender } = renderTable();
 
@@ -251,6 +279,8 @@ describe('BreakdownTable cost column and tab description', () => {
     rerender(
       <BreakdownTable
         view={UsageView.Llm}
+        rowScope={ALL_ROWS}
+        tabs={VIEW_BREAKDOWN_TABS[UsageView.Llm]}
         tab={BreakdownTab.Projects}
         onTabChange={vi.fn()}
         rows={loaded<BreakdownRow[]>(ROWS)}
@@ -276,5 +306,56 @@ describe('BreakdownTable cost column and tab description', () => {
 
     expect(card.rowData).toBeTruthy();
     expect(dialog.rowData).toBeUndefined();
+  });
+});
+
+describe('BreakdownTable in the Routes view', () => {
+  beforeEach(() => {
+    grids.length = 0;
+  });
+
+  const ownerRows = [row('app-a', 60), row('/proxy', 40)];
+  const pathRow: BreakdownRow = {
+    ...row('/proxy\u0000POST\u0000/proxy/v1/messages', 40),
+    label: '/proxy/v1/messages',
+    qualifiers: ['/proxy', 'POST'],
+  };
+
+  test('offers owners, paths, callers and projects, opening on owners', () => {
+    renderTable({ view: UsageView.Routes, tab: BreakdownTab.Owners, rows: loaded(ownerRows) });
+
+    for (const key of [
+      AnalyticsUsageI18nKey.BreakdownTabOwners,
+      AnalyticsUsageI18nKey.BreakdownTabPaths,
+      AnalyticsUsageI18nKey.BreakdownTabCallers,
+      AnalyticsUsageI18nKey.BreakdownTabProjects,
+    ]) {
+      expect(screen.getByText(key)).toBeTruthy();
+    }
+    expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
+  });
+
+  test('states each owner row kind as text, and no cost', () => {
+    renderTable({ view: UsageView.Routes, tab: BreakdownTab.Owners, rows: loaded(ownerRows) });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).toContain('routeKind');
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('cost');
+    expect(cardGrid().rowData.map((model) => model.routeKind)).toEqual([RouteKind.Application, RouteKind.Global]);
+  });
+
+  test("states a path row's method and owner beneath it", () => {
+    renderTable({ view: UsageView.Routes, tab: BreakdownTab.Paths, rows: loaded([pathRow]) });
+
+    expect(cardGrid().rowData[0].subLabel).toBe('POST · /proxy');
+    expect(cardGrid().rowData[0].routeKind).toBe(RouteKind.Global);
+  });
+
+  test('states no kind on the callers tab, and names a direct call there', () => {
+    const missing = { ...row('parent_deployment:missing', 5), label: '', isFallbackLabel: true };
+    renderTable({ view: UsageView.Routes, tab: BreakdownTab.Callers, rows: loaded([missing]) });
+
+    expect(grids[0].columnDefs.map((column) => column.colId)).not.toContain('routeKind');
+    expect(cardGrid().rowData[0].displayLabel).toBe(AnalyticsUsageI18nKey.DirectCall);
+    expect(cardGrid().rowData[0].fallbackTooltip).toBe(AnalyticsUsageI18nKey.DirectCallRouteTooltip);
   });
 });

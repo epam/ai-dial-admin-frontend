@@ -53,6 +53,7 @@ const renderRows = (overrides: Partial<Parameters<typeof useBreakdownDialogRows>
   renderHook(() =>
     useBreakdownDialogRows({
       view: UsageView.Llm,
+      rowScope: { entityClauses: [] },
       windows: { current: WINDOW },
       tab: BreakdownTab.Models,
       windowTotal: 100,
@@ -192,10 +193,13 @@ describe('useBreakdownDialogRows', () => {
     // The page memoizes its windows, so the only input changing here is the total — which arrives
     // after the rows do, and used to reset the grid and re-read from the first block.
     const windows = { current: WINDOW };
+    // The block hands a memoized scope, as it hands memoized windows.
+    const rowScope = { entityClauses: [] };
     const { result, rerender } = renderHook(
       ({ windowTotal }: { windowTotal: number | null }) =>
         useBreakdownDialogRows({
           view: UsageView.Llm,
+          rowScope,
           windows,
           tab: BreakdownTab.Models,
           windowTotal,

@@ -12,10 +12,12 @@ import {
   colorSchemeDark,
   ColumnApiModule,
   ColumnAutoSizeModule,
+  ColumnResizedEvent,
   ColumnState,
   CustomFilterModule,
   DateFilterModule,
   EventApiModule,
+  ExternalFilterModule,
   GetRowIdParams,
   GridApi,
   GridOptions,
@@ -87,7 +89,10 @@ ModuleRegistry.registerModules([
   PinnedRowModule,
   DateFilterModule,
   CustomFilterModule,
+  ExternalFilterModule,
 ]);
+
+const GRID_SIZED_RESIZE_SOURCES: ColumnResizedEvent['source'][] = ['autosizeColumns', 'sizeColumnsToFit'];
 
 const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
   toColumnLeaves(columnDefs ?? [])
@@ -259,6 +264,18 @@ const AgGridWrapper = <T extends object>({
     [onStateChanged],
   );
 
+  // Autosize and fit-grid-width dispatch columnResized too; persisting those would store a width
+  // the operator never chose and freeze the first render's measurements on every later visit.
+  const handleColumnResized = useCallback(
+    (e: ColumnResizedEvent) => {
+      if (GRID_SIZED_RESIZE_SOURCES.includes(e.source)) {
+        return;
+      }
+      handleStateUpdated(e);
+    },
+    [handleStateUpdated],
+  );
+
   const liveDataProps = isLiveData ? { rowData, columnDefs, animateRows: false, getRowId } : {};
 
   return (
@@ -278,7 +295,7 @@ const AgGridWrapper = <T extends object>({
         onGridReady={onGridReady}
         onColumnMoved={handleStateUpdated}
         onColumnVisible={handleStateUpdated}
-        onColumnResized={handleStateUpdated}
+        onColumnResized={handleColumnResized}
         onCellContextMenu={onCellContextMenu}
         preventDefaultOnContextMenu={true}
         {...liveDataProps}

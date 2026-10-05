@@ -80,6 +80,7 @@ const hasNoMatchedComparisonRows = (runs: RunComparisonRun[] | undefined): boole
 interface ComparisonRunDerived {
   scores: MetricScoresData;
   unmatchedIds: string[];
+  unmatchedTestCaseIds: string[];
   analytics: RunAnalyticsSlice;
 }
 
@@ -89,6 +90,7 @@ const applyComparisonRun = (
 ): ComparisonRunDerived => ({
   scores: parseComparisonMetricScores(run?.scores),
   unmatchedIds: run?.unmatchedEvalSummaryIds ?? [],
+  unmatchedTestCaseIds: run?.unmatchedEvalTestCaseIds ?? [],
   analytics: toMatchedAnalyticsSlice(run, statusCounts),
 });
 
@@ -260,8 +262,8 @@ export const useSummaryOverviewData = ({
 
         const [primaryStatusResult, comparedStatusResult, primaryMetricEvalResult, comparedMetricEvalResult] =
           await Promise.all([
-            executeStructuredQuery(buildTestCasesStatusQuery(primaryRunId, primaryPartial.unmatchedIds)),
-            executeStructuredQuery(buildTestCasesStatusQuery(comparedRunId, comparedPartial.unmatchedIds)),
+            executeStructuredQuery(buildTestCasesStatusQuery(primaryRunId, primaryPartial.unmatchedTestCaseIds)),
+            executeStructuredQuery(buildTestCasesStatusQuery(comparedRunId, comparedPartial.unmatchedTestCaseIds)),
             executeStructuredQuery(buildAvgMetricEvalDurationQuery(primaryRunId, primaryPartial.unmatchedIds)),
             executeStructuredQuery(buildAvgMetricEvalDurationQuery(comparedRunId, comparedPartial.unmatchedIds)),
           ]);

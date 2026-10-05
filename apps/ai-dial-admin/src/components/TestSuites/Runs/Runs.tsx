@@ -1,12 +1,13 @@
 'use client';
 
-import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2 } from '@tabler/icons-react';
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
-import { cancelRun, removeRun } from '@/src/app/[lang]/runs/actions';
-import { getRuns } from '@/src/app/[lang]/test-suites/actions';
+import { cancelRun, getRunsQuery, removeRun } from '@/src/app/[lang]/runs/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
@@ -21,8 +22,9 @@ import {
   getExportOperation,
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
-import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { SUITE_RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -52,9 +54,20 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [selectedExportRun, setSelectedExportRun] = useState<Run | undefined>(undefined);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedCancelRun, setSelectedCancelRun] = useState<Run | undefined>(undefined);
+  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
   useCancellingRunsPoll(gridApi);
+
+  const toggleColumnsPanel = useCallback(() => setShowColumnsPanel((prev) => !prev), []);
+
+  const onToggleColumnsPanel = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      toggleColumnsPanel();
+    },
+    [toggleColumnsPanel],
+  );
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -63,17 +76,18 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       'ag-activity-row-clickable': () => true,
     },
     onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        e.node.setSelected(true, true);
-        onOpenInNewTab(ApplicationRoute.Runs, e.data);
+      if (e.colDef.field === ACTIONS_COLUMN_CEL_ID) {
+        return;
       }
+      e.node.setSelected(true, true);
+      onOpenInNewTab(ApplicationRoute.Runs, e.data);
     },
   };
 
   useEffect(() => {
     if (!runs && !isLoading) {
       setIsLoading(true);
-      getRuns(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
+      getRunsQuery(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
         if (runs) {
           return;
         }
@@ -101,7 +115,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           return;
         }
 
-        getRuns(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
+        getRunsQuery(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
           .then((res) => {
             const data = res == null || res.content.length === 0 ? [] : res?.content || [];
 
@@ -218,7 +232,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const columnDefs = useMemo(
     () => [
-      ...RUNS_COLUMN,
+      ...SUITE_RUNS_COLUMN,
       ACTION_COLUMN(
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
@@ -235,12 +249,25 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   return (
     <>
-      <GridView
-        columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
-        emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
-        onGridReady={onGridReady}
-      />
+      <div className="size-full flex flex-col">
+        <div className="flex flex-row justify-end mb-2">
+          <DialGhostButton
+            label={t(ButtonsI18nKey.Columns)}
+            iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            onClick={onToggleColumnsPanel}
+          />
+        </div>
+        <div className="flex-1 min-h-0">
+          <GridView
+            columnDefs={columnDefs}
+            additionalGridOptions={gridOptions}
+            emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
+            onGridReady={onGridReady}
+            showColumnsPanel={showColumnsPanel}
+            toggleColumnsPanel={toggleColumnsPanel}
+          />
+        </div>
+      </div>
       {isDeleteModalOpen &&
         createPortal(
           <DeleteConfirmationModal

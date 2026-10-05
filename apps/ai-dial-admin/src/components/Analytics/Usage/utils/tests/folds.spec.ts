@@ -164,10 +164,21 @@ describe('foldBreakdownRows with a qualifier', () => {
       ],
     } as unknown as StructuredQueryResult;
 
-    const rows = foldBreakdownRows(result, 'mcp_tool_call_name', 'deployment');
+    const rows = foldBreakdownRows(result, 'mcp_tool_call_name', ['deployment']);
 
     expect(rows[0].id).not.toBe(rows[1].id);
     expect(rows.map((row) => row.label)).toEqual(['execute_python', 'execute_python']);
+  });
+
+  test('joins every qualifier into the id, in the order the query grouped by, and keeps their values', () => {
+    const result = {
+      rows: [{ route_owner: 'app-a', request_method: 'GET', route_path: '/v1/search', calls: 2 }],
+    } as unknown as StructuredQueryResult;
+
+    const [row] = foldBreakdownRows(result, 'route_path', ['route_owner', 'request_method']);
+
+    expect(row.id).toBe('app-a\u0000GET\u0000/v1/search');
+    expect(row.qualifiers).toEqual(['app-a', 'GET']);
   });
 
   test('leaves the id as the dimension value where a tab has no qualifier', () => {

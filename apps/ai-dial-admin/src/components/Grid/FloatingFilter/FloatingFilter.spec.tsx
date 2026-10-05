@@ -46,6 +46,40 @@ describe('FloatingFilter', () => {
     expect(onFloatingFilterChanged).toHaveBeenCalledWith('contains', 'test');
   });
 
+  test('sends the only operator a column declares, rather than the default contains', () => {
+    const onFloatingFilterChanged = vi.fn();
+    const props = {
+      parentFilterInstance: (cb: any) => cb({ onFloatingFilterChanged }),
+      currentParentModel: () => ({ filter: '' }),
+      filterParams: { filterOptions: ['equals'] },
+    } as any;
+    render(<FloatingFilter {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText(BasicI18nKey.Search), { target: { value: 'abc' } });
+    act(() => {
+      vi.advanceTimersByTime(FLOATING_FILTER_DEBOUNCE_MS);
+    });
+
+    expect(onFloatingFilterChanged).toHaveBeenCalledWith('equals', 'abc');
+  });
+
+  test('keeps contains where the column declares it alongside other operators', () => {
+    const onFloatingFilterChanged = vi.fn();
+    const props = {
+      parentFilterInstance: (cb: any) => cb({ onFloatingFilterChanged }),
+      currentParentModel: () => ({ filter: '' }),
+      filterParams: { filterOptions: ['equals', 'notEqual', 'contains'] },
+    } as any;
+    render(<FloatingFilter {...props} />);
+
+    fireEvent.change(screen.getByPlaceholderText(BasicI18nKey.Search), { target: { value: 'abc' } });
+    act(() => {
+      vi.advanceTimersByTime(FLOATING_FILTER_DEBOUNCE_MS);
+    });
+
+    expect(onFloatingFilterChanged).toHaveBeenCalledWith('contains', 'abc');
+  });
+
   test('reflects each keystroke in the input immediately even while debouncing', () => {
     const props = {
       parentFilterInstance: vi.fn(),

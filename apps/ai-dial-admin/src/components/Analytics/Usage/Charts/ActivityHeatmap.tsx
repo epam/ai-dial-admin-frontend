@@ -29,6 +29,7 @@ import {
   isFutureCell,
 } from '@/src/components/Analytics/Usage/utils/heatmap';
 import { formatWeekLabel } from '@/src/components/Analytics/Usage/utils/weeks';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import {
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
@@ -46,6 +47,8 @@ interface Props {
   heatmap: HeatmapWeek;
   /** An MCP row carries no price, so there is nothing to paint in that view. */
   view: UsageView;
+  /** Overrides the view's own answer; absent, a priced view offers cost. */
+  isCostOffered?: boolean;
 }
 
 const PAGER_ICON_PROPS = { size: 16, stroke: 2 };
@@ -61,7 +64,7 @@ const formatHourLabel = (hour: number): string => String(hour).padStart(2, '0');
  */
 const DAY_LABEL_COL_WIDTH = 88;
 
-const ActivityHeatmap: FC<Props> = ({ heatmap, view }) => {
+const ActivityHeatmap: FC<Props> = ({ heatmap, view, isCostOffered: isCostOfferedOverride }) => {
   const t = useI18n();
   const [metric, setMetric] = useState<HeatmapMetric>(HeatmapMetric.Calls);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -86,7 +89,7 @@ const ActivityHeatmap: FC<Props> = ({ heatmap, view }) => {
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
-  const isCostOffered = view === UsageView.Llm;
+  const isCostOffered = isCostOfferedOverride ?? isPricedView(view);
   const activeMetric = isCostOffered ? metric : HeatmapMetric.Calls;
 
   const matrix = useMemo(

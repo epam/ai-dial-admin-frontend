@@ -68,6 +68,16 @@ export class InvalidImportZipError extends Error {
 }
 
 /**
+ * Inflates one entry into a `File`. Kept in its own scope so the inflated buffer becomes
+ * collectable as soon as the `File` owns a copy, instead of staying alive for the whole upload —
+ * that overlap is what pushes a ~100 MB entry towards the pod's memory limit.
+ */
+async function extractEntryAsFile(entry: JSZip.JSZipObject, fileName: string): Promise<File> {
+  const content = await entry.async('arraybuffer');
+  return new File([content], fileName, { type: inferContentTypeFromFileName(fileName) });
+}
+
+/**
  * Zip-archive import: validates every entry's path (design D4, security-relevant — see
  * `zip-import.ts`), infers a content type per entry (design D5), and uploads each valid
  * entry through the same circuit breaker as plain import.
@@ -97,8 +107,7 @@ export async function importZipFile(
     const relativePath = stripZipFilesPrefix(entry.name);
     const fileName = relativePath.split('/').pop() || relativePath;
     const targetPath = `${destinationFolder}${flatImport ? fileName : relativePath}`;
-    const content = await entry.async('arraybuffer');
-    const file = new File([content], fileName, { type: inferContentTypeFromFileName(fileName) });
+    const file = await extractEntryAsFile(entry, fileName);
 
     importResults.push(await uploadAndClassify(targetPath, file, upload, breaker));
   }

@@ -47,6 +47,9 @@ export async function createToolset(toolset: DialToolsetResource) {
     displayVersion: version,
     folderId: undefined,
     version: undefined,
+    // Same flat-`path` rejection as `createApp`, and the same folder-marker cause;
+    // `updateToolset` below already strips it.
+    path: undefined,
   });
 }
 

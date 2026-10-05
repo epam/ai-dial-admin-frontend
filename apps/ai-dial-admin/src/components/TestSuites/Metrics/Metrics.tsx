@@ -62,6 +62,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         response?.map((metric) => ({
           ...metric,
           description: metric.description ?? metric.metricDeclaration?.description,
+          outputSchema: metric.outputSchema ?? metric.metricDeclarationVersion?.outputSchema,
         })) || [],
       );
     });

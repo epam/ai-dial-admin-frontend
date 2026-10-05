@@ -94,19 +94,40 @@ The user MUST be able to enable chat endpoint and/or MCP endpoint independently 
 When source `$type === 'schema'` for a `DialApplication`, the `AppRunners` component SHALL own runner-selection side-effects, resolving the selected runner's scheme through the shared `resolveAppRunnerScheme` helper rather than calling a resolver inline:
 
 1. On runner selection, it resolves the picked runner via `resolveAppRunnerScheme(runner)`:
-   - For a `Config`-origin runner, this fetches the resolved application scheme via `getResolvedApplicationScheme(runner.$id)`.
-   - For a `Platform`-origin runner, this fetches the resource content by its Core metadata storage path and calls `getResolvedRunnerSchema` with that content's declared `$id`. A metadata-list storage name or encoded resource reference MUST NOT be passed as the resolved-schema query id.
+   - For a `Config`-origin runner, or a runner without an explicit origin, when `DIAL_ADMIN_API_URL` is configured, this fetches the resolved application scheme through the Admin Backend via `getResolvedApplicationScheme(runner.$id)`.
+   - For a `Config`-origin runner, or a runner without an explicit origin, when `DIAL_ADMIN_API_URL` is absent or empty, this fetches the resolved application scheme through Core via `getResolvedRunnerSchema(runner.$id)`.
+   - For a `Platform`-origin runner, this fetches the resource content by its Core metadata storage path and calls `getResolvedRunnerSchema` with that content's declared `$id`. A metadata-list storage name or encoded resource reference MUST NOT be passed as the resolved-schema query id, and `DIAL_ADMIN_API_URL` MUST NOT alter this behavior.
 2. If the schema fetch succeeds, it derives default `applicationProperties` via `getSchemaDefaults(scheme)`.
-3. It calls `onChange` once with the combined update: `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: resolvedId }, applicationProperties }`, where `resolvedId` is the declared content `$id` for a Platform-origin runner or the selected `$id` for a Config-origin runner.
+3. It calls `onChange` once with the combined update: `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: resolvedId }, applicationProperties }`, where `resolvedId` is the declared content `$id` for a Platform-origin runner or the selected `$id` for a Config-origin or originless runner.
 
-If the schema fetch fails, the component SHALL fall back to using the non-resolved runner. If the Platform-origin content fetch itself fails, it SHALL fall back to the picker option as originally listed, so a transient failure does not block selection.
+If the selected schema fetch fails, the component SHALL fall back to using the non-resolved runner. If the Platform-origin content fetch itself fails, it SHALL fall back to the picker option as originally listed, so a transient failure does not block selection.
 
-#### Scenario: Runner selection with successful schema fetch
+#### Scenario: Config runner selection with an available Admin Backend
 
-- **WHEN** the user picks a Config-origin runner and `getResolvedApplicationScheme` returns a schema
+- **WHEN** the user picks a Config-origin runner while `DIAL_ADMIN_API_URL` is configured and `getResolvedApplicationScheme` returns a schema
 - **THEN** `entity.source.$type` is set to `SCHEMA`
 - **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
 - **AND** `entity.applicationProperties` is set to `getSchemaDefaults(schema)`
+
+#### Scenario: Config runner selection without an Admin Backend
+
+- **WHEN** the user picks a Config-origin runner while `DIAL_ADMIN_API_URL` is absent or empty and Core's `getResolvedRunnerSchema` returns a schema
+- **THEN** Core's resolver is called with the runner id
+- **AND** `entity.source.$type` is set to `SCHEMA`
+- **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
+- **AND** `entity.applicationProperties` is set to `getSchemaDefaults(schema)`
+
+#### Scenario: Originless runner selection without an Admin Backend
+
+- **WHEN** the user picks a runner without an explicit origin while `DIAL_ADMIN_API_URL` is absent or empty
+- **THEN** Core's `getResolvedRunnerSchema` is called with the runner id
+- **AND** the application update uses the returned resolved schema
+
+#### Scenario: Config runner selection with a failed resolver
+
+- **WHEN** the user picks a Config-origin runner and the resolver selected by `DIAL_ADMIN_API_URL` availability fails
+- **THEN** the component derives defaults from the unresolved runner
+- **AND** the runner selection remains usable
 
 #### Scenario: Platform runner selection resolves against its declared content id
 
@@ -115,10 +136,17 @@ If the schema fetch fails, the component SHALL fall back to using the non-resolv
 - **AND** calls `getResolvedRunnerSchema` with the content's declared `$id`
 - **AND** sets `entity.source.applicationTypeSchemaId` to the declared `$id`
 
+#### Scenario: Platform runner selection ignores Admin Backend availability
+
+- **WHEN** the user picks a Platform-origin runner while `DIAL_ADMIN_API_URL` is configured or absent
+- **THEN** the component resolves its schema through Core after reading its content
+- **AND** it does not call `getResolvedApplicationScheme`
+
 #### Scenario: Platform runner selection with a failed content fetch
 
-- **WHEN** the user picks a Platform-origin runner and the content fetch fails
-- **THEN** the component falls back to the picker option's own value for both `getResolvedRunnerSchema` and `entity.source.applicationTypeSchemaId`
+- **WHEN** the content fetch for a selected Platform-origin runner fails
+- **THEN** the component resolves through Core using the picker option's `$id`
+- **AND** it falls back to the picker option if that resolver call fails
 
 ### Requirement: Source-type change clears stale Application fields
 
@@ -189,14 +217,18 @@ A separate `isValidApplicationSource` helper MUST NOT be introduced.
 
 ### Requirement: AssetApp uses the shared SourceField with Endpoints and App Runner only
 
-Asset applications (`AssetApp`, accessed via `ApplicationRoute.AssetsApplications`) SHALL render `components/SourceField/SourceField.tsx` as their source editor, wired with the `ASSET_APPLICATION_SOURCE_ITEMS` list. That list MUST offer exactly two options:
+Asset applications (`AssetApp`, accessed via `ApplicationRoute.AssetsApplications`) SHALL render `components/SourceField/SourceField.tsx` as their source editor, wired with the `ASSET_APPLICATION_SOURCE_ITEMS` list. Existing application editing SHALL continue to offer `SOURCE_TYPE.ENDPOINTS` — rendering the application endpoint editor — and `SOURCE_TYPE.SCHEMA` — rendering `AppRunners` and writing the selected runner id to `entity.application_type_schema_id`.
 
-- `SOURCE_TYPE.ENDPOINTS` — renders the application endpoint editor.
-- `SOURCE_TYPE.SCHEMA` — renders `AppRunners` (runner picker), writing the selected runner id to `entity.source.applicationTypeSchemaId`.
+The dedicated Assets Application creation modal SHALL offer source modes in this order:
 
-The AssetApp source dropdown MUST NOT offer `SOURCE_TYPE.CONTAINER`, `RUNNER`, `ADAPTER`, or `MCP_REGISTRY`. No `getContainers` prop SHALL be passed for the AssetsApplications view.
+1. Interfaces, selected by default, which renders the existing asset interfaces editor and writes the existing `interfaces` resource field.
+2. Endpoints, which renders the application endpoint editor.
+3. App Runner, which renders the `AppRunners` picker.
+4. Code App, only when the existing Code App editor URL configuration makes it available.
 
-Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is valid iff `source.applicationTypeSchemaId` is truthy; `ENDPOINTS` is valid iff at least one of `entity.endpoint` or `entity.mcp?.endpoint` is a valid URL.
+Interfaces SHALL be a creation-editor mode and MUST NOT introduce or persist a new Core `source` discriminator. The asset source selector MUST NOT offer `SOURCE_TYPE.CONTAINER`, `RUNNER`, `ADAPTER`, or `MCP_REGISTRY`. No `getContainers` prop SHALL be passed for the AssetsApplications view.
+
+Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is valid iff `source.applicationTypeSchemaId` is truthy; `ENDPOINTS` is valid iff at least one of `entity.endpoint` or `entity.mcp?.endpoint` is a valid URL. The default Interfaces mode SHALL be valid when the resource identity fields are valid; interfaces remain optional until a configured interface imposes its own field validation.
 
 #### Scenario: AssetApp source editor offers two options
 
@@ -206,18 +238,31 @@ Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is vali
 - **AND** selecting `ENDPOINTS` renders the application endpoint editor
 - **AND** selecting `SCHEMA` renders the `AppRunners` picker
 
-#### Scenario: AssetApp runner selection writes to source
+#### Scenario: Assets Application creation defaults to Interfaces
+
+- **WHEN** an administrator advances to source configuration while creating an Assets Application
+- **THEN** Interfaces is the first available source mode and is selected by default
+- **AND** the existing asset interfaces editor is displayed
+- **AND** the available modes after Interfaces are Endpoints, App Runner, and Code App only when its editor URL is configured
+
+#### Scenario: Creation Interfaces mode writes the existing resource field
+
+- **WHEN** an administrator configures an interface while creating an Assets Application
+- **THEN** the created resource carries the interface configuration in its existing `interfaces` field
+- **AND** no new source discriminator is written for Interfaces
+
+#### Scenario: AssetApp runner selection writes to resource
 
 - **WHEN** the user picks an App Runner for an `AssetApp`
-- **THEN** `entity.source.$type` is set to `SCHEMA`
-- **AND** `entity.source.applicationTypeSchemaId` is set to the selected runner id
-- **AND** the flat `applicationTypeSchemaId` field is not written (it no longer exists)
+- **THEN** `entity.application_type_schema_id` is set to the selected runner id
+- **AND** `entity.application_properties` preserves its existing values while adding defaults from the selected runner
+- **AND** no `entity.source.$type` or camelCase `applicationTypeSchemaId` field is written
 
-#### Scenario: AssetApp schema id read through source
+#### Scenario: AssetApp schema id read through resource
 
 - **WHEN** any consumer (e.g. `getAppRunner`, the interceptor views) needs an AssetApp's schema id
-- **THEN** it reads `getSchemaSourceId(entity.source)`
-- **AND** no `|| (entity as AssetApp).applicationTypeSchemaId` fallback remains
+- **THEN** it reads `entity.application_type_schema_id`
+- **AND** no legacy `entity.source.applicationTypeSchemaId` fallback remains
 
 ### Requirement: Runner editor keeps EndpointAndMCPContainer
 

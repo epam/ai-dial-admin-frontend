@@ -1,9 +1,10 @@
 import { FC } from 'react';
 
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
+import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,14 +16,15 @@ import { AppRunnerAssetProps } from './models';
  * (icon, title, viewer/editor url, bucket copy, topics, source).
  */
 const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange }) => {
+  const t = useI18n();
   return (
     <div className="flex flex-col">
       <ResourceInfoHeader entity={runner} />
       <div className="mt-8 flex flex-col gap-y-8">
         <IdControl
-          label={EntityFieldsI18nKey.name}
+          label={t(EntityFieldsI18nKey.name)}
           inputId="name"
-          entity={{ name: runner._metadata?.name }}
+          entity={{ name: runner._metadata?.name || runner.name }}
           disabled
           isFullWidth={false}
           onChangeEntity={() => undefined}
@@ -33,6 +35,7 @@ const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange })
           disabled
           isFullWidth={false}
           onChangeEntity={() => undefined}
+          isUrlId
         />
         <SchemeProperties
           names={[]}

@@ -32,6 +32,7 @@ const ZERO_MATCHED_RUN = {
   totalRowCount: 10,
   matchedRowCount: 0,
   unmatchedEvalSummaryIds: ['eval-1'],
+  unmatchedEvalTestCaseIds: ['case-1'],
   scores: [],
 };
 
@@ -95,5 +96,46 @@ describe('useSummaryOverviewData', () => {
 
     await waitFor(() => expect(result.current.hasNoMatchingTestCases).toBe(true));
     expect(showNotificationMock).toHaveBeenCalledOnce();
+  });
+
+  test('excludes unmatched test cases from status counts and unmatched eval summaries from duration', async () => {
+    const MATCHED_RUN = {
+      computationId: 'c1',
+      totalRowCount: 10,
+      matchedRowCount: 8,
+      unmatchedEvalSummaryIds: ['eval-1', 'eval-2'],
+      unmatchedEvalTestCaseIds: ['case-1', 'case-2'],
+      scores: [],
+    };
+    getMetricScoresComparisonMock.mockResolvedValue({
+      runs: [
+        { ...MATCHED_RUN, runId: 'run-1' },
+        { ...MATCHED_RUN, runId: 'run-2', computationId: 'c2' },
+      ],
+    });
+
+    renderOverviewData();
+
+    await waitFor(() => expect(executeStructuredQueryMock).toHaveBeenCalled());
+
+    // NOT (field IN [...]) shape: and([runFilter, not(in(field, values))]).
+    const exclusionField = (query: { filter: { args: unknown[] } }) => {
+      const notNode = query.filter.args[1] as { args: [{ args: [{ name: string }, { items: { value: string }[] }] }] };
+      const inNode = notNode.args[0];
+      return { field: inNode.args[0].name, values: inNode.args[1].items.map((item) => item.value) };
+    };
+
+    const queries = executeStructuredQueryMock.mock.calls.map(([query]) => query);
+    const statusQueries = queries.filter((query) => query.entity === 'test_case_eval_scores');
+    const durationQueries = queries.filter((query) => query.entity === 'eval_summaries');
+
+    expect(statusQueries).toHaveLength(2);
+    expect(durationQueries).toHaveLength(2);
+    statusQueries.forEach((query) => {
+      expect(exclusionField(query)).toEqual({ field: 'test_case_id', values: ['case-1', 'case-2'] });
+    });
+    durationQueries.forEach((query) => {
+      expect(exclusionField(query)).toEqual({ field: 'id', values: ['eval-1', 'eval-2'] });
+    });
   });
 });

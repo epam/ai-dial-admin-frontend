@@ -88,6 +88,10 @@ export async function createApp(app: DialApplicationResource) {
     folderId: undefined,
     source: undefined,
     version: undefined,
+    // The application content DTO rejects a flat `path` outright (`FAIL_ON_UNKNOWN_PROPERTIES` —
+    // see `RESOURCE_TYPES_STRIPPED_BEFORE_PUT` in `app/api/api.ts`). Only the folder-marker payload
+    // carries one, which is why creating a folder 400'd while the create modal worked.
+    path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
   };

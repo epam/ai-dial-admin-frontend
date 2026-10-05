@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
-import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ORDER_DEFAULT_VALUE } from '@/src/constants/routes';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -59,7 +59,7 @@ const EntityRoutes: FC<Props> = ({
       const otherNames = (routes || []).filter((_, i) => i !== index).map((r) => r.name || '');
       const nameValid = isAppRunnerView
         ? !getErrorForAppRouteName(route.name, otherNames, t)
-        : !getErrorForName(route.name, otherNames, t, false, true, true);
+        : !getErrorForName(route.name, otherNames, t, false, true, t(EntityFieldsI18nKey.displayName));
       const pathsValid = !!route.paths?.length && route.paths.every((p) => !!p && isValidRoutePath(p));
       const methodsValid = !!route.methods?.length;
       const endpointsValid = !!route.response || !!route.upstreams?.length;

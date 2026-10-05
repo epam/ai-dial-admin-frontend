@@ -1,8 +1,21 @@
 import { FileManagerColumnKey } from '@epam/ai-dial-ui-kit';
+import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { getAllSelectedItemsPaths, getGridColumns, getPlatformAssetDuplicate } from '../utils';
 import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
+
+/**
+ * `getGridColumns` returns ui-kit's curried column factories alongside plain `ColDef`s —
+ * `useFileManagerColumns` invokes the former with the locale and compact-view arguments. Resolve
+ * them here so assertions see the same shape ag-grid does.
+ */
+const resolveColumns = (columns: ColDef[]): ColDef[] =>
+  columns.map((column) =>
+    typeof column === 'function' ? (column as (...args: unknown[]) => ColDef)(undefined, undefined, false) : column,
+  );
+
+const resolveColIds = (columns: ColDef[]): (string | undefined)[] => resolveColumns(columns).map((c) => c.colId);
 
 describe('BaseAssetList', () => {
   describe('getAllSelectedItemsPaths', () => {
@@ -98,11 +111,11 @@ describe('BaseAssetList', () => {
       [ApplicationRoute.PlatformAppRunners, 'Name'],
       [ApplicationRoute.AssetsApplications, 'Name'],
       [ApplicationRoute.AssetsToolsets, 'Name'],
-    ])('%s uses the customized display-name column labeled %s', (view, headerName) => {
-      const columns = getGridColumns(view, vi.fn(), {}, false, 'file/');
+    ])('%s uses the asset name column labeled %s', (view, headerName) => {
+      const columns = resolveColumns(getGridColumns(view, vi.fn(), {}, false, 'file/'));
 
       expect(columns).toHaveLength(1);
-      expect(columns[0]).toMatchObject({ colId: 'displayName', field: 'displayName', headerName });
+      expect(columns[0]).toMatchObject({ colId: FileManagerColumnKey.Name, field: 'name', headerName });
     });
   });
 
@@ -112,22 +125,22 @@ describe('BaseAssetList', () => {
     test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
       '%s uses the flat platform-entity column set (no Version column) while browsing the platform bucket',
       (view) => {
-        const columns = getGridColumns(view, onChange, {}, false, 'platform/');
-        const colIds = columns.map((c) => c.colId);
+        const colIds = resolveColIds(getGridColumns(view, onChange, {}, false, 'platform/'));
 
         expect(colIds).not.toContain(FileManagerColumnKey.Version);
-        expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
+        expect(colIds).toContain(FileManagerColumnKey.Name);
+        expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false)));
       },
     );
 
     test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
       '%s keeps the existing Version column while browsing the public bucket',
       (view) => {
-        const withPublicPath = getGridColumns(view, onChange, {}, false, 'public/');
-        const withoutPath = getGridColumns(view, onChange, {}, false);
+        const withPublicPath = resolveColIds(getGridColumns(view, onChange, {}, false, 'public/'));
+        const withoutPath = resolveColIds(getGridColumns(view, onChange, {}, false));
 
-        expect(withPublicPath.map((c) => c.colId)).toContain(FileManagerColumnKey.Version);
-        expect(withPublicPath.map((c) => c.colId)).toEqual(withoutPath.map((c) => c.colId));
+        expect(withPublicPath).toContain(FileManagerColumnKey.Version);
+        expect(withPublicPath).toEqual(withoutPath);
       },
     );
   });
@@ -137,8 +150,8 @@ describe('BaseAssetList', () => {
       '%s uses the identity display column, labeled Name, for the name column',
       (view) => {
         const onChange = vi.fn();
-        const columns = getGridColumns(view, onChange, {}, false);
-        const nameColumn = columns.find((c) => c.colId === 'displayName');
+        const columns = resolveColumns(getGridColumns(view, onChange, {}, false));
+        const nameColumn = columns.find((c) => c.colId === FileManagerColumnKey.Name);
 
         expect(nameColumn?.headerName).toBe('Name');
       },
@@ -148,10 +161,10 @@ describe('BaseAssetList', () => {
   describe('getGridColumns — PlatformTranslators', () => {
     test('uses the flat platform-entity column set, matching its Catalog siblings', () => {
       const onChange = vi.fn();
-      const colIds = getGridColumns(ApplicationRoute.PlatformTranslators, onChange, {}, false).map((c) => c.colId);
+      const colIds = resolveColIds(getGridColumns(ApplicationRoute.PlatformTranslators, onChange, {}, false));
 
       expect(colIds).not.toContain(FileManagerColumnKey.Version);
-      expect(colIds).toEqual(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false).map((c) => c.colId));
+      expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys, onChange, {}, false)));
     });
   });
 });

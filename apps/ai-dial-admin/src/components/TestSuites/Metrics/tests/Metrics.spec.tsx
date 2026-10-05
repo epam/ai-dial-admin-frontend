@@ -175,6 +175,21 @@ describe('Metrics', () => {
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
   });
 
+  test('takes output schema from the aggregated metric declaration version', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([
+      {
+        ...metric,
+        metricDeclarationVersion: { outputSchema: { type: 'object', properties: { accuracy: {}, recall: {} } } },
+      },
+    ]);
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('metric-1:accuracy,recall')).toBeInTheDocument();
+    });
+  });
+
   test('renders Add button with correct label', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 

@@ -51,7 +51,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import { emptyDataTitleMap, listViewTitleMap, RUNS_LIST_STORAGE_KEY } from '../constants';
 import DuplicateDataset from './DuplicateDataset';
 import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
@@ -90,7 +90,9 @@ const EvaluationListView = <T extends object>({
   const [cancelRunEntity, setCancelRunEntity] = useState<Run | undefined>(undefined);
   const { showNotification } = useNotification();
 
-  useCancellingRunsPoll(gridApi, route === ApplicationRoute.Runs);
+  const isRunsList = route === ApplicationRoute.Runs;
+
+  useCancellingRunsPoll(gridApi, isRunsList);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -294,7 +296,7 @@ const EvaluationListView = <T extends object>({
     actionColumn.push(getDuplicateOperation(onOpenDuplicateModal));
   }
 
-  if (route === ApplicationRoute.Runs) {
+  if (isRunsList) {
     actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status !== RunStatus.COMPLETED));
     actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
     actionColumn.push(getCancelOperation(onOpenCancelModal));
@@ -311,7 +313,7 @@ const EvaluationListView = <T extends object>({
         emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
         isEnableColumnPanel
         isMainListView
-        storageKey={route}
+        storageKey={isRunsList ? RUNS_LIST_STORAGE_KEY : route}
         onGridReady={onGridReady}
         getHref={(data) => getUrnForEntity(route, data)}
       >

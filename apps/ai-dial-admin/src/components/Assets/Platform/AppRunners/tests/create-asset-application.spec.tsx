@@ -51,7 +51,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const CREATE_ACTION_NAME = CreateI18nKey.AssetApplication;
+const CREATE_ACTION_NAME = CreateI18nKey.Application;
 
 const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerResource =>
   ({
