@@ -49,4 +49,5 @@ export interface CatalogSchemaDocument {
   ['dial:defaultLocale']?: string;
   properties?: JSONSchema7['properties'];
   required?: string[];
+  additionalProperties?: JSONSchema7['additionalProperties'];
 }

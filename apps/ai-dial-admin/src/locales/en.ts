@@ -259,6 +259,10 @@ export default {
     NoCatalogSchemaSelected: 'Select a catalog schema on the Properties tab to edit its catalog metadata.',
     NoCatalogProperties: 'This catalog schema declares no properties.',
     CatalogSchemaUnavailable: 'The selected catalog schema could not be read from DIAL Core.',
+    UndeclaredCatalogProperties: 'These values are not declared by the selected catalog schema: {names}.',
+    UndeclaredCatalogPropertiesForbidden:
+      'The selected catalog schema does not allow undeclared values. Remove them to save: {names}.',
+    RemoveUndeclaredCatalogProperties: 'Remove undeclared values',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
     ToolsetDisplayName: 'Toolset display name',
