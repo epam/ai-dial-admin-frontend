@@ -1,8 +1,18 @@
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { DialErrorText, DialLabel, DialTag } from '@epam/ai-dial-ui-kit';
+import {
+  DialEllipsisTooltip,
+  DialErrorText,
+  DialGhostIconButton,
+  DialLabel,
+  DialTag,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
+import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
 import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
@@ -30,6 +40,7 @@ const SingleValueAutocomplete: FC<Props> = ({
   disabled = false,
   onChange,
 }) => {
+  const t = useI18n();
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -109,7 +120,21 @@ const SingleValueAutocomplete: FC<Props> = ({
       {label && <DialLabel htmlFor={elementId} label={label} />}
       <div className={classNames('dial-input h-auto min-h-[40px] p-[6px]', error && 'dial-input-error')}>
         <div className="flex flex-wrap items-center gap-2">
-          {value && <DialTag label={selectedLabel} closable onRemove={handleRemoveValue} />}
+          {value && (
+            <div className="flex max-w-full min-w-0 items-center">
+              <DialEllipsisTooltip
+                className="min-w-0 flex-1"
+                contentClassName="max-w-full"
+                text={<DialTag label={selectedLabel} className="max-w-full" />}
+              />
+              <DialGhostIconButton
+                size={ElementSize.Small}
+                aria-label={t(ButtonsI18nKey.Remove)}
+                icon={<IconX size={16} aria-hidden />}
+                onClick={handleRemoveValue}
+              />
+            </div>
+          )}
           <div className="flex items-center gap-2 flex-1 min-w-[120px]">
             <input
               id={elementId}

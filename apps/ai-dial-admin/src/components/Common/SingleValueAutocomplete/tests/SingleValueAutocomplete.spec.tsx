@@ -75,11 +75,12 @@ describe('SingleValueAutocomplete', () => {
     expect(onChange).toHaveBeenCalledWith('ttl');
   });
 
-  test('removing the tag clears the value', async () => {
+  test('removing a long free-text field tag clears the value', async () => {
     const onChange = vi.fn();
-    renderAutocomplete({ value: 'ttl', onChange });
+    const jsonPath = '$.usage.details.very.long.nested.path.used.only.to.verify.the.field.tag.clear.control';
+    renderAutocomplete({ value: jsonPath, onChange });
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Remove' }));
 
     expect(onChange).toHaveBeenCalledWith('');
   });

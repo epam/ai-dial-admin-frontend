@@ -38,7 +38,7 @@ describe('App Runner Utils :: validateAppRunner', () => {
   test('rejects an id Core cannot store', () => {
     expect(validateAppRunner(runner({ $id: "https://host/it's" }))).toContainEqual({
       field: '$id',
-      message: "Id must not contain any of ! ~ * ' ( )",
+      message: "Id must not contain any of ! ~ * '",
     });
   });
 

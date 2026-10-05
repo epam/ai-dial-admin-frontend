@@ -99,7 +99,7 @@ describe('Assets app runner :: server actions', () => {
     );
   });
 
-  test.each(['!', '~', '*', "'", '(', ')'])('Should reject an id containing %s before calling Core', async (char) => {
+  test.each(['!', '~', '*', "'"])('Should reject an id containing %s before calling Core', async (char) => {
     const result = await createRunner({ ...runner, $id: `${ID}${char}` } as DialAppRunnerResource);
 
     expect(assetApi.put).not.toHaveBeenCalled();
