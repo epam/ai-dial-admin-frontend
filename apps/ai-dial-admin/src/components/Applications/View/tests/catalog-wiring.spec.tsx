@@ -107,6 +107,18 @@ describe('Application asset :: catalog metadata wiring', () => {
     expect(onChange.mock.calls[0][0]).toMatchObject({ catalog_schema_id: 'https://host/agent-card' });
   });
 
+  test("drops the previous schema's values when the schema changes", () => {
+    const onChange = renderTabs(EntityViewTab.Properties, {
+      catalog_schema_id: 'https://host/model-card',
+      catalog_properties: { tag: 'Featured' },
+    });
+
+    capturedFieldProps?.onChange('https://host/agent-card');
+
+    expect(onChange.mock.calls[0][0]).toMatchObject({ catalog_schema_id: 'https://host/agent-card' });
+    expect(onChange.mock.calls[0][0].catalog_properties).toBeUndefined();
+  });
+
   test('shows the empty state on the Catalog tab with no schema selected', () => {
     renderTabs(EntityViewTab.Catalog);
 
