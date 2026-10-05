@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { DurationUnit, formatDuration, parseDuration } from '@/src/utils/analytics/duration';
+import { DurationUnit, durationToMs, formatDuration, parseDuration } from '@/src/utils/analytics/duration';
 
 describe('Utils :: analytics :: parseDuration', () => {
   test.each([
@@ -51,5 +51,26 @@ describe('Utils :: analytics :: formatDuration', () => {
   test('normalises a parsed ISO duration to the short form', () => {
     const parsed = parseDuration('PT2H');
     expect(parsed && formatDuration(parsed)).toBe('2h');
+  });
+});
+
+describe('durationToMs', () => {
+  test.each([
+    ['250ms', 250],
+    ['30s', 30_000],
+    ['10m', 600_000],
+    ['24h', 86_400_000],
+    ['7d', 604_800_000],
+    ['PT10M', 600_000],
+    ['PT1H30M', 5_400_000],
+    ['P1D', 86_400_000],
+    ['P1DT2H', 93_600_000],
+    ['PT1.5S', 1500],
+  ])('reads %s as %d ms', (value, expected) => {
+    expect(durationToMs(value)).toBe(expected);
+  });
+
+  test.each([undefined, '', 'soon', 'P', 'PT', 'P1DT', '10 minutes'])('reads %s as no duration', (value) => {
+    expect(durationToMs(value)).toBeUndefined();
   });
 });
