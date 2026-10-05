@@ -33,6 +33,7 @@ export const ThemeProvider = ({
 }) => {
   const [currentThemeId, setCurrentThemeId] = useState<string>(DEFAULT_THEME);
   const [currentThemeLogo, setCurrentThemeLogo] = useState<string | undefined>(void 0);
+  const [isThemeInitialized, setIsThemeInitialized] = useState(false);
 
   const excludedImageNames = ['logo', 'favicon', 'config'];
   const images = themeImages
@@ -60,9 +61,15 @@ export const ThemeProvider = ({
   );
 
   useEffect(() => {
-    const storedTheme = typeof window !== 'undefined' ? getFromLocalStorage('theme') : null;
-    const configuredTheme = storedTheme || themesConfiguration?.themes?.[0].id;
-    updateTheme(configuredTheme);
+    try {
+      const storedTheme = typeof window !== 'undefined' ? getFromLocalStorage('theme') : null;
+      const configuredTheme = storedTheme || themesConfiguration?.themes?.[0].id;
+      updateTheme(configuredTheme);
+    } catch {
+      // Keep the document's default styling if fallback theme initialization also fails.
+    } finally {
+      setIsThemeInitialized(true);
+    }
   }, [themesConfiguration, updateTheme]);
 
   const setTheme = useCallback(
@@ -86,7 +93,7 @@ export const ThemeProvider = ({
         [currentThemeId, setTheme, themesConfiguration, images, currentThemeLogo],
       )}
     >
-      {children}
+      {isThemeInitialized ? children : null}
     </ThemeContext.Provider>
   );
 };
