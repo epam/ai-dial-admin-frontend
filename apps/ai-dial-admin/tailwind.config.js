@@ -14,8 +14,8 @@ const backgroundsColors = {
   success: 'var(--bg-success, #1D3841)',
   inverted: 'var(--bg-inverted, #EEF1F7)',
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #7DA4FF26)',
-  'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC2E)',
-  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2E)',
+  'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #3EBB8E2E)',
+  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #AF7AFF2E)',
 
   'model-icon': 'var(--bg-model-icon, #FFFFFF)', // TODO: use?
 
@@ -44,7 +44,7 @@ const controlsBgColors = {
   'controls-error': 'var(--controls-bg-error, #CC4545)',
   'controls-error-hover': 'var(--controls-bg-error-hover, #BF3939)',
   'controls-error-active': 'var(--controls-bg-error-active, #AE2F2F)',
-  'controls-error-alpha-hover': 'var(--controls-bg-alpha-hover, #F764642E)',
+  'controls-error-alpha-hover': 'var(--controls-bg-error-alpha-hover, #F764642E)',
   'controls-error-alpha-active': 'var(--controls-bg-error-alpha-active, #F764645C)',
 
   'controls-disable-accent': 'var(--controls-bg-disable-accent, #696E7C)',
