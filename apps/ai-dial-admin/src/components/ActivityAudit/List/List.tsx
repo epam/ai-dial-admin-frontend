@@ -578,13 +578,15 @@ const ActivityAuditList: FC<Props> = ({
         storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${effectiveViewType.toLowerCase()}` : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
-          <TimeFilter
-            timePeriod={timePeriod}
-            onTimePeriodChange={handleTimePeriodChange}
-            timeRange={timeRange}
-            onTimeRangeChange={handleTimeRangeChange}
-            timePeriodOptions={timeFilterOptions}
-          />
+          {entity && (
+            <TimeFilter
+              timePeriod={timePeriod}
+              onTimePeriodChange={handleTimePeriodChange}
+              timeRange={timeRange}
+              onTimeRangeChange={handleTimeRangeChange}
+              timePeriodOptions={timeFilterOptions}
+            />
+          )}
 
           <div className="flex gap-4">
             {entity && <ResetFiltersButton gridApi={gridApi} />}

@@ -15,10 +15,8 @@ import {
 } from '@/src/models/dial/resource';
 import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialConversation } from '@/src/models/dial/conversation';
-import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { fromCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
 import { fromCoreSchemaResourceName } from '@/src/utils/core-schemas/resource-name';
 import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
@@ -364,9 +362,8 @@ export const mergeModelResource = (
 };
 
 /**
- * App runners are flat and unversioned like models, and Core's `dial:applicationTypeRoutes` is a
- * name-keyed object that the route editors consume as an array. The resource storage name and body
- * `$id` are independent: Core addresses the blob by the former and resolves runners by the latter.
+ * App runners are flat and unversioned like models. The resource storage name and body `$id` are
+ * independent: Core addresses the blob by the former and resolves runners by the latter.
  */
 export const mergeAppRunnerResource = (
   content: Record<string, unknown>,
@@ -374,13 +371,11 @@ export const mergeAppRunnerResource = (
 ): DialAppRunnerResource => {
   const { content: rest, validity } = splitValidityFields(content);
   const _metadata = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA], content);
-  const routes = fromCoreAppRoutes(content['dial:applicationTypeRoutes'] as CoreAppRunnerRoutes | undefined);
   const declaredId = typeof content.$id === 'string' && content.$id.trim() ? content.$id : undefined;
   return {
     ...rest,
     _metadata: { ..._metadata, ...validity },
     $id: declaredId ?? fromCoreSchemaResourceName(_metadata.name),
-    ...(routes && { 'dial:applicationTypeRoutes': routes }),
   } as DialAppRunnerResource;
 };
 
