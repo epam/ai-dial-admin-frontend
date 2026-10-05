@@ -6,11 +6,11 @@ import { pausePipeline, resumePipeline } from '@/src/app/[lang]/pipelines/action
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { RUNNER_CACHE_COLD } from '@/src/models/analytics/pipeline-runtime';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
-/** The runner's own machine codes, which name causes an operator can act on. */
-const RUNNER_CACHE_COLD = 'pipeline_cache_cold';
+/** The one code this hook names that the runtime model does not, since only a write path meets it. */
 const RUNNER_STATE_DB_DOWN = 'postgres_unavailable';
 
 export interface PipelinePauseControls {

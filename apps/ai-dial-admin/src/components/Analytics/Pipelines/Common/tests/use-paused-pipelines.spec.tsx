@@ -27,7 +27,7 @@ const tracked = (...pipelineNames: string[]) =>
 const asFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({ featureFlags: {}, isFullAdmin } as never);
 
-const PAUSE = { pipelineName: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' };
+const PAUSE = { pipeline_name: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' };
 
 describe('usePausedPipelines', () => {
   beforeEach(() => {

@@ -3,6 +3,7 @@ import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/
 import {
   PausedPipeline,
   PausedPipelinesResponse,
+  PipelineRuntimeView,
   RunnerPipelineCacheResponse,
   RunnerPipelineEntry,
 } from '@/src/models/analytics/pipeline-runtime';
@@ -14,6 +15,8 @@ export const RUNNER_PAUSED_URL = `${RUNNER_PIPELINES_URL}/paused`;
 export const RUNNER_CACHE_URL = `${RUNNER_PIPELINES_URL}/cache`;
 export const RUNNER_PAUSE_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/pause`;
 export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/resume`;
+export const RUNNER_RUNTIME_URL = (name: string): string =>
+  `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/runtime`;
 
 export const RUNNER_DLQ_URL = 'v1/dlq';
 
@@ -98,6 +101,23 @@ export class AnalyticsRunnerApi extends BaseApi {
 
     const pipelines = (res.response as RunnerPipelineCacheResponse | null)?.pipelines;
     return Array.isArray(pipelines) ? { ...res, response: pipelines } : { ...res, success: false };
+  }
+
+  /**
+   * What the runner is doing with one pipeline right now.
+   *
+   * The body is the view itself rather than a wrapper, so the only shape check worth making is that a
+   * status came back: every lane carries one, and a 200 without it is an answer from something other
+   * than this route. A failure is returned untouched — its `errorHeader` carries the machine code the
+   * caller tells a cold cache, a pipeline the runner does not hold, and a genuine refusal apart by.
+   */
+  async getRuntimeView(pipelineName: string, token: Token): Promise<ServerActionResponse<PipelineRuntimeView>> {
+    const res = await this.getAction(RUNNER_RUNTIME_URL(pipelineName), token);
+
+    if (!res.success) return res;
+
+    const view = res.response as PipelineRuntimeView | null;
+    return view?.status?.state ? { ...res, response: view } : { ...res, success: false };
   }
 
   // Both verbs answer 204 with no body, so neither sends one: a JSON object here would be a body the

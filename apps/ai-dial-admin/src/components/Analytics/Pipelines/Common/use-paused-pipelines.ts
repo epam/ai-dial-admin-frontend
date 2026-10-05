@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getPausedPipelines, getRunnerPipelines } from '@/src/app/[lang]/pipelines/actions';
 import { useAppContext } from '@/src/context/AppContext';
+import { useGuardedRead } from '@/src/hooks/use-guarded-read';
 import { PipelineKind } from '@/src/models/analytics/pipeline';
 import {
   PausedPipeline,
@@ -20,7 +21,7 @@ export interface PausedPipelinesRead extends PipelineRuntimeRead {
 const NOT_READ: PipelineRuntimeRead = { isRead: false, isTrackingRead: false, paused: {}, tracked: new Set() };
 
 const byName = (entries: PausedPipeline[]): Record<string, PausedPipeline> =>
-  Object.fromEntries(entries.map((entry) => [entry.pipelineName, entry]));
+  Object.fromEntries(entries.map((entry) => [entry.pipeline_name, entry]));
 
 const names = (entries: RunnerPipelineEntry[]): Set<string> => new Set(entries.map((entry) => entry.name));
 
@@ -81,28 +82,18 @@ export const usePausedPipelines = (): PausedPipelinesRead => {
   const { isFullAdmin } = useAppContext();
 
   const [read, setRead] = useState<PipelineRuntimeRead>(NOT_READ);
-  const isMounted = useRef(true);
-  const latestRequest = useRef(0);
-
-  useEffect(() => {
-    isMounted.current = true;
-
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+  const guard = useGuardedRead();
 
   const reload = useCallback(async () => {
     if (!isFullAdmin) return;
 
-    // Only the newest read may write. A Read-again and the re-read a resume triggers can land out of
-    // order, and the loser would leave the page stating the answer from before the pipeline changed.
-    const request = ++latestRequest.current;
+    // One generation for both: they are one answer, and the guard discards the pair if a newer read
+    // starts while they are in flight.
+    const answer = await guard.run(() => Promise.all([getPausedPipelines(), getRunnerPipelines()]));
 
-    const [paused, tracked] = await Promise.all([getPausedPipelines(), getRunnerPipelines()]);
+    if (!answer) return;
 
-    if (!isMounted.current || request !== latestRequest.current) return;
-
+    const [paused, tracked] = answer;
     const isRead = Boolean(paused?.success && paused.response);
     const isTrackingRead = Boolean(tracked?.success && tracked.response);
 
@@ -116,7 +107,7 @@ export const usePausedPipelines = (): PausedPipelinesRead => {
           }
         : NOT_READ,
     );
-  }, [isFullAdmin]);
+  }, [isFullAdmin, guard]);
 
   useEffect(() => {
     void reload();

@@ -27,7 +27,14 @@ import PipelinePauseBanner from '@/src/components/Analytics/Pipelines/Common/Pip
 import PipelineRuntimeAlerts from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeAlerts';
 import PipelineRuntimeBadge from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeBadge';
 import PausePipelinePopup from '@/src/components/Analytics/Pipelines/Common/PausePipelinePopup';
-import { runtimeStatusOf, usePausedPipelines } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
+import { isRunnerDriven } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
+import {
+  isGenerationBehind,
+  isPauseOfferedFor,
+  pauseOf,
+  runtimeStatusOfView,
+} from '@/src/components/Analytics/Pipelines/Common/runtime-view';
+import { usePipelineRuntimeView } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-runtime-view';
 import { hasDeadLetters } from '@/src/components/Analytics/Pipelines/Failures/failures';
 import { usePipelineFailures } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import { usePipelinePause } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-pause';
@@ -91,7 +98,12 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   // The runner is a second upstream, read only for a caller who can act on it: it authorizes every one
   // of its endpoints on full-admin rights, so for anyone else there is nothing to present read-only.
-  const runtime = usePausedPipelines();
+  //
+  // One read, not two. The pipeline's own runtime view states its state and carries the pause it is
+  // under, where the page used to look itself up in two global listings — which the listing page still
+  // reads, because it asks the same question about every row at once.
+  const isRunnerRead = isRunnerDriven(pipeline.kind) && !!featureFlags.analyticsEnabled;
+  const runtime = usePipelineRuntimeView(pipeline.name, isRunnerRead);
   const pause = usePipelinePause(pipeline.name, runtime.reload);
 
   // Read by the frame rather than by the tab, because the tab label carries the count: a reader on
@@ -104,11 +116,13 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const failures = usePipelineFailures(pipeline.name, canDeadLetter && !!featureFlags.analyticsEnabled);
   const failureCount = failures.counts.total;
 
-  const pausedEntry = runtime.paused[pipeline.name];
-  const runtimeStatus = runtimeStatusOf(runtime, pipeline.name, pipeline.enabled, pipeline.kind);
-  const isRuntimeStatable = runtimeStatus !== PipelineRuntimeStatus.Unknown;
-  // Pausing what nothing is running would answer a request the runner has no work to apply it to.
-  const isPauseOffered = isRuntimeStatable && runtimeStatus !== PipelineRuntimeStatus.NotTracked;
+  const pausedEntry = pauseOf(runtime.view?.status);
+  const runtimeStatus = runtimeStatusOfView(runtime, pipeline.enabled, pipeline.kind);
+  // Not the same question as what the chip states, and deliberately so: a read that did not land
+  // leaves nothing to state while the pipeline is still running, and that is exactly when an operator
+  // reaches for the stop. See `isPauseOfferedFor`.
+  const isPauseOffered = isPauseOfferedFor(runtime, pipeline.enabled, pipeline.kind);
+  const isBehind = isGenerationBehind(runtime.view, pipeline.generation);
 
   // A mark rather than a number. The kit's count badge is drawn in the accent, which reads as a
   // quantity worth noticing rather than as something broken, and it carries no hook to re-colour: its
@@ -446,6 +460,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         {isRuntimeShown && (
           <PipelineRuntime
             pipeline={pipeline}
+            runtime={runtime}
+            isGenerationBehind={isBehind}
             failures={failures}
             canDeadLetter={canDeadLetter}
             isPaused={Boolean(pausedEntry)}
