@@ -235,7 +235,6 @@ const PlatformApplicationView: FC<Props> = ({
           />
         ) : (
           <TabsContent
-            key={discardKey}
             activeTab={activeTab}
             names={[]}
             models={models}
