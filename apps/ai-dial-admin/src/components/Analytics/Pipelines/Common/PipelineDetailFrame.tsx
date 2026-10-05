@@ -14,7 +14,7 @@ import {
   Tabs,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
+import { IconAlertTriangleFilled, IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
@@ -28,6 +28,8 @@ import PipelineRuntimeAlerts from '@/src/components/Analytics/Pipelines/Common/P
 import PipelineRuntimeBadge from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeBadge';
 import PausePipelinePopup from '@/src/components/Analytics/Pipelines/Common/PausePipelinePopup';
 import { runtimeStatusOf, usePausedPipelines } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
+import { hasDeadLetters } from '@/src/components/Analytics/Pipelines/Failures/failures';
+import { usePipelineFailures } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import { usePipelinePause } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-pause';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -92,16 +94,42 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const runtime = usePausedPipelines();
   const pause = usePipelinePause(pipeline.name, runtime.reload);
 
+  // Read by the frame rather than by the tab, because the tab label carries the count: a reader on
+  // `Properties` has to see that there is something to act on without opening `Runtime` first.
+  //
+  // Only where there is something to read. A SQL enrichment and an aggregate are all-or-nothing, so
+  // they dead-letter nothing; and with analytics off neither the tab strip nor the Runtime tab is
+  // rendered at all, so the request would be answered into a surface nobody can open.
+  const canDeadLetter = hasDeadLetters(pipeline.kind, pipeline.transform?.type);
+  const failures = usePipelineFailures(pipeline.name, canDeadLetter && !!featureFlags.analyticsEnabled);
+  const failureCount = failures.counts.total;
+
   const pausedEntry = runtime.paused[pipeline.name];
   const runtimeStatus = runtimeStatusOf(runtime, pipeline.name, pipeline.enabled, pipeline.kind);
   const isRuntimeStatable = runtimeStatus !== PipelineRuntimeStatus.Unknown;
   // Pausing what nothing is running would answer a request the runner has no work to apply it to.
   const isPauseOffered = isRuntimeStatable && runtimeStatus !== PipelineRuntimeStatus.NotTracked;
 
-  const tabs = useMemo(
-    () => (isFullAdmin ? [propertiesTab(t), runtimeTab(t), auditTab(t)] : [propertiesTab(t), auditTab(t)]),
-    [t, isFullAdmin],
-  );
+  // A mark rather than a number. The kit's count badge is drawn in the accent, which reads as a
+  // quantity worth noticing rather than as something broken, and it carries no hook to re-colour: its
+  // span has only utility classes, so tinting it would mean a positional selector into the kit's own
+  // markup. Severity is what this badge is for; how many have failed is one click away.
+  //
+  // The kit wraps a tab's icon in an `aria-hidden` span, so the mark is decorative by construction
+  // whatever is put on it. The count is therefore stated in text beside the strip — see the status
+  // line below — because a fault signalled by colour alone is signalled to nobody.
+  const tabs = useMemo(() => {
+    if (!isFullAdmin) return [propertiesTab(t), auditTab(t)];
+
+    const runtime = failureCount
+      ? {
+          ...runtimeTab(t),
+          icon: <IconAlertTriangleFilled {...BASE_BUTTON_ICON_PROPS} className="text-error" />,
+        }
+      : runtimeTab(t);
+
+    return [propertiesTab(t), runtime, auditTab(t)];
+  }, [t, isFullAdmin, failureCount]);
 
   const assemblyContext = useMemo(
     () => ({ grainKey: form.grainKey, sourceTable: target?.source_table }),
@@ -141,7 +169,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const onReloadRuntime = useCallback(() => {
     router.refresh();
     void runtime.reload();
-  }, [router, runtime]);
+    void failures.reload();
+  }, [router, runtime, failures]);
 
   const onDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
@@ -390,10 +419,17 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
       {!isEditorEnabled && <PipelineRuntimeAlerts pipeline={pipeline} />}
 
+      {/* What the red mark on the `Runtime` tab means, for a reader who cannot see it. */}
+      {isTabStripShown && failureCount > 0 && (
+        <span role="status" aria-live="polite" className="sr-only">
+          {t(AnalyticsPipelinesI18nKey.FailuresBadge, { count: failureCount })}
+        </span>
+      )}
+
       {isTabStripShown && (
         <Tabs
           ariaLabel={t(AnalyticsPipelinesI18nKey.Tabs)}
-          tabs={tabs.map(({ id, label }) => ({ id, label }))}
+          tabs={tabs}
           activeTabId={activeTab}
           onTabChange={(tab) => setActiveTab(tab as EntityViewTab)}
         />
@@ -410,6 +446,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         {isRuntimeShown && (
           <PipelineRuntime
             pipeline={pipeline}
+            failures={failures}
+            canDeadLetter={canDeadLetter}
+            isPaused={Boolean(pausedEntry)}
             onReload={onReloadRuntime}
             actions={
               isPauseOffered &&
