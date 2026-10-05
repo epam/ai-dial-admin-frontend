@@ -3,9 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
-  getPausedPipelines,
   getPipelineFailures,
-  getRunnerPipelines,
+  getPipelineRuntimeView,
   getTable,
   getTables,
   pausePipeline,
@@ -17,7 +16,14 @@ import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { DlqPage } from '@/src/models/analytics/pipeline-dlq';
 import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
-import { PausedPipeline, PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
+import {
+  PipelinePause,
+  PipelineRuntimeState,
+  PipelineRuntimeView,
+  PauseOrigin,
+  RUNNER_PIPELINE_NOT_FOUND,
+} from '@/src/models/analytics/pipeline-runtime';
+import { runtimeView } from '@/src/components/Analytics/Pipelines/Common/tests/mock';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
@@ -67,22 +73,26 @@ const pipeline: Pipeline = {
   state: { last_run_at: '2026-09-21T16:12:08Z', lag_seconds: 38 },
 };
 
-const OPERATOR_PAUSE: PausedPipeline = {
-  pipelineName: 'feedback-live',
+const OPERATOR_PAUSE: PipelinePause = {
   origin: PauseOrigin.Operator,
   reason: 'paused by an operator',
   since: '2026-09-21T15:40:00Z',
 };
 
-const asPaused = (...paused: PausedPipeline[]) =>
-  vi.mocked(getPausedPipelines).mockResolvedValue({ success: true, response: paused });
-
-/** The runner has taken these on; the frame states `running` only for a name in this set. */
-const asTracked = (...pipelineNames: string[]) =>
-  vi.mocked(getRunnerPipelines).mockResolvedValue({
+/** The runner holds the pipeline and answers for it. */
+const asRuntime = (view?: Partial<PipelineRuntimeView>) =>
+  vi.mocked(getPipelineRuntimeView).mockResolvedValue({
     success: true,
-    response: pipelineNames.map((name) => ({ name, enabled: true, generation: 7 })),
+    response: runtimeView({ pipeline_name: 'feedback-live', ...view }),
   });
+
+/** The same view, reporting the pause in force. The detail page reads the pause from here. */
+const asPaused = (pause?: PipelinePause) =>
+  asRuntime(pause ? { status: { state: PipelineRuntimeState.Paused, ...pause } } : undefined);
+
+/** A synced runner that does not hold this pipeline — the answer the page states as `not running`. */
+const asNotHeld = () =>
+  vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false, errorHeader: RUNNER_PIPELINE_NOT_FOUND });
 
 /** The control lives in the Runtime tab's bar; the banner carries a second Resume while paused. */
 const tabControl = (name: string) => screen.getAllByRole('button', { name }).at(-1) as HTMLElement;
@@ -108,8 +118,7 @@ describe('PipelineDetailView — runtime and pause', () => {
     vi.mocked(getTable).mockImplementation(
       async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
     );
-    asPaused();
-    asTracked('feedback-live');
+    asRuntime();
     vi.mocked(getPipelineFailures).mockResolvedValue({ success: true, response: page(0) });
     vi.mocked(pausePipeline).mockResolvedValue({ success: true });
     vi.mocked(resumePipeline).mockResolvedValue({ success: true });
@@ -139,7 +148,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('asks for no failures at all for a SQL enrichment', async () => {
     renderView();
 
-    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
     expect(getPipelineFailures).not.toHaveBeenCalled();
   });
 
@@ -155,8 +164,7 @@ describe('PipelineDetailView — runtime and pause', () => {
 
     expect(await screen.findByText(TabsI18nKey.Audit)).toBeTruthy();
     expect(screen.queryByText(TabsI18nKey.Runtime)).toBeNull();
-    expect(getPausedPipelines).not.toHaveBeenCalled();
-    expect(getRunnerPipelines).not.toHaveBeenCalled();
+    expect(getPipelineRuntimeView).not.toHaveBeenCalled();
   });
 
   test('states a running pipeline as both enabled and running', async () => {
@@ -179,14 +187,14 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('states no runtime status for a disabled pipeline', async () => {
     renderView({ enabled: false });
 
-    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeNull();
   });
 
   // The registry presents it as healthy while nothing drives it, so a chip alone will not do.
   test('warns when the runner has not taken the pipeline on', async () => {
-    asTracked('something-else');
+    asNotHeld();
     renderView();
 
     expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeTruthy();
@@ -195,7 +203,7 @@ describe('PipelineDetailView — runtime and pause', () => {
 
   test('offers no pause for a pipeline nothing is running', async () => {
     const user = userEvent.setup();
-    asTracked('something-else');
+    asNotHeld();
     renderView();
 
     await user.click(await screen.findByText(TabsI18nKey.Runtime));
@@ -203,22 +211,24 @@ describe('PipelineDetailView — runtime and pause', () => {
     expect(screen.queryByRole('button', { name: AnalyticsPipelinesI18nKey.Pause })).toBeNull();
   });
 
-  // ADAS drives aggregate pipelines on its own scheduler; the runner's cache says nothing about them.
-  test('states no runtime status for an aggregate pipeline', async () => {
-    asTracked('something-else');
+  // ADAS drives aggregate pipelines on its own scheduler and the runner has never heard of them, so
+  // the view is not even asked for: a 404 is the runner's answer for both a pipeline it refused and
+  // one that was never its to run, and reading one here would state the first about the second.
+  test('states no runtime status for an aggregate pipeline, and asks the runner nothing', async () => {
     renderView({ kind: PipelineKind.Aggregate, transform: undefined });
 
-    await waitFor(() => expect(getRunnerPipelines).toHaveBeenCalled());
+    expect(await screen.findByText(TabsI18nKey.Runtime)).toBeTruthy();
+    expect(getPipelineRuntimeView).not.toHaveBeenCalled();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeNull();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeNull();
   });
 
   test('states no runtime status when the runner did not answer', async () => {
-    vi.mocked(getPausedPipelines).mockResolvedValue({ success: false });
+    vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false });
     renderView();
 
-    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
   });
 
@@ -235,7 +245,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   });
 
   test('states when a breaker pause lifts itself', async () => {
-    asPaused({ ...OPERATOR_PAUSE, origin: PauseOrigin.Breaker, resumesAt: '2026-09-21T16:40:00Z' });
+    asPaused({ ...OPERATOR_PAUSE, origin: PauseOrigin.Breaker, resumes_at: '2026-09-21T16:40:00Z' });
     renderView();
 
     const banner = await screen.findByRole('status');
@@ -273,7 +283,7 @@ describe('PipelineDetailView — runtime and pause', () => {
   test('raises no banner for a pipeline the runner does not report as paused', async () => {
     renderView();
 
-    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalled());
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.PausedBannerTitle)).toBeNull();
   });
 
@@ -356,5 +366,80 @@ describe('PipelineDetailView — runtime and pause', () => {
     ).toBeTruthy();
     expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
     expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).not.toHaveProperty('disabled', true);
+  });
+
+  // The gates are pipelines that are enabled, taken on and consuming nothing. Each clears for a
+  // different reason, and collapsing them into `running` would state the opposite of what an operator
+  // has to act on.
+  test('states a gated pipeline as gated and still offers to pause it', async () => {
+    const user = userEvent.setup();
+    asRuntime({ status: { state: PipelineRuntimeState.OverBudget } });
+    renderView();
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeOverBudget)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
+
+    await openRuntime(user);
+
+    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
+  });
+
+  // The runner holds the pause metadata in memory, so a restart can lose it while the pause survives.
+  // Withholding the banner for a missing timestamp withheld the only Resume control on the page.
+  test('offers Resume for a pause the runner can no longer describe', async () => {
+    asRuntime({ status: { state: PipelineRuntimeState.Paused } });
+    renderView();
+
+    const banner = await screen.findByRole('status');
+
+    expect(banner.textContent).toContain(AnalyticsPipelinesI18nKey.PausedBannerTitleUndated);
+    expect(within(banner).getByRole('button', { name: AnalyticsPipelinesI18nKey.Resume })).toBeTruthy();
+  });
+
+  // The moment an operator most wants to stop a pipeline is the moment its runtime read is failing.
+  test('keeps the pause control when the runtime read did not land', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false, errorHeader: 'runtime_store_down' });
+    renderView();
+
+    await openRuntime(user);
+
+    expect(tabControl(AnalyticsPipelinesI18nKey.Pause)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeNull();
+  });
+
+  // The runner syncs on its own cadence, so an operator who has just saved would otherwise read an
+  // unchanged runtime as a save that did nothing.
+  test('states that the runner is running an earlier revision than the registry', async () => {
+    const user = userEvent.setup();
+    asRuntime({ generation: 6 });
+    renderView();
+
+    await openRuntime(user);
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeGenerationBehindTitle)).toBeTruthy();
+  });
+
+  test('says nothing about the revision when the two services agree', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await openRuntime(user);
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeGenerationBehindTitle)).toBeNull();
+  });
+
+  // The control fans out to three reads, one of which is a hook the tab cannot reach on its own.
+  test('reads the runner again when the tab asks for a re-read', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await openRuntime(user);
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledOnce());
+
+    await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.RuntimeReadAgain }));
+
+    await waitFor(() => expect(getPipelineRuntimeView).toHaveBeenCalledTimes(2));
+    expect(refresh).toHaveBeenCalled();
   });
 });

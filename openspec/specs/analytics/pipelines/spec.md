@@ -645,12 +645,18 @@ These members SHALL NOT be sent when the pipeline is saved.
 
 ### Requirement: A pipeline's runtime state is presented read-only
 
-Every pipeline carries a server-owned `state` reporting how its execution is going: the scan position it
-has reached, when it last ran, when it will next run, how far behind its input it is, the last failure,
-whether the last run left input behind, what held its window short of its input, how far its output has
-been materialized, when it was last probed and found drained, and whether an enrichment it reads has been
-re-derived beneath it. The console SHALL present this state on the detail page, read-only, and SHALL
-present it in two places according to what the reader does with it.
+Every pipeline carries a server-owned `state` reporting how its execution is going **as the registry sees
+it**: the scan position it has reached, when it last ran, when it will next run, how far behind its input it
+is, the last failure, whether the last run left input behind, what held its window short of its input, how far
+its output has been materialized, when it was last probed and found drained, and whether an enrichment it
+reads has been re-derived beneath it. The console SHALL present this state on the detail page, read-only, and
+SHALL present it in two places according to what the reader does with it.
+
+For an `enrich` pipeline the registry records almost none of the execution position, because the runner owns
+it. The **runtime view** is the authority there, and this requirement's sibling governs how it is presented.
+The registry's own state SHALL still be presented for such a pipeline in the members the runner does not
+report — the materialized-through position, the drained-at probe and the cursor position — so that no member
+the service does report is dropped on the way.
 
 The **three states an operator acts on** — the last failure, a window held short by an enrichment the
 pipeline reads, and an output a re-derived input has left behind — SHALL be presented as **alerts**, above
@@ -669,6 +675,11 @@ group answers:
   position (version and identity), the materialized-through position (version and identity), and when it
   was last drained. Named for what it is: a pipeline is a standing process rather than a job with an
   end, so none of these counts towards a finish and "progress" would promise one.
+
+Where the runtime view reports the same question for an `enrich` pipeline, the view SHALL be the one
+presented and the registry's group SHALL NOT be drawn a second time beside it. Two cards stating the
+pipeline's schedule from two services, which sample at different moments, invite a reader to treat the
+difference as a fact about the pipeline rather than about the reads.
 
 Each group SHALL be presented as a **card**, stacked, each taking the full width. Rules between groups
 left the tab one undifferentiated column under its control bar, and the failures card below them is a
@@ -711,11 +722,11 @@ control bar. The tab SHALL NOT state how old its answer is: an age beside every 
 values themselves, and re-reading is one click away.
 
 Reading again SHALL read **both** upstreams — the pipeline, which carries the state, and the runtime
-service, which carries the pause and the failures — because the tab presents facts from both and a
-control that refreshed one of them would leave the other stale behind a chip that says otherwise. A lag
-figure is measured against the present, so a value that is minutes old is a different statement from the
-same value read now, and a reader who cannot tell them apart cannot tell a stalled pipeline from a stale
-page.
+service, which carries the runtime view, the pause and the failures — because the tab presents facts from
+both and a control that refreshed one of them would leave the other stale behind a chip that says
+otherwise. A lag figure is measured against the present, so a value that is minutes old is a different
+statement from the same value read now, and a reader who cannot tell them apart cannot tell a stalled
+pipeline from a stale page.
 
 The **read-only facts row** above the tab strip SHALL carry no runtime value at all. It keeps what the
 declaration derives — grain key, version column, generation, created, updated. Four values fitted that
@@ -729,16 +740,18 @@ than as an absence that is ordinary for that kind.
 
 The tab SHALL present exactly one of these content states:
 
-- **Loaded** — the state reports at least one run, and its values are presented.
+- **Loaded** — at least one of the two services reports something, and its values are presented.
 - **Never run** — a state from which no group has anything to draw, **a reported failure included**: a
   pipeline that failed has run, and telling its reader otherwise sends them looking for a pipeline that
   never started. The tab SHALL state that the pipeline has not run yet, in the console's own empty-state
   treatment, rather than presenting a row of placeholders. This SHALL NOT be judged on `last_run_at`: ADAS records that member only for the kinds it
   drives on a schedule, so an on-ingest pipeline the runner drives has none of it while working
-  perfectly, and judging by it alone told a running pipeline it had never run.
-- **Unavailable** — the pipeline was read but carries no state at all. The tab SHALL state that the runtime
-  state could not be read and SHALL state that the pipeline's configuration is unaffected, so the reader
-  does not act on the absence as if the pipeline were broken.
+  perfectly, and judging by it alone told a running pipeline it had never run. For an `enrich` pipeline a
+  read runtime view SHALL rule this state out: the view always carries the pipeline's state, so the runner
+  has it and is driving it whatever the registry recorded.
+- **Unavailable** — neither service reported anything: the pipeline carries no state and no runtime view was
+  read. The tab SHALL state that the runtime state could not be read and SHALL state that the pipeline's
+  configuration is unaffected, so the reader does not act on the absence as if the pipeline were broken.
 
 The failures card is governed by its own requirements and SHALL be presented independently of these three:
 it reads a different service, and a pipeline that has never run can still hold dead letters from before
@@ -765,11 +778,26 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: Execution state is presented
 
-- **WHEN** a full admin opens the `Runtime` tab of a pipeline that has run
+- **WHEN** a full admin opens the `Runtime` tab of an `aggregate` pipeline that has run
 - **THEN** its last run and next run are presented in the schedule card
 - **AND** its lag, backlog, cursor position, materialized-through position and drained-at are presented
   in the state card
 - **AND** the two cards are stacked, each the full width
+
+#### Scenario: The registry's schedule is not drawn beside the runner's
+
+- **GIVEN** an `enrich` pipeline for which both the registry and the runtime service report a schedule
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** one schedule card is presented, carrying the runtime service's values
+- **AND** no second schedule card is presented from the registry's state
+
+#### Scenario: Registry members the runner does not report are still presented
+
+- **GIVEN** an `enrich` pipeline whose registry state carries a materialized-through position and a
+  drained-at probe
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** both are presented
+- **AND** the runtime service's own groups are presented beside them
 
 #### Scenario: The measured values are no longer among the read-only facts
 
@@ -801,13 +829,20 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: A pipeline that has never run says so
 
-- **WHEN** a pipeline with no recorded run is opened on `Runtime`
+- **WHEN** an `aggregate` pipeline with no recorded run is opened on `Runtime`
 - **THEN** the tab states that the pipeline has not run yet, in the console's own empty-state treatment
 - **AND** no measured value is presented as a zero, an epoch date or an em dash
 
+#### Scenario: An enrichment the runner holds is never called never-run
+
+- **GIVEN** an `enrich` pipeline carrying no registry state, for which the runtime view was read
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab does not state that the pipeline has not run yet
+- **AND** the runtime service's groups are presented
+
 #### Scenario: A pipeline carrying no state at all says the read failed
 
-- **GIVEN** a pipeline whose response carries no `state`
+- **GIVEN** an `enrich` pipeline whose response carries no `state` and whose runtime view could not be read
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the tab states that the runtime state could not be read
 - **AND** it states that the pipeline's configuration is unaffected
@@ -848,7 +883,7 @@ State SHALL NOT be sent when the pipeline is saved.
 
 - **WHEN** a pipeline reporting neither a failure, a clamp nor a required rebuild is opened
 - **THEN** no alert is presented
-- **AND** its `Runtime` tab draws no failures group at all
+- **AND** its `Runtime` tab draws no registry failures group at all
 
 #### Scenario: A pipeline whose only recorded fact is a failure is not called never-run
 
@@ -2922,13 +2957,18 @@ modal to explain: an enrichment pipeline is registered from what the operator ty
 ### Requirement: Runtime control is reached through a second analytics service
 
 Pausing a pipeline, resuming it, reading which pipelines are paused, reading which ones the runner
-has taken on, and reading and re-running its dead-lettered failures are served by the **analytics
-enrichment runner**, a service distinct from the one that holds the pipeline registry. Its failures
+has taken on, reading one pipeline's runtime view, and reading and re-running its dead-lettered failures are
+served by the **analytics enrichment runner**, a service distinct from the one that holds the pipeline
+registry. Its failures
 listing is **paged by cursor and counted by the service**: every page carries the number of items the
 filter matches and the number of them it would re-run, read in the page's own snapshot, so a caller
 never has to count rows to state a total. The console SHALL
 reach it at its own configured host and SHALL treat it as a separate upstream throughout: a registry read
 that succeeds while the runner is unreachable SHALL still present the pipeline.
+
+Every property of every runner response is named in **snake_case**, the paused listing included. The console
+SHALL parse that spelling and SHALL NOT accept the Java property names the paused listing emitted before,
+which named the same two facts differently from every other response that reports them.
 
 The runner authorizes **every** endpoint, reads included, on full-admin rights, and offers no
 consumer-facing read. The console SHALL therefore issue no request to it for a caller who is not a full
@@ -2943,11 +2983,12 @@ issued for it.
 
 The runner reports failures in the same envelope the registry does — a status, a stable machine code, a
 human-readable message, the path and the method — so a refusal SHALL be surfaced the way a registry refusal
-already is, by the service's own message with its request id. Two of its codes name conditions the operator
+already is, by the service's own message with its request id. Three of its codes name conditions the operator
 can act on and SHALL be distinguished from a generic failure:
 
 - the runner has not yet loaded the pipeline list since it started, which resolves by itself shortly;
-- the runtime-state database is unavailable, which does not.
+- the runtime-state database is unavailable, which does not;
+- the runner does not hold the pipeline, which is the state the console already states as nothing running it.
 
 #### Scenario: Pausing survives a runner that does not serve the cache listing
 
@@ -2956,6 +2997,13 @@ can act on and SHALL be distinguished from a generic failure:
 - **THEN** its runtime is stated as running
 - **AND** the pause control is offered
 - **AND** no warning states that nothing is running it
+
+#### Scenario: The paused listing is parsed in snake_case
+
+- **GIVEN** the runtime service reports a paused pipeline with its name and lift time in snake_case
+- **WHEN** a full admin opens the pipelines listing
+- **THEN** that pipeline is stated as paused
+- **AND** its lift time is stated wherever a lift time is stated
 
 #### Scenario: A pipeline reads even when the runner is unreachable
 
@@ -3073,6 +3121,11 @@ While a pipeline is paused, a banner SHALL render between the identity row and t
 the pipeline is paused, how long it has been paused, that input is still arriving and that the backlog it
 builds is worked through on resume. The banner SHALL carry a resume control.
 
+On the detail page the pause SHALL be taken from the pipeline's own **runtime view**, which reports the
+pause the runner is enforcing for it. The global paused listing answers the same question for every
+pipeline at once and remains what the listing page reads; asking it again for one pipeline the console has
+already read a view of would be a second answer to a question already answered, and the two could disagree.
+
 The banner SHALL distinguish the two origins the runtime service reports, because they call for opposite
 responses:
 
@@ -3097,9 +3150,15 @@ A pipeline the runtime service does not report as paused SHALL raise no banner, 
 runtime could not be read SHALL raise none either: a banner is a statement that the pipeline is stopped,
 and an unread runtime does not support it.
 
+The banner SHALL be raised on the reported state alone. The runtime view holds the pause's origin and its
+start time in the runner's memory, so a restart can lose them while the pause itself survives — and a
+banner withheld for a missing timestamp withholds the only Resume control on the page with it. Where the
+service did not say when the pause began, the banner SHALL state the pause without its age rather than not
+at all.
+
 #### Scenario: An operator pause is stated as one that will not lift itself
 
-- **GIVEN** a pipeline the runtime service reports as paused by an operator
+- **GIVEN** a pipeline whose runtime view reports it paused by an operator
 - **WHEN** a full admin opens its detail view
 - **THEN** a banner states that the pipeline is paused and how long it has been
 - **AND** it states that input keeps arriving and is worked through on resume
@@ -3108,7 +3167,7 @@ and an unread runtime does not support it.
 
 #### Scenario: A breaker pause states when it lifts
 
-- **GIVEN** a pipeline the runtime service reports as paused by its circuit breaker, with the time it
+- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with the time it
   resumes
 - **WHEN** a full admin opens its detail view
 - **THEN** the banner states that the pause was taken by the service rather than by an operator
@@ -3116,7 +3175,7 @@ and an unread runtime does not support it.
 
 #### Scenario: A breaker pause states the evidence it tripped on
 
-- **GIVEN** a pipeline the runtime service reports as paused by its circuit breaker, with a recorded
+- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with a recorded
   reason
 - **WHEN** a full admin opens its detail view
 - **THEN** the banner presents that reason as the service worded it
@@ -3126,6 +3185,14 @@ and an unread runtime does not support it.
 - **GIVEN** a paused pipeline
 - **WHEN** a full admin opens its detail view
 - **THEN** the banner attributes the pause to no named user
+
+#### Scenario: A pause the service can no longer describe still offers Resume
+
+- **GIVEN** a pipeline whose runtime view reports it paused and carries neither the pause's origin nor when
+  it began
+- **WHEN** a full admin opens its detail view
+- **THEN** a banner states that the pipeline is paused, without stating how long it has been
+- **AND** it offers a resume control
 
 #### Scenario: No banner without a read runtime
 
@@ -3146,39 +3213,58 @@ as one nothing was running. For an aggregate pipeline the console SHALL state no
 no warning about one, and offer no pause: the runner would accept a pause for it and answer success,
 but only the runner's own executors consult that registry, so nothing would stop.
 
-For an `enrich` pipeline the runtime status SHALL be derived from **two** reads of the runtime service,
-taken together:
-
-- the pipelines it has **taken on** — it admits one only when the pipeline is enabled and it can execute
-  that declaration, and it schedules the recurring work from exactly that set;
-- the pipelines it has **paused**.
-
-From those, three states are stateable, and no other:
+On the **detail page** the runtime status SHALL be taken from the pipeline's own runtime view, which states
+it directly. The service resolves it by the same rules its own status log uses, so the console SHALL state
+what it reports rather than deriving a second verdict that could disagree. Six states are stateable, and no
+other:
 
 | State | Condition |
 | --- | --- |
-| `running` | taken on, and not paused |
-| `paused` | paused |
-| `not running` | enabled, an `enrich` pipeline, and **not** taken on |
+| `running` | the view reports it active |
+| `paused` | the view reports it paused |
+| `held` | the view reports it held, waiting on the registry across a contract change |
+| `over budget` | the view reports it over its daily spend budget |
+| `backpressured` | the view reports it holding back because its queue is full |
+| `not running` | the service answers that it does not hold the pipeline |
+
+A state this console does not recognise SHALL be stated as `running` rather than withheld. The service's
+vocabulary grew from two states to five in one release, and a console that blanked the chip on the next
+addition would be withholding what it does know — that the runner holds the pipeline and answered for it —
+on the strength of one word it has not learned yet.
+
+The three gate states SHALL be stated as the service names them and SHALL NOT be collapsed into `running`
+or into `paused`. Each is a pipeline that is enabled, taken on, and not consuming input, and each clears for
+a different reason: a held pipeline waits on the registry, an over-budget one on the next UTC day, a
+backpressured one on its own queue draining. A console that showed all three as running would be stating the
+opposite of what the operator needs to act on.
+
+A pause SHALL still be offered for a gated pipeline and SHALL NOT be offered for one the service does not
+hold: a gate is temporary and the operator may still want the pipeline stopped, where a pipeline the runner
+does not hold has no work to withhold.
+
+On the **listing**, which asks about every pipeline at once, the runtime status SHALL continue to be derived
+from the two listings the runner serves for exactly that purpose — the pipelines it has taken on and the
+pipelines it has paused — and SHALL state the three states those two support: `running`, `paused` and
+`not running`. The gate states are per-pipeline facts the listings do not carry, and one view request per
+row is not a trade the listing makes.
 
 `running` SHALL mean that the runner has the pipeline and schedules its fires — **not** that rows are
 moving through it at this moment. Neither service reports that, and the console SHALL NOT imply it.
 
-The third state is the one the registry cannot show: an enabled pipeline the runner has not taken on is
-presented by the registry exactly like a healthy one, while nothing is driving it — the runner either
-refused the declaration as one it cannot execute, or has not synced since it started. The console SHALL
-state it as a **warning above the tab strip**, not as a chip alone, and SHALL say both possible causes,
-since it cannot tell them apart from outside. It SHALL NOT offer to pause such a pipeline: there is no
-work to withhold.
+The state the registry cannot show is an enabled pipeline the runner has not taken on: it is presented by
+the registry exactly like a healthy one, while nothing is driving it — the runner either refused the
+declaration as one it cannot execute, or has not synced since it started. The console SHALL state it as a
+**warning above the tab strip**, not as a chip alone, and SHALL say both possible causes, since it cannot
+tell them apart from outside. It SHALL NOT offer to pause such a pipeline: there is no work to withhold.
 
-The two reads SHALL fail **independently**. The pauses are load-bearing: without them the console
-states no runtime at all. The cache listing only adds `not running`, so where it is missing — an older
-runner build, a route that answers 404 — the console SHALL keep stating `running` and SHALL keep
+On the listing the two reads SHALL fail **independently**. The pauses are load-bearing: without them the
+console states no runtime at all. The cache listing only adds `not running`, so where it is missing — an
+older runner build, a route that answers 404 — the console SHALL keep stating `running` and SHALL keep
 offering the pause, rather than withholding every runtime affordance because one of two reads failed.
 It SHALL NOT state `not running` on an unread cache: that would withhold the pause on a guess.
 
 The runtime chip SHALL be withheld — not rendered as unknown — when the pipeline is disabled, when the
-pauses could not be read, or when the caller is not a full admin. A disabled pipeline has no runtime answer: the runner
+runtime could not be read, or when the caller is not a full admin. A disabled pipeline has no runtime answer: the runner
 is not driving it at all, and stating it as "not running" would read as a fault where there is a
 configuration.
 
@@ -3188,16 +3274,45 @@ never disabled.
 
 #### Scenario: A running pipeline states both facts
 
-- **GIVEN** an enabled pipeline the runtime service does not report as paused
+- **GIVEN** an enabled pipeline whose runtime view reports it active
 - **WHEN** a full admin opens its detail view
 - **THEN** the header states that it is enabled and that it is running
 
 #### Scenario: A paused pipeline is still enabled
 
-- **GIVEN** an enabled pipeline the runtime service reports as paused
+- **GIVEN** an enabled pipeline whose runtime view reports it paused
 - **WHEN** a full admin opens its detail view
 - **THEN** the header states that it is enabled
 - **AND** it states that it is paused
+
+#### Scenario: A gated pipeline states the gate rather than running
+
+- **GIVEN** an enabled pipeline whose runtime view reports it over its daily spend budget
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is over budget
+- **AND** it does not state that it is running
+- **AND** the pause control is still offered
+
+#### Scenario: A state the console does not recognise is stated as running
+
+- **GIVEN** an enabled pipeline whose runtime view reports a state this console does not know
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is running
+- **AND** the pause control is offered
+
+#### Scenario: A backpressured pipeline is distinguished from a paused one
+
+- **GIVEN** an enabled pipeline whose runtime view reports it backpressured
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is backpressured
+- **AND** no pause banner is presented
+
+#### Scenario: The listing states the three it can derive
+
+- **GIVEN** the runner reports one pipeline paused and holds a second but not a third
+- **WHEN** a full admin opens the pipelines listing
+- **THEN** the first is stated as paused, the second as running and the third as not running
+- **AND** no runtime view request is issued for any row
 
 #### Scenario: An aggregate pipeline states no runtime status
 
@@ -3209,7 +3324,7 @@ never disabled.
 
 #### Scenario: An enabled enrichment pipeline the runner has not taken on is flagged
 
-- **GIVEN** an enabled `enrich` pipeline the runtime service does not report among the ones it has taken on
+- **GIVEN** an enabled `enrich` pipeline the runtime service answers as one it does not hold
 - **WHEN** a full admin opens its detail view
 - **THEN** a warning states that nothing is running the pipeline
 - **AND** it states that the service either cannot execute the declaration or has not picked it up yet
@@ -3681,3 +3796,257 @@ a filter learns the result without hunting for it.
 - **THEN** it states that the failures could not be read
 - **AND** it offers to read them again
 - **AND** it does not state that there are no failures
+
+### Requirement: The Runtime tab presents the runner's own view of an enrichment pipeline
+
+The runtime service serves one per-pipeline view of what it is doing with a pipeline right now, in a single
+shape for every lane it runs. For an `enrich` pipeline that view — not the registry's `state` — is the
+authority on execution, because the runner owns the execution position and the registry deliberately records
+almost none of it for the kinds the runner drives. The console SHALL read it on the **Runtime** tab and
+present it in the groups the service reports it in.
+
+The view SHALL be read **only for an `enrich` pipeline**, and only where a runtime read is issued at all: a
+full admin, a configured runner host, analytics enabled. An `aggregate` pipeline is driven by the registry
+on its own scheduler and is absent from the runner by construction, so the console SHALL issue no runtime
+view request for one and SHALL present the registry's state for it as this requirement's sibling describes.
+
+Each group the service reports SHALL be presented as a card, in the tab's existing card treatment:
+
+- **Schedule** — when a live fire last committed, when the next fire is due or that one is running now, how
+  many consecutive fires have failed, and the last failure with its time.
+- **Progress** — how far behind its input the scan is, whether the last fire left input behind, when a fire
+  last ended with nothing more to read, and when the pipeline last wrote rows.
+- **Queue** — the work items computing and the computed items awaiting a write.
+- **Groups** — the dirty groups, split into ready, waiting on their idle window, and blocked by the daily
+  cost ceiling.
+- **Spend today** — the successful calls, the tokens, and the failed calls, for the current UTC day.
+
+Where both services describe one fact — the lag, the backlog, the next fire — the runner's answer SHALL be
+presented and the registry's SHALL NOT be drawn beside it: two rows stating one pipeline's schedule from two
+services sampled moments apart invite a reader to treat the difference as a fact about the pipeline. Where
+only one of them has an answer, that answer SHALL be presented whichever service it came from. The choice
+SHALL be made **per field**, not per service: the view is sparse exactly when the runner has restarted, and
+a rule that dropped the registry's copy whenever a view was read deleted what the registry still knew at the
+one moment an operator is looking.
+
+A group the service **omits** SHALL NOT be drawn, and the console SHALL NOT substitute zeros for it. The
+service omits a group that does not apply to the pipeline's lane — a SQL enrichment has no queue, no spend
+and no failures; only a group-triggered pipeline has group readiness — and an omitted group is a statement
+that the question does not arise, which a card of zeros would answer wrongly. A field omitted **inside** a
+present group SHALL likewise be left out rather than stated as zero or as an em dash.
+
+`running_now` SHALL be presented in place of the next fire rather than beside it: the service omits the next
+fire while a fire is running, and the two never both apply.
+
+Lag SHALL NOT be presented as a measure of whether the pipeline's rows are written. The scan advances when
+work is enqueued, not when it is written, so a lag of zero with items still computing is an ordinary state.
+Where the service reports a queue, the console SHALL present it in the tab so that the two are read together.
+
+The console SHALL NOT present a health verdict derived from these values, and SHALL NOT present a stall
+flag: the service computes one for its own log and deliberately does not serve it, calling it a heuristic.
+
+The view SHALL NOT be polled. It SHALL be read when the tab is opened and again on the tab's existing
+re-read control, which SHALL read the pipeline and the runtime view together.
+
+A view that was read but carries nothing drawable SHALL state that the runner holds the pipeline and has
+reported nothing about it yet. That is a synced-but-not-yet-fired pipeline, and it is neither a failed read
+nor a pipeline that has never run — a tab that fell through every one of those branches rendered an empty
+box with no explanation in it.
+
+#### Scenario: A model-calling enrichment presents the runner's groups
+
+- **GIVEN** an `enrich` pipeline whose transform calls a model, which the runner reports with schedule,
+  progress, queue, spend and failures
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the schedule, progress, queue and spend-today cards are presented with the values the service
+  reported
+- **AND** no groups card is presented
+
+#### Scenario: A SQL enrichment presents only the groups the service sent
+
+- **GIVEN** an `enrich` pipeline whose transform is SQL, for which the service omits queue, spend and
+  failures
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the schedule and progress cards are presented
+- **AND** no queue, spend-today, groups or failures card is presented
+- **AND** none of them is presented as a zero
+
+#### Scenario: A group pipeline presents its readiness counts
+
+- **GIVEN** a group-triggered enrichment the service reports with group readiness
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the groups card states the pending groups and the ready, waiting-idle and ceiling-blocked split
+
+#### Scenario: A running fire replaces the next fire
+
+- **GIVEN** a pipeline the service reports as running now, with no next fire
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the schedule card states that a fire is running
+- **AND** it states no next fire time
+
+#### Scenario: A caught-up scan with queued work does not read as finished
+
+- **GIVEN** a pipeline the service reports with a lag of zero and work still computing
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the progress card states the lag
+- **AND** the queue card states the computing items
+- **AND** neither is presented as evidence that the pipeline's rows are written
+
+#### Scenario: Fields the runner does not know are left out
+
+- **GIVEN** a runner restarted since the pipeline last fired, so it reports no backlog flag, no caught-up
+  time and no last error
+- **WHEN** a full admin opens that pipeline's `Runtime` tab
+- **THEN** none of the three is presented
+- **AND** neither a zero nor an em dash is presented in their place
+- **AND** the lag and the consecutive-failure count the service did report are presented
+
+#### Scenario: No stall verdict is presented
+
+- **GIVEN** a pipeline the service's own heartbeat treats as stalled
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states the values the service reported
+- **AND** it states no stalled, unhealthy or degraded verdict
+
+#### Scenario: No runtime view is read for an aggregate pipeline
+
+- **GIVEN** an `aggregate` pipeline
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** no runtime view request is issued
+- **AND** the registry's own state is presented instead
+
+#### Scenario: The view is read again with the pipeline
+
+- **GIVEN** a full admin on the `Runtime` tab of an enrichment pipeline
+- **WHEN** the user activates the re-read control
+- **THEN** the pipeline and the runtime view are both read again
+- **AND** an answer from an earlier read that lands later SHALL NOT replace a newer one
+
+#### Scenario: A fact only the registry still knows is presented
+
+- **GIVEN** a runner restarted since the pipeline last fired, so its view carries no lag and no schedule,
+  while the registry still records both
+- **WHEN** a full admin opens that pipeline's `Runtime` tab
+- **THEN** the lag and the schedule the registry recorded are presented
+- **AND** neither is presented twice
+
+#### Scenario: A fact both services report is presented once
+
+- **GIVEN** a pipeline for which the runner and the registry both report a lag
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** one lag is presented, the runner's
+- **AND** the registry's is not presented beside it
+
+#### Scenario: A runner holding a pipeline it has not fired says so
+
+- **GIVEN** a pipeline whose view carries a state and no other member, and whose registry state is empty
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the runner holds the pipeline and has reported nothing about it yet
+- **AND** it does not state that the pipeline has never run, and does not state that the runtime could not
+  be read
+
+#### Scenario: The view is not polled
+
+- **GIVEN** a full admin on the `Runtime` tab
+- **WHEN** the tab is left open without the re-read control being used
+- **THEN** no further runtime view request is issued
+
+### Requirement: A runtime view the runner cannot yet answer is distinguished from a pipeline it does not hold
+
+Before any answer has arrived the console SHALL state **nothing** about the runtime: no chip, no empty
+state and no notice. A verdict published before the service has answered is wrong however it is worded, and
+every statement below is a verdict.
+
+The runtime service answers a view request in three ways the console SHALL tell apart, because each calls
+for a different statement and the operator's next move differs:
+
+- it **does not hold the pipeline** — a pipeline absent from a synced cache. This is the state the console
+  already states as nothing running the pipeline: the runner either refused the declaration as one it cannot
+  execute or has not picked it up since it started. The console SHALL state it as that same warning and
+  SHALL NOT state it as a failed read.
+- it **has not synced yet** — the runner started and has not loaded the pipeline list. It resolves by itself
+  shortly, so the console SHALL state that the runtime is not read yet and that the read can be retried, and
+  SHALL NOT raise it as an error or present the pipeline as one nothing is running.
+- it **refused or did not answer** — any other failure. The console SHALL state that the runtime could not be
+  read, by the service's own message where it carries one, and SHALL state that the pipeline's configuration
+  is unaffected.
+
+None of the three SHALL withhold the pipeline, its facts or its form: the registry read stands on its own.
+
+Each of the three SHALL be stated **once**. A console that reported a cold runner, or a pipeline the runner
+does not hold, as a failed read as well put two notices on one tab contradicting each other.
+
+A refused read SHALL carry the service's message **and** the statement that the pipeline's configuration is
+unaffected. The second is what the reader acts on, and the service's message is never empty, so presenting
+one in place of the other made the second unreachable.
+
+Only a pipeline the runner does not hold SHALL withhold the pause and resume controls, and only until the
+first answer arrives SHALL they be withheld for not knowing. A read that was refused SHALL keep offering
+them: the moment an operator most wants to stop a pipeline is the moment its runtime read is failing, and
+there is no work to withhold only where the runner holds nothing.
+
+#### Scenario: A pipeline the runner does not hold is stated as one nothing is running
+
+- **GIVEN** an enabled `enrich` pipeline the runtime service answers as not found
+- **WHEN** a full admin opens its detail view
+- **THEN** a warning states that nothing is running the pipeline
+- **AND** it states that the service either cannot execute the declaration or has not picked it up yet
+- **AND** no pause control is offered
+- **AND** no error notification is raised
+
+#### Scenario: A runner that has not synced is stated as not read yet
+
+- **GIVEN** the runtime service answers that it has not loaded the pipeline list yet
+- **WHEN** a full admin opens an enabled `enrich` pipeline's `Runtime` tab
+- **THEN** the tab states that the runtime is not read yet and can be read again shortly
+- **AND** it does not state that nothing is running the pipeline
+- **AND** no runtime chip is presented
+
+#### Scenario: A refused read states the service's own message
+
+- **GIVEN** the runtime service refuses the view with a message
+- **WHEN** a full admin opens an enabled `enrich` pipeline's `Runtime` tab
+- **THEN** the tab states that the runtime could not be read, carrying that message
+- **AND** it states that the pipeline's configuration is unaffected
+- **AND** the pipeline, its facts and its form are presented
+- **AND** the pause control is still offered
+
+#### Scenario: Nothing is stated while the read is in flight
+
+- **GIVEN** a full admin opening an enabled `enrich` pipeline whose runtime read has not yet answered
+- **WHEN** the `Runtime` tab is presented
+- **THEN** no runtime chip is presented
+- **AND** the tab states neither that the pipeline has never run nor that its runtime could not be read
+- **AND** no pause control is offered
+
+#### Scenario: A cold runner is stated once
+
+- **GIVEN** a runner that has not loaded its pipeline list, and a pipeline for which the registry records
+  no state
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the runtime is not read yet
+- **AND** it does not also state that the runtime could not be read
+
+### Requirement: A pipeline the runner is driving at an older revision says so
+
+The runtime view carries the declaration revision the runner holds for the pipeline, and the pipeline itself
+carries the revision the registry holds. When the two differ, the runner is executing a declaration that is
+no longer the one on screen: it has not synced the latest save. The console SHALL state that, so an operator
+who has just saved a change is not left reading an unchanged runtime as evidence the change did nothing.
+
+It SHALL be stated as information rather than as a fault. The runner syncs on its own cadence, so a
+difference immediately after a save is the ordinary case and resolves without intervention.
+
+#### Scenario: A revision the runner has not picked up is stated
+
+- **GIVEN** a pipeline the registry reports at one declaration revision and the runtime service reports at an
+  earlier one
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the runner is still running an earlier revision of the declaration
+- **AND** it is not presented as a failure
+
+#### Scenario: Matching revisions are not remarked on
+
+- **GIVEN** a pipeline whose registry and runtime revisions are the same
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** nothing is stated about the declaration revision

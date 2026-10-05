@@ -11,7 +11,12 @@ import {
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
-import { PausedPipeline, RUNNER_NOT_CONFIGURED, RunnerPipelineEntry } from '@/src/models/analytics/pipeline-runtime';
+import {
+  PausedPipeline,
+  PipelineRuntimeView,
+  RUNNER_NOT_CONFIGURED,
+  RunnerPipelineEntry,
+} from '@/src/models/analytics/pipeline-runtime';
 import { AnalyticsTable } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -67,6 +72,19 @@ export async function getPausedPipelines(): Promise<ServerActionResponse<PausedP
   if (!analyticsRunnerApi.isConfigured) return noRunner();
 
   return analyticsRunnerApi.getPaused(await token());
+}
+
+/**
+ * One pipeline's runtime view.
+ *
+ * Unlike the two listings beside it this is a per-pipeline read, and its failures are part of its
+ * answer: the runner says through them that it has not synced yet, or that it does not hold this
+ * pipeline at all. The envelope is passed through untouched so the caller can tell those apart.
+ */
+export async function getPipelineRuntimeView(name: string): Promise<ServerActionResponse<PipelineRuntimeView>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.getRuntimeView(name, await token());
 }
 
 /** The pipelines the runner has taken on; answered without a request when no runner is configured. */

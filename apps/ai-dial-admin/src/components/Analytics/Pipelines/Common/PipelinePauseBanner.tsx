@@ -18,11 +18,11 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useMinuteTick } from '@/src/hooks/use-minute-tick';
 import { useI18n } from '@/src/locales/client';
-import { PausedPipeline, PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
+import { PipelinePause, PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 import { formatRelativeTime } from '@/src/utils/analytics/session-formatting';
 
 interface Props {
-  pause: PausedPipeline;
+  pause: PipelinePause;
   isResuming: boolean;
   onResume: () => void;
 }
@@ -35,6 +35,10 @@ interface Props {
  * It names no author. The runner records the origin and the reason it wrote at the time and no user
  * identity, so a name here could only be invented.
  *
+ * It states how long the pause has lasted only where the service said. The runtime view holds that
+ * instant in memory, so a restart can lose it while the pause itself survives — and a banner withheld
+ * for a missing timestamp would withhold the only Resume control on the page with it.
+ *
  * A breaker pause carries the time it lifts itself. That time is stated rather than counted down to: the
  * runner lifts an expired pause lazily, on the next read, so between expiry and that read the value is
  * already in the past and a countdown would run negative.
@@ -42,7 +46,7 @@ interface Props {
 const PipelinePauseBanner: FC<Props> = ({ pause, isResuming, onResume }) => {
   const t = useI18n();
 
-  const resumesAt = useLocalDateTimeString(pause.resumesAt);
+  const resumesAt = useLocalDateTimeString(pause.resumes_at);
 
   const now = useMinuteTick();
 
@@ -66,7 +70,11 @@ const PipelinePauseBanner: FC<Props> = ({ pause, isResuming, onResume }) => {
       variant={NotificationVariant.Warning}
       type={NotificationType.SectionMessage}
       role="status"
-      title={t(AnalyticsPipelinesI18nKey.PausedBannerTitle, { age: formatRelativeTime(pause.since, now) })}
+      title={
+        pause.since
+          ? t(AnalyticsPipelinesI18nKey.PausedBannerTitle, { age: formatRelativeTime(pause.since, now) })
+          : t(AnalyticsPipelinesI18nKey.PausedBannerTitleUndated)
+      }
       message={message}
       action={
         <Button

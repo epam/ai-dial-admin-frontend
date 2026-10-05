@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { DlqLane, DlqStage } from '@/src/models/analytics/pipeline-dlq';
-import { PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
+import { PauseOrigin, PipelineLane, PipelineRuntimeState } from '@/src/models/analytics/pipeline-runtime';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { AnalyticsRunnerApi } from '../analytics-runner-api';
 
@@ -24,7 +24,7 @@ describe('Server :: AnalyticsRunnerApi', () => {
   });
 
   test('getPaused issues GET /v1/pipelines/paused and unwraps the envelope', async () => {
-    const paused = [{ pipelineName: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }];
+    const paused = [{ pipeline_name: 'usage-live', origin: PauseOrigin.Operator, since: '2026-09-21T15:00:00Z' }];
     fetch.mockResponseOnce(JSON.stringify({ paused }), JSON_HEADERS);
 
     const res = await instance.getPaused(TOKEN_MOCK);
@@ -220,5 +220,66 @@ describe('Server :: AnalyticsRunnerApi', () => {
     await instance.requeueDlq('usage-live', 'run-7', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('run_id=run-7'), expect.anything());
+  });
+
+  test("getRuntimeView issues GET on the pipeline's own runtime route", async () => {
+    const view = {
+      pipeline_name: 'usage-live',
+      lane: PipelineLane.Row,
+      generation: 7,
+      status: { state: PipelineRuntimeState.Active },
+      schedule: { last_scan_at: '2026-10-05T10:00:00Z' },
+      progress: { lag_seconds: 38 },
+    };
+    fetch.mockResponseOnce(JSON.stringify(view), JSON_HEADERS);
+
+    const res = await instance.getRuntimeView('usage-live', TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: view }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/pipelines/usage-live/runtime'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('getRuntimeView escapes a pipeline name that is not URL-safe', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: { state: PipelineRuntimeState.Active } }), JSON_HEADERS);
+
+    await instance.getRuntimeView('usage/live live', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('usage%2Flive%20live/runtime'), expect.anything());
+  });
+
+  // Every lane carries a status, so a 200 without one came from something other than this route.
+  test('getRuntimeView reports a body carrying no status as a failure', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ pipeline_name: 'usage-live' }), JSON_HEADERS);
+
+    const res = await instance.getRuntimeView('usage-live', TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+  });
+
+  // The two codes the caller tells apart: a cold cache clears itself, a pipeline the runner does not
+  // hold is the state the page states as nothing running it. Neither may reach it as a generic error.
+  test('getRuntimeView carries a cold cache through by its own code', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 503, error: 'pipeline_cache_cold', message: 'Not loaded yet' }), {
+      status: 503,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getRuntimeView('usage-live', TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'pipeline_cache_cold', status: 503 }));
+  });
+
+  test('getRuntimeView carries a pipeline the runner does not hold through by its own code', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 404, error: 'not_found', message: 'No such pipeline' }), {
+      status: 404,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getRuntimeView('usage-live', TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'not_found', status: 404 }));
   });
 });

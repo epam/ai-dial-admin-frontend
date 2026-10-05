@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import { getPipelineRuntimeView, getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -94,6 +94,9 @@ beforeEach(() => {
     async (name) => [enrichment, sourceTable].find((table) => table.name === name) ?? null,
   );
   vi.mocked(updatePipeline).mockResolvedValue({ success: true });
+  // This spec is about the Properties and Audit tabs, not the runtime. An unread runner is the
+  // quietest default: the strip states nothing, and the automocked action still returns a promise.
+  vi.mocked(getPipelineRuntimeView).mockResolvedValue({ success: false });
 });
 
 describe('PipelineDetailFrame — the Properties and Audit tabs', () => {
