@@ -37,6 +37,8 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
   return (
     <SummarySection
       isFillHeight={false}
+      // Squares off against Cases Passed, which shares its row.
+      className="h-full"
       title={
         <>
           {t(TestSuitesI18nKey.OverallScoreTrend)}{' '}

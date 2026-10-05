@@ -1,4 +1,5 @@
 import { Token } from '@/src/models/auth';
+import { CasePassRateResponse } from '@/src/models/evaluation/case-pass-rate';
 import { EvalSummaryExportRequestDto, EvalSummaryPreviewResponse } from '@/src/models/evaluation/export';
 import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { RunComparisonResponse } from '@/src/models/evaluation/run-comparison';
@@ -24,6 +25,13 @@ export class AnalyticsApi extends BaseApi {
 
   getTestCaseRunResultDetails(id: string, token: Token): Promise<AnalyticsResult | null> {
     return this.get<AnalyticsResult>(`${ANALYTICS_RESULTS_URL}/${id}`, token);
+  }
+
+  getTestCasePassRate(testSuiteId: string, lastN: number, token: Token): Promise<CasePassRateResponse | null> {
+    return this.get<CasePassRateResponse>(
+      `${ANALYTICS_RESULTS_URL}/test-case-pass-rate/${encodeURIComponent(testSuiteId)}?lastN=${lastN}`,
+      token,
+    );
   }
 
   getMetricSnapshots(filters: FilterDto[], token: Token): Promise<MetricSnapshot[] | null> {

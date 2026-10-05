@@ -10,7 +10,13 @@ import {
   TRENDS_RUN_WINDOW,
   VALUE_FIELD,
 } from '@/src/components/TestSuites/Trends/constants';
-import { MetricTrendGroup, TrendsData, TrendsKpiData, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
+import {
+  CasePassRateSeries,
+  MetricTrendGroup,
+  TrendsData,
+  TrendsKpiData,
+  TrendsRunPoint,
+} from '@/src/components/TestSuites/Trends/models';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQueryResult } from '@/src/models/evaluation/structured-query';
 
@@ -28,7 +34,11 @@ const runDurationMs = (run: Run | undefined): number | null => {
  * Folds last-N metric_score_results rows + run metadata into KPI, overall series, and
  * per-statistic metric trend groups (chronological run order ascending).
  */
-export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[]): TrendsData => {
+export const parseTrendsData = (
+  result: StructuredQueryResult | null,
+  runs: Run[],
+  casePassRate: CasePassRateSeries | null = null,
+): TrendsData => {
   const runsById = new Map(runs.filter((run) => run.id).map((run) => [run.id as string, run]));
   const rows = result?.rows ?? [];
 
@@ -216,7 +226,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
       });
   }
 
-  return { runOrder, kpis, statistics: sortMetricStatistics(statistics), byStatistic };
+  return { runOrder, kpis, casePassRate, statistics: sortMetricStatistics(statistics), byStatistic };
 };
 
 export const emptyTrendsData = (): TrendsData => ({
@@ -230,6 +240,7 @@ export const emptyTrendsData = (): TrendsData => ({
     latestScore: null,
     thresholdStats: null,
   },
+  casePassRate: null,
   statistics: [],
   byStatistic: {},
 });

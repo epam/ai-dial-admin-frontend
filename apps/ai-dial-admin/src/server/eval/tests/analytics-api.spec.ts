@@ -1,3 +1,4 @@
+import { CasePassRateResponse } from '@/src/models/evaluation/case-pass-rate';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -62,6 +63,42 @@ describe('Server :: AnalyticsApi', () => {
       `${TEST_URL}${ANALYTICS_RESULTS_URL}/${resultId}`,
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('builds the case-pass-rate URL with the encoded suite id and the lastN window', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ testSuiteId: 'suite/1', runs: [] }));
+
+    await instance.getTestCasePassRate('suite/1', 10, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_RESULTS_URL}/test-case-pass-rate/suite%2F1?lastN=10`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('returns the parsed case-pass-rate response', async () => {
+    const response: CasePassRateResponse = {
+      testSuiteId: 'suite-1',
+      runs: [
+        {
+          testSuiteRunId: 'run-1',
+          failedCount: 2,
+          successPassedCount: 25,
+          successNotPassedCount: 3,
+          successNoVerdictCount: 0,
+          totalCount: 30,
+        },
+      ],
+    };
+    fetch.mockResponseOnce(JSON.stringify(response), { headers: { 'content-type': 'application/json' } });
+
+    expect(await instance.getTestCasePassRate('suite-1', 10, TOKEN_MOCK)).toEqual(response);
+  });
+
+  test('returns null when the case-pass-rate endpoint is unavailable', async () => {
+    fetch.mockResponseOnce('Not Found', { status: 404 });
+
+    expect(await instance.getTestCasePassRate('suite-1', 10, TOKEN_MOCK)).toBeNull();
   });
 
   test('Should call getMetricSnapshots with filters and build correct URL', async () => {
