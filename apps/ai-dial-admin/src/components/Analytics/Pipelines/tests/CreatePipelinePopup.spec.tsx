@@ -6,7 +6,7 @@ import { createPipeline, getTable, getTables } from '@/src/app/[lang]/pipelines/
 import CreatePipelinePopup from '@/src/components/Analytics/Pipelines/CreatePipelinePopup';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
@@ -160,11 +160,18 @@ describe('CreatePipelinePopup', () => {
 
     await waitFor(() => expect(createPipeline).toHaveBeenCalled());
     const dto = vi.mocked(createPipeline).mock.calls[0][0];
-    expect(dto).toEqual({ name: 'my-pipeline', kind: PipelineKind.Enrich, target: enrichment.name });
+    expect(dto).toEqual({
+      name: 'my-pipeline',
+      kind: PipelineKind.Enrich,
+      target: enrichment.name,
+      trigger: { kind: TriggerKind.Schedule },
+    });
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.Enabled)).toBeNull();
   });
 
-  test('sends no trigger for a pipeline registered before one is chosen', async () => {
+  // The service stores a cron-less enrichment schedule with its every-minute default, so the console names
+  // the kind and leaves the cron to it.
+  test('registers an enrichment on a schedule with no cron', async () => {
     const user = userEvent.setup();
     renderPopup();
 
@@ -173,7 +180,20 @@ describe('CreatePipelinePopup', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
     await waitFor(() => expect(createPipeline).toHaveBeenCalled());
-    expect(vi.mocked(createPipeline).mock.calls[0][0]).not.toHaveProperty('trigger');
+    expect(vi.mocked(createPipeline).mock.calls[0][0].trigger).toEqual({ kind: TriggerKind.Schedule });
+  });
+
+  test('registers an aggregate with the schedule its kind implies', async () => {
+    const user = userEvent.setup();
+    renderPopup();
+
+    typeName('my-rollup');
+    await user.click(screen.getByText(AnalyticsPipelinesI18nKey.KindAggregate));
+    await selectTarget(user, source.name);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await waitFor(() => expect(createPipeline).toHaveBeenCalled());
+    expect(vi.mocked(createPipeline).mock.calls[0][0].trigger).toEqual({ kind: TriggerKind.Schedule });
   });
 
   // Registration collects three fields and leaves the declaration unwritten, so the page that authors it

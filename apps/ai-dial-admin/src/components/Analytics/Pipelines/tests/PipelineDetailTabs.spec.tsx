@@ -63,7 +63,7 @@ const rule: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',

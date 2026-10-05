@@ -13,7 +13,7 @@ const pipeline = (state?: PipelineState): Pipeline => ({
   name: 'usage-client-identity-live',
   kind: PipelineKind.Enrich,
   target: 'usage_client_identity',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 7,
   created_at: '2026-08-24T20:27:08Z',
@@ -146,16 +146,16 @@ describe('PipelineRuntime', () => {
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeNull();
   });
 
-  // ADAS records `last_run_at` only for the kinds it drives on a schedule; an on-ingest pipeline the
-  // runner drives has none of it while working perfectly, and used to be told it had never run.
-  test('does not call an on-ingest pipeline never-run when it reports progress', () => {
+  // ADAS records `last_run_at` only for the kinds it drives itself; an enrichment the runner drives has
+  // none of it while working perfectly, and used to be told it had never run.
+  test('does not call a runner-driven enrichment never-run when it reports progress', () => {
     renderRuntime({ materialized_through_version: 1790691421686, drained_at: '2026-09-29T16:19:44Z' });
 
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeNull();
     expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionState })).toBeTruthy();
   });
 
-  // An on-ingest pipeline has no schedule at all, and a heading over white space reads as a fault.
+  // A runner-driven enrichment has no registry schedule, and a heading over white space reads as a fault.
   test('renders no section for a group whose every member the service omitted', () => {
     renderRuntime({ materialized_through_version: 1790691421686 });
 

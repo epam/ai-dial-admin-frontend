@@ -71,7 +71,7 @@ const fillRequired = async (result: Form) => {
       name: 'my-rule',
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
-      trigger: { kind: TriggerKind.OnIngest },
+      trigger: { kind: TriggerKind.Schedule },
       enabled: true,
       transform: sqlTransform,
     }),
@@ -374,7 +374,7 @@ const baseRule: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',
@@ -403,7 +403,7 @@ describe('useEnrichForm — editing an existing rule', () => {
   });
 
   test('carries a member no control presents through to the saved rule', async () => {
-    const rule = { ...baseRule, filter: 'score > 0.5', advanced: { scan_every: 'PT1H' } };
+    const rule = { ...baseRule, filter: 'score > 0.5', advanced: { rows_per_scan: 100 } };
     const { result } = renderForm({ pipeline: rule });
     await waitFor(() => expect(result.current.targetColumns).toHaveLength(1));
 
@@ -412,7 +412,7 @@ describe('useEnrichForm — editing an existing rule', () => {
 
     expect(dto.name).toBe('renamed');
     expect(dto.filter).toBe('score > 0.5');
-    expect(dto.advanced?.scan_every).toBe('PT1H');
+    expect(dto.advanced?.rows_per_scan).toBe(100);
   });
 
   test('never sends a read-only member', async () => {
@@ -442,7 +442,7 @@ describe('useEnrichForm — editing an existing rule', () => {
 describe('useEnrichForm — buildDto', () => {
   beforeEach(mockAll);
 
-  test('sends the required five and no trigger qualifier for an on-ingest rule', async () => {
+  test('sends the required five and a cron-less schedule for a rule left on every minute', async () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
@@ -452,7 +452,7 @@ describe('useEnrichForm — buildDto', () => {
       name: 'my-rule',
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
-      trigger: { kind: TriggerKind.OnIngest },
+      trigger: { kind: TriggerKind.Schedule },
       enabled: true,
       transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
     });
@@ -565,9 +565,9 @@ describe('useEnrichForm — buildDto', () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ advanced: { scan_every: 'PT1H', rate_rpm: 60 } }));
+    act(() => result.current.onChange({ advanced: { rows_per_scan: 100, rate_rpm: 60 } }));
 
-    expect(result.current.buildDto().advanced).toEqual({ scan_every: 'PT1H', rate_rpm: 60 });
+    expect(result.current.buildDto().advanced).toEqual({ rows_per_scan: 100, rate_rpm: 60 });
   });
 
   test('keeps a knob deliberately set to zero', async () => {
@@ -583,8 +583,8 @@ describe('useEnrichForm — buildDto', () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
     await fillRequired(result);
 
-    act(() => result.current.onChange({ advanced: { scan_every: 'PT1H' } }));
-    expect(result.current.buildDto().advanced?.scan_every).toBe('PT1H');
+    act(() => result.current.onChange({ advanced: { rows_per_scan: 100 } }));
+    expect(result.current.buildDto().advanced?.rows_per_scan).toBe(100);
 
     act(() => result.current.onChange({ advanced: {} }));
     expect(result.current.buildDto()).not.toHaveProperty('advanced');

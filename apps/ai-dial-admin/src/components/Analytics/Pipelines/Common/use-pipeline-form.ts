@@ -41,7 +41,7 @@ export const usePipelineForm = ({ pipeline, takenTargets = [], initialDraft }: P
 
   const onTriggerChange = useCallback(
     (patch: Partial<PipelineTrigger>) =>
-      setDraft((prev) => ({ ...prev, trigger: { ...(prev.trigger ?? { kind: TriggerKind.OnIngest }), ...patch } })),
+      setDraft((prev) => ({ ...prev, trigger: { ...(prev.trigger ?? { kind: TriggerKind.Schedule }), ...patch } })),
     [],
   );
 

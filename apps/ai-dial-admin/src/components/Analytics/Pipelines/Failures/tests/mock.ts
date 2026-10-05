@@ -9,7 +9,7 @@ export const PIPELINE: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Llm },
   target: 'usage_client_identity',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 7,
   created_at: '2026-08-24T20:27:08Z',

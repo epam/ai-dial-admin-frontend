@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getPausedPipelines, getRunnerPipelines } from '@/src/app/[lang]/pipelines/actions';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
+import { PIPELINES_NO_RUNTIME_STORAGE_KEY, PIPELINES_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { PipelineKind, PipelineListItem, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
@@ -24,6 +25,7 @@ interface MockColDef {
   colId?: string;
   field?: string;
   headerName?: string;
+  hide?: boolean;
   cellRenderer?: (params: { data: PipelineListItem }) => ReactNode;
   valueGetter?: (params: { data: PipelineListItem }) => unknown;
 }
@@ -31,13 +33,23 @@ interface MockColDef {
 // The column under test renders a badge per row, so this stand-in runs the renderer rather than only
 // listing the column ids the way the sibling spec's does.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData, columnDefs }: { rowData?: PipelineListItem[]; columnDefs?: MockColDef[] }) => {
+  default: ({
+    rowData,
+    columnDefs,
+    storageKey,
+  }: {
+    rowData?: PipelineListItem[];
+    columnDefs?: MockColDef[];
+    storageKey?: string;
+  }) => {
     const runtime = columnDefs?.find((column) => column.colId === 'runtime');
     const inputs = columnDefs?.find((column) => column.colId === 'inputs');
 
     return (
       <div>
         <div>cols: {columnDefs?.map((column) => column.colId ?? column.field).join('|')}</div>
+        <div>runtime-hidden: {String(!!runtime?.hide)}</div>
+        <div>storage: {storageKey}</div>
         {rowData?.map((row) => (
           <div key={row.name} aria-label={`row-${row.name}`}>
             {runtime?.cellRenderer?.({ data: row })}
@@ -57,7 +69,7 @@ const pipeline = (overrides: Partial<PipelineListItem> = {}): PipelineListItem =
   kind: PipelineKind.Enrich,
   transform_type: TransformType.Sql,
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',
@@ -88,6 +100,25 @@ describe('PipelinesView — runtime column', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeTruthy();
     expect(getPausedPipelines).toHaveBeenCalledOnce();
     expect(getRunnerPipelines).toHaveBeenCalledOnce();
+  });
+
+  test('shows the runtime column by default, between enabled and generation', async () => {
+    render(<PipelinesView initialPipelines={[PAUSED]} />);
+
+    await waitFor(() =>
+      expect(screen.getByText('cols:', { exact: false })).toHaveTextContent(
+        'name|kind|trigger|transform|enabled|runtime|generation|target|inputs|updatedAt',
+      ),
+    );
+    expect(screen.getByText('runtime-hidden: false')).toBeInTheDocument();
+  });
+
+  // A layout saved before the runner answered has no runtime column, and the grid would append it last.
+  test('switches to the storage key of the column set that carries runtime once the runner answers', async () => {
+    render(<PipelinesView initialPipelines={[PAUSED]} />);
+
+    expect(screen.getByText(`storage: ${PIPELINES_NO_RUNTIME_STORAGE_KEY}`)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(`storage: ${PIPELINES_STORAGE_KEY}`)).toBeInTheDocument());
   });
 
   // The runner is not driving a disabled pipeline at all, so "not running" would read as a fault where

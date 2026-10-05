@@ -108,8 +108,10 @@ reordering are the grid's own affordances: every data column SHALL remain sortab
 grid's standard column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing
 is unpaged, those controls act on the whole registry.
 
-Columns SHALL be: **name**, **kind**, **target**, **inputs**, **trigger**, **transform**, **enabled**,
-**runtime**, **generation**, and **updated at**.
+Columns SHALL be: **name**, **kind**, **trigger**, **transform**, **enabled**, **runtime**, **generation**,
+**target**, **inputs**, and **updated at**. The first seven — **name**, **kind**, **trigger**,
+**transform**, **enabled**, **runtime**, **generation**, in that order — SHALL be visible by default;
+**target**, **inputs** and **updated at** SHALL be hidden by default and remain available to show.
 
 The grain key and the version column are **not** among them. The service resolves those only for a listing
 narrowed to the enrichment kind that also asks for the compiled projection, and it refuses that projection
@@ -148,6 +150,15 @@ whole.
 The **runtime** column SHALL be omitted entirely — rather than rendered with empty or error cells — when
 the runtime service is not configured, did not answer, or the caller is not a full admin. A column of
 identical failures states nothing about any row and implies a per-row fact the page does not have.
+
+The page header SHALL carry a **Columns** button that opens the grid's standard columns panel, the same
+panel the other listings offer, in which every column above is listed under its header name and can be
+shown, hidden or reordered, and the defaults restored. The choice SHALL persist in the browser under the
+listing's own grid storage key, alongside the grid's saved sort and filter state, so it survives a reload
+and is not shared with any other listing. A listing without the runtime column SHALL keep its choice under a separate key from one
+that carries it: the grid appends a column its saved state does not know, so a choice saved before the
+runtime service answered would otherwise move **runtime** to the end for good. The button SHALL expose whether the panel is open, and SHALL NOT
+be offered over an empty listing, where the grid shows its empty state rather than columns.
 
 Each row SHALL offer an action menu with a **delete** entry, whose confirmation dialog SHALL use the danger
 (red confirm) variant and SHALL identify the pipeline by name. After a successful delete the listing SHALL
@@ -247,6 +258,30 @@ refresh client-side, preserving the filters currently applied.
 - **THEN** no data column disables sorting or filtering
 - **AND** no separate filter toolbar is rendered above the grid
 
+#### Scenario: Default columns
+
+- **WHEN** the listing renders for a browser with no saved column choice
+- **THEN** the visible columns are name, kind, trigger, transform, enabled, runtime and generation, in that
+  order
+- **AND** target, inputs and updated at are hidden but listed in the columns panel
+
+#### Scenario: Showing a hidden column from the columns panel
+
+- **WHEN** the user activates the Columns button and checks a hidden column such as target
+- **THEN** that column is shown in the grid
+- **AND** the panel offers to restore the defaults
+
+#### Scenario: The column choice survives a reload
+
+- **GIVEN** the user has hidden a default column through the columns panel
+- **WHEN** the Pipelines page is reloaded in the same browser
+- **THEN** that column stays hidden
+
+#### Scenario: No columns button over an empty listing
+
+- **WHEN** the registry holds no pipeline
+- **THEN** the empty state is shown and no Columns button is offered
+
 #### Scenario: Delete a pipeline
 
 - **WHEN** the user activates a row's delete action and confirms in the red confirmation dialog
@@ -300,35 +335,49 @@ unselected branch from the request body — hiding a control is not sufficient, 
 before the trigger kind was changed would otherwise still be submitted. The trigger members nest under a
 single `trigger` object.
 
-- `on_ingest` — the trigger SHALL carry none of `cron`, `group_by`, `ready_when`, or `member_select`.
-- `schedule` — `group_by`, `ready_when`, and `member_select` SHALL be absent. `cron` is required by the
-  service when the pipeline is armed; the console SHALL send it when it has one and SHALL NOT withhold the
-  save when it does not.
+An enrichment's trigger kind is one of **`schedule`** (row grain) and **`group`** (group grain). The
+service refuses `on_ingest` with HTTP 422 naming `schedule` as its replacement and never returns it on a
+read, so the console SHALL NOT offer, present or send it.
+
+- `schedule` — `group_by`, `ready_when`, and `member_select` SHALL be absent. For an **enrichment** the
+  console SHALL send `cron` when it has one and SHALL omit it otherwise: the service stores an enrichment
+  `schedule` trigger that declares no cron with a default — every minute, at a second derived from the
+  pipeline name — and echoes the resolved cron on every read. For an **aggregate** `cron` is required by
+  the service when the pipeline is armed and is never defaulted; the console SHALL send it when it has one
+  and SHALL NOT withhold the save when it does not.
 - `group` — `cron` SHALL be absent. `group_by` and `ready_when` are required by the service when the
   pipeline is armed, on the same terms. `member_select` is never required.
 
 A pipeline whose trigger kind has not been chosen SHALL send **no `trigger` member at all**. An object
 carrying no kind is not an absent trigger: the service reads it as a declared trigger and refuses it, and
-the trigger is now an ordinary unfilled member of a registration that never collected one.
+the trigger is now an ordinary unfilled member of a registration that never collected one. When a trigger
+member is edited on such a pipeline before a kind is chosen, the kind it lands under SHALL be `schedule`.
 
 #### Scenario: Switching trigger kind strips the abandoned branch
 
 - **WHEN** the user fills a cron expression, then switches the trigger kind to `group`, then submits
 - **THEN** the trigger carries `group_by` and `ready_when` and carries no `cron`
 
-#### Scenario: An on-ingest pipeline sends no trigger qualifiers
+#### Scenario: On-ingest is neither offered nor sent
 
-- **WHEN** the user submits an `on_ingest` pipeline
-- **THEN** the trigger carries none of `cron`, `group_by`, `ready_when`, or `member_select`
+- **WHEN** an enrichment pipeline's trigger kind control is presented, and when any pipeline is saved
+- **THEN** the control offers `schedule` and `group` and nothing else
+- **AND** no request carries a trigger of kind `on_ingest`
 
 #### Scenario: A pipeline with no trigger kind sends no trigger
 
 - **WHEN** a pipeline whose trigger kind is unset is saved
 - **THEN** the request carries no `trigger` member
 
+#### Scenario: An enrichment schedule without a cron is left to the service's default
+
+- **WHEN** an enrichment pipeline's trigger kind is `schedule` and no cron expression has been provided
+- **THEN** the save is offered and the request carries a trigger of kind `schedule` with no `cron`
+- **AND** the re-read pipeline presents the cron the service stored
+
 #### Scenario: A schedule requires its cron
 
-- **WHEN** the trigger kind is `schedule` and no cron expression has been provided
+- **WHEN** an aggregate pipeline has no cron expression
 - **THEN** the save is offered and the request carries a trigger of kind `schedule` with no `cron`
 - **AND** the service refuses the pipeline when it is enabled, naming the absent cron
 
@@ -735,8 +784,8 @@ pipeline from a slow one. `drained_at` in particular SHALL NOT stay there: besid
 the pipeline's last sign of life, which is the one thing it does not report.
 
 A group whose every member the service omitted SHALL render nothing at all — not a heading over an empty
-card. An on-ingest pipeline has no schedule: a bare heading above white space reads as a fault rather
-than as an absence that is ordinary for that kind.
+card. A pipeline for which the service records no run schedule has none to show: a bare heading above
+white space reads as a fault rather than as an absence that is ordinary for that pipeline.
 
 The tab SHALL present exactly one of these content states:
 
@@ -745,7 +794,7 @@ The tab SHALL present exactly one of these content states:
   pipeline that failed has run, and telling its reader otherwise sends them looking for a pipeline that
   never started. The tab SHALL state that the pipeline has not run yet, in the console's own empty-state
   treatment, rather than presenting a row of placeholders. This SHALL NOT be judged on `last_run_at`: ADAS records that member only for the kinds it
-  drives on a schedule, so an on-ingest pipeline the runner drives has none of it while working
+  drives itself, so an enrichment pipeline the runner drives has none of it while working
   perfectly, and judging by it alone told a running pipeline it had never run. For an `enrich` pipeline a
   read runtime view SHALL rule this state out: the view always carries the pipeline's state, so the runner
   has it and is driving it whatever the registry recorded.
@@ -853,7 +902,7 @@ State SHALL NOT be sent when the pipeline is saved.
 - **THEN** the failure reported by the service is presented as an alert, worded by the service
 - **AND** the `Runtime` tab's failures group states when it happened without repeating the alert's message
 
-#### Scenario: A running on-ingest pipeline is not called never-run
+#### Scenario: A running enrichment pipeline is not called never-run
 
 - **GIVEN** a pipeline the service reports with a materialized-through position and no `last_run_at`
 - **WHEN** a full admin opens its `Runtime` tab
@@ -862,7 +911,7 @@ State SHALL NOT be sent when the pipeline is saved.
 
 #### Scenario: A group with nothing to report is not drawn
 
-- **GIVEN** an on-ingest pipeline for which the service records no run schedule
+- **GIVEN** a pipeline for which the service records no run schedule
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** no schedule card is rendered
 - **AND** no empty heading is presented in its place
@@ -946,7 +995,7 @@ the edited values intact.
 
 #### Scenario: Switching trigger kind drops the previous branch
 
-- **WHEN** a scheduled enrichment pipeline's trigger kind is changed to on-ingest and it is saved
+- **WHEN** a scheduled enrichment pipeline's trigger kind is changed to group and it is saved
 - **THEN** the request carries no cron
 
 #### Scenario: Read-only members are not sent
@@ -1154,13 +1203,50 @@ The control SHALL offer named presets alongside a custom expression. A custom ex
 for its field count before submission, and an invalid expression SHALL block submission with a message naming
 the six-field requirement.
 
+For an **enrichment** pipeline the control SHALL also offer an **Every minute** preset, listed first. It
+SHALL be the selection whenever the cron is absent or fires once a minute at a fixed second — `N * * * * *`
+with `N` from 0 to 59 — because that is the shape of the default the service stores, at a second it
+derives from the pipeline name. Presenting such a cron as a raw custom expression would make the
+service's own default read as something the author typed. Choosing Every minute SHALL keep a cron that
+already has that shape and SHALL otherwise clear the cron, so the request omits it and the service derives
+the second. The control SHALL NOT mark the cron as required for an enrichment pipeline.
+
+For an **aggregate** pipeline the control SHALL NOT offer Every minute and SHALL mark the cron as required:
+the service never defaults an aggregate's cron, so a preset that sends none would leave the pipeline
+unarmable, and an aggregate's refresh cost scales with its cadence.
+
 This control SHALL be used for an aggregate pipeline's schedule as well, whose trigger kind is always
 `schedule`.
 
 #### Scenario: A preset yields a six-field expression
 
-- **WHEN** the user selects a named schedule preset
+- **WHEN** the user selects a named schedule preset other than Every minute
 - **THEN** the value submitted as the trigger's cron has six fields
+
+#### Scenario: A service-defaulted cron reads as Every minute
+
+- **GIVEN** an enrichment pipeline whose stored cron fires once a minute at a fixed second
+- **WHEN** its page is opened
+- **THEN** the cron control presents Every minute as the selection
+- **AND** no custom expression input is presented
+
+#### Scenario: An enrichment schedule with no cron reads as Every minute
+
+- **WHEN** an enrichment pipeline's trigger kind is switched to `schedule` and it has no cron
+- **THEN** the cron control presents Every minute as the selection
+- **AND** the cron is not marked as required
+
+#### Scenario: Choosing Every minute leaves the second to the service
+
+- **GIVEN** an enrichment pipeline whose cron is an hourly preset
+- **WHEN** the user selects Every minute and saves
+- **THEN** the request carries a trigger of kind `schedule` and no `cron`
+
+#### Scenario: Every minute is not offered for an aggregate
+
+- **WHEN** an aggregate pipeline's schedule is edited
+- **THEN** Every minute is not among the presets
+- **AND** the cron is marked as required
 
 #### Scenario: A five-field custom expression is rejected
 
@@ -2131,9 +2217,9 @@ be recovered from the target table rather than from the projection.
 
 ### Requirement: An enrichment pipeline's execution knobs are grouped under Advanced
 
-An enrichment pipeline carries five execution knobs the runner applies: how often it scans, how many
-rows one scan may claim, how many rows it evaluates per call, a per-minute model-call ceiling, and the
-fraction of eligible rows to evaluate. They are hints to the runner rather than part of the transform,
+An enrichment pipeline carries four execution knobs the runner applies: how many rows one scan may
+claim, how many rows it evaluates per call, a per-minute model-call ceiling, and the fraction of
+eligible rows to evaluate. They are hints to the runner rather than part of the transform,
 so the console SHALL present them together in one collapsible **Advanced** block placed last in the
 section, after the members that describe what the pipeline does.
 
@@ -2145,12 +2231,21 @@ Zero is refused by the service, which names disabling the pipeline as the way to
 nothing, and a value above one is refused rather than read as a percentage. This is the one knob the
 console validates; the others it SHALL present without imposing constraints the service does not.
 
+How often the pipeline scans is not one of them. It is the trigger's cron, and the service refuses
+`advanced.scan_every` with HTTP 400 naming the member, so the console SHALL neither present nor send it.
+
 These members belong to the enrichment kind and SHALL NOT be presented for an aggregate pipeline.
 
 #### Scenario: The knobs are grouped and placed last
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** the five knobs are presented together in a collapsible block at the end of the section
+- **THEN** the four knobs are presented together in a collapsible block at the end of the section
+
+#### Scenario: No scan cadence is presented or sent
+
+- **WHEN** an enrichment pipeline is opened and saved
+- **THEN** no scan-cadence control is presented in the Advanced block
+- **AND** the request carries no `advanced.scan_every`
 
 #### Scenario: A cleared knob is omitted, not zeroed
 
@@ -2231,6 +2326,13 @@ trigger kind or its branch; not inputs, measures, read scope or execution knobs.
 pipeline's own page, which presents all of them against a resolved target. A registration form that
 collects what the author may not know yet is the one-shot form this change removes.
 
+An **enrichment** registration SHALL nevertheless carry `trigger: {"kind": "schedule"}` with no `cron`,
+although no trigger control is presented. The service stores an enrichment `schedule` trigger that declares
+no cron with its own default — every minute, at a second it derives from the pipeline name — so the
+pipeline's page opens with a cadence already declared instead of an unchosen trigger kind. The console
+SHALL NOT compute or send that cron itself: the derivation is the service's, and a console copy of it is a
+second implementation to keep in step. An aggregate registration's trigger is unchanged.
+
 The modal SHALL send no `enabled` member. The service defaults it to `false` for either kind, and an
 aggregate is stored disabled whatever the caller asks, so both kinds still register not running.
 
@@ -2252,6 +2354,12 @@ pipeline.
 
 - **WHEN** the create modal is opened with either kind selected
 - **THEN** it offers no transform, trigger, inputs, measures, read scope or execution knobs
+
+#### Scenario: An enrichment is registered on the default schedule
+
+- **WHEN** an enrichment pipeline is registered from the modal
+- **THEN** the request carries a trigger of kind `schedule` and no `cron`
+- **AND** the new pipeline's page presents its schedule as *Every minute*
 
 #### Scenario: The target list follows the selected kind
 

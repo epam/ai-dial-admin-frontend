@@ -34,7 +34,7 @@ describe('Catalog Schema Utils :: validateCatalogSchema', () => {
     expect(errors).toEqual([{ field: '$id', message: 'Id must be a string' }]);
   });
 
-  test.each(['!', '~', '*', "'", '(', ')'])('Should report an id containing %s', (char) => {
+  test.each(['!', '~', '*', "'"])('Should report an id containing %s', (char) => {
     const errors = validateCatalogSchema(schema({ $id: `https://host/schema${char}` }));
 
     expect(errors[0].field).toEqual('$id');

@@ -34,7 +34,7 @@ const rule: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Llm, model: 'gpt-4o', outputs: { title: 'Title of the session.' } },
   target: 'conversation_insights',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   filter: 'turn_count > 1',
   grain_key: 'conversation_id',
