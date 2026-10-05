@@ -4,6 +4,16 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
+
+vi.mock('@/src/context/SaveValidationContext', () => ({
+  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
+  ValidationActionType: {
+    SetField: 'SET_FIELD_VALIDATION',
+    RemoveField: 'REMOVE_FIELD_VALIDATION',
+  },
+}));
+
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import {
@@ -315,6 +325,52 @@ describe('InterfacesField — asset surfaces: mode & translator', () => {
     );
 
     expect(getBaseUrlInput()).toHaveValue('https://x');
+  });
+
+  test('switching modes validates only the active source until a translator is selected', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } }}
+        translators={[{ name: 'my-translator' }]}
+      />,
+    );
+    saveValidationDispatch.mockClear();
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-base-url`,
+      isValid: true,
+    });
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: false,
+    });
+
+    await user.selectOptions(translatorSelect(), 'my-translator');
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: true,
+    });
+
+    saveValidationDispatch.mockClear();
+    await user.selectOptions(modeSelect(), InterfaceMode.Passthrough);
+
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-base-url`,
+      isValid: false,
+    });
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${DeploymentInterfaceType.OpenAIChatCompletions}-translator`,
+      isValid: true,
+    });
   });
 
   test('switching mode to translator hides base_url and shows the translator picker', async () => {

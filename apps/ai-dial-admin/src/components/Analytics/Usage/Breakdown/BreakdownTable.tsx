@@ -10,7 +10,7 @@ import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/Dime
 import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import ShareCell from '@/src/components/Analytics/Usage/Breakdown/cells/ShareCell';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
-import { DIALOG_BLOCK_SIZE, SEARCH_DEBOUNCE_MS, VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
+import { DIALOG_BLOCK_SIZE, ROUTE_KIND_TABS, SEARCH_DEBOUNCE_MS } from '@/src/components/Analytics/Usage/constants';
 import {
   BreakdownRow,
   BreakdownRowModel,
@@ -18,6 +18,7 @@ import {
   ComparedWindows,
   KpiMetric,
   RequestState,
+  RowScope,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
 import { useBreakdownDialogRows } from '@/src/components/Analytics/Usage/use-breakdown-dialog-rows';
@@ -42,7 +43,10 @@ import {
   getFallbackLabelKey,
   getFallbackTooltipKey,
   isFallbackRowPinnedLast,
+  ROUTE_KIND_LABEL_KEY,
 } from '@/src/components/Analytics/Usage/utils/labels';
+import { getRouteKind, getRowRouteOwner } from '@/src/components/Analytics/Usage/utils/routes';
+import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -80,6 +84,10 @@ const MEASURE_COLUMN_BASE: ColDef<BreakdownRowModel> = {
 
 interface Props {
   view: UsageView;
+  /** The rows the active tab ranks; the full-list dialog reads the same. */
+  rowScope: RowScope;
+  /** The tabs offered, in order. */
+  tabs: BreakdownTab[];
   tab: BreakdownTab;
   onTabChange: (tab: BreakdownTab) => void;
   rows: RequestState<BreakdownRow[]>;
@@ -94,10 +102,14 @@ interface Props {
   onOpenRow: (row: BreakdownRowModel) => void;
   /** The dialog reads its own blocks, so it reports its own failures. */
   notice: LoadFailureNotice;
+  /** Overrides the view's own answer; absent, a priced view states cost. */
+  isCostOffered?: boolean;
 }
 
 const BreakdownTable: FC<Props> = ({
   view,
+  rowScope,
+  tabs: tabIds,
   tab,
   onTabChange,
   rows,
@@ -110,15 +122,17 @@ const BreakdownTable: FC<Props> = ({
   onHideAll,
   onOpenRow,
   notice,
+  isCostOffered: isCostOfferedOverride,
 }) => {
   const t = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const settledTerm = useDebouncedValue(searchTerm, SEARCH_DEBOUNCE_MS);
   const hasComparison = Boolean(windows.previous);
+  const isCostOffered = isCostOfferedOverride ?? isPricedView(view);
 
   const tabs = useMemo(
-    () => VIEW_BREAKDOWN_TABS[view].map((option) => ({ id: option, label: t(BREAKDOWN_TAB_LABEL_KEY[option]) })),
-    [view, t],
+    () => tabIds.map((option) => ({ id: option, label: t(BREAKDOWN_TAB_LABEL_KEY[option]) })),
+    [tabIds, t],
   );
 
   const fallbackLabelKey = getFallbackLabelKey(tab);
@@ -147,6 +161,27 @@ const BreakdownTable: FC<Props> = ({
     [t],
   );
 
+  /**
+   * A route path's row is one path on one owner under one method; its sub-label names the last two.
+   * The owner is stated as the `Owners` tab states it, so the two tabs name one owner alike.
+   */
+  const readQualifierSubLabel = useMemo(
+    () => (tab === BreakdownTab.Paths ? ([owner, method]: string[]) => ({ text: `${method} · ${owner}` }) : void 0),
+    [tab],
+  );
+
+  const readRouteKind = useMemo(() => {
+    if (!ROUTE_KIND_TABS.includes(tab)) {
+      return void 0;
+    }
+
+    return (row: BreakdownRow) => {
+      const owner = getRowRouteOwner(tab, row);
+
+      return owner ? getRouteKind(owner) : null;
+    };
+  }, [tab]);
+
   const rowModels = useMemo<BreakdownRowModel[]>(() => {
     const previousData = previousRows.data ?? [];
 
@@ -159,6 +194,8 @@ const BreakdownTable: FC<Props> = ({
       isMissingPreviousEmpty: readMissingPreviousEmpty(previousData, rowLimit),
       isFallbackPinnedLast,
       readSubLabel,
+      readQualifierSubLabel,
+      readRouteKind,
     });
   }, [
     rows.data,
@@ -170,16 +207,21 @@ const BreakdownTable: FC<Props> = ({
     fallbackTooltip,
     isFallbackPinnedLast,
     readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
   ]);
 
   const { datasource, datasourceKey, isLoadingBlock } = useBreakdownDialogRows({
     view,
+    rowScope,
     windows,
     tab,
     windowTotal,
     fallbackLabel,
     fallbackTooltip,
     readSubLabel,
+    readQualifierSubLabel,
+    readRouteKind,
     searchTerm: settledTerm,
     notice,
   });
@@ -196,7 +238,22 @@ const BreakdownTable: FC<Props> = ({
         headerClass: void 0,
         cellRenderer: DimensionCell,
         cellRendererParams: { onOpenRow },
+        // The grid's tooltip covers the whole cell, info icon included; the cell shows the name itself.
+        tooltipValueGetter: () => null,
       },
+      ...(ROUTE_KIND_TABS.includes(tab)
+        ? [
+            {
+              ...BREAKDOWN_COLUMN_BASE,
+              colId: 'routeKind',
+              headerName: t(AnalyticsUsageI18nKey.ColumnRouteKind),
+              // Text, not a badge colour: the kind is read, never inferred from a swatch.
+              valueGetter: ({ data }: { data?: BreakdownRowModel }) =>
+                data?.routeKind ? t(ROUTE_KIND_LABEL_KEY[data.routeKind]) : '',
+              width: 130,
+            } satisfies ColDef<BreakdownRowModel>,
+          ]
+        : []),
       {
         ...MEASURE_COLUMN_BASE,
         colId: 'share',
@@ -261,7 +318,7 @@ const BreakdownTable: FC<Props> = ({
       },
     ];
 
-    if (view === UsageView.Llm) {
+    if (isCostOffered) {
       columns.push({
         ...MEASURE_COLUMN_BASE,
         colId: 'cost',
@@ -279,7 +336,7 @@ const BreakdownTable: FC<Props> = ({
     }
 
     return columns;
-  }, [tab, view, onOpenRow, t]);
+  }, [tab, isCostOffered, onOpenRow, t]);
 
   const columnLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, { dimension: columnLabel });

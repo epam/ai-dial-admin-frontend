@@ -21,6 +21,7 @@ export enum EntityViewTab {
   Entities = 'Entities',
   Applications = 'Applications',
   Models = 'Models',
+  Runtime = 'Runtime',
   Audit = 'Audit',
   Activities = 'Activities',
   Dashboard = 'Dashboard',
@@ -113,6 +114,11 @@ export const parametersTab = (t: (key: string) => string) => ({
 export const auditTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Audit,
   label: t(TabsI18nKey.Audit),
+});
+
+export const runtimeTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Runtime,
+  label: t(TabsI18nKey.Runtime),
 });
 
 export const modelsTab = (t: (key: string) => string) => ({
@@ -443,6 +449,8 @@ export const getTabsForAsset = (
       interceptorsTab(t),
       dependenciesTab(t),
       appRouteTab(t),
+      // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
+      ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
     ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
@@ -489,6 +497,13 @@ export const getAuditTabs = (
   view: ApplicationRoute,
 ): TabModel[] => {
   const tabs: TabModel[] = [];
+
+  // Asset applications have no telemetry dashboard to fall back to, and the admin audit records no
+  // activity for a Core asset — as for asset toolsets — so their Audit tab holds the usage dashboard
+  // alone.
+  if (view === ApplicationRoute.AssetsApplications) {
+    return [dashboardTab(t)];
+  }
 
   if (featureFlags.dashboardEnabled) {
     if (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) {

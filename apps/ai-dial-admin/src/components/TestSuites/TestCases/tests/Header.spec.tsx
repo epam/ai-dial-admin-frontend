@@ -68,12 +68,21 @@ describe('HeaderButtons', () => {
     fireEvent.click(importItem);
   };
 
-  test('renders More dropdown, Attach and Add buttons when editable', () => {
+  test('renders More dropdown, Test Case Schema, Attach and Add buttons when editable', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
     expect(screen.getByText(TestSuitesI18nKey.More)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.TestCaseSchema })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: TestSuitesI18nKey.AttachDataset })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeInTheDocument();
+  });
+
+  test('does not nest Test Case Schema inside the More dropdown', () => {
+    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
+
+    expect(screen.getByText(TestSuitesI18nKey.PublishToDataset)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ImportFromPC)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.ExportCsv)).toBeInTheDocument();
   });
 
   test('renders read-only actions when isReadOnly is true', () => {
@@ -83,6 +92,7 @@ describe('HeaderButtons', () => {
     expect(screen.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.TestCaseSchema })).toBeNull();
     expect(screen.queryByText(TestSuitesI18nKey.More)).toBeNull();
   });
 
@@ -203,7 +213,7 @@ describe('HeaderButtons', () => {
     expect(screen.queryByText('Publish Dataset Modal')).not.toBeInTheDocument();
   });
 
-  test('invokes onOpenSchemaModal from the More dropdown', () => {
+  test('invokes onOpenSchemaModal when the Test Case Schema button is clicked', () => {
     const mockOnOpenSchemaModal = vi.fn();
     render(
       <HeaderButtons
@@ -213,7 +223,7 @@ describe('HeaderButtons', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText(TestSuitesI18nKey.TestCaseSchema));
+    fireEvent.click(screen.getByRole('button', { name: TestSuitesI18nKey.TestCaseSchema }));
 
     expect(mockOnOpenSchemaModal).toHaveBeenCalledTimes(1);
   });

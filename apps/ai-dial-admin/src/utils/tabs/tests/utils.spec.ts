@@ -173,6 +173,16 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test("gives an asset application's Audit tab the usage dashboard alone", () => {
+    expect(
+      getAuditTabs(
+        t,
+        flags({ dashboardEnabled: true, analyticsUsageEnabled: true }),
+        ApplicationRoute.AssetsApplications,
+      ),
+    ).toEqual([{ id: 'Dashboard', label: TabsI18nKey.Dashboard }]);
+  });
+
   test('returns only activities tab if dashboardEnabled is false', () => {
     const tabs = getAuditTabs(t, flags({ dashboardEnabled: false }), ApplicationRoute.Models);
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
@@ -210,6 +220,14 @@ describe('Entities :: tabs', () => {
       dependenciesTab(t),
       appRouteTab(t),
     ]);
+  });
+
+  test('offers an asset application the Audit tab only behind the analytics usage flag', () => {
+    const tabsWith = (overrides: Partial<FeatureFlags>) =>
+      getTabsForAsset(t, ApplicationRoute.AssetsApplications, flags(overrides));
+
+    expect(tabsWith({ analyticsUsageEnabled: true, adminApiEnabled: true }).at(-1)).toEqual(auditTab(t));
+    expect(tabsWith({ dashboardEnabled: true, adminApiEnabled: true })).not.toContainEqual(auditTab(t));
   });
 
   test('returns correct tabs for AssetsToolsets without dashboardEnabled', () => {

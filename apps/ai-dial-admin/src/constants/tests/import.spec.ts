@@ -1,4 +1,9 @@
-import { MAX_FILE_SIZE_MB, MAX_MULTI_FILES_SIZE_MB } from '@/src/constants/file';
+import {
+  MAX_FILE_SIZE_MB,
+  MAX_FILES_ROUTE_FILE_SIZE_MB,
+  MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB,
+  MAX_MULTI_FILES_SIZE_MB,
+} from '@/src/constants/file';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -65,24 +70,34 @@ describe('IMPORT_FILE_TYPES', () => {
 });
 
 describe('import file type helper text size limits', () => {
-  test('ARCHIVE_IMPORT_TYPE passes the per-file size limit to the description key', () => {
+  test('ARCHIVE_IMPORT_TYPE shows no size limit outside Files', () => {
     const spyT = vi.fn(t);
-    ARCHIVE_IMPORT_TYPE(spyT);
-    expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveDescription, { size: MAX_FILE_SIZE_MB });
+    ARCHIVE_IMPORT_TYPE(spyT, ApplicationRoute.Applications);
+    expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveDescription);
+    expect(spyT).not.toHaveBeenCalledWith(ImportI18nKey.DialArchiveWithLimitDescription, expect.anything());
   });
 
-  test('SEPARATE_FILES_IMPORT_TYPE passes only the total size limit to the description key', () => {
+  test('ARCHIVE_IMPORT_TYPE passes the raised archive limit for Files', () => {
     const spyT = vi.fn(t);
-    SEPARATE_FILES_IMPORT_TYPE(spyT);
-    expect(spyT).toHaveBeenCalledWith(ImportI18nKey.SeparateFilesDescription, {
-      totalSize: MAX_MULTI_FILES_SIZE_MB,
+    ARCHIVE_IMPORT_TYPE(spyT, ApplicationRoute.Files);
+    expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveWithLimitDescription, {
+      size: MAX_FILES_ROUTE_FILE_SIZE_MB,
     });
   });
 
-  test('DIAL_JSON_IMPORT_TYPE passes only the total size limit to the description key', () => {
+  test('SEPARATE_FILES_IMPORT_TYPE passes only the Files total size limit', () => {
     const spyT = vi.fn(t);
-    DIAL_JSON_IMPORT_TYPE(spyT);
+    SEPARATE_FILES_IMPORT_TYPE(spyT, ApplicationRoute.Files);
     expect(spyT).toHaveBeenCalledWith(ImportI18nKey.SeparateFilesDescription, {
+      totalSize: MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB,
+    });
+  });
+
+  test('DIAL_JSON_IMPORT_TYPE passes the per-file and total default limits', () => {
+    const spyT = vi.fn(t);
+    DIAL_JSON_IMPORT_TYPE(spyT, ApplicationRoute.Toolsets);
+    expect(spyT).toHaveBeenCalledWith(ImportI18nKey.JsonFilesDescription, {
+      size: MAX_FILE_SIZE_MB,
       totalSize: MAX_MULTI_FILES_SIZE_MB,
     });
   });

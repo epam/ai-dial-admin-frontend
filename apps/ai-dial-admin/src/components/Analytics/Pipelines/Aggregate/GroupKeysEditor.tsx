@@ -1,6 +1,7 @@
 'use client';
+
 import { FC, useEffect, useRef, useState } from 'react';
-import { DialGhostButton, DialGhostIconButton, DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Input, Select } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import {
   createGroupKeyRow,
@@ -16,6 +17,7 @@ import { GroupKey } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind, GroupKeyRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
+import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 interface Props {
   groupKeys?: GroupKey[];
   /** The source's entity, so a column an enrichment supplies is offered under its qualified name. */
@@ -49,18 +51,20 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
         return (
           <div key={row.id} className="flex flex-col gap-2">
             <div className="flex flex-row flex-wrap items-end gap-3">
-              <DialSelectField
+              <Select
+                {...PIPELINE_SELECT_DEFAULTS}
                 id={`group-key-column-${index}`}
-                containerClassName="min-w-[180px] flex-1"
-                label={t(AnalyticsPipelinesI18nKey.GroupKeyColumn)}
+                className="min-w-[180px] flex-1"
+                labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyColumn) }}
                 options={withStrandedOption(columnOptions, row.column)}
                 value={row.column}
                 onChange={(v) => updateRow(row.id, { column: v as string, unit: undefined })}
               />
-              <DialSelectField
+              <Select
+                {...PIPELINE_SELECT_DEFAULTS}
                 id={`group-key-kind-${index}`}
-                containerClassName="min-w-[180px] flex-1"
-                label={t(AnalyticsPipelinesI18nKey.GroupKeyKind)}
+                className="min-w-[180px] flex-1"
+                labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyKind) }}
                 options={[
                   { value: GroupKeyKind.Column, label: t(AnalyticsPipelinesI18nKey.GroupKeyKindColumn) },
                   { value: GroupKeyKind.Trunc, label: t(AnalyticsPipelinesI18nKey.GroupKeyKindTrunc) },
@@ -69,10 +73,11 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
                 onChange={(v) => updateRow(row.id, { kind: v as GroupKeyKind, unit: undefined })}
               />
               {row.kind === GroupKeyKind.Trunc && (
-                <DialSelectField
+                <Select
+                  {...PIPELINE_SELECT_DEFAULTS}
                   id={`group-key-unit-${index}`}
-                  containerClassName="min-w-[180px] flex-1"
-                  label={t(AnalyticsPipelinesI18nKey.GroupKeyUnit)}
+                  className="min-w-[180px] flex-1"
+                  labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyUnit) }}
                   options={withStrandedOption(
                     units.map((unit) => ({ value: unit, label: unit })),
                     row.unit,
@@ -81,14 +86,14 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
                   onChange={(v) => updateRow(row.id, { unit: v as GroupKeyRow['unit'] })}
                 />
               )}
-              <DialInput
+              <Input
                 id={`group-key-alias-${index}`}
                 containerClassName="min-w-[180px] flex-1"
                 labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupKeyAlias) }}
                 value={row.as ?? ''}
                 onChange={(v) => updateRow(row.id, { as: v ?? '' })}
               />
-              <DialGhostIconButton
+              <GhostIconButton
                 className="mb-1 shrink-0"
                 icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={t(ButtonsI18nKey.Delete)}
@@ -101,7 +106,7 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
           </div>
         );
       })}
-      <DialGhostButton
+      <GhostButton
         className="self-start"
         label={t(AnalyticsPipelinesI18nKey.AddGroupKey)}
         onClick={() => commit([...rows, createGroupKeyRow()])}

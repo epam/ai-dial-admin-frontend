@@ -146,17 +146,250 @@ bookmark or a link to either old page lands on the page the configuration admits
 - **WHEN** the user opens `/usage`
 - **THEN** the browser lands on `/dashboards`
 
-### Requirement: The entity Audit tab keeps the telemetry dashboard
+### Requirement: The entity Audit tab serves the usage dashboard behind the flags
 
-Every entity's Audit tab SHALL keep rendering the existing telemetry dashboard, with its own
-controls and its refresh-interval selector, whatever the analytics flags' values. The unified route
-decides only what the standalone page shows.
+While both `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` resolve truthy — the same pair that
+decides what `/dashboards` serves — the Audit `Dashboard` tab of these entity types SHALL render the
+usage dashboard for that entity: Models, Platform models, Applications, Assets applications,
+Toolsets and Assets toolsets. With either flag falsy, the tab SHALL render the telemetry dashboard
+where it does today, unchanged.
 
-#### Scenario: Entity Audit tab is unaffected by the flags
+Assets applications SHALL gain an Audit tab only while both flags are truthy, and it SHALL hold
+`Dashboard` alone: they have no telemetry dashboard to fall back to, and the admin audit records no
+activity for them. Every other entity type's Audit tab SHALL be unchanged.
+
+When the analytics service refuses the user, the tab SHALL render the page's no-access state rather
+than an empty dashboard and a failure notification.
+
+#### Scenario: Flags on serve the usage dashboard on an entity
 
 - **GIVEN** both flags resolve truthy
-- **WHEN** the user opens an entity's Audit tab
-- **THEN** the existing telemetry dashboard renders
+- **WHEN** the user opens a model's Audit tab and selects `Dashboard`
+- **THEN** the usage dashboard renders for that model, with `View by`
+- **AND** no telemetry control (refresh interval, telemetry filters) is shown
+
+#### Scenario: A flag off keeps the telemetry dashboard
+
+- **GIVEN** `ANALYTICS_USAGE_ENABLED` resolves falsy
+- **WHEN** the user opens a model's Audit `Dashboard` tab
+- **THEN** the telemetry dashboard renders as before
+
+#### Scenario: Asset applications gain the tab behind the flags only
+
+- **GIVEN** an asset application
+- **WHEN** both flags resolve truthy
+- **THEN** it offers an Audit tab whose only entry is `Dashboard`
+- **AND** with either flag falsy it offers no Audit tab, as today
+
+#### Scenario: A refused user sees the no-access state
+
+- **GIVEN** both flags resolve truthy and the analytics service answers 403 for the user
+- **WHEN** the user opens an entity's Audit `Dashboard` tab
+- **THEN** the no-access state renders in the tab
+
+### Requirement: An entity dashboard offers View by over its entity's views
+
+An entity dashboard SHALL render the page's controls — `View by`, the period, `Compare` and refresh —
+over one view's widgets, exactly as `/dashboards` does. Its `View by` SHALL offer only the views its
+entity has traffic of, in this order, and SHALL be shown even where that is a single view, so every
+dashboard reads the same way:
+
+| Entity | Views offered |
+| --- | --- |
+| Models, Platform models | LLM |
+| Toolsets, Assets toolsets | MCP |
+| Applications, Assets applications | LLM, MCP, and Routes when the application declares routes |
+
+The first view SHALL be the one the dashboard opens with. The period and `Compare` SHALL govern every
+view, and the period SHALL start from, and write back to, the period the entity's other Audit tabs
+share, so switching to `Activities` and back keeps it.
+
+#### Scenario: A model offers its one view
+
+- **WHEN** a model's entity dashboard renders
+- **THEN** `View by` shows `LLM` and offers no other view
+
+#### Scenario: An application offers its views in order
+
+- **GIVEN** an application that declares routes
+- **WHEN** the user opens its `View by`
+- **THEN** it offers `LLM`, `MCP` and `Routes` in that order, with `LLM` selected
+
+#### Scenario: No routes, no Routes view
+
+- **GIVEN** an application that declares no routes
+- **WHEN** the user opens its `View by`
+- **THEN** it offers `LLM` and `MCP` only
+
+#### Scenario: One period governs every view and survives a tab switch
+
+- **GIVEN** an application's entity dashboard with the period set to the last 7 days
+- **WHEN** the user switches `View by` to `MCP`, opens `Activities`, and returns to `Dashboard`
+- **THEN** the dashboard reads the last 7 days
+
+### Requirement: Each entity type reads its own rows
+
+Every request an entity dashboard issues SHALL carry its view's clause, the window, and the entity's clause:
+
+| Entity | Entity clause | Name the clause matches |
+| --- | --- | --- |
+| Models, Platform models | `deployment` = the model | the model's name |
+| Toolsets | `deployment` = the toolset | the toolset's name |
+| Assets toolsets | `deployment` = the toolset | `toolsets/` + the toolset's path, each segment URI-encoded |
+| Applications | own calls: `deployment` = the application; its call tree: `execution_path` contains the application | the application's name |
+| Assets applications | as Applications | `applications/` + the application's path, each segment URI-encoded |
+
+An application's call tree SHALL be every row whose `execution_path` — the chain of deployments the
+request passed through — contains the application, at any depth: the calls it made, and the calls
+the applications it called made in turn.
+
+An application's Routes view SHALL read its own route calls: `deployment` = the application,
+within the Routes view's rows.
+
+#### Scenario: A model's dashboard counts only that model
+
+- **GIVEN** two models with traffic in the window
+- **WHEN** one model's entity dashboard renders
+- **THEN** its figures count only that model's calls
+
+#### Scenario: An asset toolset is matched by its encoded path
+
+- **GIVEN** an asset toolset whose path holds a space
+- **WHEN** its entity dashboard issues a request
+- **THEN** the deployment it matches is `toolsets/` + the path with the space encoded as `%20`
+
+#### Scenario: A nested application's calls are in the tree
+
+- **GIVEN** application A called application B, and B called a model
+- **WHEN** A's entity dashboard reads its call tree
+- **THEN** B's model call is among the rows it reads
+
+### Requirement: An application's figures rest on its own calls
+
+An application's LLM view SHALL compute `Requests`, `Unique callers`, `Error rate`, `Avg latency`,
+the requests and latency plots and the heatmap from the calls made *to* the application, so one user
+request is one request however many model calls it fanned out into.
+
+Every money and token figure SHALL rest on one set of rows instead: the **priced model calls in the
+application's call tree** — the rows of its call tree that carry a price of their own.
+
+- `Total spend` SHALL be the sum of their prices. It covers every model call the application caused,
+  however the application was invoked — as a chat, or by another application as an MCP server, whose
+  calls carry no total price.
+- `Tokens` SHALL be their prompt and completion tokens, with no caption.
+- `Cost per 1M tokens` SHALL divide `Total spend` by `Tokens`, both from those rows.
+- The spend plot SHALL plot their prices.
+
+A figure that rests on those rows and has no buckets of them SHALL draw no sparkline, and the
+heatmap of an application's LLM view SHALL offer requests alone, rather than draw the application's
+own calls beside a card that counts its call tree.
+
+A breakdown tab of an application's LLM view that ranks the application's own calls — `Projects` —
+SHALL state no cost: those calls carry no price of their own, and the cost the cards state rests on
+the call tree.
+
+An application's MCP view SHALL read the tool calls in its call tree, leaving out calls made to the
+application itself as an MCP server: those are other callers' use of the application.
+
+#### Scenario: One request fanned out is one request
+
+- **GIVEN** a user called the application once and it called models three times
+- **WHEN** the LLM view's KPI row renders
+- **THEN** `Requests` counts one
+
+#### Scenario: Spend covers the whole call tree
+
+- **GIVEN** the application called a nested application that called a model
+- **WHEN** the LLM view's KPI row renders
+- **THEN** `Total spend` includes that model call's price
+- **AND** `Tokens` includes its tokens
+
+#### Scenario: Work done as an MCP server is spend too
+
+- **GIVEN** another application invoked the application as an MCP server, and the application called a model to answer
+- **WHEN** the application's LLM view renders its KPI row
+- **THEN** `Total spend` includes that model call's price
+
+#### Scenario: Tokens name what they count
+
+- **WHEN** an application's LLM view renders its KPI row
+- **THEN** the `Tokens` card carries no caption, since it counts the whole call tree as its title says
+
+#### Scenario: The application's heatmap offers no cost
+
+- **WHEN** an application's LLM view renders its heatmap
+- **THEN** it offers requests alone
+
+#### Scenario: A tab of the application's own calls states no cost
+
+- **WHEN** an application's LLM view renders its `Projects` tab
+- **THEN** the breakdown has no cost column
+- **AND** its `Models` tab keeps one
+
+#### Scenario: Tools called by a nested application are the application's tools
+
+- **GIVEN** application A called application B, and B called a tool
+- **WHEN** A's MCP view renders
+- **THEN** that tool call is counted
+
+#### Scenario: Tools the application serves are not its tools
+
+- **GIVEN** another caller called a tool the application serves as an MCP server
+- **WHEN** the application's MCP view renders
+- **THEN** that tool call is not counted
+
+### Requirement: An entity's view hides the tab that would rank its entity against itself
+
+Each view of an entity dashboard SHALL offer its breakdown tabs less the one whose rows would be the
+entity alone:
+
+| Entity | View | Hidden tab | Tabs offered |
+| --- | --- | --- | --- |
+| Models, Platform models | LLM | `Models` | `Applications`, `Projects` |
+| Toolsets, Assets toolsets | MCP | `MCP Servers` | `Tools`, `Applications`, `Projects` |
+| Applications, Assets applications | LLM | `Applications` | `Models`, `Projects` |
+| Applications, Assets applications | MCP | `Applications` | `MCP Servers`, `Tools`, `Projects` |
+| Applications, Assets applications | Routes | `Owners` | `Paths`, `Callers`, `Projects` |
+
+The view's share donut and its split plot SHALL lead with its first offered tab.
+
+On an application's LLM view the `Models` tab and its donut SHALL rank the priced model calls in the
+application's call tree by model, their shares SHALL be shares of those calls rather than of the
+application's own calls, and the tab's cost column SHALL sum to the view's `Total spend`.
+
+#### Scenario: A model's view opens on its callers
+
+- **WHEN** a model's LLM view renders
+- **THEN** the breakdown offers `Applications` and `Projects`, opening on `Applications`
+- **AND** the donut splits by application
+
+#### Scenario: An application's model shares add up
+
+- **GIVEN** an application whose calls fanned out into many model calls
+- **WHEN** its LLM view's `Models` tab renders
+- **THEN** the shares of its rows sum to no more than one hundred per cent
+
+#### Scenario: A model reached through a nested application is ranked
+
+- **GIVEN** application A called application B, and B called model M
+- **WHEN** A's `Models` tab renders
+- **THEN** M is ranked among A's models
+
+#### Scenario: The models tab costs what the application spent
+
+- **WHEN** an application's `Models` tab renders every row of the window
+- **THEN** its rows' costs sum to the view's `Total spend`
+
+### Requirement: The Dashboards page is unchanged by the entity dashboards
+
+The standalone `/dashboards` page SHALL render, request and behave exactly as before this change:
+its `View by`, its views, its tabs and its figures.
+
+#### Scenario: The page keeps View by
+
+- **GIVEN** both flags resolve truthy
+- **WHEN** the user opens `/dashboards`
+- **THEN** `View by` offers LLM, MCP and Routes as before
 
 ### Requirement: The analytics page is headed Dashboards and offers no telemetry help
 
@@ -989,8 +1222,8 @@ cursor, which reads as the pointer having left the slice it is on.
 ### Requirement: The donut follows the view's primary dimension
 
 The donut's dimension SHALL be the active view's leading breakdown dimension — models in the LLM
-view, MCP servers in the MCP view — matching the breakdown table's default tab, so the two widgets
-never disagree about what the page is about.
+view, MCP servers in the MCP view, owners in the Routes view — matching the breakdown table's
+default tab, so the two widgets never disagree about what the page is about.
 
 The donut SHALL read that dimension from a request of its own rather than from the breakdown
 table's. Sharing the table's response would make the ring reload, and change what it splits by,
@@ -1007,6 +1240,11 @@ every time a reader switched the tab below it.
 - **WHEN** the user switches `View by` to MCP
 - **THEN** the donut splits by MCP server
 
+#### Scenario: The Routes view splits by owner
+
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** the donut splits by owner
+
 #### Scenario: Switching the breakdown tab leaves the donut alone
 
 - **GIVEN** the donut splits by model
@@ -1021,12 +1259,17 @@ by. The tab sets SHALL be:
 
 - **LLM view**: `Models`, `Applications`, `Projects`
 - **MCP view**: `MCP Servers`, `Tools`, `Applications`, `Projects`
+- **Routes view**: `Owners`, `Paths`, `Callers`, `Projects`
 
 The first tab of each set SHALL be the default. Switching tab SHALL issue exactly one request — the
 tab request named under the request contract above, grouped by that tab's dimension and ordered and
 limited server-side — and SHALL NOT re-issue the view's other requests. A tab is grouped and ranked
 by the backend rather than regrouped on the client because a top-N taken over rows grouped by every
 dimension at once ranks combinations, not the dimension the tab is about.
+
+The Routes view's `Callers` tab SHALL rank the deployment that called the route, and SHALL carry the
+`Direct call` fallback for a route called by a key or a user rather than by a deployment, with the
+tooltip that names such a call.
 
 The selected period SHALL apply to every tab.
 
@@ -1035,6 +1278,19 @@ The selected period SHALL apply to every tab.
 - **WHEN** the MCP view loads
 - **THEN** the breakdown table shows the `MCP Servers` tab
 - **AND** tabs for `Tools`, `Applications` and `Projects` are offered
+
+#### Scenario: The Routes view opens on owners
+
+- **WHEN** the Routes view loads
+- **THEN** the breakdown table shows the `Owners` tab
+- **AND** tabs for `Paths`, `Callers` and `Projects` are offered
+
+#### Scenario: A route called by a client is a direct call
+
+- **GIVEN** a route call with no calling deployment
+- **WHEN** the Routes view's `Callers` tab renders
+- **THEN** the call is counted under `Direct call`
+- **AND** its tooltip names a call made by a key or a user
 
 #### Scenario: Switching tab issues exactly one request
 
@@ -1439,9 +1695,9 @@ question from what the row is called.
 The share chart SHALL offer the measure it splits by: `Calls` and `Cost`. `Calls` SHALL be listed
 first and SHALL be the selection the card opens with, so the default reading is unchanged.
 
-The MCP view SHALL offer no such choice and SHALL split by calls alone: no `mcp` row carries a
-price, so a cost ring there would be empty whatever the window. Switching the view SHALL return the
-selection to `Calls`.
+The MCP and Routes views SHALL offer no such choice and SHALL split by calls alone: no `mcp` row and
+no route row carries a price, so a cost ring there would be empty whatever the window. Switching
+the view SHALL return the selection to `Calls`.
 
 Choosing a measure SHALL re-issue the chart's ranking request **ordered by that measure**. The top-N
 cut is taken by the backend, so a ring ranked on calls and rendered on spend would show the five
@@ -1473,6 +1729,11 @@ the new. The selection flips the figures when its rows arrive.
 #### Scenario: The MCP view offers no cost split
 
 - **WHEN** the share chart renders in the MCP view
+- **THEN** it offers no cost measure
+
+#### Scenario: The Routes view offers no cost split
+
+- **WHEN** the share chart renders in the Routes view
 - **THEN** it offers no cost measure
 
 #### Scenario: Choosing cost re-ranks on the backend
@@ -1601,6 +1862,158 @@ its rows.
 - **GIVEN** a server a client connects to often and calls rarely
 - **WHEN** the share chart and the breakdown rank the view's servers
 - **THEN** that server is ranked by the calls it served, not by the connections it received
+
+### Requirement: View by offers LLM, MCP and Routes
+
+The page's `View by` control SHALL offer three views, in this order: `LLM`, `MCP` and `Routes`.
+`LLM` SHALL remain the view the page opens with.
+
+Switching to `Routes` SHALL re-issue every request shape against the Routes view's rows, exactly as
+switching between LLM and MCP does, and SHALL keep the period and the `Compare` selection.
+
+#### Scenario: Routes is offered last
+
+- **WHEN** the page renders
+- **THEN** `View by` offers `LLM`, `MCP` and `Routes` in that order
+- **AND** `LLM` is selected
+
+#### Scenario: Switching to Routes keeps the window
+
+- **GIVEN** a custom period with comparison on
+- **WHEN** the user switches `View by` to `Routes`
+- **THEN** every widget reloads from the Routes view's rows
+- **AND** the period and the comparison are unchanged
+
+### Requirement: The Routes view reads application-route and global-route calls
+
+The Routes view SHALL read two kinds of row and no other:
+
+- an **application route** call: a row whose event kind is `route`. Its request URI has the shape
+  `/v1/deployments/<deployment>/route/<path>`, and its deployment is the deployment that declares
+  the route;
+- a **global route** call: a row whose event kind is empty and whose deployment is missing. Core
+  resolved it against its global routes map, and the log records neither a route name nor a
+  deployment for it.
+
+Every request the view issues SHALL carry that clause, so each of its figures rests on the same
+rows.
+
+#### Scenario: Both kinds are counted
+
+- **GIVEN** the window holds application-route calls and global-route calls
+- **WHEN** the Routes view loads
+- **THEN** its call count includes both
+
+#### Scenario: Model and MCP traffic is not counted
+
+- **GIVEN** the window holds LLM calls and MCP tool calls
+- **WHEN** the Routes view loads
+- **THEN** none of them is counted in any of its figures
+
+### Requirement: The LLM view does not count global route calls
+
+The LLM view SHALL exclude global route calls as defined above. Their event kind is empty, which
+the LLM view otherwise reads as an LLM call made through an API that carries no classified kind,
+so without the exclusion router and proxy traffic is counted as model calls, ranked as a model row
+with no name, and its latency is averaged into the models'.
+
+Excluding them SHALL NOT change the LLM view's spend or tokens, since no route row carries a price
+or a token count. It SHALL change the view's request count, error rate and latency by exactly the
+excluded rows.
+
+An LLM call whose event kind is empty and whose deployment is present SHALL still be counted.
+
+#### Scenario: A global route call is not an LLM call
+
+- **GIVEN** the window holds a global route call
+- **WHEN** the LLM view loads
+- **THEN** that call is counted in none of the LLM view's figures
+
+#### Scenario: An unclassified model call is still counted
+
+- **GIVEN** a call to a model through an API that carries no event kind
+- **WHEN** the LLM view loads
+- **THEN** that call is counted
+
+### Requirement: A route row states its owner, its path and its kind
+
+Every Routes view figure SHALL be grouped through three values derived from the row, computed by
+the backend so that grouping, ranking and paging rest on the same value:
+
+- **kind** — `Application` for an application route, `Global` for a global route;
+- **owner** — the declaring deployment for an application route; for a global route, the first
+  segment of the request path with its leading slash, since the log names no route;
+- **path** — for an application route, the part of the request URI after `/route/`, with a leading
+  slash; for a global route, the whole request path. A query string SHALL be dropped from both, so
+  one path called with different parameters is one path.
+
+Two global routes whose paths share a first segment SHALL rank as one owner. This is the stated cost
+of the log carrying no route name, and the `Owners` tab's description SHALL say so.
+
+#### Scenario: An application route is owned by its deployment
+
+- **GIVEN** a call to `/v1/deployments/app-a/route/v1/search?q=x`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Application`, its owner is `app-a` and its path is `/v1/search`
+
+#### Scenario: A global route is owned by its first path segment
+
+- **GIVEN** a global route call to `/proxy/v1/messages`
+- **WHEN** the Routes view groups it
+- **THEN** its kind is `Global`, its owner is `/proxy` and its path is `/proxy/v1/messages`
+
+#### Scenario: The query string does not split a path
+
+- **GIVEN** two calls to one route path with different query strings
+- **WHEN** the `Paths` tab renders
+- **THEN** they are one row
+
+### Requirement: The Routes view states what route rows carry and nothing else
+
+The Routes view SHALL render the KPI row with four cards, in this order: `Requests`,
+`Unique callers`, `Error rate`, `Avg latency`. It SHALL NOT render spend, tokens or cost per token:
+no route row carries a price or a token count, so each would read zero for every window.
+
+Its time series SHALL offer the requests plot, the split plot by owner and the latency plot, and
+SHALL NOT offer the spend plot. Its heatmap SHALL paint requests alone. Its share chart SHALL split
+by calls alone.
+
+#### Scenario: Four cards head the Routes view
+
+- **WHEN** the Routes view loads
+- **THEN** the KPI row shows `Requests`, `Unique callers`, `Error rate` and `Avg latency` in that order
+- **AND** no spend, token or cost-per-token card is shown
+
+#### Scenario: No spend plot in the Routes view
+
+- **WHEN** the Routes view's time series renders
+- **THEN** it offers the requests, by-owner and latency plots
+- **AND** it offers no spend plot
+
+#### Scenario: The heatmap offers no cost
+
+- **WHEN** the Routes view's heatmap renders
+- **THEN** it offers requests alone
+
+### Requirement: Each Routes row states its kind
+
+The `Owners` and `Paths` tabs SHALL state each row's kind, `Application` or `Global`, in a column of
+its own beside the dimension, because the two kinds derive owner and path differently and a reader
+cannot tell them apart from the value alone. The kind SHALL be text, not colour or an icon alone.
+
+A row's identity on the `Paths` tab SHALL be its owner, path and request method together, so one
+path on two owners, or under two methods, is two rows.
+
+#### Scenario: The kind is stated as text
+
+- **WHEN** the `Owners` tab renders a global route's row
+- **THEN** its kind column reads `Global`
+
+#### Scenario: One path under two methods is two rows
+
+- **GIVEN** an owner's path is called with `GET` and with `POST`
+- **WHEN** the `Paths` tab renders
+- **THEN** it shows two rows, each stating its method
 
 ### Requirement: A missing dimension value carries its tab's fallback label
 

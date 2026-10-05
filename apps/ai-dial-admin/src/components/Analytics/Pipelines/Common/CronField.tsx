@@ -2,9 +2,9 @@
 
 import { FC, useState } from 'react';
 
-import { DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { Input, Select } from '@epam/ai-dial-ui-kit';
 
-import { CRON_CUSTOM_PRESET, CRON_PRESETS } from '@/src/constants/analytics/pipelines';
+import { CRON_CUSTOM_PRESET, CRON_PRESETS, PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { getControlClassName } from '@/src/utils/entities/view';
@@ -45,17 +45,17 @@ const CronField: FC<Props> = ({ value, onChange }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <DialSelectField
+      <Select
+        {...PIPELINE_SELECT_DEFAULTS}
         id="rule-cron-preset"
-        required
-        containerClassName={getControlClassName()}
-        label={t(AnalyticsPipelinesI18nKey.CronPreset)}
+        className={getControlClassName()}
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.CronPreset), required: true }}
         options={presetOptions}
         value={isCustom ? CRON_CUSTOM_PRESET : (matchingPreset?.value ?? '')}
         onChange={(v) => onPresetChange(v as string)}
       />
       {isCustom && (
-        <DialInput
+        <Input
           id="rule-cron-expression"
           containerClassName={getControlClassName()}
           labelProps={{ label: t(AnalyticsPipelinesI18nKey.CronExpression), required: true }}

@@ -10,10 +10,12 @@ import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
 import {
   CellClickedEvent,
   ColDef,
+  FirstDataRenderedEvent,
   GridApi,
   GridOptions,
   GridReadyEvent,
   IRowNode,
+  NewColumnsLoadedEvent,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 
@@ -33,7 +35,11 @@ import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
-import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
+import {
+  CONTENT_FIT_COLUMN_IDS,
+  getTestCaseColumns,
+  VALIDITY_STATUS_COLUMN_ID,
+} from '@/src/components/TestSuites/utils/columns';
 import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { hasIncompleteInputBindings } from '@/src/components/TestSuites/utils/template-variables';
 import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
@@ -224,8 +230,18 @@ const TestCasesList: FC<Props> = ({
   const includedIdsRef = useRef(includedIds);
   includedIdsRef.current = includedIds;
 
+  const onAutoSizeTestCaseColumns = useCallback((api: GridApi) => {
+    api.autoSizeColumns({
+      colIds: CONTENT_FIT_COLUMN_IDS,
+      columnLimits: [{ colId: VALIDITY_STATUS_COLUMN_ID, minWidth: 130 }],
+    });
+    api.sizeColumnsToFit();
+  }, []);
+
   const gridOptions: GridOptions = {
     ...turnGrid.turnGridOptions,
+    onFirstDataRendered: (event: FirstDataRenderedEvent) => onAutoSizeTestCaseColumns(event.api),
+    onNewColumnsLoaded: (event: NewColumnsLoadedEvent) => onAutoSizeTestCaseColumns(event.api),
     onSelectionChanged,
     onCellClicked,
     isExternalFilterPresent: () => showIncludedOnlyRef.current,

@@ -77,12 +77,6 @@ const HeaderButtons: FC<Props> = ({
   const moreItems: DropdownItem[] = useMemo(() => {
     return [
       {
-        key: 'schema',
-        label: t(TestSuitesI18nKey.TestCaseSchema),
-        icon: <IconSettings {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: () => onOpenSchemaModal?.(),
-      },
-      {
         key: 'publish',
         label: t(TestSuitesI18nKey.PublishToDataset),
         icon: <IconDatabaseExport {...BASE_BUTTON_ICON_PROPS} />,
@@ -101,7 +95,7 @@ const HeaderButtons: FC<Props> = ({
         onClick: () => onExport?.(),
       },
     ];
-  }, [t, onOpenSchemaModal, onExport]);
+  }, [t, onExport]);
 
   const onPublishConfirm = (displayName: string, description?: string) => {
     setIsPublishModalOpen(false);
@@ -151,6 +145,13 @@ const HeaderButtons: FC<Props> = ({
 
     const leading: AdaptiveHeaderAction[] = [
       {
+        id: 'schema',
+        label: t(TestSuitesI18nKey.TestCaseSchema),
+        icon: <IconSettings {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onOpenSchemaModal?.(),
+        appearance: 'ghost',
+      },
+      {
         id: 'attach',
         label: t(TestSuitesI18nKey.AttachDataset),
         icon: <IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />,
@@ -176,20 +177,22 @@ const HeaderButtons: FC<Props> = ({
         ]
       : [];
     return { leading, trailing };
-  }, [isReadOnly, t, onExport, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
+  }, [isReadOnly, t, onExport, onOpenSchemaModal, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
 
   return (
     <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
-      {!isReadOnly && (
-        <DialButtonDropdown
-          label={t(TestSuitesI18nKey.More)}
-          items={moreItems}
-          variant={ButtonVariant.Primary}
-          appearance={ButtonAppearance.Ghost}
-        />
-      )}
+      <div className="flex gap-4 items-center min-w-0">
+        {!isReadOnly && (
+          <DialButtonDropdown
+            label={t(TestSuitesI18nKey.More)}
+            items={moreItems}
+            variant={ButtonVariant.Primary}
+            appearance={ButtonAppearance.Ghost}
+          />
+        )}
 
-      <AdaptiveHeaderActions actions={adaptiveActions} />
+        <AdaptiveHeaderActions actions={adaptiveActions} />
+      </div>
 
       {datasetTag}
 

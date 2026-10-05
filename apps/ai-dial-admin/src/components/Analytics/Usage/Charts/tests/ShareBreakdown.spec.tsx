@@ -144,6 +144,19 @@ describe('ShareBreakdown metric', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost)).toBeInTheDocument();
   });
 
+  test('offers no cost split in the Routes view, where a row carries no price', () => {
+    renderCard({ view: UsageView.Routes, tab: BreakdownTab.Owners });
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.DonutMetricCost)).toBeNull();
+  });
+
+  test('names its share as calls in the Routes view, keeping tool calls for MCP', () => {
+    renderCard({ view: UsageView.Routes, tab: BreakdownTab.Owners });
+
+    expect(screen.getByText(AnalyticsUsageI18nKey.DonutSubtitle)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsUsageI18nKey.DonutSubtitleMcp)).toBeNull();
+  });
+
   test('offers no cost split in the MCP view, where a row carries no price', () => {
     renderCard({ view: UsageView.Mcp, tab: BreakdownTab.McpServers });
 

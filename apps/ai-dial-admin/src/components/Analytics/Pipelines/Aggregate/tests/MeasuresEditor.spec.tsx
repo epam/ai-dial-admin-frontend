@@ -14,6 +14,28 @@ import {
   QueryFunctionReturnType,
 } from '@/src/models/analytics/query-function';
 
+// The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
+// options can be read out of — as the specs did when this was the 1.0 `DialSelectField`.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Select: ({ id, labelProps, options, value, caption, placeholder, onChange }: any) => (
+    <label>
+      <span>{labelProps?.label}</span>
+      {!value && placeholder && <span>{placeholder}</span>}
+      <select id={id} aria-label={labelProps?.label ?? id} value={value} onChange={(e) => onChange(e.target.value)}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {options.map((option: any) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {caption && <span>{caption}</span>}
+    </label>
+  ),
+}));
+
 const column = (name: string): AnalyticsTableColumn => ({
   source_name: name,
   name,
@@ -77,15 +99,16 @@ describe('MeasuresEditor', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.MeasureColumnDefault)).toBeTruthy();
   });
 
-  test("reveals a function's catalog description on hover rather than under the label", async () => {
-    const user = userEvent.setup();
+  // Each function is offered under its signature; its catalog description rides on the option's own
+  // tooltip, which the kit draws, so the label is what this asserts.
+  test('offers each catalog function under its signature', () => {
     renderEditor();
 
-    await user.click(screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureFn} 1` }));
+    const fn = within(screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureFn} 1` })).getByRole(
+      'combobox',
+    );
 
-    expect(screen.queryByText(functions[0].description)).toBeNull();
-    await user.hover(screen.getByText('sum(value)'));
-    expect(await screen.findByText(functions[0].description)).toBeTruthy();
+    expect(within(fn).getByRole('option', { name: functions[0].signature })).toBeTruthy();
   });
 
   // The service validates a measure against the source's entity, so a column an enrichment supplies is
@@ -94,10 +117,11 @@ describe('MeasuresEditor', () => {
     const user = userEvent.setup();
     renderEditor();
 
-    const column = screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` });
-    await user.click(within(column).getByRole('button'));
+    const column = within(
+      screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` }),
+    ).getByRole('combobox');
 
-    expect(await screen.findByRole('option', { name: /usage_client_identity\.client_session_id/ })).toBeTruthy();
+    expect(within(column).getByRole('option', { name: /usage_client_identity\.client_session_id/ })).toBeTruthy();
   });
 
   // A column written in the JSON editor is not one the form may quietly drop.
@@ -105,10 +129,11 @@ describe('MeasuresEditor', () => {
     const user = userEvent.setup();
     renderEditor([{ name: 'total_price', fn: 'sum', column: 'written_by_hand.value' }]);
 
-    const column = screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` });
-    await user.click(within(column).getByRole('button'));
+    const column = within(
+      screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` }),
+    ).getByRole('combobox');
 
-    expect(await screen.findByRole('option', { name: 'written_by_hand.value' })).toBeTruthy();
+    expect(within(column).getByRole('option', { name: /written_by_hand\.value/ })).toBeTruthy();
   });
 
   test('offers the add control', () => {

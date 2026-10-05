@@ -123,15 +123,7 @@ const Properties = <T extends object>({
   }
 
   if (isAssetView(view)) {
-    return (
-      <AssetProperties
-        view={view}
-        runners={runners}
-        versionsMap={versionsMap}
-        entity={entity as AssetWithVersion}
-        {...props}
-      />
-    );
+    return <AssetProperties view={view} versionsMap={versionsMap} entity={entity as AssetWithVersion} {...props} />;
   }
 
   return (

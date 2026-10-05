@@ -8,7 +8,8 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 const renderField = (props?: Partial<Parameters<typeof GroupByField>[0]>) =>
   render(<GroupByField grainKey="client_session_id" onChange={vi.fn()} {...props} />);
 
-const field = () => screen.getByRole('textbox', { name: `${AnalyticsPipelinesI18nKey.GroupBy}*` });
+// The 2.0 label spells the required marker out in the accessible name, where 1.0 used an asterisk.
+const field = () => screen.getByRole('textbox', { name: `${AnalyticsPipelinesI18nKey.GroupBy}(required)` });
 
 describe('GroupByField', () => {
   test('offers the target grain key as the starting value, under its own label', () => {

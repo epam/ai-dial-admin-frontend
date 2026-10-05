@@ -1,5 +1,6 @@
 import {
   BucketPoint,
+  ComparedMeasures,
   KpiFigure,
   KpiMetric,
   UsageMeasures,
@@ -20,6 +21,7 @@ export const VIEW_KPI_METRICS: Record<UsageView, KpiMetric[]> = {
     KpiMetric.AvgLatency,
   ],
   [UsageView.Mcp]: [KpiMetric.Requests, KpiMetric.UniqueCallers, KpiMetric.ErrorRate, KpiMetric.AvgLatency],
+  [UsageView.Routes]: [KpiMetric.Requests, KpiMetric.UniqueCallers, KpiMetric.ErrorRate, KpiMetric.AvgLatency],
 };
 
 const tokensOf = (measures: UsageMeasures | null): number | null => {
@@ -75,7 +77,17 @@ interface FigureInput {
   current: UsageMeasures | null;
   previous: UsageMeasures | null;
   buckets: BucketPoint[];
+  /**
+   * Where the money and token figures come from instead of `current` / `previous`. They draw no
+   * sparkline, having no buckets of those rows to draw it from.
+   */
+  made?: ComparedMeasures;
 }
+
+const MADE_METRICS = new Set([KpiMetric.TotalSpend, KpiMetric.Tokens, KpiMetric.CostPerMillionTokens]);
+
+/** Whether a card reads the `made` source where a block hands one. */
+export const isMadeMetric = (metric: KpiMetric): boolean => MADE_METRICS.has(metric);
 
 /**
  * A window with no calls reported nothing, so every card shows a dash rather than a zero.
@@ -88,12 +100,13 @@ interface FigureInput {
 const measuresOfWindow = (measures: UsageMeasures | null): UsageMeasures | null =>
   measures && measures.calls > 0 ? measures : null;
 
-export const buildKpiFigures = ({ view, current, previous, buckets }: FigureInput): KpiFigure[] =>
+export const buildKpiFigures = ({ view, current, previous, buckets, made }: FigureInput): KpiFigure[] =>
   VIEW_KPI_METRICS[view].map((metric) => {
-    const toSparkPoint = METRIC_SPARKLINE[metric];
+    const source = made && isMadeMetric(metric) ? made : { current, previous };
+    const toSparkPoint = source === made ? void 0 : METRIC_SPARKLINE[metric];
     const value: WindowedValue = {
-      current: METRIC_VALUE[metric](measuresOfWindow(current)),
-      previous: previous ? METRIC_VALUE[metric](measuresOfWindow(previous)) : null,
+      current: METRIC_VALUE[metric](measuresOfWindow(source.current)),
+      previous: source.previous ? METRIC_VALUE[metric](measuresOfWindow(source.previous)) : null,
     };
 
     const sparkline = toSparkPoint ? buckets.map(toSparkPoint).filter((point): point is number => point != null) : [];

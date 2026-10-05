@@ -3,6 +3,7 @@ import { createRef } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
+import { CONTENT_FIT_COLUMN_IDS, VALIDITY_STATUS_COLUMN_ID } from '@/src/components/TestSuites/utils/columns';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -80,7 +81,8 @@ vi.mock('@/src/components/ListView/List', () => ({
   },
 }));
 
-vi.mock('@/src/components/TestSuites/utils/columns', () => ({
+vi.mock('@/src/components/TestSuites/utils/columns', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/components/TestSuites/utils/columns')>()),
   getTestCaseColumns: ({ onCellChange, onToggleExpand }: any) => {
     capturedOnCellChange = onCellChange;
     capturedOnToggleExpand = onToggleExpand;
@@ -238,6 +240,44 @@ describe('TestCasesList', () => {
 
     expect(mockCloseSidebar).toHaveBeenCalledTimes(1);
     spy.mockRestore();
+  });
+});
+
+describe('TestCasesList — column auto-fit', () => {
+  const mockTestSuite: TestSuite = {
+    id: 'test-suite-123',
+    name: 'Test Suite 1',
+    datasetId: 'dataset-123',
+  };
+
+  const mockOnChange = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    capturedGridOptions = null;
+    vi.mocked(useIncludedIds).mockReturnValue(null);
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
+  });
+
+  test.each([
+    ['onFirstDataRendered', () => capturedGridOptions?.onFirstDataRendered],
+    ['onNewColumnsLoaded', () => capturedGridOptions?.onNewColumnsLoaded],
+  ])('%s measures the content-fit columns, then fits the rest to the grid width', async (_name, getHandler) => {
+    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
+
+    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
+
+    const autoSizeColumns = vi.fn();
+    const sizeColumnsToFit = vi.fn();
+    const handler = getHandler() as (event: { api: unknown }) => void;
+    handler({ api: { autoSizeColumns, sizeColumnsToFit } });
+
+    expect(autoSizeColumns).toHaveBeenCalledWith({
+      colIds: CONTENT_FIT_COLUMN_IDS,
+      columnLimits: [{ colId: VALIDITY_STATUS_COLUMN_ID, minWidth: 130 }],
+    });
+    expect(sizeColumnsToFit).toHaveBeenCalledOnce();
+    expect(autoSizeColumns.mock.invocationCallOrder[0]).toBeLessThan(sizeColumnsToFit.mock.invocationCallOrder[0]);
   });
 });
 

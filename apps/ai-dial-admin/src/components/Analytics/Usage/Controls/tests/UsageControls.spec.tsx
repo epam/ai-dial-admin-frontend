@@ -50,6 +50,15 @@ describe('UsageControls', () => {
     expect(compareField.value).toContain(AnalyticsUsageI18nKey.ComparePreviousPeriod);
   });
 
+  test('offers only the views it is handed, as an entity dashboard does, even when that is one', async () => {
+    const user = userEvent.setup();
+    renderControls({ views: [UsageView.Llm] });
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
+  });
+
   test('re-reads every window from the refresh control', async () => {
     const user = userEvent.setup();
     const onRefresh = vi.fn();
@@ -75,6 +84,19 @@ describe('UsageControls', () => {
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewMcp }));
 
     expect(onViewChange).toHaveBeenCalledWith(UsageView.Mcp);
+  });
+
+  test('offers LLM, MCP and Routes, in that order', async () => {
+    const user = userEvent.setup();
+    renderControls();
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      AnalyticsUsageI18nKey.ViewLlm,
+      AnalyticsUsageI18nKey.ViewMcp,
+      AnalyticsUsageI18nKey.ViewRoutes,
+    ]);
   });
 
   test('turns the comparison off from its option list', async () => {

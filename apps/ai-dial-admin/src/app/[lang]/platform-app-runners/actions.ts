@@ -11,7 +11,6 @@ import { stripMetadata } from '@/src/server/assets/exim';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { toCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
 import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/core-schemas/constants';
 import { hasUnencodableSchemaIdChars } from '@/src/utils/core-schemas/resource-name';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -60,18 +59,8 @@ const checkRunnerName = (name?: string): ServerActionResponse | null => {
  * pair. Everything not part of the schema is dropped here rather than relying on Core to filter it.
  */
 function toRunnerPayload(runner: DialAppRunnerResource) {
-  const {
-    name: __name,
-    createdAt: __createdAt,
-    updatedAt: __updatedAt,
-    'dial:applicationTypeRoutes': routes,
-    ...payload
-  } = stripMetadata(runner);
-  const coreRoutes = toCoreAppRoutes(routes);
-  return {
-    ...payload,
-    ...(coreRoutes && { 'dial:applicationTypeRoutes': coreRoutes }),
-  };
+  const { name: __name, createdAt: __createdAt, updatedAt: __updatedAt, ...payload } = stripMetadata(runner);
+  return payload;
 }
 
 export async function getRunners(path: string) {

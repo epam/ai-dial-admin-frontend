@@ -71,9 +71,13 @@ describe('AppRunnerAssetView :: save validation', () => {
   test('Should send a runner whose routes are valid', async () => {
     await clickSave(
       runner({
-        'dial:applicationTypeRoutes': [
-          { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'http://svc' }] },
-        ],
+        'dial:applicationTypeRoutes': {
+          my_route: {
+            'dial:paths': ['/a'],
+            'dial:methods': ['GET'],
+            'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }],
+          },
+        },
       }),
     );
 
@@ -93,20 +97,16 @@ describe('AppRunnerAssetView :: save validation', () => {
   });
 
   test.each([
-    ['an invalid route name', { name: 'bad-route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'u' }] }],
-    ['no methods', { name: 'my_route', paths: ['/a'], methods: [], upstreams: [{ endpoint: 'u' }] }],
-    ['no paths', { name: 'my_route', paths: [], methods: ['GET'], upstreams: [{ endpoint: 'u' }] }],
-    ['an unsupported method', { name: 'my_route', paths: ['/a'], methods: ['TRACE'], upstreams: [{ endpoint: 'u' }] }],
-    ['an upstream without an endpoint', { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{}] }],
-  ])('Should block save when a route has %s', async (_label, route) => {
-    await clickSave(runner({ 'dial:applicationTypeRoutes': [route as never] }));
-
-    expect(updateRunner).not.toHaveBeenCalled();
-  });
-
-  test('Should block save on duplicate route names', async () => {
-    const route = { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'u' }] };
-    await clickSave(runner({ 'dial:applicationTypeRoutes': [route, { ...route }] as never }));
+    ['an invalid route name', { 'bad-route': { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
+    ['no methods', { my_route: { 'dial:paths': ['/a'], 'dial:methods': [], 'dial:upstreams': [] } }],
+    ['no paths', { my_route: { 'dial:paths': [], 'dial:methods': ['GET'], 'dial:upstreams': [] } }],
+    ['an unsupported method', { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['TRACE'], 'dial:upstreams': [] } }],
+    [
+      'an upstream without an endpoint',
+      { my_route: { 'dial:paths': ['/a'], 'dial:methods': ['GET'], 'dial:upstreams': [{}] } },
+    ],
+  ])('Should block save when a route has %s', async (_label, routes) => {
+    await clickSave(runner({ 'dial:applicationTypeRoutes': routes }));
 
     expect(updateRunner).not.toHaveBeenCalled();
   });

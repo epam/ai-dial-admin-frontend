@@ -92,27 +92,29 @@ export const foldDimensionBuckets = (
     .filter((point) => !Number.isNaN(point.bucketMs));
 
 /**
- * The qualifier only reaches the id: without it two rows that share a dimension value fold into
- * one, colliding in the previous-window map and in the grid's row keys alike.
+ * The qualifiers reach the id: without them two rows that share a dimension value fold into one,
+ * colliding in the previous-window map and in the grid's row keys alike. They lead it in the order
+ * the query grouped by, which is the order the keys query reads an id back in.
  */
 export const foldBreakdownRows = (
   result: StructuredQueryResult | null | undefined,
   column: string,
-  qualifier?: string,
+  qualifiers: string[] = [],
 ): BreakdownRow[] =>
   (result?.rows ?? []).map((row) => {
     const raw = row[column];
     const isMissing = isMissingValue(raw);
-    const qualifierValue = qualifier == null ? null : String(row[qualifier] ?? '');
+    const qualifierValues = qualifiers.map((qualifier) => String(row[qualifier] ?? ''));
 
     const groupNames = row[GROUP_NAMES_ALIAS];
     const ownId = isMissing ? `${column}:missing` : String(raw);
 
     return {
-      id: qualifierValue == null ? ownId : `${qualifierValue}${ROW_KEY_SEPARATOR}${ownId}`,
+      id: [...qualifierValues, ownId].join(ROW_KEY_SEPARATOR),
       label: isMissing ? '' : String(raw),
       isFallbackLabel: isMissing,
       measures: readMeasures(row),
+      ...(qualifierValues.length ? { qualifiers: qualifierValues } : {}),
       // Present only where the tab asked for them. A row of a single deployment carries it too:
       // "which one" is the question even when the answer is one name.
       ...(isMissingValue(groupNames)
