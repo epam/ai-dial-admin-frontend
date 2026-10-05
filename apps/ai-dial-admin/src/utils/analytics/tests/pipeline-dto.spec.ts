@@ -16,7 +16,7 @@ const pipeline: Pipeline = {
   transform: { type: TransformType.Sql, outputs: { rating: 'max(rating)' } },
   response_schema: { type: 'object' },
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',
@@ -115,9 +115,9 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
   const draft = toPipelineDraft(pipeline);
 
   test('drops a member belonging to another trigger kind', () => {
-    const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.OnIngest, cron: '0 0 * * * *' } });
+    const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.Group, cron: '0 0 * * * *' } });
 
-    expect(dto.trigger).toEqual({ kind: TriggerKind.OnIngest });
+    expect(dto.trigger).not.toHaveProperty('cron');
   });
 
   // Registration collects no trigger, so a pipeline can reach a save before one is chosen. An object
@@ -126,6 +126,13 @@ describe('Utils :: analytics :: buildPipelineDto — the trigger', () => {
     const dto = buildPipelineDto({ ...draft, trigger: undefined });
 
     expect(dto).not.toHaveProperty('trigger');
+  });
+
+  // The service stores a cron-less enrichment schedule with its own every-minute default.
+  test('omits an empty cron from an enrichment schedule', () => {
+    const dto = buildPipelineDto({ ...draft, trigger: { kind: TriggerKind.Schedule, cron: '  ' } });
+
+    expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule });
   });
 
   test('sends a schedule for an aggregate whatever its draft says, its kind being no choice', () => {
@@ -251,7 +258,7 @@ describe('Utils :: analytics :: buildPipelineDto — the kinds do not leak', () 
       inputs: ['log'],
       trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' },
       transform: { type: TransformType.Llm, model: 'gpt-4o' },
-      advanced: { scan_every: '60s' },
+      advanced: { rows_per_scan: 100 },
     });
 
     ['transform', 'advanced'].forEach((key) => expect(dto).not.toHaveProperty(key));

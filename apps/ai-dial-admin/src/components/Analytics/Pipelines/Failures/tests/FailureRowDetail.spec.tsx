@@ -15,7 +15,7 @@ const renderDetail = (data: DlqItem, props: Partial<Parameters<typeof FailureRow
   render(
     <FailureRowDetail
       item={data}
-      trigger={TriggerKind.OnIngest}
+      trigger={TriggerKind.Schedule}
       isBusy={false}
       runRetryableCount={2}
       onFilterByRun={onFilterByRun}

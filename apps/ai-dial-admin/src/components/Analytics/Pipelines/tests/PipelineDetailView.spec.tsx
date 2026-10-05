@@ -37,7 +37,7 @@ const rule: Pipeline = {
   kind: PipelineKind.Enrich,
   transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   grain_key: 'response_id',
   version_column: 'ingested_at',
@@ -56,8 +56,8 @@ const editSampleFraction = async (user: ReturnType<typeof userEvent.setup>, valu
   await user.type(input, value);
 };
 
-const editScanEvery = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
-  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.ScanEvery, { exact: false });
+const editRowsPerScan = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
+  const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.RowsPerScan, { exact: false });
   await user.clear(input);
   await user.type(input, value);
 };
@@ -71,6 +71,32 @@ describe('PipelineDetailView', () => {
     );
     vi.mocked(updatePipeline).mockResolvedValue({ success: true });
     vi.mocked(deletePipeline).mockResolvedValue({ success: true });
+  });
+
+  test('offers schedule and group as the only trigger kinds', () => {
+    renderView();
+
+    const triggerKinds = screen
+      .getAllByRole('radio')
+      .map((radio) => radio.getAttribute('value'))
+      .filter((value) => Object.values(TriggerKind).includes(value as TriggerKind));
+
+    expect(triggerKinds).toEqual([TriggerKind.Schedule, TriggerKind.Group]);
+    expect(screen.queryByRole('radio', { name: 'AnalyticsPipelines.TriggerOnIngest' })).toBeNull();
+  });
+
+  test('keeps a service-defaulted cron through an unrelated save, sending no scan cadence', async () => {
+    const user = userEvent.setup();
+    renderView({ trigger: { kind: TriggerKind.Schedule, cron: '37 * * * * *' } });
+    await waitFor(() => expect(getTable).toHaveBeenCalled());
+
+    await editRowsPerScan(user, '200');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule, cron: '37 * * * * *' });
+    expect(dto.advanced).not.toHaveProperty('scan_every');
   });
 
   test('presents the name as an identity rather than as a field', () => {
@@ -210,7 +236,7 @@ describe('PipelineDetailView', () => {
     });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
   });
@@ -221,7 +247,7 @@ describe('PipelineDetailView', () => {
     renderView({ grain_key: undefined, trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } } });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
   });
@@ -311,7 +337,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Discard })).toBeTruthy();
@@ -319,27 +345,27 @@ describe('PipelineDetailView', () => {
 
   test('withdraws save when the value is edited back to what it was', async () => {
     const user = userEvent.setup();
-    renderView({ advanced: { scan_every: 'PT1H' } });
+    renderView({ advanced: { rows_per_scan: 100 } });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
 
-    await editScanEvery(user, 'PT1H');
+    await editRowsPerScan(user, '100');
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
   });
 
   test('discard restores the loaded value after confirmation', async () => {
     const user = userEvent.setup();
-    renderView({ advanced: { scan_every: 'PT1H' } });
+    renderView({ advanced: { rows_per_scan: 100 } });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
 
-    expect(screen.getByDisplayValue('PT1H')).toBeTruthy();
+    expect(screen.getByDisplayValue('100')).toBeTruthy();
   });
 
   test('saves the whole rule and re-reads it', async () => {
@@ -347,13 +373,13 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [name, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(name).toBe('feedback-live');
-    expect(dto.advanced?.scan_every).toBe('PT2H');
+    expect(dto.advanced?.rows_per_scan).toBe(200);
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -364,7 +390,7 @@ describe('PipelineDetailView', () => {
     renderView({ trigger: undefined, transform: undefined });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
@@ -378,7 +404,7 @@ describe('PipelineDetailView', () => {
     renderView({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
@@ -419,16 +445,16 @@ describe('PipelineDetailView', () => {
 
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
-    renderView({ filter: 'score > 0.5', advanced: { scan_every: 'PT1H', rate_rpm: 60 } });
+    renderView({ filter: 'score > 0.5', advanced: { rows_per_scan: 100, rate_rpm: 60 } });
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto.filter).toBe('score > 0.5');
-    expect(dto.advanced?.scan_every).toBe('PT2H');
+    expect(dto.advanced?.rows_per_scan).toBe(200);
     expect(dto.advanced?.rate_rpm).toBe(60);
   });
 
@@ -437,7 +463,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
@@ -453,7 +479,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
@@ -472,12 +498,12 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
-    expect(screen.getByDisplayValue('PT2H')).toBeTruthy();
+    expect(screen.getByDisplayValue('200')).toBeTruthy();
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -621,7 +647,7 @@ describe('PipelineDetailView', () => {
     renderView();
     await waitFor(() => expect(getTable).toHaveBeenCalled());
 
-    await editScanEvery(user, 'PT2H');
+    await editRowsPerScan(user, '200');
 
     // They keep their space rather than leaving the flow — otherwise the JSON toggle beside them
     // shifted on every keystroke that raised or cleared the change bar.

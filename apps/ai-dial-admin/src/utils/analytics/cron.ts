@@ -14,3 +14,9 @@ export const isValidSixFieldCron = (expression: string): boolean => {
 
   return fields.length === CRON_FIELD_COUNT && fields.every((field) => CRON_FIELD_PATTERN.test(field));
 };
+
+// Once a minute at a fixed second — the shape of the default the service stores for an enrichment schedule
+// that declares no cron, at a second it derives from the pipeline name.
+const EVERY_MINUTE_PATTERN = /^[0-5]?\d \* \* \* \* \*$/;
+
+export const isEveryMinuteCron = (expression: string): boolean => EVERY_MINUTE_PATTERN.test(expression.trim());
