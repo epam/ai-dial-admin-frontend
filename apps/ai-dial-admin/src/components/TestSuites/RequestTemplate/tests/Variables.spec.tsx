@@ -40,7 +40,13 @@ describe('Variables', () => {
 
   test('renders the DynamicConfiguration accordion', () => {
     render(
-      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables
+        testSuiteId="id"
+        variables={[]}
+        requestIndex="0"
+        requestBody={{}}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
     );
 
     expect(screen.getByText(TestSuitesI18nKey.DynamicConfiguration)).toBeInTheDocument();
@@ -50,7 +56,13 @@ describe('Variables', () => {
     mockGenerateVariablesRowData.mockReturnValue([]);
 
     render(
-      <Variables testSuiteId="id" variables={[]} requestBody={{}} onChangeRequestBody={mockOnChangeRequestBody} />,
+      <Variables
+        testSuiteId="id"
+        variables={[]}
+        requestIndex="0"
+        requestBody={{}}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
     );
 
     expect(screen.getByText(BasicI18nKey.NoVariables)).toBeInTheDocument();
@@ -66,7 +78,8 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={[createVariable({ name: 'alpha' }), createVariable({ name: 'beta' })]}
-        requestBody={{ alpha: 'a', beta: 'b' }}
+        requestIndex="0"
+        requestBody={{ '0': { alpha: 'a', beta: 'b' } }}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
     );
@@ -84,6 +97,7 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={[createVariable()]}
+        requestIndex="0"
         requestBody={{}}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
@@ -93,23 +107,23 @@ describe('Variables', () => {
     expect(screen.queryByText(TestSuitesI18nKey.Attribute)).not.toBeInTheDocument();
   });
 
-  test('calls generateVariablesRowData with variables and requestBody', () => {
+  test('calls generateVariablesRowData with its own request slice', () => {
     const variables = [createVariable({ name: 'alpha' })];
-    const requestBody = { alpha: 'value1' };
 
     render(
       <Variables
         testSuiteId="id"
         variables={variables}
-        requestBody={requestBody}
+        requestIndex="1"
+        requestBody={{ '0': { alpha: 'request-zero' }, '1': { alpha: 'request-one' } }}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
     );
 
-    expect(mockGenerateVariablesRowData).toHaveBeenCalledWith(variables, requestBody);
+    expect(mockGenerateVariablesRowData).toHaveBeenCalledWith(variables, { alpha: 'request-one' });
   });
 
-  test('onChangeValue calls onChangeRequestBody with updated body', async () => {
+  test('onChangeValue writes into its own request slice and leaves the others alone', async () => {
     const user = userEvent.setup();
     mockGenerateVariablesRowData.mockReturnValue([
       { templateVariable: 'myVar', effectiveType: TestCaseItemType.STRING, value: 'old' },
@@ -119,7 +133,8 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={[createVariable({ name: 'myVar' })]}
-        requestBody={{ myVar: 'old' }}
+        requestIndex="1"
+        requestBody={{ '0': { myVar: 'untouched' }, '1': { myVar: 'old' } }}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
     );
@@ -128,7 +143,34 @@ describe('Variables', () => {
     await user.clear(input);
     await user.type(input, 'new');
 
-    expect(mockOnChangeRequestBody).toHaveBeenLastCalledWith(expect.objectContaining({ myVar: expect.any(String) }));
+    expect(mockOnChangeRequestBody).toHaveBeenLastCalledWith({
+      '0': { myVar: 'untouched' },
+      '1': { myVar: expect.any(String) },
+    });
+  });
+
+  test('creates its own slice when the body has no entry for the request', async () => {
+    const user = userEvent.setup();
+    mockGenerateVariablesRowData.mockReturnValue([
+      { templateVariable: 'myVar', effectiveType: TestCaseItemType.STRING, value: '' },
+    ]);
+
+    render(
+      <Variables
+        testSuiteId="id"
+        variables={[createVariable({ name: 'myVar' })]}
+        requestIndex="2"
+        requestBody={{ '0': { other: 'kept' } }}
+        onChangeRequestBody={mockOnChangeRequestBody}
+      />,
+    );
+
+    await user.type(screen.getByRole('textbox'), 'x');
+
+    expect(mockOnChangeRequestBody).toHaveBeenLastCalledWith({
+      '0': { other: 'kept' },
+      '2': { myVar: 'x' },
+    });
   });
 
   test('uses empty array fallback for undefined variables', () => {
@@ -136,6 +178,7 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={undefined as any}
+        requestIndex="0"
         requestBody={{}}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
@@ -149,6 +192,7 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={[]}
+        requestIndex="0"
         requestBody={undefined as any}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
@@ -157,13 +201,14 @@ describe('Variables', () => {
     expect(mockGenerateVariablesRowData).toHaveBeenCalledWith([], {});
   });
 
-  test('recalculates rows when requestBody changes', () => {
+  test('recalculates rows when its own slice changes', () => {
     const variables = [createVariable({ name: 'x' })];
     const { rerender } = render(
       <Variables
         testSuiteId="id"
         variables={variables}
-        requestBody={{ x: 'a' }}
+        requestIndex="0"
+        requestBody={{ '0': { x: 'a' } }}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
     );
@@ -173,7 +218,8 @@ describe('Variables', () => {
       <Variables
         testSuiteId="id"
         variables={variables}
-        requestBody={{ x: 'b' }}
+        requestIndex="0"
+        requestBody={{ '0': { x: 'b' } }}
         onChangeRequestBody={mockOnChangeRequestBody}
       />,
     );

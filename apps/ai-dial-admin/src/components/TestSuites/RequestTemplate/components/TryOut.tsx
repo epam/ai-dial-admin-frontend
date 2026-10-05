@@ -30,6 +30,7 @@ import {
   TestSuite,
   TryOutCoreResponse,
   TryOutResponse,
+  TryOutVariablesByRequest,
 } from '@/src/models/evaluation/test-suite';
 import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
 import {
@@ -87,7 +88,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
-  const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
+  const [requestBody, setRequestBody] = useState<TryOutVariablesByRequest>({});
   const [tryOutResult, setTryOutResult] = useState<TryOutResponse | null>(null);
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);
@@ -114,13 +115,9 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   );
   const shape = useMemo(() => getTryOutSectionShape(turnCounts), [turnCounts]);
   const showRequestTabs = turnCounts.length > 1 && (shape === 'requests' || shape === 'combined');
-  const renderRequestTabs =
-    showRequestTabs &&
-    !isRequestSend &&
-    !isPreviewLoading &&
-    ((!response && !!testCaseId) || (!!response && !!history?.length));
+  const renderRequestTabs = showRequestTabs && !isRequestSend && !isPreviewLoading && (!response || !!history?.length);
 
-  const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
+  const onChangeRequestBody = useCallback((body: TryOutVariablesByRequest) => {
     setRequestBody(body);
   }, []);
 
