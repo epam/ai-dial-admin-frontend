@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { Input, RadioGroup, RadioGroupItem, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
@@ -39,10 +39,10 @@ const EnrichSection: FC<Props> = ({ form }) => {
 
   const controlClassName = getControlClassName();
 
-  const triggerRadios: RadioButtonWithContent[] = [
-    { id: TriggerKind.OnIngest, name: t(AnalyticsPipelinesI18nKey.TriggerOnIngest) },
-    { id: TriggerKind.Schedule, name: t(AnalyticsPipelinesI18nKey.TriggerSchedule) },
-    { id: TriggerKind.Group, name: t(AnalyticsPipelinesI18nKey.TriggerGroup) },
+  const triggerRadios: RadioGroupItem[] = [
+    { value: TriggerKind.OnIngest, label: t(AnalyticsPipelinesI18nKey.TriggerOnIngest) },
+    { value: TriggerKind.Schedule, label: t(AnalyticsPipelinesI18nKey.TriggerSchedule) },
+    { value: TriggerKind.Group, label: t(AnalyticsPipelinesI18nKey.TriggerGroup) },
   ];
 
   const onAdvancedChange = (patch: Partial<PipelineAdvanced>) =>
@@ -50,12 +50,12 @@ const EnrichSection: FC<Props> = ({ form }) => {
 
   const triggerBlock = (
     <>
-      <DialRadioGroup
-        elementId="pipeline-trigger-kind"
-        fieldTitle={t(AnalyticsPipelinesI18nKey.TriggerKind)}
+      <RadioGroup
+        id="pipeline-trigger-kind"
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.TriggerKind) }}
         orientation={RadioGroupOrientation.Row}
-        radioButtons={triggerRadios}
-        activeRadioButton={trigger?.kind ?? ''}
+        items={triggerRadios}
+        value={trigger?.kind ?? ''}
         onChange={(id) => onTriggerChange({ kind: id as TriggerKind })}
       />
       {trigger?.kind === TriggerKind.Schedule && (
@@ -107,7 +107,7 @@ const EnrichSection: FC<Props> = ({ form }) => {
       {transformBlock}
       <Accordion title={t(AnalyticsPipelinesI18nKey.SectionAdvanced)}>
         <div className="flex flex-col gap-y-6">
-          <DialInput
+          <Input
             id="pipeline-scan-every"
             containerClassName={controlClassName}
             wrapperClassName={NUMBER_INPUT_WIDTH}
@@ -118,7 +118,7 @@ const EnrichSection: FC<Props> = ({ form }) => {
           />
 
           {NUMERIC_KNOBS.map(({ key, labelKey }) => (
-            <DialInput
+            <Input
               key={key}
               id={`pipeline-${key}`}
               containerClassName={controlClassName}
@@ -131,7 +131,7 @@ const EnrichSection: FC<Props> = ({ form }) => {
             />
           ))}
 
-          <DialInput
+          <Input
             id="pipeline-sample-fraction"
             containerClassName={controlClassName}
             wrapperClassName={NUMBER_INPUT_WIDTH}

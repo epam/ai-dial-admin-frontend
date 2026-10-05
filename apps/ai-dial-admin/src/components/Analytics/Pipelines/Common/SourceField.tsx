@@ -1,10 +1,10 @@
 'use client';
 
+import { Select } from '@epam/ai-dial-ui-kit';
+
 import { FC } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { FOLLOW_TARGET_SOURCE } from '@/src/constants/analytics/pipelines';
+import { FOLLOW_TARGET_SOURCE, PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { SourceMode } from '@/src/models/analytics/pipeline-ui';
@@ -45,12 +45,13 @@ const SourceField: FC<Props> = ({ className, input, sourceTable, tables, onChang
   const value = isFollowing ? FOLLOW_TARGET_SOURCE : (input ?? '');
 
   return (
-    <DialSelectField
+    <Select
+      {...PIPELINE_SELECT_DEFAULTS}
       id="pipeline-input"
-      label={t(AnalyticsPipelinesI18nKey.Source)}
+      labelProps={{ label: t(AnalyticsPipelinesI18nKey.Source) }}
       options={withStrandedOption(options, value)}
       value={value}
-      containerClassName={className}
+      className={className}
       onChange={(next) => onChange(next === FOLLOW_TARGET_SOURCE ? undefined : (next as string))}
     />
   );

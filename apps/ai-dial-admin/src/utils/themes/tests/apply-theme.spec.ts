@@ -1,24 +1,59 @@
-import { describe, expect, test } from 'vitest';
-import { applyThemeColors } from '../apply-theme-colors';
+import { beforeEach, describe, expect, test } from 'vitest';
 
-describe('Utils :: applyThemeColors', () => {
-  test('Should do not find theme', () => {
-    const div = document.createElement('div');
-    applyThemeColors(div, { id: 'theme', displayName: 'theme', colors: { red2: 'red' }, 'app-logo': 'logo.svg' });
+import { applyThemeColors } from '@/src/utils/themes/apply-theme-colors';
+import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 
-    expect(div.style.getPropertyValue('--red')).toBe('');
+describe('applyThemeColors', () => {
+  beforeEach(() => {
+    localStorage.clear();
   });
 
-  test('Should do not find theme', () => {
-    const div = document.createElement('div');
-    applyThemeColors(div);
+  test('applies configured colors and persists the selected theme', () => {
+    const element = document.createElement('div');
+    const theme = {
+      id: 'custom',
+      displayName: 'Custom',
+      colors: { background: 'white', foreground: 'black' },
+      'app-logo': 'logo.svg',
+    };
 
-    expect(div.style.getPropertyValue('--red')).toBe('');
+    applyThemeColors(element, theme);
+
+    expect(element.style.getPropertyValue('--background')).toBe('white');
+    expect(element.style.getPropertyValue('--foreground')).toBe('black');
+    expect(localStorage.getItem('theme')).toBe('custom');
   });
 
-  test('Should set colors', () => {
-    const div = document.createElement('div');
-    applyThemeColors(div, { id: 'theme', displayName: 'theme', colors: { red: 'red' }, 'app-logo': 'logo.svg' });
-    expect(div.style.getPropertyValue('--red')).toBe('red');
+  test('applies every fallback dark color when no theme is provided', () => {
+    const element = document.createElement('div');
+
+    applyThemeColors(element);
+
+    Object.entries(fallbackDarkTheme).forEach(([key, value]) => {
+      expect(element.style.getPropertyValue(`--${key}`)).toBe(value);
+    });
+    expect(localStorage.getItem('theme')).toBeNull();
+  });
+
+  test('does not override compatibility tokens for the configured dark theme', () => {
+    const element = document.createElement('div');
+    const theme = {
+      id: 'dark',
+      displayName: 'Dark',
+      colors: {
+        'bg-layer-sunken': 'sunken',
+        'bg-layer-base': 'base',
+        'bg-layer-raised': 'raised',
+        'text-primary': 'white',
+      },
+      'app-logo': 'logo.svg',
+    };
+
+    applyThemeColors(element, theme);
+
+    expect(element.style.getPropertyValue('--bg-layer-sunken')).toBe('');
+    expect(element.style.getPropertyValue('--bg-layer-base')).toBe('');
+    expect(element.style.getPropertyValue('--bg-layer-raised')).toBe('');
+    expect(element.style.getPropertyValue('--text-primary')).toBe('white');
   });
 });

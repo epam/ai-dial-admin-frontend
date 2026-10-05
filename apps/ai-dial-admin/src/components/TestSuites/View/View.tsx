@@ -52,6 +52,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [discardKey, setDiscardKey] = useState(0);
   const [dataset, setDataset] = useState<Dataset | null>(null);
   const [datasetEtag, setDatasetEtag] = useState(DEFAULT_ETAG);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isSavingRef = useRef(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -117,7 +120,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     loadDataset();
   }, [loadDataset, originalTestSuite]);
 
-  const onSave = useCallback(() => {
+  const onSave = useCallback(async () => {
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
+    setIsSaving(true);
+
     const showSuccessAndRefresh = () => {
       showNotification(
         getSuccessNotification(
@@ -133,7 +142,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       router.refresh();
     };
 
-    updateTestSuite(selectedTestSuite, etag).then((suiteRes) => {
+    try {
+      const suiteRes = await updateTestSuite(selectedTestSuite, etag);
       if (!suiteRes.success) {
         handleError(suiteRes.errorHeader, suiteRes.errorMessage, suiteRes.requestId);
         return;
@@ -142,39 +152,32 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
       const datasetId = selectedTestSuite.datasetId;
 
-      const afterTestCases = () => {
-        if (dataset && datasetId) {
-          updateDataset(dataset, datasetEtag).then((datasetRes) => {
-            if (!datasetRes.success) {
-              handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
-              return;
-            }
-            if (datasetRes.etag) {
-              setDatasetEtag(datasetRes.etag);
-            }
-            showSuccessAndRefresh();
-          });
-        } else {
-          showSuccessAndRefresh();
-        }
-      };
-
       if (dirtyTestCases.length > 0 && datasetId) {
-        updateTestCases(datasetId, dirtyTestCases).then((testCasesRes) => {
-          if (!testCasesRes.success) {
-            handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
-            return;
-          }
-          testCasesActionsRef.current?.clearDirtyAndRefresh();
-          setHasTestCaseChanges(false);
-          afterTestCases();
-        });
-      } else {
-        testCasesActionsRef.current?.clearDirtyAndRefresh();
-        setHasTestCaseChanges(false);
-        afterTestCases();
+        const testCasesRes = await updateTestCases(datasetId, dirtyTestCases);
+        if (!testCasesRes.success) {
+          handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
+          return;
+        }
       }
-    });
+      testCasesActionsRef.current?.clearDirtyAndRefresh();
+      setHasTestCaseChanges(false);
+
+      if (dataset && datasetId) {
+        const datasetRes = await updateDataset(dataset, datasetEtag);
+        if (!datasetRes.success) {
+          handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
+          return;
+        }
+        if (datasetRes.etag) {
+          setDatasetEtag(datasetRes.etag);
+        }
+      }
+
+      showSuccessAndRefresh();
+    } finally {
+      isSavingRef.current = false;
+      setIsSaving(false);
+    }
   }, [selectedTestSuite, etag, showNotification, t, router, dataset, datasetEtag]);
 
   const onStartRunTestSuite = useCallback(() => {
@@ -215,6 +218,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           view={ApplicationRoute.TestSuites}
           entity={selectedTestSuite}
           isChanged={isChanged}
+          isSaving={isSaving}
           onDiscard={onDiscard}
           onSave={onSave}
           tabs={tabs}

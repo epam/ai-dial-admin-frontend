@@ -1,19 +1,18 @@
 'use client';
 
-import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, MouseEvent, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2 } from '@tabler/icons-react';
 import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
-import { useRouter } from 'next/navigation';
 
-import { cancelRun, removeRun } from '@/src/app/[lang]/runs/actions';
-import { getRuns } from '@/src/app/[lang]/test-suites/actions';
+import { cancelRun, getRunsQuery, removeRun } from '@/src/app/[lang]/runs/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
@@ -24,7 +23,8 @@ import {
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SUITE_RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -42,7 +42,6 @@ interface Props {
 
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
-  const router = useRouter();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -55,9 +54,20 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [selectedExportRun, setSelectedExportRun] = useState<Run | undefined>(undefined);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedCancelRun, setSelectedCancelRun] = useState<Run | undefined>(undefined);
+  const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
   useCancellingRunsPoll(gridApi);
+
+  const toggleColumnsPanel = useCallback(() => setShowColumnsPanel((prev) => !prev), []);
+
+  const onToggleColumnsPanel = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      toggleColumnsPanel();
+    },
+    [toggleColumnsPanel],
+  );
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -70,14 +80,14 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         return;
       }
       e.node.setSelected(true, true);
-      onCellClicked(e, ApplicationRoute.Runs, router.push);
+      onOpenInNewTab(ApplicationRoute.Runs, e.data);
     },
   };
 
   useEffect(() => {
     if (!runs && !isLoading) {
       setIsLoading(true);
-      getRuns(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
+      getRunsQuery(0, PAGE_SIZE, [], [RUN_FILTER(selectedTestSuite.id as string)]).then((res) => {
         if (runs) {
           return;
         }
@@ -105,7 +115,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           return;
         }
 
-        getRuns(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
+        getRunsQuery(page, PAGE_SIZE, sorts, [RUN_FILTER(selectedTestSuite.id as string), ...filters])
           .then((res) => {
             const data = res == null || res.content.length === 0 ? [] : res?.content || [];
 
@@ -239,12 +249,25 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   return (
     <>
-      <GridView
-        columnDefs={columnDefs}
-        additionalGridOptions={gridOptions}
-        emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
-        onGridReady={onGridReady}
-      />
+      <div className="size-full flex flex-col">
+        <div className="flex flex-row justify-end mb-2">
+          <DialGhostButton
+            label={t(ButtonsI18nKey.Columns)}
+            iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            onClick={onToggleColumnsPanel}
+          />
+        </div>
+        <div className="flex-1 min-h-0">
+          <GridView
+            columnDefs={columnDefs}
+            additionalGridOptions={gridOptions}
+            emptyDataProps={{ title: t(EntitiesI18nKey.NoRuns) }}
+            onGridReady={onGridReady}
+            showColumnsPanel={showColumnsPanel}
+            toggleColumnsPanel={toggleColumnsPanel}
+          />
+        </div>
+      </div>
       {isDeleteModalOpen &&
         createPortal(
           <DeleteConfirmationModal

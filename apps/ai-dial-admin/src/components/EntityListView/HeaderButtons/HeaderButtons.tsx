@@ -14,7 +14,7 @@ import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
-import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
@@ -109,12 +109,13 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       const translatedType = t(getImportTitle(route)).toLowerCase();
       if (!importFunction) return;
 
-      if (fileSize > MAX_FILE_SIZE_MB * (1024 * 1024)) {
+      const { maxFileSizeMb } = getImportSizeLimits(route);
+      if (fileSize > maxFileSizeMb * (1024 * 1024)) {
         removeNotification(prepareNotificationId);
         showNotification(
           getErrorNotification(
             t(ImportI18nKey.FileSizeErrorHeader),
-            t(ImportI18nKey.FileSizeErrorDescription, { size: `${MAX_FILE_SIZE_MB} MB` }),
+            t(ImportI18nKey.FileSizeErrorDescription, { size: `${maxFileSizeMb} MB` }),
           ),
         );
       } else {

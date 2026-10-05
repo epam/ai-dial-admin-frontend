@@ -7,25 +7,23 @@ import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
-import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
-import { ASSET_APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
+import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -130,12 +128,13 @@ const ApplicationAssetProperties: FC<Props> = ({
           id="sourceType"
           view={ApplicationRoute.AssetsApplications}
           label={t(EntitiesI18nKey.SourceType)}
-          sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
+          sourceItems={ASSET_APPLICATION_CREATE_SOURCE_ITEMS}
           entity={asset as DialApplicationResource}
           onChange={onChange as (entity: DialApplicationResource) => void}
           runners={runners}
           isEntityImmutable={true}
           codeAppEditorUrl={codeAppEditorUrl}
+          translators={translators}
         />
         <OverrideNameControl entity={asset as any} onChangeEntity={onChange} isAsset />
         <EndpointControl
@@ -144,15 +143,6 @@ const ApplicationAssetProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           endpoint={asset.base_url}
           onChange={(base_url) => onChange({ ...asset, base_url })}
-        />
-        <InterfacesField
-          interfaces={asset.interfaces}
-          onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
-          allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
-          translators={translators}
-          entityBaseUrl={asset.base_url}
-          view={ApplicationRoute.AssetsApplications}
-          isAsset
         />
         <ResourceMultiAuth asset={asset} onChange={onChange} />
         <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />

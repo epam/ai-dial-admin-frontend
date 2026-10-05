@@ -72,7 +72,9 @@ const AppView: FC<Props> = ({
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
-  const [tabs, setTabs] = useState<TabModel[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+  const { visualizerConnector, featureFlags } = useAppContext();
+
+  const [tabs, setTabs] = useState<TabModel[]>(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
 
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -83,7 +85,6 @@ const AppView: FC<Props> = ({
   const [discardKey, setDiscardKey] = useState(0);
 
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
-  const { visualizerConnector } = useAppContext();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -104,9 +105,9 @@ const AppView: FC<Props> = ({
     const appRunner = getAppRunner(originalApp, schemes, ApplicationRoute.AssetsApplications);
 
     if (originalApp.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications).toSpliced(1, 0, toolsTab(t)));
+      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags).toSpliced(1, 0, toolsTab(t)));
     } else {
-      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications));
+      setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalApp.mcp?.endpoint]);

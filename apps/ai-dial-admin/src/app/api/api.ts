@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
+import { AnalyticsRunnerApi } from '@/src/server/analytics/analytics-runner-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
 import { stripAssetIdentityFields, stripMetadata } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
@@ -177,6 +178,12 @@ export const analyticsDataApi = new AnalyticsDataApi({
 
 export const analyticsAuditApi = new AnalyticsAuditApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
+});
+
+// The enrichment runner is a separate deployment from the registry above, with its own availability:
+// it can be down, or absent entirely, while every analytics read still works.
+export const analyticsRunnerApi = new AnalyticsRunnerApi({
+  host: process.env.DIAL_ANALYTICS_RUNNER_API_URL,
 });
 
 // DIAL Core direct clients (publications migration)

@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  EVAL_SUMMARIES_ENTITY,
   PASSED_FIELD,
   RUN_ID_FIELD,
   SCORE_FIELD,
+  TEST_CASE_EVAL_SCORES_ENTITY,
   TEST_CASE_NAME_FIELD,
   TRENDS_STABILITY_ROW_LIMIT,
 } from '@/src/components/TestSuites/Trends/constants';
@@ -19,11 +19,11 @@ import {
 } from '@/src/models/evaluation/structured-query';
 
 describe('buildTrendsStabilityQuery', () => {
-  test('matches the BE eval_summaries row contract', () => {
+  test('matches the BE test_case_eval_scores row contract', () => {
     const query = buildTrendsStabilityQuery(['run-a', 'run-b']);
 
     expect(query).toEqual({
-      entity: EVAL_SUMMARIES_ENTITY,
+      entity: TEST_CASE_EVAL_SCORES_ENTITY,
       mode: QueryMode.Row,
       select: [
         { expr: { type: ExprType.Field, name: RUN_ID_FIELD } },

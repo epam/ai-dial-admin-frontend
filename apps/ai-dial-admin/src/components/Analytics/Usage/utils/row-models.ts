@@ -2,6 +2,7 @@ import {
   BreakdownDeltas,
   BreakdownRow,
   BreakdownRowModel,
+  RouteKind,
   UsageMeasures,
 } from '@/src/components/Analytics/Usage/models';
 import { getShareOfTotal } from '@/src/components/Analytics/Usage/utils/kpi-cards';
@@ -27,6 +28,10 @@ export interface RowModelContext {
    * The words and their formatting live with the caller, which has the translator.
    */
   readSubLabel?: (names: string[], count: number | null) => { text: string; tooltip?: string } | null;
+  /** States what a qualified row's own name leaves out — the method and owner of a route path. */
+  readQualifierSubLabel?: (qualifiers: string[]) => { text: string; tooltip?: string } | null;
+  /** Set only where the tab states which kind of route a row is. */
+  readRouteKind?: (row: BreakdownRow) => RouteKind | null;
 }
 
 /**
@@ -59,6 +64,19 @@ const toErrorRate = (measures: UsageMeasures | undefined): number | null => {
   return measures.failed / measures.calls;
 };
 
+/** The aggregated deployments where the row names some, else what its qualifiers say. */
+const readRowSubLabel = (row: BreakdownRow, context: RowModelContext) => {
+  if (row.groupNames?.length) {
+    return context.readSubLabel?.(row.groupNames, row.groupCount ?? null) ?? null;
+  }
+
+  if (row.qualifiers?.length) {
+    return context.readQualifierSubLabel?.(row.qualifiers) ?? null;
+  }
+
+  return null;
+};
+
 export const toRowModels = (rows: BreakdownRow[], context: RowModelContext): BreakdownRowModel[] => {
   const models = rows.map((row) => {
     const calls = row.measures.calls;
@@ -75,7 +93,8 @@ export const toRowModels = (rows: BreakdownRow[], context: RowModelContext): Bre
       spend: toDelta(row.measures.spend, previous?.spend),
     };
 
-    const subLabel = row.groupNames?.length ? context.readSubLabel?.(row.groupNames, row.groupCount ?? null) : null;
+    const subLabel = readRowSubLabel(row, context);
+    const routeKind = context.readRouteKind?.(row);
 
     return {
       id: row.id,
@@ -92,6 +111,7 @@ export const toRowModels = (rows: BreakdownRow[], context: RowModelContext): Bre
       errorRate,
       avgLatencyMs: row.measures.avgLatencyMs,
       spend: row.measures.spend,
+      ...(routeKind ? { routeKind } : {}),
     };
   });
 

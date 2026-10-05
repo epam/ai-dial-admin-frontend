@@ -100,8 +100,8 @@ is the actual run count in the window. When the Trends window is empty, the sect
 - **WHEN** the Trends tab has no runs (`runCount === 0`)
 - **THEN** the Test Case Stability section is not rendered
 
-### Requirement: Stability data from eval_summaries for runOrder IDs
-The system SHALL load Stability cells by executing a structured row query against `eval_summaries`
+### Requirement: Stability data from test_case_eval_scores for runOrder IDs
+The system SHALL load Stability cells by executing a structured row query against `test_case_eval_scores`
 filtered to `test_suite_run_id IN` the current `runOrder` run IDs. The query SHALL select
 `test_suite_run_id`, `test_case_name`, `score`, and `passed`; sort by `test_suite_run_id` descending
 then `test_case_name` ascending; and page with offset `0`, limit `200`, `include_total: false`.
@@ -115,7 +115,7 @@ is empty, the system SHALL skip the Stability fetch.
 
 #### Scenario: Empty runOrder skips fetch
 - **WHEN** `runOrder` is empty
-- **THEN** no Stability `eval_summaries` query is executed
+- **THEN** no Stability `test_case_eval_scores` query is executed
 
 ### Requirement: Test case × run matrix with gap handling
 The Stability section SHALL present a heatmap whose **rows** are the Trends `runOrder` runs in

@@ -26,7 +26,6 @@ import {
   buildTestCasesStatusQuery,
   fillUnscoredMetricBars,
   formatAvgRunTimeSeconds,
-  formatElapsedMmSs,
   formatRunCost,
   getMetricFieldPath,
   getMetricOutputDescriptions,
@@ -48,7 +47,7 @@ describe('Runs Summary :: query builders', () => {
   test('buildTestCasesStatusQuery groups by passed and execution_status and counts within the run', () => {
     const query = buildTestCasesStatusQuery('run-1');
 
-    expect(query.entity).toBe('eval_summaries');
+    expect(query.entity).toBe('test_case_eval_scores');
     expect(query.mode).toBe(QueryMode.Aggregate);
     expect(query.group_by).toEqual([PASSED_FIELD, EXECUTION_STATUS_FIELD]);
     expect(query.select).toEqual([
@@ -66,8 +65,9 @@ describe('Runs Summary :: query builders', () => {
   });
 
   test('buildTestCasesStatusQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
-    const query = buildTestCasesStatusQuery('run-1', ['id-1', 'id-2']);
+    const query = buildTestCasesStatusQuery('run-1', ['case-1', 'case-2']);
 
+    expect(query.entity).toBe('test_case_eval_scores');
     expect(query.filter).toEqual({
       op: LogicalOp.And,
       args: [
@@ -84,12 +84,12 @@ describe('Runs Summary :: query builders', () => {
             {
               op: ComparisonOp.In,
               args: [
-                { type: ExprType.Field, name: 'id' },
+                { type: ExprType.Field, name: 'test_case_id' },
                 {
                   type: ExprType.Array,
                   items: [
-                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
-                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'case-2' },
                   ],
                 },
               ],
@@ -664,19 +664,6 @@ describe('Runs Summary :: result parsers', () => {
   test('formatRunCost keeps sub-dollar significant digits', () => {
     expect(formatRunCost(0.0004)).toBe('$0.0004');
     expect(formatRunCost(0.0123)).toBe('$0.012');
-  });
-
-  test('formatElapsedMmSs formats minutes and seconds', () => {
-    expect(formatElapsedMmSs(0)).toBe('00:00');
-    expect(formatElapsedMmSs(15_000)).toBe('00:15');
-    expect(formatElapsedMmSs(180_000)).toBe('03:00');
-    expect(formatElapsedMmSs(65_000)).toBe('01:05');
-  });
-
-  test('formatElapsedMmSs treats negative or non-finite input as zero', () => {
-    expect(formatElapsedMmSs(-1)).toBe('00:00');
-    expect(formatElapsedMmSs(Number.NaN)).toBe('00:00');
-    expect(formatElapsedMmSs(Number.POSITIVE_INFINITY)).toBe('00:00');
   });
 
   test('hasRunCostFigure is true when either average is a number, including zero', () => {

@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { Input } from '@epam/ai-dial-ui-kit';
 
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +27,7 @@ const GroupByField: FC<Props> = ({ value, grainKey, onChange }) => {
   const t = useI18n();
 
   return (
-    <DialInput
+    <Input
       id="pipeline-trigger-group-by"
       containerClassName={getControlClassName()}
       labelProps={{ label: t(AnalyticsPipelinesI18nKey.GroupBy), required: true }}

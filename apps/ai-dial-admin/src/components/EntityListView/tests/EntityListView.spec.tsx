@@ -38,33 +38,32 @@ describe('BaseEntityList — open in new tab', () => {
     capturedGetHref = undefined;
   });
 
-  const renderList = (isConfigFileSource?: boolean) =>
+  const renderList = () =>
     render(
       <BaseEntityList
         data={[{ name: 'my-model' }]}
         baseColumns={[]}
         route={ApplicationRoute.Models}
         onRemoveEntity={vi.fn()}
-        isConfigFileSource={isConfigFileSource}
       />,
     );
 
   test('opens the config-file query param when the row is config-file-sourced', () => {
     const onOpenInNewTabSpy = vi.spyOn(openInNewTabUtils, 'onOpenInNewTab').mockImplementation(() => {});
-    renderList(true);
+    renderList();
 
     capturedOpen?.({ name: 'my-model' });
 
-    expect(onOpenInNewTabSpy).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'my-model' }, 'configFile=true');
+    expect(onOpenInNewTabSpy).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'my-model' });
   });
 
   test('opens the bare route when the row is not config-file-sourced', () => {
     const onOpenInNewTabSpy = vi.spyOn(openInNewTabUtils, 'onOpenInNewTab').mockImplementation(() => {});
-    renderList(false);
+    renderList();
 
     capturedOpen?.({ name: 'my-model' });
 
-    expect(onOpenInNewTabSpy).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'my-model' }, undefined);
+    expect(onOpenInNewTabSpy).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'my-model' });
   });
 });
 
@@ -75,34 +74,26 @@ describe('BaseEntityList — rendered row hrefs', () => {
     capturedGetHref = undefined;
   });
 
-  const renderList = (route: ApplicationRoute, isConfigFileSource?: boolean) =>
-    render(
-      <BaseEntityList
-        data={[{ name: 'my-model' }]}
-        baseColumns={[]}
-        route={route}
-        onRemoveEntity={vi.fn()}
-        isConfigFileSource={isConfigFileSource}
-      />,
-    );
+  const renderList = (route: ApplicationRoute) =>
+    render(<BaseEntityList data={[{ name: 'my-model' }]} baseColumns={[]} route={route} onRemoveEntity={vi.fn()} />);
 
   test('renders a config-file dual-bucket href with the flag and no path param', () => {
-    renderList(ApplicationRoute.AssetsApplications, true);
+    renderList(ApplicationRoute.AssetsApplications);
 
     const href = capturedGetHref?.({ name: 'my-app' });
 
-    expect(href).toBe('/assets-applications/my-app?configFile=true');
+    expect(href).toBe('/assets-applications/my-app');
     expect(href).not.toContain('path=');
   });
 
   test('renders a config-file toolset href with the flag and no path param', () => {
-    renderList(ApplicationRoute.AssetsToolsets, true);
+    renderList(ApplicationRoute.AssetsToolsets);
 
-    expect(capturedGetHref?.({ name: 'my-toolset' })).toBe('/assets-toolsets/my-toolset?configFile=true');
+    expect(capturedGetHref?.({ name: 'my-toolset' })).toBe('/assets-toolsets/my-toolset');
   });
 
   test('renders the bare href when the row is not config-file-sourced', () => {
-    renderList(ApplicationRoute.Models, false);
+    renderList(ApplicationRoute.Models);
 
     expect(capturedGetHref?.({ name: 'my-model' })).toBe('/models/my-model');
   });

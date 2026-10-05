@@ -1,6 +1,16 @@
-import { BreakdownTab, TimeSeriesView, UsageView } from '@/src/components/Analytics/Usage/models';
+import {
+  BreakdownTab,
+  EntityBlock,
+  TimeSeriesView,
+  UsageScope,
+  UsageView,
+} from '@/src/components/Analytics/Usage/models';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const USAGE_ENTITY = 'dial_usage_log';
+
+/** The standalone page reads every row of its view. */
+export const PAGE_SCOPE: UsageScope = { own: [] };
 
 /**
  * Rows the card's breakdown states. Ten is the ranked head a reader can take in without scrolling
@@ -76,13 +86,22 @@ export const HEATMAP_HEADER_HEIGHT = 40;
 export const UNDEFINED_VALUE = 'undefined';
 
 /**
- * Which rows each view is about. The empty kind is the Anthropic messages API and the OpenAI
+ * The event kinds the LLM view reads. The empty kind is the Anthropic messages API and the OpenAI
  * responses API — LLM traffic that carries no classified kind, and about a fifth of all rows.
  */
-export const USAGE_VIEW_EVENT_KINDS: Record<UsageView, string[]> = {
-  [UsageView.Llm]: ['llm_call', 'embedding', ''],
-  [UsageView.Mcp]: ['mcp'],
-};
+export const LLM_EVENT_KINDS = ['llm_call', 'embedding', ''];
+
+export const MCP_EVENT_KIND = 'mcp';
+
+/** A call to a route a deployment declares: `/v1/deployments/<deployment>/route/<path>`. */
+export const ROUTE_EVENT_KIND = 'route';
+
+/** The segment that ends a deployment route's prefix in its request URI. */
+export const DEPLOYMENT_ROUTE_SEGMENT = '/route/';
+
+/** The aliases the Routes view's derived dimensions are computed under; `queries.ts` holds the expressions. */
+export const ROUTE_OWNER_COLUMN = 'route_owner';
+export const ROUTE_PATH_COLUMN = 'route_path';
 
 /**
  * On an LLM row the model is the `deployment` and the application that called it is
@@ -94,16 +113,25 @@ export const BREAKDOWN_TAB_COLUMN: Record<BreakdownTab, string> = {
   [BreakdownTab.Projects]: 'project_id',
   [BreakdownTab.McpServers]: 'deployment',
   [BreakdownTab.Tools]: 'mcp_tool_call_name',
+  [BreakdownTab.Owners]: ROUTE_OWNER_COLUMN,
+  [BreakdownTab.Paths]: ROUTE_PATH_COLUMN,
+  [BreakdownTab.Callers]: 'parent_deployment',
 };
 
 /**
- * The column a tab's rows are qualified by, where its own dimension does not identify a row on its
+ * The columns a tab's rows are qualified by, where its own dimension does not identify a row on its
  * own. A tool name is not unique: `execute_python` exists on several MCP servers and they are
- * different tools, so the tab groups by the server as well and states it under the name.
+ * different tools, so the tab groups by the server as well and states it under the name. A route
+ * path is not unique either: two owners can declare the same one, and one path answers several
+ * methods.
  */
-export const BREAKDOWN_TAB_QUALIFIER: Partial<Record<BreakdownTab, string>> = {
-  [BreakdownTab.Tools]: 'deployment',
+export const BREAKDOWN_TAB_QUALIFIERS: Partial<Record<BreakdownTab, string[]>> = {
+  [BreakdownTab.Tools]: ['deployment'],
+  [BreakdownTab.Paths]: [ROUTE_OWNER_COLUMN, 'request_method'],
 };
+
+/** The Routes view's tabs whose rows state which kind of route they are. */
+export const ROUTE_KIND_TABS: BreakdownTab[] = [BreakdownTab.Owners, BreakdownTab.Paths];
 
 /**
  * What joins a qualified row's group values into its id. A control character, because a row's parts
@@ -122,16 +150,54 @@ export const ROW_KEY_SEPARATOR = '\u0000';
 export const MCP_TOOL_CALL_METHOD = 'tools/call';
 
 /**
- * Which plots a view offers. The MCP view has no spend: an `mcp` row carries no `deployment_price`
+ * Which plots a view offers. Only the LLM view has spend: an `mcp` row carries no `deployment_price`
  * at all — measured over a week, 76k rows and not one priced — so a Cost tab there would be a flat
  * zero line whatever the window.
  */
 export const VIEW_TIME_SERIES_VIEWS: Record<UsageView, TimeSeriesView[]> = {
   [UsageView.Llm]: [TimeSeriesView.Requests, TimeSeriesView.ByDimension, TimeSeriesView.Cost, TimeSeriesView.Latency],
   [UsageView.Mcp]: [TimeSeriesView.Requests, TimeSeriesView.ByDimension, TimeSeriesView.Latency],
+  [UsageView.Routes]: [TimeSeriesView.Requests, TimeSeriesView.ByDimension, TimeSeriesView.Latency],
 };
 
 export const VIEW_BREAKDOWN_TABS: Record<UsageView, BreakdownTab[]> = {
   [UsageView.Llm]: [BreakdownTab.Models, BreakdownTab.Applications, BreakdownTab.Projects],
   [UsageView.Mcp]: [BreakdownTab.McpServers, BreakdownTab.Tools, BreakdownTab.Applications, BreakdownTab.Projects],
+  [UsageView.Routes]: [BreakdownTab.Owners, BreakdownTab.Paths, BreakdownTab.Callers, BreakdownTab.Projects],
 };
+
+/**
+ * An application is read two ways. Its own rows are the calls made to it, one row per request, and
+ * they are what its request, caller, error and latency figures count. Its money and tokens are the
+ * priced model calls in its call tree — however deep, and however it was invoked — and they are what
+ * its `Models` tab ranks. Counting requests over those instead would count each user request once
+ * per model call it fanned out into; summing the total price of its own rows missed the work it did
+ * when another application invoked it as an MCP server, whose rows carry no total.
+ */
+const APPLICATION_BLOCKS: EntityBlock[] = [
+  {
+    view: UsageView.Llm,
+    hiddenTab: BreakdownTab.Applications,
+    madeTabs: [BreakdownTab.Models],
+    isMoneyFromMade: true,
+  },
+  // An application's own rows are never tool calls: what it did with tools is the calls in its tree.
+  { view: UsageView.Mcp, hiddenTab: BreakdownTab.Applications, isToolsOnly: true },
+  { view: UsageView.Routes, hiddenTab: BreakdownTab.Owners, isRoutesOnly: true },
+];
+
+/**
+ * The blocks an entity's dashboard renders, in order. Each leaves out the tab whose rows would be the
+ * entity alone: a model's `Models` tab is one row, the model itself.
+ */
+export const ENTITY_BLOCKS: Partial<Record<ApplicationRoute, EntityBlock[]>> = {
+  [ApplicationRoute.Models]: [{ view: UsageView.Llm, hiddenTab: BreakdownTab.Models }],
+  [ApplicationRoute.PlatformModels]: [{ view: UsageView.Llm, hiddenTab: BreakdownTab.Models }],
+  [ApplicationRoute.Toolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
+  [ApplicationRoute.AssetsToolsets]: [{ view: UsageView.Mcp, hiddenTab: BreakdownTab.McpServers }],
+  [ApplicationRoute.Applications]: APPLICATION_BLOCKS,
+  [ApplicationRoute.AssetsApplications]: APPLICATION_BLOCKS,
+};
+
+/** The views whose rows carry a price, and so the only ones that offer cost. */
+export const PRICED_VIEWS: UsageView[] = [UsageView.Llm];

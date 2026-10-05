@@ -4,7 +4,7 @@ import { FC, ReactNode, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, Input, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { createPipeline } from '@/src/app/[lang]/pipelines/actions';
 import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
@@ -70,7 +70,7 @@ const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto,
       onSubmit={() => void onSubmit()}
     >
       <div className="flex flex-col gap-y-6 p-6">
-        <DialInput
+        <Input
           id="pipeline-name"
           labelProps={{ label: t(AnalyticsPipelinesI18nKey.Name), required: true }}
           value={name ?? ''}

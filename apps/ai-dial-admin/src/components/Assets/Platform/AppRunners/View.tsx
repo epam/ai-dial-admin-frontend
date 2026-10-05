@@ -82,8 +82,8 @@ const AppRunnerAssetView: FC<Props> = ({
 
   const createItems: DropdownItem[] = [
     {
-      key: 'AssetApplication',
-      label: t(CreateI18nKey.AssetApplication),
+      key: 'Application',
+      label: t(CreateI18nKey.Application),
       onClick: () => setIsCreateAssetAppModalOpen(true),
     },
   ];

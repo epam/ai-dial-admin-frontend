@@ -1,8 +1,10 @@
+import { QueryFilterNode } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 
 export enum UsageView {
   Llm = 'llm',
   Mcp = 'mcp',
+  Routes = 'routes',
 }
 
 export enum ComparePeriod {
@@ -24,6 +26,15 @@ export enum BreakdownTab {
   Projects = 'projects',
   McpServers = 'mcp-servers',
   Tools = 'tools',
+  Owners = 'owners',
+  Paths = 'paths',
+  Callers = 'callers',
+}
+
+/** Which of the two route mechanisms a Routes view row was served by. */
+export enum RouteKind {
+  Application = 'application',
+  Global = 'global',
 }
 
 export enum HeatmapMetric {
@@ -41,10 +52,56 @@ export enum KpiMetric {
   AvgLatency = 'avg-latency',
 }
 
+/**
+ * Which rows a block reads beyond its view and window. `own` is the entity's own rows — calls made
+ * to it. An application also has a call tree, read two ways: `made` is the priced model calls in it,
+ * `tools` the tool calls in it that the application does not serve itself. The page has none.
+ */
+export interface UsageScope {
+  own: QueryFilterNode[];
+  made?: QueryFilterNode[];
+  tools?: QueryFilterNode[];
+}
+
+/** The rows one request reads beyond its view and window. */
+export interface RowScope {
+  entityClauses: QueryFilterNode[];
+}
+
+/** Where a block reads each of its figures from. The page reads every row, as an empty scope. */
+export interface BlockReads {
+  /** Read every figure from the tool calls in the entity's call tree. */
+  isToolsOnly?: boolean;
+  /** Tabs ranked from the priced model calls in the entity's call tree. */
+  madeTabs?: BreakdownTab[];
+  /** Spend, tokens, cost per 1M and the spend plot come from those calls too. */
+  isMoneyFromMade?: boolean;
+}
+
+/** One block of an entity dashboard; `ENTITY_BLOCKS` says why a tab is hidden. */
+export interface EntityBlock extends BlockReads {
+  view: UsageView;
+  hiddenTab: BreakdownTab;
+  /** Rendered only for an entity that declares routes. */
+  isRoutesOnly?: boolean;
+}
+
 export interface RequestState<T> {
   data: T | null;
   isLoading: boolean;
   hasFailed: boolean;
+}
+
+/** Measures over the current window and the one it is compared against. */
+export interface ComparedMeasures {
+  current: UsageMeasures | null;
+  previous: UsageMeasures | null;
+}
+
+/** The requests behind a `ComparedMeasures`. */
+export interface ComparedTotals {
+  current: RequestState<UsageMeasures | null>;
+  previous: RequestState<UsageMeasures | null>;
 }
 
 export interface ComparedWindows {
@@ -103,6 +160,8 @@ export interface BreakdownRow {
   groupNames?: string[];
   /** How many there are altogether, which a capped list cannot say. */
   groupCount?: number | null;
+  /** The values of the tab's qualifier columns, in their order; set only on a qualified tab. */
+  qualifiers?: string[];
 }
 
 /**
@@ -173,4 +232,6 @@ export interface BreakdownRowModel {
   avgLatencyMs: number | null;
   /** Null in the MCP view, where a row carries no price at all. */
   spend: number | null;
+  /** Set only on the Routes view's tabs that state a row's kind. */
+  routeKind?: RouteKind;
 }

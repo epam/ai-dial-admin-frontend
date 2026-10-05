@@ -115,6 +115,25 @@ describe('UsageDashboard', () => {
     expect(screen.queryByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeNull();
   });
 
+  test('reloads every widget from route rows on switching to Routes, keeping the comparison', async () => {
+    const user = userEvent.setup();
+    render(<UsageDashboard />);
+
+    await waitFor(() => expect(runQueryMock.mock.calls.length).toBe(8));
+    runQueryMock.mockClear();
+
+    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewRoutes }));
+
+    // The same eight reads against the new view: comparison stays on, so each window is read again.
+    await waitFor(() => expect(runQueryMock.mock.calls.length).toBe(8));
+    expect(groupings().filter((grouping) => grouping === 'route_owner')).toHaveLength(3);
+    expect(
+      (screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }) as HTMLInputElement).value,
+    ).toContain(AnalyticsUsageI18nKey.ComparePreviousPeriod);
+    expect(screen.queryByText(AnalyticsUsageI18nKey.TimeSeriesTabCost)).toBeNull();
+  });
+
   test('renders the page when every request fails, stating the failure once', async () => {
     runQueryMock.mockResolvedValue({ isSuccess: false, result: null, error: 'upstream refused' });
 

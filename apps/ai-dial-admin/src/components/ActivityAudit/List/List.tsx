@@ -587,6 +587,7 @@ const ActivityAuditList: FC<Props> = ({
               timePeriodOptions={timeFilterOptions}
             />
           )}
+
           <div className="flex gap-4">
             {entity && <ResetFiltersButton gridApi={gridApi} />}
             <DialGhostButton

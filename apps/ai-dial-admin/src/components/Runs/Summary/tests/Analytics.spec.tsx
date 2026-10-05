@@ -150,6 +150,34 @@ describe('Runs Summary :: Analytics', () => {
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });
 
+  test('shows real cost data rather than an error when test_case_eval_scores lags behind eval_summaries', async () => {
+    // A run can have real timing (eval_summaries) and cost data well before its per-test-case
+    // pass/fail rows (test_case_eval_scores) land — the two are populated by different backend
+    // stages. The cost cards must key off the run's own cost fetch, not off that unrelated,
+    // possibly-still-empty entity.
+    executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
+      if (query.group_by) {
+        return Promise.resolve({ rows: [] });
+      }
+      const alias = query.select?.[0]?.as;
+      if (alias === 'avg_duration_ms') {
+        return Promise.resolve(AVG_ROWS);
+      }
+      if (alias === 'avg_metric_eval_duration_ms') {
+        return Promise.resolve(AVG_METRIC_EVAL_ROWS);
+      }
+      return Promise.resolve({ rows: [] });
+    });
+    mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
+
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} />);
+
+    expect(await screen.findByText('$0.012')).toBeInTheDocument();
+    expect(screen.getByText('$1.5')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Runs.TestCaseLlmCost' })).not.toHaveTextContent('error-tag');
+    expect(screen.queryByRole('region', { name: 'Runs.MetricEvalCost' })).not.toHaveTextContent('error-tag');
+  });
+
   test('renders cost cards with dollar values', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.0123, avgMetricEvalCost: 1.5 });
@@ -204,7 +232,6 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
     expect(screen.getAllByText('Runs.CostCalculatingElapsed')).toHaveLength(2);
-    expect(screen.getAllByLabelText('loading-20')).toHaveLength(2);
 
     resolveCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
     expect(await screen.findByText('$0.5')).toBeInTheDocument();

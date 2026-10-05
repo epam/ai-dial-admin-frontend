@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialInput, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { Input, RadioGroup, RadioGroupItem, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 
 import OrderByEditor from '@/src/components/Analytics/Pipelines/Enrich/OrderByEditor';
 import SqlPredicateField from '@/src/components/Analytics/Pipelines/Common/SqlPredicateField';
@@ -47,9 +47,9 @@ const MemberSelectEditor: FC<Props> = ({ memberSelect, fields, sourceName, readS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberSelect]);
 
-  const scopeRadios: RadioButtonWithContent[] = [
-    { id: MemberScope.All, name: t(AnalyticsPipelinesI18nKey.MemberScopeAll) },
-    { id: MemberScope.Selected, name: t(AnalyticsPipelinesI18nKey.MemberScopeSelected) },
+  const scopeRadios: RadioGroupItem[] = [
+    { value: MemberScope.All, label: t(AnalyticsPipelinesI18nKey.MemberScopeAll) },
+    { value: MemberScope.Selected, label: t(AnalyticsPipelinesI18nKey.MemberScopeSelected) },
   ];
 
   const onScopeChange = (next: MemberScope) => {
@@ -69,12 +69,12 @@ const MemberSelectEditor: FC<Props> = ({ memberSelect, fields, sourceName, readS
 
   return (
     <div className="flex flex-col gap-4">
-      <DialRadioGroup
-        elementId="pipeline-member-scope"
-        fieldTitle={t(AnalyticsPipelinesI18nKey.MemberScopeTitle)}
+      <RadioGroup
+        id="pipeline-member-scope"
+        labelProps={{ label: t(AnalyticsPipelinesI18nKey.MemberScopeTitle) }}
         orientation={RadioGroupOrientation.Column}
-        radioButtons={scopeRadios}
-        activeRadioButton={scope}
+        items={scopeRadios}
+        value={scope}
         onChange={(id) => onScopeChange(id as MemberScope)}
       />
       <span className="text-secondary dial-tiny-text">
@@ -85,7 +85,7 @@ const MemberSelectEditor: FC<Props> = ({ memberSelect, fields, sourceName, readS
 
       {scope === MemberScope.Selected && (
         <>
-          <DialInput
+          <Input
             containerClassName={STANDARD_CONTROL_WIDTH}
             wrapperClassName={NUMBER_INPUT_WIDTH}
             id="pipeline-member-limit"

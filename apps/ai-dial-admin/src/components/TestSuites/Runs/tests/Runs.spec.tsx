@@ -1,11 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { useRouter } from 'next/navigation';
-
-import { cancelRun, getRun } from '@/src/app/[lang]/runs/actions';
-import { getRuns } from '@/src/app/[lang]/test-suites/actions';
-import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
+import { cancelRun, getRun, getRunsQuery } from '@/src/app/[lang]/runs/actions';
+import { ActionMenuOperationI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { RUN_CANCEL_POLL_INTERVAL } from '@/src/constants/runs';
 import { RunStatus } from '@/src/models/evaluation/run';
@@ -14,14 +11,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import Runs from '../Runs';
 
-vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getRuns: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
-}));
-
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   removeRun: vi.fn(),
   cancelRun: vi.fn(),
   getRun: vi.fn(),
+  getRunsQuery: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
 }));
 
 vi.mock('../useRunStatusStream', () => ({
@@ -61,7 +55,7 @@ const mockGridApi = {
 const gridProps: { additionalGridOptions?: any } = {};
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ columnDefs, onGridReady, additionalGridOptions }: any) => {
+  default: ({ columnDefs, onGridReady, additionalGridOptions, showColumnsPanel }: any) => {
     gridProps.additionalGridOptions = additionalGridOptions;
     onGridReady?.({ api: mockGridApi });
     const actionCol = (columnDefs || []).find((col: any) => col.field === 'actionsColumn');
@@ -69,6 +63,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 
     return (
       <div role="grid" aria-label="runs-grid">
+        {showColumnsPanel && <div role="region" aria-label="columns-panel" />}
         {MOCK_ROWS.map((row) => (
           <div key={row.id} role="row">
             {items
@@ -114,6 +109,16 @@ describe('Runs', () => {
     ).not.toBeInTheDocument();
   });
 
+  test('toggles the columns panel when the Columns button is clicked', () => {
+    render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
+
+    expect(screen.queryByRole('region', { name: 'columns-panel' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Columns }));
+
+    expect(screen.getByRole('region', { name: 'columns-panel' })).toBeInTheDocument();
+  });
+
   test('opens the confirmation modal instead of cancelling immediately', () => {
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
 
@@ -130,9 +135,9 @@ describe('Runs', () => {
     nodeSetData.mockClear();
 
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
-    // Let the initial getRuns() fetch settle so its own datasource refresh isn't mistaken for one
+    // Let the initial getRunsQuery() fetch settle so its own datasource refresh isn't mistaken for one
     // triggered by the cancel confirmation below.
-    await waitFor(() => expect(getRuns).toHaveBeenCalled());
+    await waitFor(() => expect(getRunsQuery).toHaveBeenCalled());
     await act(() => Promise.resolve());
     const datasourceCallsAfterMount = mockGridApi.setGridOption.mock.calls.length;
 
@@ -197,10 +202,7 @@ describe('Runs — row navigation', () => {
   const runRefreshRef = { current: null };
   const CLICKED_RUN = { id: 'run-completed', status: RunStatus.COMPLETED };
 
-  const push = vi.fn();
-
   const renderRuns = () => {
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
   };
 
@@ -215,27 +217,21 @@ describe('Runs — row navigation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getRuns).mockResolvedValue({ content: [], totalElements: 0 } as any);
+    vi.mocked(getRunsQuery).mockResolvedValue({ content: [], totalElements: 0 } as any);
   });
 
-  test('opens the run details in the same tab for a plain row click', () => {
-    renderRuns();
+  test.each([{}, { ctrlKey: true }, { metaKey: true }])(
+    'opens the run details in a new tab regardless of click modifiers (%o)',
+    (modifier) => {
+      const open = vi.spyOn(window, 'open').mockReturnValue(null);
+      renderRuns();
 
-    clickCell('testRunName');
+      clickCell('testRunName', modifier);
 
-    expect(push).toHaveBeenCalledWith(getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN));
-  });
-
-  test.each([{ ctrlKey: true }, { metaKey: true }])('opens the run details in a new tab for a %o click', (modifier) => {
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
-    renderRuns();
-
-    clickCell('testRunName', modifier);
-
-    expect(open).toHaveBeenCalledWith(getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN), '_blank');
-    expect(push).not.toHaveBeenCalled();
-    open.mockRestore();
-  });
+      expect(open).toHaveBeenCalledWith(getUrnForEntity(ApplicationRoute.Runs, CLICKED_RUN), '_blank');
+      open.mockRestore();
+    },
+  );
 
   test('navigates nowhere for a click in the actions column', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
@@ -243,7 +239,6 @@ describe('Runs — row navigation', () => {
 
     clickCell(ACTIONS_COLUMN_CEL_ID);
 
-    expect(push).not.toHaveBeenCalled();
     expect(open).not.toHaveBeenCalled();
     open.mockRestore();
   });

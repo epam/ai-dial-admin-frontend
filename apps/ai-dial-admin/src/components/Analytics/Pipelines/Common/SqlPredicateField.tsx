@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { DialInput, DialTextarea } from '@epam/ai-dial-ui-kit';
+import { Input, Textarea } from '@epam/ai-dial-ui-kit';
 
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -57,7 +57,7 @@ const SqlPredicateField: FC<Props> = ({
   // preference.
   if (isCompact) {
     return (
-      <DialInput
+      <Input
         id={id}
         aria-label={label}
         value={value ?? ''}
@@ -74,7 +74,7 @@ const SqlPredicateField: FC<Props> = ({
   }
 
   return (
-    <DialTextarea
+    <Textarea
       id={id}
       labelProps={{ label }}
       value={value ?? ''}

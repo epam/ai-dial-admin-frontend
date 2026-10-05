@@ -12,10 +12,15 @@ import { AnalyticsUsageI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
+import { VIEW_LABEL_KEY } from '@/src/components/Analytics/Usage/utils/labels';
+
+const ALL_VIEWS: UsageView[] = [UsageView.Llm, UsageView.Mcp, UsageView.Routes];
 
 interface Props {
   view: UsageView;
   onViewChange: (view: UsageView) => void;
+  /** The views `View by` offers, in order; an entity offers only the ones it has traffic of. */
+  views?: UsageView[];
   compare: ComparePeriod;
   onCompareChange: (compare: ComparePeriod) => void;
   timePeriod: string;
@@ -37,6 +42,7 @@ const COMPARE_SELECT_WIDTH = 'w-[200px]';
 
 const UsageControls: FC<Props> = ({
   view,
+  views = ALL_VIEWS,
   onViewChange,
   compare,
   onCompareChange,
@@ -50,11 +56,8 @@ const UsageControls: FC<Props> = ({
   const t = useI18n();
 
   const viewOptions = useMemo(
-    () => [
-      { value: UsageView.Llm, label: t(AnalyticsUsageI18nKey.ViewLlm) },
-      { value: UsageView.Mcp, label: t(AnalyticsUsageI18nKey.ViewMcp) },
-    ],
-    [t],
+    () => views.map((option) => ({ value: option, label: t(VIEW_LABEL_KEY[option]) })),
+    [views, t],
   );
 
   const compareOptions = useMemo(

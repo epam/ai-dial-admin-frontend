@@ -40,6 +40,8 @@ import {
   METRIC_SCORE_RESULTS_ENTITY,
   OVERALL_METRIC_SCORE_NAME,
   RUN_ID_FIELD,
+  TEST_CASE_EVAL_SCORES_ENTITY,
+  TEST_CASE_ID_FIELD,
   VALUE_FIELD,
 } from './constants';
 import {
@@ -53,20 +55,21 @@ import {
 } from './models';
 
 /**
- * Query: count of test-case eval summaries grouped by threshold `passed` and execution status.
+ * Query: count of test-case eval scores grouped by threshold `passed` and execution status.
  * Rows shape: `{ passed: boolean | null, execution_status: string, count: number }`.
- * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])`
- * so counts describe the matched-only population used in run comparison.
+ * When `excludeTestCaseIds` is non-empty, those test cases are excluded via
+ * `NOT (test_case_id IN [...])` so counts describe the matched-only population used in run
+ * comparison (backed by the backend's `unmatchedEvalTestCaseIds`).
  */
-export const buildTestCasesStatusQuery = (runId: string, excludeEvalSummaryIds: string[] = []): StructuredQuery => {
+export const buildTestCasesStatusQuery = (runId: string, excludeTestCaseIds: string[] = []): StructuredQuery => {
   const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
   const filter =
-    excludeEvalSummaryIds.length > 0
-      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+    excludeTestCaseIds.length > 0
+      ? and([runFilter, not(inValues(TEST_CASE_ID_FIELD, ValueType.Uuid, excludeTestCaseIds))])
       : runFilter;
 
   return aggregateQuery({
-    entity: EVAL_SUMMARIES_ENTITY,
+    entity: TEST_CASE_EVAL_SCORES_ENTITY,
     filter,
     groupBy: [PASSED_FIELD, EXECUTION_STATUS_FIELD],
     select: [col(field(PASSED_FIELD)), col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
@@ -471,18 +474,6 @@ const RUN_COST_SIGNIFICANT_DIGITS = 2;
 
 const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
-
-/**
- * Formats elapsed milliseconds as `MM:SS` for the cost-card calculating description.
- * Negative or non-finite input is treated as zero.
- */
-export const formatElapsedMmSs = (ms: number): string => {
-  const safeMs = !Number.isFinite(ms) || ms < 0 ? 0 : ms;
-  const totalSeconds = Math.floor(safeMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-};
 
 /**
  * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite

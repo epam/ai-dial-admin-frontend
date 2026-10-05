@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+import { getConfigFileAppRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { getRunnerOrigin } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -10,7 +10,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
-import { DialAppRoute } from '@/src/models/dial/route';
+import { ObjectAppRoutes } from '@/src/components/Assets/ObjectAppRoutes/models';
 import { resourceRunnerApplicationMap } from '@/src/components/Assets/Resources/constants';
 
 /**
@@ -21,20 +21,23 @@ import { resourceRunnerApplicationMap } from '@/src/components/Assets/Resources/
  */
 export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
   const t = useI18n();
-  const [routes, setRoutes] = useState<DialAppRoute[] | null>(null);
+  const [routes, setRoutes] = useState<ObjectAppRoutes | null>(null);
   const [interceptors, setInterceptors] = useState<string[] | null>(null);
   const [features, setFeatures] = useState<Record<string, boolean> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const path =
-    runner && getRunnerOrigin(runner) === AppRunnerOrigin.Platform ? (runner as AppRunnerOption).path : undefined;
+  const origin = runner ? getRunnerOrigin(runner) : undefined;
+  const path = origin === AppRunnerOrigin.Platform ? (runner as AppRunnerOption).path : undefined;
+  const configFileRunnerId = origin === AppRunnerOrigin.Config ? runner?.$id || runner?.name : undefined;
 
   useEffect(() => {
     setRoutes(null);
+    setInterceptors(null);
+    setFeatures(null);
     setError(null);
 
-    if (!path) {
+    if (!path && !configFileRunnerId) {
       setIsLoading(false);
       return;
     }
@@ -42,31 +45,57 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
     let isStale = false;
     setIsLoading(true);
 
-    getRunner(path, DEFAULT_ETAG).then((res) => {
-      if (isStale) {
-        return;
-      }
-      setIsLoading(false);
-      if (res.success) {
-        setRoutes((res.response as DialAppRunnerResource)?.['dial:applicationTypeRoutes'] || []);
-        setInterceptors((res.response as DialAppRunnerResource)?.['dial:applicationTypeInterceptors'] || []);
+    const loadRunnerDetails = async () => {
+      try {
+        let details: DialAppRunnerResource | undefined;
+
+        if (origin === AppRunnerOrigin.Platform) {
+          const res = await getRunner(path as string, DEFAULT_ETAG);
+          if (isStale) {
+            return;
+          }
+          setIsLoading(false);
+          if (!res.success) {
+            // Routes are unknown rather than absent, so the caller must not fall through to "No App Routes".
+            setError(res.errorMessage || res.errorHeader || t(EntitiesI18nKey.ResolvedSchemaFailed));
+            return;
+          }
+          details = res.response as DialAppRunnerResource;
+        } else {
+          const res = await getConfigFileAppRunner(configFileRunnerId as string);
+          if (isStale) {
+            return;
+          }
+          setIsLoading(false);
+          if (!res.success) {
+            setError(res.failure.errorMessage || res.failure.errorHeader || t(EntitiesI18nKey.ResolvedSchemaFailed));
+            return;
+          }
+          details = res.data as DialAppRunnerResource;
+        }
+        setRoutes((details?.['dial:applicationTypeRoutes'] as ObjectAppRoutes | undefined) || null);
+        setInterceptors(details?.['dial:applicationTypeInterceptors'] || []);
         const result: Record<string, boolean> = Object.fromEntries(
           Object.values(resourceRunnerApplicationMap).map((applicationType) => [
             applicationType,
-            res.response?.[applicationType as keyof DialAppRunnerResource] as boolean,
+            details?.[applicationType as keyof DialAppRunnerResource] as boolean,
           ]),
         );
         setFeatures(result);
-        return;
+      } catch {
+        if (!isStale) {
+          setIsLoading(false);
+          setError(t(EntitiesI18nKey.ResolvedSchemaFailed));
+        }
       }
-      // Routes are unknown rather than absent, so the caller must not fall through to "No App Routes".
-      setError(res.errorMessage || res.errorHeader || t(EntitiesI18nKey.ResolvedSchemaFailed));
-    });
+    };
+
+    void loadRunnerDetails();
 
     return () => {
       isStale = true;
     };
-  }, [path, t]);
+  }, [configFileRunnerId, origin, path, t]);
 
   return { routes, interceptors, features, isLoading, error };
 };

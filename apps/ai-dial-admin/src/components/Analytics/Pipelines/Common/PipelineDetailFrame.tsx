@@ -3,29 +3,40 @@
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  Button,
   ButtonAppearance,
+  ButtonVariant,
+  ConfirmationPopup,
   ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialDangerButton,
-  DialNeutralButton,
-  DialPrimaryButton,
-  DialTabs,
+  Notification,
+  NotificationType,
+  NotificationVariant,
+  Tabs,
 } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
+import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntime';
 import DeletePipelinePopup from '@/src/components/Analytics/Pipelines/Common/DeletePipelinePopup';
 import PipelineEnabledBadge from '@/src/components/Analytics/Pipelines/Common/PipelineEnabledBadge';
 import PipelineReadOnlyFacts from '@/src/components/Analytics/Pipelines/Common/PipelineReadOnlyFacts';
+import PipelinePauseBanner from '@/src/components/Analytics/Pipelines/Common/PipelinePauseBanner';
 import PipelineRuntimeAlerts from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeAlerts';
+import PipelineRuntimeBadge from '@/src/components/Analytics/Pipelines/Common/PipelineRuntimeBadge';
+import PausePipelinePopup from '@/src/components/Analytics/Pipelines/Common/PausePipelinePopup';
+import { runtimeStatusOf, usePausedPipelines } from '@/src/components/Analytics/Pipelines/Common/use-paused-pipelines';
+import { usePipelinePause } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-pause';
 import { PipelineFormState } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
-import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -33,8 +44,9 @@ import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
+import { PipelineRuntimeStatus } from '@/src/models/analytics/pipeline-runtime';
 import { ApplicationRoute } from '@/src/types/routes';
-import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
+import { auditTab, EntityViewTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { buildPipelineDto, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
@@ -52,6 +64,13 @@ interface Props {
 // expression.
 const FORBIDDEN = 403;
 
+// Four labels, one control: which verb it offers follows the pause, and whether it is mid-request
+// follows the action. A control that still said "Pause" while pausing invites the second click.
+const pauseLabelKey = (isPaused: boolean, isBusy: boolean): AnalyticsPipelinesI18nKey => {
+  if (isPaused) return isBusy ? AnalyticsPipelinesI18nKey.Resuming : AnalyticsPipelinesI18nKey.Resume;
+  return isBusy ? AnalyticsPipelinesI18nKey.Pausing : AnalyticsPipelinesI18nKey.Pause;
+};
+
 const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const t = useI18n();
   const router = useRouter();
@@ -68,7 +87,21 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   const [documentSeed, setDocumentSeed] = useState<Pipeline | PipelineDraft | null>(null);
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
 
-  const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
+  // The runner is a second upstream, read only for a caller who can act on it: it authorizes every one
+  // of its endpoints on full-admin rights, so for anyone else there is nothing to present read-only.
+  const runtime = usePausedPipelines();
+  const pause = usePipelinePause(pipeline.name, runtime.reload);
+
+  const pausedEntry = runtime.paused[pipeline.name];
+  const runtimeStatus = runtimeStatusOf(runtime, pipeline.name, pipeline.enabled, pipeline.kind);
+  const isRuntimeStatable = runtimeStatus !== PipelineRuntimeStatus.Unknown;
+  // Pausing what nothing is running would answer a request the runner has no work to apply it to.
+  const isPauseOffered = isRuntimeStatable && runtimeStatus !== PipelineRuntimeStatus.NotTracked;
+
+  const tabs = useMemo(
+    () => (isFullAdmin ? [propertiesTab(t), runtimeTab(t), auditTab(t)] : [propertiesTab(t), auditTab(t)]),
+    [t, isFullAdmin],
+  );
 
   const assemblyContext = useMemo(
     () => ({ grainKey: form.grainKey, sourceTable: target?.source_table }),
@@ -102,6 +135,13 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     reset(pipeline);
     setDocumentSeed((seed) => (seed ? pipeline : seed));
   }, [pipeline, reset]);
+
+  // Both upstreams at once. The page's own refresh brings a fresh `state` with the pipeline; the
+  // runner is a separate read this frame owns, and `router.refresh()` does not re-run its effect.
+  const onReloadRuntime = useCallback(() => {
+    router.refresh();
+    void runtime.reload();
+  }, [router, runtime]);
 
   const onDiscard = useCallback(() => {
     dispatch({ type: ValidationActionType.Reset });
@@ -208,6 +248,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     pipeline.enabled ? AnalyticsPipelinesI18nKey.DisablePipeline : AnalyticsPipelinesI18nKey.EnablePipeline,
   );
 
+  const pauseControlLabel = pauseLabelKey(Boolean(pausedEntry), pause.isBusy);
+
   const toggleProps = {
     label: toggleLabel,
     disabled: isChanged || isSaving,
@@ -217,10 +259,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
   // Disabling stops a pipeline; deleting destroys it. Only the second is destructive, so only the second
   // is drawn in danger — two red buttons side by side said they were the same weight.
-  const enabledToggle = pipeline.enabled ? (
-    <DialNeutralButton {...toggleProps} />
-  ) : (
-    <DialPrimaryButton {...toggleProps} />
+  const enabledToggle = (
+    <Button variant={pipeline.enabled ? ButtonVariant.Neutral : ButtonVariant.Primary} {...toggleProps} />
   );
 
   // One fallback for both conditions: with analytics disabled, or while the JSON editor holds the
@@ -229,6 +269,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
   // runtime toggle, and gating on it would hide the history of the toggle itself.
   const isTabStripShown = !!featureFlags.analyticsEnabled && !isEditorEnabled;
   const isAuditShown = isTabStripShown && activeTab === EntityViewTab.Audit;
+  const isRuntimeShown = isTabStripShown && isFullAdmin && activeTab === EntityViewTab.Runtime;
 
   const properties = (
     <>
@@ -241,34 +282,52 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative gap-4">
       <div className="flex flex-row items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          {!isEditorEnabled && <PipelineEnabledBadge enabled={pipeline.enabled} className="self-start" />}
+          {/* Two axes, not one: `enabled` is the declaration and the runtime chip is what the runner is
+              doing with it, so a paused pipeline still reads as enabled. */}
+          {!isEditorEnabled && (
+            <div className="flex flex-row items-center gap-2">
+              <PipelineEnabledBadge enabled={pipeline.enabled} />
+              <PipelineRuntimeBadge status={runtimeStatus} />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <h1 className="text-primary dial-h4">{pipeline.name}</h1>
             <CopyButton value={pipeline.name} valueLabel={t(AnalyticsPipelinesI18nKey.Name)} />
           </div>
         </div>
 
-        <div className="flex flex-row items-center gap-3">
+        <div className="flex min-h-10 flex-row items-center gap-3">
+          {/* The page's standing actions step aside for the change bar: neither can be used while edits
+              are pending, and four buttons in a row read as a choice between them. They keep their space
+              while they do — removed from the flow, they dragged the JSON toggle left and back on every
+              keystroke that raised or cleared the bar. `inert` rather than `aria-hidden`, so nothing
+              focusable stays reachable behind the hidden row. */}
+          {isFullAdmin && !isEditorEnabled && (
+            <div
+              className={classNames('flex flex-row items-center gap-3', isChangeBarShown && 'invisible')}
+              inert={isChangeBarShown}
+            >
+              <Button
+                variant={ButtonVariant.Danger}
+                appearance={ButtonAppearance.Outlined}
+                label={t(AnalyticsPipelinesI18nKey.DeletePipeline)}
+                onClick={() => setIsDeletePromptOpen(true)}
+              />
+              {enabledToggle}
+            </div>
+          )}
+          {/* After the actions, so it lands where they were rather than pushing the row left. */}
           {isChangeBarShown && (
             <ChangedEntityButtons
+              isDesignSystem2
               disableSave={(shouldCheckFields && form.hasFieldErrors) || isGroupKeyMissing || isSaving}
               onDiscard={onDiscard}
               onSave={onTryToSave}
             />
           )}
-          {/* The page's standing actions step aside for the change bar: neither can be used while edits
-              are pending, and four buttons in a row read as a choice between them. */}
-          {isFullAdmin && !isEditorEnabled && !isChangeBarShown && (
-            <>
-              <DialDangerButton
-                label={t(AnalyticsPipelinesI18nKey.DeletePipeline)}
-                appearance={ButtonAppearance.Outlined}
-                onClick={() => setIsDeletePromptOpen(true)}
-              />
-              {enabledToggle}
-            </>
+          {!isChangeBarShown && (
+            <JsonToggle isDesignSystem2 isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
           )}
-          {!isChangeBarShown && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />}
         </div>
       </div>
 
@@ -281,8 +340,16 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
         />
       )}
 
+      {pause.isConfirmOpen && (
+        <PausePipelinePopup
+          name={pipeline.name}
+          onConfirm={() => void pause.confirmPause()}
+          onClose={pause.closeConfirm}
+        />
+      )}
+
       {isTogglePromptOpen && (
-        <DialConfirmationPopup
+        <ConfirmationPopup
           open
           variant={ConfirmationPopupVariant.Danger}
           header={t(
@@ -305,10 +372,31 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
 
       {/* Above the strip, so a held or failing pipeline says so whichever tab is in view — and withdrawn
           with everything else below the identity row while the document is on screen. */}
+      {/* The registry calls this pipeline healthy while nothing drives it — the one runtime fact the
+          page cannot leave to a chip alone. */}
+      {!isEditorEnabled && runtimeStatus === PipelineRuntimeStatus.NotTracked && (
+        <Notification
+          variant={NotificationVariant.Error}
+          type={NotificationType.SectionMessage}
+          role="status"
+          title={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)}
+          message={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedMessage)}
+        />
+      )}
+
+      {!isEditorEnabled && pausedEntry && (
+        <PipelinePauseBanner pause={pausedEntry} isResuming={pause.isBusy} onResume={() => void pause.resume()} />
+      )}
+
       {!isEditorEnabled && <PipelineRuntimeAlerts pipeline={pipeline} />}
 
       {isTabStripShown && (
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+        <Tabs
+          ariaLabel={t(AnalyticsPipelinesI18nKey.Tabs)}
+          tabs={tabs.map(({ id, label }) => ({ id, label }))}
+          activeTabId={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as EntityViewTab)}
+        />
       )}
 
       <div className="flex-1 overflow-auto min-h-0 flex flex-col">
@@ -319,12 +407,40 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children }) => {
             readonly={!isFullAdmin}
           />
         )}
+        {isRuntimeShown && (
+          <PipelineRuntime
+            pipeline={pipeline}
+            onReload={onReloadRuntime}
+            actions={
+              isPauseOffered &&
+              // Solid against the outlined Reload beside it, and each verb carries its own glyph: this
+              // is the control that changes what the service is doing, the other only asks again.
+              (pausedEntry ? (
+                <Button
+                  variant={ButtonVariant.Primary}
+                  label={t(pauseControlLabel)}
+                  iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                  disabled={pause.isBusy}
+                  onClick={() => void pause.resume()}
+                />
+              ) : (
+                <Button
+                  variant={ButtonVariant.Neutral}
+                  label={t(pauseControlLabel)}
+                  iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                  disabled={pause.isBusy}
+                  onClick={pause.openConfirm}
+                />
+              ))
+            }
+          />
+        )}
         {isAuditShown && (
           <div className="flex min-h-0 flex-1 flex-col">
             <PipelineAudit pipeline={pipeline} />
           </div>
         )}
-        {!isEditorEnabled && !isAuditShown && properties}
+        {!isEditorEnabled && !isAuditShown && !isRuntimeShown && properties}
       </div>
     </div>
   );
