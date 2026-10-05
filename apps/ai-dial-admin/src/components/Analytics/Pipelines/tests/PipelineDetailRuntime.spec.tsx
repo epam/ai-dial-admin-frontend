@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   getPausedPipelines,
+  getPipelineFailures,
   getRunnerPipelines,
   getTable,
   getTables,
@@ -14,6 +15,7 @@ import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDet
 import { AnalyticsPipelinesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { DlqPage } from '@/src/models/analytics/pipeline-dlq';
 import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PausedPipeline, PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
@@ -88,6 +90,13 @@ const tabControl = (name: string) => screen.getAllByRole('button', { name }).at(
 const openRuntime = async (user: ReturnType<typeof userEvent.setup>) =>
   user.click(await screen.findByText(TabsI18nKey.Runtime));
 
+const page = (total: number): DlqPage => ({
+  items: [],
+  has_more: false,
+  total,
+  requeueable_total: total,
+});
+
 const renderView = (override?: Partial<Pipeline>) =>
   render(<PipelineDetailView pipeline={{ ...pipeline, ...override }} takenTargets={['turn_feedback']} />);
 
@@ -101,8 +110,37 @@ describe('PipelineDetailView — runtime and pause', () => {
     );
     asPaused();
     asTracked('feedback-live');
+    vi.mocked(getPipelineFailures).mockResolvedValue({ success: true, response: page(0) });
     vi.mocked(pausePipeline).mockResolvedValue({ success: true });
     vi.mocked(resumePipeline).mockResolvedValue({ success: true });
+  });
+
+  // The strip answers whether something is wrong; how many is one click away, on the card that can act
+  // on them. The kit hides a tab's icon from assistive technology, so the count is stated in text
+  // beside the strip rather than on the mark.
+  // The mark is decorative by construction — the kit hides a tab's icon — so the count is stated in
+  // text beside the strip. A fault signalled by colour alone is signalled to nobody.
+  test('states the failure count beside the tab strip for a model-calling enrichment', async () => {
+    vi.mocked(getPipelineFailures).mockResolvedValue({ success: true, response: page(7) });
+    renderView({ transform: { type: TransformType.Llm } });
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.FailuresBadge)).toBeTruthy();
+  });
+
+  test('states no count when the pipeline holds no dead letters', async () => {
+    vi.mocked(getPipelineFailures).mockResolvedValue({ success: true, response: page(0) });
+    renderView({ transform: { type: TransformType.Llm } });
+
+    expect(await screen.findByText(TabsI18nKey.Runtime)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.FailuresBadge)).toBeNull();
+  });
+
+  // A statement either applies to the batch or fails it, so there is nothing per-row to ask about.
+  test('asks for no failures at all for a SQL enrichment', async () => {
+    renderView();
+
+    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    expect(getPipelineFailures).not.toHaveBeenCalled();
   });
 
   test('offers a Runtime tab between Properties and Audit', async () => {
@@ -204,6 +242,32 @@ describe('PipelineDetailView — runtime and pause', () => {
 
     expect(banner.textContent).toContain(AnalyticsPipelinesI18nKey.PausedByBreaker);
     expect(banner.textContent).toContain(AnalyticsPipelinesI18nKey.PausedResumesAt);
+  });
+
+  // The evidence the breaker tripped on, worded by the service: the threshold and the window are its
+  // configuration, so a console that restated them would be quoting a copy.
+  test('states the reason a breaker pause was taken', async () => {
+    asPaused({
+      ...OPERATOR_PAUSE,
+      origin: PauseOrigin.Breaker,
+      reason: '7 of its last 50 group(s) dead-lettered',
+    });
+    renderView();
+
+    const banner = await screen.findByRole('status');
+
+    expect(banner.textContent).toContain(AnalyticsPipelinesI18nKey.PausedReason);
+  });
+
+  // The service records a fixed string for an operator pause that says only what the origin already
+  // says, so repeating it would be the same sentence twice.
+  test('states no reason for an operator pause', async () => {
+    asPaused({ ...OPERATOR_PAUSE, reason: 'paused by an operator' });
+    renderView();
+
+    const banner = await screen.findByRole('status');
+
+    expect(banner.textContent).not.toContain(AnalyticsPipelinesI18nKey.PausedReason);
   });
 
   test('raises no banner for a pipeline the runner does not report as paused', async () => {

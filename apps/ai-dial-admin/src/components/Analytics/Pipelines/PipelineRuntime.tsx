@@ -13,6 +13,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 
+import PipelineFailuresCard from '@/src/components/Analytics/Pipelines/Failures/PipelineFailuresCard';
+import { PipelineFailuresRead } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -22,9 +24,14 @@ import { Pipeline } from '@/src/models/analytics/pipeline';
 
 interface Props {
   pipeline: Pipeline;
+  /** The runner's dead letters for this pipeline, read by the frame so the tab label can carry them. */
+  failures: PipelineFailuresRead;
+  /** Whether this kind of pipeline dead-letters at all; only a model-calling enrichment does. */
+  canDeadLetter: boolean;
+  isPaused: boolean;
   /**
    * Reads both upstreams again — the pipeline through the page, and the runner through the frame's own
-   * hook. The frame owns it because only the frame holds the second one.
+   * hooks. The frame owns it because only the frame holds them.
    */
   onReload: () => void;
   /** The pause control, which the frame owns: it holds the runner read and the confirmation. */
@@ -32,40 +39,49 @@ interface Props {
 }
 
 /**
- * One group of runtime facts. The groups are separated by a rule rather than boxed: three bordered
- * cards in a column draw two lines where one says the same thing, and this content already sits inside
- * a panel of its own. The heading is small and quiet on purpose — it names the group, and the values
- * inside it are what the reader came for.
- *
- * A group whose every member the service omitted renders nothing at all. A heading over an empty row
- * states that something is missing, where the truth is that this kind of pipeline has no such facts —
- * an on-ingest pipeline has no schedule, and a bare `SCHEDULE` above white space reads as a fault.
- */
-/**
  * Undoes `DialLabelledText`'s own 200px cap. That default suits a dense form; this tab gives each value
- * a third of the page, and a truncated cursor identity is one nobody can read or copy.
+ * a quarter of the page, and a truncated cursor identity is one nobody can read or copy.
  */
 const UNCAPPED = 'max-w-none';
 
+/**
+ * One group of runtime facts, as a card.
+ *
+ * Cards rather than rules between stacked groups: the failures card below these is a card, and two
+ * presentation idioms on one tab read as two unrelated screens.
+ *
+ * Stacked, each the full width. Side by side they were forced to a shared height, so the schedule —
+ * two values against the state's seven — sat above a card's worth of empty space; and the failures
+ * card below was already full width, so the tab read as a two-column layout that gave up halfway.
+ * Full width also lets a row hold four values instead of three, which is what absorbs the height the
+ * stacking costs.
+ *
+ * The card is a raised layer and nothing else: no rim. Against the panel behind it the fill is already
+ * the boundary, and a border on top of it draws the box twice.
+ *
+ * A group whose every member the service omitted renders nothing at all. A heading over an empty card
+ * states that something is missing, where the truth is that this kind of pipeline has no such facts —
+ * an on-ingest pipeline has no schedule, and a bare `SCHEDULE` above white space reads as a fault.
+ */
 const RuntimeSection: FC<{ title: string; children: ReactNode }> = ({ title, children }) => {
   const rendered = Array.isArray(children) ? children.flat() : [children];
   if (!rendered.some(Boolean)) return null;
 
   return (
-    <section aria-label={title} className="flex flex-col gap-4 py-6 first:pt-0 last:pb-0">
+    <section aria-label={title} className="flex flex-col gap-4 rounded bg-layer-3 p-4">
       <h3 className="dial-small-semi-text uppercase tracking-wide text-secondary">{title}</h3>
-      <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3">{children}</div>
+      <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{children}</div>
     </section>
   );
 };
 
 /**
- * The runtime the service reports, in the groups an operator reads it by.
+ * The runtime the two services report, in the groups an operator reads it by.
  *
- * Every value here is measured against the moment of the read — the lag most of all — so the tab states
- * how old its answer is rather than presenting it as current. Re-reading is the page's own refresh: the
- * state arrives with the pipeline, so there is one copy of it rather than a second, client-side one that
- * could disagree with the server component's.
+ * Every value here is measured against the moment of the read — the lag most of all — so re-reading is
+ * offered rather than the age of the answer being stated. The state arrives with the pipeline, so there
+ * is one copy of it rather than a second, client-side one that could disagree with the server
+ * component's; the failures come from the runner, which is a separate read the frame owns.
  *
  * The clamp and the required rebuild are **not** restated here. They are already raised as alerts above
  * the tab strip, in the same words, and a reader who has just read the alert does not need to meet it
@@ -74,7 +90,7 @@ const RuntimeSection: FC<{ title: string; children: ReactNode }> = ({ title, chi
  * A member the service omitted is left out. These appear as the pipeline runs, and a row of em dashes
  * would state absence where there is simply nothing yet.
  */
-const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
+const PipelineRuntime: FC<Props> = ({ pipeline, failures, canDeadLetter, isPaused, onReload, actions }) => {
   const t = useI18n();
 
   const state = pipeline.state;
@@ -99,14 +115,15 @@ const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
       state.materialized_through_identity ||
       state.drained_at),
   );
-  const hasFailure = Boolean(state?.last_error);
+  // The registry's own run-level failure, judged on the raw member for the same reason as the two above.
+  const hasRunFailure = Boolean(state?.last_error);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-y-4">
       <div className="flex flex-row flex-wrap items-center justify-end gap-3">
-        {/* Both upstreams, not a page reload: the state comes with the pipeline and the pause from the
-            frame's own read. Outlined, because it only re-reads — the control that changes something
-            stands beside it in solid. */}
+        {/* Both upstreams, not a page reload: the state comes with the pipeline and the pause and the
+            failures from the frame's own reads. Outlined, because it only re-reads — the control that
+            changes something stands beside it in solid. */}
         <Button
           variant={ButtonVariant.Neutral}
           appearance={ButtonAppearance.Outlined}
@@ -127,16 +144,16 @@ const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
         />
       )}
 
-      {/* The one case with nothing to lay out: it takes the space the sections would have had, rather
-          than sitting under the control bar with an empty page beneath it. */}
-      {state && !hasSchedule && !hasProgress && !hasFailure && (
+      {/* The one case with nothing to lay out. A pipeline that reports a failure is never among them:
+          it ran, and saying otherwise sends an operator looking for a pipeline that never started. */}
+      {state && !hasSchedule && !hasProgress && !hasRunFailure && (
         <div className="flex flex-1 items-center justify-center">
           <NoDataContent title={t(AnalyticsPipelinesI18nKey.NeverRun)} />
         </div>
       )}
 
       {state && (
-        <div className="flex flex-col divide-y divide-primary">
+        <div className="flex flex-col gap-4">
           <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionSchedule)}>
             {lastRunAt && (
               <LabelledText className={UNCAPPED} label={t(AnalyticsPipelinesI18nKey.LastRun)} text={lastRunAt} />
@@ -189,8 +206,8 @@ const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
                 text={state.materialized_through_identity}
               />
             )}
-            {/* Under progress rather than under schedule, and with the caveat attached: it advances only
-                on an empty probe, so on a busy pipeline it is old while everything is working. */}
+            {/* Under state rather than under schedule, and with the caveat attached: it advances only on
+                an empty probe, so on a busy pipeline it is old while everything is working. */}
             {drainedAt && (
               <LabelledText
                 className={UNCAPPED}
@@ -201,13 +218,12 @@ const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
             )}
           </RuntimeSection>
 
-          {/* Only when something failed. An em dash here answered a question nobody asked — a pipeline
-              that has never failed says so by this section being absent, the way a pipeline with no
-              schedule says so. The service reports no timestamp for the failure — `last_error` is the
-              last run's — so the run's own time is what places it, and the alert above the tab strip
-              carries the message itself. */}
+          {/* The run's own failure, which the registry records for the kinds it drives itself. Its own
+              group rather than a line in the failures card: that card lists the dead letters of a
+              model-calling enrichment, and this is the opposite kind of fact — one verdict on a whole
+              run. The alert above the tab strip carries the message; what this adds is when. */}
           <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionFailures)}>
-            {state.last_error && (
+            {hasRunFailure && (
               <LabelledText
                 className={UNCAPPED}
                 label={t(AnalyticsPipelinesI18nKey.LastError)}
@@ -217,6 +233,11 @@ const PipelineRuntime: FC<Props> = ({ pipeline, onReload, actions }) => {
           </RuntimeSection>
         </div>
       )}
+
+      {/* The dead letters of a model-calling enrichment. Governed by the runner rather than by `state`,
+          so it is presented independently of the three content states above: a pipeline whose state was
+          reset can still hold failures from before. */}
+      {canDeadLetter && <PipelineFailuresCard pipeline={pipeline} failures={failures} isPaused={isPaused} />}
     </div>
   );
 };

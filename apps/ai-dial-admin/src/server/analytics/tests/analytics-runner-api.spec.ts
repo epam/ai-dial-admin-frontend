@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
+import { DlqLane, DlqStage } from '@/src/models/analytics/pipeline-dlq';
 import { PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { AnalyticsRunnerApi } from '../analytics-runner-api';
@@ -101,5 +102,123 @@ describe('Server :: AnalyticsRunnerApi', () => {
       expect.stringContaining('/v1/pipelines/usage-live/resume'),
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+  // --- the dead-letter queue -------------------------------------------------------------------
+
+  const DEAD_LETTER = {
+    id: 48226,
+    pipeline_name: 'usage-live',
+    stage: DlqStage.DialCall,
+    error: 'rate limit is exceeded',
+    requeueable: true,
+    created_at: '2026-10-02T10:00:00Z',
+  };
+
+  const PAGE = { items: [DEAD_LETTER], next_cursor: 'djE6MQ', has_more: true, total: 37, requeueable_total: 21 };
+
+  test('getDlq issues GET /v1/dlq for one page and returns it whole', async () => {
+    fetch.mockResponseOnce(JSON.stringify(PAGE), JSON_HEADERS);
+
+    const res = await instance.getDlq('usage-live', {}, 20, undefined, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: PAGE }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/dlq?pipeline_name=usage-live&limit=20'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('getDlq carries the cursor of the page it is continuing', async () => {
+    fetch.mockResponseOnce(JSON.stringify(PAGE), JSON_HEADERS);
+
+    await instance.getDlq('usage-live', {}, 20, 'djE6MQ', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('cursor=djE6MQ'), expect.anything());
+  });
+
+  test('getDlq narrows by lane', async () => {
+    fetch.mockResponseOnce(JSON.stringify(PAGE), JSON_HEADERS);
+
+    await instance.getDlq('usage-live', { lane: DlqLane.Backfill }, 20, undefined, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('lane=backfill'), expect.anything());
+  });
+
+  // The service answers 400 for the pair rather than the empty list it would select, so the two are
+  // kept apart here rather than only in the UI.
+  test('getDlq never sends a lane together with a run', async () => {
+    fetch.mockResponseOnce(JSON.stringify(PAGE), JSON_HEADERS);
+
+    await instance.getDlq('usage-live', { lane: DlqLane.Live, runId: 'run-7' }, 20, undefined, TOKEN_MOCK);
+
+    const url = String(vi.mocked(fetch).mock.calls[0][0]);
+
+    expect(url).toContain('run_id=run-7');
+    expect(url).not.toContain('lane=');
+  });
+
+  test('getDlq reports a body that is not a page as a failure', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+    const res = await instance.getDlq('usage-live', {}, 20, undefined, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+  });
+
+  test('getDlq carries the service refusal through', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 503, error: 'postgres_unavailable', message: 'down' }), {
+      status: 503,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getDlq('usage-live', {}, 20, undefined, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+    expect(res.response).toBeUndefined();
+  });
+
+  test('requeueDlqItem issues POST to the item path and returns the count', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ requeued: 1 }), JSON_HEADERS);
+
+    const res = await instance.requeueDlqItem(48226, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: { requeued: 1 } }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/dlq/48226/requeue'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('requeueDlqItem carries a refusal of an item the service will not re-run', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 422, error: 'dlq_not_requeueable', message: 'pre-fold' }), {
+      status: 422,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.requeueDlqItem(48226, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+    expect(res.errorHeader).toBe('dlq_not_requeueable');
+  });
+
+  test('requeueDlq selects by pipeline alone when no run is named', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ requeued: 4 }), JSON_HEADERS);
+
+    const res = await instance.requeueDlq('usage-live', undefined, TOKEN_MOCK);
+
+    expect(res.response).toEqual({ requeued: 4 });
+
+    const url = String(vi.mocked(fetch).mock.calls[0][0]);
+
+    expect(url).toContain('pipeline_name=usage-live');
+    expect(url).not.toContain('run_id=');
+  });
+
+  test('requeueDlq selects by pipeline and run together', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ requeued: 2 }), JSON_HEADERS);
+
+    await instance.requeueDlq('usage-live', 'run-7', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('run_id=run-7'), expect.anything());
   });
 });

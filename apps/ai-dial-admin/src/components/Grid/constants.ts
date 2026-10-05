@@ -1,4 +1,6 @@
 export const ROW_HEIGHT = 48;
+/** The grid's own header row. A caller sizing a bounded grid has to account for it. */
+export const HEADER_HEIGHT = 30;
 export const TWO_LINE_ROW_HEIGHT = 64;
 export const GRID_COLUMNS_KEY = 'gridColumnsState';
 export const STACKED_LINE_HEIGHT = 22;
