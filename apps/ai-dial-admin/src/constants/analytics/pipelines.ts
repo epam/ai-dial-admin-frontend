@@ -5,6 +5,8 @@ export const LATEST_VERSION = 'latest';
 
 export const CRON_CUSTOM_PRESET = 'custom';
 
+export const CRON_EVERY_MINUTE_PRESET = 'every-minute';
+
 export const CRON_PRESETS: { value: string; labelKey: AnalyticsPipelinesI18nKey }[] = [
   { value: '0 */5 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronEveryFiveMinutes },
   { value: '0 0 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronHourly },

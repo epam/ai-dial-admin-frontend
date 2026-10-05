@@ -4,7 +4,6 @@ export enum PipelineKind {
 }
 
 export enum TriggerKind {
-  OnIngest = 'on_ingest',
   Schedule = 'schedule',
   Group = 'group',
 }
@@ -78,7 +77,6 @@ export interface PipelineVar {
 }
 
 export interface PipelineAdvanced {
-  scan_every?: string;
   rows_per_scan?: number;
   rows_per_call?: number;
   rate_rpm?: number;

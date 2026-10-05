@@ -8,7 +8,7 @@ import CreatePipelineShell from '@/src/components/Analytics/Pipelines/Common/Cre
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PipelineKind } from '@/src/models/analytics/pipeline';
+import { PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
@@ -21,7 +21,12 @@ interface Props {
 const CreatePipelinePopup: FC<Props> = ({ takenTargets, onClose, onCreated }) => {
   const t = useI18n();
 
-  const form = usePipelineForm({ takenTargets, initialDraft: { kind: PipelineKind.Enrich } });
+  // No trigger control here, but an enrichment registers as a cron-less schedule so the service stores its
+  // every-minute default; an aggregate's trigger is rebuilt by kind whatever the draft holds.
+  const form = usePipelineForm({
+    takenTargets,
+    initialDraft: { kind: PipelineKind.Enrich, trigger: { kind: TriggerKind.Schedule } },
+  });
   const { draft, onChange, availableTargets, isRegistrationValid, buildDto } = form;
 
   const kindRadios: RadioGroupItem[] = [

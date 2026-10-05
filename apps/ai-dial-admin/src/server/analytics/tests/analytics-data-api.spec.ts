@@ -438,7 +438,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
       inputs: ['response_ratings'],
-      trigger: { kind: TriggerKind.OnIngest },
+      trigger: { kind: TriggerKind.Schedule },
       transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
       response_schema: { type: 'object', properties: { rate_event_count: { type: 'number' } } },
       grain_key: 'response_id',
@@ -452,7 +452,7 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       name: 'new_pipeline',
       kind: PipelineKind.Enrich,
       target: 'turn_feedback',
-      trigger: { kind: TriggerKind.OnIngest },
+      trigger: { kind: TriggerKind.Schedule },
       transform: { type: TransformType.Sql, outputs: { rate_event_count: 'count(*)' } },
       enabled: false,
     };

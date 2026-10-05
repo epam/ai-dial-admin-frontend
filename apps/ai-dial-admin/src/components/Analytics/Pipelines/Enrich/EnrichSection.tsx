@@ -40,7 +40,6 @@ const EnrichSection: FC<Props> = ({ form }) => {
   const controlClassName = getControlClassName();
 
   const triggerRadios: RadioGroupItem[] = [
-    { value: TriggerKind.OnIngest, label: t(AnalyticsPipelinesI18nKey.TriggerOnIngest) },
     { value: TriggerKind.Schedule, label: t(AnalyticsPipelinesI18nKey.TriggerSchedule) },
     { value: TriggerKind.Group, label: t(AnalyticsPipelinesI18nKey.TriggerGroup) },
   ];
@@ -59,7 +58,7 @@ const EnrichSection: FC<Props> = ({ form }) => {
         onChange={(id) => onTriggerChange({ kind: id as TriggerKind })}
       />
       {trigger?.kind === TriggerKind.Schedule && (
-        <CronField value={trigger.cron ?? ''} onChange={(cron) => onTriggerChange({ cron })} />
+        <CronField value={trigger.cron ?? ''} isDefaultable onChange={(cron) => onTriggerChange({ cron })} />
       )}
       {trigger?.kind === TriggerKind.Group && (
         <div className="flex flex-col gap-y-6">
@@ -107,16 +106,6 @@ const EnrichSection: FC<Props> = ({ form }) => {
       {transformBlock}
       <Accordion title={t(AnalyticsPipelinesI18nKey.SectionAdvanced)}>
         <div className="flex flex-col gap-y-6">
-          <Input
-            id="pipeline-scan-every"
-            containerClassName={controlClassName}
-            wrapperClassName={NUMBER_INPUT_WIDTH}
-            labelProps={{ label: t(AnalyticsPipelinesI18nKey.ScanEvery) }}
-            value={draft.advanced?.scan_every ?? ''}
-            caption={t(AnalyticsPipelinesI18nKey.ScanEveryCaption)}
-            onChange={(v) => onAdvancedChange({ scan_every: v || undefined })}
-          />
-
           {NUMERIC_KNOBS.map(({ key, labelKey }) => (
             <Input
               key={key}

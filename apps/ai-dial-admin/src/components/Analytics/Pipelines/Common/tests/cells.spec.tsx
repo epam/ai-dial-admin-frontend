@@ -14,7 +14,7 @@ const baseRule: PipelineListItem = {
   kind: PipelineKind.Enrich,
   transform_type: TransformType.Llm,
   target: 'turn_feedback',
-  trigger: { kind: TriggerKind.OnIngest },
+  trigger: { kind: TriggerKind.Schedule },
   enabled: true,
   generation: 5,
   updated_at: '2026-08-21T09:37:29Z',
@@ -32,13 +32,6 @@ describe('Pipelines :: TriggerCell', () => {
     render(<TriggerCell pipeline={{ ...baseRule, trigger: { kind: TriggerKind.Group, group_by: 'chat_id' } }} />);
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.TriggerGroup)).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupedBy)).not.toBeInTheDocument();
-  });
-
-  test('shows an on-ingest badge with no qualifier', () => {
-    render(<TriggerCell pipeline={baseRule} />);
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.TriggerOnIngest)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupedBy)).not.toBeInTheDocument();
   });
 
