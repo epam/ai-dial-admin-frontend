@@ -67,6 +67,7 @@ const AppRunners: FC<Props> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
   const [isRunnerResolving, setIsRunnerResolving] = useState(false);
+  const [runnerOptions, setRunnerOptions] = useState(runners);
   const isMobile = useIsMobileScreen();
 
   const currentValue = entity ? getSchemaSourceId(entity.source) : selectedValue;
@@ -85,6 +86,10 @@ const AppRunners: FC<Props> = ({
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
   }, [currentValue, t, dispatch]);
 
+  useEffect(() => {
+    setRunnerOptions(runners);
+  }, [runners]);
+
   const isMergedSource = view === ApplicationRoute.AssetsApplications;
 
   // On the merged surface, labelled by `$id` to match the grid's `ID` column — an asset runner has no
@@ -92,12 +97,12 @@ const AppRunners: FC<Props> = ({
   // recognizable. Elsewhere every runner has one, so it stays the label.
   const dropdownItems = useMemo(() => {
     return (
-      runners?.map((r) => ({
+      runnerOptions?.map((r) => ({
         value: r.$id || '',
         label: (isMergedSource ? r.$id : r['dial:applicationTypeDisplayName']) || r.$id || '',
       })) || ([] as SelectOption[])
     );
-  }, [runners, isMergedSource]);
+  }, [runnerOptions, isMergedSource]);
 
   const handleRunnerSelect = useCallback(
     async (value?: string) => {
@@ -114,6 +119,12 @@ const AppRunners: FC<Props> = ({
 
       try {
         const { runner: resolvedRunner, scheme } = await resolveAppRunnerScheme(runner);
+
+        if (runner && resolvedRunner?.$id) {
+          runner.$id = resolvedRunner.$id;
+          setRunnerOptions((currentRunnerOptions) => [...(currentRunnerOptions ?? [])]);
+        }
+
         const resolvedId = resolvedRunner?.$id ?? value;
         const applicationProperties = getSchemaDefaults((scheme ?? resolvedRunner) as JSONSchema7) as Record<
           string,
@@ -141,7 +152,10 @@ const AppRunners: FC<Props> = ({
     [entity, onChange, onChangeValue, onCloseModal, runners],
   );
 
-  const selectedRunner = useMemo(() => runners?.find((r) => r.$id === currentValue), [runners, currentValue]);
+  const selectedRunner = useMemo(
+    () => runnerOptions?.find((r) => r.$id === currentValue),
+    [runnerOptions, currentValue],
+  );
 
   const openInNewTab = useCallback(() => {
     const url =
@@ -191,7 +205,7 @@ const AppRunners: FC<Props> = ({
               onApply={handleRunnerSelect}
               isModalOpen={isModalOpen}
               onClose={onCloseModal}
-              sourceEntities={runners}
+              sourceEntities={runnerOptions}
               isMergedSource={isMergedSource}
             />
           </DialInputPopup>

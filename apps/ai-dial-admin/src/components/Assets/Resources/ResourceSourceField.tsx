@@ -99,7 +99,12 @@ const ResourceSourceField: FC<Props> = ({
       }
 
       if (sourceType === CODE_APP_SOURCE_TYPE) {
-        onChange({ ...entity, endpoint: codeAppEditorUrl, editor_url: codeAppEditorUrl });
+        onChange({
+          ...entity,
+          endpoint: codeAppEditorUrl,
+          editor_url: codeAppEditorUrl,
+          application_type_schema_id: undefined,
+        });
         return;
       }
 
@@ -109,7 +114,7 @@ const ResourceSourceField: FC<Props> = ({
       }
 
       // Endpoints
-      onChange({ ...entity, application_type_schema_id: undefined as unknown as string, endpoint: '' });
+      onChange({ ...entity, application_type_schema_id: undefined, endpoint: '' });
     },
     [source, entity, onChange, onSourceChange, codeAppEditorUrl],
   );

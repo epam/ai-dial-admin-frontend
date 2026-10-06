@@ -219,7 +219,6 @@ const TabsContent: FC<Props> = ({
           <AssetApplicationAppRoutes
             key={discardKey}
             roles={roles}
-            applicationRunners={applicationSchemes || []}
             selectedEntity={selectedApplication as DialApplicationResource}
             onChangeEntity={onChangeApplication}
           />
