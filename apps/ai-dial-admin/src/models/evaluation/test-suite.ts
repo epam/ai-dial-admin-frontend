@@ -173,6 +173,19 @@ export interface TemplateVariable {
   resolvedValue?: unknown;
 }
 
+/**
+ * Template variables of every chain request, keyed by request index as the backend serializes it:
+ * `"0"` is the suite's own request, `"n"` is `additionalRequests[n-1]`. A request that declares no
+ * placeholders maps to an empty list.
+ */
+export type TemplateVariablesByRequest = Record<string, TemplateVariable[]>;
+
+/**
+ * Values entered for a suite-level try-out, keyed by request index like
+ * [[TemplateVariablesByRequest]] so two requests can carry different values for one variable name.
+ */
+export type TryOutVariablesByRequest = Record<string, Record<string, unknown>>;
+
 export interface TestCaseSchema {
   name: string;
   type: TestCaseItemType;

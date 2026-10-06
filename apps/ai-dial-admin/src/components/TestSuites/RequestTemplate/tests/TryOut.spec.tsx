@@ -4,11 +4,11 @@ import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { getTestCaseTemplateVariables, tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
-import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
+import { convertVariablesIntoInitialRequests } from '@/src/components/TestSuites/utils/template-variables';
 import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import {
   SuiteType,
-  TemplateVariable,
+  TemplateVariablesByRequest,
   TestCase,
   TestCaseSchema,
   TestSuite,
@@ -19,8 +19,8 @@ import { getTryoutResponseFromStorage } from '@/src/components/TestSuites/utils/
 import TryOut from '../components/TryOut';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve([])),
-  getTestCaseTemplateVariables: vi.fn(() => Promise.resolve([])),
+  getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve({})),
+  getTestCaseTemplateVariables: vi.fn(() => Promise.resolve({})),
   tryOutTestSuite: vi.fn(() =>
     Promise.resolve({
       success: true,
@@ -49,7 +49,7 @@ vi.mock('@/src/components/TestSuites/utils/template-variables', async (importOri
   const actual = await importOriginal<typeof import('@/src/components/TestSuites/utils/template-variables')>();
   return {
     ...actual,
-    convertVariableIntoInitialRequest: vi.fn(() => ({})),
+    convertVariablesIntoInitialRequests: vi.fn(() => ({})),
   };
 });
 
@@ -207,7 +207,7 @@ describe('TryOut MCP branch', () => {
   });
 
   test('wraps the bare request body into a request envelope on a failed send', async () => {
-    vi.mocked(convertVariableIntoInitialRequest).mockReturnValueOnce({ foo: 'bar' });
+    vi.mocked(convertVariablesIntoInitialRequests).mockReturnValueOnce({ '0': { foo: 'bar' } });
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({ success: false, errorMessage: 'boom' });
 
     const user = userEvent.setup();
@@ -217,7 +217,7 @@ describe('TryOut MCP branch', () => {
     await user.click(sendButton);
 
     await waitFor(() => {
-      expect(screen.getByText('JsonEditor:{"foo":"bar"}')).toBeInTheDocument();
+      expect(screen.getByText('JsonEditor:{"0":{"foo":"bar"}}')).toBeInTheDocument();
     });
   });
 });
@@ -337,7 +337,7 @@ describe('TryOut Columns tab request binding', () => {
 
 describe('TryOut request tabs', () => {
   test('hides request tabs while preview variables are loading', async () => {
-    let resolveVariables: (value: TemplateVariable[] | null) => void = () => undefined;
+    let resolveVariables: (value: TemplateVariablesByRequest | null) => void = () => undefined;
     vi.mocked(getTestCaseTemplateVariables).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
@@ -356,7 +356,7 @@ describe('TryOut request tabs', () => {
 
     expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
 
-    resolveVariables([]);
+    resolveVariables({});
     await waitFor(() => {
       expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
     });
@@ -469,5 +469,44 @@ describe('TryOut request tabs', () => {
       expect(screen.getByText('JsonEditor:{"req":2}')).toBeInTheDocument();
     });
     expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
+  });
+});
+
+describe('TryOut suite-level request chain', () => {
+  test('shows request tabs for a chained suite with no test case selected', async () => {
+    render(<TryOut testSuite={multiRequestSuite} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('keeps request tabs hidden for a single-request suite with no test case selected', async () => {
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+  });
+
+  test('sends the entered values keyed by request index', async () => {
+    vi.mocked(convertVariablesIntoInitialRequests).mockReturnValueOnce({
+      '0': { shared: 'for-zero' },
+      '1': { shared: 'for-one' },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={multiRequestSuite} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    await waitFor(() => {
+      expect(tryOutTestSuite).toHaveBeenCalledWith('suite-mr', {
+        '0': { shared: 'for-zero' },
+        '1': { shared: 'for-one' },
+      });
+    });
   });
 });
