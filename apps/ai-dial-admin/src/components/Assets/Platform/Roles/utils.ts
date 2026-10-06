@@ -2,9 +2,9 @@ import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 
 import { SharingGridData } from '@/src/components/Roles/models';
 import { DialRoleResource } from '@/src/models/dial/resource';
-import { DialCoreRoleShare, DialRoleShare } from '@/src/models/dial/role-limits';
+import { DialCoreRoleLimits, DialCoreRoleShare, DialRoleShare } from '@/src/models/dial/role-limits';
 import { platformSharingDefaults } from './constants';
-import { PlatformSharingType } from './models';
+import { PlatformRoleModelLimitRow, PlatformRoleModelOption, PlatformSharingType } from './models';
 
 /** Maps a sharing grid column's camelCase `token` to Core's own snake_case `ShareResourceLimit` field. */
 const CAMEL_TO_CORE_SHARE_FIELD: Record<string, keyof DialCoreRoleShare> = {
@@ -100,4 +100,69 @@ export const isResetToDefaultHidden = (api: GridApi, node: IRowNode): boolean =>
     rowNode: node,
   });
   return !(invitationTtl || maxAcceptedUsers);
+};
+
+export const getModelLimitRows = (limits?: Record<string, DialCoreRoleLimits>): PlatformRoleModelLimitRow[] =>
+  Object.entries(limits ?? {}).map(([name, limit]) => ({
+    name,
+    ...limit,
+  }));
+
+export const getAvailableModels = (
+  models: PlatformRoleModelOption[],
+  limits?: Record<string, DialCoreRoleLimits>,
+): PlatformRoleModelOption[] => {
+  const attachedModels = new Set(Object.keys(limits ?? {}));
+
+  return models.filter((model) => !attachedModels.has(model.name));
+};
+
+export const updateModelLimit = (
+  limits: Record<string, DialCoreRoleLimits> | undefined,
+  name: string,
+  token: keyof DialCoreRoleLimits,
+  value: number | undefined,
+): Record<string, DialCoreRoleLimits> => {
+  const modelLimits = { ...limits?.[name] };
+
+  if (value === undefined) {
+    delete modelLimits[token];
+  } else {
+    modelLimits[token] = value;
+  }
+
+  return {
+    ...limits,
+    [name]: modelLimits,
+  };
+};
+
+export const clearModelLimits = (
+  limits: Record<string, DialCoreRoleLimits> | undefined,
+  name: string,
+): Record<string, DialCoreRoleLimits> => ({
+  ...limits,
+  [name]: {},
+});
+
+export const addModelLimits = (
+  limits: Record<string, DialCoreRoleLimits> | undefined,
+  models: PlatformRoleModelOption[],
+): Record<string, DialCoreRoleLimits> =>
+  models.reduce<Record<string, DialCoreRoleLimits>>(
+    (updatedLimits, model) => ({
+      ...updatedLimits,
+      [model.name]: updatedLimits[model.name] ?? {},
+    }),
+    { ...limits },
+  );
+
+export const removeModelLimit = (
+  limits: Record<string, DialCoreRoleLimits> | undefined,
+  name: string,
+): Record<string, DialCoreRoleLimits> => {
+  const updatedLimits = { ...limits };
+  delete updatedLimits[name];
+
+  return updatedLimits;
 };

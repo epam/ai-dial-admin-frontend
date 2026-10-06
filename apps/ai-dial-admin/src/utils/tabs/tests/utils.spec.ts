@@ -310,6 +310,10 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes)).toEqual([propertiesTab(t), rolesTab(t)]);
   });
 
+  test('returns Properties and Entities for PlatformRoles', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRoles)).toEqual([propertiesTab(t), entitiesTab(t)]);
+  });
+
   test('threads rolesWarning into the Roles tab for PlatformRoutes', () => {
     expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes, undefined, true)).toEqual([
       propertiesTab(t),
