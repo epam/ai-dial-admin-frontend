@@ -129,24 +129,9 @@
     "yaml": "2.8.3"
   },
   "overrides": {
-    "axios": "1.16.0",
-    "protobufjs": "8.6.3",
-    "dompurify": "3.4.16",
-    "follow-redirects": "1.16.0",
-    "tmp": "0.2.7",
-    "yaml": "2.8.3",
-    "postcss": "^8.5.18",
-    "nanoid": "3.3.18",
-    "form-data": "4.0.6",
-    "brace-expansion@1": "1.1.20",
-    "brace-expansion@2": "2.1.6",
-    "brace-expansion@5": "5.0.11",
-    "js-yaml@3": "3.15.2",
-    "js-yaml@4": "4.3.2",
-    "sharp": "0.35.4",
-    "undici": "7.29.1",
-    "proxy-addr": "2.0.8",
-    "source-map-js": "1.2.2"
+    "smol-toml": "^1.9.0",
+    "axios": "1.20.0",
+    "postcss-selector-parser": "^7.1.6"
   },
   "engines": {
     "node": ">=24.12.0",
