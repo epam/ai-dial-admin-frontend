@@ -128,7 +128,7 @@
   },
   "overrides": {
     "axios": "1.16.0",
-    "protobufjs": "8.6.3",
+    "protobufjs": "8.6.6",
     "dompurify": "3.4.13",
     "follow-redirects": "1.16.0",
     "tmp": "0.2.7",
@@ -136,13 +136,15 @@
     "postcss": "^8.5.18",
     "nanoid": "3.3.18",
     "form-data": "4.0.6",
-    "brace-expansion@1": "1.1.18",
-    "brace-expansion@2": "2.1.4",
-    "brace-expansion@5": "5.0.9",
+    "@grpc/grpc-js": "1.14.5",
+    "brace-expansion@1": "1.1.21",
+    "brace-expansion@2": "2.1.7",
+    "brace-expansion@5": "5.0.12",
+    "undici": "7.29.1",
     "js-yaml@3": "3.15.2",
     "js-yaml@4": "4.3.2",
     "sharp": "0.35.4",
-    "fast-uri": "3.1.6"
+    "fast-uri": "3.1.8"
   },
   "engines": {
     "node": ">=24.12.0",
