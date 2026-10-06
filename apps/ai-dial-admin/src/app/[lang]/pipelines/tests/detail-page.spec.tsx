@@ -80,7 +80,7 @@ describe('pipeline detail page :: groups probe', () => {
   test('never probes a pipeline whose trigger is not a group', async () => {
     vi.mocked(getPipeline).mockResolvedValue({
       success: true,
-      response: { ...groupPipeline, trigger: { kind: TriggerKind.OnIngest } },
+      response: { ...groupPipeline, trigger: { kind: TriggerKind.Schedule, cron: '0 0 * * * *' } },
     });
 
     expect((await renderPage()).hasGroups).toBe(false);
