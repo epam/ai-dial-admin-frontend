@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ErrorType } from '@/src/types/error-type';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
@@ -17,6 +18,7 @@ interface Props<T> {
   isUrlId?: boolean;
   forbiddenChars?: readonly string[];
   isUniqueNameError?: boolean;
+  externalError?: string;
   isDeploymentId?: boolean;
   disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
@@ -34,6 +36,7 @@ const IdControl = <T extends { name?: string }>({
   isUrlId,
   forbiddenChars,
   isUniqueNameError,
+  externalError,
   isDeploymentId,
   disabled,
   onChangeEntity,
@@ -87,6 +90,15 @@ const IdControl = <T extends { name?: string }>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUniqueNameError, validationField]);
 
+  useEffect(() => {
+    if (externalError) {
+      dispatch({ type: ValidationActionType.SetField, field: validationField, isValid: false });
+    }
+  }, [externalError, dispatch, validationField]);
+
+  const activeError: FieldError | null =
+    nameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
+
   return (
     <DialInput
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
@@ -94,8 +106,8 @@ const IdControl = <T extends { name?: string }>({
       id={inputId}
       value={entity.name}
       onChange={onChangeName}
-      error={nameError?.text}
-      invalid={!!nameError}
+      error={activeError?.text}
+      invalid={!!activeError}
       disabled={disabled || isReadOnlyAdmin}
       containerClassName={containerClassName}
     />

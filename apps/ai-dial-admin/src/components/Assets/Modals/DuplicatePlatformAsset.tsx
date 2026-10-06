@@ -1,9 +1,10 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import {
@@ -46,6 +47,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
     if (isRunner) {
       return {
         ...entity,
+        name: getClonedEntityName((entity as DialAppRunnerResource).name, true),
         $id: getClonedEntityName((entity as DialAppRunnerResource).$id, true),
       } as DialAppRunnerResource;
     }
@@ -75,13 +77,19 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
 
     return clone;
   });
+  const [idExistsError, setIdExistsError] = useState<string>();
 
   const onChangeId = useCallback(
     ({ name }: { name?: string }) => {
       setClonedAsset((asset) => (isRunner ? { ...asset, $id: name } : { ...asset, name: name as string }));
+      setIdExistsError(void 0);
     },
     [isRunner],
   );
+
+  const onChangeStorageName = useCallback(({ name }: { name?: string }) => {
+    setClonedAsset((asset) => ({ ...asset, name: name as string }));
+  }, []);
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
@@ -96,11 +104,34 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   );
 
   const id = isRunner ? (clonedAsset as DialAppRunnerResource).$id : clonedAsset.name;
+  const idNames = isRunner ? [] : names;
   const displayName = isRunner
     ? (clonedAsset as DialAppRunnerResource)['dial:applicationTypeDisplayName']
     : isDualBucketAsset
       ? (clonedAsset as DialPlatformApplicationResource | DialPlatformToolsetResource).display_name
       : (clonedAsset as DialModelResource).displayName;
+
+  const onDuplicateClick = useCallback(async () => {
+    if (!isRunner) {
+      onDuplicate(clonedAsset);
+      return;
+    }
+
+    const runner = clonedAsset as DialAppRunnerResource;
+    if (!runner.$id) return;
+
+    try {
+      const result = await getResolvedRunnerSchema(runner.$id);
+      if (result.success && result.response) {
+        setIdExistsError(t(ErrorI18nKey.NameExists));
+        return;
+      }
+    } catch {
+      // The Core write remains the authoritative collision check when resolution is unavailable.
+    }
+
+    onDuplicate(clonedAsset);
+  }, [clonedAsset, isRunner, onDuplicate, t]);
 
   return (
     <DialFormPopup
@@ -108,18 +139,30 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
       header={getCloneTitle(view, t)}
       portalId="DuplicatePlatformAsset"
       open={isModalOpen}
-      onSubmit={() => onDuplicate(clonedAsset)}
+      onSubmit={onDuplicateClick}
       onCancel={onClose}
       disableSubmitButton={!isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4 gap-y-8">
+        {isRunner && (
+          <IdControl
+            label={t(EntityFieldsI18nKey.name)}
+            inputId="name"
+            entity={{ name: clonedAsset.name }}
+            names={names}
+            onChangeEntity={onChangeStorageName}
+          />
+        )}
         <IdControl
           entity={{ name: id }}
-          names={names}
+          names={idNames}
+          inputId={isRunner ? 'id' : void 0}
+          validationField={isRunner ? 'id' : void 0}
           isUrlId={isRunner}
           forbiddenChars={isRunner ? CORE_UNENCODABLE_ID_CHARS : void 0}
+          externalError={isRunner ? idExistsError : void 0}
           onChangeEntity={onChangeId}
         />
         {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
