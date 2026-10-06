@@ -133,67 +133,75 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => appContextValue,
 }));
 
+interface SaveValidationMockAction {
+  type: string;
+  [key: string]: unknown;
+}
+
 interface SaveValidationMockValue {
   isValid: boolean;
-  dispatch: (action: { type: string; [key: string]: unknown }) => void;
+  dispatch: (action: SaveValidationMockAction) => void;
   jsonErrors: unknown[];
   jsonErrorNotifications: unknown[];
   resetCounter: number;
   errorFields: Map<string, boolean>;
 }
 
-const SaveValidationMockContext = createContext<SaveValidationMockValue | undefined>(undefined);
-const defaultSaveValidationContext: SaveValidationMockValue = {
-  isValid: true,
-  dispatch: vi.fn(),
-  jsonErrors: [],
-  jsonErrorNotifications: [],
-  resetCounter: 0,
-  errorFields: new Map(),
-};
-
 vi.mock('@/src/context/SaveValidationContext', () => {
+  // Shared across the whole file so specs can read `useSaveValidationContext().dispatch` outside a render and
+  // assert on what components dispatched; the stateful provider below forwards every action to it.
+  const sharedDispatch = vi.fn();
+  const defaultValue: SaveValidationMockValue = {
+    isValid: true,
+    dispatch: sharedDispatch,
+    jsonErrors: [],
+    jsonErrorNotifications: [],
+    resetCounter: 0,
+    errorFields: new Map(),
+  };
+  const SaveValidationMockContext = createContext<SaveValidationMockValue | undefined>(undefined);
+
+  // Specs also call the hook outside a component, where `useContext` throws; fall back to the default value.
+  const useMockValue = (): SaveValidationMockValue => {
+    try {
+      return useContext(SaveValidationMockContext) ?? defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
   return {
     SaveValidationContextProvider: ({ children }: { children: ReactNode }) => {
       const [errorFields, setErrorFields] = useState<Map<string, boolean>>(new Map());
 
-      const dispatch = useCallback((action: { type: string; [key: string]: unknown }) => {
-        if (action.type === 'SET_FIELD_VALIDATION' && typeof action.field === 'string') {
-          setErrorFields((currentErrorFields) => {
-            const nextErrorFields = new Map(currentErrorFields);
-            nextErrorFields.set(action.field, action.isValid === true);
-            return nextErrorFields;
-          });
-        }
+      const dispatch = useCallback((action: SaveValidationMockAction) => {
+        sharedDispatch(action);
+        const field = action.field;
+        if (typeof field !== 'string') return;
 
-        if (action.type === 'REMOVE_FIELD_VALIDATION' && typeof action.field === 'string') {
-          setErrorFields((currentErrorFields) => {
-            const nextErrorFields = new Map(currentErrorFields);
-            nextErrorFields.delete(action.field);
-            return nextErrorFields;
+        if (action.type === 'SET_FIELD_VALIDATION') {
+          setErrorFields((current) => new Map(current).set(field, action.isValid === true));
+        } else if (action.type === 'REMOVE_FIELD_VALIDATION') {
+          setErrorFields((current) => {
+            const next = new Map(current);
+            next.delete(field);
+            return next;
           });
         }
       }, []);
 
       const isValid = Array.from(errorFields.values()).every(Boolean);
       const value = useMemo(
-        () => ({
-          isValid,
-          dispatch,
-          jsonErrors: [],
-          jsonErrorNotifications: [],
-          resetCounter: 0,
-          errorFields,
-        }),
+        () => ({ ...defaultValue, isValid, dispatch, errorFields }),
         [dispatch, errorFields, isValid],
       );
 
       return <SaveValidationMockContext.Provider value={value}>{children}</SaveValidationMockContext.Provider>;
     },
-    useSaveValidationContext: () => useContext(SaveValidationMockContext) ?? defaultSaveValidationContext,
+    useSaveValidationContext: useMockValue,
     useJsonEditorValidation: () => {
       const editorId = useId();
-      const { dispatch } = useContext(SaveValidationMockContext) ?? defaultSaveValidationContext;
+      const { dispatch } = useMockValue();
       return {
         editorId,
         setJsonErrors: (errors: unknown[]) => dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors }),
