@@ -38,6 +38,24 @@ describe('FailureRowDetail', () => {
     expect(screen.getByText('7')).toBeTruthy();
   });
 
+  test('offers to copy the id, the grain key and the message', () => {
+    renderDetail(dlqItem({ grain_key: 'resp-1', error: 'boom' }));
+
+    for (const label of [
+      AnalyticsPipelinesI18nKey.FailuresId,
+      AnalyticsPipelinesI18nKey.FailuresGrainKey,
+      AnalyticsPipelinesI18nKey.FailuresError,
+    ]) {
+      expect(screen.getByRole('button', { name: `copy ${label}` })).toBeTruthy();
+    }
+  });
+
+  test('offers no copy for a grain key the item does not carry', () => {
+    renderDetail(dlqItem({ grain_key: null }));
+
+    expect(screen.queryByRole('button', { name: `copy ${AnalyticsPipelinesI18nKey.FailuresGrainKey}` })).toBeNull();
+  });
+
   // On a group pipeline the grain key holds the group's key, so the derivation would state the
   // opposite of the truth and nothing is stated instead.
   test('states no scope on a group pipeline', () => {
