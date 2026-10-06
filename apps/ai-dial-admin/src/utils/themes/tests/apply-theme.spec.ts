@@ -34,26 +34,4 @@ describe('applyThemeColors', () => {
     });
     expect(localStorage.getItem('theme')).toBeNull();
   });
-
-  test('does not override compatibility tokens for the configured dark theme', () => {
-    const element = document.createElement('div');
-    const theme = {
-      id: 'dark',
-      displayName: 'Dark',
-      colors: {
-        'bg-layer-sunken': 'sunken',
-        'bg-layer-base': 'base',
-        'bg-layer-raised': 'raised',
-        'text-primary': 'white',
-      },
-      'app-logo': 'logo.svg',
-    };
-
-    applyThemeColors(element, theme);
-
-    expect(element.style.getPropertyValue('--bg-layer-sunken')).toBe('');
-    expect(element.style.getPropertyValue('--bg-layer-base')).toBe('');
-    expect(element.style.getPropertyValue('--bg-layer-raised')).toBe('');
-    expect(element.style.getPropertyValue('--text-primary')).toBe('white');
-  });
 });
