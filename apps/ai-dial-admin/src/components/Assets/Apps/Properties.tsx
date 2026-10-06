@@ -172,7 +172,7 @@ const ApplicationAssetProperties: FC<Props> = ({
             schemaId={asset.catalog_schema_id}
             options={catalogSchemas?.options}
             optionsError={catalogSchemas?.error}
-            onChange={(catalog_schema_id) => onChange({ ...asset, catalog_schema_id })}
+            onChange={(catalog_schema_id) => onChange({ ...asset, catalog_schema_id, catalog_properties: void 0 })}
           />
         )}
       </div>
