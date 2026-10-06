@@ -236,7 +236,7 @@ describe('InterfacesField', () => {
     expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
   });
 
-  test('does not show a validation error for a blank required base URL until edited', () => {
+  test('show a validation error for a blank required base URL', () => {
     render(
       <InterfacesField
         interfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } }}
@@ -246,7 +246,7 @@ describe('InterfacesField', () => {
     );
 
     expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
-    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).toBeInTheDocument();
   });
 
   test('add button is wrapped in its own container so it does not stretch full width', () => {
