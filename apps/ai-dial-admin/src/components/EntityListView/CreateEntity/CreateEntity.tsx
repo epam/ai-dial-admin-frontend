@@ -205,7 +205,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       });
     }
 
-    if (route === ApplicationRoute.Routes) {
+    if (route === ApplicationRoute.Routes || route === ApplicationRoute.PlatformRoutes) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'path',

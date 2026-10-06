@@ -5,7 +5,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { ReactNode, useId } from 'react';
+import { ReactNode, createContext, useCallback, useContext, useId, useMemo, useState } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -133,18 +133,67 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => appContextValue,
 }));
 
+interface SaveValidationMockValue {
+  isValid: boolean;
+  dispatch: (action: { type: string; [key: string]: unknown }) => void;
+  jsonErrors: unknown[];
+  jsonErrorNotifications: unknown[];
+  resetCounter: number;
+  errorFields: Map<string, boolean>;
+}
+
+const SaveValidationMockContext = createContext<SaveValidationMockValue | undefined>(undefined);
+const defaultSaveValidationContext: SaveValidationMockValue = {
+  isValid: true,
+  dispatch: vi.fn(),
+  jsonErrors: [],
+  jsonErrorNotifications: [],
+  resetCounter: 0,
+  errorFields: new Map(),
+};
+
 vi.mock('@/src/context/SaveValidationContext', () => {
-  const dispatch = vi.fn();
   return {
-    SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
-    useSaveValidationContext: () => ({
-      isValid: true,
-      dispatch,
-      jsonErrors: [],
-      jsonErrorNotifications: [],
-    }),
+    SaveValidationContextProvider: ({ children }: { children: ReactNode }) => {
+      const [errorFields, setErrorFields] = useState<Map<string, boolean>>(new Map());
+
+      const dispatch = useCallback((action: { type: string; [key: string]: unknown }) => {
+        if (action.type === 'SET_FIELD_VALIDATION' && typeof action.field === 'string') {
+          setErrorFields((currentErrorFields) => {
+            const nextErrorFields = new Map(currentErrorFields);
+            nextErrorFields.set(action.field, action.isValid === true);
+            return nextErrorFields;
+          });
+        }
+
+        if (action.type === 'REMOVE_FIELD_VALIDATION' && typeof action.field === 'string') {
+          setErrorFields((currentErrorFields) => {
+            const nextErrorFields = new Map(currentErrorFields);
+            nextErrorFields.delete(action.field);
+            return nextErrorFields;
+          });
+        }
+      }, []);
+
+      const isValid = Array.from(errorFields.values()).every(Boolean);
+      const value = useMemo(
+        () => ({
+          isValid,
+          dispatch,
+          jsonErrors: [],
+          jsonErrorNotifications: [],
+          resetCounter: 0,
+          errorFields,
+        }),
+        [dispatch, errorFields, isValid],
+      );
+
+      return <SaveValidationMockContext.Provider value={value}>{children}</SaveValidationMockContext.Provider>;
+    },
+    useSaveValidationContext: () => useContext(SaveValidationMockContext) ?? defaultSaveValidationContext,
     useJsonEditorValidation: () => {
       const editorId = useId();
+      const { dispatch } = useContext(SaveValidationMockContext) ?? defaultSaveValidationContext;
       return {
         editorId,
         setJsonErrors: (errors: unknown[]) => dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors }),

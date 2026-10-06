@@ -1,5 +1,7 @@
 import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { Mock, describe, expect, test, vi } from 'vitest';
 import CreateEntity from '../CreateEntity';
@@ -172,10 +174,49 @@ describe('CreateEntity', () => {
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
       target: { value: 'route1' },
     });
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` }), {
+      target: { value: '/v1' },
+    });
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
     await waitFor(() => expect(createRoute).toHaveBeenCalled());
-    expect(createRoute.mock.calls[0][0]).toMatchObject({ userRoles: [] });
+    expect(createRoute).toHaveBeenCalledWith(expect.objectContaining({ userRoles: [], paths: ['/v1'] }));
+  });
+
+  test('requires a valid initial path before creating a platform route', async () => {
+    const user = userEvent.setup();
+    const createRoute = vi.fn().mockResolvedValue({ success: true, response: { name: 'route1' } });
+    (useRouter as Mock).mockReturnValue({ push: vi.fn() });
+
+    render(
+      <SaveValidationContextProvider>
+        <CreateEntity
+          route={ApplicationRoute.PlatformRoutes}
+          isModalOpen={true}
+          onClose={vi.fn()}
+          names={[]}
+          versionsMap={{}}
+          createEntity={createRoute}
+        />
+      </SaveValidationContextProvider>,
+    );
+
+    const createButton = screen.getByRole('button', { name: ButtonsI18nKey.Create });
+    expect(createButton).toBeDisabled();
+
+    const nameInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
+    const pathInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` });
+
+    fireEvent.change(nameInput, { target: { value: 'route1' } });
+    await waitFor(() => expect(nameInput).toHaveValue('route1'));
+    expect(createButton).toBeDisabled();
+
+    fireEvent.change(pathInput, { target: { value: '/v1' } });
+    await waitFor(() => expect(createButton).not.toBeDisabled());
+
+    await user.click(createButton);
+
+    await waitFor(() => expect(createRoute).toHaveBeenCalledWith(expect.objectContaining({ paths: ['/v1'] })));
   });
 
   test('starts a new platform-bucket application with user_roles: []', async () => {
