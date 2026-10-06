@@ -18,14 +18,42 @@ const role = { name: 'my-role', path: 'my-role', folderId: '' } as DialRoleResou
 
 describe('Role asset TabsContent', () => {
   test('Should render the Properties tab content when active', () => {
-    render(<TabsContent activeTab={EntityViewTab.Properties} selectedRole={role} isSkipRefresh onChange={vi.fn()} />);
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Properties}
+        selectedRole={role}
+        models={[]}
+        isSkipRefresh
+        onChange={vi.fn()}
+      />,
+    );
 
     expect(screen.getByText(RolesI18nKey.SetCostLimits)).toBeInTheDocument();
   });
 
+  test('Should render the Entities tab content when active', () => {
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Entities}
+        selectedRole={role}
+        models={[]}
+        isSkipRefresh
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Tabs.Entities: 0')).toBeInTheDocument();
+  });
+
   test('Should render nothing for a tab this surface does not have', () => {
     render(
-      <TabsContent activeTab={EntityViewTab.ParameterSchema} selectedRole={role} isSkipRefresh onChange={vi.fn()} />,
+      <TabsContent
+        activeTab={EntityViewTab.ParameterSchema}
+        selectedRole={role}
+        models={[]}
+        isSkipRefresh
+        onChange={vi.fn()}
+      />,
     );
 
     expect(screen.queryByText(RolesI18nKey.SetCostLimits)).not.toBeInTheDocument();

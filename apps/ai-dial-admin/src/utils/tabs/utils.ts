@@ -491,6 +491,9 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.PlatformKeys) {
     return [propertiesTab(t), rolesTab(t)];
   }
+  if (view === ApplicationRoute.PlatformRoles) {
+    return [propertiesTab(t), entitiesTab(t)];
+  }
   if (view === ApplicationRoute.Skills) {
     return [propertiesTab(t), skillTab(t)];
   }

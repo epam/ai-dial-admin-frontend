@@ -43,7 +43,7 @@ const role = (overrides: Partial<DialRoleResource> = {}): DialRoleResource =>
 
 const clickSave = async (entity: DialRoleResource) => {
   const user = userEvent.setup();
-  render(<RoleAssetView etag="etag" originalRole={entity} />);
+  render(<RoleAssetView etag="etag" originalRole={entity} models={[]} />);
   await user.click(screen.getByRole('button', { name: 'save' }));
 };
 
@@ -59,13 +59,13 @@ describe('RoleAssetView', () => {
   });
 
   test('Should render the tabs content', () => {
-    render(<RoleAssetView etag="etag" originalRole={role()} />);
+    render(<RoleAssetView etag="etag" originalRole={role()} models={[]} />);
 
     expect(screen.getByText('tabs-content')).toBeInTheDocument();
   });
 
   test('Should mark the entity read-only and hide the format selector when config-file-sourced', () => {
-    const { unmount } = render(<RoleAssetView etag="etag" originalRole={role()} isConfigFileSource />);
+    const { unmount } = render(<RoleAssetView etag="etag" originalRole={role()} models={[]} isConfigFileSource />);
 
     expect(setEntityReadOnly).toHaveBeenCalledWith(true);
     expect(capturedJsonConfiguration?.onHideFormatSelector?.()).toBe(true);
@@ -76,7 +76,7 @@ describe('RoleAssetView', () => {
   });
 
   test('Should not mark the entity read-only for an admin-backed role', () => {
-    render(<RoleAssetView etag="etag" originalRole={role()} />);
+    render(<RoleAssetView etag="etag" originalRole={role()} models={[]} />);
 
     expect(setEntityReadOnly).toHaveBeenCalledWith(false);
   });

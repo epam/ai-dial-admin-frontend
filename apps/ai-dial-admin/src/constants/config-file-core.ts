@@ -52,4 +52,5 @@ export const GLOBAL_SETTINGS_NAME = 'global';
 export const METADATA_RESOURCE_TYPE: Partial<Record<ConfigFileEntityType, ResourceType>> = {
   [ConfigFileEntityType.Interceptors]: ResourceType.INTERCEPTOR,
   [ConfigFileEntityType.Roles]: ResourceType.ROLE,
+  [ConfigFileEntityType.Models]: ResourceType.MODEL,
 };
