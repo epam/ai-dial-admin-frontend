@@ -41,7 +41,10 @@ beforeEach(() => {
   vi.mocked(getFunctions).mockResolvedValue([]);
   vi.mocked(getPipelines).mockResolvedValue({ success: true, response: [] });
   vi.mocked(getPipeline).mockResolvedValue({ success: true, response: groupPipeline });
-  vi.mocked(getPipelineGroups).mockResolvedValue({ success: true, response: [] });
+  vi.mocked(getPipelineGroups).mockResolvedValue({
+    success: true,
+    response: { groups: [], next_cursor: null, has_more: false, total: 0 },
+  });
 });
 
 afterEach(() => {
@@ -52,7 +55,7 @@ describe('pipeline detail page :: groups probe', () => {
   test('offers the tab when the runner reports a group', async () => {
     vi.mocked(getPipelineGroups).mockResolvedValue({
       success: true,
-      response: [groupMock()],
+      response: { groups: [groupMock()], next_cursor: null, has_more: false, total: 1 },
     });
 
     const props = await renderPage();

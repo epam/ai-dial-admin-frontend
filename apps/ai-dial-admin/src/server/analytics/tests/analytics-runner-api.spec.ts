@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { DlqLane, DlqStage } from '@/src/models/analytics/pipeline-dlq';
+import { GroupListOrder } from '@/src/models/analytics/pipeline-groups';
 import { PauseOrigin, PipelineLane, PipelineRuntimeState } from '@/src/models/analytics/pipeline-runtime';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { AnalyticsRunnerApi } from '../analytics-runner-api';
@@ -283,23 +284,53 @@ describe('Server :: AnalyticsRunnerApi', () => {
     expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'not_found', status: 404 }));
   });
 
-  test("getGroups asks for the limit on the pipeline's own groups route and unwraps the envelope", async () => {
+  test("getGroups asks for one page on the pipeline's own groups route and returns its envelope", async () => {
     const groups = [{ group_key: 'sess_A', dirty: true }];
-    fetch.mockResponseOnce(JSON.stringify({ groups }), JSON_HEADERS);
+    fetch.mockResponseOnce(JSON.stringify({ groups, next_cursor: 'c2', has_more: true, total: 37 }), JSON_HEADERS);
 
-    const res = await instance.getGroups('retrieval/quality', 500, TOKEN_MOCK);
+    const res = await instance.getGroups('retrieval/quality', 100, GroupListOrder.Newest, 'c1', TOKEN_MOCK);
 
-    expect(res).toEqual(expect.objectContaining({ success: true, response: groups }));
+    expect(res).toEqual(
+      expect.objectContaining({ success: true, response: { groups, next_cursor: 'c2', has_more: true, total: 37 } }),
+    );
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/pipelines/retrieval%2Fquality/groups?limit=500'),
+      expect.stringContaining('/v1/pipelines/retrieval%2Fquality/groups?limit=100&order=newest&cursor=c1'),
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('getGroups sends neither order nor cursor when none is given', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ groups: [], has_more: false, total: 0 }), JSON_HEADERS);
+
+    await instance.getGroups('retrieval-quality', 1, undefined, undefined, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/groups\?limit=1$/), expect.anything());
+  });
+
+  test('getGroups fills in the members an older runner leaves out', async () => {
+    const groups = [{ group_key: 'sess_A' }, { group_key: 'sess_B' }];
+    fetch.mockResponseOnce(JSON.stringify({ groups }), JSON_HEADERS);
+
+    const res = await instance.getGroups('retrieval-quality', 100, undefined, undefined, TOKEN_MOCK);
+
+    expect(res.response).toEqual({ groups, next_cursor: null, has_more: false, total: 2 });
+  });
+
+  test('getGroups carries a refused cursor through by its own code', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 400, error: 'invalid_cursor', message: 'Bad cursor' }), {
+      status: 400,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getGroups('retrieval-quality', 100, GroupListOrder.Oldest, 'x', TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'invalid_cursor', status: 400 }));
   });
 
   test('getGroups reports a body without the envelope as a failure', async () => {
     fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
 
-    const res = await instance.getGroups('retrieval-quality', 1, TOKEN_MOCK);
+    const res = await instance.getGroups('retrieval-quality', 1, undefined, undefined, TOKEN_MOCK);
 
     expect(res.success).toBe(false);
   });
@@ -311,7 +342,7 @@ describe('Server :: AnalyticsRunnerApi', () => {
       ...JSON_HEADERS,
     });
 
-    const res = await instance.getGroups('retrieval-quality', 1, TOKEN_MOCK);
+    const res = await instance.getGroups('retrieval-quality', 1, undefined, undefined, TOKEN_MOCK);
 
     expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'not_found', status: 404 }));
   });

@@ -11,7 +11,7 @@ import {
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
-import { PipelineGroup } from '@/src/models/analytics/pipeline-groups';
+import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
 import {
   PausedPipeline,
   PipelineRuntimeView,
@@ -142,11 +142,15 @@ export async function requeueFailures(name: string, runId?: string): Promise<Ser
   return analyticsRunnerApi.requeueDlq(name, runId, await token());
 }
 
-/** The groups the runner tracks for a group pipeline, oldest activity first. */
-export async function getPipelineGroups(name: string, limit: number): Promise<ServerActionResponse<PipelineGroup[]>> {
+export async function getPipelineGroups(
+  name: string,
+  limit: number,
+  order?: GroupListOrder,
+  cursor?: string,
+): Promise<ServerActionResponse<PipelineGroupsPage>> {
   if (!analyticsRunnerApi.isConfigured) return noRunner();
 
-  return analyticsRunnerApi.getGroups(name, limit, await token());
+  return analyticsRunnerApi.getGroups(name, limit, order, cursor, await token());
 }
 
 /** Queues one evaluation of a group at its current version, regardless of its readiness. */
