@@ -131,7 +131,16 @@
   "overrides": {
     "smol-toml": "^1.9.0",
     "axios": "1.20.0",
-    "postcss-selector-parser": "^7.1.6"
+    "postcss-selector-parser": "^7.1.6",
+    "next": {
+      "postcss": "^8.5.29"
+    },
+    "nx": {
+      "brace-expansion": "^5.0.12"
+    },
+    "monaco-editor": {
+      "dompurify": "$dompurify"
+    }
   },
   "engines": {
     "node": ">=24.12.0",
