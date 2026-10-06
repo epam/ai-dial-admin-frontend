@@ -106,6 +106,35 @@ describe('Assets role :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should preserve empty per-model limits entries and explicit zero values on update', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateRole(
+      {
+        name: 'my-role',
+        limits: {
+          unrestrictedModel: {},
+          blockedModel: { day: 0 },
+        },
+      },
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.ROLE,
+      'my-role',
+      {
+        name: 'my-role',
+        limits: {
+          unrestrictedModel: {},
+          blockedModel: { day: 0 },
+        },
+      },
+      { etag: 'etag' },
+    );
+  });
+
   test("Should call updateRole action, stripping the merged read's audit grafts — Core metadata fields, not `Role.class` fields", async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
