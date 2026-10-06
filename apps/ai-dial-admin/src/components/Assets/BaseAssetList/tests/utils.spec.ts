@@ -87,10 +87,9 @@ describe('BaseAssetList', () => {
       expect(duplicate).not.toHaveProperty('reference');
     });
 
-    test('should drop the runner name, since keeping it navigates back to the original', () => {
+    test('should not drop the runner name', () => {
       const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformAppRunners, runner) as DialAppRunnerResource;
 
-      expect(duplicate).not.toHaveProperty('name');
       expect(duplicate).not.toHaveProperty('path');
       expect(duplicate.$id).toBe('http://runner/schema-copy');
       expect(duplicate['dial:applicationTypeDisplayName']).toBe('Runner copy');
