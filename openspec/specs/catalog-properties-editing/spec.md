@@ -16,6 +16,8 @@ of them contributes only its placement, never its own copy of this behavior.
 
 The system SHALL let an admin select a Catalog Schema for a deployment, store the selected schema's declared raw `$id` as `catalog_schema_id`, and clear it again. A Core resource storage name or path SHALL be used only to retrieve or navigate to the schema, never as the deployment reference. The selection SHALL survive a save and reopen.
 
+Changing the selection — to another schema or to none — SHALL discard the deployment's `catalog_properties`, because values written for one schema mean nothing under another and would otherwise reappear in the values editor as fields the new schema does not declare. Re-picking the schema already selected is not a change and SHALL keep the values.
+
 #### Scenario: A schema is selected and persists
 
 - **WHEN** an admin selects a Catalog Schema stored under `agent-schema` with declared `$id` `https://dial.example.com/catalog_schemas/agent` and saves
@@ -26,7 +28,20 @@ The system SHALL let an admin select a Catalog Schema for a deployment, store th
 
 - **WHEN** an admin clears the selected schema and saves
 - **THEN** the deployment carries no `catalog_schema_id`
+- **AND** the deployment carries no `catalog_properties`
 - **AND** the values editor is no longer offered
+
+#### Scenario: Switching the schema discards the previous schema's values
+
+- **WHEN** an admin fills in catalog values under one schema and then selects a different schema
+- **THEN** the values editor shows only the fields the newly selected schema declares, all empty
+- **AND** saving stores none of the previous schema's values in `catalog_properties`
+- **AND** switching back to the first schema before saving does not restore them
+
+#### Scenario: Re-picking the selected schema keeps the values
+
+- **WHEN** an admin applies the schema that is already selected
+- **THEN** the deployment's `catalog_properties` are unchanged
 
 #### Scenario: A read-only admin cannot change the selection
 
