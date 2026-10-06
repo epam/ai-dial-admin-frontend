@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { CatalogSchemaDocument } from '@/src/models/dial/catalog-schema';
-import { validateCatalogProperties } from '../validate-properties';
+import {
+  getUndeclaredCatalogProperties,
+  isAdditionalPropertiesForbidden,
+  validateCatalogProperties,
+} from '../validate-properties';
 
 const schema = {
   $id: 'https://host/agent-card',
@@ -170,5 +174,38 @@ describe('validateCatalogProperties', () => {
     const malformed = { ...schema, required: ['tag', 7] } as unknown as CatalogSchemaDocument;
 
     expect(validateCatalogProperties(malformed, { tag: 'New' })).toEqual([]);
+  });
+});
+
+describe('undeclared catalog values', () => {
+  const closed = { ...schema, additionalProperties: false } as CatalogSchemaDocument;
+
+  test('names the values the schema does not declare', () => {
+    expect(getUndeclaredCatalogProperties(schema, { ...valid, field1: 'x' })).toEqual(['field1']);
+  });
+
+  test('finds none when every value is declared', () => {
+    expect(getUndeclaredCatalogProperties(schema, valid)).toEqual([]);
+  });
+
+  test('accepts an undeclared value when the schema does not forbid one, as Core does', () => {
+    expect(validateCatalogProperties(schema, { ...valid, field1: 'x' })).toEqual([]);
+  });
+
+  test('blocks an undeclared value when the schema forbids one, naming it', () => {
+    expect(validateCatalogProperties(closed, { ...valid, field1: 'x' })).toEqual([
+      { field: 'field1', message: '"field1" is not declared by the schema' },
+    ]);
+  });
+
+  test.each([
+    ['absent', undefined, false],
+    ['true', true, false],
+    ['a schema', { type: 'string' }, false],
+    ['false', false, true],
+  ])('treats additionalProperties %s as forbidding: %s', (_label, additionalProperties, isForbidden) => {
+    expect(isAdditionalPropertiesForbidden({ ...schema, additionalProperties } as CatalogSchemaDocument)).toBe(
+      isForbidden,
+    );
   });
 });

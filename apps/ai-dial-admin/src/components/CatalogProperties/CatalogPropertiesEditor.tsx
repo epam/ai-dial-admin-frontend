@@ -15,7 +15,12 @@ import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIR
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import {
+  getUndeclaredCatalogProperties,
+  isAdditionalPropertiesForbidden,
+} from '@/src/utils/catalog-schemas/validate-properties';
 import { CatalogValuesView } from './models';
+import UndeclaredPropertiesBanner from './UndeclaredPropertiesBanner';
 import { CatalogPropertiesState } from './use-catalog-properties';
 
 interface Props extends CatalogPropertiesState {
@@ -46,6 +51,10 @@ const CatalogPropertiesEditor: FC<Props> = ({
 
   const [view, setView] = useState<CatalogValuesView>(CatalogValuesView.Form);
 
+  // The renderer seeds its own state from `data` once, so it is remounted to forget the removed values
+  // rather than write them back on the next edit.
+  const [formKey, setFormKey] = useState(0);
+
   const jsonSchema = useMemo(
     () =>
       ({
@@ -64,6 +73,16 @@ const CatalogPropertiesEditor: FC<Props> = ({
     ],
     [t],
   );
+
+  const undeclared = useMemo(() => getUndeclaredCatalogProperties(schema, values), [schema, values]);
+
+  // The banner names undeclared values itself, so the error list does not repeat them.
+  const otherErrors = useMemo(() => errors.filter((error) => !undeclared.includes(error.field)), [errors, undeclared]);
+
+  const removeUndeclared = useCallback(() => {
+    setFormKey((key) => key + 1);
+    onChange(Object.fromEntries(Object.entries(values ?? {}).filter(([name]) => !undeclared.includes(name))));
+  }, [onChange, undeclared, values]);
 
   const setValuesFromJson: Dispatch<SetStateAction<Record<string, unknown>>> = useCallback(
     (next: SetStateAction<Record<string, unknown>>) => {
@@ -84,8 +103,23 @@ const CatalogPropertiesEditor: FC<Props> = ({
     return <DialNoDataContent title={t(EntitiesI18nKey.CatalogSchemaUnavailable)} />;
   }
 
+  const undeclaredBanner = !!undeclared.length && (
+    <UndeclaredPropertiesBanner
+      className="mb-2"
+      names={undeclared}
+      isForbidden={isAdditionalPropertiesForbidden(schema)}
+      onRemove={removeUndeclared}
+    />
+  );
+
+  // Stored values can still block the save under a schema that declares nothing, so the banner stays.
   if (!schema?.properties || !Object.keys(schema.properties).length) {
-    return <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />;
+    return (
+      <div className="flex flex-col size-full">
+        {undeclaredBanner}
+        <DialNoDataContent title={t(EntitiesI18nKey.NoCatalogProperties)} />
+      </div>
+    );
   }
 
   return (
@@ -101,9 +135,10 @@ const CatalogPropertiesEditor: FC<Props> = ({
           onChange={(value) => setView(value as CatalogValuesView)}
         />
       </div>
-      {!!errors.length && (
+      {undeclaredBanner}
+      {!!otherErrors.length && (
         <div className="flex flex-col mb-2">
-          {errors.map((error) => (
+          {otherErrors.map((error) => (
             <DialErrorText key={`${error.field}-${error.message}`} text={error.message} />
           ))}
         </div>
@@ -112,6 +147,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
         {view === CatalogValuesView.Form ? (
           <div className="p-4 bg-layer-0">
             <SchemaUiRenderer
+              key={formKey}
               schema={jsonSchema}
               data={values}
               onChangeConfiguration={onChange}

@@ -163,6 +163,10 @@ for the schema's own default locale (`dial:defaultLocale`, defaulting to `en`) r
 for its shape — the form does not author such a value, but Core accepts one and rejects it later if
 that locale is missing.
 
+A value the schema does not declare SHALL block the write only when the schema sets
+`additionalProperties` to `false`. Core's catalog meta-schema imposes no such rule, so otherwise Core
+accepts the value and the system SHALL NOT refuse what Core accepts.
+
 #### Scenario: A missing required value blocks the save
 
 - **WHEN** a schema marks a property required and an admin leaves it empty
@@ -183,6 +187,40 @@ that locale is missing.
 
 - **WHEN** Core rejects catalog values on a user-bucket application or toolset with a `400`
 - **THEN** the error notification carries Core's own message
+
+### Requirement: Values the schema does not declare are surfaced, never silently kept or dropped
+
+The system SHALL tell an admin which stored catalog values the selected schema does not declare —
+typically a property renamed or removed in the schema after the values were saved. The values SHALL
+NOT be removed on opening: that would mark an untouched deployment as changed and lose a value the
+admin never saw go.
+
+Where the schema allows undeclared values, the system SHALL show a warning naming them and SHALL let
+the save proceed. Where the schema sets `additionalProperties` to `false`, the system SHALL show an
+error naming them with a control that removes them, and SHALL block the save until they are gone. The
+removal SHALL keep every declared value. A read-only admin SHALL see the error without the control.
+
+#### Scenario: A property renamed in the schema leaves its old value behind
+
+- **WHEN** a deployment saved a value under `field1` and its schema since renamed that property to `field_1`
+- **THEN** the values editor shows a warning naming `field1`
+- **AND** `field_1` is offered as an empty field in its declared place
+
+#### Scenario: An allowed undeclared value does not block the save
+
+- **WHEN** the schema does not set `additionalProperties` to `false` and an undeclared value is stored
+- **THEN** the save proceeds and the value is kept
+
+#### Scenario: A forbidden undeclared value blocks the save until removed
+
+- **WHEN** the schema sets `additionalProperties` to `false` and an undeclared value is stored
+- **THEN** an error names the value and the save is blocked
+- **AND** removing it from the error keeps every declared value and unblocks the save
+
+#### Scenario: Opening a deployment does not change it
+
+- **WHEN** a deployment with undeclared values is opened and nothing is edited
+- **THEN** the deployment is not marked as changed
 
 ### Requirement: A locale-map display field is preserved rather than corrupted
 
