@@ -9,7 +9,7 @@ import {
 } from '@/src/components/ListView/Evaluation/utils/test-suites-query';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { Metric } from '@/src/models/evaluation/metric';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -118,7 +118,7 @@ export async function getTestCaseTemplateVariables(id: string, testCaseId: strin
   return testSuitesApi.getTestCaseTemplateVariables(id, testCaseId, token);
 }
 
-export async function tryOutTestSuite(id: string, requestBody: Record<string, unknown>) {
+export async function tryOutTestSuite(id: string, requestBody: TryOutVariablesByRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.tryOutTestSuite(id, requestBody, token);
 }
