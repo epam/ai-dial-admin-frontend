@@ -3,14 +3,16 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 
-const { getRunner, getConfigFileAppRunner } = vi.hoisted(() => ({
+const { getRunner, getConfigFileAppRunner, getResolvedRunnerSchema } = vi.hoisted(() => ({
   getRunner: vi.fn(),
   getConfigFileAppRunner: vi.fn(),
+  getResolvedRunnerSchema: vi.fn(),
 }));
 
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getRunner,
   getConfigFileAppRunner,
+  getResolvedRunnerSchema,
 }));
 
 import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
@@ -66,6 +68,31 @@ describe('useAssetRunnerDetails', () => {
     expect(getRunner).toHaveBeenCalledWith('platform-runner-path', '*');
     expect(getConfigFileAppRunner).not.toHaveBeenCalled();
     expect(result.current.routes).toEqual(details['dial:applicationTypeRoutes']);
+  });
+
+  test('loads details from a schema id without a runner option', async () => {
+    getResolvedRunnerSchema.mockResolvedValue({ success: true, response: details });
+
+    const { result } = renderHook(() => useAssetRunnerDetails(undefined, 'runner-id'));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(getResolvedRunnerSchema).toHaveBeenCalledOnce();
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('runner-id');
+    expect(getRunner).not.toHaveBeenCalled();
+    expect(getConfigFileAppRunner).not.toHaveBeenCalled();
+    expect(result.current.routes).toEqual(details['dial:applicationTypeRoutes']);
+  });
+
+  test('exposes an error when resolving a schema id fails', async () => {
+    getResolvedRunnerSchema.mockResolvedValue({ success: false, errorMessage: 'Schema unavailable' });
+
+    const { result } = renderHook(() => useAssetRunnerDetails(undefined, 'runner-id'));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.error).toBe('Schema unavailable');
+    expect(result.current.routes).toBeNull();
   });
 
   test('exposes an error when the config-file runner read fails', async () => {

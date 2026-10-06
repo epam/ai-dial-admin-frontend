@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
@@ -59,7 +59,8 @@ const assetRunner = {
   folderId: '',
 } as ResourceInfo;
 
-const options = buildAppRunnerOptions([entityRunner], [assetRunner]);
+// The component writes a resolved `$id` back onto the runner it was handed, so options are rebuilt per test.
+let options: ReturnType<typeof buildAppRunnerOptions>;
 
 const selectRunner = async (value: string) => {
   const user = userEvent.setup();
@@ -67,6 +68,10 @@ const selectRunner = async (value: string) => {
 };
 
 describe('AppRunners :: merged picker', () => {
+  beforeEach(() => {
+    options = buildAppRunnerOptions([{ ...entityRunner }], [{ ...assetRunner }]);
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
