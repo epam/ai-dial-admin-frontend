@@ -3,7 +3,14 @@ import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { SuiteType, TestCase, TestCaseSchema, TestSuite, TemplateVariable } from '@/src/models/evaluation/test-suite';
+import {
+  SuiteType,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TemplateVariable,
+  TemplateVariablesByRequest,
+} from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import TryOutRequestPreview from '../components/TryOutRequestPreview';
 
@@ -89,7 +96,7 @@ const singleTurnCase: TestCase = {
 
 describe('TryOutRequestPreview section labels', () => {
   test('renders one Variables section per turn when multi-turn only', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue(variables);
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': variables });
 
     render(
       <TryOutRequestPreview
@@ -114,7 +121,7 @@ describe('TryOutRequestPreview section labels', () => {
   });
 
   test('renders variables for the selected request in multi-request single-turn', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue([
+    const sharedVariable: TemplateVariable[] = [
       {
         name: 'shared',
         effectiveType: TestCaseItemType.STRING,
@@ -123,7 +130,8 @@ describe('TryOutRequestPreview section labels', () => {
         sources: ['body'],
         resolvedValue: null,
       },
-    ]);
+    ];
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': sharedVariable, '1': sharedVariable });
 
     const multiRequestCase: TestCase = {
       id: 'case-mr',
@@ -170,7 +178,7 @@ describe('TryOutRequestPreview section labels', () => {
   });
 
   test('shows Turn labels inside the active request tab for combined suites', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue(variables);
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': variables, '1': variables });
 
     render(
       <TryOutRequestPreview
@@ -193,8 +201,11 @@ describe('TryOutRequestPreview section labels', () => {
     expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
   });
 
-  test('inherits request #0 attribute bindings on a later tab with no inputBindings', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: null }]);
+  test('falls back to a same-named test-case field on a later tab that binds nothing', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue({
+      '0': [{ ...variables[0], resolvedValue: null }],
+      '1': [{ ...variables[0], resolvedValue: null }],
+    });
 
     render(
       <TryOutRequestPreview
@@ -215,7 +226,10 @@ describe('TryOutRequestPreview section labels', () => {
   });
 
   test('fills per-turn attribute bindings from single-turn data without multiTurnData', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: null }]);
+    getTestCaseTemplateVariables.mockResolvedValue({
+      '0': [{ ...variables[0], resolvedValue: null }],
+      '1': [{ ...variables[0], resolvedValue: null }],
+    });
 
     const singleTurnMultiRequestCase: TestCase = {
       id: 'case-st',
@@ -242,7 +256,7 @@ describe('TryOutRequestPreview section labels', () => {
   });
 
   test('keeps a single Variables section for single-turn cases', async () => {
-    getTestCaseTemplateVariables.mockResolvedValue([{ ...variables[0], resolvedValue: 'once' }]);
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': [{ ...variables[0], resolvedValue: 'once' }] });
 
     render(
       <TryOutRequestPreview
@@ -262,5 +276,110 @@ describe('TryOutRequestPreview section labels', () => {
 
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.RequestLabel)).not.toBeInTheDocument();
+  });
+});
+
+describe('TryOutRequestPreview per-request variables', () => {
+  const greeting: TemplateVariable = {
+    name: 'greeting',
+    effectiveType: TestCaseItemType.STRING,
+    defaultValue: null,
+    hasDefault: false,
+    sources: ['body'],
+  };
+
+  const chainSuite: TestSuite = {
+    id: 'suite-chain',
+    datasetId: 'dataset-1',
+    suiteType: SuiteType.Deployment,
+    endpointRef: { method: 'POST', relativeUrlPattern: '/chat' } as TestSuite['endpointRef'],
+    inputBindings: [{ templateVariable: 'greeting', constantValue: 'zero' }],
+    additionalRequests: [{ inputBindings: [{ templateVariable: 'greeting', dataField: 'greetingField' }] }],
+  };
+
+  const chainCase: TestCase = { id: 'case-chain', createdAt: 0, data: { greetingField: 'one' } };
+
+  const renderChain = (suite: TestSuite, selectedRequestIndex: number) =>
+    render(
+      <TryOutRequestPreview
+        testSuite={suite}
+        testCaseId="case-chain"
+        schema={schema}
+        initialTestCase={chainCase}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={selectedRequestIndex}
+      />,
+    );
+
+  test('resolves the same variable name differently for each request that binds it', async () => {
+    const byRequest: TemplateVariablesByRequest = { '0': [greeting], '1': [greeting] };
+    getTestCaseTemplateVariables.mockResolvedValue(byRequest);
+
+    const { unmount } = renderChain(chainSuite, 0);
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:greeting=zero')).toBeInTheDocument();
+    });
+    unmount();
+
+    getTestCaseTemplateVariables.mockResolvedValue(byRequest);
+    renderChain(chainSuite, 1);
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:greeting=one')).toBeInTheDocument();
+    });
+  });
+
+  test('does not inherit an earlier request constant binding', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': [greeting], '1': [greeting] });
+
+    renderChain({ ...chainSuite, additionalRequests: [{}] }, 1);
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:greeting=null')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Variables:greeting=zero')).not.toBeInTheDocument();
+  });
+
+  test('states that a request declaring no variables has none', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': [], '1': [greeting] });
+
+    renderChain(chainSuite, 0);
+
+    await waitFor(() => {
+      expect(screen.getByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
+    });
+  });
+
+  test('treats a request the response does not mention as declaring no variables', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue({ '0': [greeting] });
+
+    renderChain(chainSuite, 1);
+
+    await waitFor(() => {
+      expect(screen.getByText(TestSuitesI18nKey.RequestNoTemplateVariables)).toBeInTheDocument();
+    });
+  });
+
+  test('seeds the suite-level body with an entry per chain request', async () => {
+    getTestSuiteTemplateVariables.mockResolvedValue({ '0': [greeting], '1': [greeting] });
+    const onChangeRequestBody = vi.fn();
+
+    render(
+      <TryOutRequestPreview
+        testSuite={chainSuite}
+        schema={schema}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={onChangeRequestBody}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onChangeRequestBody).toHaveBeenCalledWith({ '0': { greeting: '' }, '1': { greeting: '' } });
+    });
   });
 });

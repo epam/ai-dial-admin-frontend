@@ -2,8 +2,10 @@ import {
   InputBinding,
   InputBindingRowData,
   TemplateVariable,
+  TemplateVariablesByRequest,
   TestCaseSchema,
   TestSuite,
+  TryOutVariablesByRequest,
 } from '@/src/models/evaluation/test-suite';
 import { InputBindingType } from '@/src/types/evaluation';
 
@@ -36,16 +38,6 @@ export const buildTurnEffectiveData = (
 
 export const perTurnFieldNames = (schema: TestCaseSchema[] | undefined): Set<string> =>
   new Set((schema ?? []).filter((field) => field.perTurn).map((field) => field.name));
-
-/** Request-specific bindings win; names missing on that request keep the fallback (request #0) mapping. */
-export const mergeRequestBindings = (
-  requestBindings: InputBinding[] | undefined,
-  fallbackBindings: InputBinding[] | undefined,
-): InputBinding[] => {
-  const byVariable = new Map((fallbackBindings ?? []).map((binding) => [binding.templateVariable, binding]));
-  (requestBindings ?? []).forEach((binding) => byVariable.set(binding.templateVariable, binding));
-  return [...byVariable.values()];
-};
 
 /**
  * Resolve template variables for one turn: constant → dataField → variable name → default → null.
@@ -125,6 +117,27 @@ export const convertVariableIntoInitialRequest = (variables: TemplateVariable[])
     requestVariables[variable.name] = variable.defaultValue ?? variable.resolvedValue ?? '';
   });
   return requestVariables;
+};
+
+/**
+ * Initial suite-level try-out body: one entry per request the response reported, seeded from that
+ * request's own variables.
+ *
+ * The keys come from the response rather than from the suite in the editor, because the try-out
+ * endpoint rejects any index outside the *saved* chain — and the editor can hold a request that has
+ * not been saved yet. A request the response does not mention is simply left out, which the endpoint
+ * reads as "no variables for that request".
+ */
+export const convertVariablesIntoInitialRequests = (
+  variablesByRequest: TemplateVariablesByRequest,
+): TryOutVariablesByRequest => {
+  const body: TryOutVariablesByRequest = {};
+
+  for (const [requestIndex, variables] of Object.entries(variablesByRequest)) {
+    body[requestIndex] = convertVariableIntoInitialRequest(variables ?? []);
+  }
+
+  return body;
 };
 
 export const generateInputBinding = (binding: InputBinding, field: string, value: string): InputBinding => {

@@ -13,21 +13,25 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleResource } from '@/src/models/dial/resource';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { PlatformRoleModelOption } from './models';
 import TabsContent from './TabsContent';
 
 interface Props {
   etag: string;
   originalRole: DialRoleResource;
+  models: PlatformRoleModelOption[];
+  optionWarnings?: EntitiesI18nKey[];
   /** True when `originalRole` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
   isConfigFileSource?: boolean;
 }
 
-const RoleAssetView: FC<Props> = ({ etag, originalRole, isConfigFileSource }) => {
+const RoleAssetView: FC<Props> = ({ etag, originalRole, models, optionWarnings, isConfigFileSource }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformRoles);
   const router = useRouter();
@@ -64,6 +68,12 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole, isConfigFileSource }) =>
   useEffect(() => {
     setSelectedRole(structuredClone(originalRole));
   }, [originalRole]);
+
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   useEffect(() => {
     if (Object.keys(selectedRole).length && originalRole) {
@@ -128,6 +138,7 @@ const RoleAssetView: FC<Props> = ({ etag, originalRole, isConfigFileSource }) =>
           <TabsContent
             activeTab={activeTab}
             selectedRole={selectedRole}
+            models={models}
             isSkipRefresh={isSkipRefresh}
             onChange={onChangeRole}
           />

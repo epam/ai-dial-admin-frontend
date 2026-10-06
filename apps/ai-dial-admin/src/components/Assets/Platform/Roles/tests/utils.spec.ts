@@ -1,13 +1,19 @@
 import { describe, expect, test } from 'vitest';
 
 import { DialRoleResource } from '@/src/models/dial/resource';
-import { PlatformSharingType } from '../models';
+import { PlatformRoleModelOption, PlatformSharingType } from '../models';
 import {
+  addModelLimits,
   applySharingChange,
+  clearModelLimits,
   getAssetSharingData,
+  getAvailableModels,
   getDefaultPlaceholder,
+  getModelLimitRows,
   isResetToDefaultHidden,
+  removeModelLimit,
   toCoreShareField,
+  updateModelLimit,
 } from '../utils';
 
 // `DialRoleResource` also requires the identity fields; the tests only care about `share`, so the
@@ -184,5 +190,53 @@ describe('isResetToDefaultHidden', () => {
 
   test('is shown once either field has an override', () => {
     expect(isResetToDefaultHidden(buildApi('24', undefined) as never, {} as never)).toBe(false);
+  });
+});
+
+const model = (name: string): PlatformRoleModelOption => ({
+  name,
+  displayName: name,
+  origin: 'Api' as PlatformRoleModelOption['origin'],
+});
+
+describe('Platform role model limits', () => {
+  test('maps every configured model to a row and leaves absent tokens undefined', () => {
+    expect(getModelLimitRows({ modelA: { minute: 10 }, modelB: {} })).toEqual([
+      { name: 'modelA', minute: 10 },
+      { name: 'modelB' },
+    ]);
+  });
+
+  test('stores 0 as a configured value instead of treating it as no limit', () => {
+    expect(updateModelLimit({}, 'modelA', 'day', 0)).toEqual({ modelA: { day: 0 } });
+  });
+
+  test('clearing one token removes only that token and keeps the empty attached-model entry', () => {
+    const limits = { modelA: { minute: 10, day: 20 } };
+
+    expect(updateModelLimit(limits, 'modelA', 'minute', undefined)).toEqual({ modelA: { day: 20 } });
+    expect(updateModelLimit({ modelA: { minute: 10 } }, 'modelA', 'minute', undefined)).toEqual({ modelA: {} });
+  });
+
+  test('excludes attached models and adds selected models with empty limits without overwriting existing values', () => {
+    const limits = { modelA: { minute: 10 } };
+    const models = [model('modelA'), model('modelB'), model('modelC')];
+
+    expect(getAvailableModels(models, limits)).toEqual([model('modelB'), model('modelC')]);
+    expect(addModelLimits(limits, [model('modelA'), model('modelB')])).toEqual({
+      modelA: { minute: 10 },
+      modelB: {},
+    });
+  });
+
+  test('clears all token limits while preserving the attached model and sibling models', () => {
+    expect(clearModelLimits({ modelA: { minute: 10, day: 20 }, modelB: { week: 30 } }, 'modelA')).toEqual({
+      modelA: {},
+      modelB: { week: 30 },
+    });
+  });
+
+  test('removes a model entry only when the user removes the model', () => {
+    expect(removeModelLimit({ modelA: {}, modelB: { week: 30 } }, 'modelA')).toEqual({ modelB: { week: 30 } });
   });
 });

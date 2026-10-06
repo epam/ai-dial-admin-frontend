@@ -80,7 +80,7 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange
           schemaId={asset.catalogSchemaId}
           options={catalogSchemas?.options}
           optionsError={catalogSchemas?.error}
-          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId })}
+          onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId, catalogProperties: void 0 })}
         />
       </div>
     </div>
