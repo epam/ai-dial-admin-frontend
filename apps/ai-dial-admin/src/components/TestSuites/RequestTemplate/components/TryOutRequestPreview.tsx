@@ -7,15 +7,22 @@ import { getDatasetTestCase } from '@/src/app/[lang]/datasets/actions';
 import { getTestCaseTemplateVariables, getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
-  convertVariableIntoInitialRequest,
-  perTurnFieldNames,
   buildTurnEffectiveData,
-  mergeRequestBindings,
+  convertVariablesIntoInitialRequests,
+  perTurnFieldNames,
   resolveVariablesForTurn,
 } from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { SuiteType, TemplateVariable, TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import {
+  SuiteType,
+  TemplateVariable,
+  TemplateVariablesByRequest,
+  TestCase,
+  TestCaseSchema,
+  TestSuite,
+  TryOutVariablesByRequest,
+} from '@/src/models/evaluation/test-suite';
 import { toRequestView } from '@/src/utils/evaluation/request-chain';
 import {
   getRequestTurnCounts,
@@ -32,8 +39,8 @@ interface Props {
   initialTestCase?: TestCase;
   resolvedRequest: Record<string, unknown>;
   isRequestSend?: boolean;
-  requestBody: Record<string, unknown>;
-  onChangeRequestBody: (body: Record<string, unknown>) => void;
+  requestBody: TryOutVariablesByRequest;
+  onChangeRequestBody: (body: TryOutVariablesByRequest) => void;
   selectedRequestIndex?: number;
   onLoadingChange?: (loading: boolean) => void;
 }
@@ -51,7 +58,7 @@ const TryOutRequestPreview: FC<Props> = ({
   onLoadingChange,
 }) => {
   const t = useI18n();
-  const [variables, setVariables] = useState<TemplateVariable[]>([]);
+  const [variablesByRequest, setVariablesByRequest] = useState<TemplateVariablesByRequest>({});
   const [testCase, setTestCase] = useState<TestCase | null>(initialTestCase ?? null);
   const [isVariablesLoading, setIsVariablesLoading] = useState(true);
 
@@ -69,8 +76,8 @@ const TryOutRequestPreview: FC<Props> = ({
             : Promise.resolve(null),
         ]);
 
-        const vars = varsRes || [];
-        setVariables(vars);
+        const vars = varsRes ?? {};
+        setVariablesByRequest(vars);
         if (caseRes) {
           setTestCase({
             id: caseRes.id || testCaseId || '',
@@ -83,7 +90,7 @@ const TryOutRequestPreview: FC<Props> = ({
         }
         // Test-case try-out posts an empty body; only suite-level Send uses these values.
         if (!testCaseId) {
-          onChangeRequestBody(convertVariableIntoInitialRequest(vars));
+          onChangeRequestBody(convertVariablesIntoInitialRequests(vars));
         }
       } finally {
         setIsVariablesLoading(false);
@@ -103,14 +110,14 @@ const TryOutRequestPreview: FC<Props> = ({
   const multiTurnLength = multiTurnData?.length ?? 0;
 
   const turnCounts = useMemo(
-    () => (testCaseId ? getRequestTurnCounts(testSuite, schema, multiTurnLength) : [1]),
-    [testCaseId, testSuite, schema, multiTurnLength],
+    () => getRequestTurnCounts(testSuite, schema, multiTurnLength),
+    [testSuite, schema, multiTurnLength],
   );
 
   const shape = useMemo(() => getTryOutSectionShape(turnCounts), [turnCounts]);
 
   const groupedSlots = useMemo((): TryOutSectionGroup<{ variables: TemplateVariable[] }>[] => {
-    if (!testCaseId || shape === 'single') {
+    if (shape === 'single') {
       return [];
     }
 
@@ -118,10 +125,9 @@ const TryOutRequestPreview: FC<Props> = ({
 
     for (let requestIndex = 0; requestIndex < turnCounts.length; requestIndex++) {
       const turnCount = turnCounts[requestIndex];
-      const bindings = mergeRequestBindings(
-        toRequestView(testSuite, requestIndex).inputBindings,
-        testSuite.inputBindings,
-      );
+      // Each chain request resolves from its own bindings — nothing is inherited from request #0.
+      const bindings = toRequestView(testSuite, requestIndex).inputBindings ?? [];
+      const requestVariables = variablesByRequest[String(requestIndex)] ?? [];
       const turns: TryOutSectionGroup<{ variables: TemplateVariable[] }>['turns'] = [];
 
       for (let turnIndex = 0; turnIndex < turnCount; turnIndex++) {
@@ -133,7 +139,7 @@ const TryOutRequestPreview: FC<Props> = ({
         const effectiveData = buildTurnEffectiveData(testCase?.data, turnData, perTurnFields);
         turns.push({
           turnIndex,
-          item: { variables: resolveVariablesForTurn(variables, bindings, effectiveData) },
+          item: { variables: resolveVariablesForTurn(requestVariables, bindings, effectiveData) },
         });
       }
 
@@ -143,7 +149,7 @@ const TryOutRequestPreview: FC<Props> = ({
     }
 
     return groups;
-  }, [testCaseId, shape, turnCounts, testSuite, multiTurnData, testCase?.data, perTurnFields, variables]);
+  }, [shape, turnCounts, testSuite, multiTurnData, testCase?.data, perTurnFields, variablesByRequest]);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const previewLabel = isMcp ? t(TestSuitesI18nKey.ToolArgumentsPreview) : t(TestSuitesI18nKey.RequestBodyPreview);
@@ -151,36 +157,38 @@ const TryOutRequestPreview: FC<Props> = ({
     ? `TOOL CALL ${testSuite.mcpDeploymentRef?.name}:${testSuite.toolRef?.name}`
     : `${testSuite.endpointRef?.method} ${testSuite.endpointRef?.relativeUrlPattern}`;
 
-  const renderVariables = (vars: TemplateVariable[], key: string, title?: string) => (
+  const renderVariables = (vars: TemplateVariable[], key: string, requestIndex: number, title?: string) => (
     <div key={key} className="flex flex-col gap-y-4 shrink-0">
       {title ? <h2 className="dial-small-text font-semibold">{title}</h2> : null}
-      <Variables
-        testSuiteId={testSuite.id as string}
-        variables={vars}
-        requestBody={{}}
-        onChangeRequestBody={onChangeRequestBody}
-        readonly
-      />
+      {vars.length === 0 ? (
+        <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.RequestNoTemplateVariables)}</p>
+      ) : (
+        <Variables
+          testSuiteId={testSuite.id as string}
+          variables={vars}
+          requestIndex={String(requestIndex)}
+          requestBody={requestBody}
+          onChangeRequestBody={onChangeRequestBody}
+          readonly={!!testCaseId}
+        />
+      )}
     </div>
   );
 
   const sectionedVariables = (() => {
     if (shape === 'single' || groupedSlots.length === 0) {
-      return (
-        <Variables
-          testSuiteId={testSuite.id as string}
-          variables={variables}
-          requestBody={requestBody}
-          onChangeRequestBody={onChangeRequestBody}
-          readonly={!!testCaseId}
-        />
-      );
+      return renderVariables(variablesByRequest['0'] ?? [], 'single-0', 0);
     }
 
     if (shape === 'turns') {
       return groupedSlots.flatMap((group) =>
         group.turns.map(({ turnIndex, item }) =>
-          renderVariables(item.variables, `t-${turnIndex}`, t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 })),
+          renderVariables(
+            item.variables,
+            `t-${turnIndex}`,
+            group.requestIndex,
+            t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }),
+          ),
         ),
       );
     }
@@ -197,6 +205,7 @@ const TryOutRequestPreview: FC<Props> = ({
         renderVariables(
           item.variables,
           `${shape}-${group.requestIndex}-${turnIndex}`,
+          group.requestIndex,
           showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined,
         ),
       );

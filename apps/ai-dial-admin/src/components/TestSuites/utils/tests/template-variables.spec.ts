@@ -2,10 +2,10 @@ import { describe, test, expect } from 'vitest';
 import {
   buildTurnEffectiveData,
   convertVariableIntoInitialRequest,
+  convertVariablesIntoInitialRequests,
   generateInputBindingsRowData,
   generateVariablesRowData,
   hasIncompleteInputBindings,
-  mergeRequestBindings,
   perTurnFieldNames,
   resolveVariablesForTurn,
 } from '../template-variables';
@@ -37,20 +37,31 @@ describe('buildTurnEffectiveData', () => {
   });
 });
 
-describe('mergeRequestBindings', () => {
-  test('fills gaps from fallback bindings when the request has none', () => {
-    expect(mergeRequestBindings([], [{ templateVariable: 'user_message', dataField: 'message' }])).toEqual([
-      { templateVariable: 'user_message', dataField: 'message' },
-    ]);
+describe('convertVariablesIntoInitialRequests', () => {
+  test('seeds one entry per chain request from that request own variables', () => {
+    const result = convertVariablesIntoInitialRequests({
+      '0': [createVariable({ name: 'first', defaultValue: 'a', hasDefault: true })],
+      '1': [createVariable({ name: 'second', defaultValue: 'b', hasDefault: true })],
+    });
+
+    expect(result).toEqual({ '0': { first: 'a' }, '1': { second: 'b' } });
   });
 
-  test('lets request-specific bindings override the same variable on the fallback', () => {
-    expect(
-      mergeRequestBindings(
-        [{ templateVariable: 'user_message', dataField: 'other' }],
-        [{ templateVariable: 'user_message', dataField: 'message' }],
-      ),
-    ).toEqual([{ templateVariable: 'user_message', dataField: 'other' }]);
+  test('keeps an entry for a request that declares no variables', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })], '1': [] })).toEqual({
+      '0': { first: '' },
+      '1': {},
+    });
+  });
+
+  test('omits a request the response does not mention, so no out-of-range index is sent', () => {
+    expect(convertVariablesIntoInitialRequests({ '0': [createVariable({ name: 'first' })] })).toEqual({
+      '0': { first: '' },
+    });
+  });
+
+  test('returns an empty body for an empty response', () => {
+    expect(convertVariablesIntoInitialRequests({})).toEqual({});
   });
 });
 

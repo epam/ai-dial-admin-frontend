@@ -2080,6 +2080,7 @@ export enum TestSuitesI18nKey {
   RequestChainPreviousOutputsInfo = 'TestSuites.RequestChainPreviousOutputsInfo',
   RequestChainPreviousOutputsColumnsInfo = 'TestSuites.RequestChainPreviousOutputsColumnsInfo',
   RequestChainOutputOf = 'TestSuites.RequestChainOutputOf',
+  RequestNoTemplateVariables = 'TestSuites.RequestNoTemplateVariables',
   TrendsRunsCount = 'TestSuites.TrendsRunsCount',
   TrendsLastNRuns = 'TestSuites.TrendsLastNRuns',
   RunsPassedThreshold = 'TestSuites.RunsPassedThreshold',

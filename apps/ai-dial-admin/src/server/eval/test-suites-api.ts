@@ -3,7 +3,13 @@ import { CustomFile, DialFile } from '@/src/models/dial/file';
 import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
-import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
+import {
+  TemplateVariablesByRequest,
+  TestCase,
+  TestSuite,
+  TryOutResponse,
+  TryOutVariablesByRequest,
+} from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -179,17 +185,21 @@ export class TestSuitesApi extends BaseApi {
     return this.get(DEPLOYMENT_BY_ID_URL(id), token);
   }
 
-  getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
+  getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariablesByRequest | null> {
     return this.get(TEST_SUITE_TEMPLATE_VARIABLES_URL(id), token);
   }
 
-  getTestCaseTemplateVariables(id: string, testCaseId: string, token: Token): Promise<TemplateVariable[] | null> {
+  getTestCaseTemplateVariables(
+    id: string,
+    testCaseId: string,
+    token: Token,
+  ): Promise<TemplateVariablesByRequest | null> {
     return this.get(TEST_CASE_TEMPLATE_VARIABLES_URL(id, testCaseId), token);
   }
 
   tryOutTestSuite(
     id: string,
-    requestBody: Record<string, unknown>,
+    requestBody: TryOutVariablesByRequest,
     token: Token,
   ): Promise<ServerActionResponse<TryOutResponse> | null> {
     return this.postAction(TEST_SUITE_TRY_OUT_URL(id), { variables: requestBody }, token);

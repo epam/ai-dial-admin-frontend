@@ -2150,6 +2150,7 @@ export default {
     RequestChainPreviousOutputsInfo: 'This request has access to the output of previous requests.',
     RequestChainPreviousOutputsColumnsInfo: 'This request has access to the output of previous requests: {columns}.',
     RequestChainOutputOf: 'Output of {request}',
+    RequestNoTemplateVariables: 'This request has no template variables.',
     TrendsRunsCount: '{count} Runs',
     TrendsLastNRuns: 'Last {count} Runs',
     RunsPassedThreshold: 'Runs Passed Threshold',
