@@ -48,12 +48,12 @@ const valueAxis = {
  * into the chart instead and needs a literal colour.
  */
 const TOOLTIP_STYLE = {
-  backgroundColor: 'var(--bg-layer-3)',
-  borderColor: 'var(--stroke-primary)',
+  backgroundColor: 'var(--bg-layer-sunken, #242A38)',
+  borderColor: 'var(--stroke-primary, #848E9C)',
   borderWidth: 1,
   padding: [6, 10],
-  textStyle: { color: 'var(--text-primary)', fontSize: 12 },
-  extraCssText: 'border-radius:4px;box-shadow:0 4px 12px rgba(12,16,29,.45);',
+  textStyle: { color: 'var(--text-primary, #FCFCFC)', fontSize: 12 },
+  extraCssText: 'border-radius:4px;box-shadow:0 4px 12px var(--shadow-md, #07081359);',
 };
 
 interface AxisTooltipParam {

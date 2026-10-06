@@ -1,14 +1,16 @@
 import { MetricStatus } from '@/src/components/Common/MetricCard/models';
+import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 
-// ECharts needs concrete colors; these mirror the theme token fallbacks (tailwind.config.js).
+// ECharts paints on a canvas, which cannot resolve CSS variables, so it gets the dark palette's
+// concrete values.
 export const CHART_COLOR = {
-  success: '#37BABC',
-  warning: '#EEC840',
-  error: '#F76464',
-  accent: '#7DA4FF',
-  neutral: '#9FA6BD',
-  value: '#EEF1F7',
-  track: '#242C42',
+  success: fallbackDarkTheme['text-success'],
+  warning: fallbackDarkTheme['text-warning'],
+  error: fallbackDarkTheme['text-error'],
+  accent: fallbackDarkTheme['text-accent-primary'],
+  neutral: fallbackDarkTheme['text-secondary'],
+  value: fallbackDarkTheme['text-primary'],
+  track: fallbackDarkTheme['bg-layer-4'],
 };
 
 export const STATUS_COLOR: Record<MetricStatus, string> = {
@@ -24,6 +26,6 @@ export const STATUS_TEXT_CLASS: Record<MetricStatus, string> = {
   [MetricStatus.Ok]: 'text-success',
   [MetricStatus.Warn]: 'text-warning',
   [MetricStatus.Crit]: 'text-error',
-  [MetricStatus.Neutral]: 'text-accent-primary',
+  [MetricStatus.Neutral]: 'text-accent',
   [MetricStatus.NoData]: 'text-secondary',
 };

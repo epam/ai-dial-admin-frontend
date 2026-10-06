@@ -1,13 +1,41 @@
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
+import { fallbackDarkTheme as dark } from '@/src/utils/themes/constant';
 
-const DEFAULT_COLORS = {
+// Monaco takes a theme as literal colors and cannot resolve CSS variables, so the dark theme reads
+// the dark palette's concrete values.
+const SHARED_COLORS = {
   focusBorder: '#00000000',
-  'editor.foreground': '#EEF1F7',
-  'editor.background': '#161B2D',
-  'editorCursor.foreground': '#EEF1F7',
   'editor.selectionBackground': '#5C8DEA2B',
+  'diffEditor.insertedLineBackground': '#00000000',
+  'diffEditor.removedLineBackground': '#00000000',
+  'editor.lineHighlightBorder': '#00000000',
+};
+
+const DARK_COLORS = {
+  ...SHARED_COLORS,
+  'editor.foreground': dark['text-primary'],
+  'editor.background': dark['bg-layer-2'],
+  'editorCursor.foreground': dark['text-primary'],
+  'editorLineNumber.foreground': dark['controls-text-primary-disable'],
+  'scrollbarSlider.background': `${dark['bg-layer-4']}66`,
+  'scrollbarSlider.hoverBackground': `${dark['bg-layer-4']}99`,
+  'scrollbarSlider.activeBackground': `${dark['bg-layer-4']}CC`,
+  'minimapSlider.background': `${dark['text-primary']}1A`,
+  'minimapSlider.hoverBackground': `${dark['text-primary']}33`,
+  'minimapSlider.activeBackground': `${dark['bg-layer-4']}CC`,
+  'diffEditor.insertedTextBackground': dark['bg-success'],
+  'diffEditor.removedTextBackground': dark['bg-error'],
+  'diffEditor.insertedTextBorder': dark['text-success'],
+  'diffEditor.removedTextBorder': dark['stroke-error'],
+};
+
+const LIGHT_COLORS = {
+  ...SHARED_COLORS,
+  'editor.foreground': '#161B2D',
+  'editor.background': '#EEF1F7',
+  'editorCursor.foreground': '#161B2D',
   'editorLineNumber.foreground': '#7C8293',
   'scrollbarSlider.background': '#242C4266',
   'scrollbarSlider.hoverBackground': '#242C4299',
@@ -15,13 +43,10 @@ const DEFAULT_COLORS = {
   'minimapSlider.background': '#EEF1F71A',
   'minimapSlider.hoverBackground': '#EEF1F733',
   'minimapSlider.activeBackground': '#242C42CC',
-  'diffEditor.insertedTextBackground': '#1D3841',
-  'diffEditor.removedTextBackground': '#402027',
+  'diffEditor.insertedTextBackground': '#CEEBEE',
+  'diffEditor.removedTextBackground': '#F3D6D8',
   'diffEditor.insertedTextBorder': '#37BABC',
   'diffEditor.removedTextBorder': '#F76464',
-  'diffEditor.insertedLineBackground': '#00000000',
-  'diffEditor.removedLineBackground': '#00000000',
-  'editor.lineHighlightBorder': '#00000000',
 };
 
 export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
@@ -32,7 +57,7 @@ export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig 
       return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
     case EDITOR_THEMES.dark:
     default:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#1D2439' } };
+      return { ...template, colors: { ...template.colors, 'editor.background': dark['bg-layer-3'] } };
   }
 };
 
@@ -41,26 +66,24 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
     base: 'vs-dark',
     inherit: false,
     rules: [
-      { token: 'string.key.json', foreground: '#37BABC' },
-      { token: 'string.value.json', foreground: '#7DA4FF' },
+      { token: 'string.key.json', foreground: dark['text-accent-secondary'] },
+      { token: 'string.value.json', foreground: dark['text-accent-primary'] },
       { token: 'number', foreground: '#D97C27' },
       { token: 'keyword.json', foreground: '#F4CE46' },
-      { token: 'delimiter', foreground: '#EEF1F7' },
-      { token: 'delimiter.bracket.json', foreground: '#A972FF' },
-      { token: 'delimiter.parenthesis', foreground: '#A972FF' },
-      { token: 'jsonata.string', foreground: '#7DA4FF' },
-      { token: 'jsonata.string.escape', foreground: '#7DA4FF' },
+      { token: 'delimiter', foreground: dark['text-primary'] },
+      { token: 'delimiter.bracket.json', foreground: dark['text-accent-tertiary'] },
+      { token: 'delimiter.parenthesis', foreground: dark['text-accent-tertiary'] },
+      { token: 'jsonata.string', foreground: dark['text-accent-primary'] },
+      { token: 'jsonata.string.escape', foreground: dark['text-accent-primary'] },
       { token: 'jsonata.number', foreground: '#D97C27' },
       { token: 'jsonata.keyword', foreground: '#F4CE46' },
-      { token: 'jsonata.variable', foreground: '#37BABC' },
-      { token: 'jsonata.variable.template', foreground: '#A972FF' },
-      { token: 'jsonata.operator', foreground: '#EEF1F7' },
-      { token: 'jsonata.bracket', foreground: '#A972FF' },
-      { token: 'jsonata.comment', foreground: '#7C8293' },
+      { token: 'jsonata.variable', foreground: dark['text-accent-secondary'] },
+      { token: 'jsonata.variable.template', foreground: dark['text-accent-tertiary'] },
+      { token: 'jsonata.operator', foreground: dark['text-primary'] },
+      { token: 'jsonata.bracket', foreground: dark['text-accent-tertiary'] },
+      { token: 'jsonata.comment', foreground: dark['controls-text-primary-disable'] },
     ],
-    colors: {
-      ...DEFAULT_COLORS,
-    },
+    colors: DARK_COLORS,
   },
   [EDITOR_THEMES.light]: {
     base: 'vs',
@@ -83,14 +106,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'jsonata.bracket', foreground: '#7E39EC' },
       { token: 'jsonata.comment', foreground: '#7C8293' },
     ],
-    colors: {
-      ...DEFAULT_COLORS,
-      'editor.foreground': '#161B2D',
-      'editor.background': '#EEF1F7',
-      'editorCursor.foreground': '#161B2D',
-      'diffEditor.insertedTextBackground': '#CEEBEE',
-      'diffEditor.removedTextBackground': '#F3D6D8',
-    },
+    colors: LIGHT_COLORS,
   },
 };
 

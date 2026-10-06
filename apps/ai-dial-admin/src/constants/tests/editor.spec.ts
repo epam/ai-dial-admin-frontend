@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { getDiffEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
 import { EDITOR_THEMES } from '@/src/types/editor';
+import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 import { JSONATA_MONARCH_TOKENS } from '@/src/components/Common/JsonataEditor/constants';
 
 const collectJsonataTokenNames = (): string[] => {
@@ -26,7 +27,7 @@ describe('getDiffEditorTheme', () => {
   test('returns dark theme config with overridden background', () => {
     const theme = getDiffEditorTheme(EDITOR_THEMES.dark);
     expect(theme.base).toBe('vs-dark');
-    expect(theme.colors['editor.background']).toBe('#1D2439');
+    expect(theme.colors['editor.background']).toBe(fallbackDarkTheme['bg-layer-3']);
   });
 
   test('returns light theme config with overridden background', () => {
