@@ -1,97 +1,99 @@
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
-import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
+import { ThemePalette } from '@/src/models/theme';
+import { EDITOR_THEMES, EditorOptions, EditorThemeSpec, JSONEditorThemeConfig } from '@/src/types/editor';
+import { getThemePalette } from '@/src/utils/themes/get-theme-palette';
 
-const DEFAULT_COLORS = {
-  focusBorder: '#00000000',
-  'editor.foreground': '#EEF1F7',
-  'editor.background': '#161B2D',
-  'editorCursor.foreground': '#EEF1F7',
-  'editor.selectionBackground': '#5C8DEA2B',
-  'editorLineNumber.foreground': '#7C8293',
-  'scrollbarSlider.background': '#242C4266',
-  'scrollbarSlider.hoverBackground': '#242C4299',
-  'scrollbarSlider.activeBackground': '#242C42CC',
-  'minimapSlider.background': '#EEF1F71A',
-  'minimapSlider.hoverBackground': '#EEF1F733',
-  'minimapSlider.activeBackground': '#242C42CC',
-  'diffEditor.insertedTextBackground': '#1D3841',
-  'diffEditor.removedTextBackground': '#402027',
-  'diffEditor.insertedTextBorder': '#37BABC',
-  'diffEditor.removedTextBorder': '#F76464',
-  'diffEditor.insertedLineBackground': '#00000000',
-  'diffEditor.removedLineBackground': '#00000000',
-  'editor.lineHighlightBorder': '#00000000',
-};
-
-export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
-  const template = EDITOR_THEMES_CONFIG[theme || EDITOR_THEMES.dark];
-
-  switch (theme) {
-    case EDITOR_THEMES.light:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
-    case EDITOR_THEMES.dark:
-    default:
-      return { ...template, colors: { ...template.colors, 'editor.background': '#1D2439' } };
-  }
-};
-
-export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> = {
+// Each theme keeps the surfaces it had before the palettes existed: the dark editor sits one layer
+// above the diff, the light one a layer below it.
+const EDITOR_THEME_SPECS: Record<EDITOR_THEMES, EditorThemeSpec> = {
   [EDITOR_THEMES.dark]: {
     base: 'vs-dark',
-    inherit: false,
-    rules: [
-      { token: 'string.key.json', foreground: '#37BABC' },
-      { token: 'string.value.json', foreground: '#7DA4FF' },
-      { token: 'number', foreground: '#D97C27' },
-      { token: 'keyword.json', foreground: '#F4CE46' },
-      { token: 'delimiter', foreground: '#EEF1F7' },
-      { token: 'delimiter.bracket.json', foreground: '#A972FF' },
-      { token: 'delimiter.parenthesis', foreground: '#A972FF' },
-      { token: 'jsonata.string', foreground: '#7DA4FF' },
-      { token: 'jsonata.string.escape', foreground: '#7DA4FF' },
-      { token: 'jsonata.number', foreground: '#D97C27' },
-      { token: 'jsonata.keyword', foreground: '#F4CE46' },
-      { token: 'jsonata.variable', foreground: '#37BABC' },
-      { token: 'jsonata.variable.template', foreground: '#A972FF' },
-      { token: 'jsonata.operator', foreground: '#EEF1F7' },
-      { token: 'jsonata.bracket', foreground: '#A972FF' },
-      { token: 'jsonata.comment', foreground: '#7C8293' },
-    ],
-    colors: {
-      ...DEFAULT_COLORS,
-    },
+    editorBackground: 'bg-layer-2',
+    diffBackground: 'bg-layer-3',
+    numberColor: '#D97C27',
+    keywordColor: '#F4CE46',
   },
   [EDITOR_THEMES.light]: {
     base: 'vs',
+    editorBackground: 'bg-layer-3',
+    diffBackground: 'bg-layer-2',
+    numberColor: '#B25500',
+    keywordColor: '#3F3D25',
+  },
+};
+
+const TRANSPARENT = '#00000000';
+
+// Monaco takes a theme as literal colors and cannot resolve CSS variables, so both themes read the
+// concrete values of their palette.
+const buildEditorTheme = (palette: ThemePalette, spec: EditorThemeSpec): JSONEditorThemeConfig => {
+  const key = palette['text-accent-secondary'];
+  const value = palette['text-accent-primary'];
+  const bracket = palette['text-accent-tertiary'];
+  const text = palette['text-primary'];
+  const muted = palette['controls-text-primary-disable'];
+  const slider = palette['stroke-primary'];
+
+  return {
+    base: spec.base,
     inherit: false,
     rules: [
-      { token: 'string.key.json', foreground: '#009D9F' },
-      { token: 'string.value.json', foreground: '#2764D9' },
-      { token: 'number', foreground: '#B25500' },
-      { token: 'keyword.json', foreground: '#3F3D25' },
-      { token: 'delimiter', foreground: '#161B2D' },
-      { token: 'delimiter.bracket.json', foreground: '#7E39EC' },
-      { token: 'delimiter.parenthesis', foreground: '#7E39EC' },
-      { token: 'jsonata.string', foreground: '#2764D9' },
-      { token: 'jsonata.string.escape', foreground: '#2764D9' },
-      { token: 'jsonata.number', foreground: '#B25500' },
-      { token: 'jsonata.keyword', foreground: '#3F3D25' },
-      { token: 'jsonata.variable', foreground: '#009D9F' },
-      { token: 'jsonata.variable.template', foreground: '#7E39EC' },
-      { token: 'jsonata.operator', foreground: '#161B2D' },
-      { token: 'jsonata.bracket', foreground: '#7E39EC' },
-      { token: 'jsonata.comment', foreground: '#7C8293' },
+      { token: 'string.key.json', foreground: key },
+      { token: 'string.value.json', foreground: value },
+      { token: 'number', foreground: spec.numberColor },
+      { token: 'keyword.json', foreground: spec.keywordColor },
+      { token: 'delimiter', foreground: text },
+      { token: 'delimiter.bracket.json', foreground: bracket },
+      { token: 'delimiter.parenthesis', foreground: bracket },
+      { token: 'jsonata.string', foreground: value },
+      { token: 'jsonata.string.escape', foreground: value },
+      { token: 'jsonata.number', foreground: spec.numberColor },
+      { token: 'jsonata.keyword', foreground: spec.keywordColor },
+      { token: 'jsonata.variable', foreground: key },
+      { token: 'jsonata.variable.template', foreground: bracket },
+      { token: 'jsonata.operator', foreground: text },
+      { token: 'jsonata.bracket', foreground: bracket },
+      { token: 'jsonata.comment', foreground: muted },
     ],
     colors: {
-      ...DEFAULT_COLORS,
-      'editor.foreground': '#161B2D',
-      'editor.background': '#EEF1F7',
-      'editorCursor.foreground': '#161B2D',
-      'diffEditor.insertedTextBackground': '#CEEBEE',
-      'diffEditor.removedTextBackground': '#F3D6D8',
+      focusBorder: TRANSPARENT,
+      'editor.foreground': text,
+      'editor.background': palette[spec.editorBackground],
+      'editorCursor.foreground': text,
+      'editor.selectionBackground': `${palette['bg-accent-primary']}2B`,
+      'editor.lineHighlightBorder': TRANSPARENT,
+      'editorLineNumber.foreground': muted,
+      'scrollbarSlider.background': `${slider}66`,
+      'scrollbarSlider.hoverBackground': `${slider}99`,
+      'scrollbarSlider.activeBackground': `${slider}CC`,
+      'minimapSlider.background': `${text}1A`,
+      'minimapSlider.hoverBackground': `${text}33`,
+      'minimapSlider.activeBackground': `${slider}CC`,
+      'diffEditor.insertedTextBackground': palette['bg-success'],
+      'diffEditor.removedTextBackground': palette['bg-error'],
+      'diffEditor.insertedTextBorder': palette['text-success'],
+      'diffEditor.removedTextBorder': palette['stroke-error'],
+      'diffEditor.insertedLineBackground': TRANSPARENT,
+      'diffEditor.removedLineBackground': TRANSPARENT,
     },
-  },
+  };
+};
+
+export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> = {
+  [EDITOR_THEMES.dark]: buildEditorTheme(getThemePalette(EDITOR_THEMES.dark), EDITOR_THEME_SPECS[EDITOR_THEMES.dark]),
+  [EDITOR_THEMES.light]: buildEditorTheme(
+    getThemePalette(EDITOR_THEMES.light),
+    EDITOR_THEME_SPECS[EDITOR_THEMES.light],
+  ),
+};
+
+export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
+  const themeId = theme || EDITOR_THEMES.dark;
+  const template = EDITOR_THEMES_CONFIG[themeId];
+  const background = getThemePalette(themeId)[EDITOR_THEME_SPECS[themeId].diffBackground];
+
+  return { ...template, colors: { ...template.colors, 'editor.background': background } };
 };
 
 const defaultOptions: EditorOptions = {

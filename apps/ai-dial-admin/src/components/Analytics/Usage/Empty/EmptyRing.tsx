@@ -19,7 +19,7 @@ const EmptyRing: FC<Props> = ({ size, children }) => (
       aria-hidden
       className="absolute inset-0 opacity-40"
       style={{
-        background: 'repeating-conic-gradient(var(--stroke-primary, #333a4d) 0deg 1.4deg, transparent 1.4deg 6deg)',
+        background: 'repeating-conic-gradient(var(--stroke-primary, #848E9C) 0deg 1.4deg, transparent 1.4deg 6deg)',
         WebkitMaskImage: RING_MASK,
         maskImage: RING_MASK,
       }}

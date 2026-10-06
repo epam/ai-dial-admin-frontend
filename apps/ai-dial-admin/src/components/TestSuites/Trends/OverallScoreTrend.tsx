@@ -11,6 +11,7 @@ import { useStickyChartTooltip } from '@/src/components/TestSuites/Trends/use-st
 import { buildOverallScoreChartOptions } from '@/src/components/TestSuites/Trends/utils/chart-options';
 import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useThemePalette } from '@/src/hooks/use-theme-palette';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -21,17 +22,18 @@ interface Props {
 
 const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
   const t = useI18n();
+  const palette = useThemePalette();
   const hasData = runOrder.some((point) => point.overallScore != null);
   const { chartRef, onChartReady } = useStickyChartTooltip(hasData && !isLoading, runOrder.length);
 
   const options = useMemo(
     () =>
-      buildOverallScoreChartOptions(runOrder, {
+      buildOverallScoreChartOptions(palette, runOrder, {
         date: t(TestSuitesI18nKey.TrendsTooltipDate),
         run: t(TestSuitesI18nKey.TrendsTooltipRun),
         score: t(TestSuitesI18nKey.TrendsTooltipScore),
       }),
-    [runOrder, t],
+    [runOrder, t, palette],
   );
 
   return (

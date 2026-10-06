@@ -2,9 +2,6 @@ import { EChartsOption } from 'echarts-for-react';
 
 import {
   OVERALL_SCORE_TREND_TOOLTIP_CLASS,
-  TREND_OVERALL_FAILED_COLOR,
-  TREND_OVERALL_GRID_LINE_COLOR,
-  TREND_OVERALL_PASSED_COLOR,
   TREND_OVERALL_SYMBOL_SIZE,
 } from '@/src/components/TestSuites/Trends/constants';
 import { MetricTrendSeries, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
@@ -14,8 +11,15 @@ import {
   formatTrendAxisDate,
   formatTrendTooltipDate,
 } from '@/src/components/TestSuites/Trends/utils/format';
+import { ThemePalette } from '@/src/models/theme';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+
+// The tooltip is a DOM node and resolves the theme's variables; the axes and series are painted on the
+// canvas and take the palette's concrete values.
+const TOOLTIP_BACKGROUND = 'color-mix(in srgb, var(--bg-layer-base, #10151E) 90%, transparent)';
+const TOOLTIP_TEXT_PRIMARY = 'var(--text-primary, #FCFCFC)';
+const TOOLTIP_TEXT_SECONDARY = 'var(--text-secondary, #ACB3C3)';
 
 interface OverallChartLabels {
   date: string;
@@ -129,9 +133,12 @@ export const resolveCategoryDataIndexFromPixel = (
 };
 
 export const buildOverallScoreChartOptions = (
+  palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   labels: OverallChartLabels,
 ): EChartsOption => {
+  const passedColor = palette['text-accent-primary'];
+  const axisColor = palette['text-secondary'];
   const categories = runOrder.map((point) => formatTrendAxisDate(point.computedAtMs));
   const centeredCategories = buildCenteredTimelineLabels(categories);
 
@@ -139,7 +146,7 @@ export const buildOverallScoreChartOptions = (
     if (point.overallScore == null) {
       return null;
     }
-    const color = point.isFailed ? TREND_OVERALL_FAILED_COLOR : TREND_OVERALL_PASSED_COLOR;
+    const color = point.isFailed ? palette['text-error'] : passedColor;
     return {
       value: point.overallScore,
       itemStyle: { color, borderColor: color },
@@ -157,15 +164,15 @@ export const buildOverallScoreChartOptions = (
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
       confine: false,
       className: OVERALL_SCORE_TREND_TOOLTIP_CLASS,
-      backgroundColor: 'rgba(12, 16, 29, 0.9)',
-      borderColor: '#696e7c',
+      backgroundColor: TOOLTIP_BACKGROUND,
+      borderColor: 'var(--stroke-primary, #848E9C)',
       borderWidth: 1,
       padding: [8, 12],
-      textStyle: { color: '#EEF1F7', fontSize: 12 },
+      textStyle: { color: TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
       axisPointer: {
         type: 'line',
         snap: true,
-        lineStyle: { color: '#9FA6BD', width: 1 },
+        lineStyle: { color: axisColor, width: 1 },
       },
       position: (
         point: number[],
@@ -187,15 +194,15 @@ export const buildOverallScoreChartOptions = (
         const score = point.overallScore != null ? formatScore(point.overallScore) : '—';
         return `
           <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="display:flex;flex-direction:column;gap:4px;color:#9FA6BD;">
+            <div style="display:flex;flex-direction:column;gap:4px;color:${TOOLTIP_TEXT_SECONDARY};">
               <span>${labels.date}</span>
               <span>${labels.run}</span>
               <span>${labels.score}</span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;color:#EEF1F7;">
+            <div style="display:flex;flex-direction:column;gap:4px;color:${TOOLTIP_TEXT_PRIMARY};">
               <span>${formatTrendTooltipDate(point.computedAtMs)}</span>
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="color:#7DA4FF;font-weight:600;text-decoration:none;cursor:pointer;">
+                 style="color:var(--text-accent, #6E8AF7);font-weight:600;text-decoration:none;cursor:pointer;">
                 ${point.runName} ↗
               </a>
               <span>${score}</span>
@@ -216,7 +223,7 @@ export const buildOverallScoreChartOptions = (
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9FA6BD',
+        color: axisColor,
         fontSize: 12,
         formatter: (_value: string, index: number) => centeredCategories[index] ?? '',
       },
@@ -227,8 +234,8 @@ export const buildOverallScoreChartOptions = (
       min: 0,
       max: 1,
       interval: 0.25,
-      axisLabel: { color: '#9FA6BD', fontSize: 12 },
-      splitLine: { lineStyle: { color: TREND_OVERALL_GRID_LINE_COLOR, width: 1 } },
+      axisLabel: { color: axisColor, fontSize: 12 },
+      splitLine: { lineStyle: { color: palette['bg-layer-1'], width: 1 } },
       axisLine: { show: false },
       axisTick: { show: false },
     },
@@ -240,9 +247,9 @@ export const buildOverallScoreChartOptions = (
         showSymbol: true,
         symbol: 'circle',
         symbolSize: TREND_OVERALL_SYMBOL_SIZE,
-        lineStyle: { color: TREND_OVERALL_PASSED_COLOR, width: 2 },
-        itemStyle: { color: TREND_OVERALL_PASSED_COLOR },
-        areaStyle: { color: 'rgba(125, 164, 255, 0.2)' },
+        lineStyle: { color: passedColor, width: 2 },
+        itemStyle: { color: passedColor },
+        areaStyle: { color: passedColor, opacity: 0.2 },
         connectNulls: false,
       },
     ],
@@ -250,11 +257,13 @@ export const buildOverallScoreChartOptions = (
 };
 
 export const buildMetricTrendChartOptions = (
+  palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   series: MetricTrendSeries[],
   hiddenSeries: Set<string>,
   runLabel: string,
 ): EChartsOption => {
+  const axisColor = palette['text-secondary'];
   const categories = runOrder.map((point) => formatTrendAxisDate(point.computedAtMs));
   const visible = series.filter((item) => !hiddenSeries.has(item.name));
 
@@ -264,14 +273,14 @@ export const buildMetricTrendChartOptions = (
       trigger: 'axis',
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
       confine: false,
-      backgroundColor: 'rgba(12, 16, 29, 0.9)',
-      borderColor: '#696e7c',
+      backgroundColor: TOOLTIP_BACKGROUND,
+      borderColor: 'var(--stroke-primary, #848E9C)',
       borderWidth: 1,
       padding: [4, 8],
-      textStyle: { color: '#EEF1F7', fontSize: 12 },
+      textStyle: { color: TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
       axisPointer: {
         type: 'line',
-        lineStyle: { color: '#9FA6BD', width: 1 },
+        lineStyle: { color: axisColor, width: 1 },
       },
       formatter: (params: { seriesName: string; value: number | null; color: string; dataIndex: number }[]) => {
         if (!params.length) {
@@ -291,16 +300,16 @@ export const buildMetricTrendChartOptions = (
         const values = metricParams
           .map(
             (param) => `
-              <div style="line-height:16px;color:#EEF1F7;">${formatScore(Number(param.value))}</div>`,
+              <div style="line-height:16px;color:${TOOLTIP_TEXT_PRIMARY};">${formatScore(Number(param.value))}</div>`,
           )
           .join('');
         return `
           <div style="display:flex;gap:12px;align-items:flex-start;font-size:12px;">
-            <div style="display:flex;flex-direction:column;gap:2px;color:#9FA6BD;">
+            <div style="display:flex;flex-direction:column;gap:2px;color:${TOOLTIP_TEXT_SECONDARY};">
               <div style="line-height:16px;">${runLabel}</div>
               ${labels}
             </div>
-            <div style="display:flex;flex-direction:column;gap:2px;color:#EEF1F7;">
+            <div style="display:flex;flex-direction:column;gap:2px;color:${TOOLTIP_TEXT_PRIMARY};">
               <div style="line-height:16px;">${point?.runName ?? ''}</div>
               ${values}
             </div>
@@ -325,12 +334,12 @@ export const buildMetricTrendChartOptions = (
       min: 0,
       max: 1,
       interval: 0.25,
-      axisLabel: { show: true, color: '#9FA6BD', fontSize: 10 },
+      axisLabel: { show: true, color: axisColor, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: {
         show: true,
-        lineStyle: { color: '#242C42', width: 1 },
+        lineStyle: { color: palette['bg-layer-4'], width: 1 },
       },
     },
     series: visible.map((item) => ({

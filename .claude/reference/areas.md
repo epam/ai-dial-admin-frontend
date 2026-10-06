@@ -135,6 +135,7 @@ For work with no feature home, use a technical area:
 | `config` | App/build/tooling config, deps, lint/format, husky |
 | `infra` | CI, scripts, Docker, agent tooling (`.claude`, `.github`, `.cursor`) |
 | `openspec` | Specification framework (`openspec/specs`, `openspec/changes`) |
+| `theming` | Color tokens, global SCSS, chart/editor palettes (`src/scss`, theme-token consumers across components) |
 
 ---
 
