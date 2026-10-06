@@ -28,7 +28,7 @@ const hasPipelineGroups = async (pipeline: Pipeline): Promise<boolean> => {
     if (!(await isFullAdminCaller())) return false;
 
     const read = await getPipelineGroups(pipeline.name, GROUPS_PROBE_LIMIT);
-    return read.success && !!read.response?.length;
+    return read.success && !!read.response?.groups.length;
   } catch (e) {
     errorObjLog(e, 'Failed to probe the pipeline groups');
     return false;

@@ -13,7 +13,6 @@ import { deriveGroupState } from '@/src/components/Analytics/Pipelines/Groups/gr
 import { GroupState } from '@/src/components/Analytics/Pipelines/Groups/models';
 import { usePipelineGroups } from '@/src/components/Analytics/Pipelines/Groups/use-pipeline-groups';
 import { useQueueGroupEvaluation } from '@/src/components/Analytics/Pipelines/Groups/use-queue-group-evaluation';
-import { GROUPS_LIMIT } from '@/src/constants/analytics/pipeline-groups';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useMinuteTick } from '@/src/hooks/use-minute-tick';
@@ -70,6 +69,10 @@ const PipelineGroups: FC<Props> = ({ pipeline, isPaused, isGenerationBehind }) =
     void queue.queue(key);
   }, [pending, queue]);
 
+  const isFiltered = Boolean(search.trim()) || stateFilter != null;
+
+  const onLoadMore = useCallback(() => void groups.loadMore(), [groups]);
+
   const emptyMessage =
     rows.length > 0 ? t(AnalyticsPipelinesI18nKey.GroupsNoMatch) : t(AnalyticsPipelinesI18nKey.GroupsEmpty);
 
@@ -77,7 +80,26 @@ const PipelineGroups: FC<Props> = ({ pipeline, isPaused, isGenerationBehind }) =
     <div className="flex min-h-0 flex-1 flex-col gap-y-4 pt-4">
       <ReadinessSummary readyWhen={readyWhen} />
 
-      <GroupsFilterBar search={search} state={stateFilter} onSearchChange={setSearch} onStateChange={setStateFilter} />
+      <div className="flex flex-row flex-wrap items-center justify-between gap-3">
+        <GroupsFilterBar
+          search={search}
+          state={stateFilter}
+          onSearchChange={setSearch}
+          onStateChange={setStateFilter}
+        />
+        {!groups.hasFailed && !groups.isLoading && (
+          <span className="dial-small-text text-secondary">
+            {t(AnalyticsPipelinesI18nKey.GroupsTotal, { count: groups.total })}
+          </span>
+        )}
+      </div>
+
+      {/* The runner serves neither the search nor the state filter, so both reach only the pages loaded so far. */}
+      {isFiltered && groups.hasMore && (
+        <p className="dial-tiny-text text-secondary" role="status">
+          {t(AnalyticsPipelinesI18nKey.GroupsLoadedOnly, { count: groups.groups.length })}
+        </p>
+      )}
 
       {groups.hasFailed ? (
         <div className="flex flex-row flex-wrap items-center gap-3" role="status">
@@ -103,15 +125,11 @@ const PipelineGroups: FC<Props> = ({ pipeline, isPaused, isGenerationBehind }) =
           isLoading={groups.isLoading}
           now={now}
           emptyMessage={emptyMessage}
+          order={groups.order}
+          onOrderChange={groups.setOrder}
+          onLoadMore={onLoadMore}
           onQueue={setPending}
         />
-      )}
-
-      {/* With the window full the newest groups are the ones missing, and the search cannot find them. */}
-      {!groups.hasFailed && groups.groups.length >= GROUPS_LIMIT && (
-        <p className="dial-tiny-text text-secondary">
-          {t(AnalyticsPipelinesI18nKey.GroupsWindowFull, { count: GROUPS_LIMIT })}
-        </p>
       )}
 
       <span role="status" aria-live="polite" className={queue.outcome ? 'dial-small-text text-secondary' : 'sr-only'}>

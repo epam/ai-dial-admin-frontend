@@ -1,21 +1,27 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ColDef, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import GroupsGrid, { GroupRow } from '@/src/components/Analytics/Pipelines/Groups/GroupsGrid';
 import { GroupState } from '@/src/components/Analytics/Pipelines/Groups/models';
 import { groupMock, NOW } from '@/src/components/Analytics/Pipelines/Groups/tests/mock';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { ReadyWhen } from '@/src/models/analytics/pipeline';
+import { GroupListOrder } from '@/src/models/analytics/pipeline-groups';
 
 /**
  * ag-grid is replaced by a harness that renders each row through the column's own renderer or formatter, so the
  * cells under test are the real ones.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const captured: { columnDefs: ColDef[]; options: any } = { columnDefs: [], options: {} };
+
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default: ({ rowData, columnDefs, getIsEmptyData, emptyDataProps }: any) => {
+  default: ({ rowData, columnDefs, getIsEmptyData, emptyDataProps, additionalGridOptions }: any) => {
+    captured.columnDefs = columnDefs;
+    captured.options = additionalGridOptions;
     if (getIsEmptyData?.()) return <section aria-label="empty">{emptyDataProps?.title}</section>;
 
     const cell = (column: ColDef<GroupRow>, row: GroupRow) => {
@@ -54,6 +60,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 
 const CEILING: ReadyWhen = { idle: '10m', cost_ceiling: 20 };
 
+const onOrderChange = vi.fn();
+const onLoadMore = vi.fn();
+
 const renderGrid = (rows: GroupRow[], readyWhen: ReadyWhen = CEILING) => {
   const onQueue = vi.fn();
 
@@ -66,6 +75,9 @@ const renderGrid = (rows: GroupRow[], readyWhen: ReadyWhen = CEILING) => {
       isLoading={false}
       now={NOW}
       emptyMessage="nothing"
+      order={GroupListOrder.Newest}
+      onOrderChange={onOrderChange}
+      onLoadMore={onLoadMore}
       onQueue={onQueue}
     />,
   );
@@ -78,6 +90,10 @@ const queueControl = (key: string) =>
   within(row(key)).queryByRole('button', { name: AnalyticsPipelinesI18nKey.GroupsQueue });
 
 describe('GroupsGrid', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('states the empty message when there are no rows', () => {
     renderGrid([]);
 
@@ -160,6 +176,47 @@ describe('GroupsGrid', () => {
     renderGrid([{ group: groupMock({ dirty: false, evaluations: 20 }), state: GroupState.UpToDate }]);
 
     expect(queueControl('sess_A')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  test('holds back a key the runner cannot be addressed by', () => {
+    renderGrid([{ group: groupMock({ group_key: 'a/../b' }), state: GroupState.Waiting }]);
+
+    expect(queueControl('a/../b')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  test('offers Queue evaluation on a key with a slash', () => {
+    renderGrid([{ group: groupMock({ group_key: 'team/a' }), state: GroupState.Waiting }]);
+
+    expect(queueControl('team/a')).not.toHaveAttribute('aria-disabled');
+  });
+
+  test('sorts by last activity alone, in the runner order, in two directions', () => {
+    renderGrid([]);
+
+    const sortable = captured.columnDefs.filter((column) => column.sortable);
+    expect(sortable.map((column) => column.colId)).toEqual(['lastActivity']);
+    expect(sortable[0]).toMatchObject({ sort: 'desc', sortingOrder: ['desc', 'asc'] });
+    expect((sortable[0].comparator as () => number)()).toBe(0);
+  });
+
+  test('switches the order when the activity header turns ascending', () => {
+    renderGrid([]);
+
+    captured.options.onSortChanged({
+      api: { getColumnState: () => [{ colId: 'lastActivity', sort: 'asc' }] },
+    });
+
+    expect(onOrderChange).toHaveBeenCalledWith(GroupListOrder.Oldest);
+  });
+
+  test('reads the next page when scrolled near the end, and not before', () => {
+    renderGrid([]);
+
+    captured.options.onBodyScroll({ api: { getLastDisplayedRowIndex: () => 10, getDisplayedRowCount: () => 100 } });
+    expect(onLoadMore).not.toHaveBeenCalled();
+
+    captured.options.onBodyScroll({ api: { getLastDisplayedRowIndex: () => 98, getDisplayedRowCount: () => 100 } });
+    expect(onLoadMore).toHaveBeenCalledOnce();
   });
 
   test('offers no control on a ready group', () => {

@@ -1,6 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
-import { PipelineGroup, PipelineGroupsResponse } from '@/src/models/analytics/pipeline-groups';
+import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
 import {
   PausedPipeline,
   PausedPipelinesResponse,
@@ -19,9 +19,15 @@ export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_U
 export const RUNNER_RUNTIME_URL = (name: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/runtime`;
 
-/** The runner clamps `limit` to 1..500 and lists oldest activity first; there is no cursor. */
-export const RUNNER_GROUPS_URL = (name: string, limit: number): string =>
-  `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups?${new URLSearchParams({ limit: String(limit) }).toString()}`;
+/** One keyset page of a pipeline's groups. The cursor is the previous page's `next_cursor`, under the same order. */
+export const RUNNER_GROUPS_URL = (name: string, limit: number, order?: GroupListOrder, cursor?: string): string => {
+  const params = new URLSearchParams({ limit: String(limit) });
+
+  if (order) params.set('order', order);
+  if (cursor) params.set('cursor', cursor);
+
+  return `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups?${params.toString()}`;
+};
 export const RUNNER_GROUP_REQUEUE_URL = (name: string, groupKey: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups/${encodeURIComponent(groupKey)}/requeue`;
 
@@ -189,17 +195,35 @@ export class AnalyticsRunnerApi extends BaseApi {
   }
 
   /**
-   * The groups the runner tracks for a group pipeline. A 404 means either that the runner does not hold the
-   * pipeline or that it is not a group pipeline; the two are indistinguishable here, and both mean there are
-   * no groups to show.
+   * One page of the groups the runner tracks for a group pipeline. A 404 means either that the runner does not hold
+   * the pipeline or that it is not a group pipeline; the two are indistinguishable here, and both mean there are no
+   * groups to show.
    */
-  async getGroups(pipelineName: string, limit: number, token: Token): Promise<ServerActionResponse<PipelineGroup[]>> {
-    const res = await this.getAction(RUNNER_GROUPS_URL(pipelineName, limit), token);
+  async getGroups(
+    pipelineName: string,
+    limit: number,
+    order: GroupListOrder | undefined,
+    cursor: string | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<PipelineGroupsPage>> {
+    const res = await this.getAction(RUNNER_GROUPS_URL(pipelineName, limit, order, cursor), token);
 
     if (!res.success) return res;
 
-    const groups = (res.response as PipelineGroupsResponse | null)?.groups;
-    return Array.isArray(groups) ? { ...res, response: groups } : { ...res, success: false };
+    const page = res.response as Partial<PipelineGroupsPage> | null;
+    if (!Array.isArray(page?.groups)) return { ...res, success: false };
+
+    // Normalised rather than trusted, as the failures listing is: a runner predating paging answers `{groups}` alone,
+    // and `has_more` false then ends the walk after the one page it served.
+    return {
+      ...res,
+      response: {
+        groups: page.groups,
+        next_cursor: page.next_cursor ?? null,
+        has_more: page.has_more ?? false,
+        total: typeof page.total === 'number' ? page.total : page.groups.length,
+      },
+    };
   }
 
   // Answers 202 with no body: the evaluation is queued, and its result is never reported here.

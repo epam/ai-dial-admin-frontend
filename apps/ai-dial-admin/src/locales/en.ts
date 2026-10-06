@@ -3116,10 +3116,17 @@ export default {
     GroupsStateAll: 'All states',
     GroupsNoMatch: 'No groups match the filters.',
     GroupsEmpty: 'The runner holds no groups for this pipeline.',
-    GroupsWindowFull: 'Showing the {count} groups with the oldest activity. Newer groups are not listed.',
+    'GroupsTotal#one': '1 group',
+    'GroupsTotal#other': '{count} groups',
+    'GroupsLoadedOnly#one':
+      'Search and filter cover the 1 group loaded so far. Clear them and scroll down to load more.',
+    'GroupsLoadedOnly#other':
+      'Search and filter cover the {count} groups loaded so far. Clear them and scroll down to load more.',
     GroupsReadFailed: 'Couldn’t load groups',
     GroupsReadAgain: 'Retry loading',
     GroupsQueue: 'Queue evaluation',
+    GroupsQueueUnaddressable:
+      'This key cannot be sent to the runner: it holds a sequence the runner refuses in a request path, such as // or a . segment.',
     GroupsQueueAtCap: 'Daily limit reached. Resets at 00:00 UTC, in {remaining}.',
     GroupsQueueTitle: 'Queue an evaluation for this group?',
     GroupsQueueWaiting: 'The group is evaluated without waiting for its triggers:',

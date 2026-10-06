@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PipelineGroups from '@/src/components/Analytics/Pipelines/Groups/PipelineGroups';
 import { GroupRow } from '@/src/components/Analytics/Pipelines/Groups/GroupsGrid';
 import { groupMock, HOUR, isoAgo } from '@/src/components/Analytics/Pipelines/Groups/tests/mock';
-import { GROUPS_LIMIT } from '@/src/constants/analytics/pipeline-groups';
+import { GROUPS_PAGE_SIZE } from '@/src/constants/analytics/pipeline-groups';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { Pipeline, PipelineKind, TriggerKind } from '@/src/models/analytics/pipeline';
-import { PipelineGroup } from '@/src/models/analytics/pipeline-groups';
+import { GroupListOrder, PipelineGroup } from '@/src/models/analytics/pipeline-groups';
 
 const { getPipelineGroups, queueGroupEvaluation } = vi.hoisted(() => ({
   getPipelineGroups: vi.fn(),
@@ -51,8 +51,13 @@ const listedKeys = () =>
     .queryAllByRole('listitem')
     .map((item) => item.getAttribute('aria-label'));
 
-const renderTab = async (groups: PipelineGroup[]) => {
-  getPipelineGroups.mockResolvedValue({ success: true, response: groups });
+const page = (groups: PipelineGroup[], hasMore = false, total = groups.length) => ({
+  success: true,
+  response: { groups, next_cursor: hasMore ? 'next' : null, has_more: hasMore, total },
+});
+
+const renderTab = async (groups: PipelineGroup[], hasMore = false, total = groups.length) => {
+  getPipelineGroups.mockResolvedValue(page(groups, hasMore, total));
   render(<PipelineGroups pipeline={pipeline} isPaused={false} isGenerationBehind={false} />);
   await waitFor(() => expect(listedKeys()).toHaveLength(groups.length));
 };
@@ -67,10 +72,30 @@ describe('PipelineGroups', () => {
     vi.clearAllMocks();
   });
 
-  test('reads the whole window the runner serves', async () => {
-    await renderTab([groupMock()]);
+  test('reads the first page newest first and states the runner total', async () => {
+    await renderTab([groupMock()], true, 37);
 
-    expect(getPipelineGroups).toHaveBeenCalledWith('retrieval-quality', GROUPS_LIMIT);
+    expect(getPipelineGroups).toHaveBeenCalledWith('retrieval-quality', GROUPS_PAGE_SIZE, GroupListOrder.Newest);
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.GroupsTotal)).toBeInTheDocument();
+  });
+
+  test('says the search covers the loaded groups only while more pages remain', async () => {
+    const user = userEvent.setup();
+    await renderTab([groupMock({ group_key: 'sess_A' })], true, 37);
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupsLoadedOnly)).toBeNull();
+    await user.type(screen.getByLabelText(AnalyticsPipelinesI18nKey.GroupsSearch), 'sess');
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.GroupsLoadedOnly)).toBeInTheDocument();
+  });
+
+  test('says nothing about loaded groups once every page is loaded', async () => {
+    const user = userEvent.setup();
+    await renderTab([groupMock({ group_key: 'sess_A' })]);
+
+    await user.type(screen.getByLabelText(AnalyticsPipelinesI18nKey.GroupsSearch), 'sess');
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.GroupsLoadedOnly)).toBeNull();
   });
 
   test('narrows the rows by key, ignoring case, without a request', async () => {
@@ -95,12 +120,6 @@ describe('PipelineGroups', () => {
     await user.click(screen.getByRole('option', { name: AnalyticsPipelinesI18nKey.GroupStateUpToDate }));
 
     expect(listedKeys()).toEqual(['other']);
-  });
-
-  test('says when the window is full', async () => {
-    await renderTab(Array.from({ length: GROUPS_LIMIT }, (_, i) => groupMock({ group_key: `sess_${i}` })));
-
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.GroupsWindowFull)).toBeInTheDocument();
   });
 
   test('states a failed read in place of the grid and reads again', async () => {

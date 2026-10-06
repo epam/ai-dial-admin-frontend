@@ -23,6 +23,19 @@ export interface PipelineGroup {
   dirty: boolean;
 }
 
-export interface PipelineGroupsResponse {
+/** Which end of a pipeline's groups the listing starts from, by `last_activity_at`. */
+export enum GroupListOrder {
+  Newest = 'newest',
+  Oldest = 'oldest',
+}
+
+/**
+ * One page of the listing. `total` is the pipeline's group count, read on the page's own snapshot and never narrowed
+ * by the cursor; `next_cursor` is passed back opaquely and is null on the last page.
+ */
+export interface PipelineGroupsPage {
   groups: PipelineGroup[];
+  next_cursor: string | null;
+  has_more: boolean;
+  total: number;
 }

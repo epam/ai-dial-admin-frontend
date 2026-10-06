@@ -4177,7 +4177,7 @@ difference immediately after a save is the ordinary case and resolves without in
 
 A group-trigger pipeline evaluates whole groups — every row sharing its `group_by` key — and the enrichment
 runner keeps one state record per group it is tracking. The runner serves that state at
-`GET /v1/pipelines/{name}/groups?limit=` (at most 500 groups, oldest activity first, no cursor) and answers
+`GET /v1/pipelines/{name}/groups` (paged by cursor, as "A pipeline's groups are listed in a grid" states) and answers
 404 both for a pipeline it does not hold and for a pipeline that is not a group pipeline.
 
 The **Groups** tab SHALL be offered only when **all** of these hold:
@@ -4283,15 +4283,27 @@ The summary SHALL describe the declaration as saved, not a pending edit of it.
 
 ### Requirement: A pipeline's groups are listed in a grid
 
-Beneath the readiness summary the Groups tab SHALL list the pipeline's groups in a grid, read in **one** request
-of 500 groups — the most the runner serves. The runner's listing has no cursor and always starts from the oldest
-activity, so there is nothing further to page to; a larger window needs a change on the runner.
+Beneath the readiness summary the Groups tab SHALL list the pipeline's groups in a grid, read **page by page**.
+The runner pages the listing by an opaque cursor over `(last_activity_at, group_key)`, in one of two orders, and
+every page carries `total`, the pipeline's group count, which the cursor never narrows.
+
+- The first page SHALL be read when the tab opens, at 100 groups a page.
+- The next page SHALL be read when the grid is scrolled to within a few rows of its end, while the runner reports
+  more. There SHALL be no "load more" control: a grid that pages on scroll needs none.
+- A cursor the runner refuses (`invalid_cursor`) SHALL restart the walk from the first page rather than surface as
+  an error: the console never edits a cursor, so a refusal means the listing changed under it.
+- Above the grid the tab SHALL state **`total`**, read from the first page, as the number of groups the pipeline
+  has. It is the runner's count, not the rows loaded.
 
 The grid SHALL carry these columns, each with a real header name:
 
 - **Group key** — the group's `group_key`, truncated with its full value reachable;
 - **State** — the group's state, as "Each group's state is derived from the runner's facts" defines it;
-- **Last activity** — `last_activity_at`;
+- **Last activity** — `last_activity_at`. Its header SHALL be the **sort control**: activating it switches between
+  newest first and oldest first, the direction stated by an arrow and by `aria-sort`, and restarts the walk from
+  the first page in the new order. **Newest first** SHALL be the initial order — the groups an operator usually
+  asks about. No other column SHALL sort: the runner orders by activity alone, and a client sort over the loaded
+  pages would misstate the order of the groups not yet read;
 - **Last evaluated** — `computed_at`, or `Never` when the group has not been evaluated;
 - **Evaluations today** — the group's evaluations for the current UTC day, as `used / ceiling` when the pipeline
   declares a `cost_ceiling` and as a bare count when it does not. A count the runner recorded against an earlier
@@ -4299,16 +4311,17 @@ The grid SHALL carry these columns, each with a real header name:
   a schedule. A group whose count has reached its ceiling SHALL have the cell highlighted with the warning colour;
 - **an action column** — the group's evaluation control, as "A group can be queued for evaluation" states it.
 
-Rows SHALL be presented in the runner's order, oldest activity first.
-
 Above the grid the tab SHALL offer a **search by group key** — a case-insensitive substring match — and a
-**filter by state**, with `All` and each of the four states. Both SHALL narrow the rows already read and SHALL
-NOT issue a request. The tab SHALL NOT state a row count.
+**filter by state**, with `All` and each of the four states. The runner serves neither, so both SHALL narrow the
+rows already loaded and SHALL NOT issue a request, and the tab SHALL say so beside them while either is in force
+and more pages remain. Pages are read by scrolling, which a narrowed grid may not allow, so the note SHALL tell the
+reader to clear the search and filter to load more.
 
-When the read returns the full 500, a note beneath the grid SHALL state that the oldest 500 groups are shown and
-newer groups are not listed. With the window full, the newest groups — the ones an operator just saw arrive — are
-exactly the ones missing, and the search cannot find them; without the note that absence reads as the group not
-existing.
+A read after Queue evaluation SHALL restart the walk from the first page: the outcome concerns one group, and a
+walk resumed from an old cursor would mix pages read before and after the change it reports.
+
+A next page that fails SHALL end the walk rather than be asked for again on every scroll; reading again starts it
+over.
 
 A read that fails SHALL be stated in place of the grid with the service's own message, and SHALL offer reading
 again. A read that returns no groups — every group evicted since the page loaded — SHALL state that the runner
@@ -4348,9 +4361,12 @@ holds no groups for the pipeline.
 
 #### Scenario: A full window says newer groups are not listed
 
-- **GIVEN** a group read that returns 500 groups
+The 500-group window this scenario described is gone; it is kept under its name so the change states what replaced it.
+
+- **GIVEN** a pipeline with more groups than one page holds
 - **WHEN** the grid is rendered
-- **THEN** a note states that the oldest 500 groups are shown and newer groups are not listed
+- **THEN** no note about a window of groups is presented
+- **AND** the groups past the first page are reached by scrolling
 
 #### Scenario: A failed read is stated in place of the grid
 
@@ -4358,6 +4374,39 @@ holds no groups for the pipeline.
 - **WHEN** the Groups tab is opened
 - **THEN** the service's message is stated where the grid would be
 - **AND** a control to read again is offered
+
+#### Scenario: The first page is newest first, with the pipeline's total
+
+- **WHEN** the Groups tab is opened
+- **THEN** the first page is read newest first, 100 groups at most
+- **AND** the tab states the `total` the runner reported
+
+#### Scenario: Scrolling to the end reads the next page
+
+- **GIVEN** a first page after which the runner reports more groups
+- **WHEN** the grid is scrolled to within a few rows of its end
+- **THEN** the next page is read with the runner's cursor and appended
+- **AND** no "load more" control is presented
+
+#### Scenario: The activity header switches the order
+
+- **GIVEN** the grid newest first
+- **WHEN** the user activates the `Last activity` header
+- **THEN** the walk restarts from the first page, oldest first
+- **AND** the header states the ascending order
+
+#### Scenario: A refused cursor restarts the walk
+
+- **GIVEN** a next-page read the runner refuses with `invalid_cursor`
+- **WHEN** it answers
+- **THEN** the first page is read again in the current order
+- **AND** no error is presented
+
+#### Scenario: The search says it covers the loaded groups only
+
+- **GIVEN** a first page after which the runner reports more groups
+- **WHEN** the user types in the search
+- **THEN** the tab states that the search covers the groups loaded so far
 
 ### Requirement: Each group's state is derived from the runner's facts
 
@@ -4489,6 +4538,13 @@ The action column SHALL offer a **Queue evaluation** control per row, by state:
 - **any group whose evaluations today have reached the ceiling** — held back the same way, an `Up to date` one
   included. Only a dirty group can be `At cap`, yet re-evaluating a clean group is charged like any other.
 - **Ready** — not offered: the runner takes the group on its next pass.
+- **any group whose key the runner cannot be addressed by** — presented but not operable, staying focusable, with
+  a tooltip stating that the key cannot be sent to the runner. The key travels as one path segment, and the
+  runner's request firewall or servlet container refuses some keys before routing however they are encoded: the
+  empty key, `.` and `..`; a key with a `.` or `..` segment between slashes (`a/../b`, `./a`, `a/.`); a key
+  containing `//`, `%`, `;` or `\`; a key containing a line feed, a carriage return, U+2028 or U+2029. Offering
+  the control would end in a refusal — reported as a `401` under OIDC, which names the wrong cause. A `/`
+  elsewhere in a key is addressable, sent as `%2F`.
 
 The control SHALL open a confirmation dialog, which SHALL state:
 
@@ -4544,6 +4600,19 @@ longer tracked.
 - **GIVEN** an up-to-date group whose evaluations today equal its pipeline's `cost_ceiling`
 - **WHEN** the grid is rendered
 - **THEN** its `Queue evaluation` control does not operate and states that the daily limit is reached
+
+#### Scenario: A key the runner cannot be addressed by is held back
+
+- **GIVEN** a waiting group whose key is `a/../b`
+- **WHEN** the user focuses its `Queue evaluation` control
+- **THEN** the control does not operate
+- **AND** a tooltip states that the key cannot be sent to the runner
+
+#### Scenario: A key with a slash is queued
+
+- **GIVEN** a waiting group whose key is `team/a`
+- **WHEN** the user confirms its evaluation
+- **THEN** the request addresses the group with the key encoded as `team%2Fa`
 
 #### Scenario: A ready group offers no control
 
