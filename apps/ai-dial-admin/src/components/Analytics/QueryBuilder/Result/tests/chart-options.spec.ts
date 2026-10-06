@@ -10,9 +10,10 @@ import {
   getNumericColumns,
   getStrictNumericColumns,
 } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
-import { CHART_COLOR } from '@/src/components/Common/MetricCard/constants';
+import { getChartColors } from '@/src/components/Common/MetricCard/utils';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
 import { ChartType } from '@/src/models/analytics/query-builder';
+import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 
 const ROWS = [
   { deployment: 'gpt-4o', total: 120 },
@@ -20,21 +21,23 @@ const ROWS = [
   { deployment: 'gemini', total: null },
 ];
 
-const CONTEXT = { dimensionColumns: ['deployment'], otherLabel: 'Other', columnLabels: {} };
+const COLORS = getChartColors(fallbackDarkTheme);
+
+const CONTEXT = { colors: COLORS, dimensionColumns: ['deployment'], otherLabel: 'Other', columnLabels: {} };
 
 describe('QueryBuilder :: chart-options', () => {
   test('bar options map x categories and numeric y values', () => {
-    const options = buildBarChartOptions(ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
     expect(options.xAxis.data).toEqual(['gpt-4o', 'claude', 'gemini']);
     expect(options.series).toEqual([
-      { type: 'bar', data: [120, 80, null], barMaxWidth: 48, itemStyle: { color: CHART_COLOR.accent } },
+      { type: 'bar', data: [120, 80, null], barMaxWidth: 48, itemStyle: { color: COLORS.accent } },
     ]);
     expect(options.yAxis.name).toBe('total');
-    expect(options.color).toBe(CHART_COLOR.accent);
+    expect(options.color).toBe(COLORS.accent);
   });
 
   test('line options build a smooth line series without area fill', () => {
-    const options = buildLineChartOptions(ROWS, 'deployment', 'total');
+    const options = buildLineChartOptions(COLORS, ROWS, 'deployment', 'total');
     expect(options.series[0].type).toBe('line');
     expect(options.series[0].smooth).toBe(true);
     expect(options.series[0].areaStyle).toBeUndefined();
@@ -42,13 +45,13 @@ describe('QueryBuilder :: chart-options', () => {
 
   test('object x values are stringified and non-numeric y values become null', () => {
     const rows = [{ key: { a: 1 }, total: 'not-a-number' }];
-    const options = buildBarChartOptions(rows, 'key', 'total');
+    const options = buildBarChartOptions(COLORS, rows, 'key', 'total');
     expect(options.xAxis.data).toEqual(['{"a":1}']);
     expect(options.series[0].data).toEqual([null]);
   });
 
   test('empty rows build empty axes and series data', () => {
-    const options = buildBarChartOptions([], 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, [], 'deployment', 'total');
     expect(options.xAxis.data).toEqual([]);
     expect(options.series[0].data).toEqual([]);
   });
@@ -59,7 +62,7 @@ describe('QueryBuilder :: chart-options', () => {
       { bucket: '2026-07-12T00:00:00Z', cnt: 1 },
       { bucket: '2026-07-12T10:00:00Z', cnt: 2 },
     ];
-    const options = buildBarChartOptions(rows, 'bucket', 'cnt');
+    const options = buildBarChartOptions(COLORS, rows, 'bucket', 'cnt');
     expect(options.xAxis.data).toEqual(['2026-07-12T00:00:00Z', '2026-07-12T10:00:00Z', '2026-07-13T08:00:00Z']);
     expect(options.series[0].data).toEqual([1, 2, 3]);
   });
@@ -70,18 +73,18 @@ describe('QueryBuilder :: chart-options', () => {
       { code: '41', cnt: 7 },
       { code: 100, cnt: 6 },
     ];
-    const options = buildBarChartOptions(rows, 'code', 'cnt');
+    const options = buildBarChartOptions(COLORS, rows, 'code', 'cnt');
     expect(options.xAxis.data).toEqual(['41', '100', '200']);
     expect(options.series[0].data).toEqual([7, 6, 5]);
   });
 
   test('plain-text x values keep the query row order', () => {
-    const options = buildBarChartOptions(ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
     expect(options.xAxis.data).toEqual(['gpt-4o', 'claude', 'gemini']);
   });
 
   test('x labels are truncated to a fixed width, keeping the axis readable for long values', () => {
-    const options = buildBarChartOptions(ROWS, 'deployment', 'total');
+    const options = buildBarChartOptions(COLORS, ROWS, 'deployment', 'total');
     expect(options.xAxis.axisLabel).toMatchObject({ width: 120, overflow: 'truncate' });
   });
 
@@ -137,7 +140,7 @@ describe('QueryBuilder :: chart-options', () => {
 
   describe('pie', () => {
     test('pie options bucket slices and cycle the shared series palette', () => {
-      const options = buildPieChartOptions(ROWS, 'deployment', 'total', 'Other');
+      const options = buildPieChartOptions(COLORS, ROWS, 'deployment', 'total', 'Other');
       expect(options.series[0].type).toBe('pie');
       expect(options.series[0].data[0]).toEqual({ name: 'gpt-4o', value: 120 });
       expect(options.color).toBe(CHART_SERIES_COLOR_CYCLE);
@@ -152,7 +155,7 @@ describe('QueryBuilder :: chart-options', () => {
     ];
 
     test('plots one point per row in query row order, named by the dimension values', () => {
-      const options = buildScatterChartOptions(rows, 'count', 'tokens', ['model']);
+      const options = buildScatterChartOptions(COLORS, rows, 'count', 'tokens', ['model']);
       expect(options.series[0].type).toBe('scatter');
       expect(options.series[0].data).toEqual([
         { name: 'gpt-4o', value: [3, 900] },
@@ -165,7 +168,7 @@ describe('QueryBuilder :: chart-options', () => {
 
     test('rows with a missing coordinate are dropped', () => {
       const withGap = [...rows, { model: 'gemini', count: null, tokens: 100 }];
-      const options = buildScatterChartOptions(withGap, 'count', 'tokens', ['model']);
+      const options = buildScatterChartOptions(COLORS, withGap, 'count', 'tokens', ['model']);
       expect(options.series[0].data).toHaveLength(2);
     });
 
@@ -174,7 +177,7 @@ describe('QueryBuilder :: chart-options', () => {
         { day: '2026-07-02', cnt: 2 },
         { day: '2026-07-01', cnt: 1 },
       ];
-      const options = buildScatterChartOptions(dated, 'day', 'cnt', []);
+      const options = buildScatterChartOptions(COLORS, dated, 'day', 'cnt', []);
       expect(options.xAxis.type).toBe('time');
       expect(options.series[0].data.map((d: { value: unknown[] }) => d.value[0])).toEqual(['2026-07-02', '2026-07-01']);
     });

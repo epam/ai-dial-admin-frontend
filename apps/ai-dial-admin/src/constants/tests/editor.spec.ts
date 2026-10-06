@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { getDiffEditorTheme, EDITOR_THEMES_CONFIG } from '../editor';
 import { EDITOR_THEMES } from '@/src/types/editor';
-import { fallbackDarkTheme } from '@/src/utils/themes/constant';
+import { fallbackDarkTheme, fallbackLightTheme } from '@/src/utils/themes/constant';
 import { JSONATA_MONARCH_TOKENS } from '@/src/components/Common/JsonataEditor/constants';
 
 const collectJsonataTokenNames = (): string[] => {
@@ -33,7 +33,7 @@ describe('getDiffEditorTheme', () => {
   test('returns light theme config with overridden background', () => {
     const theme = getDiffEditorTheme(EDITOR_THEMES.light);
     expect(theme.base).toBe('vs');
-    expect(theme.colors['editor.background']).toBe('#FCFCFC');
+    expect(theme.colors['editor.background']).toBe(fallbackLightTheme['bg-layer-2']);
   });
 });
 
@@ -41,6 +41,16 @@ describe('EDITOR_THEMES_CONFIG', () => {
   test('contains dark, light, and light-orange configs', () => {
     expect(EDITOR_THEMES_CONFIG[EDITOR_THEMES.dark]).toBeDefined();
     expect(EDITOR_THEMES_CONFIG[EDITOR_THEMES.light]).toBeDefined();
+  });
+
+  test.each([
+    [EDITOR_THEMES.dark, fallbackDarkTheme],
+    [EDITOR_THEMES.light, fallbackLightTheme],
+  ])('%s theme reads its own palette', (theme, palette) => {
+    const { colors, rules } = EDITOR_THEMES_CONFIG[theme];
+    expect(colors['editor.foreground']).toBe(palette['text-primary']);
+    expect(colors['diffEditor.insertedTextBackground']).toBe(palette['bg-success']);
+    expect(rules.find((rule) => rule.token === 'string.key.json')?.foreground).toBe(palette['text-accent-secondary']);
   });
 });
 

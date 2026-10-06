@@ -8,7 +8,6 @@ import {
   TEST_CASE_EVAL_SCORES_ENTITY,
   VALUE_FIELD,
 } from '@/src/components/Runs/Summary/constants';
-import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 
 export {
   METRIC_NAME_FIELD,
@@ -38,15 +37,6 @@ export const TRENDS_STABILITY_ROW_LIMIT = 200;
 
 /** CSS class on the Overall Score Trend sticky tooltip (outside-click dismiss). */
 export const OVERALL_SCORE_TREND_TOOLTIP_CLASS = 'overall-score-trend-tooltip';
-
-/** Overall Score Trend line and passed-run marker. */
-export const TREND_OVERALL_PASSED_COLOR = fallbackDarkTheme['text-accent-primary'];
-
-/** Failed-run marker on Overall Score Trend (text-error fallback). */
-export const TREND_OVERALL_FAILED_COLOR = fallbackDarkTheme['text-error'];
-
-/** Horizontal grid lines on Overall Score Trend (Figma Line 7 / Line 12). */
-export const TREND_OVERALL_GRID_LINE_COLOR = fallbackDarkTheme['bg-layer-1'];
 
 /** Marker diameter for Overall Score Trend run dots (Figma 8px). */
 export const TREND_OVERALL_SYMBOL_SIZE = 8;

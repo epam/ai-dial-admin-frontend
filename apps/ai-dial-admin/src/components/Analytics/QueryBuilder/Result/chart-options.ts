@@ -1,9 +1,9 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { CHART_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
+import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { ChartBuildContext, ChartType, PieSlice } from '@/src/models/analytics/query-builder';
 
 type ResultRows = Array<Record<string, unknown>>;
@@ -68,39 +68,40 @@ export const bucketTopSlices = (
   return [...slices.slice(0, maxSlices), { name: otherLabel, value: other }];
 };
 
-const TOOLTIP_STYLE = {
+const tooltipStyle = (colors: ChartColors) => ({
   backgroundColor: 'var(--bg-control-neutral, #1B212D)',
   borderColor: 'var(--bg-control-neutral, #1B212D)',
   borderWidth: 1,
   padding: [8, 12],
-  textStyle: { color: CHART_COLOR.value, fontSize: 12 },
-};
+  textStyle: { color: colors.value, fontSize: 12 },
+});
 
-const baseOptions = (xData: string[], yField: string): EChartsOption => ({
+const baseOptions = (colors: ChartColors, xData: string[], yField: string): EChartsOption => ({
   title: { show: false },
-  tooltip: { trigger: 'axis', ...TOOLTIP_STYLE },
+  tooltip: { trigger: 'axis', ...tooltipStyle(colors) },
   xAxis: {
     type: 'category',
     data: xData,
-    splitLine: { show: true, lineStyle: { color: CHART_COLOR.track, width: 1 } },
+    splitLine: { show: true, lineStyle: { color: colors.track, width: 1 } },
     axisLine: { show: false },
     axisTick: { show: false },
     // Long category values (resource paths, prompts…) get clipped to a fixed label width — the
     // tooltip still carries the full value.
-    axisLabel: { color: CHART_COLOR.neutral, width: 120, overflow: 'truncate', hideOverlap: true },
+    axisLabel: { color: colors.neutral, width: 120, overflow: 'truncate', hideOverlap: true },
   },
   yAxis: {
     type: 'value',
     name: yField,
-    nameTextStyle: { color: CHART_COLOR.neutral, fontSize: 12, fontWeight: 500 },
-    axisLabel: { color: CHART_COLOR.neutral },
-    splitLine: { show: true, lineStyle: { color: CHART_COLOR.track, width: 1 } },
+    nameTextStyle: { color: colors.neutral, fontSize: 12, fontWeight: 500 },
+    axisLabel: { color: colors.neutral },
+    splitLine: { show: true, lineStyle: { color: colors.track, width: 1 } },
   },
   grid: { left: 40, right: 8, bottom: 24, top: 32, borderColor: '' },
-  color: CHART_COLOR.accent,
+  color: colors.accent,
 });
 
 const buildCartesianOptions = (
+  colors: ChartColors,
   type: ChartType,
   rows: ResultRows,
   xField: string,
@@ -110,10 +111,10 @@ const buildCartesianOptions = (
   const ordered = sortRowsByX(rows, xField);
   const xData = ordered.map((row) => renderCell(row[xField]));
   const yData = ordered.map((row) => toNumber(row[yField]));
-  const options = baseOptions(xData, yLabel);
+  const options = baseOptions(colors, xData, yLabel);
 
   if (type === ChartType.Bar) {
-    options.series = [{ type: 'bar', data: yData, barMaxWidth: 48, itemStyle: { color: CHART_COLOR.accent } }];
+    options.series = [{ type: 'bar', data: yData, barMaxWidth: 48, itemStyle: { color: colors.accent } }];
     return options;
   }
 
@@ -121,26 +122,35 @@ const buildCartesianOptions = (
   return options;
 };
 
-export const buildBarChartOptions = (rows: ResultRows, xField: string, yField: string): EChartsOption =>
-  buildCartesianOptions(ChartType.Bar, rows, xField, yField);
+export const buildBarChartOptions = (
+  colors: ChartColors,
+  rows: ResultRows,
+  xField: string,
+  yField: string,
+): EChartsOption => buildCartesianOptions(colors, ChartType.Bar, rows, xField, yField);
 
-export const buildLineChartOptions = (rows: ResultRows, xField: string, yField: string): EChartsOption =>
-  buildCartesianOptions(ChartType.Line, rows, xField, yField);
+export const buildLineChartOptions = (
+  colors: ChartColors,
+  rows: ResultRows,
+  xField: string,
+  yField: string,
+): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yField);
 
 export const buildPieChartOptions = (
+  colors: ChartColors,
   rows: ResultRows,
   categoryField: string,
   valueField: string,
   otherLabel: string,
 ): EChartsOption => ({
   title: { show: false },
-  tooltip: { trigger: 'item', ...TOOLTIP_STYLE },
+  tooltip: { trigger: 'item', ...tooltipStyle(colors) },
   series: [
     {
       type: 'pie',
       radius: '70%',
       data: bucketTopSlices(rows, categoryField, valueField, otherLabel),
-      label: { color: CHART_COLOR.neutral },
+      label: { color: colors.neutral },
     },
   ],
   color: CHART_SERIES_COLOR_CYCLE,
@@ -151,17 +161,18 @@ export const buildPieChartOptions = (
 const scatterAxisType = (rows: ResultRows, field: string): 'value' | 'time' =>
   rows.every((row) => toNumber(row[field]) !== null) ? 'value' : 'time';
 
-const scatterAxis = (type: 'value' | 'time', name: string) => ({
+const scatterAxis = (colors: ChartColors, type: 'value' | 'time', name: string) => ({
   type,
   name,
-  nameTextStyle: { color: CHART_COLOR.neutral, fontSize: 12, fontWeight: 500 },
+  nameTextStyle: { color: colors.neutral, fontSize: 12, fontWeight: 500 },
   axisLine: { show: false },
   axisTick: { show: false },
-  axisLabel: { color: CHART_COLOR.neutral, hideOverlap: true },
-  splitLine: { show: true, lineStyle: { color: CHART_COLOR.track, width: 1 } },
+  axisLabel: { color: colors.neutral, hideOverlap: true },
+  splitLine: { show: true, lineStyle: { color: colors.track, width: 1 } },
 });
 
 export const buildScatterChartOptions = (
+  colors: ChartColors,
   rows: ResultRows,
   xField: string,
   yField: string,
@@ -186,16 +197,16 @@ export const buildScatterChartOptions = (
     title: { show: false },
     tooltip: {
       trigger: 'item',
-      ...TOOLTIP_STYLE,
+      ...tooltipStyle(colors),
       formatter: (params: { name?: string; value: unknown[] }) => {
         const head = params.name ? `${params.name}<br/>` : '';
         return `${head}${xLabel}: ${renderCell(params.value[0])}<br/>${yLabel}: ${renderCell(params.value[1])}`;
       },
     },
-    xAxis: scatterAxis(xType, xLabel),
-    yAxis: scatterAxis(yType, yLabel),
+    xAxis: scatterAxis(colors, xType, xLabel),
+    yAxis: scatterAxis(colors, yType, yLabel),
     grid: { left: 40, right: 24, bottom: 24, top: 32, borderColor: '' },
-    series: [{ type: 'scatter', data: points, symbolSize: 10, itemStyle: { color: CHART_COLOR.accent } }],
+    series: [{ type: 'scatter', data: points, symbolSize: 10, itemStyle: { color: colors.accent } }],
   };
 };
 
@@ -207,9 +218,17 @@ export const buildChartOptions = (
   context: ChartBuildContext,
 ): EChartsOption => {
   const label = (column: string): string => context.columnLabels[column] ?? column;
-  if (type === ChartType.Pie) return buildPieChartOptions(rows, xField, yField, context.otherLabel);
+  if (type === ChartType.Pie) return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel);
   if (type === ChartType.Scatter) {
-    return buildScatterChartOptions(rows, xField, yField, context.dimensionColumns, label(xField), label(yField));
+    return buildScatterChartOptions(
+      context.colors,
+      rows,
+      xField,
+      yField,
+      context.dimensionColumns,
+      label(xField),
+      label(yField),
+    );
   }
-  return buildCartesianOptions(type, rows, xField, yField, label(yField));
+  return buildCartesianOptions(context.colors, type, rows, xField, yField, label(yField));
 };

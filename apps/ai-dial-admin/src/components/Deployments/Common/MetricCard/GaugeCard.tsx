@@ -2,8 +2,9 @@ import ReactECharts from 'echarts-for-react';
 import { FC, useMemo } from 'react';
 
 import MetricCardShell from '@/src/components/Common/MetricCard/MetricCardShell';
-import { CHART_COLOR, STATUS_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { MetricStatus } from '@/src/components/Common/MetricCard/models';
+import { getStatusColor } from '@/src/components/Common/MetricCard/utils';
+import { useChartColors } from '@/src/hooks/use-chart-colors';
 
 interface Props {
   title: string;
@@ -16,14 +17,15 @@ interface Props {
 }
 
 const GaugeCard: FC<Props> = ({ title, value, loading, status = MetricStatus.Neutral, emptyReason, thresholds }) => {
+  const colors = useChartColors();
   const option = useMemo(() => {
     const zones = thresholds
       ? [
-          [thresholds.warn, CHART_COLOR.success],
-          [thresholds.crit, CHART_COLOR.warning],
-          [1, CHART_COLOR.error],
+          [thresholds.warn, colors.success],
+          [thresholds.crit, colors.warning],
+          [1, colors.error],
         ]
-      : [[1, CHART_COLOR.track]];
+      : [[1, colors.track]];
 
     return {
       series: [
@@ -38,24 +40,24 @@ const GaugeCard: FC<Props> = ({ title, value, loading, status = MetricStatus.Neu
           progress: { show: false },
           axisLine: { lineStyle: { width: 8, color: zones } },
           // Needle marks where the current value sits against the colored zones.
-          pointer: { show: true, length: '62%', width: 4, itemStyle: { color: CHART_COLOR.value } },
+          pointer: { show: true, length: '62%', width: 4, itemStyle: { color: colors.value } },
           axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { show: false },
-          anchor: { show: true, size: 8, itemStyle: { color: CHART_COLOR.value } },
+          anchor: { show: true, size: 8, itemStyle: { color: colors.value } },
           title: { show: false },
           detail: {
             formatter: (v: number) => `${Math.round(v * 100)}%`,
             fontSize: 24,
             fontWeight: 600,
-            color: STATUS_COLOR[status],
+            color: getStatusColor(colors, status),
             offsetCenter: [0, '38%'],
           },
           data: [{ value: value ?? 0 }],
         },
       ],
     };
-  }, [value, status, thresholds]);
+  }, [value, status, thresholds, colors]);
 
   return (
     <MetricCardShell title={title} loading={loading} isEmpty={value === null} emptyReason={emptyReason} status={status}>

@@ -2,9 +2,6 @@ import { EChartsOption } from 'echarts-for-react';
 
 import {
   OVERALL_SCORE_TREND_TOOLTIP_CLASS,
-  TREND_OVERALL_FAILED_COLOR,
-  TREND_OVERALL_GRID_LINE_COLOR,
-  TREND_OVERALL_PASSED_COLOR,
   TREND_OVERALL_SYMBOL_SIZE,
 } from '@/src/components/TestSuites/Trends/constants';
 import { MetricTrendSeries, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
@@ -14,16 +11,15 @@ import {
   formatTrendAxisDate,
   formatTrendTooltipDate,
 } from '@/src/components/TestSuites/Trends/utils/format';
+import { ThemePalette } from '@/src/models/theme';
 import { ApplicationRoute } from '@/src/types/routes';
-import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
-// The tooltip is a DOM node and resolves the theme's variables; the axes are painted on the canvas
-// and need the palette's concrete values.
+// The tooltip is a DOM node and resolves the theme's variables; the axes and series are painted on the
+// canvas and take the palette's concrete values.
 const TOOLTIP_BACKGROUND = 'color-mix(in srgb, var(--bg-layer-base, #10151E) 90%, transparent)';
 const TOOLTIP_TEXT_PRIMARY = 'var(--text-primary, #FCFCFC)';
 const TOOLTIP_TEXT_SECONDARY = 'var(--text-secondary, #ACB3C3)';
-const AXIS_COLOR = fallbackDarkTheme['text-secondary'];
 
 interface OverallChartLabels {
   date: string;
@@ -137,9 +133,12 @@ export const resolveCategoryDataIndexFromPixel = (
 };
 
 export const buildOverallScoreChartOptions = (
+  palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   labels: OverallChartLabels,
 ): EChartsOption => {
+  const passedColor = palette['text-accent-primary'];
+  const axisColor = palette['text-secondary'];
   const categories = runOrder.map((point) => formatTrendAxisDate(point.computedAtMs));
   const centeredCategories = buildCenteredTimelineLabels(categories);
 
@@ -147,7 +146,7 @@ export const buildOverallScoreChartOptions = (
     if (point.overallScore == null) {
       return null;
     }
-    const color = point.isFailed ? TREND_OVERALL_FAILED_COLOR : TREND_OVERALL_PASSED_COLOR;
+    const color = point.isFailed ? palette['text-error'] : passedColor;
     return {
       value: point.overallScore,
       itemStyle: { color, borderColor: color },
@@ -173,7 +172,7 @@ export const buildOverallScoreChartOptions = (
       axisPointer: {
         type: 'line',
         snap: true,
-        lineStyle: { color: AXIS_COLOR, width: 1 },
+        lineStyle: { color: axisColor, width: 1 },
       },
       position: (
         point: number[],
@@ -224,7 +223,7 @@ export const buildOverallScoreChartOptions = (
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        color: AXIS_COLOR,
+        color: axisColor,
         fontSize: 12,
         formatter: (_value: string, index: number) => centeredCategories[index] ?? '',
       },
@@ -235,8 +234,8 @@ export const buildOverallScoreChartOptions = (
       min: 0,
       max: 1,
       interval: 0.25,
-      axisLabel: { color: AXIS_COLOR, fontSize: 12 },
-      splitLine: { lineStyle: { color: TREND_OVERALL_GRID_LINE_COLOR, width: 1 } },
+      axisLabel: { color: axisColor, fontSize: 12 },
+      splitLine: { lineStyle: { color: palette['bg-layer-1'], width: 1 } },
       axisLine: { show: false },
       axisTick: { show: false },
     },
@@ -248,9 +247,9 @@ export const buildOverallScoreChartOptions = (
         showSymbol: true,
         symbol: 'circle',
         symbolSize: TREND_OVERALL_SYMBOL_SIZE,
-        lineStyle: { color: TREND_OVERALL_PASSED_COLOR, width: 2 },
-        itemStyle: { color: TREND_OVERALL_PASSED_COLOR },
-        areaStyle: { color: TREND_OVERALL_PASSED_COLOR, opacity: 0.2 },
+        lineStyle: { color: passedColor, width: 2 },
+        itemStyle: { color: passedColor },
+        areaStyle: { color: passedColor, opacity: 0.2 },
         connectNulls: false,
       },
     ],
@@ -258,11 +257,13 @@ export const buildOverallScoreChartOptions = (
 };
 
 export const buildMetricTrendChartOptions = (
+  palette: ThemePalette,
   runOrder: TrendsRunPoint[],
   series: MetricTrendSeries[],
   hiddenSeries: Set<string>,
   runLabel: string,
 ): EChartsOption => {
+  const axisColor = palette['text-secondary'];
   const categories = runOrder.map((point) => formatTrendAxisDate(point.computedAtMs));
   const visible = series.filter((item) => !hiddenSeries.has(item.name));
 
@@ -279,7 +280,7 @@ export const buildMetricTrendChartOptions = (
       textStyle: { color: TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
       axisPointer: {
         type: 'line',
-        lineStyle: { color: AXIS_COLOR, width: 1 },
+        lineStyle: { color: axisColor, width: 1 },
       },
       formatter: (params: { seriesName: string; value: number | null; color: string; dataIndex: number }[]) => {
         if (!params.length) {
@@ -333,12 +334,12 @@ export const buildMetricTrendChartOptions = (
       min: 0,
       max: 1,
       interval: 0.25,
-      axisLabel: { show: true, color: AXIS_COLOR, fontSize: 10 },
+      axisLabel: { show: true, color: axisColor, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: {
         show: true,
-        lineStyle: { color: fallbackDarkTheme['bg-layer-4'], width: 1 },
+        lineStyle: { color: palette['bg-layer-4'], width: 1 },
       },
     },
     series: visible.map((item) => ({

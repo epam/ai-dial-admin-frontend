@@ -1,3 +1,4 @@
+import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
@@ -290,6 +291,7 @@ export interface ChartSlotDescriptor {
 // "Other" bucket, scatter labels points by the row's dimension values, and axis titles/tooltips
 // show columns by their display label (see ExecutedQueryMeta.columnLabels).
 export interface ChartBuildContext {
+  colors: ChartColors;
   dimensionColumns: string[];
   otherLabel: string;
   columnLabels: Record<string, string>;

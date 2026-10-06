@@ -1,3 +1,5 @@
+import { ThemePalette } from '@/src/models/theme';
+
 //commented values is old fallback values, let`s keep them until complete full redesign
 export const fallbackDarkTheme = {
   'bg-layer-0': '#1B212D', //000000
@@ -69,6 +71,80 @@ export const fallbackDarkTheme = {
   'controls-text-accent-primary-hover': '#80A1F4', //3664E2
   'controls-text-accent-primary-active': '#80A1F4', //124ACE
   'controls-text-disable': '#2E3647', //575F73
+};
+
+// Derived from the light theme of the default themes config the same way the dark fallback is: each
+// legacy key carries the value of the token `newTokensMap` points it at.
+export const fallbackLightTheme: ThemePalette = {
+  'bg-layer-0': '#FCFCFC',
+  'bg-layer-1': '#F5F7FA',
+  'bg-layer-2': '#FCFCFC',
+  'bg-layer-3': '#EEF1F7',
+  'bg-layer-4': '#E0E6F0',
+  'bg-backdrop': '#161B2D4D',
+  'bg-blackout': '#161B2D4D',
+  'bg-error': '#F3D6D8',
+  'bg-warning': '#FAF0CF',
+  'bg-info': '#E1EAF9',
+  'bg-success': '#DBF1EB',
+  'bg-accent-primary': '#2764D9',
+  'bg-accent-secondary': '#009D9F',
+  'bg-accent-tertiary': '#7E39EC',
+  'bg-accent-primary-alpha': '#2764D90F',
+  'bg-accent-secondary-alpha': '#37BABC2E',
+  'bg-accent-tertiary-alpha': '#A972FF2E',
+  'bg-model-icon': '#FFFFFF',
+  'bg-overlay': '#FCFCFC80',
+  'bg-neutral': '#FCFCFC',
+  'bg-inverted': '#57647A',
+  'text-primary': '#1B212D',
+  'text-secondary': '#57647A',
+  'text-inverted': '#FCFCFC',
+  'text-error': '#AE2F2F',
+  'text-warning': '#7F6300',
+  'text-warning-icon': '#EEC840',
+  'text-info': '#1D4ED8',
+  'text-success': '#007274',
+  'text-accent-primary': '#1D4ED8',
+  'text-accent-secondary': '#007274',
+  'text-accent-tertiary': '#7C3AED',
+  'stroke-primary': '#57647A',
+  'stroke-secondary': '#D1DBEA',
+  'stroke-tertiary': '#E0E6F0',
+  'stroke-error': '#AE2F2F',
+  'stroke-warning': '#EEC840',
+  'stroke-info': '#1D4ED8',
+  'stroke-success': '#007274',
+  'stroke-hover': '#161B2D',
+  'stroke-focus': '#1B212D',
+  'stroke-accent-primary': '#1D4ED8',
+  'stroke-accent-secondary': '#007274',
+  'stroke-accent-tertiary': '#7C3AED',
+  'controls-bg-accent': '#5C8DEA',
+  'controls-bg-accent-hover': '#4878D2',
+  'controls-bg-accent-primary': '#1D4ED8',
+  'controls-bg-accent-primary-hover': '#80A1F4',
+  'controls-bg-accent-primary-active': '#1D4ED8',
+  'controls-bg-accent-primary-alpha-active': '#2764D924',
+  'controls-bg-error': '#AE2F2F',
+  'controls-bg-error-hover': '#BF3939',
+  'controls-bg-error-active': '#CC4545',
+  'controls-bg-error-alpha-hover': '#F7646426',
+  'controls-bg-error-alpha-active': '#F7646433',
+  'controls-bg-disable-accent': '#ACB3C3',
+  'controls-bg-disable': '#DCE0E8',
+  'controls-bg-neutral-hover': '#E0E6F0',
+  'controls-bg-neutral-active': '#D1DBEA',
+  'controls-bg-accent-success-alpha-hover': '#37BABC2E',
+  'controls-bg-accent-success-alpha-active': '#37BABC5C',
+  'controls-text-permanent': '#FCFCFC',
+  'controls-text-accent-disable': '#D1DBEA',
+  'controls-text-primary-disable': '#57647A',
+  'controls-text-secondary-disable': '#848E9C',
+  'controls-text-neutral': '#1B212D',
+  'controls-text-accent-primary-hover': '#5976E9',
+  'controls-text-accent-primary-active': '#6E8AF7',
+  'controls-text-disable': '#D1DBEA',
 };
 
 export const newTokensMap = {

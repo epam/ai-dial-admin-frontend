@@ -1,12 +1,13 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 
-import { CHART_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { BucketPoint } from '@/src/components/Analytics/Usage/models';
 import { GROUPING_LOCALE } from '@/src/components/Analytics/Usage/utils/format';
+import { ChartColors } from '@/src/components/Common/MetricCard/models';
 
-const GRID_LINE_COLOR = 'rgba(238, 241, 247, .07)';
+// The page's text colour at 7%, so the lines stay faint on either theme's background.
+const gridLineColor = (colors: ChartColors): string => `${colors.value}12`;
 
-const axisLabelStyle = { color: CHART_COLOR.neutral, fontSize: 13 };
+const axisLabelStyle = (colors: ChartColors) => ({ color: colors.neutral, fontSize: 13 });
 
 /**
  * The calls and split lines downsample for drawing rather than for fetching; the latency lines do
@@ -35,12 +36,12 @@ export const formatChartNumber = (value: number, maximumFractionDigits = 2): str
 const tooltipValueFormatter = (value: unknown): string =>
   typeof value === 'number' ? formatChartNumber(value, 1) : NO_FIGURE;
 
-const valueAxis = {
+const valueAxis = (colors: ChartColors) => ({
   type: 'value' as const,
   // `hideOverlap` so a short plot drops ticks instead of stacking them into an unreadable block.
-  axisLabel: { ...axisLabelStyle, hideOverlap: true, formatter: (value: number) => formatChartNumber(value) },
-  splitLine: { lineStyle: { color: GRID_LINE_COLOR } },
-};
+  axisLabel: { ...axisLabelStyle(colors), hideOverlap: true, formatter: (value: number) => formatChartNumber(value) },
+  splitLine: { lineStyle: { color: gridLineColor(colors) } },
+});
 
 /**
  * ECharts renders its tooltip as a real DOM node, so the theme's own CSS variables reach it — the
@@ -109,12 +110,13 @@ interface ItemTooltipParam {
 
 const formatTooltipValue = (value: number): string => `<b>${formatChartNumber(value)}</b>`;
 
-const axisPointerStyle = { color: CHART_COLOR.neutral, width: 1, type: 'dashed' as const };
+const axisPointerStyle = (colors: ChartColors) => ({ color: colors.neutral, width: 1, type: 'dashed' as const });
 
 export const LATENCY_P50_COLOR = '#7FCFC4';
 export const LATENCY_P95_COLOR = '#B49BE8';
 
 export const buildTimeSeriesOptions = (
+  colors: ChartColors,
   points: BucketPoint[],
   formatBucket: (bucketMs: number) => string,
   periods?: string[],
@@ -124,15 +126,15 @@ export const buildTimeSeriesOptions = (
     type: 'category',
     data: points.map((point) => formatBucket(point.bucketMs)),
     boundaryGap: false,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisLabel: { ...axisLabelStyle(colors), hideOverlap: true },
+    axisLine: { lineStyle: { color: gridLineColor(colors) } },
     axisTick: { show: false },
   },
-  yAxis: valueAxis,
+  yAxis: valueAxis(colors),
   tooltip: {
     ...TOOLTIP_STYLE,
     trigger: 'axis',
-    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     // A single series needs no colour marker to say which one it is.
     formatter: axisTooltip(periods),
   },
@@ -140,12 +142,12 @@ export const buildTimeSeriesOptions = (
   series: [
     {
       type: 'line',
-      color: CHART_COLOR.accent,
+      color: colors.accent,
       data: points.map((point) => point.measures.calls),
       showSymbol: false,
       sampling: LINE_SAMPLING,
-      lineStyle: { width: 1.5, color: CHART_COLOR.accent },
-      areaStyle: { color: CHART_COLOR.accent, opacity: 0.12 },
+      lineStyle: { width: 1.5, color: colors.accent },
+      areaStyle: { color: colors.accent, opacity: 0.12 },
     },
   ],
 });
@@ -158,6 +160,7 @@ export interface NamedSeries {
 }
 
 export const buildSplitSeriesOptions = (
+  colors: ChartColors,
   labels: string[],
   series: NamedSeries[],
   periods?: string[],
@@ -167,15 +170,15 @@ export const buildSplitSeriesOptions = (
     type: 'category',
     data: labels,
     boundaryGap: false,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisLabel: { ...axisLabelStyle(colors), hideOverlap: true },
+    axisLine: { lineStyle: { color: gridLineColor(colors) } },
     axisTick: { show: false },
   },
-  yAxis: valueAxis,
+  yAxis: valueAxis(colors),
   tooltip: {
     ...TOOLTIP_STYLE,
     trigger: 'axis',
-    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     formatter: axisTooltip(periods, true),
   },
   animation: false,
@@ -201,16 +204,21 @@ export const buildSplitSeriesOptions = (
   })),
 });
 
-export const buildBarOptions = (labels: string[], values: number[], periods?: string[]): EChartsOption => ({
+export const buildBarOptions = (
+  colors: ChartColors,
+  labels: string[],
+  values: number[],
+  periods?: string[],
+): EChartsOption => ({
   grid: { left: 58, right: 8, top: 16, bottom: 32 },
   xAxis: {
     type: 'category',
     data: labels,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisLabel: { ...axisLabelStyle(colors), hideOverlap: true },
+    axisLine: { lineStyle: { color: gridLineColor(colors) } },
     axisTick: { show: false },
   },
-  yAxis: valueAxis,
+  yAxis: valueAxis(colors),
   tooltip: {
     ...TOOLTIP_STYLE,
     trigger: 'axis',
@@ -223,13 +231,14 @@ export const buildBarOptions = (labels: string[], values: number[], periods?: st
       type: 'bar',
       // Every bar the same: they answer one question, and toning one of them made it read as the
       // answer while the rest read as context.
-      itemStyle: { color: CHART_COLOR.accent },
+      itemStyle: { color: colors.accent },
       data: values,
     },
   ],
 });
 
 export const buildLatencyOptions = (
+  colors: ChartColors,
   labels: string[],
   p50: (number | null)[],
   p95: (number | null)[],
@@ -240,15 +249,15 @@ export const buildLatencyOptions = (
     type: 'category',
     data: labels,
     boundaryGap: false,
-    axisLabel: { ...axisLabelStyle, hideOverlap: true },
-    axisLine: { lineStyle: { color: GRID_LINE_COLOR } },
+    axisLabel: { ...axisLabelStyle(colors), hideOverlap: true },
+    axisLine: { lineStyle: { color: gridLineColor(colors) } },
     axisTick: { show: false },
   },
-  yAxis: valueAxis,
+  yAxis: valueAxis(colors),
   tooltip: {
     ...TOOLTIP_STYLE,
     trigger: 'axis',
-    axisPointer: { type: 'line', lineStyle: axisPointerStyle },
+    axisPointer: { type: 'line', lineStyle: axisPointerStyle(colors) },
     formatter: axisTooltip(periods, true),
   },
   animation: false,
@@ -320,10 +329,8 @@ export const SLICE_COLORS = [
   '#C4A66B',
 ];
 
-export const OTHER_SLICE_COLOR = CHART_COLOR.neutral;
-
-export const getSliceColor = (index: number, isOther: boolean): string =>
-  isOther ? OTHER_SLICE_COLOR : SLICE_COLORS[index % SLICE_COLORS.length];
+export const getSliceColor = (colors: ChartColors, index: number, isOther: boolean): string =>
+  isOther ? colors.neutral : SLICE_COLORS[index % SLICE_COLORS.length];
 
 /** How far the slices the cursor is not on fade, so the one it is on reads as the answer. */
 const DONUT_BLUR_OPACITY = 0.25;
