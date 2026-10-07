@@ -14,29 +14,36 @@ import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { ApplicationRoute } from '@/src/types/routes';
-import { createSchemaSource, getSchemaSourceId } from '@/src/utils/entities/application-source';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { resolveAppRunnerScheme } from './resolve-app-runner';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
+import { getRunnerOpenUrl } from './utils';
 
 interface Props {
-  entity: DialApplication;
-  onChange: (entity: DialApplication) => void;
-  label?: string;
+  selectedValue?: string;
+  onChangeValue: (value?: string, application_properties?: Record<string, unknown>) => void;
+  /** Config and Platform runners merged by `buildAppRunnerOptions`. */
   runners?: DialApplicationScheme[];
+  label?: string;
   isEntityImmutable?: boolean;
   disabled?: boolean;
 }
 
-const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmutable = false, disabled }) => {
+const AppRunnersResource: FC<Props> = ({
+  selectedValue,
+  onChangeValue,
+  runners,
+  label,
+  isEntityImmutable = false,
+  disabled,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const currentLocale = useCurrentLocale();
@@ -45,9 +52,10 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
   const [isRunnerResolving, setIsRunnerResolving] = useState(false);
+  const [runnerOptions, setRunnerOptions] = useState(runners);
   const isMobile = useIsMobileScreen();
 
-  const currentValue = getSchemaSourceId(entity.source);
+  const currentValue = selectedValue;
   const isFieldDisabled = disabled || isReadOnlyAdmin;
 
   const onOpenModal = useCallback(() => {
@@ -63,14 +71,21 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
   }, [currentValue, t, dispatch]);
 
-  const dropdownItems = useMemo(() => {
-    return (
-      runners?.map((r) => ({
-        value: r.$id || '',
-        label: r['dial:applicationTypeDisplayName'] || r.$id || '',
-      })) || ([] as SelectOption[])
-    );
+  useEffect(() => {
+    setRunnerOptions(runners);
   }, [runners]);
+
+  // Labelled by `$id` to match the grid's `ID` column — an asset runner has no display name without a
+  // per-runner content read, and a label the grid never showed would not be recognizable.
+  // A stored id the list does not carry (a Platform runner whose `$id` was edited after creation) is still
+  // shown, just not matched to a runner: no selected row in the picker and no Open control.
+  const dropdownItems = useMemo(() => {
+    const items: SelectOption[] = runnerOptions?.map((r) => ({ value: r.$id || '', label: r.$id || '' })) ?? [];
+
+    return currentValue && !items.some((item) => item.value === currentValue)
+      ? [...items, { value: currentValue, label: currentValue }]
+      : items;
+  }, [runnerOptions, currentValue]);
 
   const handleRunnerSelect = useCallback(
     async (value?: string) => {
@@ -78,15 +93,15 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
 
       const runner = runners?.find((r) => r.$id === value);
 
-      if (!runner) {
-        onChange({ ...entity, source: undefined, endpoint: undefined, mcp: undefined });
-        return;
-      }
-
       setIsRunnerResolving(true);
 
       try {
         const { runner: resolvedRunner, scheme } = await resolveAppRunnerScheme(runner);
+
+        if (runner && resolvedRunner?.$id) {
+          runner.$id = resolvedRunner.$id;
+          setRunnerOptions((currentRunnerOptions) => [...(currentRunnerOptions ?? [])]);
+        }
 
         const resolvedId = resolvedRunner?.$id ?? value;
         const applicationProperties = getSchemaDefaults((scheme ?? resolvedRunner) as JSONSchema7) as Record<
@@ -94,26 +109,25 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
           unknown
         >;
 
-        onChange({
-          ...entity,
-          source: resolvedId ? createSchemaSource(resolvedId) : undefined,
-          endpoint: undefined,
-          mcp: undefined,
-          applicationProperties: { ...entity.applicationProperties, ...applicationProperties },
-        });
+        onChangeValue(resolvedId, applicationProperties);
       } finally {
         setIsRunnerResolving(false);
       }
     },
-    [entity, onChange, onCloseModal, runners],
+    [onChangeValue, onCloseModal, runners],
   );
 
-  const openInNewTab = useCallback(() => {
-    window.open(
-      `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${currentValue}`)}`,
-      '_blank',
-    );
-  }, [currentLocale, currentValue]);
+  const selectedRunner = useMemo(
+    () => runnerOptions?.find((r) => r.$id === currentValue),
+    [runnerOptions, currentValue],
+  );
+  const openUrl = selectedRunner && getRunnerOpenUrl(selectedRunner, currentLocale);
+
+  const onOpenInNewTab = useCallback(() => {
+    if (openUrl) {
+      window.open(openUrl, '_blank');
+    }
+  }, [openUrl]);
 
   useEffect(() => {
     setValueTitle(dropdownItems?.find((r) => r.value === currentValue)?.label || '');
@@ -155,16 +169,16 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
               onApply={handleRunnerSelect}
               isModalOpen={isModalOpen}
               onClose={onCloseModal}
-              sourceEntities={runners}
-              columns={LIST_RUNNER_COLUMNS}
+              sourceEntities={runnerOptions}
+              columns={PICKER_RUNNER_COLUMNS(t)}
             />
           </DialInputPopup>
         </div>
-        {currentValue && (
+        {openUrl && (
           <DialNeutralButton
             label={isMobile ? '' : t(ButtonsI18nKey.Open)}
             iconBefore={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={openInNewTab}
+            onClick={onOpenInNewTab}
           />
         )}
       </div>
@@ -172,4 +186,4 @@ const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmut
   );
 };
 
-export default AppRunners;
+export default AppRunnersResource;

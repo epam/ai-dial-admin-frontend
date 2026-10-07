@@ -1,6 +1,8 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { ApplicationRoute } from '@/src/types/routes';
 import { toRunnerReference } from '@/src/utils/app-runners/runner-reference';
+import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { AppRunnerOption, AppRunnerOrigin } from './models';
 
 export const getRunnerOrigin = (runner: DialApplicationScheme): AppRunnerOrigin =>
@@ -32,3 +34,22 @@ export const buildAppRunnerOptions = (
   entityRunners?: DialApplicationScheme[] | null,
   assetRunners?: ResourceInfo[] | null,
 ): AppRunnerOption[] => [...(entityRunners || []).map(toConfigOption), ...(assetRunners || []).map(toPlatformOption)];
+
+/**
+ * Where the merged picker's Open control leads — the `Assets > App Runners` detail page, addressed the
+ * way that list's `handleOpenInNewTab` does: a Platform runner by storage path, a configuration-file
+ * runner by `$id` in `configFile=true` mode. `undefined` for an option that carries neither.
+ */
+export const getRunnerOpenUrl = (runner: DialApplicationScheme, locale: string): string | undefined => {
+  const option = runner as AppRunnerOption;
+
+  if (getRunnerOrigin(runner) === AppRunnerOrigin.Platform) {
+    return option.path
+      ? `/${locale}${getUrnForEntity(ApplicationRoute.PlatformAppRunners, { path: option.path })}`
+      : undefined;
+  }
+
+  return option.reference && runner.$id
+    ? `/${locale}${appendUrlQuery(getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: runner.$id }), 'configFile=true')}`
+    : undefined;
+};

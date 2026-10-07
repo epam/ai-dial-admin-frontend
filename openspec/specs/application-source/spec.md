@@ -40,7 +40,7 @@ The legacy enum name `ApplicationSourceType` MUST remain exported as an alias of
 
 ### Requirement: Regular Applications use the shared SourceField component
 
-`DialApplication` editing (every Applications-family view, **including `ApplicationRoute.AssetsApplications`**) SHALL render `components/SourceField/SourceField.tsx` as its source editor, using the same dropdown selector (`DialSelectField`) used by Models, Toolsets, Adapters, and Interceptors.
+`DialApplication` editing (every Applications-family view **except `ApplicationRoute.AssetsApplications`**, which renders `ResourceSourceField` instead) SHALL render `components/SourceField/SourceField.tsx` as its source editor, using the same dropdown selector (`DialSelectField`) used by Models, Toolsets, Adapters, and Interceptors.
 
 The regular Applications source dropdown (`ApplicationRoute.Applications`) MUST offer exactly three options in this scope:
 
@@ -215,20 +215,20 @@ A separate `isValidApplicationSource` helper MUST NOT be introduced.
 - **WHEN** `entity` is a `DialApplication` with `source.$type === ENDPOINTS` and neither `entity.endpoint` nor `entity.mcp?.endpoint` is a valid URL
 - **THEN** `isValidSourceField(entity)` returns `false`
 
-### Requirement: AssetApp uses the shared SourceField with Endpoints and App Runner only
+### Requirement: AssetApp uses ResourceSourceField with Endpoints and App Runner only
 
-Asset applications (`AssetApp`, accessed via `ApplicationRoute.AssetsApplications`) SHALL render `components/SourceField/SourceField.tsx` as their source editor, wired with the `ASSET_APPLICATION_SOURCE_ITEMS` list. Existing application editing SHALL continue to offer `SOURCE_TYPE.ENDPOINTS` — rendering the application endpoint editor — and `SOURCE_TYPE.SCHEMA` — rendering `AppRunners` and writing the selected runner id to `entity.application_type_schema_id`.
+Asset applications (`AssetApp`, accessed via `ApplicationRoute.AssetsApplications`) SHALL render `components/Assets/Resources/ResourceSourceField.tsx` — not `components/SourceField/SourceField.tsx` — as their source editor, both on the detail view and in the creation modal, wired with the `ASSET_APPLICATION_CREATE_SOURCE_ITEMS` list. Existing application editing SHALL continue to offer `SOURCE_TYPE.ENDPOINTS` — rendering the application endpoint editor — and `SOURCE_TYPE.SCHEMA` — rendering `AppRunnersResource` and writing the selected runner id to `entity.application_type_schema_id`.
 
 The dedicated Assets Application creation modal SHALL offer source modes in this order:
 
 1. Interfaces, selected by default, which renders the existing asset interfaces editor and writes the existing `interfaces` resource field.
 2. Endpoints, which renders the application endpoint editor.
-3. App Runner, which renders the `AppRunners` picker.
+3. App Runner, which renders the `AppRunnersResource` picker.
 4. Code App, only when the existing Code App editor URL configuration makes it available.
 
 Interfaces SHALL be a creation-editor mode and MUST NOT introduce or persist a new Core `source` discriminator. The asset source selector MUST NOT offer `SOURCE_TYPE.CONTAINER`, `RUNNER`, `ADAPTER`, or `MCP_REGISTRY`. No `getContainers` prop SHALL be passed for the AssetsApplications view.
 
-Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is valid iff `source.applicationTypeSchemaId` is truthy; `ENDPOINTS` is valid iff at least one of `entity.endpoint` or `entity.mcp?.endpoint` is a valid URL. The default Interfaces mode SHALL be valid when the resource identity fields are valid; interfaces remain optional until a configured interface imposes its own field validation.
+Validation SHALL treat `SCHEMA` as valid iff `entity.application_type_schema_id` is truthy; `ENDPOINTS` is valid iff `entity.endpoint` is a valid URL. The default Interfaces mode SHALL be valid when the resource identity fields are valid; interfaces remain optional until a configured interface imposes its own field validation.
 
 #### Scenario: AssetApp source editor offers two options
 
@@ -236,7 +236,7 @@ Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is vali
 - **THEN** a source dropdown with options "Endpoints" and "App Runner" is displayed
 - **AND** "Application Container" is NOT displayed
 - **AND** selecting `ENDPOINTS` renders the application endpoint editor
-- **AND** selecting `SCHEMA` renders the `AppRunners` picker
+- **AND** selecting `SCHEMA` renders the `AppRunnersResource` picker
 
 #### Scenario: Assets Application creation defaults to Interfaces
 

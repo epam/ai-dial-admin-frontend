@@ -1,11 +1,10 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -15,20 +14,12 @@ interface Props {
   selectedId?: string;
   sourceEntities?: DialApplicationScheme[];
   isModalOpen: boolean;
-  /** Both runner populations are offered, so the columns drop to what each of them can fill. */
-  isMergedSource?: boolean;
+  columns: ColDef[];
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectAppRunnerModal: FC<Props> = ({
-  selectedId,
-  sourceEntities,
-  isModalOpen,
-  isMergedSource,
-  onClose,
-  onApply,
-}) => {
+const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOpen, columns, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedRunner, setSelectedRunner] = useState(selectedId);
@@ -85,7 +76,7 @@ const SelectAppRunnerModal: FC<Props> = ({
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
-          columnDefs={(isMergedSource ? PICKER_RUNNER_COLUMNS(t) : LIST_RUNNER_COLUMNS).map((col) => ({
+          columnDefs={columns.map((col) => ({
             ...col,
             sort: void 0,
           }))}

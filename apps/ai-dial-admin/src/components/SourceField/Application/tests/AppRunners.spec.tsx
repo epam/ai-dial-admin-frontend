@@ -154,20 +154,13 @@ describe('AppRunners (entity-mode side-effects)', () => {
   });
 });
 
-describe('AppRunners (legacy selectedValue/onChangeValue API)', () => {
-  test('calls onChangeValue when entity/onChange are not provided', async () => {
-    (getResolvedApplicationScheme as any).mockResolvedValue({
-      success: true,
-      response: { schema: runner },
-    });
+describe('AppRunners (admin-BE presentation)', () => {
+  test('labels runners by display name even when options carry a Platform origin', () => {
+    const platformRunner = { $id: 'urn:runner:platform', origin: 'platform' } as unknown as DialApplicationScheme;
+    render(<AppRunners entity={makeEntity()} onChange={vi.fn()} runners={[runner, platformRunner]} />);
 
-    const onChangeValue = vi.fn();
-    render(<AppRunners selectedValue={''} onChangeValue={onChangeValue} runners={[runner]} />);
-
-    fireEvent.change(screen.getByTestId('select-sourceEntity'), { target: { value: 'urn:runner:1' } });
-
-    await waitFor(() => {
-      expect(onChangeValue).toHaveBeenCalledWith('urn:runner:1', { propA: 'default-a' });
-    });
+    expect(screen.getByRole('option', { name: 'Runner One' })).toBeDefined();
+    expect(screen.getByRole('option', { name: 'urn:runner:platform' })).toBeDefined();
+    expect(screen.queryByRole('option', { name: 'urn:runner:1' })).toBeNull();
   });
 });
