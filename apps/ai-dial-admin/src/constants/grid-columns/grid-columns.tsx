@@ -171,9 +171,9 @@ export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
-// A cache rate is flat-or-tree: a flat rate keeps its stored string as before, a tree renders as the
-// readable conditional with per-million leaves under the token unit.
-const getCacheRateTooltip = (
+// A pricing rate is flat-or-tree: a flat rate keeps its stored string as before, while a tree renders
+// as the readable conditional with per-million leaves under the token unit.
+const getPricingRateTooltip = (
   rate: PricingRate | undefined,
   unit: string | undefined,
   t: (str: string) => string,
@@ -201,26 +201,28 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'pricing.prompt',
     headerName: 'Prompt price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.prompt,
+    tooltipValueGetter: (params) => getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t),
   },
   {
     field: 'pricing.completion',
     headerName: 'Completion price',
     hide: true,
-    tooltipValueGetter: (params) => params.data?.pricing?.completion,
+    tooltipValueGetter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t),
   },
   {
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
-    tooltipValueGetter: (params) => getCacheRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
+    tooltipValueGetter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
   },
   {
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
     tooltipValueGetter: (params) =>
-      getCacheRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
+      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
   },
 ];
 

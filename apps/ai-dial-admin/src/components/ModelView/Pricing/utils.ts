@@ -59,21 +59,21 @@ const mapRateLeaves = (value: PricingRate | undefined, map: LeafMapper): Pricing
 };
 
 /**
- * Display-side scaling for a flat-or-tree cache rate: multiplies every leaf rate per million under
+ * Display-side scaling for a flat-or-tree pricing rate: multiplies every leaf rate per million under
  * the token unit, keeping empty leaves as '' so the inputs render empty rather than vanishing.
  */
 export const getMultipliedRate = (value: PricingRate | undefined, isTokenType: boolean): PricingRate | undefined =>
   mapRateLeaves(value, (rate) => getMultipliedValue(rate, isTokenType));
 
 /**
- * Store-side scaling for a flat-or-tree cache rate: divides every leaf rate back to per-token, and
+ * Store-side scaling for a flat-or-tree pricing rate: divides every leaf rate back to per-token, and
  * omits a branch the user left empty so it is not persisted as '' or '0'.
  */
 export const getRealRate = (value: PricingRate | undefined, isTokenType: boolean): PricingRate | undefined =>
   mapRateLeaves(value, (rate) => (rate === '' ? void 0 : getPriceRealValue(rate, isTokenType)));
 
 /**
- * Formats a flat-or-tree cache rate as a readable one-line conditional, leaf rates scaled per
+ * Formats a flat-or-tree pricing rate as a readable one-line conditional, leaf rates scaled per
  * million under the token unit — e.g. `ttl == 1h ? 6 : 3.75`, nested trees parenthesised, and an
  * omitted branch shown as the prompt-rate fallback it means.
  */
