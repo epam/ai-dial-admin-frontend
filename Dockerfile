@@ -1,7 +1,7 @@
 FROM node:24.21-alpine3.24 AS base
 
 # Pin npm for builds; remove its bundled dependencies from the final image below.
-RUN apk upgrade --no-cache libcrypto3 libssl3 \
+RUN apk upgrade --no-cache libcrypto3 libssl3 zlib \
  && npm install --global npm@12.1.0
 
 FROM base AS deps
