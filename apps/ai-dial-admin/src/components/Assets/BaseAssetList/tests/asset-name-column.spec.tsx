@@ -3,6 +3,8 @@ import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
+import { ApplicationRoute } from '@/src/types/routes';
+import { ASSET_TYPE_ICONS } from '../constants';
 import { getAssetNameColumn } from '../utils';
 
 const column = (): ColDef => getAssetNameColumn('Name')(undefined, undefined, false);
@@ -43,6 +45,26 @@ describe('getAssetNameColumn', () => {
 
     expect(screen.getByText('Summarize text')).toBeInTheDocument();
     expect(screen.getByText('summarize-text')).toBeInTheDocument();
+  });
+
+  test('shows the initials fallback for a view without a type icon', () => {
+    const cellRenderer = getAssetNameColumn('Name', ApplicationRoute.PlatformModels)(undefined, undefined, false)
+      .cellRenderer as (p: ICellRendererParams) => React.ReactNode;
+    render(<>{cellRenderer(params({ name: 'gpt', displayName: 'Gpt', nodeType: DialFileNodeType.ITEM }))}</>);
+
+    expect(screen.getByText('G')).toBeInTheDocument();
+  });
+
+  test('maps exactly the five asset views to a type icon', () => {
+    expect(Object.keys(ASSET_TYPE_ICONS).sort()).toEqual(
+      [
+        ApplicationRoute.AssetsApplications,
+        ApplicationRoute.AssetsToolsets,
+        ApplicationRoute.Prompts,
+        ApplicationRoute.Skills,
+        ApplicationRoute.Conversations,
+      ].sort(),
+    );
   });
 
   test('sorts and filters on the label the row actually shows', () => {
