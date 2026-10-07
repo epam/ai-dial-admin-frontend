@@ -14,6 +14,7 @@ import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { isFolder } from '@/src/utils/files/path';
+import { isFileRootPath } from '@/src/utils/files/root-folder';
 
 interface Props {
   disableAutoFetch?: boolean;
@@ -30,7 +31,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
   const folderContext = context?.();
 
   const folderData = useMemo(() => {
-    return folderContext?.files;
+    return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
   }, [folderContext]);
 
   const scrollToFolder = useCallback(() => {
@@ -139,7 +140,7 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
   const isFetching = isRuleFolderContext
     ? ruleContext.isLoading || ruleContext.files == null
     : !!assetsContext?.isFetchingFiles;
-  const showNoFolders = !isFetching && !folderContext?.files?.length;
+  const showNoFolders = !isFetching && !folderData?.length;
 
   return (
     <div className="flex-1 size-full overflow-y-auto">
