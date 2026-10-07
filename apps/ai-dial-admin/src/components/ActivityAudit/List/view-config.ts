@@ -38,6 +38,7 @@ export const ACTIVITY_AUDIT_VIEW_CONFIG: Record<ActivityAuditView, ActivityAudit
       getActivityAuditColumns(t, open, onRollback, void 0, isSingleEntity),
     hasParentChildAggregation: true,
     hasDeletedParentSuppression: false,
+    hasImportGrouping: false,
     hasRollback: true,
     isRowNavigable: isAnyRowNavigable,
     getEntityActivityHref: getNamespacedEntityActivityHref,
@@ -52,6 +53,7 @@ export const ACTIVITY_AUDIT_VIEW_CONFIG: Record<ActivityAuditView, ActivityAudit
         : getDeploymentActivityAuditColumns(t, open, onRollback),
     hasParentChildAggregation: false,
     hasDeletedParentSuppression: false,
+    hasImportGrouping: false,
     hasRollback: true,
     isRowNavigable: isDeploymentManagerResource,
     getEntityActivityHref: getNamespacedEntityActivityHref,
@@ -62,12 +64,14 @@ export const ACTIVITY_AUDIT_VIEW_CONFIG: Record<ActivityAuditView, ActivityAudit
     // forwarded, and the caller decides it from the tab's resource type — a table Audit tab keeps
     // `Resource type` / `Resource identifier` because its feed carries both `Table` and
     // `TableColumn` rows, while a pipeline tab carries one of each and hides them.
-    getColumns: ({ t, open, isSingleEntity }) => getAnalyticsActivityAuditColumns(t, open, isSingleEntity),
+    getColumns: ({ t, open, isSingleEntity, isGlobalList }) =>
+      getAnalyticsActivityAuditColumns(t, open, isSingleEntity, isGlobalList),
     hasParentChildAggregation: false,
     // Deleting a table records a `Delete` per column, each naming the table activity as its
     // parent; the parent's own detail view already renders every one of those columns as
     // removed, so the children are noise. Only this feed produces them.
     hasDeletedParentSuppression: true,
+    hasImportGrouping: true,
     hasRollback: false,
     isRowNavigable: isAnyRowNavigable,
     getEntityActivityHref: getGlobalActivityHref,

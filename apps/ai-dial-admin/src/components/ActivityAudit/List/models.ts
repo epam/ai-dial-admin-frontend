@@ -25,6 +25,8 @@ export interface ActivityAuditColumnsParams {
   open?: ActivityAuditRowAction;
   onRollback?: ActivityAuditRowAction;
   isSingleEntity?: boolean;
+  /** The global audit page rather than an entity's Audit tab; only there are Import rows built. */
+  isGlobalList?: boolean;
 }
 
 export interface ActivityAuditHrefParams {
@@ -42,6 +44,11 @@ export interface ActivityAuditViewConfig {
    * of a table deletion. Only the analytics feed records those children.
    */
   hasDeletedParentSuppression: boolean;
+  /**
+   * Whether the view groups activities sharing an `importId` under one client-built Import row. The analytics
+   * feed tags an import's activities but writes no parent; the admin feed writes a real parent instead.
+   */
+  hasImportGrouping: boolean;
   hasRollback: boolean;
   isRowNavigable: (resourceType?: string) => boolean;
   getEntityActivityHref: (params: ActivityAuditHrefParams) => string;

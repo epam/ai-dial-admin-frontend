@@ -112,7 +112,7 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
         isSingleEntity: true,
       });
 
-      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, true);
+      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, true, undefined);
       expect(getActivityAuditColumns).not.toHaveBeenCalled();
       expect(getDeploymentActivityAuditColumns).not.toHaveBeenCalled();
       expect(columns).toEqual([{ colId: 'analytics-columns' }]);
@@ -126,7 +126,7 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
         isSingleEntity: false,
       });
 
-      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, false);
+      expect(getAnalyticsActivityAuditColumns).toHaveBeenCalledWith(t, open, false, undefined);
     });
   });
 
@@ -137,6 +137,7 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
       expect(config.hasParentChildAggregation).toBe(true);
       expect(config.hasRollback).toBe(true);
       expect(config.hasDeletedParentSuppression).toBe(false);
+      expect(config.hasImportGrouping).toBe(false);
     });
 
     test('keeps the Deployments view flat and still offering rollback', () => {
@@ -145,14 +146,16 @@ describe('ACTIVITY_AUDIT_VIEW_CONFIG', () => {
       expect(config.hasParentChildAggregation).toBe(false);
       expect(config.hasRollback).toBe(true);
       expect(config.hasDeletedParentSuppression).toBe(false);
+      expect(config.hasImportGrouping).toBe(false);
     });
 
-    test('renders the Analytics view flat and offers no rollback', () => {
+    test('renders the Analytics view without parentActivityId aggregation, grouped by import, with no rollback', () => {
       const config = ACTIVITY_AUDIT_VIEW_CONFIG[ActivityAuditView.Analytics];
 
       expect(config.hasParentChildAggregation).toBe(false);
       expect(config.hasRollback).toBe(false);
       expect(config.hasDeletedParentSuppression).toBe(true);
+      expect(config.hasImportGrouping).toBe(true);
     });
   });
 

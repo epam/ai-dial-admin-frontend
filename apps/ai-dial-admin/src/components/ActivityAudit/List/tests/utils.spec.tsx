@@ -13,7 +13,7 @@ import {
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { getResourceRollbackOperation } from '@/src/constants/grid-columns/actions';
+import { getOpenInNewTabOperation, getResourceRollbackOperation } from '@/src/constants/grid-columns/actions';
 import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ActivityAuditResourceType, ActivityAuditType, ActivityAuditView } from '@/src/types/activity-audit';
 import type { FilterDto } from '@/src/models/request';
@@ -121,11 +121,11 @@ describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => 
     expect(cols[2].colId).toBe('actions');
   });
 
-  test('builds its columns for the Analytics view, so no expander and no Version column are added', () => {
+  test('builds its columns for the Analytics view, whose column set carries no Version column', () => {
     getAnalyticsActivityAuditColumns(t, vi.fn());
 
     // The third argument is the single-entity flag, undefined for a caller that omits it.
-    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, void 0);
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, void 0, false);
   });
 
   test('offers Open in new tab as the only row action and never a rollback one', () => {
@@ -135,6 +135,23 @@ describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => 
     expect(actions).toHaveLength(1);
     expect(actions[0].type).toBe('open');
     expect(getResourceRollbackOperation).not.toHaveBeenCalled();
+  });
+
+  test('asks for the row expander on the global list only', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn(), false, true);
+
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, false, true);
+  });
+
+  test('hides Open in new tab on a client-built Import row only', () => {
+    getAnalyticsActivityAuditColumns(t, vi.fn());
+
+    const isHidden = vi.mocked(getOpenInNewTabOperation).mock.lastCall?.[2] as (
+      api: unknown,
+      node: { data: Partial<DialActivity> },
+    ) => boolean;
+    expect(isHidden({}, { data: { activityType: ActivityAuditType.Import } })).toBe(true);
+    expect(isHidden({}, { data: { activityType: ActivityAuditType.Create } })).toBe(false);
   });
 
   test('returns an empty action list when no open handler is provided', () => {
@@ -149,7 +166,7 @@ describe('Activity Audit List utils :: getAnalyticsActivityAuditColumns', () => 
 
     // The column set itself is `ACTIVITY_AUDIT_COLUMNS`' to build: with the flag true it emits
     // neither `resourceType` nor `resourceId`, which `List.spec.tsx` asserts against the real one.
-    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, true);
+    expect(ACTIVITY_AUDIT_COLUMNS).toHaveBeenCalledWith(t, ActivityAuditView.Analytics, true, false);
     expect(cols[2].colId).toBe('actions');
   });
 

@@ -145,6 +145,15 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'expanderColumn')).toBe(false);
   });
 
+  test('ACTIVITY_AUDIT_COLUMNS adds the expander to the Analytics view only when asked', () => {
+    const t = (s: string) => s;
+
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, false, true)[0].field).toBe('expanderColumn');
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics).some((c) => c.field === 'expanderColumn')).toBe(
+      false,
+    );
+  });
+
   test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
     const cols1 = IMAGE_DEPENDENCIES_COLUMNS(t);

@@ -19,8 +19,25 @@ export interface DialActivity {
   activityId: string;
   revision: number;
   parentActivityId?: string;
+  /** The analytics catalog import that wrote this activity; absent for every other activity. */
+  importId?: string;
   action?: string;
   version?: string;
+}
+
+/** A row that lists its child activities beneath it, in the shape the audit grid's expander reads. */
+export interface DialActivityGroupRow extends DialActivity {
+  children: DialActivity[];
+  expanded: boolean;
+  canToggleExpand: boolean;
+}
+
+/** Activities of each analytics import fetched during one list pass, keyed by `importId`. */
+export type ImportActivities = Record<string, DialActivity[]>;
+
+export interface ImportGroupingResult {
+  rows: DialActivity[];
+  emittedImportIds: string[];
 }
 
 export interface ActivityAuditDiff {
