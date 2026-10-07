@@ -1,6 +1,13 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { ExportFormat, ExportType } from '@/src/types/export';
-import { getComponents, getComponentTypes, getFilteredData, isEntityWithDependency } from '../utils';
+import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import {
+  getComponents,
+  getComponentTypes,
+  getExportScopes,
+  getFilteredData,
+  hasSelection,
+  isEntityWithDependency,
+} from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -209,5 +216,26 @@ describe('Export Config Utils :: isEntityWithDependency', () => {
     const res = isEntityWithDependency(EntityType.ADAPTER);
 
     expect(res).toEqual(false);
+  });
+});
+
+describe('getExportScopes', () => {
+  test.each([
+    [false, false, [ExportComponentType.ADMIN]],
+    [true, false, [ExportComponentType.ADMIN, ExportComponentType.DEPLOYMENTS]],
+    [false, true, [ExportComponentType.ADMIN, ExportComponentType.ANALYTICS]],
+    [true, true, [ExportComponentType.ADMIN, ExportComponentType.DEPLOYMENTS, ExportComponentType.ANALYTICS]],
+  ])('offers the scopes for deployments=%s analytics=%s', (deployments, analytics, expected) => {
+    expect(getExportScopes(deployments, analytics)).toEqual(expected);
+  });
+});
+
+describe('hasSelection', () => {
+  test('is false when every tab is empty', () => {
+    expect(hasSelection({ a: [], b: [] })).toBe(false);
+  });
+
+  test('is true when any tab holds an entity', () => {
+    expect(hasSelection({ a: [], b: [{ name: 'x' }] })).toBe(true);
   });
 });

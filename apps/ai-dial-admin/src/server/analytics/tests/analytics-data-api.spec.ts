@@ -1,4 +1,5 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { CatalogComponentType } from '@/src/types/analytics/export';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
@@ -731,5 +732,59 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
     const surface = Object.getOwnPropertyNames(Object.getPrototypeOf(instance));
 
     expect(surface.filter((name) => name.toLowerCase().includes('evaluator'))).toEqual([]);
+  });
+});
+
+describe('Server :: AnalyticsDataApi — catalog export', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
+  const request = { components: [{ type: CatalogComponentType.TABLE, name: 'usage_sentiment' }] };
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('previewCatalogExport issues POST /v1/catalog/export/preview with the selection', async () => {
+    const preview = { objects: [], required_system_tables: [], skipped: [] };
+    fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+    const res = await instance.previewCatalogExport(request, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/catalog/export/preview'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(request) }),
+    );
+  });
+
+  test('exportCatalog returns the JSON bundle as a blob under the Content-Disposition name', async () => {
+    const bundle = JSON.stringify({ format: 'adas-catalog', format_version: 1 });
+    fetch.mockResponseOnce(bundle, {
+      headers: {
+        'content-type': 'application/json',
+        'content-disposition': 'attachment; filename="adas-catalog-20261007T120000Z.json"',
+      },
+    });
+
+    const res = await instance.exportCatalog(request, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('adas-catalog-20261007T120000Z.json');
+    expect(await res.response?.blob.text()).toBe(bundle);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/catalog\/export$/),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('exportCatalog returns the error envelope when the service refuses the selection', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'catalog_export_invalid', message: 'otel_x is an OTLP table' }), {
+      status: 422,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.exportCatalog(request, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 422 }));
+    expect(res.response).toBeUndefined();
   });
 });
