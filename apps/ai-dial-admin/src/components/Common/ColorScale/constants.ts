@@ -1,4 +1,5 @@
 import { DEFAULT_THEME } from '@/src/constants/theme';
+import { EDITOR_THEMES } from '@/src/types/editor';
 
 import { HeatColorSegment } from './models';
 
@@ -61,8 +62,8 @@ export const DELTA_POSITIVE_COLOR_MAP_LIGHT: Record<number, HeatColorSegment> = 
 };
 
 export const DELTA_NEUTRAL_SEGMENT = {
-  bg: 'var(--bg-layer-2, #161b2d)',
-  border: 'var(--stroke-secondary, #242c42)',
+  bg: 'var(--bg-layer-2, #FCFCFC)',
+  border: 'var(--stroke-secondary, #D1DBEA)',
 };
 
 export const DELTA_NEGATIVE_THRESHOLDS = Object.keys(DELTA_NEGATIVE_COLOR_MAP)
@@ -75,7 +76,7 @@ export const DELTA_POSITIVE_THRESHOLDS = Object.keys(DELTA_POSITIVE_COLOR_MAP)
 
 export const DELTA_SCALE_THRESHOLDS = [...DELTA_NEGATIVE_THRESHOLDS, 0, ...DELTA_POSITIVE_THRESHOLDS] as const;
 
-export const isDarkHeatMapTheme = (theme: string = DEFAULT_THEME): boolean => theme === DEFAULT_THEME;
+export const isDarkHeatMapTheme = (theme: string = DEFAULT_THEME): boolean => theme === EDITOR_THEMES.dark;
 
 export const getAccuracyColorMap = (theme: string = DEFAULT_THEME): Record<number, HeatColorSegment> =>
   isDarkHeatMapTheme(theme) ? ACCURACY_COLOR_MAP : ACCURACY_COLOR_MAP_LIGHT;

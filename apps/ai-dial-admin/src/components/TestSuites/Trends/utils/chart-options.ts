@@ -17,9 +17,9 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 // The tooltip is a DOM node and resolves the theme's variables; the axes and series are painted on the
 // canvas and take the palette's concrete values.
-const TOOLTIP_BACKGROUND = 'color-mix(in srgb, var(--bg-layer-base, #10151E) 90%, transparent)';
-const TOOLTIP_TEXT_PRIMARY = 'var(--text-primary, #FCFCFC)';
-const TOOLTIP_TEXT_SECONDARY = 'var(--text-secondary, #ACB3C3)';
+const TOOLTIP_BACKGROUND = 'color-mix(in srgb, var(--bg-layer-base, #F5F7FA) 90%, transparent)';
+const TOOLTIP_TEXT_PRIMARY = 'var(--text-primary, #161B2D)';
+const TOOLTIP_TEXT_SECONDARY = 'var(--text-secondary, #57647A)';
 
 interface OverallChartLabels {
   date: string;
@@ -165,7 +165,7 @@ export const buildOverallScoreChartOptions = (
       confine: false,
       className: OVERALL_SCORE_TREND_TOOLTIP_CLASS,
       backgroundColor: TOOLTIP_BACKGROUND,
-      borderColor: 'var(--stroke-primary, #848E9C)',
+      borderColor: 'var(--stroke-primary, #57647A)',
       borderWidth: 1,
       padding: [8, 12],
       textStyle: { color: TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
@@ -202,7 +202,7 @@ export const buildOverallScoreChartOptions = (
             <div style="display:flex;flex-direction:column;gap:4px;color:${TOOLTIP_TEXT_PRIMARY};">
               <span>${formatTrendTooltipDate(point.computedAtMs)}</span>
               <a href="${href}" target="_blank" rel="noopener noreferrer"
-                 style="color:var(--text-accent, #6E8AF7);font-weight:600;text-decoration:none;cursor:pointer;">
+                 style="color:var(--text-accent, #1D4ED8);font-weight:600;text-decoration:none;cursor:pointer;">
                 ${point.runName} ↗
               </a>
               <span>${score}</span>
@@ -274,7 +274,7 @@ export const buildMetricTrendChartOptions = (
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
       confine: false,
       backgroundColor: TOOLTIP_BACKGROUND,
-      borderColor: 'var(--stroke-primary, #848E9C)',
+      borderColor: 'var(--stroke-primary, #57647A)',
       borderWidth: 1,
       padding: [4, 8],
       textStyle: { color: TOOLTIP_TEXT_PRIMARY, fontSize: 12 },
