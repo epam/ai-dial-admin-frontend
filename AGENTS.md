@@ -42,7 +42,7 @@ Things that cost time or fail silently if you don't know them:
   variant per tool and owns them.
 - **Analytics is a root index plus ten sub-capabilities** under `openspec/specs/analytics/` —
   `query-builder`, `query-viewer`, `saved-queries`, `tables`, `sessions-listing`,
-  `session-trace-listing`, `session-trace-detail`, `pipelines`, `evaluators`, `dashboards`. Address one as
+  `session-trace-listing`, `session-trace-detail`, `pipelines`, `dashboards`, `config-transfer`. Address one as
   `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
   shares, plus a routing table naming what each sub-capability answers — add a row when you add one.
   Never create a top-level `analytics-*` spec folder.

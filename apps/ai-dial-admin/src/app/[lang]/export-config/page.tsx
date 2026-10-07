@@ -1,4 +1,5 @@
 import ExportConfig from '@/src/components/ExportConfig/ExportConfig';
+import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
 import { isValueTruthy } from '@/src/utils/types';
 import { redirect } from 'next/navigation';
 
@@ -15,6 +16,7 @@ export default async function Page() {
     <ExportConfig
       enableExportConfigMap={isValueTruthy(process.env.ENABLE_EXPORT_CONFIG_MAP)}
       deploymentsEnabled={isValueTruthy(process.env.DEPLOYMENTS_ENABLED)}
+      isAnalyticsEnabled={getIsAnalyticsEnabled()}
     />
   );
 }

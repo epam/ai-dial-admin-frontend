@@ -1023,6 +1023,14 @@ export enum ExportI18nKey {
   InterceptorImage = 'Export.InterceptorImage',
   AdapterImage = 'Export.AdapterImage',
   ApplicationImage = 'Export.ApplicationImage',
+  AnalyticsObjects = 'Export.AnalyticsObjects',
+  AnalyticsRequiredSystemTables = 'Export.AnalyticsRequiredSystemTables',
+  AnalyticsSkipped = 'Export.AnalyticsSkipped',
+  AnalyticsType = 'Export.AnalyticsType',
+  AnalyticsName = 'Export.AnalyticsName',
+  AnalyticsDescription = 'Export.AnalyticsDescription',
+  AnalyticsReason = 'Export.AnalyticsReason',
+  CandidatesReadFailed = 'Export.CandidatesReadFailed',
 }
 
 export enum FoldersI18nKey {

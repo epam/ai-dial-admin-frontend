@@ -26,6 +26,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
 | `analytics/pipelines` | The pipelines console — listing, registration, detail page, bindings and triggers, JSON editing |
 | `analytics/dashboards` | The Dashboards page over the usage log — how it is reached, its requests, Compare, KPI row, heatmap, share donut, breakdown table |
+| `analytics/config-transfer` | Moving the catalog between environments — the Analytics scope of Export Config, table and pipeline selection, the export preview, the bundle download |
 
 ## Requirements
 
