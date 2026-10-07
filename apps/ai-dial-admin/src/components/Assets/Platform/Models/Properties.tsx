@@ -23,6 +23,7 @@ import Limits from '@/src/components/ModelView/Limits/Limits';
 import EmbeddingDimensions from '@/src/components/ModelView/ModelProperties/EmbeddingDimensions';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
+import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -168,6 +169,7 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
           schemaId={asset.catalogSchemaId}
           options={catalogSchemas?.options}
           optionsError={catalogSchemas?.error}
+          entityType={CATALOG_SCHEMA_PICKER_ENTITY_TYPE.models}
           onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId, catalogProperties: void 0 })}
         />
       </div>

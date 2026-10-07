@@ -1,6 +1,49 @@
 import { CatalogEntityType, CatalogPropertyWidget } from '@/src/models/dial/catalog-schema';
 
+/**
+ * What the console ACCEPTS on save: Core's full five, mirroring its catalog meta-schema. Consumed by
+ * the save gate in `@/src/utils/catalog-schemas/validation.ts`.
+ *
+ * Deliberately wider than `OFFERED_CATALOG_ENTITY_TYPES`. Do not narrow this to match it: Core's
+ * meta-schema `required`s the field and allows all five, so a configuration file may legally declare
+ * a schema typed `skill`. Issue #4880 was exactly this conflation — the accept list had been
+ * shortened along with the offered list, so such a schema opened in the console and then failed
+ * every save with "Entity type must be one of ...".
+ */
 export const CATALOG_ENTITY_TYPES: CatalogEntityType[] = Object.values(CatalogEntityType);
+
+/**
+ * What the console OFFERS when authoring or editing a schema: four of Core's five. Consumed by the
+ * entity-type selection on the catalog-schema Properties tab.
+ *
+ * `skill` is absent because a skill cannot carry a catalog schema — `Skill` does not extend
+ * `Deployment` in Core, and this console's Skills view has no catalog surface to feed — so offering
+ * it would invite authoring a schema nothing can reference.
+ *
+ * Spelled out rather than derived from `CATALOG_ENTITY_TYPES`, so that a future addition to Core's
+ * meta-schema is accepted on save immediately but only becomes offerable when someone decides it
+ * should be. Keeping these two lists separate is the Issue #4880 fix; do not merge them.
+ */
+export const OFFERED_CATALOG_ENTITY_TYPES: CatalogEntityType[] = [
+  CatalogEntityType.Model,
+  CatalogEntityType.Agent,
+  CatalogEntityType.Toolset,
+  CatalogEntityType.Interceptor,
+];
+
+/**
+ * The `dial:catalogEntityType` each deployment surface's schema picker filters to.
+ *
+ * Applications map to `agent`, not `application`: Core's meta-schema has no `application` value.
+ * That mismatch between this console's vocabulary and Core's is why the four pairings live here
+ * under one name instead of being spelled inline at each picker call site.
+ */
+export const CATALOG_SCHEMA_PICKER_ENTITY_TYPE = {
+  models: CatalogEntityType.Model,
+  applications: CatalogEntityType.Agent,
+  toolsets: CatalogEntityType.Toolset,
+  interceptors: CatalogEntityType.Interceptor,
+} as const satisfies Record<string, CatalogEntityType>;
 
 export const CATALOG_PROPERTY_WIDGETS: CatalogPropertyWidget[] = Object.values(CatalogPropertyWidget);
 

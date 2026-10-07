@@ -24,6 +24,7 @@ import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import { ASSET_APPLICATION_CREATE_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -172,6 +173,7 @@ const ApplicationAssetProperties: FC<Props> = ({
             schemaId={asset.catalog_schema_id}
             options={catalogSchemas?.options}
             optionsError={catalogSchemas?.error}
+            entityType={CATALOG_SCHEMA_PICKER_ENTITY_TYPE.applications}
             onChange={(catalog_schema_id) => onChange({ ...asset, catalog_schema_id, catalog_properties: void 0 })}
           />
         )}

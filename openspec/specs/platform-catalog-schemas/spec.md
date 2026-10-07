@@ -188,13 +188,29 @@ metadata, not a deployment: it has no endpoints, no routing, no interceptor chai
 ### Requirement: Properties tab content
 
 The system SHALL render the catalog-schema Properties tab with the resource info header, the
-read-only `$id`, a required entity-type selection offering exactly `model`, `agent`, `toolset`,
-`skill`, and `interceptor`, a required display name, and an optional default locale.
+read-only `$id`, a required entity-type selection, a required display name, and an optional default
+locale.
+
+The entity-type selection SHALL offer exactly `model`, `agent`, `toolset`, and `interceptor`.
+`skill` SHALL NOT be offered: a skill cannot carry a catalog schema, because `Skill` does not extend
+`Deployment` in DIAL Core and the console's Skills view has no catalog surface to feed, so offering it
+would invite authoring a schema nothing can reference.
+
+What the selection offers is deliberately narrower than what a save accepts. DIAL Core's catalog
+meta-schema allows five values — `model`, `agent`, `toolset`, `skill`, `interceptor` — and `required`s
+the field, so a configuration file may legally declare a schema typed `skill`. The save gate SHALL
+therefore continue to accept all five, as `Client-side validation replaces Core's absent write-time
+checks` requires. Narrowing both halves together is the Issue #4880 regression: the console offered
+and accepted the same shortened list, so a legally-typed schema opened and then could never be saved.
+
+When the schema being edited declares an entity kind outside the offered four, the selection SHALL
+also offer that kind, so the field shows the schema's real value rather than appearing blank and
+discarding it on the next edit.
 
 The entity type SHALL be presented as a declaration of which catalog entity kind the schema is
-written for, not as a filter or a constraint: DIAL Core validates a deployment's
-`catalog_properties` against the schema its `catalog_schema_id` names and never checks the
-deployment's kind against the schema's entity type.
+written for. DIAL Core validates a deployment's `catalog_properties` against the schema its
+`catalog_schema_id` names and never checks the deployment's kind against the schema's entity type, so
+this value SHALL NOT be enforced as a constraint on save.
 
 #### Scenario: The four fields are shown with the id fixed
 
@@ -202,10 +218,12 @@ deployment's kind against the schema's entity type.
 - **THEN** the read-only `$id`, the entity-type selection, the display name, and the default locale
   are shown
 
-#### Scenario: Entity type offers exactly the five supported kinds
+#### Scenario: Entity type offers exactly the four offerable kinds
 
-- **WHEN** a user opens the entity-type selection
-- **THEN** the options are exactly `model`, `agent`, `toolset`, `skill`, and `interceptor`
+- **WHEN** a user opens the entity-type selection on a schema declaring one of the offered kinds, or
+  none
+- **THEN** the options are exactly `model`, `agent`, `toolset`, and `interceptor`
+- **AND** `skill` is not among them
 
 #### Scenario: Edits round-trip on the resource
 
@@ -280,10 +298,16 @@ violates the catalog meta-schema is accepted on write and only surfaces later �
 status on read, and as a rejected deployment when something references it. The system SHALL block
 such a save and SHALL surface the reason to the user.
 
-The enforced rules are: a non-blank `$id`; an entity type within the five supported values; a
-non-blank display name; a default locale matching `^[a-z]{2}(-[A-Z]{2})?$` when present; and, for any
-property declared file-valued, the string type and encoded-file format the meta-schema requires
-alongside it.
+The enforced rules are: a non-blank `$id`; an entity type within the five values Core's catalog
+meta-schema allows; a non-blank display name; a default locale matching `^[a-z]{2}(-[A-Z]{2})?$` when
+present; and, for any property declared file-valued, the string type and encoded-file format the
+meta-schema requires alongside it.
+
+The entity-type rule SHALL mirror Core's meta-schema exactly — `model`, `agent`, `toolset`, `skill`,
+`interceptor` — and SHALL NOT be narrowed to the four kinds the Properties tab offers for authoring.
+A schema a configuration file types `skill` SHALL keep saving. Enforcing the narrower offered list
+here is the Issue #4880 regression, where a legally-typed schema opened in the console and then failed
+every save with a message listing fewer kinds than Core allows.
 
 #### Scenario: A missing display name blocks save
 
@@ -292,8 +316,10 @@ alongside it.
 
 #### Scenario: A missing or unsupported entity type blocks save
 
-- **WHEN** a schema carries no entity type, or one outside the five supported values
+- **WHEN** a schema carries no entity type, or one outside the five values Core's meta-schema allows
 - **THEN** the save is blocked with a message identifying the field
+- **AND** a schema typed `skill` is not blocked, even though the Properties tab does not offer that
+  kind for authoring
 
 #### Scenario: A malformed default locale blocks save
 

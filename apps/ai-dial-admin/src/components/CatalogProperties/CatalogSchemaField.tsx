@@ -10,8 +10,9 @@ import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constan
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
-import { CatalogSchemaOption } from '@/src/models/dial/catalog-schema';
+import { CatalogEntityType, CatalogSchemaOption } from '@/src/models/dial/catalog-schema';
 import { ApplicationRoute } from '@/src/types/routes';
+import { filterCatalogSchemaOptionsByEntityType } from '@/src/utils/catalog-schemas/picker-options';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import SelectCatalogSchemaModal from './SelectCatalogSchemaModal';
 
@@ -23,6 +24,11 @@ interface Props {
   options?: CatalogSchemaOption[];
   /** Resolved here: the option read runs on the server, where no translator exists. */
   optionsError?: EntitiesI18nKey;
+  /**
+   * The kind of deployment this field sits on, which the offered schemas are filtered to. Absent
+   * leaves every schema listed. Each surface names its own via `CATALOG_SCHEMA_PICKER_ENTITY_TYPE`.
+   */
+  entityType?: CatalogEntityType;
   disabled?: boolean;
   /**
    * Fires only on a real change: each surface discards `catalog_properties` here, so re-picking the
@@ -31,7 +37,7 @@ interface Props {
   onChange: (schemaId?: string) => void;
 }
 
-const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabled, onChange }) => {
+const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entityType, disabled, onChange }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -41,17 +47,26 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabl
 
   const isFieldDisabled = disabled || isReadOnlyAdmin;
 
+  /**
+   * Filtered with the same helper the browse grid uses, so the two halves of one picker cannot list
+   * different sets. The relaxing control lives in the modal alone.
+   */
+  const offeredOptions = useMemo(
+    () => filterCatalogSchemaOptionsByEntityType(options || [], entityType, schemaId),
+    [options, entityType, schemaId],
+  );
+
   const dropdownItems = useMemo(
     () => [
       { value: NO_SCHEMA, label: t(BasicI18nKey.None) },
-      ...(options || []).map((option) => ({
+      ...offeredOptions.map((option) => ({
         value: option.$id,
         label: option['dial:catalogDisplayName'] || option.$id,
         // Display names are not unique, so the `$id` is what tells two same-named schemas apart.
         description: option['dial:catalogDisplayName'] ? option.$id : void 0,
       })),
     ],
-    [options, t],
+    [offeredOptions, t],
   );
 
   const onSelect = useCallback(
@@ -114,6 +129,7 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabl
         <SelectCatalogSchemaModal
           selectedId={schemaId}
           options={options}
+          entityType={entityType}
           isModalOpen={isModalOpen}
           onClose={onCloseModal}
           onApply={onApply}

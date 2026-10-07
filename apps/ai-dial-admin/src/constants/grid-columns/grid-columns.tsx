@@ -419,15 +419,24 @@ export const PICKER_RUNNER_COLUMNS = (t: (str: string) => string): ColDef[] => [
 ];
 
 /**
- * The catalog-schema picker's columns. No author or updated-time column: the read that unions the
- * two schema populations (`v1/catalog_schemas/schemas`) carries no resource metadata, so those
- * columns would cost one metadata request per row and stay empty for the config-file half anyway.
+ * The catalog-schema picker's columns with the entity-kind filter relaxed, where that kind varies
+ * and is the reason to be in that view.
+ *
+ * No author or updated-time column in either view: the read that unions the two schema populations
+ * (`v1/catalog_schemas/schemas`) carries no resource metadata, so those columns would cost one
+ * metadata request per row and stay empty for the config-file half anyway.
  */
 export const CATALOG_SCHEMA_PICKER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { field: '$id', headerName: 'ID' },
   { field: 'dial:catalogDisplayName', headerName: t(EntityFieldsI18nKey.displayName) },
   { field: 'dial:catalogEntityType', headerName: t(EntityFieldsI18nKey.catalogEntityType) },
 ];
+
+/**
+ * The picker's columns while filtered to one entity kind: the `$id` alone. That kind is a constant
+ * here, and display names are not unique, so the `$id` is the only column that identifies a schema.
+ */
+export const CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS = (): ColDef[] => [{ field: '$id', headerName: 'ID' }];
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
   ...BASE_COLUMNS,
