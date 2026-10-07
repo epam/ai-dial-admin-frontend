@@ -23,6 +23,12 @@ describe('FloatingFilter', () => {
     expect(screen.getByDisplayValue('abc')).toBeInTheDocument();
   });
 
+  test('draws the search field with an 8px radius', () => {
+    const props = { parentFilterInstance: vi.fn(), currentParentModel: () => ({ filter: '' }) } as any;
+    render(<FloatingFilter {...props} />);
+    expect(screen.getByPlaceholderText(BasicI18nKey.Search).parentElement).toHaveClass('rounded-lg');
+  });
+
   test('calls parentFilterInstance only after the user stops typing', () => {
     const onFloatingFilterChanged = vi.fn();
     const parentFilterInstance = (cb: any) => cb({ onFloatingFilterChanged });

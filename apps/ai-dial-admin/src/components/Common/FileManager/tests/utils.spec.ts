@@ -1,15 +1,16 @@
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_MANAGER_GRID_CLASS, FILE_NAME_MAX_LENGTH } from '../constants';
 import {
   createEmptyFile,
   findFolderByPath,
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
   getEmptyFile,
+  getGridOptions,
   getValidationMessages,
   isItemNameValid,
   validateCreateFolder,
@@ -265,5 +266,13 @@ describe('getBulkActionsToolbarOptions — Assets Applications bucket switch', (
 
     expect(withPath.actionLabels).toEqual(withoutPath.actionLabels);
     expect(Object.keys(withPath.actionLabels)).toEqual(['delete']);
+  });
+});
+
+describe('getGridOptions — file manager grid design', () => {
+  const options = getGridOptions(ApplicationRoute.Files, false, [], translate);
+
+  test('scopes the grid with the file manager class', () => {
+    expect(options.containerClassName).toBe(FILE_MANAGER_GRID_CLASS);
   });
 });

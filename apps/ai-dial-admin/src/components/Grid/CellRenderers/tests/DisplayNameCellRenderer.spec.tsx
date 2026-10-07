@@ -26,6 +26,25 @@ describe('DisplayNameCellRenderer', () => {
     expect(screen.getByText('gpt-4-turbo')).toBeInTheDocument();
   });
 
+  test('shows the type icon instead of the entity icon and initials when one is supplied', () => {
+    const TypeIcon = () => <svg role="img" aria-label="type icon" />;
+    render(
+      <DisplayNameCellRenderer
+        {...params({ displayName: 'Chat', name: 'chat', iconUrl: 'files/chat.png' })}
+        typeIcon={TypeIcon}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'type icon' })).toBeInTheDocument();
+    expect(screen.queryByText('C')).not.toBeInTheDocument();
+  });
+
+  test('shows the initials fallback when no type icon or iconUrl is supplied', () => {
+    render(<DisplayNameCellRenderer {...params({ displayName: 'Chat', name: 'chat' })} />);
+
+    expect(screen.getByText('C')).toBeInTheDocument();
+  });
+
   test('renders without crashing when neither displayName nor name is set', () => {
     const { container } = render(<DisplayNameCellRenderer {...params({})} />);
 

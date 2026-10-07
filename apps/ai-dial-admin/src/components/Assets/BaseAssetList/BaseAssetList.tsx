@@ -7,7 +7,7 @@ import {
   DialUploadFileItem,
   FileManagerColumnKey,
   FileManagerGridRow,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createSkill, createSkillFolder } from '@/src/app/[lang]/skills/actions';

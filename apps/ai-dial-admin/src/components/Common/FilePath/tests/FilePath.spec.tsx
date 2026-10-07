@@ -7,8 +7,8 @@ import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderCont
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-react-file-manager')>();
   return {
     ...actual,
     // Mirrors the real component's own `excludedPaths` filtering, so the test exercises the actual

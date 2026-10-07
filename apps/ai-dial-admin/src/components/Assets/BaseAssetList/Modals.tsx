@@ -22,7 +22,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
-import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import DeleteAssetsModal from '@/src/components/Assets/Modals/DeleteAssetsModal';
 
 interface Props {
