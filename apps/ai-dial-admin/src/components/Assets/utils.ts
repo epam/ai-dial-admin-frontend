@@ -18,7 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
-import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
 const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>

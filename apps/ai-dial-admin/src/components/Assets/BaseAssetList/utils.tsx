@@ -82,18 +82,19 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 import {
   DialFileNodeType,
   FileManagerColumnKey,
   NAME_COLUMN,
-  SelectOption,
   UPDATED_AT_COLUMN,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { MouseEvent, ReactNode } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
+import { ASSET_TYPE_ICONS } from './constants';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
@@ -130,7 +131,7 @@ export const customMultiSelectTagsRenderer = (
  * the one layout where the date column is hidden.
  */
 export const getAssetNameColumn =
-  (headerName: string) =>
+  (headerName: string, view?: ApplicationRoute) =>
   (
     dateLocale: Intl.LocalesArgument,
     dateOptions: Intl.DateTimeFormatOptions | undefined,
@@ -149,7 +150,7 @@ export const getAssetNameColumn =
         params.data?.nodeType === DialFileNodeType.FOLDER ? (
           renderFileManagerName(params)
         ) : (
-          <DisplayNameCellRenderer {...params} />
+          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} />
         ),
     };
   };
@@ -220,7 +221,7 @@ export const getGridColumns = (
 
   // Cast once: ui-kit accepts a column factory wherever a `ColDef` is declared and resolves it in
   // `useFileManagerColumns`, but that union is not in ag-grid's own type.
-  const NAME_COLUMN_DEF = getAssetNameColumn('Name') as unknown as ColDef;
+  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view) as unknown as ColDef;
 
   if (isFileRootPath(currentPath)) {
     return [NAME_COLUMN_DEF];

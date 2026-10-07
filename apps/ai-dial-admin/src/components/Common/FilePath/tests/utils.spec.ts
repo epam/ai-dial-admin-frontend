@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { processAssetsData, getFilePathGridOptions } from '../utils';
 import * as fileManagerUtils from '@/src/components/Common/FileManager/utils';
 import * as baseAssetListUtils from '@/src/components/Assets/BaseAssetList/utils';

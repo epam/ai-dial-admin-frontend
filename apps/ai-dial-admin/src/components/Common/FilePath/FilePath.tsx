@@ -1,13 +1,12 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import { DialInput, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import {
   DialDestinationFolderPopup,
   DialFile,
-  DialInput,
-  DialNeutralButton,
   DialRootFolder,
   DialUploadFileItem,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { IconFolderShare } from '@tabler/icons-react';
 
 import { getParentPathByFullPath } from '@/src/components/Assets/utils';

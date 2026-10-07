@@ -1,8 +1,10 @@
-import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
+import { ApplicationRoute } from '@/src/types/routes';
+import { ASSET_TYPE_ICONS } from '../constants';
 import { getAssetNameColumn } from '../utils';
 
 const column = (): ColDef => getAssetNameColumn('Name')(undefined, undefined, false);
@@ -22,7 +24,7 @@ describe('getAssetNameColumn', () => {
     expect(column()).toMatchObject({ colId: 'name', field: 'name', headerName: 'Name' });
   });
 
-  test('renders a folder row through ui-kit, which gives it a folder icon instead of a letter avatar', () => {
+  test('renders a folder row through the file manager, which gives it a folder icon instead of a letter avatar', () => {
     const { container } = renderCell({
       name: 'shared-prompts',
       path: 'public/shared-prompts',
@@ -30,7 +32,7 @@ describe('getAssetNameColumn', () => {
     });
 
     expect(screen.getByText('shared-prompts')).toBeInTheDocument();
-    expect(container.querySelector('.tabler-icon-folder')).toBeInTheDocument();
+    expect(container.querySelector('.dial-kit-folder-name .dial-kit-file-icon svg')).toBeInTheDocument();
   });
 
   test('keeps the display-name presentation for an asset row, id sub-line included', () => {
@@ -43,6 +45,26 @@ describe('getAssetNameColumn', () => {
 
     expect(screen.getByText('Summarize text')).toBeInTheDocument();
     expect(screen.getByText('summarize-text')).toBeInTheDocument();
+  });
+
+  test('shows the initials fallback for a view without a type icon', () => {
+    const cellRenderer = getAssetNameColumn('Name', ApplicationRoute.PlatformModels)(undefined, undefined, false)
+      .cellRenderer as (p: ICellRendererParams) => React.ReactNode;
+    render(<>{cellRenderer(params({ name: 'gpt', displayName: 'Gpt', nodeType: DialFileNodeType.ITEM }))}</>);
+
+    expect(screen.getByText('G')).toBeInTheDocument();
+  });
+
+  test('maps exactly the five asset views to a type icon', () => {
+    expect(Object.keys(ASSET_TYPE_ICONS).sort()).toEqual(
+      [
+        ApplicationRoute.AssetsApplications,
+        ApplicationRoute.AssetsToolsets,
+        ApplicationRoute.Prompts,
+        ApplicationRoute.Skills,
+        ApplicationRoute.Conversations,
+      ].sort(),
+    );
   });
 
   test('sorts and filters on the label the row actually shows', () => {

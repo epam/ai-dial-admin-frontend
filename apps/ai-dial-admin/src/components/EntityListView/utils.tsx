@@ -23,7 +23,7 @@ import { isAssetWithVersion, isToolsetRoute, isVersionlessAssetView } from '@/sr
 import { RefObject } from 'react';
 import { prepareEntityForDuplicate } from './Components/utils';
 import { CreateAssetActionMap, getEmptyAsset } from '../Assets/BaseAssetList/utils';
-import { DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 
 export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
