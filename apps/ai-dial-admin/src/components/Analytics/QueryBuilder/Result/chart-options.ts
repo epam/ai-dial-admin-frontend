@@ -69,8 +69,8 @@ export const bucketTopSlices = (
 };
 
 const tooltipStyle = (colors: ChartColors) => ({
-  backgroundColor: 'var(--bg-control-neutral, #1B212D)',
-  borderColor: 'var(--bg-control-neutral, #1B212D)',
+  backgroundColor: 'var(--bg-control-neutral, #FCFCFC)',
+  borderColor: 'var(--bg-control-neutral, #FCFCFC)',
   borderWidth: 1,
   padding: [8, 12],
   textStyle: { color: colors.value, fontSize: 12 },

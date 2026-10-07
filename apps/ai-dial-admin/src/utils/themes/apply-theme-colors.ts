@@ -1,11 +1,11 @@
 import { Theme } from '@/src/models/theme';
 import { setToLocalStorage } from '@/src/utils/local-storage';
-import { fallbackDarkTheme, newTokensMap } from './constant';
+import { fallbackLightTheme, newTokensMap } from './constant';
 
 export const applyThemeColors = (div: HTMLElement, theme?: Theme) => {
   div.removeAttribute('style'); // temporary (dark and white theme colors are not synchronized)
 
-  const colors: Record<string, string> = theme ? theme.colors : fallbackDarkTheme;
+  const colors: Record<string, string> = theme ? theme.colors : fallbackLightTheme;
 
   Object.entries(colors).forEach(([key, value]) => {
     const newToken = newTokensMap[key as keyof typeof newTokensMap];

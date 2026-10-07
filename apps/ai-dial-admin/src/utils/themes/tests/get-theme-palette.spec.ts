@@ -12,9 +12,9 @@ describe('getThemePalette', () => {
     expect(getThemePalette('dark')).toBe(fallbackDarkTheme);
   });
 
-  test('falls back to the dark palette for a custom or missing theme id', () => {
-    expect(getThemePalette('light-orange')).toBe(fallbackDarkTheme);
-    expect(getThemePalette()).toBe(fallbackDarkTheme);
+  test('falls back to the light palette for a custom or missing theme id', () => {
+    expect(getThemePalette('light-orange')).toBe(fallbackLightTheme);
+    expect(getThemePalette()).toBe(fallbackLightTheme);
   });
 
   test('both palettes define the same keys', () => {
