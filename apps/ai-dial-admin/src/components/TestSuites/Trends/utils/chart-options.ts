@@ -158,7 +158,7 @@ export const buildOverallScoreChartOptions = (
     tooltip: {
       trigger: 'axis',
       triggerOn: 'click',
-      alwaysShowContent: true,
+      hideDelay: 0,
       transitionDuration: 0,
       enterable: true,
       appendTo: typeof document !== 'undefined' ? document.body : undefined,
