@@ -22,7 +22,7 @@ The system SHALL render the route asset list as a single, non-nested list of ent
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
-- **WHEN** a user opens `/assets-routes`
+- **WHEN** a user opens `/platform-routes`
 - **THEN** all route resources are shown as direct entries with no folder-expand affordance
 
 #### Scenario: No create-folder or move action is present
@@ -31,8 +31,14 @@ no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: Create action opens the route create modal
 - **WHEN** a user activates the create action in the list toolbar
-- **THEN** a modal opens requesting only the route's name — no display name or description field,
-  since `Route` has neither — and submitting it creates the resource and navigates to its detail view
+- **THEN** a modal opens requesting the route's name and one required Path, with no Display Name or Description field
+- **AND** the Path input uses the existing route-path validation and shows its inline validation error when empty or invalid
+- **AND** Create remains unavailable until both the name and Path are valid
+
+#### Scenario: A valid initial path is persisted when creating a route
+- **WHEN** a user submits the create modal with a valid name and Path
+- **THEN** the system creates the resource with the entered Path as the sole initial item in its `paths` array
+- **AND** the existing success notification is shown and the user is navigated to the route detail view
 
 #### Scenario: Bulk delete removes the selected routes
 - **WHEN** a user selects several routes and confirms bulk delete
@@ -202,10 +208,10 @@ Audit tabs, and the existing Admin/CORE-format toggle — unchanged by this capa
   as before
 
 ### Requirement: No route-attach picker widening
-Unlike an interceptor, no entity surface attaches a route to itself by name — DIAL Core resolves a
-route by matching a request's path and method against its global `routes` map rather than through a
-per-entity reference list. The system SHALL leave every existing entity-attach picker unchanged,
-introducing no route-origin dimension or widened picker as part of this capability.
+The system SHALL leave every existing entity-attach picker unchanged, introducing no route-origin
+dimension or widened picker as part of this capability. Unlike an interceptor, no entity surface
+attaches a route to itself by name: DIAL Core resolves a route by matching a request's path and method
+against its global `routes` map rather than through a per-entity reference list.
 
 #### Scenario: No existing picker changes behavior
 - **WHEN** any existing entity-attach picker in the admin console renders
