@@ -9,6 +9,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 describe('getTrendsRunsCountI18nKey', () => {
   test('uses plain runs count below the Trends window', () => {
+    expect(getTrendsRunsCountI18nKey(1)).toBe(TestSuitesI18nKey.TrendsRunsCount);
     expect(getTrendsRunsCountI18nKey(TRENDS_RUN_WINDOW - 1)).toBe(TestSuitesI18nKey.TrendsRunsCount);
   });
 
@@ -21,6 +22,7 @@ describe('formatTrendsRunsCountLabel', () => {
   test('passes count into the selected key', () => {
     const t = (key: string, values?: Record<string, string | number>) => `${key}:${values?.count ?? ''}`;
 
+    expect(formatTrendsRunsCountLabel(t, 1)).toBe(`${TestSuitesI18nKey.TrendsRunsCount}:1`);
     expect(formatTrendsRunsCountLabel(t, 3)).toBe(`${TestSuitesI18nKey.TrendsRunsCount}:3`);
     expect(formatTrendsRunsCountLabel(t, 10)).toBe(`${TestSuitesI18nKey.TrendsLastNRuns}:10`);
   });

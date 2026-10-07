@@ -10,11 +10,12 @@ describe('RunsPassedThresholdCard', () => {
       <RunsPassedThresholdCard
         className="flex-1 sm:min-w-[180px]"
         stats={{ passed: 3, failed: 0, error: 0, total: 7 }}
+        runCount={7}
       />,
     );
 
     expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(TestSuitesI18nKey.TrendsLastNRuns))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(TestSuitesI18nKey.TrendsRunsCount))).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('/ 7')).toBeInTheDocument();
     expect(screen.getByText(`3 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
