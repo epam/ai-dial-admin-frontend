@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
-import { buildAppRunnerOptions, getRunnerOrigin } from '@/src/components/SourceField/Application/utils';
+import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
+import {
+  buildAppRunnerOptions,
+  getRunnerOpenUrl,
+  getRunnerOrigin,
+} from '@/src/components/SourceField/Application/utils';
 import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -96,5 +100,28 @@ describe('PICKER_RUNNER_COLUMNS', () => {
 
     expect(format({ value: AppRunnerOrigin.Platform })).toBe(SourceI18nKey.PlatformRunner);
     expect(format({ value: AppRunnerOrigin.Config })).toBe(SourceI18nKey.ConfigRunner);
+  });
+});
+
+describe('getRunnerOpenUrl', () => {
+  const [configOption, platformOption] = buildAppRunnerOptions(
+    [{ $id: 'urn:runner:entity' } as DialApplicationScheme],
+    [assetRunner],
+  );
+
+  it('opens a Platform runner by its storage path', () => {
+    expect(getRunnerOpenUrl(platformOption, 'en')).toBe('/en/platform-app-runners/http%253A%252F%252Fasdqwe');
+  });
+
+  it('opens a configuration-file runner by $id in config-file mode', () => {
+    expect(getRunnerOpenUrl(configOption, 'en')).toBe('/en/platform-app-runners/urn%3Arunner%3Aentity?configFile=true');
+  });
+
+  it('has no target for a Platform option without a path or a Config option without a reference', () => {
+    const withoutPath: AppRunnerOption = { ...platformOption, path: undefined };
+    const withoutReference: AppRunnerOption = { ...configOption, reference: '' };
+
+    expect(getRunnerOpenUrl(withoutPath, 'en')).toBeUndefined();
+    expect(getRunnerOpenUrl(withoutReference, 'en')).toBeUndefined();
   });
 });

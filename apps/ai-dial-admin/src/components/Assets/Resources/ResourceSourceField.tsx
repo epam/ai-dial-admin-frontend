@@ -2,7 +2,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import AppRunners from '@/src/components/SourceField/Application/AppRunners';
+import AppRunnersResource from '@/src/components/SourceField/Application/AppRunnersResource';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { ASSET_APPLICATION_INTERFACES_SOURCE_TYPE } from '@/src/components/SourceField/constants';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -156,9 +156,8 @@ const ResourceSourceField: FC<Props> = ({
       )}
 
       {source === SOURCE_TYPE.SCHEMA && (
-        <AppRunners
+        <AppRunnersResource
           selectedValue={entity.application_type_schema_id}
-          onChange={onChangeEntity}
           onChangeValue={(value, application_properties) =>
             onChangeEntity({
               ...entity,
@@ -167,9 +166,7 @@ const ResourceSourceField: FC<Props> = ({
             } as DialApplication)
           }
           runners={runners}
-          view={view}
           isEntityImmutable={isEntityImmutable}
-          isModal={isModal}
           disabled={isReadonly}
         />
       )}

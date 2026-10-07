@@ -372,7 +372,7 @@ The picker's columns SHALL be limited to `ID`, `Source`, `Author`, and `Updated 
 
 A runner SHALL be labelled by its `$id` consistently across the picker — the grid's `ID` column, the dropdown options, and the collapsed field showing the current selection — so the name a user selects by is the name they see afterwards. The runner's display name SHALL NOT be surfaced in the merged picker, because an asset runner has none without a content read and a label absent from the grid would not be recognizable.
 
-The picker component and its grid are shared with other surfaces, so this column set and labelling SHALL apply only where both populations are offered. Every other consumer — `Entities > Applications` included — SHALL keep the display-name label and the standalone runner column set unchanged, since all of its runners are admin-BE-backed and carry a display name.
+The merged picker SHALL be a dedicated component (`AppRunnersResource`) used only where both populations are offered; the admin-BE picker (`AppRunners`) SHALL carry no merged-mode, origin, or `$id`-labelling behaviour. Every other consumer — `Entities > Applications` included — SHALL keep the display-name label and the standalone runner column set unchanged, since all of its runners are admin-BE-backed and carry a display name.
 
 A failure to read the asset runner list SHALL degrade to the admin-BE-only list rather than failing the page.
 
@@ -421,6 +421,12 @@ A failure to read the asset runner list SHALL degrade to the admin-BE-only list 
 - **WHEN** the asset runner list cannot be read
 - **THEN** the picker still lists the admin-BE runners
 - **AND** the page renders rather than erroring
+
+#### Scenario: The admin-BE picker never renders the merged presentation
+
+- **WHEN** `AppRunners` renders for any view, including a view whose runner list contains Platform-origin options
+- **THEN** it labels runners by display name and shows the standalone runner column set
+- **AND** it opens the standalone `Entities > Application Runners` page in a new tab
 
 ### Requirement: An asset runner reference is stored as its Core resource name
 
@@ -721,3 +727,31 @@ If the resolved-schema request returns a schema, the system SHALL treat the decl
 - **THEN** the system invokes the existing Core-backed create callback with the edited Name, ID, and Display Name
 - **AND** the normal success or error result of the Core create flow remains visible
 
+### Requirement: A stored runner id that is not in the picker's list is still shown
+
+A Platform runner's option `$id` is the runner's `$id` as of creation, while an application stores the runner's current content `$id`. When the two differ — the runner's `$id` was edited after creation — the stored id matches no option. The merged picker SHALL still show the stored id as the field's value rather than rendering it blank. It SHALL NOT match the id to a runner: the picker opens with no selected row, and the open-in-new-tab control SHALL NOT be offered. Choosing a runner in the picker replaces the stored id and restores normal behaviour.
+
+#### Scenario: A runner whose `$id` was edited after creation is still shown
+
+- **WHEN** the properties tab opens an asset application whose `application_type_schema_id` is `http://asdqwe/edited` and no listed option carries that `$id`
+- **THEN** the field shows `http://asdqwe/edited` as its value
+- **AND** no open-in-new-tab control is offered
+
+#### Scenario: Choosing a runner replaces the unmatched id
+
+- **WHEN** the user selects a listed runner while an unmatched stored id is shown
+- **THEN** the field shows the selected runner and the open-in-new-tab control is offered for it
+
+### Requirement: The merged picker opens the selected runner on its own detail page
+
+The merged picker's open-in-new-tab control SHALL open the selected runner on the `Assets > App Runners` detail page, using the same URL the `Assets > App Runners` list builds for the matching row. A `Platform`-origin runner SHALL open at its storage path. A `Config`-origin runner SHALL open at its `$id` with the `configFile=true` query, so the page reads it from Core's configuration file; this works whether or not an admin backend is configured. The control SHALL NOT point at `Entities > Application Runners`.
+
+#### Scenario: A Platform runner opens by storage path
+
+- **WHEN** the selected runner is a Platform option with path `http%3A%2F%2Fasdqwe`
+- **THEN** Open navigates to `/{locale}/platform-app-runners/http%253A%252F%252Fasdqwe` in a new tab
+
+#### Scenario: A configuration-file runner opens in config-file mode
+
+- **WHEN** the selected runner is a Config-origin option with `$id` `urn:runner:entity`
+- **THEN** Open navigates to `/{locale}/platform-app-runners/urn%3Arunner%3Aentity?configFile=true` in a new tab
