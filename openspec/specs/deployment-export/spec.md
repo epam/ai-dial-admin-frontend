@@ -1,19 +1,31 @@
-## ADDED Requirements
+# Deployment Export
 
+## Purpose
+
+Exporting Deployment Manager entities (model servings, containers, images) from the Export Config page through the deployment manager's config export API.
+## Requirements
 ### Requirement: Components radio group in export structure panel
-When `deploymentsEnabled` feature flag is true, the export config Structure panel SHALL display a "Components" radio group with two options: "Entities, Builders, Access Management" and "Deployments". When the flag is false, the Components radio group SHALL NOT be rendered and the page SHALL behave as if "Entities, Builders, Access Management" is selected.
+When the `deploymentsEnabled` feature flag or the `analyticsEnabled` feature flag is true, the export config Structure panel SHALL display a "Components" radio group. Its options SHALL be, in order: "Entities, Builders, Access Management" (always), "Deployments" (only when `deploymentsEnabled` is true), and "Analytics" (only when `analyticsEnabled` is true). When both flags are false, the Components radio group SHALL NOT be rendered and the page SHALL behave as if "Entities, Builders, Access Management" is selected.
 
 #### Scenario: Deployments enabled
-- **WHEN** the `DEPLOYMENTS_ENABLED` environment variable is true
-- **THEN** the Components radio group is displayed with both options: "Entities, Builders, Access Management" and "Deployments"
+- **WHEN** the `DEPLOYMENTS_ENABLED` environment variable is true and `ANALYTICS_ENABLED` is not
+- **THEN** the Components radio group is displayed with two options: "Entities, Builders, Access Management" and "Deployments"
+
+#### Scenario: Analytics enabled without Deployments
+- **WHEN** `ANALYTICS_ENABLED` is true and `DEPLOYMENTS_ENABLED` is false or not set
+- **THEN** the Components radio group is displayed with two options: "Entities, Builders, Access Management" and "Analytics"
+
+#### Scenario: Both enabled
+- **WHEN** both `DEPLOYMENTS_ENABLED` and `ANALYTICS_ENABLED` are true
+- **THEN** the Components radio group shows "Entities, Builders, Access Management", "Deployments" and "Analytics", in that order
 
 #### Scenario: Deployments disabled
-- **WHEN** the `DEPLOYMENTS_ENABLED` environment variable is false or not set
+- **WHEN** the `DEPLOYMENTS_ENABLED` and `ANALYTICS_ENABLED` environment variables are both false or not set
 - **THEN** the Components radio group is NOT rendered
 - **AND** the export page behaves identically to the current admin entity export (as if first option is selected)
 
 #### Scenario: Default selection
-- **WHEN** the export page loads with deployments enabled
+- **WHEN** the export page loads with the Components radio group rendered
 - **THEN** "Entities, Builders, Access Management" SHALL be selected by default
 
 ### Requirement: Admin export context when first option selected
@@ -123,3 +135,12 @@ A new `DeploymentExportApi` class SHALL be created using `DIAL_DEPLOYMENTS_API_U
 #### Scenario: API class instantiation
 - **WHEN** the application initializes
 - **THEN** a `deploymentExportApi` instance is created with `DIAL_DEPLOYMENTS_API_URL` host in `app/api/api.ts`
+
+### Requirement: Deployment candidate read failure stops loading
+When reading a deployment entity type's candidates for the Add modal is rejected (for example because the deployment manager cannot be reached), the Content panel SHALL stop its loader, SHALL show an error notification saying the list could not be loaded, and SHALL read the candidates again when the tab is reopened.
+
+#### Scenario: Deployment manager unreachable
+- **WHEN** the candidate read for a deployment tab is rejected
+- **THEN** the loader stops and an error notification is shown
+- **AND** reopening the tab reads the candidates again
+

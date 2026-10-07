@@ -4,6 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import {
   adaptersApi,
+  analyticsDataApi,
   applicationRunnersApi,
   applicationsApi,
   containersApi,
@@ -18,11 +19,16 @@ import {
   toolSetsApi,
   utilityApi,
 } from '@/src/app/api/api';
+import { CatalogExportPreview, CatalogExportRequest } from '@/src/models/analytics/catalog-export';
+import { DownloadedFile } from '@/src/models/download';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { AnalyticsExportEntityType } from '@/src/types/analytics/export';
 import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getPipelinesForExportGrid, getTablesForExportGrid } from '@/src/utils/entities/analytics-entities-list-view';
 import {
   getContainersForEntitiesGrid,
   getImagesForEntitiesGrid,
@@ -146,4 +152,36 @@ export async function getDeploymentEntities(type: string): Promise<EntitiesGridD
     return getImagesForEntitiesGrid(res.success ? res.response : null);
   }
   return [];
+}
+
+export async function exportAnalyticsConfig(
+  request: CatalogExportRequest,
+): Promise<ServerActionResponse<DownloadedFile>> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await analyticsDataApi.exportCatalog(request, token);
+}
+
+export async function previewAnalyticsExportConfig(
+  request: CatalogExportRequest,
+): Promise<ServerActionResponse<CatalogExportPreview>> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await analyticsDataApi.previewCatalogExport(request, token);
+}
+
+export async function getAnalyticsEntities(type: string): Promise<ServerActionResponse<EntitiesGridData[]>> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
+  if (type === AnalyticsExportEntityType.TABLE) {
+    const res = await analyticsDataApi.getTables(token);
+    return res.success
+      ? { ...res, response: getTablesForExportGrid(res.response ?? []) }
+      : { ...res, response: void 0 };
+  }
+  if (type === AnalyticsExportEntityType.PIPELINE) {
+    const res = await analyticsDataApi.getPipelines(void 0, token);
+    return res.success
+      ? { ...res, response: getPipelinesForExportGrid(res.response ?? []) }
+      : { ...res, response: void 0 };
+  }
+  return { success: true, response: [] };
 }
