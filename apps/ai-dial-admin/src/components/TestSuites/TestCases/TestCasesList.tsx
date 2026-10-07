@@ -238,10 +238,15 @@ const TestCasesList: FC<Props> = ({
     api.sizeColumnsToFit();
   }, []);
 
+  const onGridSizeChanged = useCallback((event: { api: GridApi }) => {
+    event.api.sizeColumnsToFit();
+  }, []);
+
   const gridOptions: GridOptions = {
     ...turnGrid.turnGridOptions,
     onFirstDataRendered: (event: FirstDataRenderedEvent) => onAutoSizeTestCaseColumns(event.api),
     onNewColumnsLoaded: (event: NewColumnsLoadedEvent) => onAutoSizeTestCaseColumns(event.api),
+    onGridSizeChanged,
     onSelectionChanged,
     onCellClicked,
     isExternalFilterPresent: () => showIncludedOnlyRef.current,
