@@ -1,12 +1,4 @@
-# run-status-display Specification
-
-## Purpose
-
-Defines how a test suite run's status is presented wherever a run appears — list rows, the run detail
-header, and any other surface showing a run — so that every status value the backend can report is
-legible, including a status added to the backend after a UI release.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Run status presentation
 The system SHALL present a run's status with a visual indicator wherever a run status appears, and SHALL
@@ -45,18 +37,3 @@ and non-text-content requirements in `.claude/rules/a11y.md`, and a tooltip is n
 - **WHEN** a run status is presented as an indicator alone in a list row
 - **THEN** the status label is part of the cell's accessible name
 - **AND** the label is reachable by keyboard, not only on hover
-
-### Requirement: Unrecognized status is still legible
-When a run's status is a value the system does not recognize, it SHALL display that raw status value
-rather than rendering an empty status. A status the UI has no label for MUST NOT result in a blank status
-with no indicator and no text, because that is indistinguishable from a rendering failure.
-
-#### Scenario: Backend reports a status the UI does not know
-- **WHEN** a run is displayed whose status is a value the system has no label for
-- **THEN** the raw status value is shown as its status text
-- **THEN** the status is not blank
-
-#### Scenario: Run has no status
-- **WHEN** a run is displayed that has no status value at all
-- **THEN** no status text is shown
-- **THEN** no placeholder standing in for a missing value is shown

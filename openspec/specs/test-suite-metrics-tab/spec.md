@@ -7,22 +7,34 @@ its create/edit metric modal each make only the requests their own render actual
 
 ## Requirements
 
-### Requirement: Single aggregated fetch for the Metrics tab's initial render
+### Requirement: Aggregated fetch for the Metrics tab's initial render, with condition backfilled
 The system SHALL fetch a test suite's bound metrics for the Metrics tab's initial render with a
-single request that returns each metric together with its metric declaration (including
+single aggregated request that returns each metric together with its metric declaration (including
 description) and metric declaration version (including `outputSchema`). The system SHALL NOT issue
 a separate per-metric request to obtain a metric's `outputSchema`.
 
+The aggregated response does not carry a metric's `condition`. The system SHALL backfill `condition`
+by also fetching the plain metrics list (one additional, non-per-metric request) in parallel with the
+aggregated fetch, and merging each metric's `condition` from that list by metric id. This backfill is
+a stopgap for the aggregated endpoint's gap, not a feature of the tab's loading model: it SHALL be
+removed once the aggregated response carries `condition` itself.
+
 #### Scenario: Suite with multiple bound metrics
 - **WHEN** a user opens the Metrics tab of a test suite that has several bound metrics
-- **THEN** the system issues exactly one request to load the metrics for that render, and every
-  metric card and the score-settings panel have the data (name, description, condition, bindings,
-  `outputSchema`) they need from that single response
+- **THEN** the system issues exactly one aggregated request and one plain-list request to load the
+  metrics for that render, and every metric card and the score-settings panel have the data (name,
+  description, condition, bindings, `outputSchema`) they need from those two responses combined
 
 #### Scenario: Suite with no bound metrics
 - **WHEN** a user opens the Metrics tab of a test suite with no bound metrics
-- **THEN** the system issues the same single request, receives an empty result, and renders the
+- **THEN** the system issues the same two requests, receives empty results, and renders the
   no-metrics state without any additional request
+
+#### Scenario: Metric condition round-trips after being saved
+- **WHEN** a user sets a metric's condition in the create/edit metric modal and confirms, and the
+  Metrics tab then reloads its metrics
+- **THEN** the metric card shows the saved condition (not "Always run"), and reopening the edit
+  modal for that metric prefills the Condition field with the saved value
 
 ### Requirement: Metric declarations listing deferred to the create/edit metric modal
 The system SHALL NOT fetch the metric declarations listing when the Metrics tab is opened or

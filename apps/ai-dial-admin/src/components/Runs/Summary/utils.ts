@@ -1,6 +1,7 @@
 import { JSONSchema7 } from 'json-schema';
 
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
+import { DialModelPricing } from '@/src/models/dial/model';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus, RunCosts } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
@@ -506,3 +507,12 @@ export const formatRunCost = (value: number | null | undefined): string | null =
  */
 export const hasRunCostFigure = (costs: RunCosts | null | undefined): boolean =>
   Number.isFinite(costs?.avgTestCaseCost) || Number.isFinite(costs?.avgMetricEvalCost);
+
+/**
+ * Whether a model's pricing carries a usable rate. `prompt`/`completion` are the only flat rates a
+ * model bills from (cache rates fall back to the prompt rate when unset, per `DialModelPricing`), so
+ * a model with neither set has no price at all — any run against it can never produce a cost figure,
+ * no matter how long `/costs` is polled.
+ */
+export const hasModelPricing = (pricing: DialModelPricing | undefined): boolean =>
+  Boolean(pricing?.prompt) || Boolean(pricing?.completion);

@@ -87,6 +87,7 @@ export interface Run {
 }
 
 export enum RunStatus {
+  PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   RUNNING = 'RUNNING',
   FAILED = 'FAILED',

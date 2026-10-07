@@ -19,6 +19,7 @@ import {
   createTestSuiteMetric,
   deleteTestSuiteMetric,
   getDetailedMetricDeclarations,
+  getTestSuiteMetrics,
   getTestSuiteMetricsAggregated,
   updateTestSuiteMetric,
 } from '@/src/app/[lang]/test-suites/actions';
@@ -57,15 +58,23 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
   const loadMetrics = useCallback(() => {
     const testSuiteId = selectedTestSuite.id as string;
 
-    return getTestSuiteMetricsAggregated(testSuiteId).then((response) => {
-      setMetrics(
-        response?.map((metric) => ({
-          ...metric,
-          description: metric.description ?? metric.metricDeclaration?.description,
-          outputSchema: metric.outputSchema ?? metric.metricDeclarationVersion?.outputSchema,
-        })) || [],
-      );
-    });
+    // The aggregated endpoint doesn't serialize `condition` (same gap as the per-metric
+    // `.../aggregated` endpoint - see AddMetricModal.tsx), so it's backfilled from the plain list,
+    // which does. Remove this merge once the aggregated response carries `condition` itself.
+    return Promise.all([getTestSuiteMetricsAggregated(testSuiteId), getTestSuiteMetrics(testSuiteId, 0, 1000)]).then(
+      ([aggregatedMetrics, plainMetrics]) => {
+        const conditionByMetricId = new Map(plainMetrics?.content?.map((metric) => [metric.id, metric.condition]));
+
+        setMetrics(
+          aggregatedMetrics?.map((metric) => ({
+            ...metric,
+            condition: metric.condition ?? conditionByMetricId.get(metric.id),
+            description: metric.description ?? metric.metricDeclaration?.description,
+            outputSchema: metric.outputSchema ?? metric.metricDeclarationVersion?.outputSchema,
+          })) || [],
+        );
+      },
+    );
   }, [selectedTestSuite.id]);
 
   const onRemoveMetric = useCallback(

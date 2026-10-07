@@ -24,6 +24,18 @@ describe('getRequestFilters', () => {
     expect(getRequestFilters(gridFilters)).toEqual(expected);
   });
 
+  test('maps INCLUDES to a comma-joined value match', () => {
+    const gridFilters: Record<string, GridFilter> = {
+      status: { filterType: 'in', type: GridFilterType.INCLUDES, filter: 'FAILED,CANCELLED' },
+    };
+
+    const expected: FilterDto[] = [
+      { column: 'status', value: 'FAILED,CANCELLED', operator: FilterOperatorDto.INCLUDES },
+    ];
+
+    expect(getRequestFilters(gridFilters)).toEqual(expected);
+  });
+
   test('ignores filters with unknown types', () => {
     const gridFilters: Record<string, GridFilter> = {
       name: { filterType: 'text', type: 'invalid' as GridFilterType, filter: 'test' },

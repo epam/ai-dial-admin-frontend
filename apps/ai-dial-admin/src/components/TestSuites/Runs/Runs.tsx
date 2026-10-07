@@ -14,6 +14,7 @@ import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
+import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getCancelOperation,
@@ -71,6 +72,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    components: RUN_STATUS_FILTER_COMPONENTS,
     rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
     rowClassRules: {
       'ag-activity-row-clickable': () => true,
@@ -265,6 +267,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
             onGridReady={onGridReady}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
+            storageKey={`${ApplicationRoute.TestSuites}/runs`}
           />
         </div>
       </div>
