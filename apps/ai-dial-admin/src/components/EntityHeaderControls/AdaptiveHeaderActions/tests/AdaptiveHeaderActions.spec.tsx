@@ -120,4 +120,63 @@ describe('AdaptiveHeaderActions', () => {
     await user.click(screen.getByRole('button', { name: 'Export' }));
     expect(onExport).toHaveBeenCalled();
   });
+
+  test('expands again when available width recovers after compact', () => {
+    let available = 200;
+    const needed = 500;
+    const callbacks: ResizeObserverCallback[] = [];
+
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          callbacks.push(callback);
+        }
+        observe(target: Element) {
+          Object.defineProperty(target, 'clientWidth', {
+            configurable: true,
+            get: () => available,
+          });
+          const measure = target.querySelector('[aria-hidden="true"]') as HTMLElement | null;
+          if (measure) {
+            Object.defineProperty(measure, 'scrollWidth', { configurable: true, value: needed });
+          }
+          callbacks.at(-1)?.([], this as unknown as ResizeObserver);
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+
+    const { rerender } = renderActions();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
+
+    available = 800;
+    callbacks.forEach((callback) => callback([], {} as ResizeObserver));
+    rerender(
+      <AdaptiveHeaderActions
+        actions={{
+          trailing: [
+            {
+              id: 'export',
+              label: 'Export',
+              icon: <span>export-icon</span>,
+              onClick: vi.fn(),
+            },
+          ],
+        }}
+        deleteAction={{
+          id: 'delete',
+          label: ButtonsI18nKey.Delete,
+          icon: <span>delete-icon</span>,
+          onClick: vi.fn(),
+          appearance: 'danger',
+        }}
+      />,
+    );
+    callbacks.forEach((callback) => callback([], {} as ResizeObserver));
+
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ShowMore })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
+  });
 });

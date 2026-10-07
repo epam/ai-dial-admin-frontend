@@ -16,14 +16,31 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
   const gridApiRef = useRef<GridApi | null>(null);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [isSearching, setIsSearching] = useState(false);
+  // Survives a render where expandGroup runs before groups flip to multi — the prune effect
+  // below would otherwise drop the key and leave a newly promoted case collapsed.
+  const pendingExpandRef = useRef<Set<string>>(new Set());
 
   const groups = useMemo(() => groupTestCaseRows(rawRows), [rawRows]);
 
   useEffect(() => {
     const multiTurnKeys = new Set(groups.filter((group) => group.isMulti).map((group) => group.key));
     setExpandedKeys((prev) => {
-      const next = new Set([...prev].filter((key) => multiTurnKeys.has(key)));
-      return next.size === prev.size ? prev : next;
+      const next = new Set<string>();
+      prev.forEach((key) => {
+        if (multiTurnKeys.has(key)) {
+          next.add(key);
+        }
+      });
+      pendingExpandRef.current.forEach((key) => {
+        if (multiTurnKeys.has(key)) {
+          next.add(key);
+          pendingExpandRef.current.delete(key);
+        }
+      });
+      if (next.size === prev.size && [...next].every((key) => prev.has(key))) {
+        return prev;
+      }
+      return next;
     });
   }, [groups]);
 
@@ -44,6 +61,7 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
+        pendingExpandRef.current.delete(key);
       } else {
         next.add(key);
       }
@@ -52,6 +70,7 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
   }, []);
 
   const expandGroup = useCallback((key: string) => {
+    pendingExpandRef.current.add(key);
     setExpandedKeys((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);

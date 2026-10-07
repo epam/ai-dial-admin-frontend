@@ -55,6 +55,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const isSavingRef = useRef(false);
+  /** Stays true after save until router.refresh() delivers a new etag/entity — prevents stale-etag retries. */
+  const awaitingRefreshRef = useRef(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -82,6 +84,15 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   useEffect(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
   }, [originalTestSuite]);
+
+  useEffect(() => {
+    if (!awaitingRefreshRef.current) {
+      return;
+    }
+    awaitingRefreshRef.current = false;
+    isSavingRef.current = false;
+    setIsSaving(false);
+  }, [etag, originalTestSuite]);
 
   useEffect(() => {
     if (!originalTestSuite.datasetId) {
@@ -134,11 +145,13 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
         ),
       );
+      awaitingRefreshRef.current = true;
       router.refresh();
     };
 
     const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
       showNotification(getErrorNotification(header, message, requestId));
+      awaitingRefreshRef.current = true;
       router.refresh();
     };
 
@@ -175,8 +188,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
 
       showSuccessAndRefresh();
     } finally {
-      isSavingRef.current = false;
-      setIsSaving(false);
+      if (!awaitingRefreshRef.current) {
+        isSavingRef.current = false;
+        setIsSaving(false);
+      }
     }
   }, [selectedTestSuite, etag, showNotification, t, router, dataset, datasetEtag]);
 

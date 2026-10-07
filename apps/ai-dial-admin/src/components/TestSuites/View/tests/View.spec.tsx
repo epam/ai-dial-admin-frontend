@@ -155,32 +155,39 @@ describe('TestSuiteView', () => {
       expect(saveButton).toBeDisabled();
     });
 
-    test('re-enables Save once the request completes', async () => {
+    test('keeps Save disabled after success until refresh delivers a new etag', async () => {
       const user = userEvent.setup();
       const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
       (updateTestSuite as Mock).mockResolvedValue({ success: true });
 
-      render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
+      const { rerender } = render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag-1" />);
 
       const saveButton = screen.getByRole('button', { name: 'Save' });
       await user.click(saveButton);
 
+      await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+      expect(saveButton).toBeDisabled();
+
+      rerender(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag-2" />);
       await waitFor(() => expect(saveButton).not.toBeDisabled());
-      expect(mockRefresh).toHaveBeenCalled();
     });
 
-    test('re-enables Save after a failed request, so the user can retry', async () => {
+    test('keeps Save disabled after a failed request until refresh delivers updated props', async () => {
       const user = userEvent.setup();
       const { updateTestSuite } = await import('@/src/app/[lang]/test-suites/actions');
       (updateTestSuite as Mock).mockResolvedValue({ success: false, errorHeader: 'Error', errorMessage: 'Conflict' });
 
-      render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag" />);
+      const { rerender } = render(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag-1" />);
 
       const saveButton = screen.getByRole('button', { name: 'Save' });
       await user.click(saveButton);
 
-      await waitFor(() => expect(saveButton).not.toBeDisabled());
+      await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+      expect(saveButton).toBeDisabled();
       expect(updateTestSuite).toHaveBeenCalledOnce();
+
+      rerender(<TestSuiteView originalTestSuite={mockTestSuite} etag="etag-2" />);
+      await waitFor(() => expect(saveButton).not.toBeDisabled());
     });
   });
 });

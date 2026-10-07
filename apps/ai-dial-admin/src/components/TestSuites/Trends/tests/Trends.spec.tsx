@@ -164,7 +164,7 @@ describe('Trends', () => {
 
     await waitFor(() => {
       expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
-      expect(screen.getByText(new RegExp(TestSuitesI18nKey.TrendsLastNRuns))).toBeInTheDocument();
+      expect(screen.getAllByText(new RegExp(TestSuitesI18nKey.TrendsRunsCount)).length).toBeGreaterThan(0);
       expect(screen.getByText('/ 2')).toBeInTheDocument();
       expect(screen.getByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
       expect(screen.getByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();

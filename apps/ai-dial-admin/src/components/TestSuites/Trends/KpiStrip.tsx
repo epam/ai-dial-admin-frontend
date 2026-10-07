@@ -46,7 +46,11 @@ const KpiStrip: FC<Props> = ({ kpis }) => {
         runCount={kpis.runCount}
       />
       {kpis.thresholdStats != null && (
-        <RunsPassedThresholdCard className="flex-1 sm:min-w-[180px]" stats={kpis.thresholdStats} />
+        <RunsPassedThresholdCard
+          className="flex-1 sm:min-w-[180px]"
+          stats={kpis.thresholdStats}
+          runCount={kpis.runCount}
+        />
       )}
     </div>
   );
