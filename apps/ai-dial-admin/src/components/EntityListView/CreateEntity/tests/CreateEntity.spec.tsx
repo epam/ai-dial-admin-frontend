@@ -172,10 +172,13 @@ describe('CreateEntity', () => {
     fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
       target: { value: 'route1' },
     });
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.paths}*` }), {
+      target: { value: '/v1' },
+    });
     fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
 
     await waitFor(() => expect(createRoute).toHaveBeenCalled());
-    expect(createRoute.mock.calls[0][0]).toMatchObject({ userRoles: [] });
+    expect(createRoute).toHaveBeenCalledWith(expect.objectContaining({ userRoles: [], paths: ['/v1'] }));
   });
 
   test('starts a new platform-bucket application with user_roles: []', async () => {
