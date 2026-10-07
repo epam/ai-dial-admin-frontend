@@ -1,10 +1,5 @@
-import {
-  DialFormPopup,
-  DialRadioGroup,
-  DialUploadFileItem,
-  RadioButtonWithContent,
-  RadioGroupOrientation,
-} from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import { DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 

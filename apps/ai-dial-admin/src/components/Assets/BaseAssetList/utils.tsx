@@ -82,13 +82,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions } from '@/src/utils/entities/versions';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 import {
   DialFileNodeType,
   FileManagerColumnKey,
   NAME_COLUMN,
-  SelectOption,
   UPDATED_AT_COLUMN,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { MouseEvent, ReactNode } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';

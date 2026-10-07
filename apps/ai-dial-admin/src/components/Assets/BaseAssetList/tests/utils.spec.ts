@@ -1,4 +1,4 @@
-import { FileManagerColumnKey } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey } from '@epam/ai-dial-react-file-manager';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { getAllSelectedItemsPaths, getGridColumns, getPlatformAssetDuplicate } from '../utils';

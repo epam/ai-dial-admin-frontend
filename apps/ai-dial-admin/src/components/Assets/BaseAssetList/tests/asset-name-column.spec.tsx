@@ -1,4 +1,4 @@
-import { DialFileNodeType } from '@epam/ai-dial-ui-kit';
+import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
@@ -22,7 +22,7 @@ describe('getAssetNameColumn', () => {
     expect(column()).toMatchObject({ colId: 'name', field: 'name', headerName: 'Name' });
   });
 
-  test('renders a folder row through ui-kit, which gives it a folder icon instead of a letter avatar', () => {
+  test('renders a folder row through the file manager, which gives it a folder icon instead of a letter avatar', () => {
     const { container } = renderCell({
       name: 'shared-prompts',
       path: 'public/shared-prompts',
@@ -30,7 +30,7 @@ describe('getAssetNameColumn', () => {
     });
 
     expect(screen.getByText('shared-prompts')).toBeInTheDocument();
-    expect(container.querySelector('.tabler-icon-folder')).toBeInTheDocument();
+    expect(container.querySelector('.dial-kit-folder-name .dial-kit-file-icon svg')).toBeInTheDocument();
   });
 
   test('keeps the display-name presentation for an asset row, id sub-line included', () => {
