@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { CATALOG_ENTITY_TYPES } from '@/src/constants/catalog-schemas';
+import { CATALOG_ENTITY_TYPES, OFFERED_CATALOG_ENTITY_TYPES } from '@/src/constants/catalog-schemas';
 import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import { isValidCatalogSchema, validateCatalogSchema } from '../validation';
@@ -72,6 +72,22 @@ describe('Catalog Schema Utils :: validateCatalogSchema', () => {
     CatalogEntityType.Interceptor,
   ])('Should accept the %s entity type', (entityType) => {
     expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': entityType }))).toEqual([]);
+  });
+
+  /**
+   * The console offers fewer kinds than it accepts: `skill` is not offerable, because a skill cannot
+   * carry a catalog schema, but a configuration file may legally declare one and it must keep saving.
+   * Narrowing the accept list to match the offered list is the Issue #4880 regression, so the gap is
+   * asserted here rather than left implicit in two separate lists.
+   */
+  test('Should accept every offered entity type and at least one it does not offer', () => {
+    expect(CATALOG_ENTITY_TYPES).toEqual(expect.arrayContaining(OFFERED_CATALOG_ENTITY_TYPES));
+    expect(OFFERED_CATALOG_ENTITY_TYPES).not.toContain(CatalogEntityType.Skill);
+    expect(CATALOG_ENTITY_TYPES.length).toBeGreaterThan(OFFERED_CATALOG_ENTITY_TYPES.length);
+  });
+
+  test('Should keep saving a schema a configuration file typed skill, which is never offered', () => {
+    expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': CatalogEntityType.Skill }))).toEqual([]);
   });
 
   test.each([undefined, '', '   '])('Should report a blank display name (%s)', (displayName) => {

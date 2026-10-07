@@ -20,6 +20,7 @@ import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
+import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -150,6 +151,7 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
             schemaId={selectedToolset.catalog_schema_id}
             options={catalogSchemas?.options}
             optionsError={catalogSchemas?.error}
+            entityType={CATALOG_SCHEMA_PICKER_ENTITY_TYPE.toolsets}
             onChange={(catalog_schema_id) =>
               onChange({ ...selectedToolset, catalog_schema_id, catalog_properties: void 0 })
             }

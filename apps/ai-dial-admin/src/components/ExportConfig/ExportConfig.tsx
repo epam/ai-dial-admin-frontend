@@ -13,13 +13,26 @@ import {
 import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
+import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
 
-import { exportConfig, exportConfigMap, exportDeploymentConfig } from '@/src/app/[lang]/export-config/actions';
+import {
+  exportAnalyticsConfig,
+  exportConfig,
+  exportConfigMap,
+  exportDeploymentConfig,
+} from '@/src/app/[lang]/export-config/actions';
+import { buildCatalogExportRequest } from '@/src/components/ExportConfig/analytics-utils';
+import AnalyticsConfigContent from '@/src/components/ExportConfig/Content/AnalyticsConfigContent';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
 import DeploymentConfigContent from '@/src/components/ExportConfig/Content/DeploymentConfigContent';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
-import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
+import {
+  fulDependenciesConfig,
+  getComponents,
+  getComponentTypes,
+  hasSelection,
+} from '@/src/components/ExportConfig/utils';
 import {
   buildDeploymentExportPreviewRequest,
   getDeploymentExportComponents,
@@ -39,9 +52,10 @@ import ExportTopics from './Structure/Topics';
 interface Props {
   enableExportConfigMap?: boolean;
   deploymentsEnabled?: boolean;
+  isAnalyticsEnabled?: boolean;
 }
 
-const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) => {
+const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled, isAnalyticsEnabled }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -55,9 +69,11 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
   const [isExportDisable, setIsExportDisable] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
-  const isDeploymentContext = useMemo(
-    () => selectedComponentType === ExportComponentType.DEPLOYMENTS,
-    [selectedComponentType],
+  const isAdminContext = selectedComponentType === ExportComponentType.ADMIN;
+
+  const scopes = useMemo(
+    () => getConfigScopes(!!deploymentsEnabled, !!isAnalyticsEnabled),
+    [deploymentsEnabled, isAnalyticsEnabled],
   );
 
   const exportTypes: RadioButtonWithContent[] = [
@@ -102,6 +118,13 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
     } as ExportRequest;
   }, [selectedExportType, selectedExportFormat, dependencies, customExportData, selectedTopics]);
 
+  const isAnalyticsContext = selectedComponentType === ExportComponentType.ANALYTICS;
+
+  const analyticsExportRequest = useMemo(
+    () => buildCatalogExportRequest(selectedExportType, customExportData),
+    [selectedExportType, customExportData],
+  );
+
   const prevComponentTypeRef = useRef(selectedComponentType);
   const onChangeComponentType = useCallback((key: string) => {
     const newType = key as ExportComponentType;
@@ -110,6 +133,10 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
 
     setSelectedComponentType(newType);
     setCustomExportData({});
+
+    if (newType === ExportComponentType.ANALYTICS) {
+      setSelectedExportType(ExportType.Full);
+    }
 
     if (newType === ExportComponentType.ADMIN) {
       setSelectedExportFormat(ExportFormat.ADMIN);
@@ -179,6 +206,49 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
     [customExportData, showNotification, t],
   );
 
+  const onAnalyticsExport = useCallback(async () => {
+    const type = t(MenuI18nKey.Analytics);
+    const showExportError = (message?: string, requestId?: string) =>
+      showNotification(
+        getErrorNotification(
+          t(ExportI18nKey.ErrorTitle, { type }),
+          message || t(ExportI18nKey.ErrorDescription),
+          requestId,
+        ),
+      );
+
+    try {
+      const res = await exportAnalyticsConfig(analyticsExportRequest);
+      if (res.success && res.response) {
+        showNotification(
+          getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
+        );
+        downloadFile(res.response.blob, res.response.fileName);
+      } else {
+        showExportError(res.errorMessage, res.requestId);
+      }
+    } catch {
+      showExportError();
+    }
+  }, [analyticsExportRequest, showNotification, t]);
+
+  const onPrepare = useCallback(
+    (addSecrets: boolean, addGlobalFirewall?: boolean) => {
+      setIsModalOpen(false);
+      switch (selectedComponentType) {
+        case ExportComponentType.DEPLOYMENTS:
+          onDeploymentExport(addSecrets, addGlobalFirewall ?? false);
+          break;
+        case ExportComponentType.ANALYTICS:
+          void onAnalyticsExport();
+          break;
+        default:
+          onExport(addSecrets);
+      }
+    },
+    [selectedComponentType, onDeploymentExport, onAnalyticsExport, onExport],
+  );
+
   const onExportMap = useCallback(() => {
     const type = t(ExportI18nKey.Config);
     exportConfigMap()
@@ -196,24 +266,63 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
       });
   }, [showNotification, t]);
 
+  // An empty Custom selection would reach the service as `components: []`, which it reads as "export everything".
+  const isEmptyAnalyticsCustom =
+    isAnalyticsContext && selectedExportType === ExportType.Custom && analyticsExportRequest.components.length === 0;
+
   const onTryExport = useCallback(() => {
-    if (!isDeploymentContext && selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
+    if (isEmptyAnalyticsCustom) {
+      return;
+    }
+    if (isAdminContext && selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
       onExportMap();
     } else {
       setIsModalOpen(true);
     }
-  }, [isDeploymentContext, onExportMap, selectedExportFormat]);
+  }, [isAdminContext, isEmptyAnalyticsCustom, onExportMap, selectedExportFormat]);
 
   useEffect(() => {
-    if (isDeploymentContext) {
-      const hasComponents = Object.values(customExportData).some((data) => data.length > 0);
-      setIsExportDisable(!hasComponents);
+    if (isAnalyticsContext && selectedExportType === ExportType.Full) {
+      setIsExportDisable(false);
+    } else if (!isAdminContext) {
+      setIsExportDisable(!hasSelection(customExportData));
     } else if (exportRequest.$type === ExportType.Full) {
       setIsExportDisable(exportRequest.componentTypes.length === 0);
     } else {
       setIsExportDisable(exportRequest.components.length === 0);
     }
-  }, [exportRequest, isDeploymentContext, customExportData]);
+  }, [exportRequest, isAdminContext, isAnalyticsContext, selectedExportType, customExportData]);
+
+  const renderContent = () => {
+    switch (selectedComponentType) {
+      case ExportComponentType.DEPLOYMENTS:
+        return (
+          <DeploymentConfigContent customExportData={customExportData} setCustomExportData={setCustomExportData} />
+        );
+      case ExportComponentType.ANALYTICS:
+        return (
+          <AnalyticsConfigContent
+            customExportData={customExportData}
+            setCustomExportData={setCustomExportData}
+            isFull={selectedExportType === ExportType.Full}
+          />
+        );
+      default:
+        if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
+          return <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff size={50} />} />;
+        }
+        return (
+          <ConfigContent
+            selectedExportFormat={selectedExportFormat}
+            dependencies={dependencies}
+            selectedExportType={selectedExportType}
+            customExportData={customExportData}
+            setCustomExportData={setCustomExportData}
+            selectedTopics={selectedTopics}
+          />
+        );
+    }
+  };
 
   if (isReadOnlyAdmin) {
     return (
@@ -240,10 +349,24 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
           <div className="border border-primary p-4 rounded w-[340px] flex flex-col">
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
             <div className="flex flex-1 flex-col gap-y-8 min-h-0 min-w-0 overflow-auto">
-              {deploymentsEnabled && (
-                <ConfigScopeSelector selectedScope={selectedComponentType} onChange={onChangeComponentType} />
+              {scopes.length > 1 && (
+                <ConfigScopeSelector
+                  scopes={scopes}
+                  selectedScope={selectedComponentType}
+                  onChange={onChangeComponentType}
+                />
               )}
-              {!isDeploymentContext && (
+              {isAnalyticsContext && (
+                <DialRadioGroup
+                  radioButtons={exportTypes}
+                  activeRadioButton={selectedExportType}
+                  elementId="analyticsExportType"
+                  fieldTitle={t(ExportI18nKey.ExportType)}
+                  orientation={RadioGroupOrientation.Column}
+                  onChange={onChangeExportType}
+                />
+              )}
+              {isAdminContext && (
                 <>
                   <DialRadioGroup
                     radioButtons={exportFormats}
@@ -278,40 +401,25 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
               )}
             </div>
           </div>
-          {isDeploymentContext ? (
-            <DeploymentConfigContent customExportData={customExportData} setCustomExportData={setCustomExportData} />
-          ) : selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
-            <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff size={50} />} />
-          ) : (
-            <ConfigContent
-              selectedExportFormat={selectedExportFormat}
-              dependencies={dependencies}
-              selectedExportType={selectedExportType}
-              customExportData={customExportData}
-              setCustomExportData={setCustomExportData}
-              selectedTopics={selectedTopics}
-            />
-          )}
+          {renderContent()}
         </div>
       </div>
 
       {isModalOpen && (
         <PreviewModal
-          exportRequest={isDeploymentContext ? undefined : exportRequest}
+          exportRequest={isAdminContext ? exportRequest : undefined}
           deploymentExportRequest={
-            isDeploymentContext ? buildDeploymentExportPreviewRequest(customExportData) : undefined
+            selectedComponentType === ExportComponentType.DEPLOYMENTS
+              ? buildDeploymentExportPreviewRequest(customExportData)
+              : undefined
           }
-          isDeploymentExport={isDeploymentContext}
+          analyticsExportRequest={
+            selectedComponentType === ExportComponentType.ANALYTICS ? analyticsExportRequest : undefined
+          }
+          scope={selectedComponentType}
           isModalOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onPrepare={(addSecrets, addGlobalFirewall) => {
-            setIsModalOpen(false);
-            if (isDeploymentContext) {
-              onDeploymentExport(addSecrets, addGlobalFirewall ?? false);
-            } else {
-              onExport(addSecrets);
-            }
-          }}
+          onPrepare={onPrepare}
         />
       )}
     </>

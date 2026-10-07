@@ -14,6 +14,7 @@ import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -22,43 +23,20 @@ import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { createSchemaSource, getSchemaSourceId } from '@/src/utils/entities/application-source';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getSchemaDefaults } from '@/src/utils/schema';
-import { AppRunnerOrigin } from './models';
 import { resolveAppRunnerScheme } from './resolve-app-runner';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
-import { getRunnerOrigin } from './utils';
 
 interface Props {
-  /** Entity-based API: AppRunners owns scheme-fetch + applicationProperties derivation side-effect. */
-  entity?: DialApplication;
-  onChange?: (entity: DialApplication) => void;
-  /** Legacy callback-based API: used by AssetApp flow in ApplicationSource.tsx, where the write pattern differs. */
-  selectedValue?: string;
-  onChangeValue?: (value?: string, application_properties?: Record<string, unknown>) => void;
-  runners?: DialApplicationScheme[];
+  entity: DialApplication;
+  onChange: (entity: DialApplication) => void;
   label?: string;
-  /**
-   * Only `AssetsApplications` receives both runner populations, and only there is the presentation
-   * `$id`-based. Every other surface offers admin-BE runners alone and keeps its display names.
-   */
-  view?: ApplicationRoute;
+  runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  isModal?: boolean;
   disabled?: boolean;
 }
 
-const AppRunners: FC<Props> = ({
-  entity,
-  onChange,
-  selectedValue,
-  onChangeValue,
-  runners,
-  label,
-  view,
-  isEntityImmutable = false,
-  disabled,
-}) => {
+const AppRunners: FC<Props> = ({ entity, onChange, runners, label, isEntityImmutable = false, disabled }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const currentLocale = useCurrentLocale();
@@ -67,10 +45,9 @@ const AppRunners: FC<Props> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
   const [isRunnerResolving, setIsRunnerResolving] = useState(false);
-  const [runnerOptions, setRunnerOptions] = useState(runners);
   const isMobile = useIsMobileScreen();
 
-  const currentValue = entity ? getSchemaSourceId(entity.source) : selectedValue;
+  const currentValue = getSchemaSourceId(entity.source);
   const isFieldDisabled = disabled || isReadOnlyAdmin;
 
   const onOpenModal = useCallback(() => {
@@ -86,23 +63,14 @@ const AppRunners: FC<Props> = ({
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
   }, [currentValue, t, dispatch]);
 
-  useEffect(() => {
-    setRunnerOptions(runners);
-  }, [runners]);
-
-  const isMergedSource = view === ApplicationRoute.AssetsApplications;
-
-  // On the merged surface, labelled by `$id` to match the grid's `ID` column — an asset runner has no
-  // display name without a per-runner content read, and a label the grid never showed would not be
-  // recognizable. Elsewhere every runner has one, so it stays the label.
   const dropdownItems = useMemo(() => {
     return (
-      runnerOptions?.map((r) => ({
+      runners?.map((r) => ({
         value: r.$id || '',
-        label: (isMergedSource ? r.$id : r['dial:applicationTypeDisplayName']) || r.$id || '',
+        label: r['dial:applicationTypeDisplayName'] || r.$id || '',
       })) || ([] as SelectOption[])
     );
-  }, [runnerOptions, isMergedSource]);
+  }, [runners]);
 
   const handleRunnerSelect = useCallback(
     async (value?: string) => {
@@ -110,8 +78,8 @@ const AppRunners: FC<Props> = ({
 
       const runner = runners?.find((r) => r.$id === value);
 
-      if (!runner && entity) {
-        onChange?.({ ...entity, source: undefined, endpoint: undefined, mcp: undefined });
+      if (!runner) {
+        onChange({ ...entity, source: undefined, endpoint: undefined, mcp: undefined });
         return;
       }
 
@@ -120,50 +88,32 @@ const AppRunners: FC<Props> = ({
       try {
         const { runner: resolvedRunner, scheme } = await resolveAppRunnerScheme(runner);
 
-        if (runner && resolvedRunner?.$id) {
-          runner.$id = resolvedRunner.$id;
-          setRunnerOptions((currentRunnerOptions) => [...(currentRunnerOptions ?? [])]);
-        }
-
         const resolvedId = resolvedRunner?.$id ?? value;
         const applicationProperties = getSchemaDefaults((scheme ?? resolvedRunner) as JSONSchema7) as Record<
           string,
           unknown
         >;
-        const baseEntity: DialApplication = {
+
+        onChange({
           ...entity,
           source: resolvedId ? createSchemaSource(resolvedId) : undefined,
           endpoint: undefined,
           mcp: undefined,
-        };
-
-        if (entity) {
-          onChange?.({
-            ...baseEntity,
-            applicationProperties: { ...baseEntity.applicationProperties, ...applicationProperties },
-          });
-        } else if (onChangeValue) {
-          onChangeValue(resolvedId, applicationProperties);
-        }
+          applicationProperties: { ...entity.applicationProperties, ...applicationProperties },
+        });
       } finally {
         setIsRunnerResolving(false);
       }
     },
-    [entity, onChange, onChangeValue, onCloseModal, runners],
-  );
-
-  const selectedRunner = useMemo(
-    () => runnerOptions?.find((r) => r.$id === currentValue),
-    [runnerOptions, currentValue],
+    [entity, onChange, onCloseModal, runners],
   );
 
   const openInNewTab = useCallback(() => {
-    const url =
-      selectedRunner && getRunnerOrigin(selectedRunner) === AppRunnerOrigin.Platform
-        ? `/${currentLocale}${getUrnForEntity(ApplicationRoute.PlatformAppRunners, selectedRunner)}`
-        : `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${currentValue}`)}`;
-    window.open(url, '_blank');
-  }, [currentLocale, currentValue, selectedRunner]);
+    window.open(
+      `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${currentValue}`)}`,
+      '_blank',
+    );
+  }, [currentLocale, currentValue]);
 
   useEffect(() => {
     setValueTitle(dropdownItems?.find((r) => r.value === currentValue)?.label || '');
@@ -205,8 +155,8 @@ const AppRunners: FC<Props> = ({
               onApply={handleRunnerSelect}
               isModalOpen={isModalOpen}
               onClose={onCloseModal}
-              sourceEntities={runnerOptions}
-              isMergedSource={isMergedSource}
+              sourceEntities={runners}
+              columns={LIST_RUNNER_COLUMNS}
             />
           </DialInputPopup>
         </div>

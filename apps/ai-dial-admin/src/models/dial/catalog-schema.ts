@@ -5,6 +5,10 @@ import { JSONSchema7 } from 'json-schema';
  * The values Core's catalog meta-schema allows in `dial:catalogEntityType`, in its own order.
  * Declarative only: DIAL Core validates a deployment's `catalog_properties` against the schema its
  * `catalog_schema_id` names, and never checks the deployment's own kind against this value.
+ *
+ * This mirrors Core and so stays at five. The console offers fewer than it accepts — see
+ * `CATALOG_ENTITY_TYPES` and `OFFERED_CATALOG_ENTITY_TYPES` in `@/src/constants/catalog-schemas`,
+ * which document the split and the Issue #4880 regression that narrowing this enum caused.
  */
 export enum CatalogEntityType {
   Model = 'model',

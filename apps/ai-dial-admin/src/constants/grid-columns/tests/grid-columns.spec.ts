@@ -32,6 +32,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
+import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 vi.mock('@/src/constants/ag-grid', () => ({
@@ -514,15 +515,17 @@ describe('RUNS_COLUMN', () => {
     });
   });
 
-  test('keeps the status header visible and sortable, and its filter button in the filter row', () => {
+  test('keeps the status header visible and sortable, with a fixed-value multiselect filter', () => {
     const status = RUNS_COLUMN.find((col) => col.colId === 'status');
 
     expect(status?.headerName).toBe('Status');
     // No header component overriding the default, so the label and the sort control both render.
     expect(status?.headerComponent).toBeUndefined();
-    // Left to the grid defaults: sorting on, the text filter, and a filter row carrying its button.
+    // Left to the grid default: sorting on.
     expect(status?.sortable).toBeUndefined();
-    expect(status?.filter).toBeUndefined();
+    // A status is a fixed value: the only filter offered is the checkbox-list multiselect, never a
+    // free-text or operator-based entry.
+    expect(status?.filter).toBe(RUN_STATUS_VALUE_FILTER);
     expect(status?.floatingFilter).toBeUndefined();
     // An empty filter body leaves the filter row with the button alone, no search input.
     expect(status?.floatingFilterComponent).toBe(EmptyFloatingFilter);

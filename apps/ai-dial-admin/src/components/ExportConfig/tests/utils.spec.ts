@@ -1,6 +1,6 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { getComponents, getComponentTypes, getFilteredData, isEntityWithDependency } from '../utils';
+import { getComponents, getComponentTypes, getFilteredData, hasSelection, isEntityWithDependency } from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -209,5 +209,15 @@ describe('Export Config Utils :: isEntityWithDependency', () => {
     const res = isEntityWithDependency(EntityType.ADAPTER);
 
     expect(res).toEqual(false);
+  });
+});
+
+describe('hasSelection', () => {
+  test('is false when every tab is empty', () => {
+    expect(hasSelection({ a: [], b: [] })).toBe(false);
+  });
+
+  test('is true when any tab holds an entity', () => {
+    expect(hasSelection({ a: [], b: [{ name: 'x' }] })).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import { DialInput, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import { CATALOG_DEFAULT_LOCALE_PATTERN, CATALOG_ENTITY_TYPES } from '@/src/constants/catalog-schemas';
+import { CATALOG_DEFAULT_LOCALE_PATTERN, OFFERED_CATALOG_ENTITY_TYPES } from '@/src/constants/catalog-schemas';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -33,10 +33,21 @@ const CatalogSchemaCreateProperties: FC<Props> = ({ entity, names, isUniqueNameE
   const { dispatch } = useSaveValidationContext();
   const controlClassName = getControlClassName(isModal);
 
-  const entityTypeOptions = useMemo(
-    () => CATALOG_ENTITY_TYPES.map((type) => ({ value: type, label: startCase(type) })),
-    [],
-  );
+  const declaredEntityType = entity['dial:catalogEntityType'];
+
+  /**
+   * The offered four, plus the kind this schema already declares when that is not among them. A
+   * configuration file may legally type a schema `skill`, which the save gate still accepts — so
+   * the field has to show that value rather than render blank and discard it on the next edit.
+   */
+  const entityTypeOptions = useMemo(() => {
+    const offered =
+      declaredEntityType && !OFFERED_CATALOG_ENTITY_TYPES.includes(declaredEntityType)
+        ? [...OFFERED_CATALOG_ENTITY_TYPES, declaredEntityType]
+        : OFFERED_CATALOG_ENTITY_TYPES;
+
+    return offered.map((type) => ({ value: type, label: startCase(type) }));
+  }, [declaredEntityType]);
 
   const defaultLocale = entity['dial:defaultLocale'];
   const localeError =
@@ -109,7 +120,7 @@ const CatalogSchemaCreateProperties: FC<Props> = ({ entity, names, isUniqueNameE
         label={t(EntityFieldsI18nKey.catalogEntityType)}
         placeholder={t(EntityPlaceholdersI18nKey.SelectCatalogEntityType)}
         options={entityTypeOptions}
-        value={entity['dial:catalogEntityType'] ?? ''}
+        value={declaredEntityType ?? ''}
         containerClassName={controlClassName}
         disabled={isReadOnlyAdmin}
         onChange={onChangeEntityType}

@@ -6,20 +6,19 @@ import { FC } from 'react';
 import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
 import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
-import { TRENDS_RUN_WINDOW } from '@/src/components/TestSuites/Trends/constants';
+import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   stats: PassFailErrorCounts;
+  runCount: number;
   className?: string;
 }
 
-const RunsPassedThresholdCard: FC<Props> = ({ stats, className }) => {
+const RunsPassedThresholdCard: FC<Props> = ({ stats, runCount, className }) => {
   const t = useI18n();
-  const title = `${t(TestSuitesI18nKey.RunsPassedThreshold)} · ${t(TestSuitesI18nKey.TrendsLastNRuns, {
-    count: TRENDS_RUN_WINDOW,
-  })}`;
+  const title = `${t(TestSuitesI18nKey.RunsPassedThreshold)} · ${formatTrendsRunsCountLabel(t, runCount)}`;
 
   return (
     <div

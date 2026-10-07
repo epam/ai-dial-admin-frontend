@@ -181,20 +181,19 @@ const HeaderButtons: FC<Props> = ({
 
   return (
     <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
-      <div className="flex gap-4 items-center min-w-0">
-        {!isReadOnly && (
-          <DialButtonDropdown
-            label={t(TestSuitesI18nKey.More)}
-            items={moreItems}
-            variant={ButtonVariant.Primary}
-            appearance={ButtonAppearance.Ghost}
-          />
-        )}
+      {!isReadOnly && (
+        <DialButtonDropdown
+          label={t(TestSuitesI18nKey.More)}
+          items={moreItems}
+          variant={ButtonVariant.Primary}
+          appearance={ButtonAppearance.Ghost}
+          className="shrink-0"
+        />
+      )}
 
-        <AdaptiveHeaderActions actions={adaptiveActions} />
-      </div>
+      <AdaptiveHeaderActions actions={adaptiveActions} />
 
-      {datasetTag}
+      {datasetTag ? <div className="shrink-0">{datasetTag}</div> : null}
 
       {isImportModalOpen &&
         createPortal(

@@ -2,6 +2,7 @@ import { RadioButtonWithContent, Step } from '@epam/ai-dial-ui-kit';
 
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
@@ -67,6 +68,11 @@ export const SEPARATE_FILES_IMPORT_TYPE = (t: TranslateFn, route?: ApplicationRo
 export const DEPLOYMENT_IMPORT_RESOLUTIONS = (t: TranslateFn): RadioButtonWithContent[] => [
   { id: DeploymentImportResolutionPolicy.OVERWRITE, name: t(ImportI18nKey.Override) },
   { id: DeploymentImportResolutionPolicy.SKIP_IF_EXISTS, name: t(ImportI18nKey.Skip) },
+];
+
+export const ANALYTICS_IMPORT_RESOLUTIONS = (t: TranslateFn): RadioButtonWithContent[] => [
+  { id: CatalogResolutionPolicy.FAIL_IF_EXISTS, name: t(ImportI18nKey.AnalyticsFailIfExists) },
+  { id: CatalogResolutionPolicy.SKIP_IF_EXISTS, name: t(ImportI18nKey.AnalyticsSkipIfExists) },
 ];
 
 export const IMPORT_FILE_TYPES = (t: TranslateFn, route?: ApplicationRoute): RadioButtonWithContent[] => {

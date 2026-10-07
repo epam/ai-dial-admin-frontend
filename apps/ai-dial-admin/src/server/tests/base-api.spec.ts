@@ -186,3 +186,56 @@ describe('BaseApi putActionWithEtag', () => {
     expect(headers).not.toHaveProperty(IF_MATCH);
   });
 });
+
+describe('BaseApi postDownloadAction', () => {
+  class TestApi extends BaseApi {
+    public testPostDownloadAction(url: string) {
+      return this.postDownloadAction(url, {}, TOKEN_MOCK);
+    }
+  }
+
+  const api = new TestApi({ host: 'http://test.com' });
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('returns a JSON body as a blob under the Content-Disposition name', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response('{"a":1}', {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'content-disposition': 'attachment; filename="bundle.json"' },
+      }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res.success).toBe(true);
+    expect(res.response?.fileName).toBe('bundle.json');
+    expect(await res.response?.blob.text()).toBe('{"a":1}');
+  });
+
+  test('returns the error envelope for a 403 instead of an empty success', async () => {
+    vi.spyOn(sendRequestModule, 'sendRequest').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'forbidden', message: 'No access' }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 403 }));
+    expect(res.response).toBeUndefined();
+  });
+
+  test('returns the cancelled envelope when the request is aborted', async () => {
+    const abortError = new Error('aborted');
+    abortError.name = 'AbortError';
+    vi.spyOn(sendRequestModule, 'sendRequest').mockRejectedValue(abortError);
+
+    const res = await api.testPostDownloadAction('/download');
+
+    expect(res).toEqual({ success: false, status: 0, errorMessage: 'Request cancelled' });
+  });
+});

@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { previewDeploymentExportConfig, previewExportConfig } from '@/src/app/[lang]/export-config/actions';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
+import AnalyticsExportPreview from '@/src/components/ExportConfig/Preview/AnalyticsExportPreview';
 import { getDeploymentColDefs } from '@/src/components/ExportConfig/deployment-utils';
 import { getDeploymentExportPreviewTabs, getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -13,14 +14,16 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { DeploymentExportRequest, ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
 import { DeploymentExportPreviewResponse } from '@/src/models/deployments/preview';
-import { ExportType } from '@/src/types/export';
+import { ExportComponentType, ExportType } from '@/src/types/export';
+import { CatalogExportRequest } from '@/src/models/analytics/catalog-export';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   exportRequest?: Partial<ExportRequest>;
   deploymentExportRequest?: DeploymentExportRequest;
-  isDeploymentExport?: boolean;
+  analyticsExportRequest?: CatalogExportRequest;
+  scope: ExportComponentType;
   isModalOpen: boolean;
   onClose: () => void;
   onPrepare: (isIncludeSecret: boolean, addGlobalFirewall?: boolean) => void;
@@ -29,7 +32,8 @@ interface Props {
 const PreviewModal: FC<Props> = ({
   exportRequest,
   deploymentExportRequest,
-  isDeploymentExport,
+  analyticsExportRequest,
+  scope,
   onPrepare,
   isModalOpen,
   onClose,
@@ -45,6 +49,10 @@ const PreviewModal: FC<Props> = ({
   const [data, setData] = useState<Record<string, EntitiesGridData[]>>({});
   const [selectedTab, setSelectedTab] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isAnalyticsPreviewAccepted, setIsAnalyticsPreviewAccepted] = useState(false);
+
+  const isDeploymentExport = scope === ExportComponentType.DEPLOYMENTS;
+  const isAnalyticsExport = scope === ExportComponentType.ANALYTICS;
 
   const toggleIncludeSecret = useCallback(() => {
     setIsIncludeSecret((prev) => !prev);
@@ -56,7 +64,7 @@ const PreviewModal: FC<Props> = ({
 
   // Admin export preview
   useEffect(() => {
-    if (isDeploymentExport || !exportRequest) {
+    if (scope !== ExportComponentType.ADMIN || !exportRequest) {
       return;
     }
 
@@ -83,7 +91,7 @@ const PreviewModal: FC<Props> = ({
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
-  }, [exportRequest, isDeploymentExport, isIncludeSecret, showNotification, t]);
+  }, [exportRequest, scope, isIncludeSecret, showNotification, t]);
 
   // Deployment export preview
   useEffect(() => {
@@ -111,6 +119,44 @@ const PreviewModal: FC<Props> = ({
     });
   }, [deploymentExportRequest, isDeploymentExport, showNotification, t]);
 
+  const renderBody = () => {
+    if (isAnalyticsExport && analyticsExportRequest) {
+      return (
+        <AnalyticsExportPreview request={analyticsExportRequest} onPreviewResult={setIsAnalyticsPreviewAccepted} />
+      );
+    }
+    if (isLoadingData) {
+      return <DialLoader size={50} />;
+    }
+    if (isDeploymentExport) {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="mb-3">
+            <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+          </div>
+          <div className="flex-1 min-h-0">
+            <GridView
+              key={selectedTab}
+              columnDefs={getDeploymentColDefs(t, undefined, selectedTab)}
+              rowData={data[selectedTab] || []}
+              emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
+            />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col h-full">
+        <div className="mb-3">
+          <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+        </div>
+        <div className="flex-1 min-h-0">
+          <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
+        </div>
+      </div>
+    );
+  };
+
   const submitLabel = isDeploymentExport ? t(ButtonsI18nKey.PrepareFile) : t(ButtonsI18nKey.Export);
 
   return (
@@ -122,58 +168,34 @@ const PreviewModal: FC<Props> = ({
       className="h-[754px]"
       size={PopupSize.Lg}
       submitLabel={submitLabel}
+      disableSubmitButton={isAnalyticsExport && !isAnalyticsPreviewAccepted}
       onSubmit={() => onPrepare(isIncludeSecret, isDeploymentExport ? isIncludeGlobalFirewall : undefined)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
       <div className="flex flex-col gap-4 p-6 h-full">
-        <div className="flex-1 min-h-0">
-          {isLoadingData ? (
-            <DialLoader size={50} />
-          ) : isDeploymentExport ? (
-            <div className="flex flex-col h-full">
-              <div className="mb-3">
-                <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
-              </div>
-              <div className="flex-1 min-h-0">
-                <GridView
-                  key={selectedTab}
-                  columnDefs={getDeploymentColDefs(t, undefined, selectedTab)}
-                  rowData={data[selectedTab] || []}
-                  emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
+        <div className="flex-1 min-h-0">{renderBody()}</div>
+        {!isAnalyticsExport && (
+          <div className="flex flex-row items-center gap-4">
+            <DialCheckbox
+              checked={isIncludeSecret}
+              label={t(ExportI18nKey.IncludeSecrets)}
+              id="includeSecret"
+              onChange={toggleIncludeSecret}
+            />
+            {isDeploymentExport && (
+              <>
+                <div className="h-5 w-px bg-layer-4" />
+                <DialCheckbox
+                  checked={isIncludeGlobalFirewall}
+                  label={t(ExportI18nKey.IncludeGlobalFirewall)}
+                  id="includeGlobalFirewall"
+                  onChange={toggleIncludeGlobalFirewall}
                 />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col h-full">
-              <div className="mb-3">
-                <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
-              </div>
-              <div className="flex-1 min-h-0">
-                <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-row items-center gap-4">
-          <DialCheckbox
-            checked={isIncludeSecret}
-            label={t(ExportI18nKey.IncludeSecrets)}
-            id="includeSecret"
-            onChange={toggleIncludeSecret}
-          />
-          {isDeploymentExport && (
-            <>
-              <div className="h-5 w-px bg-layer-4" />
-              <DialCheckbox
-                checked={isIncludeGlobalFirewall}
-                label={t(ExportI18nKey.IncludeGlobalFirewall)}
-                id="includeGlobalFirewall"
-                onChange={toggleIncludeGlobalFirewall}
-              />
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </DialFormPopup>
   );

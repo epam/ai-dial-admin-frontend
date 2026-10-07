@@ -9,6 +9,7 @@ import Metrics from '../Metrics';
 import { MetricBindingType } from '../../../../types/evaluation';
 
 const mockGetTestSuiteMetricsAggregated = vi.fn();
+const mockGetTestSuiteMetrics = vi.fn();
 const mockGetDetailedMetricDeclarations = vi.fn();
 const mockCreateTestSuiteMetric = vi.fn();
 const mockDeleteTestSuiteMetric = vi.fn();
@@ -16,6 +17,7 @@ const mockUpdateTestSuiteMetric = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteMetricsAggregated: (...args: unknown[]) => mockGetTestSuiteMetricsAggregated(...args),
+  getTestSuiteMetrics: (...args: unknown[]) => mockGetTestSuiteMetrics(...args),
   getDetailedMetricDeclarations: (...args: unknown[]) => mockGetDetailedMetricDeclarations(...args),
   createTestSuiteMetric: (...args: unknown[]) => mockCreateTestSuiteMetric(...args),
   deleteTestSuiteMetric: (...args: unknown[]) => mockDeleteTestSuiteMetric(...args),
@@ -26,6 +28,7 @@ vi.mock('../AddMetric/AddMetricModal', () => ({
   default: ({ isModalOpen, onClose, onConfirm, editingMetric }: any) =>
     isModalOpen ? (
       <div role="dialog" aria-label={editingMetric ? 'Edit metric' : 'Add metric'}>
+        {editingMetric?.condition && <span>editing-condition:{editingMetric.condition}</span>}
         <button type="button" onClick={onClose}>
           Cancel
         </button>
@@ -118,13 +121,14 @@ describe('Metrics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetTestSuiteMetricsAggregated.mockResolvedValue([]);
+    mockGetTestSuiteMetrics.mockResolvedValue({ content: [], page: 0, size: 1000 });
     mockGetDetailedMetricDeclarations.mockResolvedValue([]);
     mockCreateTestSuiteMetric.mockResolvedValue({ success: true, response: { id: 'created-metric' } });
     mockDeleteTestSuiteMetric.mockResolvedValue({ success: true });
     mockUpdateTestSuiteMetric.mockResolvedValue({ success: true });
   });
 
-  test('loads metrics with a single aggregated request and shows empty state when list is empty', async () => {
+  test('loads metrics with the aggregated and plain-list requests and shows empty state when list is empty', async () => {
     render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     await waitFor(() => {
@@ -132,6 +136,7 @@ describe('Metrics', () => {
     });
 
     expect(mockGetTestSuiteMetricsAggregated).toHaveBeenCalledOnce();
+    expect(mockGetTestSuiteMetrics).toHaveBeenCalledWith('suite-1', 0, 1000);
     expect(screen.getByText(`${TabsI18nKey.Metrics}: 0`)).toBeInTheDocument();
     expect(screen.getByRole('status', { name: EntitiesI18nKey.NoMetrics })).toBeInTheDocument();
   });
@@ -343,5 +348,60 @@ describe('Metrics', () => {
     });
 
     expect(screen.getByText(TestSuitesI18nKey.ConditionAlwaysRun)).toBeInTheDocument();
+  });
+
+  test('backfills condition from the plain metrics list when the aggregated response omits it', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: undefined }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: '$exists(data.expected)' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('$exists(data.expected)')).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.ConditionAlwaysRun)).not.toBeInTheDocument();
+  });
+
+  test('prefers the aggregated response condition over the plain-list backfill when both are present', async () => {
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: 'from-aggregated' }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: 'from-plain-list' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('from-aggregated')).toBeInTheDocument();
+  });
+
+  test('prefills the edit modal with the backfilled condition', async () => {
+    const user = userEvent.setup();
+    mockGetTestSuiteMetricsAggregated.mockResolvedValue([{ ...metric, condition: undefined }]);
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: '$exists(data.expected)' }],
+      page: 0,
+      size: 1000,
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    expect(screen.getByText('editing-condition:$exists(data.expected)')).toBeInTheDocument();
   });
 });

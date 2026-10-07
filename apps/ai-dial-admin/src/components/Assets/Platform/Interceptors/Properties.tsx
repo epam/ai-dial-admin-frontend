@@ -12,6 +12,7 @@ import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchema
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
+import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -80,6 +81,7 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, catalogSchemas, onChange
           schemaId={asset.catalogSchemaId}
           options={catalogSchemas?.options}
           optionsError={catalogSchemas?.error}
+          entityType={CATALOG_SCHEMA_PICKER_ENTITY_TYPE.interceptors}
           onChange={(catalogSchemaId) => onChange({ ...asset, catalogSchemaId, catalogProperties: void 0 })}
         />
       </div>

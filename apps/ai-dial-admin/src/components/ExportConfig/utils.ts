@@ -251,3 +251,6 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.APPLICATION_TYPE_SCHEMA
   );
 };
+
+export const hasSelection = (customExportData: Record<string, EntitiesGridData[]>): boolean =>
+  Object.values(customExportData).some((data) => data.length > 0);

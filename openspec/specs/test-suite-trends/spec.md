@@ -22,17 +22,34 @@ omitted entirely — not shown as empty or “No Data”.
 ### Requirement: Runs Passed Threshold metric and window label
 The Runs Passed Threshold card SHALL show a primary metric of `passed / total`, where `total` is
 the number of runs in the current Trends window and `passed` is the count of those runs that meet
-the pass rule below. The card title SHALL include a fixed window label of the form
-“Last {N} Runs” where `N` is the Trends run-window size (currently 10), even when fewer than `N`
-runs exist.
+the pass rule below. The card title SHALL use the shared Trends runs-count label (same rules as
+other Trends section headers).
 
 #### Scenario: Metric reflects passed count over window size
 - **WHEN** the Trends window has 7 runs and 3 of them pass the threshold
 - **THEN** the card displays `3` as the primary numerator and `/7` as the denominator
 
-#### Scenario: Window label uses configured Trends window size
-- **WHEN** the Trends run-window size is 10 and the suite has fewer than 10 runs with a threshold set
-- **THEN** the card title still includes “Last 10 Runs”
+#### Scenario: Window label reflects displayed run count
+- **WHEN** the Trends window has fewer than 10 runs with a threshold set
+- **THEN** the card title includes “{N} Runs” (or “1 Run” when N is 1), not “Last 10 Runs”
+
+### Requirement: Trends section runs-count label
+Trends section headers and KPI titles that append a runs-count fragment SHALL format it from the
+displayed Trends-window `runCount` as follows:
+- when `runCount` is at least the Trends window size (10) → “Last 10 Runs”
+- when `runCount` is below 10 → “{N} Runs”, with singular “1 Run” when N is 1
+
+#### Scenario: Single run uses singular label
+- **WHEN** the Trends window has exactly 1 run
+- **THEN** section headers include “1 Run”
+
+#### Scenario: Partial window uses plain count
+- **WHEN** the Trends window has 5 runs
+- **THEN** section headers include “5 Runs”
+
+#### Scenario: Full window uses last-N label
+- **WHEN** the Trends window has 10 runs
+- **THEN** section headers include “Last 10 Runs”
 
 ### Requirement: Threshold outcome aggregation for the Trends window
 For each run in the Trends window, the system SHALL classify outcomes against
@@ -88,9 +105,9 @@ SHALL remain hidden.
 ### Requirement: Test Case Stability section visibility
 When the Trends tab has at least one run in its Trends window (`runOrder.length > 0`), the system
 SHALL render a **Test Case Stability** section below Metric Trends using the shared `SummarySection`
-chrome (`isFillHeight={false}`) and a title of the form “Test Case Stability · {N} runs” where `N`
-is the actual run count in the window. When the Trends window is empty, the section SHALL not appear
-(the tab’s empty state already covers that case).
+chrome (`isFillHeight={false}`) and a title that appends the shared Trends runs-count label. When
+the Trends window is empty, the section SHALL not appear (the tab’s empty state already covers that
+case).
 
 #### Scenario: Section shown when Trends has runs
 - **WHEN** the Trends tab has loaded data with one or more runs in `runOrder`
