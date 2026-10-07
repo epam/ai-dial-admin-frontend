@@ -265,6 +265,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
             onGridReady={onGridReady}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
+            storageKey={`${ApplicationRoute.TestSuites}/runs`}
           />
         </div>
       </div>
