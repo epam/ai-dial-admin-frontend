@@ -194,12 +194,16 @@ const ShareBreakdown: FC<Props> = ({
 
   const renderFigure = () => {
     if (rows.isLoading) {
-      return <DialLoader size={24} />;
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <DialLoader size={24} />
+        </div>
+      );
     }
 
     if (isEmptyWindow) {
       return (
-        <div className="flex justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <EmptyRing size={DONUT_SIZE}>
             <span className="dial-display2-text text-secondary">—</span>
             <span className="dial-small-text text-secondary">{t(AnalyticsUsageI18nKey.DonutEmptyCenter)}</span>
@@ -208,8 +212,11 @@ const ShareBreakdown: FC<Props> = ({
       );
     }
 
+    // A column rather than a centering row, so the figure keeps the card's full width for its legend.
     return (
-      <DonutFigure slices={cardSlices} centerValue={centerValue} centerCaption={centerCaption} size={DONUT_SIZE} />
+      <div className="flex flex-1 flex-col justify-center">
+        <DonutFigure slices={cardSlices} centerValue={centerValue} centerCaption={centerCaption} size={DONUT_SIZE} />
+      </div>
     );
   };
 
