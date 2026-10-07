@@ -1,6 +1,6 @@
-import { FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
+import { FC, KeyboardEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { DialFormPopup, DialInput, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInputPopup, DialLabel, DialTextarea } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import SchemaTree from '@/src/components/Common/SchemaGrid/SchemaTree';
@@ -43,6 +43,17 @@ const JsonAtaInput: FC<Props> = ({
   const [type, setType] = useState<string | undefined>(undefined);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  const expressionFieldRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const textarea = expressionFieldRef.current?.querySelector('textarea');
+    if (!textarea) return;
+
+    const currentHeight = textarea.clientHeight;
+    textarea.style.height = '0px';
+    const contentHeight = textarea.scrollHeight;
+    textarea.style.height = `${Math.max(contentHeight, currentHeight)}px`;
+  }, [expression, isModalOpen]);
 
   const treeNodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
@@ -90,7 +101,7 @@ const JsonAtaInput: FC<Props> = ({
   const onHighlightSuggestion = useCallback((idx: number) => setHighlightIndex(idx), []);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setShowSuggestions(true);
@@ -132,9 +143,10 @@ const JsonAtaInput: FC<Props> = ({
         >
           <div className="px-6 py-4 h-[540px] flex flex-col gap-4">
             <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
-            <div className="relative">
-              <DialInput
+            <div className="relative" ref={expressionFieldRef}>
+              <DialTextarea
                 id="expression"
+                className="resize-y !min-h-[36px] !max-h-[76px]"
                 labelProps={{ label: header, required: true }}
                 placeholder={t(EntityPlaceholdersI18nKey.Expression)}
                 value={expression}
