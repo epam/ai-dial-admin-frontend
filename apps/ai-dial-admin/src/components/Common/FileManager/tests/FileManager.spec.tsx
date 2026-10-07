@@ -7,8 +7,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 const { dialFileManagerPropsSpy } = vi.hoisted(() => ({ dialFileManagerPropsSpy: vi.fn() }));
 
-vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-react-file-manager')>();
   return {
     ...actual,
     DialFileManager: (props: unknown) => {

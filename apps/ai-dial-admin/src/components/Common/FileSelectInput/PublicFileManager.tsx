@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-ui-kit';
+import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
 
 import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Files/constants';
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
@@ -105,6 +105,8 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
       items={files as []}
       filesLoading={isFetchingFiles}
       showNavigationPanel={false}
+      navigationPanelOptions={{ searchable: false }}
+      sortOptions={{ sortable: false }}
       treeOptions={getTreeOptions(
         isReadOnlyAdmin,
         isFetchingFiles,

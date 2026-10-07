@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 
 import { importFiles } from '@/src/utils/files/import-files';
 import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';

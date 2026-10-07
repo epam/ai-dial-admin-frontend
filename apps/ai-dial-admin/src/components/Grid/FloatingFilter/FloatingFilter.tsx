@@ -60,7 +60,7 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
   };
 
   return (
-    <div className="w-full h-[23px] pl-2 self-center flex flex-row items-center border border-primary rounded text-secondary">
+    <div className="w-full h-[23px] pl-2 self-center flex flex-row items-center border border-primary rounded-lg text-secondary">
       <IconSearch width={12} height={12} className="" />
       <input
         type="text"
