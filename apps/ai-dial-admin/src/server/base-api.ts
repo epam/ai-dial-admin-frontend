@@ -1,9 +1,11 @@
 import { IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
+import { DownloadedFile } from '@/src/models/download';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { streamRequest } from '@/src/utils/api/create-stream-request';
 import { ErrorObject, getError, getErrorMessage, getParsedError } from '@/src/utils/api/error';
 import { fileRequest } from '@/src/utils/api/file-request';
+import { getFileName } from '@/src/utils/api/get-file-name';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { requestRegistry } from '@/src/utils/api/request-registry';
@@ -123,11 +125,6 @@ export class BaseApi {
     return streamRequest(`${this.config.host || ''}${url}`, fileName, token, isPreview);
   }
 
-  /**
-   * `signal` belongs to whoever asked for the request — a route handler passing its client's. It is
-   * combined with the registry's own rather than replacing it, so logout still cancels everything while a
-   * caller that has gone away cancels only its own.
-   */
   protected async sendActionRequest<T extends object>(
     url: string,
     type: string,
@@ -136,18 +133,58 @@ export class BaseApi {
     initHeaders?: HeadersInit,
     signal?: AbortSignal,
   ): Promise<ServerActionResponse> {
+    const res = await this.fetchRegistered(url, type, token, dto, initHeaders, signal);
+    return isEnvelope(res) ? res : this.handleResponse(res, type);
+  }
+
+  /**
+   * A POST whose success body is a file to hand to the browser as-is, whatever its content type — unlike
+   * `sendRequest`, which returns the raw response only for `application/octet-stream` and parses the rest.
+   * A failure resolves to the same envelope every other action returns, so the caller can report the
+   * service's own message.
+   */
+  protected async postDownloadAction<T extends object>(
+    url: string,
+    dto: T,
+    token?: Token,
+  ): Promise<ServerActionResponse<DownloadedFile>> {
+    const res = await this.fetchRegistered(url, 'POST', token, dto);
+
+    if (isEnvelope(res)) {
+      return res;
+    }
+
+    if (isFailedRequest(res)) {
+      return this.handleResponse(res, 'POST');
+    }
+
+    return { success: true, response: { blob: await res.blob(), fileName: getFileName(res) || '' } };
+  }
+
+  /**
+   * `signal` belongs to whoever asked for the request — a route handler passing its client's. It is
+   * combined with the registry's own rather than replacing it, so logout still cancels everything while a
+   * caller that has gone away cancels only its own.
+   */
+  private async fetchRegistered<T extends object>(
+    url: string,
+    type: string,
+    token?: Token,
+    dto?: T,
+    initHeaders?: HeadersInit,
+    signal?: AbortSignal,
+  ): Promise<Response | ServerActionResponse> {
     const requestId = crypto.randomUUID();
     const controller = requestRegistry.register(requestId);
 
     try {
-      const res = await sendRequest(
+      return await sendRequest(
         `${this.config.host || ''}${url}`,
         type,
         { ...getApiHeaders(token), ...initHeaders },
         dto,
         signal ? AbortSignal.any([controller.signal, signal]) : controller.signal,
       );
-      return this.handleResponse(res, type);
     } catch (error) {
       // Request cancelled during logout, this is expected
       if ((error as Error).name === 'AbortError') {
@@ -260,6 +297,9 @@ export class BaseApi {
     errorLog(`${errObject.error} ${errObject.message}`);
   }
 }
+
+// `fetchRegistered` answers a cancelled request with an envelope instead of a response.
+const isEnvelope = (res: Response | ServerActionResponse): res is ServerActionResponse => 'success' in res;
 
 const isFailedRequest = (res: Response) => {
   return !(res.status >= 200 && res.status < 300);

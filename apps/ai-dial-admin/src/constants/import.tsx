@@ -3,9 +3,12 @@ import { RadioButtonWithContent, Step } from '@epam/ai-dial-ui-kit';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { DeploymentImportResolutionPolicy } from '@/src/types/deployments/import';
+import { ExportComponentType } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getImportSizeLimits } from '@/src/utils/import/get-import-size-limits';
 import { isAssetWithVersion } from '@/src/utils/is-view';
+
+export const IMPORT_CONFIG_SCOPES: ExportComponentType[] = [ExportComponentType.ADMIN, ExportComponentType.DEPLOYMENTS];
 
 export const ROW_IMPORT_META_KEY = '__import' as const;
 

@@ -18,6 +18,7 @@ import {
   ARCHIVE_IMPORT_TYPE,
   DEPLOYMENT_IMPORT_RESOLUTIONS,
   DIAL_JSON_IMPORT_TYPE,
+  IMPORT_CONFIG_SCOPES,
   IMPORT_RESOLUTIONS,
 } from '@/src/constants/import';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -109,7 +110,13 @@ const Files: FC<Props> = ({
         />
       </div>
       <div className="flex-1 min-h-0 gap-y-8 flex flex-col w-full overflow-auto">
-        {deploymentsEnabled && <ConfigScopeSelector selectedScope={configScope} onChange={onChangeConfigScope} />}
+        {deploymentsEnabled && (
+          <ConfigScopeSelector
+            scopes={IMPORT_CONFIG_SCOPES}
+            selectedScope={configScope}
+            onChange={onChangeConfigScope}
+          />
+        )}
         {isDeployments ? (
           <DialRadioGroup
             radioButtons={DEPLOYMENT_IMPORT_RESOLUTIONS(t)}
