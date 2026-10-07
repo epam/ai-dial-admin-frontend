@@ -28,4 +28,6 @@ jobs:
       node-version: 24
       publish-enabled: false
       maximize-build-space: true
+      trivy-severity: "CRITICAL,HIGH,MEDIUM,LOW"
+      trivy-severity-for-sarif: "CRITICAL,HIGH,MEDIUM,LOW"
     secrets: inherit

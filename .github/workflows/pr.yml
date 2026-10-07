@@ -69,3 +69,5 @@ jobs:
     with:
       node-version: 24
       maximize-build-space: true
+      trivy-severity: "CRITICAL,HIGH,MEDIUM,LOW"
+      trivy-severity-for-sarif: "CRITICAL,HIGH,MEDIUM,LOW"
