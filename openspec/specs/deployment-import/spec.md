@@ -1,7 +1,11 @@
-## ADDED Requirements
+# Deployment Import
 
+## Purpose
+
+Importing a Deployment Manager configuration archive through the Import Config page: the Config Scope selector, the ZIP upload and conflict policy, and the deployment manager's config import API.
+## Requirements
 ### Requirement: Config scope selector on import page
-The import config page SHALL display a Config Scope radio group (Admin / Deployments) inside the Files step. This selector SHALL be extracted as a shared component reusable by both import and export pages.
+The import config page SHALL display a Config Scope radio group inside the Files step when Deployments or Analytics is enabled. Its options SHALL be, in order: Admin (always), Deployments (only when `DEPLOYMENTS_ENABLED` is truthy) and Analytics (only when `ANALYTICS_ENABLED` is truthy). When neither is enabled the group SHALL NOT be rendered and the page SHALL behave as Admin. This selector SHALL be the shared component used by both import and export pages.
 
 #### Scenario: Admin selected (default)
 - **WHEN** the user opens the import config page
@@ -12,6 +16,14 @@ The import config page SHALL display a Config Scope radio group (Admin / Deploym
 - **THEN** the File Type radio group SHALL be hidden
 - **AND** only ZIP archive upload SHALL be available
 - **AND** the conflict resolution radio group SHALL show Override and Skip options
+
+#### Scenario: Analytics offered without Deployments
+- **WHEN** `ANALYTICS_ENABLED` is truthy and `DEPLOYMENTS_ENABLED` is not
+- **THEN** the Config Scope group shows Admin and Analytics
+
+#### Scenario: Neither enabled
+- **WHEN** neither `DEPLOYMENTS_ENABLED` nor `ANALYTICS_ENABLED` is truthy
+- **THEN** the Config Scope group is not rendered
 
 ### Requirement: Deployment import conflict resolution
 The system SHALL support two conflict resolution policies for deployment import: Override (mapped to `OVERWRITE`) and Skip (mapped to `SKIP_IF_EXISTS`). The policy SHALL be sent as the `resolutionPolicy` query parameter on the import API request.
@@ -55,7 +67,7 @@ A new `DeploymentConfigApi` class SHALL be created under `server/deployments/` t
 - **THEN** a `deploymentConfigApi` instance SHALL be registered in `api.ts` using `DIAL_DEPLOYMENTS_API_URL` as the host
 
 ### Requirement: Config scope switch resets state
-When the user switches config scope (Admin/Deployments), the import page SHALL reset all file upload state and conflict resolution to defaults.
+When the user switches config scope (Admin, Deployments or Analytics), the import page SHALL reset all file upload state and conflict resolution to the defaults of the scope switched to.
 
 #### Scenario: Switch from Admin to Deployments
 - **WHEN** the user switches config scope from Admin to Deployments
@@ -66,6 +78,11 @@ When the user switches config scope (Admin/Deployments), the import page SHALL r
 - **WHEN** the user switches config scope from Deployments to Admin
 - **THEN** all uploaded files SHALL be cleared
 - **AND** the conflict resolution policy SHALL reset to its default value
+
+#### Scenario: Switch to Analytics
+- **WHEN** the user switches config scope to Analytics after uploading a file in another scope
+- **THEN** all uploaded files SHALL be cleared
+- **AND** the conflict resolution policy SHALL be "Fail if exists"
 
 ### Requirement: Deployment import notifications
 The deployment import SHALL show the same notification pattern as admin config import: a loading notification during import, a success notification on completion, and an error notification on failure.
@@ -88,3 +105,4 @@ A `DeploymentImportResolutionPolicy` enum SHALL be defined with values `OVERWRIT
 #### Scenario: Enum values
 - **WHEN** the conflict resolution options are rendered for deployment import
 - **THEN** Override SHALL map to `OVERWRITE` and Skip SHALL map to `SKIP_IF_EXISTS`
+

@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { CatalogExportPreview, CatalogExportRequest } from '@/src/models/analytics/catalog-export';
+import { CatalogImportPreview, CatalogImportResult } from '@/src/models/analytics/catalog-import';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
@@ -36,6 +37,7 @@ import {
 import { DownloadedFile } from '@/src/models/download';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 
 export const QUERIES_URL = 'v1/queries';
 export const QUERIES_ENTITIES_URL = `${QUERIES_URL}/entities`;
@@ -108,6 +110,13 @@ export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/ac
 export const CATALOG_URL = 'v1/catalog';
 export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
 export const CATALOG_EXPORT_PREVIEW_URL = `${CATALOG_EXPORT_URL}/preview`;
+export const CATALOG_IMPORT_URL = `${CATALOG_URL}/import`;
+export const CATALOG_IMPORT_PREVIEW_URL = `${CATALOG_IMPORT_URL}/preview`;
+export const CATALOG_IMPORT_QUERY = (policy: CatalogResolutionPolicy, isReusedNamesAcknowledged: boolean): string =>
+  new URLSearchParams({
+    resolution_policy: policy,
+    acknowledge_reused_names: String(isReusedNamesAcknowledged),
+  }).toString();
 
 export class AnalyticsDataApi extends BaseApi {
   checkAccess(token: Token): Promise<ServerActionResponse> {
@@ -314,5 +323,31 @@ export class AnalyticsDataApi extends BaseApi {
 
   exportCatalog(request: CatalogExportRequest, token: Token): Promise<ServerActionResponse<DownloadedFile>> {
     return this.postDownloadAction(CATALOG_EXPORT_URL, request, token);
+  }
+
+  previewCatalogImport(
+    file: FormData,
+    policy: CatalogResolutionPolicy,
+    isReusedNamesAcknowledged: boolean,
+    token: Token,
+  ): Promise<ServerActionResponse<CatalogImportPreview>> {
+    return this.postFiles(
+      `${CATALOG_IMPORT_PREVIEW_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      file,
+      token,
+    );
+  }
+
+  importCatalog(
+    file: FormData,
+    policy: CatalogResolutionPolicy,
+    isReusedNamesAcknowledged: boolean,
+    token: Token,
+  ): Promise<ServerActionResponse<CatalogImportResult>> {
+    return this.postFiles(
+      `${CATALOG_IMPORT_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      file,
+      token,
+    );
   }
 }

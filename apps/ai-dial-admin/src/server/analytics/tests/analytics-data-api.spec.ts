@@ -1,5 +1,6 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { CatalogComponentType } from '@/src/types/analytics/export';
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
@@ -786,5 +787,44 @@ describe('Server :: AnalyticsDataApi — catalog export', () => {
 
     expect(res).toEqual(expect.objectContaining({ success: false, status: 422 }));
     expect(res.response).toBeUndefined();
+  });
+});
+
+describe('Server :: AnalyticsDataApi — catalog import', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('previewCatalogImport posts the bundle with the policy and confirmation as query params', async () => {
+    const preview = { tables: [], pipelines: [], required_system_tables: [], env_specific: [], validation_errors: [] };
+    fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+    const body = new FormData();
+
+    const res = await instance.previewCatalogImport(body, CatalogResolutionPolicy.SKIP_IF_EXISTS, false, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/v1/catalog/import/preview?resolution_policy=SKIP_IF_EXISTS&acknowledge_reused_names=false',
+      ),
+      expect.objectContaining({ method: 'POST', body }),
+    );
+  });
+
+  test('importCatalog sends the confirmation and returns the error envelope on a conflict', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: 'catalog_import_conflict', message: 'usage_sentiment exists' }), {
+      status: 409,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, true, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 409 }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/catalog\/import\?resolution_policy=FAIL_IF_EXISTS&acknowledge_reused_names=true$/),
+      expect.anything(),
+    );
   });
 });

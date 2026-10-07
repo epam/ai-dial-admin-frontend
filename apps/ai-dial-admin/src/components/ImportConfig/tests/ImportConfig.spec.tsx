@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import ImportConfig from '../ImportConfig';
-import { ExportI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/app/[lang]/import-config/actions', () => ({
   importJsonConfigs: vi.fn(),
@@ -9,6 +9,8 @@ vi.mock('@/src/app/[lang]/import-config/actions', () => ({
   importDeploymentConfig: vi.fn(),
   previewJsonConfigs: vi.fn(),
   previewZipConfig: vi.fn(),
+  importAnalyticsConfig: vi.fn(),
+  previewAnalyticsImportConfig: vi.fn(),
 }));
 
 vi.mock('@/src/components/EntityListView/Import/utils', () => ({
@@ -47,5 +49,26 @@ describe('ImportConfig', () => {
 
     expect(screen.getByText(ImportI18nKey.Override)).toBeInTheDocument();
     expect(screen.getByText(ImportI18nKey.Skip)).toBeInTheDocument();
+  });
+});
+
+describe('ImportConfig — Analytics scope', () => {
+  test('offers Analytics without Deployments when only Analytics is enabled', () => {
+    render(<ImportConfig isAnalyticsEnabled />);
+
+    expect(screen.getByText(MenuI18nKey.Analytics)).toBeInTheDocument();
+    expect(screen.queryByText(ExportI18nKey.Deployments)).toBeNull();
+  });
+
+  test('hides the file type and offers Fail if exists and Skip if exists without Override', () => {
+    render(<ImportConfig deploymentsEnabled isAnalyticsEnabled />);
+
+    fireEvent.click(screen.getByText(MenuI18nKey.Analytics));
+
+    expect(screen.queryByText(ImportI18nKey.FileType)).toBeNull();
+    expect(screen.getByText(ImportI18nKey.AnalyticsFailIfExists)).toBeInTheDocument();
+    expect(screen.getByText(ImportI18nKey.AnalyticsSkipIfExists)).toBeInTheDocument();
+    expect(screen.queryByText(ImportI18nKey.Override)).toBeNull();
+    expect(screen.getByText(ImportI18nKey.AnalyticsDropBundle)).toBeInTheDocument();
   });
 });
