@@ -1,6 +1,6 @@
 import { DialCheckbox, DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
-import { GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { GridOptions } from 'ag-grid-community';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -44,11 +44,11 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
 
   const rowData = useMemo(() => {
     const all = options || [];
-    return isFilteredToOneKind ? filterCatalogSchemaOptionsByEntityType(all, entityType, selectedId) : all;
-  }, [options, isFilteredToOneKind, entityType, selectedId]);
+    return isFilteredToOneKind ? filterCatalogSchemaOptionsByEntityType(all, entityType, selectedSchema) : all;
+  }, [options, isFilteredToOneKind, entityType, selectedSchema]);
 
   const columnDefs = useMemo(() => {
-    const columns = isFilteredToOneKind ? CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS(t) : CATALOG_SCHEMA_PICKER_COLUMNS(t);
+    const columns = isFilteredToOneKind ? CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS() : CATALOG_SCHEMA_PICKER_COLUMNS(t);
     return columns.map((col) => ({ ...col, sort: void 0 }));
   }, [isFilteredToOneKind, t]);
 
@@ -65,14 +65,19 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
         setSelectedSchema((event.data as CatalogSchemaOption)?.$id);
       }
     },
-  };
-
-  const onGridReady = (event: GridReadyEvent) => {
-    event.api.forEachNode((node) => {
-      if (isSelectedNode(node.data)) {
-        node.setSelected(true);
-      }
-    });
+    /**
+     * Not `onGridReady`: rows reach this grid through `updateGridOptions` once the api exists, so at
+     * ready time the row model is still empty. This also fires again when relaxing the filter
+     * replaces the rows, which is when the selected row would otherwise lose its highlight.
+     */
+    onRowDataUpdated: (event) => {
+      event.api.forEachNode((node) => {
+        if (isSelectedNode(node.data)) {
+          node.setSelected(true);
+          event.api.ensureNodeVisible(node, 'middle');
+        }
+      });
+    },
   };
 
   const onToggleAllKinds = useCallback((value?: boolean) => setIsShowingAllKinds(!!value), []);
@@ -97,7 +102,13 @@ const SelectCatalogSchemaModal: FC<Props> = ({ selectedId, options, entityType, 
             rowData={rowData}
             columnDefs={columnDefs}
             additionalGridOptions={gridOptions}
-            onGridReady={onGridReady}
+            // Without this the grid renders as bare headers, which reads as a failed load rather
+            // than an empty result — and when the filter is the cause, says nothing about undoing it.
+            emptyDataProps={{
+              title: isFilteredToOneKind
+                ? t(EntitiesI18nKey.NoCatalogSchemasForEntityKind)
+                : t(EntitiesI18nKey.NoCatalogSchemas),
+            }}
           />
         </div>
         {!!entityType && (

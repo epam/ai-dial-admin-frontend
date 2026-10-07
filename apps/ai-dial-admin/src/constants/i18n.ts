@@ -240,6 +240,8 @@ export enum EntitiesI18nKey {
   AppRunner = 'Entities.AppRunner',
   CatalogSchema = 'Entities.CatalogSchema',
   ShowAllCatalogEntityKinds = 'Entities.ShowAllCatalogEntityKinds',
+  NoCatalogSchemas = 'Entities.NoCatalogSchemas',
+  NoCatalogSchemasForEntityKind = 'Entities.NoCatalogSchemasForEntityKind',
   NoCatalogSchemaSelected = 'Entities.NoCatalogSchemaSelected',
   NoCatalogProperties = 'Entities.NoCatalogProperties',
   CatalogSchemaUnavailable = 'Entities.CatalogSchemaUnavailable',

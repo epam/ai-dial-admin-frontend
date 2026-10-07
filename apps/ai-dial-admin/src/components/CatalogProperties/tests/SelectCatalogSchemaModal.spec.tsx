@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ColDef, GridOptions, GridReadyEvent, IRowNode, RowSelectedEvent } from 'ag-grid-community';
+import { ColDef, GridOptions, IRowNode, RowDataUpdatedEvent, RowSelectedEvent } from 'ag-grid-community';
 import { ComponentProps } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ interface GridViewProps {
   rowData?: CatalogSchemaOption[] | null;
   columnDefs?: ColDef[];
   additionalGridOptions?: GridOptions;
-  onGridReady?: (event: GridReadyEvent) => void;
+  emptyDataProps?: { title?: string };
 }
 
 let capturedGridProps: GridViewProps | undefined;
@@ -42,7 +42,11 @@ const kindless: CatalogSchemaOption = {
   'dial:catalogDisplayName': 'Kindless card',
 };
 
-const buildGridReadyEvent = (nodes: CatalogSchemaOption[]) => {
+/**
+ * Stands in for the rows arriving, which is what `onRowDataUpdated` reacts to — not `onGridReady`,
+ * where the row model is still empty because rows come through `updateGridOptions`.
+ */
+const buildRowDataUpdatedEvent = (nodes: CatalogSchemaOption[]) => {
   const selected: CatalogSchemaOption[] = [];
   const event = {
     api: {
@@ -50,8 +54,9 @@ const buildGridReadyEvent = (nodes: CatalogSchemaOption[]) => {
         nodes.forEach((data) =>
           callback({ data, setSelected: () => selected.push(data) } as unknown as IRowNode<CatalogSchemaOption>),
         ),
+      ensureNodeVisible: () => undefined,
     },
-  } as unknown as GridReadyEvent;
+  } as unknown as RowDataUpdatedEvent;
 
   return { event, selected };
 };
@@ -99,6 +104,12 @@ describe('SelectCatalogSchemaModal', () => {
     expect(capturedGridProps?.rowData).toEqual([apiWritten, fileDeclared]);
   });
 
+  test('says only that there are none when it is not filtering', () => {
+    renderModal({ options: [] });
+
+    expect(capturedGridProps?.emptyDataProps?.title).toEqual(EntitiesI18nKey.NoCatalogSchemas);
+  });
+
   test('replaces a previous selection rather than adding to it', () => {
     renderModal();
 
@@ -107,11 +118,11 @@ describe('SelectCatalogSchemaModal', () => {
     );
   });
 
-  test('preselects the schema the deployment already points at', () => {
+  test('preselects the schema the deployment already points at, once its rows arrive', () => {
     renderModal({ selectedId: fileDeclared.$id });
-    const { event, selected } = buildGridReadyEvent([apiWritten, fileDeclared]);
+    const { event, selected } = buildRowDataUpdatedEvent([apiWritten, fileDeclared]);
 
-    capturedGridProps?.onGridReady?.(event);
+    capturedGridProps?.additionalGridOptions?.onRowDataUpdated?.(event);
 
     expect(selected).toEqual([fileDeclared]);
   });
@@ -174,10 +185,16 @@ describe('SelectCatalogSchemaModal — filtered to an entity kind', () => {
     expect(capturedGridProps?.rowData).toEqual([apiWritten, kindless]);
   });
 
-  test('drops the entity-kind column, which is a constant in this view', () => {
+  test('names the filter as the reason when it leaves nothing to pick', () => {
+    renderModal({ options: [fileDeclared], entityType: CatalogEntityType.Model });
+
+    expect(capturedGridProps?.emptyDataProps?.title).toEqual(EntitiesI18nKey.NoCatalogSchemasForEntityKind);
+  });
+
+  test('shows the id alone, the only column that identifies a schema here', () => {
     renderModal();
 
-    expect(capturedGridProps?.columnDefs?.map((column) => column.field)).toEqual(['$id', 'dial:catalogDisplayName']);
+    expect(capturedGridProps?.columnDefs?.map((column) => column.field)).toEqual(['$id']);
   });
 
   test('keeps the schema the deployment points at even when its kind differs', () => {
@@ -190,6 +207,22 @@ describe('SelectCatalogSchemaModal — filtered to an entity kind', () => {
     renderModal();
 
     expect(screen.getByRole('checkbox', { name: EntitiesI18nKey.ShowAllCatalogEntityKinds })).toBeTruthy();
+  });
+
+  /**
+   * Re-applying the filter must not hide a pick made while it was relaxed: Apply would still commit
+   * that schema, so a grid that dropped it would show nothing selected and commit it anyway.
+   */
+  test('keeps a cross-kind pick listed after the filter is re-applied', async () => {
+    const user = userEvent.setup();
+    renderModal();
+    const relax = screen.getByRole('checkbox', { name: EntitiesI18nKey.ShowAllCatalogEntityKinds });
+
+    await user.click(relax);
+    capturedGridProps?.additionalGridOptions?.onRowSelected?.(buildRowSelectedEvent(fileDeclared));
+    await user.click(relax);
+
+    expect(capturedGridProps?.rowData).toEqual([apiWritten, fileDeclared, kindless]);
   });
 
   test('lists every schema once the filter is relaxed', async () => {

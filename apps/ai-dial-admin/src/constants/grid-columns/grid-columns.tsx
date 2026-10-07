@@ -432,15 +432,10 @@ export const CATALOG_SCHEMA_PICKER_COLUMNS = (t: (str: string) => string): ColDe
 ];
 
 /**
- * The picker's columns while filtered to one entity kind, where that kind is a constant and so
- * carries no information. Both survivors are load-bearing: display names are not unique, so the
- * `$id` is what tells two same-named schemas apart, and the display name is the only
- * human-readable label.
+ * The picker's columns while filtered to one entity kind: the `$id` alone. That kind is a constant
+ * here, and display names are not unique, so the `$id` is the only column that identifies a schema.
  */
-export const CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  { field: '$id', headerName: 'ID' },
-  { field: 'dial:catalogDisplayName', headerName: t(EntityFieldsI18nKey.displayName) },
-];
+export const CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS = (): ColDef[] => [{ field: '$id', headerName: 'ID' }];
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
   ...BASE_COLUMNS,

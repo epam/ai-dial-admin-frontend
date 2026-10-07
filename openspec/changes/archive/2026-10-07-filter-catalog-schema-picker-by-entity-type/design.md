@@ -116,15 +116,33 @@ visually coherent; a lone 2.0 control inside a 1.0 popup would not.
 ### Columns follow the view
 
 In the filtered view the kind column is a constant, so it carries no information and is dropped. The
-grid keeps two columns: the schema's `$id` and its `dial:catalogDisplayName`.
+grid presents the schema's `$id` alone.
 
-Both are kept deliberately. `$id` is a URI and display names are not unique, so `$id` is what tells
-two same-named schemas apart; `dial:catalogDisplayName` is the only human-readable label. Reducing
-the grid to `$id` alone would leave an administrator matching URIs by eye.
+Dropping `dial:catalogDisplayName` here is the accepted tradeoff, taken by the product owner against
+the alternative argued below. Display names are not unique, so the `$id` is the only column that
+identifies a schema; once the list is narrowed to one kind, the display name distinguishes nothing
+the `$id` does not. The cost is real — `$id` is a URI, so an administrator reads URIs rather than
+labels — and the filter is what makes that acceptable, by keeping the list short enough to scan.
 
-The "show all" view restores the kind column, where it varies and is the reason to be in that view at
-all. `CATALOG_SCHEMA_PICKER_COLUMNS` keeps its current three-column shape and serves the "show all"
-view; a new `CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS` serves the filtered one.
+An earlier revision of Issue #4892 floated keeping the kind visible as its own titled column, with a
+mockup. This change answers that with the filter plus the "show all" view instead, so confirm the
+presentation with the reporter rather than assuming the issue is satisfied as written.
+
+The "show all" view restores both the display name and the kind, which vary there and are the reason
+to be in that view at all. `CATALOG_SCHEMA_PICKER_COLUMNS` keeps its three-column shape and serves
+the "show all" view; a new `CATALOG_SCHEMA_PICKER_FILTERED_COLUMNS` serves the filtered one.
+
+### An emptied grid says which of the two reasons emptied it
+
+`GridView` renders `DialNoDataContent` only when it is given `emptyDataProps`, so without them an
+empty result is bare column headers — indistinguishable from a failed load. The picker passes them,
+and picks the message by whether the filter is in effect: filtered out, which names the entity kind
+so the relax control reads as the way out, versus no schemas at all. Two i18n keys rather than one,
+because a single generic line would leave an administrator with no clue that unticking a checkbox
+would show something.
+
+The inline dropdown gets neither message nor relax control, as noted above: it collapses to its
+"None" entry and Browse is the way into the full list.
 
 ### The surface-to-kind mapping has one home
 

@@ -29,8 +29,11 @@ made it permanently unsaveable. This change keeps the two concerns apart on purp
 - Offer a "show all entity kinds" control in the browse modal, so a deliberate cross-kind pairing
   stays reachable. DIAL Core never checks a deployment's kind against the schema's, so our UI must
   not refuse a pairing Core accepts.
-- Drop the kind column from the filtered grid, where it is a constant, and keep the schema's `$id`
-  and display name. Restore the kind column in the "show all" view.
+- Reduce the filtered grid to the schema's `$id` alone: the kind is a constant there and display
+  names are not unique, so the `$id` is the only column that identifies a schema. Restore the
+  display name and the kind in the "show all" view, where both vary.
+- Say so when nothing is left to pick, naming the entity kind when the filter is what emptied the
+  grid, rather than rendering bare column headers that read as a failed load.
 - Stop offering `skill` in the catalog-schema entity-type selection: offer `model`, `agent`,
   `toolset` and `interceptor`.
 - Keep the save gate at Core's full five values, so a schema already typed `skill` keeps saving, and

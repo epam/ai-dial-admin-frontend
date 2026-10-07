@@ -21,15 +21,19 @@
 - [x] 2.2 Add `CATALOG_SCHEMA_PICKER_ENTITY_TYPE` to `apps/ai-dial-admin/src/constants/catalog-schemas.ts`
       mapping each deployment surface to the kind its picker filters to, with the Applications-to-`agent`
       pairing noted, and leave `CATALOG_SCHEMA_PICKER_COLUMNS` as the three-column "show all" set while
-      adding a two-column filtered set to `apps/ai-dial-admin/src/constants/grid-columns/grid-columns.tsx`.
+      adding an `$id`-only filtered set to `apps/ai-dial-admin/src/constants/grid-columns/grid-columns.tsx`.
 - [x] 2.3 Thread an `entityType` prop through
       `apps/ai-dial-admin/src/components/CatalogProperties/CatalogSchemaField.tsx` so its inline
       selection lists the filtered set, and pass it to the browse modal.
 - [x] 2.4 Give `apps/ai-dial-admin/src/components/CatalogProperties/SelectCatalogSchemaModal.tsx` a
-      "show all entity kinds" checkbox that relaxes the filter and restores the entity-kind column,
-      driving the grid from `rowData` so the toggle re-renders it.
-- [x] 2.5 Add the checkbox label to `apps/ai-dial-admin/src/constants/i18n.ts` and
-      `apps/ai-dial-admin/src/locales/en.ts`.
+      "show all entity kinds" checkbox that relaxes the filter and restores the display-name and
+      entity-kind columns, driving the grid from `rowData` so the toggle re-renders it, and restore
+      the selected row from `onRowDataUpdated` rather than `onGridReady`, where the row model is
+      still empty.
+- [x] 2.5 Pass `emptyDataProps` to the modal's `GridView`, choosing between a kind-specific and a
+      plain title by whether the filter is in effect, so an emptied grid is not bare headers.
+- [x] 2.6 Add the checkbox label and both empty-state titles to
+      `apps/ai-dial-admin/src/constants/i18n.ts` and `apps/ai-dial-admin/src/locales/en.ts`.
 
 ## 3. Pass each deployment surface its own kind
 
@@ -42,8 +46,9 @@
 - [x] 4.1 Add `apps/ai-dial-admin/src/utils/catalog-schemas/tests/picker-options.spec.ts` covering a
       matching kind, a null kind, the selected `$id` surviving a mismatch, and an absent entity type.
 - [x] 4.2 Update `apps/ai-dial-admin/src/components/CatalogProperties/tests/SelectCatalogSchemaModal.spec.tsx`
-      for the filtered row set, the two-column filtered view, and the three-column "show all" view the
-      checkbox reaches.
+      for the filtered row set, the `$id`-only filtered view, the three-column "show all" view the
+      checkbox reaches, both empty-state titles, the selection restored on `onRowDataUpdated`, and a
+      cross-kind pick surviving a re-applied filter.
 - [x] 4.3 Update `apps/ai-dial-admin/src/components/CatalogProperties/tests/CatalogSchemaField.spec.tsx`
       so the inline selection is asserted against the filtered option set.
 - [x] 4.4 Extend `apps/ai-dial-admin/src/components/Assets/Platform/CatalogSchemas/tests/CreateProperties.spec.tsx`

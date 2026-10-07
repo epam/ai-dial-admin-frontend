@@ -11,7 +11,7 @@ When this delta is synced into the consolidated spec, rename:
 
 - the requirement to `The schema picker filters to the deployment's entity kind`
 - `Both populations appear` to `Both populations appear, filtered to the deployment's kind`
-- `The grid shows exactly the three columns` to `The filtered grid shows the id and the display name`
+- `The grid shows exactly the three columns` to `The filtered grid shows the id alone`
 
 The remaining four scenario headings are already accurate and keep their names.
 -->
@@ -40,15 +40,25 @@ DIAL Core never checks a deployment's own kind against the schema's `dial:catalo
 deliberate cross-kind pairing is legal and the picker SHALL keep it reachable rather than refusing a
 pairing Core accepts. The filter is a default, not a constraint.
 
-In the filtered view the grid SHALL present exactly two columns — the schema's `$id` and its display
-name — because the entity kind is a constant there and carries no information. Both SHALL be present:
-display names are not unique, so the `$id` is what distinguishes two same-named schemas, and the
-display name is the only human-readable label. When the filter is relaxed the grid SHALL also present
-the entity kind, which varies in that view.
+In the filtered view the grid SHALL present the schema's `$id` alone. The entity kind is a constant
+there, and the display name distinguishes nothing — display names are not unique, so the `$id` is the
+only column that identifies a schema. When the filter is relaxed the grid SHALL present the display
+name and the entity kind alongside it, both of which carry information in that view.
 
 Author and updated-time columns SHALL NOT be offered in either view: the read that unions the two
 populations carries no resource metadata, and adding them would cost one metadata request per row for
 the API-written half and remain empty for the other.
+
+When nothing is left to pick the grid SHALL say so rather than render as bare column headers, which
+reads as a failed load. Where the filter is what emptied it, the message SHALL name the entity kind
+as the cause, so the relax control reads as the way out; where no schema exists at all, it SHALL
+report only that.
+
+#### Scenario: An empty filtered result names the kind as the cause
+
+- **WHEN** an admin opens the picker on a deployment whose kind no schema declares
+- **THEN** the grid reports that there are no catalog schemas for this entity kind
+- **AND** the control that relaxes the filter is still offered
 
 #### Scenario: Both populations appear
 
@@ -59,7 +69,7 @@ the API-written half and remain empty for the other.
 #### Scenario: The grid shows exactly the three columns
 
 - **WHEN** the picker grid renders with the filter in effect
-- **THEN** its columns are the schema id and the display name, and no entity-kind column is present
+- **THEN** its only column is the schema id — no display-name and no entity-kind column
 - **AND** no author or updated-time column is present in either view
 
 #### Scenario: A schema written for another entity kind is still selectable
