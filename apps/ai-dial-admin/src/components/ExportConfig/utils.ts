@@ -12,7 +12,7 @@ import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequestComponent } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 export const fulDependenciesConfig: ExportDependenciesConfig = {
@@ -251,12 +251,6 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.APPLICATION_TYPE_SCHEMA
   );
 };
-
-export const getExportScopes = (isDeploymentsEnabled: boolean, isAnalyticsEnabled: boolean): ExportComponentType[] => [
-  ExportComponentType.ADMIN,
-  ...(isDeploymentsEnabled ? [ExportComponentType.DEPLOYMENTS] : []),
-  ...(isAnalyticsEnabled ? [ExportComponentType.ANALYTICS] : []),
-];
 
 export const hasSelection = (customExportData: Record<string, EntitiesGridData[]>): boolean =>
   Object.values(customExportData).some((data) => data.length > 0);

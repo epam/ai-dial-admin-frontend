@@ -1,3 +1,5 @@
+import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
+import { ExportComponentType } from '@/src/types/export';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -84,7 +86,10 @@ const renderPreview = () =>
       importBody={buildFormData()}
       files={[new File(['x'], 'config.zip')]}
       fileType={ImportFileType.ARCHIVE}
-      isDeployments
+      configScope={ExportComponentType.DEPLOYMENTS}
+      analyticsPolicy={CatalogResolutionPolicy.FAIL_IF_EXISTS}
+      isReusedNamesAcknowledged={false}
+      onChangeReusedNamesAcknowledged={vi.fn()}
       onImportFile={vi.fn()}
     />,
   );

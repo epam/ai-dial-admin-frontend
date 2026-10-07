@@ -13,6 +13,7 @@ import {
 import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
 import ConfigScopeSelector from '@/src/components/Common/ConfigScopeSelector/ConfigScopeSelector';
+import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
 
 import {
   exportAnalyticsConfig,
@@ -30,7 +31,6 @@ import {
   fulDependenciesConfig,
   getComponents,
   getComponentTypes,
-  getExportScopes,
   hasSelection,
 } from '@/src/components/ExportConfig/utils';
 import {
@@ -72,7 +72,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled, is
   const isAdminContext = selectedComponentType === ExportComponentType.ADMIN;
 
   const scopes = useMemo(
-    () => getExportScopes(!!deploymentsEnabled, !!isAnalyticsEnabled),
+    () => getConfigScopes(!!deploymentsEnabled, !!isAnalyticsEnabled),
     [deploymentsEnabled, isAnalyticsEnabled],
   );
 

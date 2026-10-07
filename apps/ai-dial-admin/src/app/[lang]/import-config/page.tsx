@@ -1,4 +1,5 @@
 import ImportConfig from '@/src/components/ImportConfig/ImportConfig';
+import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
 import { isValueTruthy } from '@/src/utils/types';
 import { redirect } from 'next/navigation';
 
@@ -11,5 +12,10 @@ export default async function Page() {
     redirect(ApplicationRoute.Home);
   }
 
-  return <ImportConfig deploymentsEnabled={isValueTruthy(process.env.DEPLOYMENTS_ENABLED)} />;
+  return (
+    <ImportConfig
+      deploymentsEnabled={isValueTruthy(process.env.DEPLOYMENTS_ENABLED)}
+      isAnalyticsEnabled={getIsAnalyticsEnabled()}
+    />
+  );
 }
