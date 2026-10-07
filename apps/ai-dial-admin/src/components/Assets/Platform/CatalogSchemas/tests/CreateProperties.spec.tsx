@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -6,6 +6,23 @@ import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import CatalogSchemaCreateProperties from '../CreateProperties';
+
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  DialSelectField: ({ id, label, value, options, onChange }: any) => (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="" />
+        {options?.map((option: any) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  ),
+}));
 
 const schema = (overrides: Partial<DialCatalogSchemaResource> = {}): DialCatalogSchemaResource =>
   ({
@@ -34,6 +51,19 @@ describe('CatalogSchemaCreateProperties', () => {
     expect(screen.getByText(EntityFieldsI18nKey.catalogDefaultLocale)).toBeInTheDocument();
     expect(screen.queryByText(EntityFieldsI18nKey.baseUrl)).not.toBeInTheDocument();
     expect(screen.queryByText(EntityFieldsI18nKey.endpoint)).not.toBeInTheDocument();
+  });
+
+  test('Should offer every entity type Core allows, in Core order', () => {
+    renderForm(schema());
+
+    const select = within(screen.getByRole('combobox', { name: EntityFieldsI18nKey.catalogEntityType }));
+
+    expect(
+      select
+        .getAllByRole('option')
+        .map((option) => option.textContent)
+        .filter(Boolean),
+    ).toEqual(['Model', 'Agent', 'Toolset', 'Skill', 'Interceptor']);
   });
 
   test('Should write the typed id to $id rather than to the generic name field', async () => {

@@ -2,6 +2,7 @@ import { JsonSchema } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 /**
+ * The values Core's catalog meta-schema allows in `dial:catalogEntityType`, in its own order.
  * Declarative only: DIAL Core validates a deployment's `catalog_properties` against the schema its
  * `catalog_schema_id` names, and never checks the deployment's own kind against this value.
  */
@@ -9,6 +10,8 @@ export enum CatalogEntityType {
   Model = 'model',
   Agent = 'agent',
   Toolset = 'toolset',
+  Skill = 'skill',
+  Interceptor = 'interceptor',
 }
 
 /** Values Core's catalog meta-schema allows in a property's `dial:meta`.`dial:widget`. */
