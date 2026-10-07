@@ -24,6 +24,7 @@ import RunCancelModal from '@/src/components/Runs/Cancel/RunCancelModal';
 import { useCancellingRunsPoll } from '@/src/components/Runs/Cancel/useCancellingRunsPoll';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
+import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
@@ -96,6 +97,7 @@ const EvaluationListView = <T extends object>({
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    ...(isRunsList ? { components: RUN_STATUS_FILTER_COMPONENTS } : {}),
     onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 

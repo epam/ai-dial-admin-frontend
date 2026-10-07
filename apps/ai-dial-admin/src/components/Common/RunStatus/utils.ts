@@ -8,6 +8,8 @@ import { RunStatus } from '@/src/models/evaluation/run';
  */
 export const getStatusLabel = (status: RunStatus | string | undefined, t: (key: string) => string) => {
   switch (status) {
+    case RunStatus.PENDING:
+      return t(RunsI18nKey.Pending);
     case RunStatus.COMPLETED:
       return t(RunsI18nKey.Completed);
     case RunStatus.RUNNING:

@@ -13,6 +13,7 @@ import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/Im
 import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
 import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
+import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
 import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
@@ -1316,7 +1317,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: RunStatusCellRenderer,
     cellRendererParams: { isLabelHidden: true },
     tooltipValueGetter: () => undefined,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    filter: RUN_STATUS_VALUE_FILTER,
     floatingFilterComponent: EmptyFloatingFilter,
     width: RUN_STATUS_COLUMN_WIDTH,
     minWidth: RUN_STATUS_COLUMN_WIDTH,

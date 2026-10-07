@@ -9,8 +9,18 @@ import {
 } from '@/src/models/evaluation/structured-query';
 import { McpDeploymentRef, SuiteType, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
-import { SortDirectionDto } from '@/src/types/request';
-import { and, col, compare, field, offsetPage, or, rowQuery, sortItem } from '@/src/utils/structured-query/build';
+import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
+import {
+  and,
+  col,
+  compare,
+  field,
+  inValues,
+  offsetPage,
+  or,
+  rowQuery,
+  sortItem,
+} from '@/src/utils/structured-query/build';
 
 import {
   DEPLOYMENT_REF_NAME_FIELD,
@@ -38,6 +48,12 @@ const valueTypeForField = (dslField: string): ValueType => {
 };
 
 const buildFieldFilter = (dslField: string, filter: FilterDto): FilterNode | null => {
+  // `compare` always builds a one-value node; a multiselect's comma-joined value needs the DSL's
+  // array-shaped `In` node instead, or the backend compares the field against the whole joined
+  // string as one literal and matches nothing.
+  if (filter.operator === FilterOperatorDto.INCLUDES) {
+    return inValues(dslField, valueTypeForField(dslField), String(filter.value).split(','));
+  }
   const op: ComparisonOp | undefined = OPERATOR_TO_COMPARISON[filter.operator];
   if (!op) {
     return null;
