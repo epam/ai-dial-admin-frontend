@@ -19,6 +19,13 @@ The label SHALL always be part of the status's accessible name, in every present
 meaning is carried only by colour or shape is not a status presentation: colour alone fails the contrast
 and non-text-content requirements in `.claude/rules/a11y.md`, and a tooltip is not an accessible name.
 
+#### Scenario: Run is pending
+- **WHEN** a run with status `PENDING` is displayed
+- **THEN** a settled-style indicator is shown (no in-progress animation) with the label for `PENDING`
+  available the same way
+- **THEN** it is not presented as in-progress — a run that has not yet started is not a run that is
+  actively doing something
+
 #### Scenario: Run is running
 - **WHEN** a run with status `RUNNING` is displayed
 - **THEN** an in-progress indicator is shown

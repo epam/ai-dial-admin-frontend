@@ -72,6 +72,11 @@
   }
 }
 
+// The file manager grid design draws row dividers at half weight (header divider stays 1px).
+.file-manager-grid .ag-root-wrapper .ag-row {
+  border-bottom-width: 0.5px;
+}
+
 .ag-root-wrapper {
   .ag-row {
     @apply border-b border-tertiary;

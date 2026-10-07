@@ -76,7 +76,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     }
   }, [selectedRequestIndex, rawSelectedRequestIndex]);
 
-  const requestView = toRequestView(testSuite, selectedRequestIndex);
+  const requestView = useMemo(() => toRequestView(testSuite, selectedRequestIndex), [testSuite, selectedRequestIndex]);
 
   const onChangeRequestView = useCallback(
     (view: TestSuite, isSkipRefreshChange?: boolean) =>

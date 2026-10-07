@@ -11,7 +11,7 @@ import {
   DialUploadFileItem,
   FileManagerColumnKey,
   FileManagerGridRow,
-} from '@epam/ai-dial-ui-kit';
+} from '@epam/ai-dial-react-file-manager';
 import { AgGridEvent, ColDef, GridApi } from 'ag-grid-community';
 
 import {
@@ -146,11 +146,6 @@ const FileManager: FC<Props> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
-
-  const managerLabel = useMemo(
-    () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
-    [label],
-  );
 
   // Applications is the one view with two top-level buckets (`platform`/`public` — see
   // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
@@ -434,14 +429,16 @@ const FileManager: FC<Props> = ({
   return (
     <>
       <DialFileManager
-        managerLabel={managerLabel}
-        className="bg-layer-2 py-4 px-6"
+        className="bg-layer-2 pb-4 px-6"
         path={filePath}
         defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}
         rootItem={isMultiRootView ? ({ label } as DialRootFolder) : (filteredFiles?.[0] as DialRootFolder)}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
+        contentHeaderClassName="justify-end"
+        navigationPanelOptions={{ searchable: false }}
+        sortOptions={{ sortable: false }}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
         toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t, filePath)}
         treeOptions={getTreeOptions(
@@ -453,6 +450,7 @@ const FileManager: FC<Props> = ({
           setExpandedFolders,
           t,
           filePath,
+          label,
         )}
         gridOptions={gridOptions}
         onGridApiChange={handleGridApiChange}

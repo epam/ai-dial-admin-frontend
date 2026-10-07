@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialUploadFileItem, GridOptions, GridSelectionMode } from '@epam/ai-dial-react-file-manager';
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
 import { bulkActionLabels } from '@/src/components/Assets/constants';
@@ -15,6 +15,7 @@ import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
 import {
   CONTROL_CHARS_ONLY_REGEXP,
   CREATE_FOLDER_FORBIDDEN_CHARS,
+  FILE_MANAGER_GRID_CLASS,
   FILE_NAME_MAX_LENGTH,
   MAX_FOLDER_NESTING_DEPTH,
   MOVE_EXCLUDED_PATHS,
@@ -173,6 +174,7 @@ export const getGridOptions = (
   ({
     alternateOddRowColors: false,
     columnDefs,
+    containerClassName: FILE_MANAGER_GRID_CLASS,
     selectionMode:
       isReadOnlyAdmin || isFileRootPath(currentPath)
         ? void 0
@@ -207,6 +209,8 @@ export const getTreeOptions = (
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
   currentPath?: string,
+  // An empty header suppresses the library's default "Folder Tree" title.
+  header = '',
 ) => {
   return {
     collapsed: false,
@@ -215,7 +219,7 @@ export const getTreeOptions = (
     loadingPaths: isFetchingFiles ? new Set<string>([getRootFolder(view)]) : new Set<string>(),
     actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view, currentPath), t),
     onExpandedPathsChange: setExpanded,
-    header: t(FileManagerI18nKey.FolderTree),
+    header,
   };
 };
 
@@ -237,7 +241,7 @@ export const getBulkActionsToolbarOptions = (
 ) => {
   if (isFileRootPath(currentPath)) {
     return {
-      getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+      getSelectionLabel: () => t(FileManagerI18nKey.SelectedItems),
       actionLabels: {},
     };
   }
@@ -258,7 +262,7 @@ export const getBulkActionsToolbarOptions = (
   const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;
 
   return {
-    getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+    getSelectionLabel: () => t(FileManagerI18nKey.SelectedItems),
     actionLabels: getActionLabels(actionLabels, t),
   };
 };

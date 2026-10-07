@@ -1,4 +1,4 @@
-import { NAME_COLUMN, SIZE_COLUMN, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
+import { NAME_COLUMN, SIZE_COLUMN, UPDATED_AT_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef } from 'ag-grid-community';
 
 export const FILES_GRID_COLUMNS: ColDef[] = [

@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
-import { FileManagerColumnKey } from '@epam/ai-dial-ui-kit';
+import { FileManagerColumnKey } from '@epam/ai-dial-react-file-manager';
 import {
   getDeleteModalDescription,
   getDeleteModalTitle,
@@ -12,7 +12,7 @@ import {
   processAssetsData,
 } from '../utils';
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialFile } from '@epam/ai-dial-ui-kit';
+import { DialFile } from '@epam/ai-dial-react-file-manager';
 import { ColDef } from 'ag-grid-community';
 
 const t = (key: string, options?: Record<string, string | number>) => {

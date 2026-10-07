@@ -5,6 +5,11 @@ import { RunStatus } from '@/src/models/evaluation/run';
 
 describe('Run status :: getStatusLabel', () => {
   const mockT = (key: string) => key;
+  test('correct label for PENDING status', () => {
+    const result = getStatusLabel(RunStatus.PENDING, mockT);
+    expect(result).toBe('Runs.Status.Pending');
+  });
+
   test('correct label for COMPLETED status', () => {
     const result = getStatusLabel(RunStatus.COMPLETED, mockT);
     expect(result).toBe('Runs.Status.Completed');
@@ -46,9 +51,12 @@ describe('Run status :: isTransitionalRunStatus', () => {
     expect(isTransitionalRunStatus(status)).toBe(true);
   });
 
-  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])('treats %s as settled', (status) => {
-    expect(isTransitionalRunStatus(status)).toBe(false);
-  });
+  test.each([RunStatus.PENDING, RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])(
+    'treats %s as settled',
+    (status) => {
+      expect(isTransitionalRunStatus(status)).toBe(false);
+    },
+  );
 
   test('treats an unknown status as settled', () => {
     expect(isTransitionalRunStatus('SOMETHING_NEW')).toBe(false);
@@ -56,9 +64,12 @@ describe('Run status :: isTransitionalRunStatus', () => {
 });
 
 describe('Run status :: isIncompleteRunStatus', () => {
-  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])('treats %s as incomplete', (status) => {
-    expect(isIncompleteRunStatus(status)).toBe(true);
-  });
+  test.each([RunStatus.PENDING, RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])(
+    'treats %s as incomplete',
+    (status) => {
+      expect(isIncompleteRunStatus(status)).toBe(true);
+    },
+  );
 
   test.each([RunStatus.COMPLETED, RunStatus.FAILED])('treats %s as complete', (status) => {
     expect(isIncompleteRunStatus(status)).toBe(false);

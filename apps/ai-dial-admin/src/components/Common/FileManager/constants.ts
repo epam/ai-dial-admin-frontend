@@ -10,4 +10,6 @@ export const MOVE_ITEMS_INDICATOR_SIZE = 100;
 export const MOVE_ITEMS_INDICATOR_WIDTH = 4;
 export const MOVE_ITEMS_INDICATOR_DELAY = 500;
 export const ASSET_LIST_FILTER_STORAGE_KEY = 'assetListFilter_';
+/** Scopes file-manager-only grid styling in `scss/ag-grid.scss`. */
+export const FILE_MANAGER_GRID_CLASS = 'file-manager-grid';
 export const MOVE_EXCLUDED_PATHS = ['platform/', 'file/'];

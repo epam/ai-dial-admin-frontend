@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialFileIcon, DialLoader, DialLoadFileAreaField, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
+import { DialFileIcon, DialLoader, DialLoadFileAreaField } from '@epam/ai-dial-ui-kit';
+import { SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef, GridOptions } from 'ag-grid-community';
 
 import { getFormDataForUpload } from '@/src/components/EntityListView/HeaderButtons/utils';

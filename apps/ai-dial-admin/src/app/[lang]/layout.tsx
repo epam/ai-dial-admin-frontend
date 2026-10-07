@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 
 // @ts-ignore
 import '@epam/ai-dial-ui-kit/styles.css';
+import '@epam/ai-dial-react-file-manager/styles.css';
 
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';

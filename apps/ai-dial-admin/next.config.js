@@ -59,7 +59,7 @@ const nextConfig = {
       },
     ];
   },
-  transpilePackages: ['@epam/ai-dial-ui-kit'],
+  transpilePackages: ['@epam/ai-dial-ui-kit', '@epam/ai-dial-react-file-manager'],
   experimental: {
     serverActions: {
       bodySizeLimit: '64mb',
