@@ -1,6 +1,6 @@
 # Theme Customization
 
-You can tailor the appearance of your application using **themes** - a collection of static resources including images, fonts, and colors. AI DIAL Admin provides two pre-set themes - dark (which is the default theme) and light. However, you can deploy a specific service that allows you to modify the default themes or create and configure your own custom themes. This independent service allows you to alter themes without having to rebuild the the application Docker image.
+You can tailor the appearance of your application using **themes** - a collection of static resources including images, fonts, and colors. AI DIAL Admin provides two pre-set themes - light (which is the default theme) and dark. However, you can deploy a specific service that allows you to modify the default themes or create and configure your own custom themes. This independent service allows you to alter themes without having to rebuild the the application Docker image.
 
 **Note**: after making changes into themes, it is necessary to restart the application to apply changes.
 

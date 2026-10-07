@@ -1,4 +1,8 @@
-FROM node:24-alpine AS base
+FROM node:24.21-alpine3.24 AS base
+
+# Pin npm for builds; remove its bundled dependencies from the final image below.
+RUN apk upgrade --no-cache libcrypto3 libssl3 \
+ && npm install --global npm@12.1.0
 
 FROM base AS deps
 WORKDIR /app
@@ -24,6 +28,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Runtime starts with node directly. Project overrides do not patch global npm's
+# bundled dependencies, so remove npm/npx and its cache.
+RUN npm cache clean --force \
+ && rm -rf /usr/local/lib/node_modules/npm \
+ && rm -f /usr/local/bin/npm /usr/local/bin/npx
+
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 
@@ -34,4 +44,5 @@ USER nextjs
 
 EXPOSE 3000 9464
 
-CMD ["npm", "run", "start"]
+# Equivalent of the generated `npm run start` (`next start`), without npm.
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

@@ -1,15 +1,15 @@
-// Default color palette is dark when no themes presented (fallbacks match the dark theme in themes.json)
+// Default color palette is light when no themes presented (fallbacks match the DIAL Chat light palette)
 
 const backgroundsColors = {
   transparent: 'transparent',
-  'layer-sunken': 'var(--bg-layer-sunken, #242A38)',
-  'layer-base': 'var(--bg-layer-base, #10151E)',
-  'layer-raised': 'var(--bg-layer-raised, #1B212D)',
-  error: 'var(--bg-error, #431E20)',
-  warning: 'var(--bg-warning, #37301A)',
-  info: 'var(--bg-info, #192948)',
-  success: 'var(--bg-success, #16312C)',
-  backdrop: 'var(--bg-backdrop, #070813CC)',
+  'layer-sunken': 'var(--bg-layer-sunken, #EEF1F7)',
+  'layer-base': 'var(--bg-layer-base, #F5F7FA)',
+  'layer-raised': 'var(--bg-layer-raised, #FCFCFC)',
+  error: 'var(--bg-error, #F3D6D8)',
+  warning: 'var(--bg-warning, #FAF0CF)',
+  info: 'var(--bg-info, #E1EAF9)',
+  success: 'var(--bg-success, #DBF1EB)',
+  backdrop: 'var(--bg-backdrop, #161B2D4D)',
 
   // controls
   'gradient-1-hover': 'var(--bg-gradient-1-hover, #6785FB)',
@@ -20,118 +20,117 @@ const backgroundsColors = {
   'control-accent-alpha': 'var(--bg-control-accent-alpha, #2764D90F)',
   'control-accent-alpha-hover': 'var(--bg-control-accent-alpha-hover, #2764D924)',
   'control-accent-alpha-active': 'var(--bg-control-accent-alpha-active, #2764D933)',
-  'control-accent': 'var(--bg-control-accent, #6E8AF7)',
+  'control-accent': 'var(--bg-control-accent, #1D4ED8)',
   'control-accent-hover': 'var(--bg-control-accent-hover, #5976E9)',
-  'control-neutral': 'var(--bg-control-neutral, #1B212D)',
+  'control-neutral': 'var(--bg-control-neutral, #FCFCFC)',
   'control-neutral-hover-strong': 'var(--bg-control-neutral-hover-strong, #848E9C)',
-  'control-neutral-hover-muted': 'var(--bg-control-neutral-hover-muted, var(--bg-control-neutral-hover, #2E3647))',
-  'control-neutral-active': 'var(--bg-control-neutral-active, #404A5E)',
-  'control-neutral-default': 'var(--bg-control-neutral-default, #57647A)',
-  'control-inverted': 'var(--bg-control-inverted, #ACB3C3)',
+  'control-neutral-hover-muted': 'var(--bg-control-neutral-hover-muted, #E0E6F0)',
+  'control-neutral-active': 'var(--bg-control-neutral-active, #D1DBEA)',
+  'control-neutral-default': 'var(--bg-control-neutral-default, #ACB3C3)',
+  'control-inverted': 'var(--bg-control-inverted, #57647A)',
   'control-error': 'var(--bg-control-error, #AE2F2F)',
   'control-error-hover': 'var(--bg-control-error-hover, #BF3939)',
   'control-error-active': 'var(--bg-control-error-active, #CC4545)',
-  'control-error-alpha-hover': 'var(--bg-control-error-alpha-hover, #F7646426)',
+  'control-error-alpha-hover': 'var(--bg-control-error-alpha-hover, #F764641A)',
   'control-error-alpha-active': 'var(--bg-control-error-alpha-active, #F7646433)',
-  'control-disable-primary': 'var(--bg-control-disable-primary, #404A5E)',
-  'control-disable-secondary': 'var(--bg-control-disable-secondary, #57647A)',
+  'control-disable-primary': 'var(--bg-control-disable-primary, #DCE0E8)',
+  'control-disable-secondary': 'var(--bg-control-disable-secondary, #ACB3C3)',
 
   // visuals
-  blue: 'var(--bg-visual-blue, #1D2E44)',
-  'green-1': 'var(--bg-visual-green-1, #16312C)',
-  'green-2': 'var(--bg-visual-green-2, #162D18)',
-  brown: 'var(--bg-visual-brown, #3A2412)',
-  red: 'var(--bg-visual-red, #451C30)',
-  'violet-1': 'var(--bg-visual-violet-1, #2C2A51)',
-  'violet-2': 'var(--bg-visual-violet-2, #372947)',
+  blue: 'var(--bg-visual-blue, #D6EDF9)',
+  'green-1': 'var(--bg-visual-green-1, #CDE8E5)',
+  'green-2': 'var(--bg-visual-green-2, #D1F0DC)',
+  brown: 'var(--bg-visual-brown, #FDE8D8)',
+  red: 'var(--bg-visual-red, #FCE7F3)',
+  'violet-1': 'var(--bg-visual-violet-1, #DDE3F9)',
+  'violet-2': 'var(--bg-visual-violet-2, #F1E9FF)',
 };
 
 const borderColors = {
   transparent: 'transparent',
-  primary: 'var(--stroke-primary, #848E9C)',
-  secondary: 'var(--stroke-secondary, #404A5E)',
-  tertiary: 'var(--stroke-tertiary, #2E3647)',
-  error: 'var(--stroke-error, #F76464)',
+  primary: 'var(--stroke-primary, #57647A)',
+  secondary: 'var(--stroke-secondary, #D1DBEA)',
+  tertiary: 'var(--stroke-tertiary, #E0E6F0)',
+  error: 'var(--stroke-error, #AE2F2F)',
   warning: 'var(--stroke-warning, #EEC840)',
-  info: 'var(--stroke-info, #6E8AF7)',
-  accent: 'var(--stroke-accent, #6E8AF7)',
-  success: 'var(--stroke-success, #3EBB8E)',
-  // `--stroke-focus-black` stays as a fallback for consumers still setting it.
-  focus: 'var(--stroke-focus, var(--stroke-focus-black, #FCFCFC))',
+  info: 'var(--stroke-info, #1D4ED8)',
+  accent: 'var(--stroke-accent, #1D4ED8)',
+  success: 'var(--stroke-success, #007274)',
+  focus: 'var(--stroke-focus, #161B2D)',
 
   // controls
-  default: 'var(--stroke-default, #2E3647)',
+  default: 'var(--stroke-default, #B2C2DD)',
   'accent-alpha': 'var(--stroke-accent-alpha, #2764D933)',
   'gradient-1': 'var(--stroke-gradient-1, #5976E9)',
   'gradient-2': 'var(--stroke-gradient-2, #885DF2)',
-  'accent-focus': 'var(--stroke-accent-focus, #5976E9)',
-  'error-alpha': 'var(--stroke-error-alpha, #F7646473)',
+  'accent-focus': 'var(--stroke-accent-focus, #6785FB)',
+  'error-alpha': 'var(--stroke-error-alpha, #AE2F2F73)',
   'control-disable-primary': 'var(--stroke-control-disable-primary, #848E9C)',
 };
 
 const textColors = {
   transparent: 'transparent',
-  primary: 'var(--text-primary, #FCFCFC)',
-  secondary: 'var(--text-secondary, #ACB3C3)',
+  primary: 'var(--text-primary, #161B2D)',
+  secondary: 'var(--text-secondary, #57647A)',
   tertiary: 'var(--text-tertiary, #848E9C)',
-  accent: 'var(--text-accent, #6E8AF7)',
-  error: 'var(--text-error, #F76464)',
-  warning: 'var(--text-warning, #EEC840)',
+  accent: 'var(--text-accent, #1D4ED8)',
+  error: 'var(--text-error, #AE2F2F)',
+  warning: 'var(--text-warning, #7F6300)',
   'warning-icon': 'var(--text-warning-icon, #EEC840)',
-  info: 'var(--text-info, #6E8AF7)',
-  success: 'var(--text-success, #3EBB8E)',
+  info: 'var(--text-info, #1D4ED8)',
+  success: 'var(--text-success, #007274)',
 
   // visuals
   blue: 'var(--text-visual-blue, #1189C8)',
-  'green-1': 'var(--text-visual-green-1, #3EBB8E)',
-  'green-2': 'var(--text-visual-green-2, #059669)',
-  'green-3': 'var(--text-visual-green-3, #3EBB8E)',
-  'brown-1': 'var(--text-visual-brown-1, #B45309)',
-  'brown-2': 'var(--text-visual-brown-2, #D36817)',
-  red: 'var(--text-visual-red, #F76464)',
-  'violet-1': 'var(--text-visual-violet-1, #AF7AFF)',
-  'violet-2': 'var(--text-visual-violet-2, #885DF2)',
+  'green-1': 'var(--text-visual-green-1, #059669)',
+  'green-2': 'var(--text-visual-green-2, #0D6E72)',
+  'green-3': 'var(--text-visual-green-3, #065F46)',
+  'brown-1': 'var(--text-visual-brown-1, #D36817)',
+  'brown-2': 'var(--text-visual-brown-2, #B45309)',
+  red: 'var(--text-visual-red, #9D174D)',
+  'violet-1': 'var(--text-visual-violet-1, #7C3AED)',
+  'violet-2': 'var(--text-visual-violet-2, #3730B7)',
 
   // controls
   'control-permanent': 'var(--text-control-permanent, #FCFCFC)',
-  'control-inverted': 'var(--text-control-inverted, #1B212D)',
-  'control-disable-primary': 'var(--text-control-disable-primary, #57647A)',
-  'control-disable-secondary': 'var(--text-control-disable-secondary, #848E9C)',
+  'control-inverted': 'var(--text-control-inverted, #FCFCFC)',
+  'control-disable-primary': 'var(--text-control-disable-primary, #848E9C)',
+  'control-disable-secondary': 'var(--text-control-disable-secondary, #DCE0E8)',
   'control-accent-hover': 'var(--text-control-accent-hover, #5976E9)',
-  'control-accent-active': 'var(--text-control-accent-active, #6E8AF7)',
+  'control-accent-active': 'var(--text-control-accent-active, #6785FB)',
 };
 
 const shadowColors = {
-  'xs-1': 'var(--shadow-xs-1, #07081359)',
-  'xs-2': 'var(--shadow-xs-2, #07081359)',
-  sm: 'var(--shadow-sm, #07081359)',
-  md: 'var(--shadow-md, #07081359)',
-  lg: 'var(--shadow-lg, #07081399)',
+  'xs-1': 'var(--shadow-xs-1, #2764D933)',
+  'xs-2': 'var(--shadow-xs-2, #161B2D08)',
+  sm: 'var(--shadow-sm, #2764D914)',
+  md: 'var(--shadow-md, #2764D90F)',
+  lg: 'var(--shadow-lg, #2764D914)',
 };
 
 const placeholderColor = {
-  primary: 'var(--text-primary, #FCFCFC)',
-  secondary: 'var(--controls-text-secondary-disable, #575F73)',
+  primary: 'var(--text-primary, #161B2D)',
+  secondary: 'var(--controls-text-secondary-disable, #ACB3C3)',
 };
 
 // TODO: remove colors
 const backgroundsColorsToRemove = {
-  'layer-0': 'var(--bg-layer-0, #000000)',
-  'layer-1': 'var(--bg-layer-1, #0C101D)',
-  'layer-2': 'var(--bg-layer-2, #161B2D)',
-  'layer-3': 'var(--bg-layer-3, #1D2439)',
-  'layer-4': 'var(--bg-layer-4, #242C42)',
-  blackout: 'var(--bg-blackout, #090D13B3)',
-  neutral: 'var(--bg-neutral, #1D2439)',
-  inverted: 'var(--bg-inverted, #EEF1F7)',
+  'layer-0': 'var(--bg-layer-0, #FCFCFC)',
+  'layer-1': 'var(--bg-layer-1, #E0E6F0)',
+  'layer-2': 'var(--bg-layer-2, #FCFCFC)',
+  'layer-3': 'var(--bg-layer-3, #EEF1F7)',
+  'layer-4': 'var(--bg-layer-4, #D1DBEA)',
+  blackout: 'var(--bg-blackout, #161B2D4D)',
+  neutral: 'var(--bg-neutral, #EEF1F7)',
+  inverted: 'var(--bg-inverted, #161B2D)',
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #7DA4FF2E)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC2E)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2E)',
-  'accent-primary': 'var(--bg-accent-primary, #5C8DEA)',
+  'accent-primary': 'var(--bg-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
   'model-icon': 'var(--bg-model-icon, #FFFFFF)',
-  secondary: 'var(--bg-secondary, #9FA6BD)',
+  secondary: 'var(--bg-secondary, #848E9C)',
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
   'orange-400': 'var(--bg-orange-400, #D97C27)',
@@ -153,47 +152,47 @@ const backgroundsColorsToRemove = {
   'controls-error-alpha-hover': 'var(--controls-bg-error-alpha-hover, #F764642E)',
   'controls-error-alpha-active': 'var(--controls-bg-error-alpha-active, #F764645C)',
 
-  'controls-disable-accent': 'var(--controls-bg-disable-accent, #696E7C)',
-  'controls-disable': 'var(--controls-bg-disable, #242C42)',
+  'controls-disable-accent': 'var(--controls-bg-disable-accent, #ACB3C3)',
+  'controls-disable': 'var(--controls-bg-disable, #DCE0E8)',
 
-  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #242C42)',
-  'controls-neutral-active': 'var(--controls-bg-neutral-active, #242C42)',
+  'controls-neutral-hover': 'var(--controls-bg-neutral-hover, #E0E6F0)',
+  'controls-neutral-active': 'var(--controls-bg-neutral-active, #D1DBEA)',
 
   'controls-accent-success-alpha-hover': 'var(--controls-bg-accent-success-alpha-hover, #37BABC2E)',
   'controls-accent-success-alpha-active': 'var(--controls-bg-accent-success-alpha-active, #37BABC5C)',
 
-  'controls-accent': 'var(--controls-bg-accent, #5C8DEA)',
-  'controls-accent-hover': 'var(--controls-bg-accent-hover, #4878D2)',
-  'controls-accent-alpha': 'var(--controls-bg-accent-alpha, #5C8DEA2B)',
+  'controls-accent': 'var(--controls-bg-accent, #1D4ED8)',
+  'controls-accent-hover': 'var(--controls-bg-accent-hover, #5976E9)',
+  'controls-accent-alpha': 'var(--controls-bg-accent-alpha, #2764D924)',
   'controls-enable-primary': 'var(--controls-enable-primary, #FCFCFC)',
 };
 
 const borderColorsToRemove = {
-  'controls-accent': 'var(--controls-bg-accent, #5C8DEA)',
-  'red-900': 'var(--red-900, #402027)',
-  'accent-primary': 'var(--stroke-accent-primary, #7DA4FF)',
+  'controls-accent': 'var(--controls-bg-accent, #1D4ED8)',
+  'red-900': 'var(--red-900, #F3D6D8)',
+  'accent-primary': 'var(--stroke-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--stroke-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--stroke-accent-tertiary, #A972FF)',
-  hover: 'var(--stroke-hover, #EEF1F7)',
+  hover: 'var(--stroke-hover, #57647A)',
   blue800: 'var(--stroke-blue-800, #2764D9)',
 };
 
 const textColorsToRemove = {
-  inverted: 'var(--text-inverted, #161B2D)',
-  'accent-primary': 'var(--text-accent-primary, #7DA4FF)',
+  inverted: 'var(--text-inverted, #FCFCFC)',
+  'accent-primary': 'var(--text-accent-primary, #1D4ED8)',
   'accent-secondary': 'var(--text-accent-secondary, #37BABC)',
-  'accent-tertiary': 'var(--text-accent-tertiary, #A972FF)',
+  'accent-tertiary': 'var(--text-accent-tertiary, #7C3AED)',
 
   // controls
   'controls-permanent': 'var(--controls-text-permanent, #FCFCFC)',
-  'controls-accent-disable': 'var(--controls-text-accent-disable, #242C42)',
-  'controls-primary-disable': 'var(--controls-text-primary-disable, #7C8293)',
-  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #575F73)',
-  'controls-neutral': 'var(--controls-text-neutral, #FCFCFC)',
+  'controls-accent-disable': 'var(--controls-text-accent-disable, #DCE0E8)',
+  'controls-primary-disable': 'var(--controls-text-primary-disable, #848E9C)',
+  'controls-secondary-disable': 'var(--controls-text-secondary-disable, #ACB3C3)',
+  'controls-neutral': 'var(--controls-text-neutral, #161B2D)',
   'controls-accent-primary-hover': 'var(--controls-text-accent-primary-hover, #3664E2)',
   'controls-accent-primary-active': 'var(--controls-text-accent-primary-active, #124ACE)',
-  'controls-primary': 'var(--controls-primary, #FCFCFC)',
-  'controls-disable': 'var(--controls-text-disable, #575F73)',
+  'controls-primary': 'var(--controls-primary, #161B2D)',
+  'controls-disable': 'var(--controls-text-disable, #ACB3C3)',
 };
 
 /** @type {import('tailwindcss').Config} */
@@ -222,7 +221,7 @@ module.exports = {
       },
       outlineColor: { ...borderColors, ...borderColorsToRemove },
       boxShadow: {
-        DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B3)',
+        DEFAULT: '0 0 4px 0 var(--bg-blackout, #161B2D4D)',
         xs: `0 1px 4px 0 ${shadowColors['xs-1']}, 0 1px 2px 0 ${shadowColors['xs-2']}`,
         sm: `0 8px 10px 0 ${shadowColors.sm}`,
         md: `0 8px 24px 0 ${shadowColors.md}`,
@@ -236,11 +235,11 @@ module.exports = {
       },
       backgroundImage: {
         'control-accent-gradient':
-          'linear-gradient(99.78deg, var(--bg-gradient-1, var(--bg-control-accent-gradient-from, #1D4ED8)) 8.59%, var(--bg-gradient-2, var(--bg-control-accent-gradient-to, #885DF2)) 98.14%)',
+          'linear-gradient(99.78deg, var(--bg-gradient-1, #1D4ED8) 8.59%, var(--bg-gradient-2, #885DF2) 98.14%)',
         'control-accent-gradient-hover':
-          'linear-gradient(99.78deg, var(--bg-gradient-1-hover, var(--bg-control-accent-gradient-hover-from, #6785FB)) 8.59%, var(--bg-gradient-2-hover, var(--bg-control-accent-gradient-to, #885DF2)) 98.14%)',
+          'linear-gradient(99.78deg, var(--bg-gradient-1-hover, #6785FB) 8.59%, var(--bg-gradient-2-hover, #885DF2) 98.14%)',
         'control-accent-gradient-active':
-          'linear-gradient(99.78deg, var(--bg-gradient-1-active, var(--bg-control-accent-gradient-from, #1D4ED8)) 8.59%, var(--bg-gradient-2-active, var(--bg-control-accent-gradient-active-to, #7C3AED)) 98.14%)',
+          'linear-gradient(99.78deg, var(--bg-gradient-1-active, #1D4ED8) 8.59%, var(--bg-gradient-2-active, #7C3AED) 98.14%)',
       },
       colors: {
         transparent: 'transparent',
@@ -267,9 +266,9 @@ module.exports = {
       typography: {
         DEFAULT: {
           css: {
-            color: 'var(--text-primary, #FCFCFC)',
+            color: 'var(--text-primary, #161B2D)',
             a: {
-              color: 'var(--text-accent, #6E8AF7)',
+              color: 'var(--text-accent, #1D4ED8)',
             },
             pre: {
               border: 'none',
