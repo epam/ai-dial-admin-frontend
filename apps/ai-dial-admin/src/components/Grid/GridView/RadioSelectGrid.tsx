@@ -17,6 +17,8 @@ interface Props<T extends object> {
   emptyTitle: string;
   isLoading?: boolean;
   onSelect: (item: T) => void;
+  /** AG Grid custom components (e.g. a string `filter` a column def references) this grid's columns need. */
+  components?: GridOptions['components'];
 }
 
 // TODO: use for all cases
@@ -28,6 +30,7 @@ function RadioSelectGrid<T extends object>({
   emptyTitle,
   isLoading,
   onSelect,
+  components,
 }: Props<T>) {
   const onRowSelected = useCallback(
     (event: RowSelectedEvent) => {
@@ -41,6 +44,7 @@ function RadioSelectGrid<T extends object>({
   const additionalGridOptions: GridOptions = useMemo(
     () => ({
       ...SINGLE_ROW_SELECTION,
+      components,
       selectionColumnDef: {
         ...SINGLE_ROW_SELECTION.selectionColumnDef,
         cellRenderer: (params: { data?: Record<string, string> }) => (
@@ -62,7 +66,7 @@ function RadioSelectGrid<T extends object>({
         }
       },
     }),
-    [selectedId, onRowSelected, idField],
+    [selectedId, onRowSelected, idField, components],
   );
 
   if (isLoading) {

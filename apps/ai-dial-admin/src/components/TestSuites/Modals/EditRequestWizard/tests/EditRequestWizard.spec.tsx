@@ -173,6 +173,39 @@ describe('EditRequestWizard', () => {
     expect(screen.getByText('Methods:/v1/main')).toBeInTheDocument();
   });
 
+  test('stays on Configuration when the testSuite prop gets a new reference while open', async () => {
+    const user = userEvent.setup();
+    const onChangeTestSuite = vi.fn();
+    const { rerender } = render(
+      <EditRequestWizard
+        testSuite={baseSuite}
+        onChangeTestSuite={onChangeTestSuite}
+        selectedApplication={null}
+        isOpen
+        onClose={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Next }));
+    await user.click(screen.getByRole('button', { name: 'edit-body' }));
+    expect(screen.getByText('RequestTemplate:edited')).toBeInTheDocument();
+
+    // A parent re-render that recomputes a new `testSuite` object with equivalent content — e.g. an
+    // unmemoized derived view — must not be mistaken for the wizard being (re)opened.
+    rerender(
+      <EditRequestWizard
+        testSuite={{ ...baseSuite }}
+        onChangeTestSuite={onChangeTestSuite}
+        selectedApplication={null}
+        isOpen
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('RequestTemplate:edited')).toBeInTheDocument();
+    expect(screen.queryByText(/Methods:/)).not.toBeInTheDocument();
+  });
+
   test('shows Reset to default only once the body has been edited, and reset reverts it', async () => {
     const user = userEvent.setup();
     renderWizard();

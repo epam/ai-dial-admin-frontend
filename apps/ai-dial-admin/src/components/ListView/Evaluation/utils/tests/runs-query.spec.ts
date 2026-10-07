@@ -83,6 +83,29 @@ describe('runs-query', () => {
     expect(buildRunsFilter([{ column: 'cost', value: 1, operator: FilterOperatorDto.EQUALS }])).toBeUndefined();
   });
 
+  // The multiselect status filter sends a comma-joined value under `in`; this must become an
+  // array-shaped `In` node, not a single comparison against the joined string — the latter never
+  // matches a real row and silently returns an empty list.
+  test('buildRunsFilter builds an array-shaped In node for a comma-joined INCLUDES value', () => {
+    expect(
+      buildRunsFilter([
+        { column: 'status', value: `${RunStatus.FAILED},${RunStatus.CANCELLED}`, operator: FilterOperatorDto.INCLUDES },
+      ]),
+    ).toEqual({
+      op: ComparisonOp.In,
+      args: [
+        { type: ExprType.Field, name: 'status' },
+        {
+          type: ExprType.Array,
+          items: [
+            { type: ExprType.Value, value_type: ValueType.String, value: RunStatus.FAILED },
+            { type: ExprType.Value, value_type: ValueType.String, value: RunStatus.CANCELLED },
+          ],
+        },
+      ],
+    });
+  });
+
   test('buildRunsSort maps a known column, and Metrics against its real field', () => {
     expect(
       buildRunsSort([

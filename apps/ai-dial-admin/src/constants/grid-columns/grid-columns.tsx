@@ -13,6 +13,7 @@ import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/Im
 import ClampedTextCellRenderer from '@/src/components/Grid/CellRenderers/ClampedTextCellRenderer';
 import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
+import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
 import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
@@ -1316,7 +1317,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: RunStatusCellRenderer,
     cellRendererParams: { isLabelHidden: true },
     tooltipValueGetter: () => undefined,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    filter: RUN_STATUS_VALUE_FILTER,
     floatingFilterComponent: EmptyFloatingFilter,
     width: RUN_STATUS_COLUMN_WIDTH,
     minWidth: RUN_STATUS_COLUMN_WIDTH,
@@ -1346,6 +1347,7 @@ export const RUNS_COLUMN: ColDef[] = [
   {
     field: 'numberOfTestCases',
     colId: 'numberOfTestCases',
+    headerTooltip: 'Test cases',
     headerName: 'Test cases',
     maxWidth: 98,
     filter: false,
@@ -1420,6 +1422,7 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Cost',
     valueGetter: ({ data }) => (data as Run)?.totalCost ?? null,
     valueFormatter: ({ value }) => formatRunCost(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    tooltipValueGetter: ({ data }) => formatRunCost((data as Run)?.totalCost ?? null) || undefined,
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 100,
     ...derivedRunColDef,

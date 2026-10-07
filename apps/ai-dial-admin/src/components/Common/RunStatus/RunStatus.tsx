@@ -14,6 +14,7 @@ interface Props {
 }
 
 const SETTLED_STATUS_DOT_CLASS: Partial<Record<RunStatus, string>> = {
+  [RunStatus.PENDING]: 'bg-secondary',
   [RunStatus.COMPLETED]: 'bg-accent-secondary',
   [RunStatus.FAILED]: 'bg-error',
   [RunStatus.CANCELLED]: 'bg-secondary',

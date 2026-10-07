@@ -32,6 +32,7 @@ import {
   getMetricOutputFields,
   getMetricStatCards,
   hasOverallScoreThreshold,
+  hasModelPricing,
   hasRunCostFigure,
   parseAvgRunTimeMs,
   parseComparisonMetricScores,
@@ -678,5 +679,19 @@ describe('Runs Summary :: result parsers', () => {
     expect(hasRunCostFigure('' as unknown as RunCosts)).toBe(false);
     expect(hasRunCostFigure(null)).toBe(false);
     expect(hasRunCostFigure(undefined)).toBe(false);
+  });
+});
+
+describe('hasModelPricing', () => {
+  test('is true when either a prompt or a completion rate is set', () => {
+    expect(hasModelPricing({ prompt: '0.001' })).toBe(true);
+    expect(hasModelPricing({ completion: '0.002' })).toBe(true);
+    expect(hasModelPricing({ prompt: '0.001', completion: '0.002' })).toBe(true);
+  });
+
+  test('is false when neither rate is set, including an all-empty or absent pricing object', () => {
+    expect(hasModelPricing({})).toBe(false);
+    expect(hasModelPricing({ prompt: '', completion: '' })).toBe(false);
+    expect(hasModelPricing(undefined)).toBe(false);
   });
 });

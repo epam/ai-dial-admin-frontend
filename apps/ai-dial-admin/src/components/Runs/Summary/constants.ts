@@ -59,6 +59,16 @@ export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify
 
 export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
 
+/**
+ * Upper bound on how long `useRunCosts` keeps polling a run that never returns a figure. The
+ * endpoint cannot tell "still aggregating" from "this run can never have a cost" (e.g. the
+ * evaluated model has no pricing configured), so both look identical — a payload with no averages —
+ * for as long as the client keeps asking. Set well above the "usually under 10 min" copy promise so
+ * a genuinely slow aggregation still finishes inside the window; once it elapses the cards settle to
+ * an em dash instead of calculating forever.
+ */
+export const COST_FETCH_MAX_WAIT_MS = 15 * 60 * 1_000;
+
 export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';

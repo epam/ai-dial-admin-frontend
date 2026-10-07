@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
@@ -9,10 +10,20 @@ import { COST_FETCH_POLL_INTERVAL_MS } from '../constants';
 
 const executeStructuredQueryMock = vi.fn();
 const getRunCostsMock = vi.fn();
+const getPlatformModelMock = vi.fn();
+const getEntityModelMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   executeStructuredQuery: (query: StructuredQuery) => executeStructuredQueryMock(query),
   getRunCosts: (id: string) => getRunCostsMock(id),
+}));
+
+vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+  getModel: (...args: unknown[]) => getPlatformModelMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/models/actions', () => ({
+  getModel: (...args: unknown[]) => getEntityModelMock(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -48,6 +59,22 @@ const MCP_RUN = {
   status: RunStatus.COMPLETED,
   suiteSnapshot: { overallScoreThreshold: 0.5, suiteType: SuiteType.McpTool },
 };
+const UNPRICED_MODEL_RUN = {
+  id: 'run-1',
+  status: RunStatus.COMPLETED,
+  suiteSnapshot: {
+    overallScoreThreshold: 0.5,
+    deploymentRef: { id: 'gpt-unpriced', name: 'gpt-unpriced', type: DeploymentType.Model },
+  },
+};
+const PRICED_MODEL_RUN = {
+  id: 'run-1',
+  status: RunStatus.COMPLETED,
+  suiteSnapshot: {
+    overallScoreThreshold: 0.5,
+    deploymentRef: { id: 'gpt-4', name: 'gpt-4', type: DeploymentType.Model },
+  },
+};
 
 const mockQueries = () => {
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
@@ -73,6 +100,10 @@ describe('Runs Summary :: Analytics', () => {
   beforeEach(() => {
     executeStructuredQueryMock.mockReset();
     getRunCostsMock.mockReset();
+    getPlatformModelMock.mockReset();
+    getEntityModelMock.mockReset();
+    getPlatformModelMock.mockResolvedValue(null);
+    getEntityModelMock.mockResolvedValue(null);
     vi.useRealTimers();
   });
 
@@ -198,6 +229,54 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('Runs.TestCaseLlmCost')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
     expect(screen.getByText('$0')).toBeInTheDocument();
+  });
+
+  test('settles Metric-Eval Cost to a dash immediately when the run computed zero metrics', async () => {
+    mockQueries();
+    getRunCostsMock.mockReturnValue(new Promise(() => undefined));
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} metricSnapshotCount={0} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+
+    const metricEvalCard = screen.getByRole('region', { name: 'Runs.MetricEvalCost' });
+    expect(within(metricEvalCard).getByText('—')).toBeInTheDocument();
+    expect(within(metricEvalCard).queryByText('Runs.Calculating')).not.toBeInTheDocument();
+    expect(within(metricEvalCard).queryByText('error-tag')).not.toBeInTheDocument();
+
+    // Test Case LLM Cost is unaffected — it can still resolve to a real figure, so it keeps waiting.
+    const testCaseCard = screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' });
+    expect(within(testCaseCard).getByText('Runs.Calculating')).toBeInTheDocument();
+  });
+
+  test('keeps Metric-Eval Cost sharing the Calculating state when the run computed at least one metric', async () => {
+    mockQueries();
+    getRunCostsMock.mockReturnValue(new Promise(() => undefined));
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} metricSnapshotCount={2} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
+  });
+
+  test('does not show the Metric-Eval dash early while the metric snapshot count is still unknown', async () => {
+    mockQueries();
+    getRunCostsMock.mockReturnValue(new Promise(() => undefined));
+    render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
+
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
+  });
+
+  test('settles Metric-Eval Cost to a dash, not the Error badge, for a no-metrics run with no results', async () => {
+    executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+    render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status: RunStatus.COMPLETED } as any} metricSnapshotCount={0} />);
+
+    const metricEvalCard = await screen.findByRole('region', { name: 'Runs.MetricEvalCost' });
+    expect(within(metricEvalCard).getByText('—')).toBeInTheDocument();
+    expect(within(metricEvalCard).queryByText('error-tag')).not.toBeInTheDocument();
+
+    // The rest of the strip still errors as usual for a settled run with no results.
+    const testCaseCard = screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' });
+    expect(within(testCaseCard).getByText('error-tag')).toBeInTheDocument();
   });
 
   test('shows Error on cost cards without dropping other KPI cards when costs are unavailable', async () => {
@@ -344,33 +423,47 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getAllByText('—')).toHaveLength(2);
   });
 
-  test('does not fetch costs for an MCP-tool run that computed no metrics', async () => {
+  test('does not fetch costs for an MCP-tool run, regardless of metrics computed', async () => {
     mockQueries();
     mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
-    render(<Analytics run={MCP_RUN as any} metricSnapshotCount={0} />);
+    render(<Analytics run={MCP_RUN as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     expect(getRunCostsMock).not.toHaveBeenCalled();
     expect(screen.getAllByText('—')).toHaveLength(2);
   });
 
-  test('still fetches costs for an MCP-tool run whose metrics can be billed', async () => {
+  test('settles to a dash and stops polling once the deployed model is confirmed to have no pricing', async () => {
     mockQueries();
-    mockCosts({ avgTestCaseCost: null, avgMetricEvalCost: 0.25 });
-    render(<Analytics run={MCP_RUN as any} metricSnapshotCount={2} />);
+    getRunCostsMock.mockReturnValue(new Promise(() => undefined));
+    getPlatformModelMock.mockResolvedValue({ response: { name: 'gpt-unpriced', pricing: undefined } });
+    render(<Analytics run={UNPRICED_MODEL_RUN as any} />);
 
-    expect(await screen.findByText('$0.25')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
+    // The pricing check resolves after the cost fetch has already started on the optimistic guess
+    // that costs are possible — the fix is that it then stops the wait rather than never resolving it.
+    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+    expect(getRunCostsMock.mock.calls.length).toBeLessThanOrEqual(1);
   });
 
-  test('keeps polling an MCP-tool run while the metric snapshots are still loading', async () => {
+  test('still fetches costs for a model confirmed to have pricing configured', async () => {
     mockQueries();
-    getRunCostsMock.mockResolvedValue({ avgTestCaseCost: null, avgMetricEvalCost: null });
-    render(<Analytics run={MCP_RUN as any} />);
+    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+    getPlatformModelMock.mockResolvedValue({ response: { name: 'gpt-4', pricing: { prompt: '0.001' } } });
+    render(<Analytics run={PRICED_MODEL_RUN as any} />);
+
+    expect(await screen.findByText('$0.5')).toBeInTheDocument();
+    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
+  });
+
+  test('does not block the cost fetch while the pricing check is still pending', async () => {
+    mockQueries();
+    mockCosts({ avgTestCaseCost: 0.5, avgMetricEvalCost: 0.25 });
+    getPlatformModelMock.mockReturnValue(new Promise(() => undefined));
+    render(<Analytics run={UNPRICED_MODEL_RUN as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
     await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
-    expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
   });
 
   test('still marks cards as error for a stopped run once data is present', async () => {

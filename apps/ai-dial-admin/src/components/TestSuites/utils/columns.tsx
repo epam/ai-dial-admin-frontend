@@ -602,6 +602,7 @@ export const getColumnsGridColumns = (
         onChange: onChangeExpression,
         variables: jsonataVariables,
       },
+      tooltipValueGetter: () => undefined,
       flex: 2,
     },
     {
