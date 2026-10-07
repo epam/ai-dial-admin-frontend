@@ -447,7 +447,7 @@ export const SESSION_FILTER_QUERY_OPERATOR: Record<
   [SessionFilterOperator.LessThanOrEqual]: QueryOperator.Le,
 };
 
-export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, SessionScalarOperator> = {
+export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, SessionScalarOperator | undefined> = {
   [GridFilterType.CONTAINS]: SessionFilterOperator.Contains,
   [GridFilterType.NOT_CONTAINS]: SessionFilterOperator.NotContains,
   [GridFilterType.EQUALS]: SessionFilterOperator.Equals,
@@ -456,6 +456,11 @@ export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, SessionScalarOper
   [GridFilterType.GREATER_THAN_OR_EQUAL]: SessionFilterOperator.GreaterThanOrEqual,
   [GridFilterType.LESS_THAN]: SessionFilterOperator.LessThan,
   [GridFilterType.LESS_THAN_OR_EQUAL]: SessionFilterOperator.LessThanOrEqual,
+  // A multi-value match has no single-value translation, and `toColumnFilter` already takes a
+  // dedicated branch for a column's `{ values }` model before this map is ever read — so this never
+  // resolves through here. `undefined` keeps the map total over `GridFilterType` instead of silently
+  // omitting the new member.
+  [GridFilterType.INCLUDES]: undefined,
 };
 
 // One colour per origin, from theme tokens. Every value here clears WCAG AA for normal text against

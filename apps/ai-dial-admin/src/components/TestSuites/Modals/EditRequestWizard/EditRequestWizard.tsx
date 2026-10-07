@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialGhostButton,
@@ -61,14 +61,19 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
   const [hasVisitedConfiguration, setHasVisitedConfiguration] = useState(false);
   const [showVarReferences, setShowVarReferences] = useState(false);
   const [bodyResetSignal, setBodyResetSignal] = useState(0);
+  // Tracks the previous isOpen so the reset below only fires on the closed->open transition,
+  // not on every `testSuite` reference change while the wizard stays open (the parent recomputes
+  // its request view on each render, which would otherwise wipe mid-session progress).
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
       setCurrentSuite(structuredClone(testSuite));
       setCurrentStepId(EditRequestStep.Methods);
       setHasVisitedConfiguration(false);
       setBodyResetSignal(0);
     }
+    wasOpenRef.current = isOpen;
   }, [isOpen, testSuite]);
 
   const onChangeStep = useCallback((stepId: string) => {

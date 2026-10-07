@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { COST_FETCH_POLL_INTERVAL_MS } from '../constants';
+import { COST_FETCH_MAX_WAIT_MS, COST_FETCH_POLL_INTERVAL_MS } from '../constants';
 import { useRunCosts } from '../use-run-costs';
 
 const getRunCostsMock = vi.fn();
@@ -170,7 +170,7 @@ describe('useRunCosts', () => {
     expect(result.current.unavailable).toBe(false);
   });
 
-  test('keeps polling well past any former deadline instead of giving up', async () => {
+  test('keeps polling well within the max-wait window instead of giving up early', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     getRunCostsMock.mockResolvedValue({ avgTestCaseCost: null, avgMetricEvalCost: null });
 
@@ -184,6 +184,31 @@ describe('useRunCosts', () => {
     expect(result.current.unavailable).toBe(false);
     expect(result.current.costs).toBeNull();
     expect(getRunCostsMock.mock.calls.length).toBeGreaterThan(50);
+  });
+
+  test('gives up and settles to a dash once the max wait elapses without a figure', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const neverReady = { avgTestCaseCost: null, avgMetricEvalCost: null };
+    getRunCostsMock.mockResolvedValue(neverReady);
+
+    const { result } = renderHook(() => useRunCosts('run-1'));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COST_FETCH_MAX_WAIT_MS + COST_FETCH_POLL_INTERVAL_MS);
+    });
+
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.unavailable).toBe(false);
+    expect(result.current.costs).toEqual(neverReady);
+
+    const callsAtGiveUp = getRunCostsMock.mock.calls.length;
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS * 5);
+    });
+
+    // Settled, not just paused — no further attempts once the cards give up.
+    expect(getRunCostsMock.mock.calls.length).toBe(callsAtGiveUp);
   });
 
   test('settles on an endpoint error raised by a later attempt', async () => {

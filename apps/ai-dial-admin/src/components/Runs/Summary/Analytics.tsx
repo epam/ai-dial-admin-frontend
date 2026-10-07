@@ -8,6 +8,8 @@ import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFra
 import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
 import { isIncompleteRunStatus, isTransitionalRunStatus } from '@/src/components/Common/RunStatus/utils';
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
+import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
+import { useModelPricing } from '@/src/components/Runs/Summary/use-model-pricing';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
 import { formatAvgRunTimeSeconds, formatRunCost, hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
@@ -50,9 +52,19 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   // arrives late would leave `useRunCosts` stuck at canHaveCosts=false — and thus permanently
   // unfetched — for a run that already has real cost data.
   const hasNoResults = data != null && data.avgRunTimeMs == null;
-  // An MCP row carries no price at all, so an MCP-tool suite bills only through its metrics.
-  const isUnpricedMcpRun = run?.suiteSnapshot?.suiteType === SuiteType.McpTool && metricSnapshotCount === 0;
-  const canHaveCosts = !isRunInProgress && !hasNoResults && !isUnpricedMcpRun;
+  // Cost aggregation doesn't support MCP-tool suites at all yet — confirmed by QA reproduction
+  // (both cards stay in Calculating indefinitely regardless of whether the run computed metrics),
+  // which disproved the earlier "MCP bills only through its metrics" assumption. Skip the fetch
+  // unconditionally rather than polling toward a result the backend can never produce.
+  const isMcpRun = run?.suiteSnapshot?.suiteType === SuiteType.McpTool;
+  // A model with no Prompt/Completion rate configured can never produce a cost figure either — the
+  // backend has nothing to multiply usage by. Resolved from the deployed model's own config, not
+  // from `/costs`, so a run against such a model shows a dash immediately instead of polling toward
+  // a result that will never arrive. Applications have no pricing of their own at the Admin level
+  // (see `resolveModelPricing`), so this only ever fires for a model deployment.
+  const { deploymentType } = useDeploymentType(run?.suiteSnapshot?.deploymentRef);
+  const { isDefinitelyUnpriced } = useModelPricing(run?.suiteSnapshot?.deploymentRef?.id, deploymentType);
+  const canHaveCosts = !isRunInProgress && !hasNoResults && !isMcpRun && !isDefinitelyUnpriced;
   const { costs, isPending: areCostsPending, unavailable: costsUnavailable } = useRunCosts(run?.id, canHaveCosts);
 
   if (!data) {
@@ -95,6 +107,16 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
     return display ?? NO_DATA_VALUE;
   };
 
+  // A run that computed zero metrics can never have a metric-eval cost — there is no metric-eval
+  // usage to bill, independent of suite type or the test-case side's own pricing. That's known from
+  // the metric snapshots already fetched for the rest of the Summary tab, so this card can settle
+  // immediately instead of sharing the Test Case LLM Cost card's Calculating wait for a field that
+  // will always come back null.
+  const hasNoMetrics = metricSnapshotCount === 0;
+  const metricEvalCostError = hasNoMetrics ? false : hasCostError;
+  const metricEvalCostDescription = hasNoMetrics ? t(RunsI18nKey.AvgPerTestCase) : costDescription;
+  const metricEvalCostValue = hasNoMetrics ? NO_DATA_VALUE : costCardValue(metricEvalCostDisplay);
+
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
       {overallScore != null && (
@@ -136,11 +158,11 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
         error={hasCostError}
       />
       <DialAnalyticsCard
-        className={getCardClassNames(hasCostError)}
+        className={getCardClassNames(metricEvalCostError)}
         title={t(RunsI18nKey.MetricEvalCost)}
-        value={costCardValue(metricEvalCostDisplay)}
-        description={costDescription}
-        error={hasCostError}
+        value={metricEvalCostValue}
+        description={metricEvalCostDescription}
+        error={metricEvalCostError}
       />
     </div>
   );

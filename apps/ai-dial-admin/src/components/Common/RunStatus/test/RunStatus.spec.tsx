@@ -5,6 +5,13 @@ import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import { RunStatus } from '@/src/models/evaluation/run';
 
 describe('RunStatusComponent', () => {
+  test('renders the label for a pending run', () => {
+    const { container } = render(<RunStatusComponent status={RunStatus.PENDING} />);
+
+    expect(screen.getByText('Runs.Status.Pending')).toBeInTheDocument();
+    expect(container.querySelector('.bg-secondary')).toBeInTheDocument();
+  });
+
   test('renders the label for a completed run', () => {
     render(<RunStatusComponent status={RunStatus.COMPLETED} />);
 
@@ -42,7 +49,7 @@ describe('RunStatusComponent', () => {
     expect(screen.getByText('Runs.Status.Cancelling')).toBeInTheDocument();
   });
 
-  test.each([RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])(
+  test.each([RunStatus.PENDING, RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED])(
     'indicates %s as settled, without an in-progress indicator',
     (status) => {
       const { container } = render(<RunStatusComponent status={status} />);

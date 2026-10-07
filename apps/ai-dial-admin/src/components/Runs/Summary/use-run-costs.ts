@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { getRunCosts } from '@/src/app/[lang]/runs/actions';
-import { COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
+import { COST_FETCH_MAX_WAIT_MS, COST_FETCH_POLL_INTERVAL_MS } from '@/src/components/Runs/Summary/constants';
 import { hasRunCostFigure } from '@/src/components/Runs/Summary/utils';
 import { RunCosts } from '@/src/models/evaluation/run';
 
@@ -20,16 +20,21 @@ export interface UseRunCostsResult {
  * The endpoint answers as soon as the run row exists, but the backend aggregates usage logs
  * asynchronously, so a just-finished run gets an empty body or all-null averages back within
  * milliseconds. That is "not computed yet", not a result: the hook keeps polling on
- * `COST_FETCH_POLL_INTERVAL_MS` and stays pending for as long as the cards are mounted. Only a real
- * figure or an endpoint error (null response or throw) settles the cards — there is no client-side
- * deadline, because a long aggregation is slow, not broken, and an Error badge over data that is
- * still on its way is worse than a spinner the user can walk away from.
+ * `COST_FETCH_POLL_INTERVAL_MS` and stays pending for as long as the cards are mounted — up to
+ * `COST_FETCH_MAX_WAIT_MS`. A real figure or an endpoint error (null response or throw) settles the
+ * cards immediately; an Error badge over data that is still on its way would be worse than a spinner
+ * the user can walk away from. But the endpoint has no way to say "there will never be a figure" —
+ * e.g. the evaluated model has no pricing configured — so a figureless payload is indistinguishable
+ * from one that just hasn't aggregated yet, for as long as the client keeps asking. Once
+ * `COST_FETCH_MAX_WAIT_MS` elapses without a figure, the hook stops polling and settles the cards on
+ * the last figureless payload, which renders as an em dash rather than spinning forever.
  *
- * Because that wait is unbounded, the caller must say whether this run can produce a cost at all:
+ * Because that wait can still run the full `COST_FETCH_MAX_WAIT_MS` window before giving up, the
+ * caller should say whether this run can produce a cost at all whenever it already knows the answer:
  * `canHaveCosts` false skips the fetch entirely and reports idle, so a run that will never have
- * figures shows a dash instead of spinning forever. The caller owns that judgement because the
- * evidence for it — run status, result counts, suite type, metric snapshots — lives on the Summary
- * tab, not behind `/costs`.
+ * figures shows a dash immediately instead of waiting out the window. The caller owns that judgement
+ * because the evidence for it — run status, result counts, suite type, metric snapshots — lives on
+ * the Summary tab, not behind `/costs`.
  */
 export const useRunCosts = (runId: string | undefined, canHaveCosts = true): UseRunCostsResult => {
   const [costs, setCosts] = useState<RunCosts | null>(null);
@@ -46,9 +51,10 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
     }
 
     let cancelled = false;
-    /** True once a definitive outcome (figures / null / throw) has been applied. */
+    /** True once a definitive outcome (figures / null / throw / gave-up) has been applied. */
     let hasSettled = false;
     let retryId = 0;
+    const startedAt = Date.now();
 
     setCosts(null);
     setIsPending(true);
@@ -74,6 +80,13 @@ export const useRunCosts = (runId: string | undefined, canHaveCosts = true): Use
           return;
         }
         if (result == null || hasRunCostFigure(result)) {
+          settle(result);
+          return;
+        }
+        if (Date.now() - startedAt >= COST_FETCH_MAX_WAIT_MS) {
+          // This run will never produce a figure — e.g. the evaluated model has no pricing
+          // configured — and the endpoint has no way to say so. Stop asking and settle on the last
+          // figureless payload, which renders as an em dash instead of calculating forever.
           settle(result);
           return;
         }

@@ -52,9 +52,12 @@ figures at all — all-null averages, an empty object, or an empty body. A paylo
 the cost cards when at least one of `avgTestCaseCost` / `avgMetricEvalCost` is a finite number; zero
 counts as a figure. While no such payload has arrived, the cards SHALL remain in the calculating
 state and SHALL NOT fall back to an em dash, and the system SHALL retry `getRunCosts` on a fixed
-interval until a figure arrives or the endpoint reports an error. There SHALL be no client-side
-deadline and no attempt cap: a long aggregation is slow, not broken, and an Error badge over data
-still on its way would be wrong. Polling SHALL stop when the cards unmount or the run id changes.
+interval until a figure arrives, the endpoint reports an error, or `COST_FETCH_MAX_WAIT_MS` elapses
+since the first attempt. A long aggregation is slow, not broken, and an Error badge over data still
+on its way would be wrong — but `/costs` itself cannot distinguish a slow aggregation from a run that
+will never produce a figure, so for whatever case "A run that can have no cost is not polled" has not
+already ruled out from known data, the wait still needs a backstop rather than running forever.
+Polling SHALL stop when the cards unmount or the run id changes.
 
 #### Scenario: Not-yet-aggregated payload keeps the calculating state
 
@@ -70,9 +73,18 @@ still on its way would be wrong. Polling SHALL stop when the cards unmount or th
 
 #### Scenario: Polling outlasts a long aggregation
 
-- **WHEN** `getRunCosts` has returned payloads without figures for many minutes
+- **WHEN** `getRunCosts` has returned payloads without figures for several minutes, short of
+  `COST_FETCH_MAX_WAIT_MS`
 - **THEN** the cost cards are still calculating and further attempts are still being made
 - **AND** neither card has shown an em dash or the Error badge
+
+#### Scenario: A run that can never have a cost settles to a dash instead of calculating forever
+
+- **WHEN** `getRunCosts` has returned only figureless payloads for `COST_FETCH_MAX_WAIT_MS` since the
+  first attempt
+- **THEN** polling stops
+- **AND** both cost cards show an em dash rather than the Calculating state
+- **AND** neither card shows the Error badge
 
 #### Scenario: Polling stops when the cards go away
 
@@ -81,21 +93,29 @@ still on its way would be wrong. Polling SHALL stop when the cards unmount or th
 
 ### Requirement: A run that can have no cost is not polled
 
-Because the wait above is unbounded, a run that will never produce a figure would otherwise spin
-forever. The endpoint cannot distinguish "still aggregating" from "there will never be one", so the
-Summary tab SHALL rule the case out from data it already holds and skip the fetch entirely. It
-SHALL do so when, and only when, no usage row can exist:
+Even with `COST_FETCH_MAX_WAIT_MS` bounding the wait, a run that will never produce a figure should
+not spend that whole window calculating when the Summary tab can already tell. The endpoint cannot
+distinguish "still aggregating" from "there will never be one" from its payload alone, so the Summary
+tab SHALL rule the case out from data it already holds and skip the fetch entirely. It SHALL do so
+when, and only when, no usage row can exist:
 
 - the run is in a transitional status (still running, or cancelling) — nothing is aggregated yet,
   and the sibling KPI cards already show a dash rather than a value;
 - the structured-query slice reports no test-case results at all;
-- the suite is an MCP-tool suite **and** the run computed no metrics — an MCP usage row carries no
-  price, so such a run bills only through its metrics.
+- the suite is an MCP-tool suite — cost aggregation does not support MCP-tool suites at all, so no
+  usage row is ever produced regardless of whether the run computed metrics;
+- the run's deployed model is confirmed to have no pricing configured (no Prompt and no Completion
+  rate) — there is nothing for the backend to ever multiply usage by, so no usage row can price out
+  to a figure. This is resolved from the model's own config (the same Catalog-then-Entities lookup
+  the Summary tab already makes to link to the deployment), not from `/costs`, and only ever applies
+  to a model deployment: an Application has no pricing of its own at the Admin level, so this check
+  never rules an Application-based run out — consistent with such runs pricing out normally.
 
 Each check SHALL evaluate to "costs are still possible" while the evidence for it is loading, so a
 pending fetch is never mistaken for a zero. When the fetch is skipped, the cards SHALL show an em
 dash and SHALL NOT show the Calculating copy. If the evidence later changes — a running run
-completes, snapshots arrive — the fetch SHALL start.
+completes, or the model-pricing check resolves to "no pricing" after the fetch already started on
+the optimistic guess that costs were possible — the fetch SHALL start, respectively stop, to match.
 
 #### Scenario: An in-progress run shows dashes instead of calculating
 
@@ -103,21 +123,69 @@ completes, snapshots arrive — the fetch SHALL start.
 - **THEN** `getRunCosts` is not called
 - **AND** both cost cards show an em dash rather than the spinner and Calculating label
 
-#### Scenario: An MCP-tool run without metrics is not polled
+#### Scenario: An MCP-tool run is never polled
 
-- **WHEN** the run's suite snapshot is an MCP-tool suite and its metric snapshot count is zero
-- **THEN** `getRunCosts` is not called and both cost cards show an em dash
+- **WHEN** the run's suite snapshot is an MCP-tool suite
+- **THEN** `getRunCosts` is not called, regardless of how many metrics the run computed
+- **AND** both cost cards show an em dash
 
-#### Scenario: An MCP-tool run with metrics is still polled
+#### Scenario: A model confirmed to have no pricing is never polled
 
-- **WHEN** the run's suite snapshot is an MCP-tool suite and it computed at least one metric
-- **THEN** `getRunCosts` is called
-- **AND** a resolved metric-eval average renders while the test-case card shows an em dash
+- **WHEN** the run's deployment resolves to a model whose config has neither a Prompt nor a
+  Completion rate
+- **THEN** `getRunCosts` either is not called, or is cancelled once the pricing check resolves if it
+  had already started on the optimistic guess that costs were possible
+- **AND** both cost cards settle to an em dash rather than the Calculating state
 
-#### Scenario: Loading evidence does not suppress the fetch
+#### Scenario: A model confirmed to have pricing is still polled
 
-- **WHEN** the metric snapshot count is not yet known for an MCP-tool run
-- **THEN** `getRunCosts` is called and the cards show the calculating state
+- **WHEN** the run's deployment resolves to a model whose config has a Prompt or a Completion rate
+- **THEN** `getRunCosts` is called as usual
+
+#### Scenario: An Application deployment is never ruled out by the pricing check
+
+- **WHEN** the run's deployment resolves to an Application rather than a Model
+- **THEN** the pricing check never reports "no pricing" for it
+- **AND** `getRunCosts` is called as usual, independent of the pricing check
+
+### Requirement: Metric-Eval Cost settles independently of Test Case LLM Cost when there are no metrics
+
+A run that computed zero metrics can never have a metric-eval cost — there is no metric-eval usage
+for the backend to bill, independent of suite type or whether the deployed model has pricing. That
+fact is known from the metric snapshots the Summary tab already fetches for its other sections, so
+the Metric-Eval Cost card SHALL settle to an em dash as soon as the snapshot count is known to be
+zero, without waiting on `/costs` and without sharing the Test Case LLM Cost card's Calculating
+state for it. This SHALL NOT affect whether `/costs` itself is fetched: the Test Case LLM Cost card
+can still resolve to a real figure for a no-metrics run, so the fetch proceeds as usual and that card
+keeps its own Calculating/settled state unchanged. The Metric-Eval Cost card SHALL show this as a
+plain em dash, never the Error badge — a run having no metrics is an expected shape, not a failure.
+While the snapshot count is not yet known, the Metric-Eval Cost card SHALL behave exactly as it did
+before this requirement (sharing the Test Case LLM Cost card's state), so a run that does have
+metrics is never shown a premature dash.
+
+#### Scenario: Zero metrics settles Metric-Eval Cost to a dash immediately
+
+- **WHEN** the run's metric snapshot count is known to be zero
+- **THEN** the Metric-Eval Cost card shows an em dash right away, regardless of whether `getRunCosts`
+  has settled
+- **AND** it shows neither the Calculating state nor the Error badge
+
+#### Scenario: Test Case LLM Cost is unaffected by a zero metric count
+
+- **WHEN** the run's metric snapshot count is known to be zero and `getRunCosts` has not yet settled
+- **THEN** the Test Case LLM Cost card still shows its own Calculating state
+- **AND** it later resolves to a dollar value or an em dash exactly as it would for any other run
+
+#### Scenario: At least one metric keeps the two cards in lockstep
+
+- **WHEN** the run's metric snapshot count is known to be at least one
+- **THEN** the Metric-Eval Cost card shares the Test Case LLM Cost card's Calculating/settled state as
+  it did before this requirement
+
+#### Scenario: An unknown metric count never shows a premature dash
+
+- **WHEN** the run's metric snapshot count has not yet loaded
+- **THEN** the Metric-Eval Cost card shows the Calculating state rather than an em dash
 
 ### Requirement: Successful costs render dollar averages
 

@@ -34,6 +34,8 @@ export const getFilter = (type: GridFilterType): FilterOperatorDto | null => {
       return FilterOperatorDto.LESS_THAN;
     case GridFilterType.LESS_THAN_OR_EQUAL:
       return FilterOperatorDto.LESS_THAN_OR_EQUAL;
+    case GridFilterType.INCLUDES:
+      return FilterOperatorDto.INCLUDES;
     default:
       return null;
   }
