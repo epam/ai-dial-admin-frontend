@@ -256,6 +256,7 @@ export default {
     Endpoints: 'Endpoints',
     AppRunner: 'Application runner',
     CatalogSchema: 'Catalog schema',
+    ShowAllCatalogEntityKinds: 'Show schemas for all entity kinds',
     NoCatalogSchemaSelected: 'Select a catalog schema on the Properties tab to edit its catalog metadata.',
     NoCatalogProperties: 'This catalog schema declares no properties.',
     CatalogSchemaUnavailable: 'The selected catalog schema could not be read from DIAL Core.',

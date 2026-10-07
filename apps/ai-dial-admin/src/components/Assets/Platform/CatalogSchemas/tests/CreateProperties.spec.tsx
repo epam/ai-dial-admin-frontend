@@ -53,17 +53,35 @@ describe('CatalogSchemaCreateProperties', () => {
     expect(screen.queryByText(EntityFieldsI18nKey.endpoint)).not.toBeInTheDocument();
   });
 
-  test('Should offer every entity type Core allows, in Core order', () => {
+  const offeredEntityTypes = () =>
+    within(screen.getByRole('combobox', { name: EntityFieldsI18nKey.catalogEntityType }))
+      .getAllByRole('option')
+      .map((option) => option.textContent)
+      .filter(Boolean);
+
+  test('Should offer the four entity types the console allows authoring, in Core order', () => {
     renderForm(schema());
 
-    const select = within(screen.getByRole('combobox', { name: EntityFieldsI18nKey.catalogEntityType }));
+    expect(offeredEntityTypes()).toEqual(['Model', 'Agent', 'Toolset', 'Interceptor']);
+  });
 
-    expect(
-      select
-        .getAllByRole('option')
-        .map((option) => option.textContent)
-        .filter(Boolean),
-    ).toEqual(['Model', 'Agent', 'Toolset', 'Skill', 'Interceptor']);
+  /**
+   * A skill cannot carry a catalog schema, so offering it would invite authoring a schema nothing
+   * can reference. The save gate still accepts it — see the next test and `validation.spec.ts`.
+   */
+  test('Should not offer skill as an entity type', () => {
+    renderForm(schema());
+
+    expect(offeredEntityTypes()).not.toContain('Skill');
+  });
+
+  test('Should still offer the declared kind of a schema a configuration file typed skill', () => {
+    renderForm(schema({ 'dial:catalogEntityType': CatalogEntityType.Skill }));
+
+    expect(offeredEntityTypes()).toEqual(['Model', 'Agent', 'Toolset', 'Interceptor', 'Skill']);
+    expect(screen.getByRole('combobox', { name: EntityFieldsI18nKey.catalogEntityType })).toHaveValue(
+      CatalogEntityType.Skill,
+    );
   });
 
   test('Should write the typed id to $id rather than to the generic name field', async () => {

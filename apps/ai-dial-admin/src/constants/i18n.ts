@@ -239,6 +239,7 @@ export enum EntitiesI18nKey {
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
   CatalogSchema = 'Entities.CatalogSchema',
+  ShowAllCatalogEntityKinds = 'Entities.ShowAllCatalogEntityKinds',
   NoCatalogSchemaSelected = 'Entities.NoCatalogSchemaSelected',
   NoCatalogProperties = 'Entities.NoCatalogProperties',
   CatalogSchemaUnavailable = 'Entities.CatalogSchemaUnavailable',

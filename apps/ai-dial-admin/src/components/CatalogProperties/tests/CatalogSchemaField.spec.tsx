@@ -16,6 +16,7 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
 interface ModalProps {
   selectedId?: string;
   options?: CatalogSchemaOption[];
+  entityType?: CatalogEntityType;
   onApply: (id?: string) => void;
 }
 
@@ -165,5 +166,59 @@ describe('CatalogSchemaField', () => {
     renderField({ schemaId: apiWritten.$id });
 
     expect(screen.getByRole('button', { name: 'Buttons.Browse' }).getAttribute('disabled')).not.toBeNull();
+  });
+});
+
+describe('CatalogSchemaField — filtered to an entity kind', () => {
+  const kindless: CatalogSchemaOption = {
+    $id: 'https://host/kindless-card',
+    'dial:catalogEntityType': null,
+    'dial:catalogDisplayName': 'Kindless card',
+  };
+
+  const renderField = (props?: Partial<ComponentProps<typeof CatalogSchemaField>>) =>
+    render(
+      <CatalogSchemaField
+        options={[apiWritten, fileDeclared, kindless]}
+        entityType={CatalogEntityType.Model}
+        onChange={vi.fn()}
+        {...props}
+      />,
+    );
+
+  beforeEach(() => {
+    capturedModalProps = undefined;
+    isReadOnlyAdmin.mockReturnValue(false);
+    vi.clearAllMocks();
+  });
+
+  test('offers only the schemas written for that kind, plus those declaring none', async () => {
+    const user = userEvent.setup();
+    renderField();
+
+    await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
+
+    expect(screen.getByText('Model card')).toBeTruthy();
+    expect(screen.getByText('Kindless card')).toBeTruthy();
+    expect(screen.queryByText('Agent card')).toBeNull();
+  });
+
+  test('keeps offering the selected schema when its kind does not match', async () => {
+    const user = userEvent.setup();
+    renderField({ schemaId: fileDeclared.$id });
+
+    await user.click(screen.getByRole('button', { name: `Agent card ${fileDeclared.$id}` }));
+
+    expect(screen.getAllByText('Agent card').length).toBeGreaterThan(0);
+  });
+
+  test('hands the browse modal the deployment kind and the unfiltered options', async () => {
+    const user = userEvent.setup();
+    renderField();
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Browse' }));
+
+    expect(capturedModalProps?.entityType).toEqual(CatalogEntityType.Model);
+    expect(capturedModalProps?.options).toEqual([apiWritten, fileDeclared, kindless]);
   });
 });
