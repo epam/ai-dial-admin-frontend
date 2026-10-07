@@ -1347,6 +1347,7 @@ export const RUNS_COLUMN: ColDef[] = [
   {
     field: 'numberOfTestCases',
     colId: 'numberOfTestCases',
+    headerTooltip: 'Test cases',
     headerName: 'Test cases',
     maxWidth: 98,
     filter: false,
@@ -1421,6 +1422,7 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Cost',
     valueGetter: ({ data }) => (data as Run)?.totalCost ?? null,
     valueFormatter: ({ value }) => formatRunCost(value as number | null) ?? MISSING_VALUE_DISPLAY,
+    tooltipValueGetter: ({ data }) => formatRunCost((data as Run)?.totalCost ?? null) || undefined,
     cellRenderer: OptionalValueCellRenderer,
     maxWidth: 100,
     ...derivedRunColDef,
