@@ -1,11 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ComponentProps } from 'react';
+import { ComponentProps, useEffect } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { CatalogSchemaDocument } from '@/src/models/dial/catalog-schema';
 import CatalogPropertiesEditor from '../CatalogPropertiesEditor';
+
+const isReadOnlyAdmin = vi.fn(() => false);
+
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
+  useIsReadOnlyAdmin: () => isReadOnlyAdmin(),
+}));
 
 interface RendererProps {
   schema?: { properties?: Record<string, unknown>; required?: string[] };
@@ -15,10 +21,14 @@ interface RendererProps {
 }
 
 let capturedRendererProps: RendererProps | undefined;
+let rendererMounts = 0;
 
 vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
   default: (props: RendererProps) => {
     capturedRendererProps = props;
+    useEffect(() => {
+      rendererMounts += 1;
+    }, []);
     return (
       <button type="button" onClick={() => props.onChangeConfiguration({ tag: 'Featured' })}>
         schema-renderer
@@ -75,6 +85,7 @@ describe('CatalogPropertiesEditor', () => {
   beforeEach(() => {
     capturedRendererProps = undefined;
     capturedJsonProps = undefined;
+    isReadOnlyAdmin.mockReturnValue(false);
     vi.clearAllMocks();
   });
 
@@ -165,6 +176,100 @@ describe('CatalogPropertiesEditor', () => {
     renderEditor({ values: { tag: 'New' } });
 
     expect(screen.queryAllByRole('alert')).toEqual([]);
+  });
+});
+
+describe('CatalogPropertiesEditor — undeclared values', () => {
+  const closed: CatalogSchemaDocument = { ...schema, additionalProperties: false };
+  const orphaned = { tag: 'New', field1: 'x' };
+
+  const renderEditor = (props?: Partial<ComponentProps<typeof CatalogPropertiesEditor>>) =>
+    render(
+      <CatalogPropertiesEditor
+        schemaId={SCHEMA_ID}
+        schema={schema}
+        isLoading={false}
+        hasReadFailed={false}
+        errors={[]}
+        values={orphaned}
+        onChange={vi.fn()}
+        {...props}
+      />,
+    );
+
+  beforeEach(() => {
+    isReadOnlyAdmin.mockReturnValue(false);
+    vi.clearAllMocks();
+  });
+
+  test('warns about them without a remove control when the schema allows them', () => {
+    renderEditor();
+
+    expect(screen.getByText(EntitiesI18nKey.UndeclaredCatalogProperties)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties })).toBeNull();
+  });
+
+  test('shows no banner when every value is declared', () => {
+    renderEditor({ values: { tag: 'New' } });
+
+    expect(screen.queryByText(EntitiesI18nKey.UndeclaredCatalogProperties)).toBeNull();
+  });
+
+  test('reports them as an error once, in the banner, when the schema forbids them', () => {
+    renderEditor({
+      schema: closed,
+      errors: [{ field: 'field1', message: '"field1" is not declared by the schema' }],
+    });
+
+    expect(screen.getByText(EntitiesI18nKey.UndeclaredCatalogPropertiesForbidden)).toBeTruthy();
+    expect(screen.queryByText('"field1" is not declared by the schema')).toBeNull();
+  });
+
+  test('removes them and keeps the declared values', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderEditor({ schema: closed, onChange });
+
+    await user.click(screen.getByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties }));
+
+    expect(onChange).toHaveBeenCalledWith({ tag: 'New' });
+  });
+
+  test('remounts the form after removal, so its next edit cannot write them back', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderEditor({ schema: closed });
+    const mountsBefore = rendererMounts;
+
+    await user.click(screen.getByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties }));
+    rerender(
+      <CatalogPropertiesEditor
+        schemaId={SCHEMA_ID}
+        schema={closed}
+        isLoading={false}
+        hasReadFailed={false}
+        errors={[]}
+        values={{ tag: 'New' }}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(rendererMounts).toBe(mountsBefore + 1);
+    expect(capturedRendererProps?.data).toEqual({ tag: 'New' });
+  });
+
+  test('keeps the banner under a schema that declares no properties', () => {
+    renderEditor({ schema: { $id: SCHEMA_ID, additionalProperties: false } });
+
+    expect(screen.getByText(EntitiesI18nKey.NoCatalogProperties)).toBeTruthy();
+    expect(screen.getByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties })).toBeTruthy();
+  });
+
+  test('offers no remove control to a read-only admin', () => {
+    isReadOnlyAdmin.mockReturnValue(true);
+    renderEditor({ schema: closed });
+
+    expect(screen.getByText(EntitiesI18nKey.UndeclaredCatalogPropertiesForbidden)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: EntitiesI18nKey.RemoveUndeclaredCatalogProperties })).toBeNull();
   });
 });
 

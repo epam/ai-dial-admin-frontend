@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
+import { getChartColors } from '@/src/components/Common/MetricCard/utils';
+import { fallbackDarkTheme } from '@/src/utils/themes/constant';
+
 import {
   buildBarOptions,
   buildDonutOptions,
@@ -18,6 +21,8 @@ interface AxisParam {
 }
 
 type AxisFormatter = (params: AxisParam[]) => string;
+
+const COLORS = getChartColors(fallbackDarkTheme);
 
 const formatterOf = (options: { tooltip?: unknown }): AxisFormatter =>
   (options.tooltip as { formatter: AxisFormatter }).formatter;
@@ -51,22 +56,22 @@ describe('formatChartNumber', () => {
 
 describe('axis tooltips', () => {
   test('rounds a cost to one decimal instead of printing the raw float', () => {
-    expect(formatterOf(buildBarOptions(['Sep'], [20.50087114]))([param(20.50087114)])).toContain('20.5');
+    expect(formatterOf(buildBarOptions(COLORS, ['Sep'], [20.50087114]))([param(20.50087114)])).toContain('20.5');
   });
 
   test('rounds a latency to one decimal', () => {
-    const options = buildLatencyOptions(['12:00'], [9149.517302573204], [null]);
+    const options = buildLatencyOptions(COLORS, ['12:00'], [9149.517302573204], [null]);
 
     expect(formatterOf(options)([param(9149.517302573204, { seriesName: 'p50' })])).toContain('9,149.5');
   });
 
   test('states a bucket with no figure as a dash rather than a zero', () => {
-    expect(formatterOf(buildLatencyOptions(['12:00'], [null], [null]))([param(null)])).toContain('—');
+    expect(formatterOf(buildLatencyOptions(COLORS, ['12:00'], [null], [null]))([param(null)])).toContain('—');
   });
 
   test('tones every bar the same, so none reads as the answer', () => {
     const series = (
-      buildBarOptions(['a', 'b'], [1, 2]).series as [{ itemStyle?: { color?: string }; data?: unknown }]
+      buildBarOptions(COLORS, ['a', 'b'], [1, 2]).series as [{ itemStyle?: { color?: string }; data?: unknown }]
     )[0];
 
     expect(series.itemStyle?.color).toBeTruthy();
@@ -74,19 +79,19 @@ describe('axis tooltips', () => {
   });
 
   test('states a bar figure, which the series holds as an object rather than a number', () => {
-    const options = buildBarOptions(['Sep 22'], [20.50087114]);
+    const options = buildBarOptions(COLORS, ['Sep 22'], [20.50087114]);
 
     expect(formatterOf(options)([barParam(20.50087114)])).toContain('20.5');
   });
 
   test('heads the tooltip with the period the bucket covers, where the caller states one', () => {
-    const options = buildBarOptions(['Sep 22'], [1], ['Sep 22, 02:00 – 04:00']);
+    const options = buildBarOptions(COLORS, ['Sep 22'], [1], ['Sep 22, 02:00 – 04:00']);
 
     expect(formatterOf(options)([param(1)])).toContain('Sep 22, 02:00 – 04:00');
   });
 
   test('falls back to the axis label when it states none', () => {
-    expect(formatterOf(buildBarOptions(['Sep 22'], [1]))([param(1)])).toContain('Sep 22');
+    expect(formatterOf(buildBarOptions(COLORS, ['Sep 22'], [1]))([param(1)])).toContain('Sep 22');
   });
 });
 
@@ -94,7 +99,7 @@ describe('series colours', () => {
   const colorsOf = (options: { series?: unknown }) => (options.series as { color?: string }[]).map((s) => s.color);
 
   test('states each latency series own colour, which its tooltip marker reads', () => {
-    const [p50, p95] = colorsOf(buildLatencyOptions(['12:00'], [1], [2]));
+    const [p50, p95] = colorsOf(buildLatencyOptions(COLORS, ['12:00'], [1], [2]));
 
     expect(p50).toBeTruthy();
     expect(p95).toBeTruthy();
@@ -102,13 +107,18 @@ describe('series colours', () => {
   });
 
   test('states a split series colour on the series, not only on its line', () => {
-    const options = buildSplitSeriesOptions(['12:00'], [{ id: 'a', label: 'a', color: '#7DA4FF', values: [1] }]);
+    const options = buildSplitSeriesOptions(
+      COLORS,
+      ['12:00'],
+      [{ id: 'a', label: 'a', color: '#7DA4FF', values: [1] }],
+    );
 
     expect(colorsOf(options)).toEqual(['#7DA4FF']);
   });
 
   test('draws each series from zero rather than on a stack, so a line states its own figure', () => {
     const options = buildSplitSeriesOptions(
+      COLORS,
       ['12:00'],
       [
         { id: 'a', label: 'a', color: '#7DA4FF', values: [1] },
@@ -124,7 +134,7 @@ describe('series colours', () => {
 
 describe('latency gaps', () => {
   test('draws no line across a bucket with no percentile to state', () => {
-    const series = buildLatencyOptions(['12:00', '13:00'], [1, null], [2, null]).series as {
+    const series = buildLatencyOptions(COLORS, ['12:00', '13:00'], [1, null], [2, null]).series as {
       connectNulls?: boolean;
       sampling?: string;
     }[];

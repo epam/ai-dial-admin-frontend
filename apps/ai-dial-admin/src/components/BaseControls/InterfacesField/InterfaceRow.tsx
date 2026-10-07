@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DialInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 
@@ -106,16 +106,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetCounter]);
 
-  // The save button gates live off SaveValidationContext (no save-time revalidation pass), so a
-  // change to the entity-level base URL must re-flag this row immediately: cleared, an empty row
-  // becomes required-invalid; refilled, a stale required error clears. Skipped on mount so a blank
-  // row shows no error until edited, as before.
-  const isFirstEntityBaseUrlRender = useRef(true);
   useEffect(() => {
-    if (isFirstEntityBaseUrlRender.current) {
-      isFirstEntityBaseUrlRender.current = false;
-      return;
-    }
     if (isPassthrough) {
       validate(baseUrl);
     }

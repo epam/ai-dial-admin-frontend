@@ -35,7 +35,7 @@
     "@epam/ai-dial-ui-kit": "0.15.0-dev.24",
     "@epam/ai-dial-visualizer-connector": "^0.44.8",
     "@floating-ui/react": "^0.27.19",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@monaco-editor/react": "^4.7.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.219.0",
     "@opentelemetry/instrumentation-fetch": "^0.219.0",
@@ -81,14 +81,14 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@next/eslint-plugin-next": "^16.2.4",
-    "@nx/eslint": "23.0.2",
-    "@nx/eslint-plugin": "23.0.2",
-    "@nx/js": "23.0.2",
-    "@nx/next": "23.0.2",
-    "@nx/vite": "23.0.2",
-    "@nx/vitest": "23.0.2",
-    "@nx/web": "23.0.2",
-    "@nx/workspace": "23.0.2",
+    "@nx/eslint": "23.2.1",
+    "@nx/eslint-plugin": "23.2.1",
+    "@nx/js": "23.2.1",
+    "@nx/next": "23.2.1",
+    "@nx/vite": "23.2.1",
+    "@nx/vitest": "23.2.1",
+    "@nx/web": "23.2.1",
+    "@nx/workspace": "23.2.1",
     "@svgr/webpack": "^8.1.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -116,7 +116,7 @@
     "husky": "^9.1.7",
     "jsdom": "~29.1.1",
     "lint-staged": "^16.4.0",
-    "nx": "23.0.2",
+    "nx": "23.2.1",
     "prettier": "^3.8.3",
     "sass": "^1.99.0",
     "tailwindcss": "^3.4.19",
@@ -130,24 +130,18 @@
     "yaml": "2.8.3"
   },
   "overrides": {
-    "axios": "1.16.0",
-    "protobufjs": "8.6.3",
-    "dompurify": "3.4.16",
-    "follow-redirects": "1.16.0",
-    "tmp": "0.2.7",
-    "yaml": "2.8.3",
-    "postcss": "^8.5.18",
-    "nanoid": "3.3.18",
-    "form-data": "4.0.6",
-    "brace-expansion@1": "1.1.20",
-    "brace-expansion@2": "2.1.6",
-    "brace-expansion@5": "5.0.11",
-    "js-yaml@3": "3.15.2",
-    "js-yaml@4": "4.3.2",
-    "sharp": "0.35.4",
-    "undici": "7.29.1",
-    "proxy-addr": "2.0.8",
-    "source-map-js": "1.2.2"
+    "smol-toml": "^1.9.0",
+    "axios": "1.20.0",
+    "postcss-selector-parser": "^7.1.6",
+    "next": {
+      "postcss": "^8.5.29"
+    },
+    "nx": {
+      "brace-expansion": "^5.0.12"
+    },
+    "monaco-editor": {
+      "dompurify": "$dompurify"
+    }
   },
   "engines": {
     "node": ">=24.12.0",

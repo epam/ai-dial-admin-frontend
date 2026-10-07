@@ -8,3 +8,14 @@ export enum MetricStatus {
   // Value missing / block unavailable.
   NoData = 'no-data',
 }
+
+// Concrete colors for ECharts, which paints on a canvas and cannot resolve CSS variables.
+export interface ChartColors {
+  success: string;
+  warning: string;
+  error: string;
+  accent: string;
+  neutral: string;
+  value: string;
+  track: string;
+}

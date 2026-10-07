@@ -94,6 +94,30 @@ const validateValue = (
 };
 
 /**
+ * Keys of `values` the schema does not declare — typically left behind by a property renamed or
+ * removed in the schema after the values were saved.
+ */
+export const getUndeclaredCatalogProperties = (
+  schema: CatalogSchemaDocument | undefined,
+  values: Record<string, unknown> | undefined,
+): string[] => {
+  if (!isRecord(schema) || !isRecord(values)) {
+    return [];
+  }
+  const properties = isRecord(schema.properties) ? schema.properties : {};
+  return Object.keys(values).filter((name) => !Object.hasOwn(properties, name));
+};
+
+/**
+ * Only a literal `false` forbids undeclared values: Core's meta-schema imposes no such rule, so Core
+ * accepts them unless the schema's own author opted out. A schema-valued `additionalProperties` is
+ * deliberately not applied here, which leaves it unchecked before assembly for a platform-bucket
+ * resource.
+ */
+export const isAdditionalPropertiesForbidden = (schema: CatalogSchemaDocument | undefined): boolean =>
+  isRecord(schema) && schema.additionalProperties === false;
+
+/**
  * For a platform-bucket resource this is the only gate in front of Core: invalid values are accepted
  * on write and then break the merged configuration at assembly. A user-bucket application or toolset
  * is additionally rejected by Core itself with a `400`, so Core's message stays the authority there.
@@ -131,5 +155,12 @@ export const validateCatalogProperties = (
     return validateValue(name, definition as JSONSchema7, values[name], defaultLocale);
   });
 
-  return [...missing, ...invalid];
+  const undeclared = isAdditionalPropertiesForbidden(schema)
+    ? getUndeclaredCatalogProperties(schema, values).map((name) => ({
+        field: name,
+        message: `"${name}" is not declared by the schema`,
+      }))
+    : [];
+
+  return [...missing, ...invalid, ...undeclared];
 };

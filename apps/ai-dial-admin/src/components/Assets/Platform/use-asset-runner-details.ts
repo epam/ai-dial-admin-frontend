@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-import { getConfigFileAppRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+import {
+  getConfigFileAppRunner,
+  getResolvedRunnerSchema,
+  getRunner,
+} from '@/src/app/[lang]/platform-app-runners/actions';
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { getRunnerOrigin } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -15,11 +19,12 @@ import { resourceRunnerApplicationMap } from '@/src/components/Assets/Resources/
 
 /**
  * An asset app runner reaches an application view as a metadata-only option (`buildAppRunnerOptions`
- * never reads per-runner content), so its routes have to be read from the runner resource itself.
- * `routes` stays `null` whenever there is nothing to add — no runner, an admin-BE runner, or a read
- * still in flight — so callers keep falling back to the option's own routes.
+ * never reads per-runner content), so its routes have to be read from the runner resource itself. An
+ * asset application can instead supply only its schema id; in that case the resolved schema contains
+ * the same details. `routes` stays `null` whenever there is nothing to add — no runner or schema id,
+ * an admin-BE runner, or a read still in flight — so callers keep falling back to the option's own routes.
  */
-export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
+export const useAssetRunnerDetails = (runner?: DialApplicationScheme, runnerId?: string) => {
   const t = useI18n();
   const [routes, setRoutes] = useState<ObjectAppRoutes | null>(null);
   const [interceptors, setInterceptors] = useState<string[] | null>(null);
@@ -30,6 +35,7 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
   const origin = runner ? getRunnerOrigin(runner) : undefined;
   const path = origin === AppRunnerOrigin.Platform ? (runner as AppRunnerOption).path : undefined;
   const configFileRunnerId = origin === AppRunnerOrigin.Config ? runner?.$id || runner?.name : undefined;
+  const resolvedSchemaId = runner ? undefined : runnerId;
 
   useEffect(() => {
     setRoutes(null);
@@ -37,7 +43,7 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
     setFeatures(null);
     setError(null);
 
-    if (!path && !configFileRunnerId) {
+    if (!path && !configFileRunnerId && !resolvedSchemaId) {
       setIsLoading(false);
       return;
     }
@@ -61,8 +67,8 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
             return;
           }
           details = res.response as DialAppRunnerResource;
-        } else {
-          const res = await getConfigFileAppRunner(configFileRunnerId as string);
+        } else if (configFileRunnerId) {
+          const res = await getConfigFileAppRunner(configFileRunnerId);
           if (isStale) {
             return;
           }
@@ -72,6 +78,17 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
             return;
           }
           details = res.data as DialAppRunnerResource;
+        } else {
+          const res = await getResolvedRunnerSchema(resolvedSchemaId as string);
+          if (isStale) {
+            return;
+          }
+          setIsLoading(false);
+          if (!res.success) {
+            setError(res.errorMessage || res.errorHeader || t(EntitiesI18nKey.ResolvedSchemaFailed));
+            return;
+          }
+          details = res.response as DialAppRunnerResource;
         }
         setRoutes((details?.['dial:applicationTypeRoutes'] as ObjectAppRoutes | undefined) || null);
         setInterceptors(details?.['dial:applicationTypeInterceptors'] || []);
@@ -95,7 +112,7 @@ export const useAssetRunnerDetails = (runner?: DialApplicationScheme) => {
     return () => {
       isStale = true;
     };
-  }, [configFileRunnerId, origin, path, t]);
+  }, [configFileRunnerId, origin, path, resolvedSchemaId, t]);
 
   return { routes, interceptors, features, isLoading, error };
 };

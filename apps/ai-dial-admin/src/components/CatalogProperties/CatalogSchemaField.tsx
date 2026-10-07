@@ -24,6 +24,10 @@ interface Props {
   /** Resolved here: the option read runs on the server, where no translator exists. */
   optionsError?: EntitiesI18nKey;
   disabled?: boolean;
+  /**
+   * Fires only on a real change: each surface discards `catalog_properties` here, so re-picking the
+   * selected schema must not wipe them.
+   */
   onChange: (schemaId?: string) => void;
 }
 
@@ -50,15 +54,24 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabl
     [options, t],
   );
 
+  const onSelect = useCallback(
+    (id?: string) => {
+      if (id !== schemaId) {
+        onChange(id);
+      }
+    },
+    [onChange, schemaId],
+  );
+
   const onOpenModal = useCallback(() => setIsModalOpen(true), []);
   const onCloseModal = useCallback(() => setIsModalOpen(false), []);
 
   const onApply = useCallback(
     (id?: string) => {
       onCloseModal();
-      onChange(id);
+      onSelect(id);
     },
-    [onChange, onCloseModal],
+    [onSelect, onCloseModal],
   );
 
   /**
@@ -84,7 +97,7 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, disabl
             disabled={isFieldDisabled}
             error={optionsError ? t(optionsError) : void 0}
             invalid={!!optionsError}
-            onChange={(value) => onChange((value as string) || void 0)}
+            onChange={(value) => onSelect((value as string) || void 0)}
           />
         </div>
         <DialNeutralButton label={t(ButtonsI18nKey.Browse)} disabled={isFieldDisabled} onClick={onOpenModal} />

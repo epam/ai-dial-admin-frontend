@@ -132,3 +132,15 @@ export const readinessSummary = (readyWhen?: ReadyWhen): ReadinessSummary => {
     limits: items.filter((item) => CONDITION_META[item.condition].role === GroupConditionRole.Limit),
   };
 };
+
+// What the runner's request firewall or servlet container refuses in a path segment however it is encoded. A copy of
+// the runner's own list (runner-ops, "A group key containing a slash is addressable"), kept here so the console does
+// not offer an evaluation that can only be refused — under OIDC, as a 401 that names the wrong cause.
+const UNADDRESSABLE_PARTS = ['//', '%', ';', '\\', '\n', '\r', '\u2028', '\u2029'];
+const DOT_SEGMENTS = new Set(['.', '..']);
+
+/** Whether the runner can be asked to evaluate the group with this key. */
+export const isAddressableGroupKey = (key: string): boolean =>
+  key !== '' &&
+  !UNADDRESSABLE_PARTS.some((part) => key.includes(part)) &&
+  !key.split('/').some((segment) => DOT_SEGMENTS.has(segment));

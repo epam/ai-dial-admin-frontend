@@ -22,9 +22,9 @@ export const HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER = 2;
 export const HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT = 28;
 export const HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT = 140;
 export const HEAT_MAP_LABEL_COL_ID = 'heatMapLabel';
-export const HEAT_MAP_STROKE_TERTIARY = 'var(--stroke-tertiary, #0C101D)';
+export const HEAT_MAP_STROKE_TERTIARY = 'var(--stroke-tertiary, #E0E6F0)';
 export const HEAT_MAP_GRID_BORDER = `1px solid ${HEAT_MAP_STROKE_TERTIARY}`;
-export const HEAT_MAP_GROUP_ROW_BG = 'var(--bg-layer-3, #1D2439)';
+export const HEAT_MAP_GROUP_ROW_BG = 'var(--bg-layer-sunken, #EEF1F7)';
 
 export const getHeatMapGridCellBorderStyle = (backgroundColor?: string) => ({
   ...(backgroundColor ? { backgroundColor } : {}),

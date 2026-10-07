@@ -115,6 +115,28 @@ describe('CatalogSchemaField', () => {
     expect(onChange).toHaveBeenCalledWith(fileDeclared.$id);
   });
 
+  test('reports nothing when the selected schema is picked again', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderField({ schemaId: apiWritten.$id, onChange });
+
+    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
+    await user.click(screen.getAllByText('Model card').at(-1)!);
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('reports nothing when the modal applies the schema already selected', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderField({ schemaId: fileDeclared.$id, onChange });
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Browse' }));
+    await user.click(screen.getByRole('button', { name: 'apply-from-modal' }));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   test('clears the selection', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

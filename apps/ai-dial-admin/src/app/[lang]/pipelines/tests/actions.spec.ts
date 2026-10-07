@@ -13,6 +13,7 @@ import {
   resumePipeline,
 } from '@/src/app/[lang]/pipelines/actions';
 import { DlqLane } from '@/src/models/analytics/pipeline-dlq';
+import { GroupListOrder } from '@/src/models/analytics/pipeline-groups';
 import { PauseOrigin, RUNNER_NOT_CONFIGURED } from '@/src/models/analytics/pipeline-runtime';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -173,12 +174,15 @@ describe('Pipeline runtime server actions', () => {
     expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
   });
 
-  test('getPipelineGroups reads the runner with the requested limit and the caller token', async () => {
-    runner.getGroups.mockResolvedValue({ success: true, response: [] });
+  test('getPipelineGroups reads one page in the given order, from the given cursor, with the caller token', async () => {
+    runner.getGroups.mockResolvedValue({
+      success: true,
+      response: { groups: [], next_cursor: null, has_more: false, total: 0 },
+    });
 
-    await getPipelineGroups('retrieval-quality', 500);
+    await getPipelineGroups('retrieval-quality', 100, GroupListOrder.Oldest, 'c1');
 
-    expect(runner.getGroups).toHaveBeenCalledWith('retrieval-quality', 500, TOKEN_MOCK);
+    expect(runner.getGroups).toHaveBeenCalledWith('retrieval-quality', 100, GroupListOrder.Oldest, 'c1', TOKEN_MOCK);
   });
 
   test('queueGroupEvaluation queues the named group with the caller token', async () => {

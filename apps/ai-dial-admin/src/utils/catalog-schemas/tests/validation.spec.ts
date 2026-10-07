@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
+import { CATALOG_ENTITY_TYPES } from '@/src/constants/catalog-schemas';
 import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import { isValidCatalogSchema, validateCatalogSchema } from '../validation';
@@ -53,15 +54,25 @@ describe('Catalog Schema Utils :: validateCatalogSchema', () => {
     );
 
     expect(errors[0].field).toEqual('dial:catalogEntityType');
-    expect(errors[0].message).toContain('model, agent, toolset');
+    expect(errors[0].message).toContain('model, agent, toolset, skill, interceptor');
   });
 
-  test.each([CatalogEntityType.Model, CatalogEntityType.Agent, CatalogEntityType.Toolset])(
-    'Should accept the %s entity type',
-    (entityType) => {
-      expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': entityType }))).toEqual([]);
-    },
-  );
+  // Regression (Issue #4880): the enum carried three of the five, so no schema a configuration file
+  // typed `skill` or `interceptor` could be saved. These literals are an independent copy of Core's
+  // enum, so an edit that drifts from it fails here — the loop below only samples what the enum has.
+  test('Should enforce exactly the entity types Core allows, in Core order', () => {
+    expect(CATALOG_ENTITY_TYPES).toEqual(['model', 'agent', 'toolset', 'skill', 'interceptor']);
+  });
+
+  test.each([
+    CatalogEntityType.Model,
+    CatalogEntityType.Agent,
+    CatalogEntityType.Toolset,
+    CatalogEntityType.Skill,
+    CatalogEntityType.Interceptor,
+  ])('Should accept the %s entity type', (entityType) => {
+    expect(validateCatalogSchema(schema({ 'dial:catalogEntityType': entityType }))).toEqual([]);
+  });
 
   test.each([undefined, '', '   '])('Should report a blank display name (%s)', (displayName) => {
     const errors = validateCatalogSchema(schema({ 'dial:catalogDisplayName': displayName }));

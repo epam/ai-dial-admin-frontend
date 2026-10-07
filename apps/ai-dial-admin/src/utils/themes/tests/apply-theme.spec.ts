@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { applyThemeColors } from '@/src/utils/themes/apply-theme-colors';
-import { fallbackDarkTheme } from '@/src/utils/themes/constant';
+import { fallbackLightTheme } from '@/src/utils/themes/constant';
 
 describe('applyThemeColors', () => {
   beforeEach(() => {
@@ -24,12 +24,12 @@ describe('applyThemeColors', () => {
     expect(localStorage.getItem('theme')).toBe('custom');
   });
 
-  test('applies every fallback dark color when no theme is provided', () => {
+  test('applies every fallback light color when no theme is provided', () => {
     const element = document.createElement('div');
 
     applyThemeColors(element);
 
-    Object.entries(fallbackDarkTheme).forEach(([key, value]) => {
+    Object.entries(fallbackLightTheme).forEach(([key, value]) => {
       expect(element.style.getPropertyValue(`--${key}`)).toBe(value);
     });
     expect(localStorage.getItem('theme')).toBeNull();

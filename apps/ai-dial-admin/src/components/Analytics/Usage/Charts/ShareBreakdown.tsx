@@ -28,6 +28,7 @@ import { formatGroupedMoney, formatGroupedNumber, formatPercent } from '@/src/co
 import { isPricedView } from '@/src/components/Analytics/Usage/utils/views';
 import { BREAKDOWN_TAB_COLUMN_LABEL_KEY, getFallbackLabelKey } from '@/src/components/Analytics/Usage/utils/labels';
 import { AnalyticsUsageI18nKey } from '@/src/constants/i18n';
+import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -79,6 +80,7 @@ const ShareBreakdown: FC<Props> = ({
   onHideAll,
 }) => {
   const t = useI18n();
+  const colors = useChartColors();
   const [legendFilter, setLegendFilter] = useState('');
 
   const otherLabel = t(AnalyticsUsageI18nKey.DonutOther);
@@ -135,7 +137,7 @@ const ShareBreakdown: FC<Props> = ({
           isOther: slice.isOther,
           valueLabel: formatMetricValue(slice.value, renderedMetric),
           shareLabel: share == null ? null : formatPercent(share, 0),
-          color: getSliceColor(index, slice.isOther),
+          color: getSliceColor(colors, index, slice.isOther),
         };
       });
     },
@@ -151,6 +153,7 @@ const ShareBreakdown: FC<Props> = ({
       renderedMetric,
       fallbackKey,
       t,
+      colors,
     ],
   );
 
@@ -191,12 +194,16 @@ const ShareBreakdown: FC<Props> = ({
 
   const renderFigure = () => {
     if (rows.isLoading) {
-      return <DialLoader size={24} />;
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <DialLoader size={24} />
+        </div>
+      );
     }
 
     if (isEmptyWindow) {
       return (
-        <div className="flex justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <EmptyRing size={DONUT_SIZE}>
             <span className="dial-display2-text text-secondary">—</span>
             <span className="dial-small-text text-secondary">{t(AnalyticsUsageI18nKey.DonutEmptyCenter)}</span>
@@ -205,8 +212,11 @@ const ShareBreakdown: FC<Props> = ({
       );
     }
 
+    // A column rather than a centering row, so the figure keeps the card's full width for its legend.
     return (
-      <DonutFigure slices={cardSlices} centerValue={centerValue} centerCaption={centerCaption} size={DONUT_SIZE} />
+      <div className="flex flex-1 flex-col justify-center">
+        <DonutFigure slices={cardSlices} centerValue={centerValue} centerCaption={centerCaption} size={DONUT_SIZE} />
+      </div>
     );
   };
 

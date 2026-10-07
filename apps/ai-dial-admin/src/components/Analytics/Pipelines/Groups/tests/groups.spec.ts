@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   deriveGroupState,
   evaluationsToday,
+  isAddressableGroupKey,
   isAtCeiling,
   nextUtcMidnight,
   readinessSummary,
@@ -156,4 +157,34 @@ describe('readinessSummary', () => {
       limits: [],
     });
   });
+});
+
+describe('isAddressableGroupKey', () => {
+  // The runner's own refused and addressable values (EncodedSlashFirewallIntegrationTest).
+  test.each([
+    '',
+    '.',
+    '..',
+    'a/./b',
+    'a/../b',
+    './a',
+    'a/..',
+    'a//b',
+    'a%b',
+    'a;b',
+    'a\\b',
+    'a\nb',
+    'a\rb',
+    'a\u2028b',
+    'a\u2029b',
+  ])('refuses %j', (key) => {
+    expect(isAddressableGroupKey(key)).toBe(false);
+  });
+
+  test.each(['team/a', '/a', 'a/', '/', ' ', '..a', 'a.', '...', 'a+b', 'a?b', 'a#b', 'ключ/юникод', 'sess A'])(
+    'admits %j',
+    (key) => {
+      expect(isAddressableGroupKey(key)).toBe(true);
+    },
+  );
 });

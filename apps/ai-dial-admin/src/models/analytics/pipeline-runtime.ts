@@ -26,6 +26,12 @@ export const RUNNER_CACHE_COLD = 'pipeline_cache_cold';
  */
 export const RUNNER_PIPELINE_NOT_FOUND = 'not_found';
 
+/**
+ * A listing cursor the runner did not issue, or one issued under the other order. The console passes cursors back
+ * untouched, so a refusal means the walk itself is stale.
+ */
+export const RUNNER_INVALID_CURSOR = 'invalid_cursor';
+
 /** Who paused a pipeline, which decides whether the pause can expire. */
 export enum PauseOrigin {
   /** A deliberate decision. It never expires and is lifted only by resuming. */

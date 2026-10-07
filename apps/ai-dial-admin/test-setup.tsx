@@ -103,7 +103,7 @@ vi.mock('@/src/context/assets/SkillFolderContext', () => ({
   SkillFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
-vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
+vi.mock('@/src/context/ThemeContext', () => ({ useTheme: vi.fn(() => ({ currentTheme: 'dark' })) }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 

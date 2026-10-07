@@ -10,6 +10,7 @@ import { TREND_TAG_BG_COLORS } from '@/src/components/TestSuites/Trends/constant
 import { MetricTrendGroup, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import { buildMetricTrendChartOptions } from '@/src/components/TestSuites/Trends/utils/chart-options';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useThemePalette } from '@/src/hooks/use-theme-palette';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -19,11 +20,19 @@ interface Props {
 
 const MetricTrendCard: FC<Props> = ({ group, runOrder }) => {
   const t = useI18n();
+  const palette = useThemePalette();
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(() => new Set());
 
   const options = useMemo(
-    () => buildMetricTrendChartOptions(runOrder, group.series, hiddenSeries, t(TestSuitesI18nKey.TrendsTooltipRun)),
-    [group.series, hiddenSeries, runOrder, t],
+    () =>
+      buildMetricTrendChartOptions(
+        palette,
+        runOrder,
+        group.series,
+        hiddenSeries,
+        t(TestSuitesI18nKey.TrendsTooltipRun),
+      ),
+    [group.series, hiddenSeries, runOrder, t, palette],
   );
 
   const onToggleSeries = (name: string) => {

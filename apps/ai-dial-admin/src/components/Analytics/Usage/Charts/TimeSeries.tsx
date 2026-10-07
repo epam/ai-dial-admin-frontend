@@ -39,6 +39,7 @@ import { buildStackedMatrix } from '@/src/components/Analytics/Usage/utils/stack
 import { getSpendResolution } from '@/src/components/Analytics/Usage/utils/spend-resolution';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { AnalyticsUsageI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 import { ChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
@@ -107,6 +108,7 @@ const TimeSeries: FC<Props> = ({
   onTimeSeriesViewChange,
 }) => {
   const t = useI18n();
+  const colors = useChartColors();
   const chartRef = useRef<ReactECharts>(null);
   const plotRef = useRef<HTMLDivElement>(null);
 
@@ -224,19 +226,19 @@ const TimeSeries: FC<Props> = ({
         ...namedRows.map((row, index) => ({
           id: row.id,
           label: row.label || t(BasicI18nKey.NoData),
-          color: getSliceColor(index, false),
+          color: getSliceColor(colors, index, false),
           values: stack.series[index]?.values ?? [],
         })),
         {
           id: 'other',
           label: t(AnalyticsUsageI18nKey.DonutOther),
-          color: getSliceColor(namedRows.length, true),
+          color: getSliceColor(colors, namedRows.length, true),
           values: stack.otherValues,
         },
       ];
 
       return {
-        options: buildSplitSeriesOptions(labels, series, periods),
+        options: buildSplitSeriesOptions(colors, labels, series, periods),
         // Names and colours only: the share of each band is the share chart's own figure, and a
         // second copy of it under the plot is one more thing to keep in agreement.
         legend: series.map<ChartLegendEntry>((entry, index) => ({
@@ -254,6 +256,7 @@ const TimeSeries: FC<Props> = ({
 
       return {
         options: buildBarOptions(
+          colors,
           bars.map((bucket) => formatSpendLabel(bucket.bucketMs, spendResolution)),
           bars.map((bucket) => bucket.spend),
           bars.map((bucket) => formatBucketRange(bucket.bucketMs, getBucketStepMs(spendResolution))),
@@ -268,7 +271,7 @@ const TimeSeries: FC<Props> = ({
       const p95 = points.map((point) => point.measures.p95LatencyMs);
 
       return {
-        options: buildLatencyOptions(labels, p50, p95, periods),
+        options: buildLatencyOptions(colors, labels, p50, p95, periods),
         legend: [
           { id: 'p50', label: t(AnalyticsUsageI18nKey.TimeSeriesLatencyP50), color: LATENCY_P50_COLOR, seriesIndex: 0 },
           { id: 'p95', label: t(AnalyticsUsageI18nKey.TimeSeriesLatencyP95), color: LATENCY_P95_COLOR, seriesIndex: 1 },
@@ -280,7 +283,7 @@ const TimeSeries: FC<Props> = ({
     // One band, and the figure it would print is already the Requests card's — a second copy of it
     // computed from the plotted buckets is what made the two disagree.
     return {
-      options: buildTimeSeriesOptions(points, formatBucketLabel, periods),
+      options: buildTimeSeriesOptions(colors, points, formatBucketLabel, periods),
       legend: [],
       isLoading: buckets.isLoading,
     };
@@ -297,6 +300,7 @@ const TimeSeries: FC<Props> = ({
     spendBuckets,
     donutRows,
     t,
+    colors,
   ]);
 
   const renderPlot = () => {
@@ -312,7 +316,7 @@ const TimeSeries: FC<Props> = ({
       return (
         <div className="relative flex-1" style={{ minHeight: TIME_SERIES_MIN_HEIGHT }}>
           <ReactECharts
-            option={buildTimeSeriesOptions([], formatBucketLabel)}
+            option={buildTimeSeriesOptions(colors, [], formatBucketLabel)}
             style={{ height: '100%', minHeight: TIME_SERIES_MIN_HEIGHT, width: '100%' }}
             opts={{ renderer: 'svg' }}
             notMerge

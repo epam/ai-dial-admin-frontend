@@ -2,8 +2,9 @@ import ReactECharts from 'echarts-for-react';
 import { FC, useMemo } from 'react';
 
 import MetricCardShell from '@/src/components/Common/MetricCard/MetricCardShell';
-import { CHART_COLOR, STATUS_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { MetricStatus } from '@/src/components/Common/MetricCard/models';
+import { getStatusColor } from '@/src/components/Common/MetricCard/utils';
+import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { DistributionSummary } from '@/src/models/deployments/metrics';
 
 interface Props {
@@ -23,6 +24,7 @@ const DistributionCard: FC<Props> = ({
   status = MetricStatus.Neutral,
   emptyReason,
 }) => {
+  const colors = useChartColors();
   const hasPercentiles = [distribution?.p50, distribution?.p95, distribution?.p99].some(
     (v) => v !== null && v !== undefined,
   );
@@ -46,17 +48,17 @@ const DistributionCard: FC<Props> = ({
         data: categories,
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: CHART_COLOR.neutral, fontSize: 11 },
+        axisLabel: { color: colors.neutral, fontSize: 11 },
       },
       series: [
         {
           type: 'bar',
           barWidth: '55%',
-          itemStyle: { color: STATUS_COLOR[status], borderRadius: 2 },
+          itemStyle: { color: getStatusColor(colors, status), borderRadius: 2 },
           label: {
             show: true,
             position: 'right',
-            color: CHART_COLOR.value,
+            color: colors.value,
             fontSize: 12,
             formatter: (p: { value: number }) => `${p.value}${unit}`,
           },
@@ -64,7 +66,7 @@ const DistributionCard: FC<Props> = ({
         },
       ],
     };
-  }, [distribution, status, unit, hasPercentiles]);
+  }, [distribution, status, unit, hasPercentiles, colors]);
 
   return (
     <MetricCardShell title={title} loading={loading} isEmpty={isEmpty} emptyReason={emptyReason} status={status}>

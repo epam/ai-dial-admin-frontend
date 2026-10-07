@@ -6,6 +6,7 @@ import { Button, ButtonAppearance, ButtonVariant, ElementSize } from '@epam/ai-d
 import { IconFilter, IconRefresh } from '@tabler/icons-react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import CopyableText from '@/src/components/Common/CopyableText/CopyableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { errorLines, pathOf, scopeOf } from '@/src/components/Analytics/Pipelines/Failures/failures';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
@@ -14,6 +15,9 @@ import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { DlqItem, DlqLane, DlqScope } from '@/src/models/analytics/pipeline-dlq';
 import { TriggerKind } from '@/src/models/analytics/pipeline';
+
+/** The value typography the shared labelled field uses, for the fields this detail renders itself. */
+const VALUE_TEXT = 'dial-small-text text-primary';
 
 interface Props {
   item: DlqItem;
@@ -85,12 +89,15 @@ const FailureRowDetail: FC<Props> = ({
   return (
     <div className="flex flex-col gap-4 bg-layer-2 px-4 py-4">
       <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
-        <LabelledText
-          label={t(AnalyticsPipelinesI18nKey.FailuresId)}
-          text={String(item.id)}
-          copyable
-          copyLabel={t(AnalyticsPipelinesI18nKey.FailuresId)}
-        />
+        {/* The copy sits right after the value rather than at the column's far edge, where the shared field
+            places its postfix. */}
+        <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresId)}>
+          <CopyableText
+            value={String(item.id)}
+            copyLabel={t(AnalyticsPipelinesI18nKey.FailuresId)}
+            textClassName={VALUE_TEXT}
+          />
+        </LabelledText>
         {scope && (
           <LabelledText
             label={t(AnalyticsPipelinesI18nKey.FailuresScope)}
@@ -104,7 +111,17 @@ const FailureRowDetail: FC<Props> = ({
         <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresFailedAt)} text={failedAt} />
         {/* Plain text, not a link: the console has no page for a backfill run to link to. */}
         {item.run_id && <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresRun)} text={item.run_id} />}
-        <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresGrainKey)} text={grainKeyText} />
+        {item.grain_key ? (
+          <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresGrainKey)}>
+            <CopyableText
+              value={item.grain_key}
+              copyLabel={t(AnalyticsPipelinesI18nKey.FailuresGrainKey)}
+              textClassName={VALUE_TEXT}
+            />
+          </LabelledText>
+        ) : (
+          <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresGrainKey)} text={grainKeyText} />
+        )}
         {item.pipeline_generation != null && (
           <LabelledText
             label={t(AnalyticsPipelinesI18nKey.FailuresGeneration)}
@@ -115,12 +132,23 @@ const FailureRowDetail: FC<Props> = ({
 
       <div className="flex flex-col gap-1">
         <span className="dial-tiny-text text-secondary">{t(AnalyticsPipelinesI18nKey.FailuresError)}</span>
-        <div className="flex flex-row items-start gap-x-2 rounded bg-layer-4 p-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="rounded bg-layer-4 p-3">
+          <div className="flex min-w-0 flex-col gap-1">
             {lines.length ? (
+              // `anywhere` rather than `break-word`: only it lowers the line's minimum width, so a URL with no
+              // break opportunity wraps inside the block instead of running under its edge. The message is never
+              // clipped, so its copy follows the last line rather than an ellipsis.
               lines.map((line, index) => (
-                <span key={`${index}-${line}`} className="dial-code-text break-words text-error">
+                <span key={`${index}-${line}`} className="dial-code-text text-error [overflow-wrap:anywhere]">
                   {line}
+                  {index === lines.length - 1 && (
+                    <CopyButton
+                      className="ml-1 inline-flex align-middle"
+                      value={item.error ?? ''}
+                      valueLabel={t(AnalyticsPipelinesI18nKey.FailuresError)}
+                      size={ElementSize.Small}
+                    />
+                  )}
                 </span>
               ))
             ) : (
@@ -128,7 +156,6 @@ const FailureRowDetail: FC<Props> = ({
               <span className="dial-small-text text-secondary">{t(AnalyticsPipelinesI18nKey.FailuresNoMessage)}</span>
             )}
           </div>
-          {item.error && <CopyButton value={item.error} valueLabel={t(AnalyticsPipelinesI18nKey.FailuresError)} />}
         </div>
       </div>
 

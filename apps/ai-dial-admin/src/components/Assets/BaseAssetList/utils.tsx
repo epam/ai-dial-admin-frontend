@@ -401,7 +401,6 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     status: __status,
     validationWarnings: __validationWarnings,
     reference: __reference,
-    name,
     ...duplicate
   } = asset as DialModelResource &
     DialAppRunnerResource & {
@@ -411,9 +410,7 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
       validationWarnings?: CoreValidationWarning[];
     };
 
-  return view === ApplicationRoute.PlatformAppRunners
-    ? (duplicate as PlatformAsset)
-    : ({ ...duplicate, name } as PlatformAsset);
+  return duplicate as PlatformAsset;
 };
 
 export const getResourceTypeByRoute = (view: ApplicationRoute) => {

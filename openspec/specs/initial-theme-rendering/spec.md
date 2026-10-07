@@ -22,17 +22,17 @@ The system SHALL withhold application content wrapped by the theme provider unti
 
 ### Requirement: Initial theme setup preserves fallback behavior
 
-The system SHALL apply the existing dark fallback colors before rendering wrapped application content when no usable configured theme can be resolved.
+The system SHALL apply the existing light fallback colors before rendering wrapped application content when no usable configured theme can be resolved.
 
 #### Scenario: Theme configuration is unavailable
 
 - **WHEN** the theme configuration is unavailable or contains no themes
-- **THEN** the system SHALL apply `fallbackDarkTheme` before rendering the wrapped application content
+- **THEN** the system SHALL apply `fallbackLightTheme` before rendering the wrapped application content
 
 #### Scenario: Stored theme is not configured
 
 - **WHEN** the stored theme ID does not match a theme in the current configuration
-- **THEN** the system SHALL apply `fallbackDarkTheme` before rendering the wrapped application content
+- **THEN** the system SHALL apply `fallbackLightTheme` before rendering the wrapped application content
 
 ### Requirement: Theme initialization cannot permanently hide content
 
@@ -41,7 +41,7 @@ The system SHALL open the initial rendering gate after attempting configured and
 #### Scenario: Initial theme setup fails
 
 - **WHEN** reading the stored theme or applying the selected theme throws an error
-- **THEN** the system SHALL attempt to apply the existing dark fallback colors and SHALL render the wrapped application content after the initialization attempt finishes
+- **THEN** the system SHALL attempt to apply the existing light fallback colors and SHALL render the wrapped application content after the initialization attempt finishes
 
 #### Scenario: Fallback application also fails
 

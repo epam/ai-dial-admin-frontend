@@ -9,6 +9,7 @@ import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { buildChartOptions, getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { ChartColumnSource, ChartConfig, ChartType, ExecutedQueryMeta } from '@/src/models/analytics/query-builder';
@@ -22,6 +23,7 @@ interface Props {
 
 const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   const t = useI18n();
+  const colors = useChartColors();
 
   // Deduplicated: a SQL run the backend could not translate offers every column as a dimension, so
   // its numeric columns are in both lists — counting them twice would offer scatter a single column
@@ -71,12 +73,13 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
     () =>
       xField && yField
         ? buildChartOptions(config.type, result.rows, xField, yField, {
+            colors,
             dimensionColumns: meta.dimensionColumns,
             otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
             columnLabels: meta.columnLabels,
           })
         : null,
-    [config.type, result.rows, xField, yField, meta.dimensionColumns, meta.columnLabels, t],
+    [config.type, result.rows, xField, yField, meta.dimensionColumns, meta.columnLabels, t, colors],
   );
 
   if (!options) {

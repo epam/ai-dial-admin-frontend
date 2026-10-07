@@ -1,24 +1,36 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
+import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { PlatformAsset, ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import DuplicatePlatformAsset from '../DuplicatePlatformAsset';
 
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
+  getResolvedRunnerSchema: vi.fn(),
+}));
+
 const model = { name: 'gpt-4', displayName: 'GPT-4', endpoint: 'http://model/chat' } as PlatformAsset;
 const runner = {
+  name: 'runner',
   $id: 'http://runner/schema',
   'dial:applicationTypeDisplayName': 'Runner',
 } as unknown as PlatformAsset;
 
-const renderModal = (view: ApplicationRoute, entity: PlatformAsset, onDuplicate = vi.fn(), onClose = vi.fn()) => {
+const renderModal = (
+  view: ApplicationRoute,
+  entity: PlatformAsset,
+  onDuplicate = vi.fn(),
+  onClose = vi.fn(),
+  names: string[] = [],
+) => {
   render(
     <DuplicatePlatformAsset
       view={view}
       isModalOpen
-      names={[]}
+      names={names}
       entity={entity}
       onClose={onClose}
       onDuplicate={onDuplicate}
@@ -29,6 +41,11 @@ const renderModal = (view: ApplicationRoute, entity: PlatformAsset, onDuplicate 
 };
 
 describe('DuplicatePlatformAsset', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: false });
+  });
+
   test('Should offer only an id and a display name, these assets having no version or folder', () => {
     renderModal(ApplicationRoute.PlatformModels, model);
 
@@ -48,19 +65,22 @@ describe('DuplicatePlatformAsset', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
     expect(onDuplicate).toHaveBeenCalledWith({ ...model, name: 'gpt-4-copy' });
+    expect(getResolvedRunnerSchema).not.toHaveBeenCalled();
   });
 
-  test('Should edit an app runner through its $id, not its name', async () => {
+  test('duplicates an app runner under an edited storage name and ID', async () => {
     const user = userEvent.setup();
     const { onDuplicate } = renderModal(ApplicationRoute.PlatformAppRunners, runner);
-    const idInput = screen.getAllByRole('textbox')[0];
+    const idInput = screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` });
 
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toHaveValue('runner-copy');
     expect(idInput).toHaveValue('http://runner/schema-copy');
 
     fireEvent.change(idInput, { target: { value: 'http://runner/other' } });
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
-    expect(onDuplicate).toHaveBeenCalledWith({ ...runner, $id: 'http://runner/other' });
+    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://runner/other'));
+    expect(onDuplicate).toHaveBeenCalledWith({ ...runner, name: 'runner-copy', $id: 'http://runner/other' });
   });
 
   test('Should close without duplicating on cancel', async () => {
@@ -73,10 +93,39 @@ describe('DuplicatePlatformAsset', () => {
     expect(onDuplicate).not.toHaveBeenCalled();
   });
 
-  test('Should render a name field and a display name field for an app runner', () => {
+  test('renders storage name, ID, and display name fields for an app runner', () => {
     renderModal(ApplicationRoute.PlatformAppRunners, runner);
 
-    expect(screen.getAllByRole('textbox')).toHaveLength(2);
+    expect(screen.getAllByRole('textbox')).toHaveLength(3);
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` })).toHaveValue('runner-copy');
+  });
+
+  test('renders an inline error when an app runner storage name exists', () => {
+    renderModal(ApplicationRoute.PlatformAppRunners, runner, vi.fn(), vi.fn(), ['taken-name']);
+
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+      target: { value: 'taken-name' },
+    });
+
+    expect(screen.getByText(ErrorI18nKey.LabelExists)).toBeInTheDocument();
+  });
+
+  test('blocks an app runner duplicate when Core resolves its declared ID and clears the error after editing', async () => {
+    const user = userEvent.setup();
+    const onDuplicate = vi.fn();
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: true, response: {} });
+    renderModal(ApplicationRoute.PlatformAppRunners, runner, onDuplicate);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
+
+    await waitFor(() => expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument());
+    expect(onDuplicate).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}*` }), {
+      target: { value: 'http://runner/available' },
+    });
+
+    await waitFor(() => expect(screen.queryByText(ErrorI18nKey.NameExists)).toBeNull());
   });
 
   test('Should render only a name field for a route, which has no displayName', () => {
