@@ -41,7 +41,8 @@ const parseScore = (value: unknown): number | null | undefined => {
 
 /**
  * Pivot eval_summaries into run × test-case cells (Figma: rows = runs, columns = test cases).
- * Missing pairs stay undefined (gap). Duplicate pairs: last row wins.
+ * Rows are newest run first (charts keep ascending `runOrder`). Missing pairs stay undefined (gap).
+ * Duplicate pairs: last row wins.
  */
 export const pivotStabilitySummaries = (
   summaries: StabilitySummaryRow[],
@@ -76,7 +77,8 @@ export const pivotStabilitySummaries = (
   const headerLabels = sortedNames;
 
   const cellMeta: Record<string, Record<string, StabilityCellMeta>> = {};
-  const rows: HeatMapGridRow[] = runOrder.map((run) => {
+  // `runOrder` is chronological (oldest → newest) for charts; stability table shows newest first.
+  const rows: HeatMapGridRow[] = [...runOrder].reverse().map((run) => {
     const values: Record<string, number | null | undefined> = {};
     const metaForRow: Record<string, StabilityCellMeta> = {};
     const byCol = cellMap.get(run.runId);
