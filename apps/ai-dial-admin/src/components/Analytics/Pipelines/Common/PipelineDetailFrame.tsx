@@ -441,8 +441,10 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
       )}
 
       {/* The padding, given back by the negative margin, is room for the focus outline ui-kit draws outside
-          a control's border box: without it the scroll edge clipped the outline of anything touching it. */}
-      <div className="flex-1 overflow-auto min-h-0 flex flex-col -m-1 p-1">
+          a control's border box: without it the scroll edge clipped the outline of anything touching it.
+          `relative` makes this the containing block of the absolutely positioned `sr-only` inputs of
+          checkboxes and radios; otherwise focusing one scrolls the `overflow-hidden` ancestor instead. */}
+      <div className="relative flex-1 overflow-auto min-h-0 flex flex-col -m-1 p-1">
         {isEditorEnabled && (
           <EntityJsonEditor
             entity={documentSeed as PipelineDraft | null}
