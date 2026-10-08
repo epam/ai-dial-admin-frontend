@@ -59,12 +59,12 @@ const CatalogSchemaField: FC<Props> = ({ schemaId, options, optionsError, entity
   const dropdownItems = useMemo(
     () => [
       { value: NO_SCHEMA, label: t(BasicI18nKey.None) },
-      ...offeredOptions.map((option) => ({
-        value: option.$id,
-        label: option['dial:catalogDisplayName'] || option.$id,
-        // Display names are not unique, so the `$id` is what tells two same-named schemas apart.
-        description: option['dial:catalogDisplayName'] ? option.$id : void 0,
-      })),
+      /**
+       * The `$id` alone, as in the browse grid. Display names are not unique, and once the list is
+       * filtered to one entity kind they tend to repeat the kind itself — three interceptor schemas
+       * all reading "Interceptor" in a list that holds nothing else.
+       */
+      ...offeredOptions.map((option) => ({ value: option.$id, label: option.$id })),
     ],
     [offeredOptions, t],
   );
