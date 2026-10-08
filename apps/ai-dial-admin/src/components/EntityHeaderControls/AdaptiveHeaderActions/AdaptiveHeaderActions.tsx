@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   ButtonAppearance,
@@ -27,6 +27,8 @@ interface Props {
   actions: AdaptiveHeaderActionsConfig;
   deleteAction?: AdaptiveHeaderAction;
   buttonsClassName?: string;
+  /** Rendered before actions inside the right-aligned group (stays visible when actions collapse). */
+  prefix?: ReactNode;
 }
 
 const GAP_PX = 16;
@@ -64,14 +66,16 @@ const renderExpandedAction = (action: AdaptiveHeaderAction, buttonsClassName?: s
   );
 };
 
-const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassName }) => {
+const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassName, prefix }) => {
   const t = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
+  const prefixRef = useRef<HTMLDivElement>(null);
   const [isCompact, setIsCompact] = useState(false);
 
   const leading = actions.leading ?? [];
   const trailing = actions.trailing ?? [];
+  const hasPrefix = prefix != null;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -81,14 +85,16 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
     }
 
     const update = () => {
-      setIsCompact(measure.scrollWidth > container.clientWidth);
+      const prefixWidth = prefixRef.current?.offsetWidth ?? 0;
+      const prefixGap = prefixWidth > 0 ? GAP_PX : 0;
+      setIsCompact(measure.scrollWidth + prefixWidth + prefixGap > container.clientWidth);
     };
 
     update();
     const observer = new ResizeObserver(update);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [leading.length, trailing.length, deleteAction?.label]);
+  }, [leading.length, trailing.length, deleteAction?.label, hasPrefix]);
 
   const renderExpandedActions = () => [
     ...leading.map((action) => renderExpandedAction(action, buttonsClassName)),
@@ -110,7 +116,11 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
   }));
 
   return (
-    <div ref={containerRef} className="relative flex-1 min-w-0 flex flex-row items-center justify-end">
+    <div
+      ref={containerRef}
+      className="relative flex-1 min-w-0 flex flex-row items-center justify-end"
+      style={{ gap: GAP_PX }}
+    >
       <div
         ref={measureRef}
         className="absolute left-0 top-0 opacity-0 pointer-events-none -z-10 flex flex-row items-center whitespace-nowrap"
@@ -119,6 +129,12 @@ const AdaptiveHeaderActions: FC<Props> = ({ actions, deleteAction, buttonsClassN
       >
         {renderExpandedActions()}
       </div>
+
+      {prefix ? (
+        <div ref={prefixRef} className="shrink-0">
+          {prefix}
+        </div>
+      ) : null}
 
       {isCompact ? (
         <DialDropdown items={dropdownItems} listClassName="min-w-[200px]" placement="bottom-end">
