@@ -36,6 +36,7 @@ const nodeSetData = vi.fn();
 
 const MOCK_ROWS = [
   { id: 'run-running', status: RunStatus.RUNNING },
+  { id: 'run-pending', status: RunStatus.PENDING },
   { id: 'run-completed', status: RunStatus.COMPLETED },
   { id: 'run-failed', status: RunStatus.FAILED },
   { id: 'run-cancelled', status: RunStatus.CANCELLED },
@@ -94,10 +95,11 @@ describe('Runs', () => {
   const selectedTestSuite = { id: 'suite-1' } as TestSuite;
   const runRefreshRef = { current: null };
 
-  test('shows the Stop action only for running rows', () => {
+  test('shows the Stop action only for running and pending rows', () => {
     render(<Runs runRefreshRef={runRefreshRef} selectedTestSuite={selectedTestSuite} />);
 
     expect(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-running` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-pending` })).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-completed` }),
     ).not.toBeInTheDocument();

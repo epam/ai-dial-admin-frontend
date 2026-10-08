@@ -62,8 +62,8 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
     }));
   }, []);
 
-  // A cancellation can also fail, putting the run back to RUNNING, so the exit condition is leaving
-  // CANCELLING rather than reaching a settled status.
+  // A cancellation can also fail, putting the run back to RUNNING or PENDING, so the exit condition
+  // is leaving CANCELLING rather than reaching a settled status.
   useEffect(() => {
     if (selectedRun.status !== RunStatus.CANCELLING || !selectedRun.id) {
       return;
@@ -76,7 +76,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
         return;
       }
 
-      if (run.status === RunStatus.RUNNING) {
+      if (run.status === RunStatus.RUNNING || run.status === RunStatus.PENDING) {
         showNotification(
           getErrorNotification(t(RunsI18nKey.CancelRunFailed), t(RunsI18nKey.CancelRunFailedDescription)),
         );
@@ -124,7 +124,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
       : [];
 
     const trailing = [
-      ...(selectedRun.status === RunStatus.RUNNING
+      ...(selectedRun.status === RunStatus.RUNNING || selectedRun.status === RunStatus.PENDING
         ? [
             {
               id: 'stop',

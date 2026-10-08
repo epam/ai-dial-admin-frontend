@@ -121,6 +121,31 @@ describe('AdaptiveHeaderActions', () => {
     expect(onExport).toHaveBeenCalled();
   });
 
+  test('renders prefix before expanded actions and keeps it when collapsed', () => {
+    stubResizeObserver(200, 500);
+
+    render(
+      <AdaptiveHeaderActions
+        actions={{
+          leading: [
+            {
+              id: 'schema',
+              label: 'Schema',
+              icon: <span>schema-icon</span>,
+              onClick: vi.fn(),
+              appearance: 'ghost',
+            },
+          ],
+        }}
+        prefix={<button type="button">More</button>}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'More' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schema' })).not.toBeInTheDocument();
+  });
+
   test('expands again when available width recovers after compact', () => {
     let available = 200;
     const needed = 500;

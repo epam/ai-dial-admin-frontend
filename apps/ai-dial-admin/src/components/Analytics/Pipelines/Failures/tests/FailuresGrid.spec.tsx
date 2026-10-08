@@ -1,13 +1,14 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { FC } from 'react';
 import userEvent from '@testing-library/user-event';
-import { CellClickedEvent, ColDef, GridOptions } from 'ag-grid-community';
+import { CellClickedEvent, ColDef, GridOptions, ICellRendererParams } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import FailuresGrid from '@/src/components/Analytics/Pipelines/Failures/FailuresGrid';
 import { PipelineFailuresRead } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import { dlqItem, failuresRead } from '@/src/components/Analytics/Pipelines/Failures/tests/mock';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { DlqLane } from '@/src/models/analytics/pipeline-dlq';
+import { DlqLane, DlqStage } from '@/src/models/analytics/pipeline-dlq';
 
 /**
  * ag-grid is replaced by a harness that keeps what the grid is configured with and renders each row
@@ -91,6 +92,19 @@ describe('FailuresGrid', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     captured.rowData = [];
+  });
+
+  // On the icon rather than the whole cell, so the stage name itself carries no tooltip.
+  test('describes the stage on an info icon beside its name', () => {
+    renderGrid(failuresRead({ items: [dlqItem({ id: 1, stage: DlqStage.Validate })] }));
+
+    const stage = captured.columnDefs.find((column) => column.colId === 'stage');
+    const Cell = stage?.cellRenderer as FC<ICellRendererParams>;
+    const cell = within(render(<Cell {...({ data: captured.rowData[0] } as ICellRendererParams)} />).container);
+
+    expect(cell.getByText(DlqStage.Validate)).toBeTruthy();
+    expect(cell.getByRole('img', { name: AnalyticsPipelinesI18nKey.FailuresStageDescValidate })).toBeTruthy();
+    expect(stage?.tooltipValueGetter).toBeUndefined();
   });
 
   test('lists the rows the read loaded', () => {

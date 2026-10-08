@@ -47,6 +47,7 @@ const nodeSetData = vi.fn();
 
 const MOCK_ROWS = [
   { id: 'run-running', status: RunStatus.RUNNING },
+  { id: 'run-pending', status: RunStatus.PENDING },
   { id: 'run-completed', status: RunStatus.COMPLETED },
   { id: 'run-cancelling', status: RunStatus.CANCELLING },
 ];
@@ -85,10 +86,11 @@ vi.mock('@/src/components/ListView/List', () => ({
 const noopGetData = vi.fn().mockResolvedValue({ content: [], totalElements: 0 });
 
 describe('EvaluationListView', () => {
-  test('shows the Stop action only for a running row when route is Runs', () => {
+  test('shows the Stop action for running and pending rows when route is Runs', () => {
     render(<EvaluationListView route={ApplicationRoute.Runs} baseColumns={[]} getData={noopGetData} />);
 
     expect(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-running` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-pending` })).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: `${ActionMenuOperationI18nKey.Stop}:run-completed` }),
     ).not.toBeInTheDocument();

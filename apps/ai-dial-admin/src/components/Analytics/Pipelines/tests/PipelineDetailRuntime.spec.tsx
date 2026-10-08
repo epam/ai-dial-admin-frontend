@@ -193,9 +193,15 @@ describe('PipelineDetailView — runtime and pause', () => {
   });
 
   // The registry presents it as healthy while nothing drives it, so a chip alone will not do.
-  test('warns when the runner has not taken the pipeline on', async () => {
+  test('states on the Runtime tab, not above the strip, that the runner has not taken the pipeline on', async () => {
+    const user = userEvent.setup();
     asNotHeld();
     renderView();
+
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeNull();
+
+    await user.click(screen.getByText(TabsI18nKey.Runtime));
 
     expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeTruthy();
     expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy();

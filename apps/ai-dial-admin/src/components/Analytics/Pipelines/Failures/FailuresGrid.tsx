@@ -2,8 +2,8 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, ButtonAppearance, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronRight, IconRefresh } from '@tabler/icons-react';
+import { Button, ButtonAppearance, ButtonVariant, DialTooltip, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronRight, IconInfoCircle, IconRefresh } from '@tabler/icons-react';
 import {
   BodyScrollEvent,
   CellClickedEvent,
@@ -23,7 +23,7 @@ import FailuresFilterBar from '@/src/components/Analytics/Pipelines/Failures/Fai
 import { isRetryable, visibleFailures } from '@/src/components/Analytics/Pipelines/Failures/failures';
 import { PipelineFailuresRead } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import { HEADER_HEIGHT, ROW_HEIGHT } from '@/src/components/Grid/constants';
-import { DLQ_GRID_MAX_HEIGHT_PX, DLQ_STAGE_COLOR } from '@/src/constants/analytics/pipeline-dlq';
+import { DLQ_GRID_MAX_HEIGHT_PX, DLQ_STAGE_COLOR, DLQ_STAGE_DESCRIPTION } from '@/src/constants/analytics/pipeline-dlq';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -294,6 +294,17 @@ const FailuresGrid: FC<Props> = ({
             <span className="flex flex-row items-center gap-x-2">
               <span className={`size-2 shrink-0 rounded-full ${DLQ_STAGE_COLOR[name]}`} aria-hidden />
               <span className="font-mono">{name}</span>
+              {/* The description sits on the icon rather than on the whole cell, so the name stays plain
+                  text. The same words are in the row detail, which a keyboard reader can reach. */}
+              <DialTooltip tooltip={t(DLQ_STAGE_DESCRIPTION[name])}>
+                <IconInfoCircle
+                  {...BASE_BUTTON_ICON_PROPS}
+                  size={16}
+                  className="text-secondary"
+                  role="img"
+                  aria-label={t(DLQ_STAGE_DESCRIPTION[name])}
+                />
+              </DialTooltip>
             </span>
           );
         },

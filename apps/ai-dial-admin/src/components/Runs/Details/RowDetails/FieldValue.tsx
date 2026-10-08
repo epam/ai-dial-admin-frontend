@@ -85,7 +85,11 @@ const FieldValue: FC<Props> = ({
     return (
       <span
         ref={textRef}
-        className={classNames(textClassName, 'break-words min-w-0 self-stretch', isLong && 'whitespace-pre-wrap')}
+        className={classNames(
+          textClassName,
+          'break-words min-w-0 self-stretch overflow-y-auto',
+          isLong && 'whitespace-pre-wrap',
+        )}
       >
         {displayText}
       </span>

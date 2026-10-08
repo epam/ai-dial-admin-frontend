@@ -235,7 +235,8 @@ export function getCancelOperation<T>(onClick: (entity?: T) => void): ActionMenu
     id: ActionMenuOperationI18nKey.Stop,
     label: ActionMenuOperationI18nKey.Stop,
     onClick,
-    hidden: (_: GridApi, node: IRowNode) => node.data?.status !== RunStatus.RUNNING,
+    hidden: (_: GridApi, node: IRowNode) =>
+      node.data?.status !== RunStatus.RUNNING && node.data?.status !== RunStatus.PENDING,
   };
 }
 

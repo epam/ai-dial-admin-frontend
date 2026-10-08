@@ -6,7 +6,7 @@ import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntim
 import { dlqItem, failuresRead } from '@/src/components/Analytics/Pipelines/Failures/tests/mock';
 import { noRuntimeRead, runtimeRead, runtimeView } from '@/src/components/Analytics/Pipelines/Common/tests/mock';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { Pipeline, PipelineKind, PipelineState, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, PipelineKind, PipelineState, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
 
 const pipeline = (state?: PipelineState): Pipeline => ({
@@ -50,6 +50,7 @@ const renderRuntime = (state?: PipelineState, props: Partial<Parameters<typeof P
       failures={failuresRead()}
       canDeadLetter={false}
       isPaused={false}
+      isNotTracked={false}
       onReload={onReload}
       {...props}
     />,
@@ -58,6 +59,143 @@ const renderRuntime = (state?: PipelineState, props: Partial<Parameters<typeof P
 describe('PipelineRuntime', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('by kind of pipeline', () => {
+    const POSITIONED: PipelineState = {
+      ...RAN,
+      cursor_version: 1_790_000_000_000,
+      materialized_through_version: 1_780_000_000_000,
+    };
+    const sqlPipeline = { ...pipeline(POSITIONED), transform: { type: TransformType.Sql } };
+    const aggregatePipeline = { ...pipeline(POSITIONED), kind: PipelineKind.Aggregate };
+
+    test('an aggregate states the time its output covers, and no lag, no position', () => {
+      renderRuntime(POSITIONED, { pipeline: aggregatePipeline });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.DataUpTo)).toBeTruthy();
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.Lag)).toBeNull();
+      expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.SectionState })).toBeNull();
+    });
+
+    test('a SQL enrichment states the time its output covers, and no lag, no position', () => {
+      renderRuntime(POSITIONED, { pipeline: sqlPipeline });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.DataUpTo)).toBeTruthy();
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.Lag)).toBeNull();
+      expect(screen.queryByRole('region', { name: AnalyticsPipelinesI18nKey.SectionState })).toBeNull();
+    });
+
+    test('a pipeline that calls a model keeps its lag and its position', () => {
+      renderRuntime(POSITIONED);
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.Lag)).toBeTruthy();
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.DataUpTo)).toBeNull();
+      expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionState })).toBeTruthy();
+    });
+
+    test('states the status for every kind', () => {
+      renderRuntime(POSITIONED, { pipeline: aggregatePipeline });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.ProgressStatus)).toBeTruthy();
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusCatchingUp)).toBeTruthy();
+    });
+
+    test('states up to date when no input was left behind', () => {
+      renderRuntime({ ...POSITIONED, has_more: false });
+
+      expect(screen.getByText(AnalyticsPipelinesI18nKey.StatusUpToDate)).toBeTruthy();
+    });
+  });
+
+  test("presents one last run, the runner's when both services have one", () => {
+    // The next run is moved off the registry's last run's date, so the date can only come from the last run.
+    renderRuntime(
+      { ...RAN, next_run_at: '2026-11-11T12:00:00Z' },
+      {
+        runtime: runtimeRead({ view: runtimeView({ schedule: { last_scan_at: '2026-10-05T10:00:00Z' } }) }),
+      },
+    );
+
+    const schedule = screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionSchedule });
+
+    expect(screen.getAllByText(AnalyticsPipelinesI18nKey.LastRun)).toHaveLength(1);
+    expect(schedule.textContent).toContain('10/5/2026');
+    expect(schedule.textContent).not.toContain('9/21/2026');
+  });
+
+  test('draws the registry last run where the runner has none', () => {
+    renderRuntime(RAN);
+
+    const schedule = screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionSchedule });
+
+    expect(schedule.textContent).toContain('9/21/2026');
+  });
+
+  describe('Data up to', () => {
+    const aggregate = (state: PipelineState): Pipeline => ({ ...pipeline(state), kind: PipelineKind.Aggregate });
+
+    test('states the cursor version as a local time', () => {
+      const version = Date.UTC(2026, 9, 5, 10, 0, 0);
+      renderRuntime({ cursor_version: version }, { pipeline: aggregate({ cursor_version: version }) });
+
+      const progress = screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionProgress });
+
+      expect(progress.textContent).toContain(AnalyticsPipelinesI18nKey.DataUpTo);
+      expect(progress.textContent).toContain('10/5/2026');
+    });
+
+    test.each([0, -5])('leaves the row out for a version of %s', (version) => {
+      renderRuntime(
+        { cursor_version: version, last_run_at: '2026-09-21T16:12:08Z' },
+        {
+          pipeline: aggregate({ cursor_version: version }),
+        },
+      );
+
+      expect(screen.queryByText(AnalyticsPipelinesI18nKey.DataUpTo)).toBeNull();
+    });
+  });
+
+  // The position card is withdrawn for these kinds, but a state that carries only a position is still a
+  // pipeline that ran.
+  test('does not call an aggregate that recorded only a drained-at probe never-run', () => {
+    const state = { drained_at: '2026-09-25T14:59:53Z' };
+    renderRuntime(state, { pipeline: { ...pipeline(state), kind: PipelineKind.Aggregate } });
+
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.NeverRun)).toBeNull();
+  });
+
+  test('wraps and copies a long last error from the runner', () => {
+    const message = 'I/O error on POST request for "http://dial-adas.svc.cluster.local:80/v1/x"';
+    renderRuntime(RAN, { runtime: runtimeRead({ view: runtimeView({ schedule: { last_error: message } }) }) });
+
+    expect(screen.getByText(message, { exact: false }).closest('[class*="overflow-wrap"]')).not.toBeNull();
+    expect(screen.getByRole('button', { name: `copy ${AnalyticsPipelinesI18nKey.LastError}` })).toBeTruthy();
+  });
+
+  // A request URL followed by a connection failure has no break opportunity, so the message has to be
+  // allowed to wrap anywhere or it runs under the notification's edge.
+  test('lets a long refused-read message wrap', () => {
+    const message =
+      'I/O error on POST request for "http://dial-adas.dial-adas.svc.cluster.local:80/v1/pipelines/x/group-rows"';
+    renderRuntime(undefined, { runtime: runtimeRead({ outcome: RuntimeReadOutcome.Failed, errorMessage: message }) });
+
+    const text = screen.getByText(new RegExp(message.slice(0, 30)));
+
+    expect(text.closest('[class*="overflow-wrap"]')).not.toBeNull();
+  });
+
+  test('gives the cursor identity a copy control', () => {
+    renderRuntime(RAN);
+
+    expect(screen.getByRole('button', { name: `copy ${AnalyticsPipelinesI18nKey.CursorIdentity}` })).toBeTruthy();
+  });
+
+  test('states that nothing runs the pipeline yet, on the tab', () => {
+    renderRuntime(RAN, { isNotTracked: true });
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)).toBeTruthy();
   });
 
   test('groups the schedule, the progress and the registry position under their own headings', () => {
@@ -289,7 +427,7 @@ describe("PipelineRuntime — the runner's view", () => {
   test('leaves out a field the runner does not currently know', () => {
     renderView(runtimeRead({ view: runtimeView({ progress: { lag_seconds: 38 } }) }));
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.Backlog)).toBeNull();
+    expect(screen.queryByText(AnalyticsPipelinesI18nKey.ProgressStatus)).toBeNull();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.CaughtUpAt)).toBeNull();
     expect(screen.getByText(AnalyticsPipelinesI18nKey.Lag)).toBeTruthy();
   });
@@ -322,7 +460,7 @@ describe("PipelineRuntime — the runner's view", () => {
     renderView(runtimeRead({ view: runtimeView({ progress: {}, schedule: {} }) }), RAN);
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.Lag)).toBeTruthy();
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.Backlog)).toBeTruthy();
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.ProgressStatus)).toBeTruthy();
     expect(screen.getByRole('region', { name: AnalyticsPipelinesI18nKey.SectionSchedule })).toBeTruthy();
   });
 

@@ -93,11 +93,15 @@ When the user clicks a cell in the main Execution Result grid whose column maps 
 
 ### Requirement: Pivot cells truncate and open a full-value popup
 
-Pivot value cells SHALL truncate content that does not fit. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a `DialPopup` titled with the field label and showing the full value (not a two-pane diff viewer).
+Pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a `DialPopup` titled with the field label and showing the full value (not a two-pane diff viewer).
 
 #### Scenario: Truncate long value
-- **WHEN** a field value exceeds the cell width
-- **THEN** the cell displays truncated text with overflow hidden
+- **WHEN** a field value is taller than the cell's fixed height
+- **THEN** the cell shows an internal vertical scrollbar and the row height does not grow to fit the value
+
+#### Scenario: Short value shows no scroll
+- **WHEN** a field value fits within the cell's fixed height
+- **THEN** the cell shows no scrollbar and renders exactly as before
 
 #### Scenario: Hover shows open-popup icon
 - **WHEN** the user hovers a value cell
