@@ -734,7 +734,7 @@ describe('getTargetUrl', () => {
   };
 
   test('should return URL for AssetsApplications route', () => {
-    const application = { path: 'my-app/v1', name: 'my-app' } as any;
+    const application = { _metadata: { path: 'my-app/v1' }, name: 'my-app' } as any;
     const result = getTargetUrl(ApplicationRoute.AssetsApplications, application, frameConfig);
 
     expect(result).toBeInstanceOf(URL);
