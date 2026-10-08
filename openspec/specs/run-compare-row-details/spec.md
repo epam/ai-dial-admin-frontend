@@ -51,11 +51,19 @@ When the user clicks a cell in the Compare Execution Results grid whose column m
 
 ### Requirement: Compare pivot cells truncate and open a dual-run popup
 
-Compare pivot value cells SHALL truncate content that does not fit. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a popup titled with the field label that shows both the primary and compared run values for that field (side-by-side), not only the clicked cell’s value. Delta-row cells SHALL remain non-clickable.
+Compare pivot value cells SHALL be capped to a fixed cell height and SHALL scroll vertically within that height when content does not fit, instead of expanding the row. Each cell's scroll is independent — scrolling one primary or secondary cell SHALL NOT move any other cell's scroll position. On hover, the cell SHALL show an “open in popup” affordance at the bottom-right. Clicking the cell SHALL open a popup titled with the field label that shows both the primary and compared run values for that field (side-by-side), not only the clicked cell’s value. Delta-row cells SHALL remain non-clickable.
 
 #### Scenario: Truncate long value
-- **WHEN** a primary or secondary field value exceeds the cell width
-- **THEN** the cell displays truncated text with overflow hidden
+- **WHEN** a primary or secondary field value is taller than the cell's fixed height
+- **THEN** the cell shows an internal vertical scrollbar and the row height does not grow to fit the value
+
+#### Scenario: Scrolling one cell does not affect its row neighbor
+- **WHEN** the user scrolls a primary cell that has overflowing content
+- **THEN** the corresponding secondary cell's scroll position is unaffected, and vice versa
+
+#### Scenario: Short value shows no scroll
+- **WHEN** a primary or secondary field value fits within the cell's fixed height
+- **THEN** the cell shows no scrollbar and renders exactly as before
 
 #### Scenario: Hover shows open-popup icon
 - **WHEN** the user hovers a value cell

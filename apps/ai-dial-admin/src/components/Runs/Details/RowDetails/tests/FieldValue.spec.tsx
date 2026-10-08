@@ -17,3 +17,11 @@ describe('FieldValue score indicator alignment', () => {
     expect(container.querySelector('.justify-end')).toBeNull();
   });
 });
+
+describe('FieldValue fill variant', () => {
+  test('scrolls internally instead of expanding when content is long', () => {
+    const { container } = render(<FieldValue raw="a long value" isScoreIndicator={false} failedLabel="Failed" fill />);
+
+    expect(container.querySelector('.overflow-y-auto')).toBeTruthy();
+  });
+});
