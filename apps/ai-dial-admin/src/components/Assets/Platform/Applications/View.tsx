@@ -133,7 +133,7 @@ const PlatformApplicationView: FC<Props> = ({
   // MCP-configured applications get a Tools tab the same way the public Apps view does — MCP is fully
   // supported for platform-bucket applications, unlike `function`/code-runtime apps.
   const tabs = useMemo(() => {
-    const appRunner = getAppRunner(originalApp, schemes, ApplicationRoute.AssetsApplications);
+    const appRunner = getAppRunner(originalApp, schemes);
     const baseTabs = withPlatformApplicationTabs(
       t,
       getTabsForAsset(t, ApplicationRoute.AssetsApplications),

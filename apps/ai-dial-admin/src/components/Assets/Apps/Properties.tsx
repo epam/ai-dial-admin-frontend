@@ -65,10 +65,7 @@ const ApplicationAssetProperties: FC<Props> = ({
   // once here for every folder read below (storage label, bucket check, the Move field).
   const folderId = asset.folderId ?? asset._metadata?.folderId ?? '';
 
-  const appRunner = useMemo(
-    () => getAppRunner(assetApp, runners ?? [], ApplicationRoute.AssetsApplications),
-    [assetApp, runners],
-  );
+  const appRunner = useMemo(() => getAppRunner(assetApp, runners ?? []), [assetApp, runners]);
 
   const showResponsesDefaults =
     (!schemaSourceId && !!assetApp.responses_endpoint) ||

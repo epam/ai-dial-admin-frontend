@@ -28,14 +28,7 @@ const entityRunner = {
 } as DialApplicationScheme;
 
 const renderRoutes = (entity: DialApplication) =>
-  render(
-    <ApplicationAppRoutes
-      view={ApplicationRoute.Applications}
-      applicationRunners={[entityRunner]}
-      selectedEntity={entity}
-      onChangeEntity={vi.fn()}
-    />,
-  );
+  render(<ApplicationAppRoutes applicationRunners={[entityRunner]} selectedEntity={entity} onChangeEntity={vi.fn()} />);
 
 describe('ApplicationAppRoutes', () => {
   test('renders an entity application route array unchanged', () => {

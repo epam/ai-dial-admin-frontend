@@ -87,7 +87,7 @@ const TabsContent: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const appRunner = useMemo(() => {
     if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
-      return getAppRunner(selectedApplication, applicationSchemes, view);
+      return getAppRunner(selectedApplication, applicationSchemes);
     }
   }, [applicationSchemes, selectedApplication, view]);
 
@@ -225,7 +225,6 @@ const TabsContent: FC<Props> = ({
         ) : (
           <ApplicationAppRoutes
             key={discardKey}
-            view={view}
             roles={roles}
             applicationRunners={applicationSchemes || []}
             selectedEntity={selectedApplication}
