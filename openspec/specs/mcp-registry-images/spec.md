@@ -51,10 +51,10 @@ Branch, SHA, and BaseDirectory fields SHALL NOT be shown in the modal when `exte
 
 ### Purpose-specific server action for images
 
-The `getImageMcpServers()` server action SHALL make two parallel POST requests — one with `{ repositoryExists: true }` and one with `{ packageRegistryTypes: ["oci"] }` — and merge and deduplicate results by `name + version`. The action SHALL support `minResults` accumulation.
+The `getImageMcpServers()` server action SHALL make two parallel POST requests — one with `{ repositoryExists: true }` and one with `{ packageRegistryTypes: ["oci"] }` — and merge and deduplicate results by `name + version`. The action SHALL make one such pair of requests per call and SHALL NOT accumulate results across BE pages.
 
 #### Scenario: Merged results from two filters
-- **WHEN** `getImageMcpServers({ limit: 100, minResults: 100 })` is called
+- **WHEN** `getImageMcpServers({ limit: 30 })` is called
 - **THEN** the action SHALL make two parallel requests with different filters
 - **AND** merge results, deduplicating servers that appear in both by `name + version`
 
