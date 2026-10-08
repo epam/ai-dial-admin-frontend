@@ -9,6 +9,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { MENU_CONFIGURATION } from '../menu-configuration';
 import MenuItem from '../MenuItem/MenuItem';
@@ -25,6 +26,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
   const router = useRouter();
   const { featureFlags } = useAppContext();
+  const isConfigTransferEnabled = getIsConfigTransferEnabled(featureFlags);
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // pathname - /en/models/[id]
@@ -67,7 +69,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const MenuActionsBar = () => (
     <div className={classNames(actionsClassName, 'justify-start')}>
-      {featureFlags.adminApiEnabled && (
+      {isConfigTransferEnabled && (
         <>
           <MenuAction
             tooltip={t(MenuI18nKey.ImportConfig)}
@@ -116,7 +118,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
             onExport={handleExport}
             onImport={handleImport}
             onOpenProperties={openProperties}
-            showImportExport={!isReadOnlyAdmin && featureFlags.adminApiEnabled}
+            showImportExport={!isReadOnlyAdmin && isConfigTransferEnabled}
           />
         </div>
       )}
