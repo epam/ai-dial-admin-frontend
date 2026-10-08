@@ -397,7 +397,7 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
   });
 
-  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])(
+  test.each([RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED, RunStatus.FAILED])(
     'renders dashes instead of error tags for a %s run with no data',
     async (status) => {
       executeStructuredQueryMock.mockResolvedValue({ rows: [] });
@@ -409,6 +409,22 @@ describe('Runs Summary :: Analytics', () => {
       // read immediately, it catches them still loading whenever the suite runs slowly enough.
       await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(5));
       expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+    },
+  );
+
+  test.each([RunStatus.CANCELLED, RunStatus.FAILED])(
+    'keeps cost figures for a %s run that has no eval_summaries averages',
+    async (status) => {
+      executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+      mockCosts({ avgTestCaseCost: 0.0965298, avgMetricEvalCost: null });
+      render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
+
+      expect(await screen.findByText('$0.097')).toBeInTheDocument();
+      await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
+      expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
+      const testCaseCost = screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' });
+      expect(testCaseCost).toHaveTextContent('$0.097');
+      expect(testCaseCost).not.toHaveTextContent('error-tag');
     },
   );
 

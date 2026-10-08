@@ -101,7 +101,6 @@ when, and only when, no usage row can exist:
 
 - the run is in a transitional status (still running, or cancelling) — nothing is aggregated yet,
   and the sibling KPI cards already show a dash rather than a value;
-- the structured-query slice reports no test-case results at all;
 - the suite is an MCP-tool suite — cost aggregation does not support MCP-tool suites at all, so no
   usage row is ever produced regardless of whether the run computed metrics;
 - the run's deployed model is confirmed to have no pricing configured (no Prompt and no Completion
@@ -110,6 +109,11 @@ when, and only when, no usage row can exist:
   the Summary tab already makes to link to the deployment), not from `/costs`, and only ever applies
   to a model deployment: an Application has no pricing of its own at the Admin level, so this check
   never rules an Application-based run out — consistent with such runs pricing out normally.
+
+The Summary tab SHALL NOT skip `/costs` because the structured-query slice lacks eval_summaries
+averages (`avgRunTimeMs`). CANCELLED ("Stopped") and FAILED runs commonly have priced usage without
+those averages; gating the fetch on that signal wiped a successful `/costs` response when the slice
+resolved later and left the cards on a dash or Error while the Runs grid still showed a real cost.
 
 Each check SHALL evaluate to "costs are still possible" while the evidence for it is loading, so a
 pending fetch is never mistaken for a zero. When the fetch is skipped, the cards SHALL show an em
@@ -223,11 +227,19 @@ is never an error, however long it lasts.
 - **THEN** each cost card shows the Error badge
 - **AND** the non-cost KPI cards remain visible with their values
 
-#### Scenario: A settled run with no results errors alongside the strip
+#### Scenario: A completed run with no results errors alongside the strip
 
-- **WHEN** a run in a settled status produced no test-case results
+- **WHEN** a COMPLETED run produced no test-case results and `/costs` also has no figures
 - **THEN** the cost cards show the Error badge, as the other KPI cards do for the same run
-- **AND** the same run in an incomplete status shows an em dash on every card instead
+- **AND** the same run in an incomplete status (PENDING, RUNNING, CANCELLING, CANCELLED, FAILED)
+  shows an em dash on every card instead of the Error badge
+
+#### Scenario: Cancelled or failed runs keep cost figures without eval_summaries averages
+
+- **WHEN** a CANCELLED or FAILED run has no `avgRunTimeMs` from the structured-query slice
+- **AND** `getRunCosts` returns at least one numeric average
+- **THEN** the cost cards show the formatted dollar values
+- **AND** neither cost card shows the Error badge or an em dash in place of those values
 
 #### Scenario: An error on a later poll settles the cards
 

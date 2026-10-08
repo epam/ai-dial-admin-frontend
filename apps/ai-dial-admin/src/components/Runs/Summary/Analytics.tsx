@@ -12,7 +12,12 @@ import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-
 import { useModelPricing } from '@/src/components/Runs/Summary/use-model-pricing';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
-import { formatAvgRunTimeSeconds, formatRunCost, hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
+import {
+  formatAvgRunTimeSeconds,
+  formatRunCost,
+  hasOverallScoreThreshold,
+  hasRunCostFigure,
+} from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
@@ -47,10 +52,9 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   const { data } = useRunAnalyticsSlice(run?.id);
 
   const isRunInProgress = isTransitionalRunStatus(run?.status);
-  // Sourced from `avgRunTimeMs` (eval_summaries), not `statusCounts` (test_case_eval_scores):
-  // the latter can lag behind execution finishing, and gating the cost fetch on a signal that
-  // arrives late would leave `useRunCosts` stuck at canHaveCosts=false — and thus permanently
-  // unfetched — for a run that already has real cost data.
+  // Absent eval_summaries averages (avgRunTimeMs) — used for KPI dash/error presentation only.
+  // Must NOT gate the cost fetch: CANCELLED/FAILED runs often have /costs figures with no
+  // eval_summaries row, and flipping canHaveCosts false after an optimistic fetch would wipe them.
   const hasNoResults = data != null && data.avgRunTimeMs == null;
   // Cost aggregation doesn't support MCP-tool suites at all yet — confirmed by QA reproduction
   // (both cards stay in Calculating indefinitely regardless of whether the run computed metrics),
@@ -64,7 +68,7 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   // (see `resolveModelPricing`), so this only ever fires for a model deployment.
   const { deploymentType } = useDeploymentType(run?.suiteSnapshot?.deploymentRef);
   const { isDefinitelyUnpriced } = useModelPricing(run?.suiteSnapshot?.deploymentRef?.id, deploymentType);
-  const canHaveCosts = !isRunInProgress && !hasNoResults && !isMcpRun && !isDefinitelyUnpriced;
+  const canHaveCosts = !isRunInProgress && !isMcpRun && !isDefinitelyUnpriced;
   const { costs, isPending: areCostsPending, unavailable: costsUnavailable } = useRunCosts(run?.id, canHaveCosts);
 
   if (!data) {
@@ -86,10 +90,9 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   const showTestCasesPassed = hasOverallScoreThreshold(run.suiteSnapshot?.overallScoreThreshold);
   const hasStatusCounts = statusCounts.total > 0;
   const isRunIncomplete = isIncompleteRunStatus(run.status);
-  // Reuses `hasNoResults` (eval_summaries-backed) rather than `hasStatusCounts`
-  // (test_case_eval_scores-backed) so the cost cards' error state can't disagree with the signal
-  // that decided whether `useRunCosts` even attempted a fetch.
-  const hasCostError = costsUnavailable || (hasNoResults && !isRunIncomplete);
+  // Incomplete statuses (incl. CANCELLED/FAILED) never Error the cost cards — missing figures are a
+  // dash. COMPLETED still Errors on endpoint failure or on no eval_summaries with no cost figures.
+  const hasCostError = !isRunIncomplete && (costsUnavailable || (hasNoResults && !hasRunCostFigure(costs)));
   const costDescription = areCostsPending
     ? t(RunsI18nKey.CostCalculatingElapsed)
     : hasCostError
