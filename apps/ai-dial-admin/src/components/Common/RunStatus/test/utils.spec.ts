@@ -64,15 +64,15 @@ describe('Run status :: isTransitionalRunStatus', () => {
 });
 
 describe('Run status :: isIncompleteRunStatus', () => {
-  test.each([RunStatus.PENDING, RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED])(
+  test.each([RunStatus.PENDING, RunStatus.RUNNING, RunStatus.CANCELLING, RunStatus.CANCELLED, RunStatus.FAILED])(
     'treats %s as incomplete',
     (status) => {
       expect(isIncompleteRunStatus(status)).toBe(true);
     },
   );
 
-  test.each([RunStatus.COMPLETED, RunStatus.FAILED])('treats %s as complete', (status) => {
-    expect(isIncompleteRunStatus(status)).toBe(false);
+  test('treats COMPLETED as complete', () => {
+    expect(isIncompleteRunStatus(RunStatus.COMPLETED)).toBe(false);
   });
 
   test('treats an unknown or missing status as complete', () => {
