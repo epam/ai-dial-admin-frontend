@@ -40,7 +40,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/activity-audit';
+import { DialActivity, ImportActivities } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
@@ -50,6 +50,7 @@ import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 import { clearAuditListPreselect, readAuditListPreselect } from '@/src/utils/audit-list-preselect';
 import { isResourceIdInTableScope } from '@/src/utils/audit/analytics-resource-id';
 import { filterOutDeletedTableChildren, getUnresolvedParentIds } from '@/src/utils/audit/deleted-parent-suppression';
+import { getUngroupedImportIds, groupImportActivities } from '@/src/utils/audit/import-grouping';
 import { getEntityAuditFilters } from '@/src/utils/audit/entity-audit-filters';
 import {
   needsDeploymentLifecycleCheck,
@@ -141,6 +142,9 @@ const ActivityAuditList: FC<Props> = ({
   // Activities resolved during one list pass, keyed by their own identifier: every fetched row
   // plus every parent the suppression lookup answered for.
   const resolvedActivitiesRef = useRef<Record<string, DialActivity>>({});
+  const importActivitiesRef = useRef<ImportActivities>({});
+  const emittedImportsRef = useRef<Set<string>>(new Set());
+  const failedImportsRef = useRef<Set<string>>(new Set());
   const rowBufferRef = useRef<DialActivity[]>([]);
   const apiPageRef = useRef(0);
   const apiExhaustedRef = useRef(false);
@@ -211,6 +215,9 @@ const ActivityAuditList: FC<Props> = ({
           apiExhaustedRef.current = false;
           childrenCacheRef.current = {};
           resolvedActivitiesRef.current = {};
+          importActivitiesRef.current = {};
+          emittedImportsRef.current = new Set();
+          failedImportsRef.current = new Set();
         }
 
         // Resolved per request, not per memo: a preset's window — and an anchored option's end date —
@@ -225,7 +232,8 @@ const ActivityAuditList: FC<Props> = ({
           ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
-        const { fetchActivities, hasParentChildAggregation, hasDeletedParentSuppression } = viewConfig;
+        const { fetchActivities, hasParentChildAggregation, hasDeletedParentSuppression, hasImportGrouping } =
+          viewConfig;
 
         /**
          * The rows of a page the list should show, once the per-column children of a table
@@ -270,6 +278,56 @@ const ActivityAuditList: FC<Props> = ({
           return filterOutDeletedTableChildren(pageRows, resolvedActivitiesRef.current);
         };
 
+        /**
+         * The page's rows with each analytics import collapsed into one Import row and its activities.
+         *
+         * An import met for the first time is fetched whole — every page of an `importId` request that also carries
+         * the reader's filters — so a group spanning page boundaries is complete and a filtered list stays filtered
+         * inside it.
+         */
+        const getImportGroupedRows = async (pageRows: DialActivity[]): Promise<DialActivity[]> => {
+          const settledImportIds = new Set([...emittedImportsRef.current, ...failedImportsRef.current]);
+          const newImportIds = getUngroupedImportIds(pageRows, settledImportIds);
+
+          if (newImportIds.length > 0) {
+            const importFilters: FilterDto[] = [
+              ...filters,
+              { column: 'importId', value: newImportIds.join(','), operator: FilterOperatorDto.INCLUDES },
+            ];
+            try {
+              // The fetcher answers a failed HTTP request with no page rather than throwing, and a group built from
+              // a partial answer would hide the missing rows, so any missing page fails the whole request.
+              const first = await fetchActivities(PAGE_SIZE, 0, sorts, importFilters);
+              if (!first) throw new Error('import activities unavailable');
+              const fetched: DialActivity[] = [...first.data];
+              for (let p = 1; p < first.totalPages; p++) {
+                const next = await fetchActivities(PAGE_SIZE, p, sorts, importFilters);
+                if (!next) throw new Error('import activities unavailable');
+                fetched.push(...next.data);
+              }
+
+              // A rolled-back import deletes its tables, so the same per-column suppression applies inside a group;
+              // it resolves at most a page of parents per call, hence one call per page-sized slice.
+              const listedFetched: DialActivity[] = [];
+              for (let start = 0; start < fetched.length; start += PAGE_SIZE) {
+                const slice = fetched.slice(start, start + PAGE_SIZE);
+                listedFetched.push(...(hasDeletedParentSuppression ? await getListedRows(slice) : slice));
+              }
+              newImportIds.forEach((importId) => {
+                importActivitiesRef.current[importId] = listedFetched.filter((a) => a.importId === importId);
+              });
+            } catch {
+              // Deliberately swallowed, as the parent lookup is: these imports are listed flat for the rest of the
+              // pass instead of being grouped.
+              newImportIds.forEach((importId) => failedImportsRef.current.add(importId));
+            }
+          }
+
+          const grouped = groupImportActivities(pageRows, importActivitiesRef.current, emittedImportsRef.current);
+          grouped.emittedImportIds.forEach((importId) => emittedImportsRef.current.add(importId));
+          return grouped.rows;
+        };
+
         try {
           while (rowBufferRef.current.length < endRow && !apiExhaustedRef.current) {
             const page = apiPageRef.current;
@@ -288,7 +346,8 @@ const ActivityAuditList: FC<Props> = ({
             // Suppression happens here, at the same point the table-scope narrowing already
             // drops rows: before the row buffer, so the buffer, the page boundaries and the
             // end-of-list signal count only rows that are shown.
-            const rows = hasDeletedParentSuppression ? await getListedRows(scopedRows) : scopedRows;
+            const listedRows = hasDeletedParentSuppression ? await getListedRows(scopedRows) : scopedRows;
+            const rows = hasImportGrouping && !entity ? await getImportGroupedRows(listedRows) : listedRows;
 
             // `hasParentChildAggregation` states the view's stance; entity mode has always listed
             // rows flat whatever the view, so both conditions have to hold.
@@ -443,6 +502,7 @@ const ActivityAuditList: FC<Props> = ({
       // A single-entity list is one about one resource type and one identifier. A table Audit tab
       // is not that: it lists the table *and its columns*, so it keeps the multi-type column set.
       isSingleEntity: !!entity && !hasChildResourceActivities(entityType),
+      isGlobalList: !entity,
     });
   }, [
     entity,
