@@ -54,9 +54,9 @@ export function useCancellingRunsPoll(gridApi: GridApi | null, isEnabled = true)
             return;
           }
 
-          // A run is polled only while it is CANCELLING, so seeing it RUNNING again means the
-          // cancellation did not take effect.
-          if (run.status === RunStatus.RUNNING) {
+          // A run is polled only while it is CANCELLING, so seeing it back in RUNNING or PENDING
+          // means the cancellation did not take effect.
+          if (run.status === RunStatus.RUNNING || run.status === RunStatus.PENDING) {
             showNotification(
               getErrorNotification(t(RunsI18nKey.CancelRunFailed), t(RunsI18nKey.CancelRunFailedDescription)),
             );

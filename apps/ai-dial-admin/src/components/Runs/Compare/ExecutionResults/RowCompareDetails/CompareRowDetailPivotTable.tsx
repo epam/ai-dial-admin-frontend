@@ -78,7 +78,12 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
   const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns), [columns]);
-  const gridTemplateRows = hasComparedMatch ? 'auto auto 1fr 1fr auto' : 'auto auto 1fr 1fr';
+  // minmax(0, 1fr), not bare 1fr, on the primary/secondary value rows: a bare fr track can't
+  // shrink below its content's min-content height, so a long cell value would blow out the row
+  // instead of scrolling inside PivotValueCell.
+  const gridTemplateRows = hasComparedMatch
+    ? 'auto auto minmax(0, 1fr) minmax(0, 1fr) auto'
+    : 'auto auto minmax(0, 1fr) minmax(0, 1fr)';
 
   useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);

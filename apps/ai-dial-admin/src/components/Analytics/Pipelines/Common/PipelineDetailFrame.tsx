@@ -8,9 +8,6 @@ import {
   ButtonVariant,
   ConfirmationPopup,
   ConfirmationPopupVariant,
-  Notification,
-  NotificationType,
-  NotificationVariant,
   Tabs,
 } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -421,18 +418,6 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
 
       {/* Above the strip, so a held or failing pipeline says so whichever tab is in view — and withdrawn
           with everything else below the identity row while the document is on screen. */}
-      {/* The registry calls this pipeline healthy while nothing drives it — the one runtime fact the
-          page cannot leave to a chip alone. */}
-      {!isEditorEnabled && runtimeStatus === PipelineRuntimeStatus.NotTracked && (
-        <Notification
-          variant={NotificationVariant.Error}
-          type={NotificationType.SectionMessage}
-          role="status"
-          title={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)}
-          message={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedMessage)}
-        />
-      )}
-
       {!isEditorEnabled && pausedEntry && (
         <PipelinePauseBanner pause={pausedEntry} isResuming={pause.isBusy} onResume={() => void pause.resume()} />
       )}
@@ -473,6 +458,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             failures={failures}
             canDeadLetter={canDeadLetter}
             isPaused={Boolean(pausedEntry)}
+            isNotTracked={runtimeStatus === PipelineRuntimeStatus.NotTracked}
             onReload={onReloadRuntime}
             actions={
               isPauseOffered &&

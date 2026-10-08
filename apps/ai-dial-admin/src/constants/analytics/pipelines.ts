@@ -3,10 +3,6 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 
 export const LATEST_VERSION = 'latest';
 
-export const CRON_CUSTOM_PRESET = 'custom';
-
-export const CRON_EVERY_MINUTE_PRESET = 'every-minute';
-
 export const CRON_PRESETS: { value: string; labelKey: AnalyticsPipelinesI18nKey }[] = [
   { value: '0 */5 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronEveryFiveMinutes },
   { value: '0 0 * * * *', labelKey: AnalyticsPipelinesI18nKey.CronHourly },
@@ -73,3 +69,11 @@ export const PIPELINES_STORAGE_KEY = 'analytics/pipelines';
 // does not know. A layout saved without it would push Runtime to the end for good, so each column set
 // keeps its own.
 export const PIPELINES_NO_RUNTIME_STORAGE_KEY = 'analytics/pipelines/no-runtime';
+
+/**
+ * Lets a service message wrap inside a section notification. `textClassName` replaces the kit's own, so the
+ * first four classes restate the kit's default section-message layout and only the last is ours: its items
+ * cannot break inside a word, so a request URL followed by a connection failure ran past the edge, and
+ * `anywhere` lowers the item's minimum width so it wraps instead. Re-check them against the kit on upgrade.
+ */
+export const NOTIFICATION_MESSAGE_WRAP_CLASS = 'flex-row flex-wrap items-baseline gap-x-1 [overflow-wrap:anywhere]';

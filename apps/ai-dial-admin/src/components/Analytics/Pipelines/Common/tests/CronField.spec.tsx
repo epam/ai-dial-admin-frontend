@@ -1,157 +1,143 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CronField from '@/src/components/Analytics/Pipelines/Common/CronField';
-import { CRON_CUSTOM_PRESET, CRON_EVERY_MINUTE_PRESET } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-
-// The 2.0 select keeps its options in an overlay, so the field is swapped for a native select the
-// options can be read out of — as the specs did when this was the 1.0 `DialSelectField`.
-vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Select: ({ id, labelProps, options, value, onChange }: any) => (
-    <label>
-      <span>{labelProps?.label}</span>
-      <select
-        id={id}
-        aria-label={labelProps?.label ?? id}
-        aria-required={labelProps?.required}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {options.map((option: any) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  ),
-}));
 
 const HOURLY = '0 0 * * * *';
 const EVERY_FIVE_MINUTES = '0 */5 * * * *';
 
+const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
+  render(<CronField value="" onChange={vi.fn()} {...props} />);
+
+const openPresets = async (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.CronPresets }));
+
+const offered = () => screen.getAllByRole('menuitem').map((item) => item.textContent);
+
 describe('CronField', () => {
-  // A discard restores the expression alone, so a stored "custom" flag would outlive the value it
-  // described and leave the preset reading empty.
-  test('reads an expression matching no preset as custom, however it arrived', () => {
-    const { rerender } = renderField({ value: '0 0 * * * *' });
+  test('is one input labelled Schedule, with no second input and no mode selection', () => {
+    renderField({ value: '0 30 2 * * MON' });
 
-    rerender(<CronField value="0 12/15 * * * *" onChange={vi.fn()} />);
-
-    expect(screen.getByDisplayValue('0 12/15 * * * *')).toBeTruthy();
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.CronSchedule, { exact: false })).toBeTruthy();
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
-  const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
-    render(<CronField value="" onChange={vi.fn()} {...props} />);
+  test('labels the presets menu with the word rather than an icon alone', () => {
+    renderField({ value: HOURLY });
 
-  const preset = () => screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.CronPreset });
+    expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.CronPresets }).textContent).toContain(
+      AnalyticsPipelinesI18nKey.CronPresets,
+    );
+  });
 
-  test('offers the named presets and a custom entry', async () => {
+  test('offers the named presets from the menu', async () => {
     const user = userEvent.setup();
     renderField({ value: HOURLY });
 
-    const offered = within(preset())
-      .getAllByRole('option')
-      .map((option) => option.textContent);
+    await openPresets(user);
 
-    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronEveryFiveMinutes);
-    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronHourly);
-    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronDailyMidnight);
-    expect(offered).toContain(AnalyticsPipelinesI18nKey.CronCustom);
+    expect(offered()).toEqual([
+      AnalyticsPipelinesI18nKey.CronEveryFiveMinutes,
+      AnalyticsPipelinesI18nKey.CronHourly,
+      AnalyticsPipelinesI18nKey.CronDailyMidnight,
+    ]);
   });
 
-  test('reports a six-field expression when a preset is chosen', async () => {
+  test('writes the six-field expression of the chosen preset into the input', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
     renderField({ value: EVERY_FIVE_MINUTES, onChange });
 
-    await user.selectOptions(preset(), HOURLY);
+    await openPresets(user);
+    await user.click(screen.getByRole('menuitem', { name: AnalyticsPipelinesI18nKey.CronHourly }));
 
-    expect(onChange).toHaveBeenCalledWith('0 0 * * * *');
+    expect(onChange).toHaveBeenCalledWith(HOURLY);
     expect(onChange.mock.calls[0][0].split(' ')).toHaveLength(6);
   });
 
-  test('hides the expression input until custom is chosen', () => {
-    renderField();
+  test('keeps whatever expression it is given, with no second input, however it arrived', () => {
+    const { rerender } = renderField({ value: HOURLY });
 
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronExpression)).toBeNull();
+    rerender(<CronField value="0 12/15 * * * *" onChange={vi.fn()} />);
+
+    expect(screen.getByDisplayValue('0 12/15 * * * *')).toBeTruthy();
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
   });
 
-  test('reveals the expression input when custom is chosen', async () => {
+  test('accepts a typed expression directly', async () => {
+    const onChange = vi.fn();
     const user = userEvent.setup();
-    renderField({ value: HOURLY });
+    renderField({ onChange });
 
-    await user.selectOptions(preset(), CRON_CUSTOM_PRESET);
+    await user.type(screen.getByRole('textbox'), '0');
 
-    expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.CronExpression, { exact: false })).toBeTruthy();
+    expect(onChange).toHaveBeenCalledWith('0');
   });
 
-  test('reports a five-field custom expression as invalid', () => {
+  test('reports a five-field expression as invalid', () => {
     renderField({ value: '*/5 * * * *' });
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.CronInvalid)).toBeTruthy();
   });
 
-  test('accepts a well-formed six-field custom expression', () => {
-    renderField({ value: '0 */5 * * * *' });
-
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronInvalid)).toBeNull();
-  });
-
-  test('opens in custom mode for a value matching no preset', () => {
+  test('accepts a well-formed six-field expression', () => {
     renderField({ value: '0 30 2 * * MON' });
 
-    expect(screen.getByText(AnalyticsPipelinesI18nKey.CronExpression)).toBeTruthy();
-  });
-
-  test('does not report an invalid expression before anything is typed', () => {
-    renderField();
-
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronInvalid)).toBeNull();
   });
 
-  test('offers no every-minute preset and keeps the cron required when it is not defaultable', () => {
+  test('offers no every-minute preset and keeps the cron required when it is not defaultable', async () => {
+    const user = userEvent.setup();
     renderField({ value: HOURLY });
 
-    const offered = within(preset())
-      .getAllByRole('option')
-      .map((option) => option.textContent);
+    await openPresets(user);
 
-    expect(offered).not.toContain(AnalyticsPipelinesI18nKey.CronEveryMinute);
-    expect(preset()).toBeRequired();
+    expect(offered()).not.toContain(AnalyticsPipelinesI18nKey.CronEveryMinute);
+    expect(screen.getByRole('textbox')).toBeRequired();
   });
 });
 
 describe('CronField — defaultable', () => {
-  const renderField = (props?: Partial<Parameters<typeof CronField>[0]>) =>
+  const renderDefaultable = (props?: Partial<Parameters<typeof CronField>[0]>) =>
     render(<CronField value="" isDefaultable onChange={vi.fn()} {...props} />);
 
-  const preset = () => screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.CronPreset });
+  test('shows a service-defaulted cron as the expression it is', () => {
+    renderDefaultable({ value: '37 * * * * *' });
 
-  test.each(['', '37 * * * * *'])('reads %j as every minute, with no custom input', (value) => {
-    renderField({ value });
+    expect(screen.getByDisplayValue('37 * * * * *')).toBeTruthy();
+  });
 
-    expect(preset()).toHaveValue(CRON_EVERY_MINUTE_PRESET);
-    expect(screen.queryByText(AnalyticsPipelinesI18nKey.CronExpression)).toBeNull();
+  test('leaves the input empty, with every minute as its placeholder', () => {
+    renderDefaultable();
+
+    expect(screen.getByPlaceholderText(AnalyticsPipelinesI18nKey.CronEveryMinute)).toBeTruthy();
   });
 
   test('does not mark the cron as required', () => {
-    renderField();
+    renderDefaultable();
 
-    expect(preset()).not.toBeRequired();
+    expect(screen.getByRole('textbox')).not.toBeRequired();
+  });
+
+  test('offers every minute first', async () => {
+    const user = userEvent.setup();
+    renderDefaultable({ value: HOURLY });
+
+    await openPresets(user);
+
+    expect(offered()[0]).toBe(AnalyticsPipelinesI18nKey.CronEveryMinute);
   });
 
   test('clears the cron when every minute is chosen over another preset', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
-    renderField({ value: HOURLY, onChange });
+    renderDefaultable({ value: HOURLY, onChange });
 
-    await user.selectOptions(preset(), CRON_EVERY_MINUTE_PRESET);
+    await openPresets(user);
+    await user.click(screen.getByRole('menuitem', { name: AnalyticsPipelinesI18nKey.CronEveryMinute }));
 
     expect(onChange).toHaveBeenCalledWith('');
   });
@@ -159,10 +145,10 @@ describe('CronField — defaultable', () => {
   test('keeps a cron that already fires every minute', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
-    renderField({ value: '37 * * * * *', onChange });
+    renderDefaultable({ value: '37 * * * * *', onChange });
 
-    await user.selectOptions(preset(), CRON_CUSTOM_PRESET);
-    await user.selectOptions(preset(), CRON_EVERY_MINUTE_PRESET);
+    await openPresets(user);
+    await user.click(screen.getByRole('menuitem', { name: AnalyticsPipelinesI18nKey.CronEveryMinute }));
 
     expect(onChange).not.toHaveBeenCalled();
   });

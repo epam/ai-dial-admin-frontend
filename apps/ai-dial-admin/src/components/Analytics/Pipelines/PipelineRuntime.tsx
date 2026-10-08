@@ -6,6 +6,7 @@ import {
   Button,
   ButtonAppearance,
   ButtonVariant,
+  ElementSize,
   NoDataContent,
   Notification,
   NotificationType,
@@ -16,13 +17,16 @@ import { IconRefresh } from '@tabler/icons-react';
 import PipelineFailuresCard from '@/src/components/Analytics/Pipelines/Failures/PipelineFailuresCard';
 import { PipelineFailuresRead } from '@/src/components/Analytics/Pipelines/Failures/use-pipeline-failures';
 import { PipelineRuntimeViewRead } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-runtime-view';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import { NOTIFICATION_MESSAGE_WRAP_CLASS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Pipeline } from '@/src/models/analytics/pipeline';
 import { RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
+import { getDataUpTo, getPipelineRuntimeKind, PipelineRuntimeKind } from '@/src/utils/analytics/pipeline-runtime-kind';
 
 interface Props {
   pipeline: Pipeline;
@@ -35,6 +39,12 @@ interface Props {
   /** Whether this kind of pipeline dead-letters at all; only a model-calling enrichment does. */
   canDeadLetter: boolean;
   isPaused: boolean;
+  /**
+   * The registry calls the pipeline healthy while the runner has not taken it on. Stated here, on the
+   * runtime tab, rather than above the strip: right after enabling it is the ordinary state until the
+   * next sync, and a page-level alert made every enable look like a fault.
+   */
+  isNotTracked: boolean;
   /**
    * Reads both upstreams again — the pipeline through the page, and the runner through the frame's own
    * hooks. The frame owns it because only the frame holds them.
@@ -99,7 +109,7 @@ const RuntimeSection: FC<{ title: string; children: ReactNode }> = ({ title, chi
  * that renders nothing is still an entry in that array — so a card of absent dates would keep its
  * heading over empty space, which is the thing that rule exists to prevent.
  */
-const LabelledDate: FC<{ label: string; at?: string; tooltip?: string; fallback?: string }> = ({
+const LabelledDate: FC<{ label: string; at?: string | number; tooltip?: string; fallback?: string }> = ({
   label,
   at,
   tooltip,
@@ -111,6 +121,20 @@ const LabelledDate: FC<{ label: string; at?: string; tooltip?: string; fallback?
 
   return <LabelledText className={UNCAPPED} label={label} text={at ? text : fallback} tooltip={tooltip} />;
 };
+
+/**
+ * A value that is wrapped whole rather than cut off, with its copy control after the last line. For the
+ * cursor identity and the last error, which are long, unbroken, and the thing a reader came to copy;
+ * `anywhere` rather than `break-word` because only it lowers the line's minimum width.
+ */
+const labelledWrapped = (label: string, text: string): ReactNode => (
+  <LabelledText key={label} className={UNCAPPED} label={label}>
+    <span className="dial-small-text text-primary [overflow-wrap:anywhere]">
+      {text}
+      <CopyButton className="ml-1 inline-flex align-middle" value={text} valueLabel={label} size={ElementSize.Small} />
+    </span>
+  </LabelledText>
+);
 
 /**
  * One count, or nothing. A count the runner has not recorded is absent, and absence is not zero.
@@ -153,6 +177,7 @@ const PipelineRuntime: FC<Props> = ({
   failures,
   canDeadLetter,
   isPaused,
+  isNotTracked,
   onReload,
   actions,
 }) => {
@@ -167,25 +192,40 @@ const PipelineRuntime: FC<Props> = ({
   // its answer after a restart, since it holds these in memory.
   const nextRunAt = schedule?.next_run_at ?? state?.next_run_at;
   const lagSeconds = progress?.lag_seconds ?? state?.lag_seconds;
+  // The vocabulary follows the declaration, so it does not change with which upstream happened to answer.
+  const runtimeKind = getPipelineRuntimeKind(pipeline);
+  const isModelCalling = runtimeKind === PipelineRuntimeKind.Model;
+  const dataUpTo = getDataUpTo(runtimeKind, state);
+  // The runner's own time of the last committed fire wins; the registry's is drawn only where it has none.
+  const lastRunAt = schedule?.last_scan_at ?? state?.last_run_at;
   const hasMore = progress?.has_more ?? state?.has_more;
 
   // The registry's own run-level failure. Judged on the raw member: the formatted timestamp lands
   // after the first render, so a gate read from it would drop the row and then pop it back in.
   const hasRunFailure = Boolean(state?.last_error);
 
-  const hasSchedule = Boolean(schedule?.last_scan_at || state?.last_run_at || nextRunAt || schedule?.running_now);
+  const hasSchedule = Boolean(lastRunAt || nextRunAt || schedule?.running_now);
   const hasProgress = Boolean(
-    lagSeconds != null || hasMore != null || progress?.caught_up_at || progress?.last_write_at,
+    dataUpTo != null ||
+    (isModelCalling && lagSeconds != null) ||
+    hasMore != null ||
+    progress?.caught_up_at ||
+    progress?.last_write_at,
   );
-  const hasPosition = Boolean(
+  // Judged on what the registry recorded, not on what this kind of pipeline draws: a SQL enrichment or an
+  // aggregate withdraws the position card, and a state that carries only a position is still a pipeline
+  // that ran — telling its reader otherwise sends them looking for one that never started.
+  const hasRecordedPosition = Boolean(
     state &&
     (state.cursor_version != null ||
       state.cursor_identity ||
       state.materialized_through_version != null ||
       state.materialized_through_identity ||
-      state.drained_at),
+      state.drained_at ||
+      state.lag_seconds != null),
   );
-  const hasAnyFact = hasSchedule || hasProgress || hasPosition || hasRunFailure || !!queue || !!groups || !!spend;
+  const hasAnyFact =
+    hasSchedule || hasProgress || hasRecordedPosition || hasRunFailure || !!queue || !!groups || !!spend;
 
   // Nothing is stated until something is known. A verdict published before the runner has answered is
   // wrong however it is worded, and each of the four below is a verdict.
@@ -248,6 +288,16 @@ const PipelineRuntime: FC<Props> = ({
         />
       )}
 
+      {isNotTracked && (
+        <Notification
+          variant={NotificationVariant.Warning}
+          type={NotificationType.SectionMessage}
+          role="status"
+          title={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedTitle)}
+          message={t(AnalyticsPipelinesI18nKey.RuntimeNotTrackedMessage)}
+        />
+      )}
+
       {/* The service's own words **and** the console's. The message says what went wrong; the sentence
           after it says what did not, which is the half an operator acts on — and the service's message
           is never empty, so an `||` between them made the second unreachable. */}
@@ -261,6 +311,7 @@ const PipelineRuntime: FC<Props> = ({
             runtime.errorMessage || t(AnalyticsPipelinesI18nKey.RuntimeUnavailable),
             t(AnalyticsPipelinesI18nKey.RuntimeUnaffected),
           ].join(' ')}
+          textClassName={NOTIFICATION_MESSAGE_WRAP_CLASS}
         />
       )}
 
@@ -280,10 +331,7 @@ const PipelineRuntime: FC<Props> = ({
 
       <div className="flex flex-col gap-4">
         <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionSchedule)}>
-          {schedule?.last_scan_at && (
-            <LabelledDate label={t(AnalyticsPipelinesI18nKey.LastScan)} at={schedule.last_scan_at} />
-          )}
-          {state?.last_run_at && <LabelledDate label={t(AnalyticsPipelinesI18nKey.LastRun)} at={state.last_run_at} />}
+          {lastRunAt && <LabelledDate label={t(AnalyticsPipelinesI18nKey.LastRun)} at={lastRunAt} />}
           {/* The service omits the next fire while one is running, so the two never both apply. */}
           {schedule?.running_now && (
             <LabelledText
@@ -296,13 +344,7 @@ const PipelineRuntime: FC<Props> = ({
             <LabelledDate label={t(AnalyticsPipelinesI18nKey.NextRun)} at={nextRunAt} />
           )}
           {labelledCount(t(AnalyticsPipelinesI18nKey.ConsecutiveFailures), schedule?.consecutive_failures)}
-          {schedule?.last_error && (
-            <LabelledText
-              className={UNCAPPED}
-              label={t(AnalyticsPipelinesI18nKey.LastError)}
-              text={schedule.last_error}
-            />
-          )}
+          {schedule?.last_error && labelledWrapped(t(AnalyticsPipelinesI18nKey.LastError), schedule.last_error)}
           {schedule?.last_error_at && (
             <LabelledDate label={t(AnalyticsPipelinesI18nKey.LastErrorAt)} at={schedule.last_error_at} />
           )}
@@ -312,7 +354,8 @@ const PipelineRuntime: FC<Props> = ({
             the runner measures it, and the cursor pair below is a different service's answer to a
             different question. */}
         <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionProgress)}>
-          {lagSeconds != null && (
+          {dataUpTo != null && <LabelledDate label={t(AnalyticsPipelinesI18nKey.DataUpTo)} at={dataUpTo} />}
+          {isModelCalling && lagSeconds != null && (
             <LabelledText
               className={UNCAPPED}
               label={t(AnalyticsPipelinesI18nKey.Lag)}
@@ -323,8 +366,8 @@ const PipelineRuntime: FC<Props> = ({
           {hasMore != null && (
             <LabelledText
               className={UNCAPPED}
-              label={t(AnalyticsPipelinesI18nKey.Backlog)}
-              text={t(hasMore ? AnalyticsPipelinesI18nKey.BacklogYes : AnalyticsPipelinesI18nKey.BacklogNo)}
+              label={t(AnalyticsPipelinesI18nKey.ProgressStatus)}
+              text={t(hasMore ? AnalyticsPipelinesI18nKey.StatusCatchingUp : AnalyticsPipelinesI18nKey.StatusUpToDate)}
             />
           )}
           {progress?.caught_up_at && (
@@ -336,33 +379,31 @@ const PipelineRuntime: FC<Props> = ({
         </RuntimeSection>
 
         {/* The registry's own position members, which the runner's view does not carry. */}
-        <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionState)}>
-          {labelledCount(t(AnalyticsPipelinesI18nKey.CursorVersion), state?.cursor_version)}
-          {state?.cursor_identity && (
-            <LabelledText
-              className={UNCAPPED}
-              label={t(AnalyticsPipelinesI18nKey.CursorIdentity)}
-              text={state.cursor_identity}
-            />
-          )}
-          {labelledCount(t(AnalyticsPipelinesI18nKey.MaterializedThroughVersion), state?.materialized_through_version)}
-          {state?.materialized_through_identity && (
-            <LabelledText
-              className={UNCAPPED}
-              label={t(AnalyticsPipelinesI18nKey.MaterializedThroughIdentity)}
-              text={state.materialized_through_identity}
-            />
-          )}
-          {/* With the caveat attached: it advances only on an empty probe, so on a busy pipeline it is
+        {isModelCalling && (
+          <RuntimeSection title={t(AnalyticsPipelinesI18nKey.SectionState)}>
+            {labelledCount(t(AnalyticsPipelinesI18nKey.CursorVersion), state?.cursor_version)}
+            {state?.cursor_identity &&
+              labelledWrapped(t(AnalyticsPipelinesI18nKey.CursorIdentity), state.cursor_identity)}
+            {labelledCount(
+              t(AnalyticsPipelinesI18nKey.MaterializedThroughVersion),
+              state?.materialized_through_version,
+            )}
+            {state?.materialized_through_identity &&
+              labelledWrapped(
+                t(AnalyticsPipelinesI18nKey.MaterializedThroughIdentity),
+                state.materialized_through_identity,
+              )}
+            {/* With the caveat attached: it advances only on an empty probe, so on a busy pipeline it is
               old while everything is working. */}
-          {state?.drained_at && (
-            <LabelledDate
-              label={t(AnalyticsPipelinesI18nKey.DrainedAt)}
-              at={state.drained_at}
-              tooltip={t(AnalyticsPipelinesI18nKey.DrainedAtHint)}
-            />
-          )}
-        </RuntimeSection>
+            {state?.drained_at && (
+              <LabelledDate
+                label={t(AnalyticsPipelinesI18nKey.DrainedAt)}
+                at={state.drained_at}
+                tooltip={t(AnalyticsPipelinesI18nKey.DrainedAtHint)}
+              />
+            )}
+          </RuntimeSection>
+        )}
 
         {/* Beside the lag rather than under it: the scan advances when work is enqueued, so these are
             what say whether a caught-up pipeline has actually written its rows. */}

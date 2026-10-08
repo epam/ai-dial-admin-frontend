@@ -52,7 +52,10 @@ const ExecutionRowDetailPivotTable: FC<Props> = ({ sections, focusFieldKey, focu
           className="dial-tiny-text grid w-full h-full"
           style={{
             gridTemplateColumns,
-            gridTemplateRows: 'auto auto 1fr',
+            // minmax(0, 1fr), not bare 1fr: a bare fr track can't shrink below its content's
+            // min-content height, so a long cell value would blow out the row instead of
+            // scrolling inside PivotValueCell.
+            gridTemplateRows: 'auto auto minmax(0, 1fr)',
             minWidth: gridMinWidth,
           }}
         >

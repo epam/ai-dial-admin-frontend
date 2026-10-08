@@ -11,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { JsonataVariable } from '@/src/models/jsonata';
 import Suggestions, { SuggestionOption } from './Suggestions';
 import { getSchemaSuggestions, getVariableSuggestions } from './utils';
+import classNames from 'classnames';
 
 interface Props {
   value: string;
@@ -23,6 +24,9 @@ interface Props {
   variables?: JsonataVariable[];
   onChangeValue: (expression: string, type?: string) => void;
 }
+
+const textareaScrollClassnames =
+  '[scrollbar-width:initial] [scrollbar-color:initial] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--stroke-primary,#57647A)] [&::-webkit-scrollbar-thumb]:rounded-full';
 
 const JsonAtaInput: FC<Props> = ({
   value,
@@ -45,7 +49,7 @@ const JsonAtaInput: FC<Props> = ({
   const [highlightIndex, setHighlightIndex] = useState(0);
   const expressionFieldRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  const resizeExpressionTextarea = useCallback(() => {
     const textarea = expressionFieldRef.current?.querySelector('textarea');
     if (!textarea) return;
 
@@ -53,7 +57,19 @@ const JsonAtaInput: FC<Props> = ({
     textarea.style.height = '0px';
     const contentHeight = textarea.scrollHeight;
     textarea.style.height = `${Math.max(contentHeight, currentHeight)}px`;
-  }, [expression, isModalOpen]);
+  }, []);
+
+  useLayoutEffect(() => {
+    resizeExpressionTextarea();
+  }, [expression, resizeExpressionTextarea]);
+
+  const onExpressionFieldRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      expressionFieldRef.current = node;
+      if (node) resizeExpressionTextarea();
+    },
+    [resizeExpressionTextarea],
+  );
 
   const treeNodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
@@ -65,13 +81,24 @@ const JsonAtaInput: FC<Props> = ({
     [treeNodes, variables, expression],
   );
 
+  const resetDraftFromValue = useCallback(() => {
+    setExpression(value);
+    setType(undefined);
+  }, [value]);
+
   const onOpenModal = useCallback(() => {
+    resetDraftFromValue();
     setIsModalOpen(true);
-  }, [setIsModalOpen]);
+  }, [resetDraftFromValue]);
 
   const onCloseModal = useCallback(() => {
     setIsModalOpen(false);
-  }, [setIsModalOpen]);
+  }, []);
+
+  const onCancelModal = useCallback(() => {
+    resetDraftFromValue();
+    onCloseModal();
+  }, [resetDraftFromValue, onCloseModal]);
 
   const onApply = useCallback(() => {
     onChangeValue(expression, type);
@@ -131,22 +158,22 @@ const JsonAtaInput: FC<Props> = ({
         inputClassName={inputClassName}
       >
         <DialFormPopup
-          onClose={onCloseModal}
+          onClose={onCancelModal}
           header={header}
           portalId="jsonAtaInputModal"
           open={isModalOpen}
           onSubmit={onApply}
           submitLabel={t(ButtonsI18nKey.Apply)}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
-          onCancel={onCloseModal}
+          onCancel={onCancelModal}
           disableSubmitButton={!expression}
         >
           <div className="px-6 py-4 h-[540px] flex flex-col gap-4">
             <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
-            <div className="relative" ref={expressionFieldRef}>
+            <div className="relative" ref={onExpressionFieldRef}>
               <DialTextarea
                 id="expression"
-                className="resize-y !min-h-[36px] !max-h-[76px]"
+                className={classNames('resize-y !min-h-[36px] !max-h-[164px]', textareaScrollClassnames)}
                 labelProps={{ label: header, required: true }}
                 placeholder={t(EntityPlaceholdersI18nKey.Expression)}
                 value={expression}
