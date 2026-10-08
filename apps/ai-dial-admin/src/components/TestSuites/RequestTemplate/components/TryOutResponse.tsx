@@ -112,15 +112,6 @@ const TryOutResponsePreview: FC<Props> = ({
 }) => {
   const t = useI18n();
   const requestBody = resolvedRequest.body as object;
-  const isError = isMcp
-    ? (response as Record<string, unknown>).isError
-    : !(response.statusCode >= 200 && response.statusCode < 300);
-  const alertMessage = isMcp
-    ? isError
-      ? t(TestSuitesI18nKey.ToolCallFailed)
-      : t(TestSuitesI18nKey.ToolCallSucceeded)
-    : `${response.statusCode}`;
-  const alertVariant = isError ? NotificationVariant.Error : NotificationVariant.Success;
 
   const turnCounts = useMemo(
     () => (testSuite ? getRequestTurnCounts(testSuite, schema, multiTurnData?.length ?? 0) : [history?.length ?? 1]),
@@ -133,8 +124,34 @@ const TryOutResponsePreview: FC<Props> = ({
     [history, turnCounts],
   );
 
+  // Multi-request / multi-turn history owns the body UI. A missing group (skipped after fail-fast)
+  // must stay empty — never fall through to the top-level last-invocation pair (issue #4720).
+  const usesHistorySections = !!(history?.length && shape !== 'single');
+
+  // Status banner must follow the selected request tab, not the suite-level last invocation
+  // (which is what made chat show a red "0" after a later request failed).
+  const selectedHistoryGroup =
+    usesHistorySections && (shape === 'requests' || shape === 'combined')
+      ? groups.find((item) => item.requestIndex === selectedRequestIndex)
+      : undefined;
+  const isSelectedRequestSkipped =
+    usesHistorySections && (shape === 'requests' || shape === 'combined') && !selectedHistoryGroup;
+  const selectedEntry = selectedHistoryGroup?.turns.at(-1)?.item;
+  const bannerResponse = selectedEntry?.response ?? response;
+  const bannerGrafanaUrl = selectedEntry?.grafanaTraceUrl ?? grafanaTraceUrl;
+
+  const isError = isMcp
+    ? (bannerResponse as Record<string, unknown>).isError
+    : !(bannerResponse.statusCode >= 200 && bannerResponse.statusCode < 300);
+  const alertMessage = isMcp
+    ? isError
+      ? t(TestSuitesI18nKey.ToolCallFailed)
+      : t(TestSuitesI18nKey.ToolCallSucceeded)
+    : `${bannerResponse.statusCode}`;
+  const alertVariant = isError ? NotificationVariant.Error : NotificationVariant.Success;
+
   const historyContent = useMemo(() => {
-    if (!history?.length || shape === 'single') {
+    if (!usesHistorySections) {
       return null;
     }
 
@@ -170,23 +187,27 @@ const TryOutResponsePreview: FC<Props> = ({
     }
 
     return null;
-  }, [history, shape, groups, turnCounts, isRequestSend, t, selectedRequestIndex]);
+  }, [usesHistorySections, shape, groups, turnCounts, isRequestSend, t, selectedRequestIndex]);
 
   return (
     <>
-      <DialNotification message={alertMessage} variant={alertVariant}>
-        {grafanaTraceUrl && (
-          <DialNeutralButton
-            size={ElementSize.Small}
-            className="w-fit"
-            iconBefore={<Grafana />}
-            label={t(RunsI18nKey.GrafanaRun)}
-            onClick={() => window.open(grafanaTraceUrl, '_blank')}
-          />
-        )}
-      </DialNotification>
+      {isSelectedRequestSkipped ? null : (
+        <DialNotification message={alertMessage} variant={alertVariant}>
+          {bannerGrafanaUrl && (
+            <DialNeutralButton
+              size={ElementSize.Small}
+              className="w-fit"
+              iconBefore={<Grafana />}
+              label={t(RunsI18nKey.GrafanaRun)}
+              onClick={() => window.open(bannerGrafanaUrl, '_blank')}
+            />
+          )}
+        </DialNotification>
+      )}
 
-      {historyContent ?? (
+      {usesHistorySections ? (
+        historyContent
+      ) : (
         <>
           <JsonCollapsible title={t(BasicI18nKey.Request)} entity={requestBody} isLoading={isRequestSend} />
           {responseBody}
