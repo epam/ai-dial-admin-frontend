@@ -76,6 +76,16 @@ describe('FailureRowDetail', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresStageValue)).toBeTruthy();
   });
 
+  // The code typography class sets `white-space: nowrap`, under which `overflow-wrap` does nothing.
+  test('lets a long unbroken error wrap rather than run past its box', () => {
+    renderDetail(dlqItem({ error: 'I/O error on POST request for "http://dial-adas.svc.cluster.local:80/v1/x"' }));
+
+    const line = screen.getByText(/I\/O error on POST/);
+
+    expect(line.className).toContain('whitespace-normal');
+    expect(line.className).toContain('[overflow-wrap:anywhere]');
+  });
+
   test('presents a multi-part validation message one failure per line', () => {
     renderDetail(dlqItem({ error: 'first failure; second failure' }));
 

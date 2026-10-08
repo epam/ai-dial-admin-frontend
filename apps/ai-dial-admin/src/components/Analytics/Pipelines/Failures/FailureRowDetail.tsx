@@ -140,23 +140,28 @@ const FailureRowDetail: FC<Props> = ({
 
       <div className="flex flex-col gap-1">
         <span className="dial-tiny-text text-secondary">{t(AnalyticsPipelinesI18nKey.FailuresError)}</span>
-        <div className="rounded bg-layer-4 p-3">
+        <div className="relative rounded bg-layer-4 p-3 pr-10">
+          {/* Fixed to the corner rather than following the last line, so it stays in one place however the
+              message wraps. The right padding keeps the text out from under it. */}
+          {lines.length > 0 && (
+            <CopyButton
+              className="absolute right-2 top-2"
+              value={item.error ?? ''}
+              valueLabel={t(AnalyticsPipelinesI18nKey.FailuresError)}
+              size={ElementSize.Small}
+            />
+          )}
           <div className="flex min-w-0 flex-col gap-1">
             {lines.length ? (
               // `anywhere` rather than `break-word`: only it lowers the line's minimum width, so a URL with no
-              // break opportunity wraps inside the block instead of running under its edge. The message is never
-              // clipped, so its copy follows the last line rather than an ellipsis.
+              // break opportunity wraps inside the block instead of running under its edge. `whitespace-normal`
+              // because the code typography class sets `nowrap`, which switches wrapping off altogether.
               lines.map((line, index) => (
-                <span key={`${index}-${line}`} className="dial-code-text text-error [overflow-wrap:anywhere]">
+                <span
+                  key={`${index}-${line}`}
+                  className="dial-code-text whitespace-normal text-error [overflow-wrap:anywhere]"
+                >
                   {line}
-                  {index === lines.length - 1 && (
-                    <CopyButton
-                      className="ml-1 inline-flex align-middle"
-                      value={item.error ?? ''}
-                      valueLabel={t(AnalyticsPipelinesI18nKey.FailuresError)}
-                      size={ElementSize.Small}
-                    />
-                  )}
                 </span>
               ))
             ) : (
