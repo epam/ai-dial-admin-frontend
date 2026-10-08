@@ -147,19 +147,22 @@ describe('useCancellingRunsPoll', () => {
     expect(getRunMock).not.toHaveBeenCalled();
   });
 
-  test('reports a failed cancellation once when the run comes back running', async () => {
-    const { gridApi, nodes } = createGridApi([{ id: 'run-1', status: RunStatus.CANCELLING }]);
-    getRunMock.mockResolvedValue({ id: 'run-1', status: RunStatus.RUNNING });
+  test.each([RunStatus.RUNNING, RunStatus.PENDING])(
+    'reports a failed cancellation once when the run comes back %s',
+    async (status) => {
+      const { gridApi, nodes } = createGridApi([{ id: 'run-1', status: RunStatus.CANCELLING }]);
+      getRunMock.mockResolvedValue({ id: 'run-1', status });
 
-    renderHook(() => useCancellingRunsPoll(gridApi));
-    await tick();
+      renderHook(() => useCancellingRunsPoll(gridApi));
+      await tick();
 
-    expect(showNotification).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ type: NotificationType.error, title: RunsI18nKey.CancelRunFailed }),
-    );
-    expect(nodes[0].setData).toHaveBeenCalledWith(expect.objectContaining({ status: RunStatus.RUNNING }));
-  });
+      expect(showNotification).toHaveBeenCalledOnce();
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ type: NotificationType.error, title: RunsI18nKey.CancelRunFailed }),
+      );
+      expect(nodes[0].setData).toHaveBeenCalledWith(expect.objectContaining({ status }));
+    },
+  );
 
   test('reports one failed cancellation per regressing run', async () => {
     const { gridApi } = createGridApi([
