@@ -83,6 +83,16 @@ describe('RequestsSidebar', () => {
     expect(onRename).toHaveBeenCalledWith(1, 'Renamed');
   });
 
+  test('pre-fills Rename with the fallback label when the request has no stored name', async () => {
+    const user = userEvent.setup();
+    renderSidebar();
+
+    await user.click(getActionsTrigger(2));
+    await user.click(screen.getByRole('menuitem', { name: ActionMenuOperationI18nKey.Rename }));
+
+    expect(screen.getByDisplayValue(`${TestSuitesI18nKey.Request} 3`)).toBeInTheDocument();
+  });
+
   test('calls onRemove with the row index when Delete is chosen for a non-first request', async () => {
     const user = userEvent.setup();
     const onRemove = vi.fn();

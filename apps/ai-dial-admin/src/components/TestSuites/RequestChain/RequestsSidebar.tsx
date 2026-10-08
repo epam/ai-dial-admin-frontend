@@ -136,7 +136,7 @@ const RequestsSidebar: FC<Props> = ({
       {renamingRequest && (
         <RenameRequestModal
           isOpen
-          initialName={renamingRequest.name}
+          initialName={renamingRequest.label}
           onClose={() => setRenameIndex(null)}
           onConfirm={(name) => {
             onRename(renamingRequest.index, name);
