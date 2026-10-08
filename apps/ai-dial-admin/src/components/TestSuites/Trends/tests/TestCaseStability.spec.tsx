@@ -46,7 +46,7 @@ describe('TestCaseStability', () => {
     expect(screen.getByText(TestSuitesI18nKey.TestCaseStability, { exact: false })).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByTestId('stability-grid')).toHaveTextContent('Run#1,Run#2');
+      expect(screen.getByTestId('stability-grid')).toHaveTextContent('Run#2,Run#1');
     });
   });
 

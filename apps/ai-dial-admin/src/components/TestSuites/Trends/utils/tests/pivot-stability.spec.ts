@@ -23,11 +23,11 @@ describe('pivotStabilitySummaries', () => {
     );
 
     expect(matrix.headerLabels).toEqual(['case-a', 'case-b']);
-    expect(matrix.rows.map((row) => row.label)).toEqual(['Run#1', 'Run#2']);
-    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-a')]).toBe(0.9);
-    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-b')]).toBe(0.4);
-    expect(matrix.rows[1].values[getStabilityTestCaseColId('case-a')]).toBe(0.8);
-    expect(matrix.cellMeta[matrix.rows[0].id][getStabilityTestCaseColId('case-a')].passed).toBe(true);
+    expect(matrix.rows.map((row) => row.label)).toEqual(['Run#2', 'Run#1']);
+    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-a')]).toBe(0.8);
+    expect(matrix.rows[1].values[getStabilityTestCaseColId('case-a')]).toBe(0.9);
+    expect(matrix.rows[1].values[getStabilityTestCaseColId('case-b')]).toBe(0.4);
+    expect(matrix.cellMeta[matrix.rows[1].id][getStabilityTestCaseColId('case-a')].passed).toBe(true);
   });
 
   test('marks missing test case × run pairs as undefined gaps', () => {
@@ -36,9 +36,10 @@ describe('pivotStabilitySummaries', () => {
       runOrder,
     );
 
-    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-a')]).toBe(0.5);
-    expect(matrix.rows[1].values[getStabilityTestCaseColId('case-a')]).toBeUndefined();
-    expect(matrix.cellMeta[matrix.rows[1].id][getStabilityTestCaseColId('case-a')]).toBeUndefined();
+    // Newest run first: run-2 (gap), then run-1 (score).
+    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-a')]).toBeUndefined();
+    expect(matrix.cellMeta[matrix.rows[0].id][getStabilityTestCaseColId('case-a')]).toBeUndefined();
+    expect(matrix.rows[1].values[getStabilityTestCaseColId('case-a')]).toBe(0.5);
   });
 
   test('last row wins for duplicate test case and run pairs', () => {
@@ -50,7 +51,14 @@ describe('pivotStabilitySummaries', () => {
       runOrder,
     );
 
-    expect(matrix.rows[0].values[getStabilityTestCaseColId('case-a')]).toBe(0.99);
-    expect(matrix.cellMeta[matrix.rows[0].id][getStabilityTestCaseColId('case-a')].passed).toBe(true);
+    const run1Row = matrix.rows.find((row) => row.label === 'Run#1');
+    expect(run1Row?.values[getStabilityTestCaseColId('case-a')]).toBe(0.99);
+    expect(matrix.cellMeta[run1Row!.id][getStabilityTestCaseColId('case-a')].passed).toBe(true);
+  });
+
+  test('orders rows newest run first', () => {
+    const matrix = pivotStabilitySummaries([], runOrder);
+
+    expect(matrix.rows.map((row) => row.label)).toEqual(['Run#2', 'Run#1']);
   });
 });

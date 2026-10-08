@@ -276,6 +276,25 @@
   }
 }
 
+// Heat-map tooltips render in AG Grid's popup parent (often outside `.heat-map-grid`).
+// When anchored above a cell, move the caret under the body (via order — Tailwind's
+// `flex-col` would otherwise win over `flex-direction: column-reverse`) and flip it.
+.heat-map-tooltip--above {
+  .heat-map-cell-tooltip-body {
+    order: 1;
+  }
+
+  .heat-map-cell-tooltip-arrow {
+    order: 2;
+    margin-top: -1px;
+    margin-bottom: 0;
+
+    .tooltip-arrow {
+      transform: rotate(180deg);
+    }
+  }
+}
+
 .heat-map-grid {
   // Keep AG Grid's internal horizontal scroll usable. overflow:visible on the header
   // viewport breaks scroll sync and clips trailing test-case columns.

@@ -12,6 +12,8 @@ export interface HeatMapTooltipCellResolution {
   source: HeatMapTooltipCellResolutionSource;
 }
 
+export const HEAT_MAP_TOOLTIP_ABOVE_CLASS = 'heat-map-tooltip--above';
+
 export const resolveCenteredPopupLeft = (
   anchorCenterX: number,
   parentLeft: number,
@@ -21,6 +23,39 @@ export const resolveCenteredPopupLeft = (
   const left = anchorCenterX - parentLeft - popupWidth / 2;
   const maxLeft = parentWidth - popupWidth;
   return Math.max(0, Math.min(left, maxLeft));
+};
+
+/**
+ * Prefer the tooltip just below the cell (arrow on top). When there isn't room in the
+ * popup parent, place it above and flip the arrow via {@link HEAT_MAP_TOOLTIP_ABOVE_CLASS}.
+ */
+export const resolveCenteredPopupTop = (
+  cellTop: number,
+  cellBottom: number,
+  parentTop: number,
+  parentHeight: number,
+  popupHeight: number,
+): { top: number; placedAbove: boolean } => {
+  const maxTop = Math.max(0, parentHeight - popupHeight);
+  const belowTop = cellBottom - parentTop;
+  const aboveTop = cellTop - parentTop - popupHeight;
+  const fitsBelow = belowTop <= maxTop && belowTop >= 0;
+  const fitsAbove = aboveTop >= 0;
+
+  if (fitsBelow) {
+    return { top: belowTop, placedAbove: false };
+  }
+  if (fitsAbove) {
+    return { top: Math.min(aboveTop, maxTop), placedAbove: true };
+  }
+
+  // Neither side fits fully — keep the popup in-bounds on the side with more space.
+  const spaceBelow = parentTop + parentHeight - cellBottom;
+  const spaceAbove = cellTop - parentTop;
+  if (spaceBelow >= spaceAbove) {
+    return { top: Math.min(belowTop, maxTop), placedAbove: false };
+  }
+  return { top: Math.max(0, aboveTop), placedAbove: true };
 };
 
 const resolveHeatMapTooltipCellFromPointer = (mouseEvent: MouseEvent | Touch): HTMLElement | null => {
@@ -75,6 +110,7 @@ export const centerHeatMapTooltipPopup = <TData>(params: PostProcessPopupParams<
   const cellRect = cellElement.getBoundingClientRect();
   const popup = params.ePopup;
   const popupWidth = popup.offsetWidth;
+  const popupHeight = popup.offsetHeight;
   const anchorCenterX = cellRect.left + cellRect.width / 2;
   const offsetParent = popup.offsetParent as HTMLElement | null;
   const parentRect = offsetParent?.getBoundingClientRect();
@@ -84,6 +120,16 @@ export const centerHeatMapTooltipPopup = <TData>(params: PostProcessPopupParams<
   }
 
   popup.style.left = `${resolveCenteredPopupLeft(anchorCenterX, parentRect.left, parentRect.width, popupWidth)}px`;
+
+  const { top, placedAbove } = resolveCenteredPopupTop(
+    cellRect.top,
+    cellRect.bottom,
+    parentRect.top,
+    parentRect.height,
+    popupHeight,
+  );
+  popup.style.top = `${top}px`;
+  popup.classList.toggle(HEAT_MAP_TOOLTIP_ABOVE_CLASS, placedAbove);
 
   return true;
 };
