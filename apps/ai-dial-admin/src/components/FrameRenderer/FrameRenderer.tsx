@@ -71,6 +71,9 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
           visualizerName: name || '',
         });
 
+        // The connector's sandbox lacks this token, so auth popups inherit it and get blocked.
+        containerRef.current.querySelector('iframe')?.sandbox.add('allow-popups-to-escape-sandbox');
+
         setVisualizerConnector?.(visualizerRef.current);
 
         return () => {
