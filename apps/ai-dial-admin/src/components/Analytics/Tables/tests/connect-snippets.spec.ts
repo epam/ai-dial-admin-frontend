@@ -7,6 +7,7 @@ import {
 import {
   buildConnectSnippets,
   buildFormatNotes,
+  buildRequiredColumns,
   buildSampleRow,
   toJsonLiteral,
   toPythonLiteral,
@@ -81,12 +82,10 @@ describe('buildSampleRow', () => {
     expect(typeof row.score).toBe('string');
   });
 
-  test('writes a timestamp in the space-separated form the insert path accepts', () => {
+  test('writes a timestamp as ISO-8601 with a T separator and an explicit zone, the only form the insert path accepts', () => {
     const row = buildSampleRow(table([column({ name: 'recorded_at', type: AnalyticsFieldType.Timestamp })]));
 
-    expect(row.recorded_at).toBe('2026-01-15 10:00:00.000');
-    expect(row.recorded_at).not.toContain('T');
-    expect(row.recorded_at).not.toContain('Z');
+    expect(row.recorded_at).toBe('2026-01-15T10:00:00.000Z');
   });
 
   test('shapes an array by its element type', () => {
@@ -192,6 +191,28 @@ describe('buildFormatNotes', () => {
     );
 
     expect(notes).toEqual([{ rule: ConnectFormatRule.Decimal, columns: ['total_cost'] }]);
+  });
+});
+
+describe('buildRequiredColumns', () => {
+  test('names every non-nullable column by its exposed name, in declared order', () => {
+    const required = buildRequiredColumns(
+      table([
+        column({ name: 'event_id', nullable: false }),
+        column({ name: 'note', nullable: true }),
+        column({ name: 'total_cost', source_name: 'total_money', nullable: false }),
+      ]),
+    );
+
+    expect(required).toEqual(['event_id', 'total_cost']);
+  });
+
+  test('omits platform-owned columns, which the platform fills in', () => {
+    expect(buildRequiredColumns(table([column({ name: '_ingested_at', nullable: false })]))).toEqual([]);
+  });
+
+  test('returns nothing when every column is nullable', () => {
+    expect(buildRequiredColumns(table([column({ name: 'note', nullable: true })]))).toEqual([]);
   });
 });
 

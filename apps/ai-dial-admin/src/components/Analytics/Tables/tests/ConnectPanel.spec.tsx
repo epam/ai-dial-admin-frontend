@@ -199,6 +199,34 @@ describe('ConnectPanel :: snippets', () => {
   });
 });
 
+describe('ConnectPanel :: rejections', () => {
+  test('states the forbidden rejection a key without a write role receives', async () => {
+    renderPanel();
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectForbidden)).toBeInTheDocument();
+  });
+
+  test('warns that non-nullable columns must be present when the table declares any', async () => {
+    renderPanel();
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectRequiredColumns)).toBeInTheDocument();
+  });
+
+  test('states no required-column rejection when every column is nullable', async () => {
+    render(
+      <ConnectPanel
+        table={{ ...table, columns: table.columns?.map((column) => ({ ...column, nullable: true })) }}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText(AnalyticsTablesI18nKey.ConnectForbidden)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRequiredColumns)).not.toBeInTheDocument();
+  });
+});
+
 describe('ConnectPanel :: unconfigured endpoint', () => {
   const renderUnconfiguredPanel = () =>
     render(<ConnectPanel table={table} apiBaseUrl="" flightUri="" onClose={vi.fn()} />);

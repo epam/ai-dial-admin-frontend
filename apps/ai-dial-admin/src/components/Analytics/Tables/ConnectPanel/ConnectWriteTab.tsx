@@ -16,6 +16,7 @@ interface Props {
   curlSnippet: string;
   restEndpointSnippet: string;
   formatNotes: ConnectFormatNote[];
+  requiredColumns: string[];
   isBaseUrlPlaceholder: boolean;
   writeRoles: string[];
   isRolesLoading: boolean;
@@ -36,6 +37,7 @@ const ConnectWriteTab: FC<Props> = ({
   curlSnippet,
   restEndpointSnippet,
   formatNotes,
+  requiredColumns,
   isBaseUrlPlaceholder,
   writeRoles,
   isRolesLoading,
@@ -107,8 +109,13 @@ const ConnectWriteTab: FC<Props> = ({
           <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
             {t(AnalyticsTablesI18nKey.ConnectUnknownColumn)}
           </li>
+          {requiredColumns.length > 0 && (
+            <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
+              {t(AnalyticsTablesI18nKey.ConnectRequiredColumns, { columns: requiredColumns.join(', ') })}
+            </li>
+          )}
           <li className="dial-tiny-text text-secondary border-l-2 border-tertiary pl-3">
-            {t(AnalyticsTablesI18nKey.ConnectNotAuthorized)}
+            {t(AnalyticsTablesI18nKey.ConnectForbidden)}
           </li>
         </ul>
       </section>

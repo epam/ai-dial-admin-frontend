@@ -11,6 +11,7 @@ import ConnectWriteTab from '@/src/components/Analytics/Tables/ConnectPanel/Conn
 import {
   buildConnectSnippets,
   buildFormatNotes,
+  buildRequiredColumns,
   isEnrichmentRead,
   isReadProjectionSubset,
 } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
@@ -96,6 +97,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
     [table, apiBaseUrl, flightUri],
   );
   const formatNotes = useMemo(() => buildFormatNotes(table), [table]);
+  const requiredColumns = useMemo(() => buildRequiredColumns(table), [table]);
   const isProjectionSubset = useMemo(() => isReadProjectionSubset(table), [table]);
   const tabs = useMemo(
     () => [
@@ -147,6 +149,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
               curlSnippet={snippets.curlWrite}
               restEndpointSnippet={snippets.restEndpoint}
               formatNotes={formatNotes}
+              requiredColumns={requiredColumns}
               isBaseUrlPlaceholder={!apiBaseUrl?.trim()}
               writeRoles={writeRoles}
               isRolesLoading={isRolesLoading}

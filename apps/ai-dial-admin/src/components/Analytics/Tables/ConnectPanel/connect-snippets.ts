@@ -104,6 +104,15 @@ export const buildFormatNotes = (table: AnalyticsTable): ConnectFormatNote[] => 
   }));
 };
 
+/**
+ * The columns every row must carry with a non-null value — the insert path rejects a row that omits
+ * one or sends null. Named by the exposed name, like the format notes, since that is what the grid shows.
+ */
+export const buildRequiredColumns = (table: AnalyticsTable): string[] =>
+  writableColumns(table)
+    .filter((column) => !column.nullable)
+    .map((column) => column.name);
+
 const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || ANALYTICS_BASE_URL_PLACEHOLDER;
 
 const resolveFlightUri = (flightUri: string): string =>
