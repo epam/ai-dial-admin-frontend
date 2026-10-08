@@ -24,7 +24,7 @@ import {
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SUITE_RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
@@ -252,7 +252,10 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   return (
     <>
       <div className="size-full flex flex-col">
-        <div className="flex flex-row justify-end mb-2">
+        <div className="flex flex-row justify-between items-center mb-2">
+          <span className="text-sm text-secondary">
+            {t(TabsI18nKey.Runs)}: {runs?.length ?? 0}
+          </span>
           <DialGhostButton
             label={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} aria-hidden />}

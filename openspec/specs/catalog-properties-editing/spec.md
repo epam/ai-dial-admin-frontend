@@ -78,10 +78,13 @@ DIAL Core never checks a deployment's own kind against the schema's `dial:catalo
 deliberate cross-kind pairing is legal and the picker SHALL keep it reachable rather than refusing a
 pairing Core accepts. The filter is a default, not a constraint.
 
-In the filtered view the grid SHALL present the schema's `$id` alone. The entity kind is a constant
-there, and the display name distinguishes nothing — display names are not unique, so the `$id` is the
-only column that identifies a schema. When the filter is relaxed the grid SHALL present the display
-name and the entity kind alongside it, both of which carry information in that view.
+Both halves of the picker SHALL identify a schema by its `$id` and nothing else: the grid in its
+filtered view by a single `$id` column, and the inline selection by the `$id` as each option's only
+text. The entity kind is a constant under the filter, and the display name distinguishes nothing —
+display names are not unique, and because a schema is usually named after the kind it describes, a
+list already narrowed to one kind repeats that one word down its length. When the filter is relaxed
+the grid SHALL present the display name and the entity kind alongside the `$id`, both of which carry
+information in that view.
 
 Author and updated-time columns SHALL NOT be offered in either view: the read that unions the two
 populations carries no resource metadata, and adding them would cost one metadata request per row for
@@ -103,6 +106,11 @@ report only that.
 - **WHEN** an admin opens the picker and schemas matching the deployment's kind exist in both
   populations
 - **THEN** all of those are listed in one grid, whichever population each came from
+
+#### Scenario: The inline selection identifies each option by its id
+
+- **WHEN** an admin opens the inline catalog-schema selection
+- **THEN** each option reads as the schema's `$id`, with no display name beside or above it
 
 #### Scenario: The filtered grid shows the id alone
 
