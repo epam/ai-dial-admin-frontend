@@ -102,7 +102,7 @@ const AppView: FC<Props> = ({
   );
 
   useEffect(() => {
-    const appRunner = getAppRunner(originalApp, schemes, ApplicationRoute.AssetsApplications);
+    const appRunner = getAppRunner(originalApp, schemes);
 
     if (originalApp.mcp?.endpoint || (appRunner && appRunner?.['dial:applicationTypeMcp'])) {
       setTabs(getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags).toSpliced(1, 0, toolsTab(t)));

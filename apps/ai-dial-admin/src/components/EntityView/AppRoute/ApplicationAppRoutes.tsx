@@ -6,26 +6,24 @@ import { ApplicationSourceType, DialApplication, DialApplicationScheme } from '@
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { ApplicationRoute } from '@/src/types/routes';
 import EntityRoutes from './AppRoute';
 
 interface Props {
-  view: ApplicationRoute;
   roles?: DialRole[] | null;
   applicationRunners: DialApplicationScheme[];
   selectedEntity: DialApplication;
   onChangeEntity: (entity: DialApplication) => void;
 }
 
-const ApplicationAppRoutes: FC<Props> = ({ view, selectedEntity, applicationRunners, onChangeEntity, ...props }) => {
+const ApplicationAppRoutes: FC<Props> = ({ selectedEntity, applicationRunners, onChangeEntity, ...props }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const hasSchemaSource =
     selectedEntity.source?.$type === ApplicationSourceType.SCHEMA ||
     !!(selectedEntity as DialApplicationResource).application_type_schema_id;
 
   const appRunner = useMemo(
-    () => (hasSchemaSource ? getAppRunner(selectedEntity, applicationRunners, view) : undefined),
-    [applicationRunners, hasSchemaSource, selectedEntity, view],
+    () => (hasSchemaSource ? getAppRunner(selectedEntity, applicationRunners) : undefined),
+    [applicationRunners, hasSchemaSource, selectedEntity],
   );
 
   const routes = useMemo(
