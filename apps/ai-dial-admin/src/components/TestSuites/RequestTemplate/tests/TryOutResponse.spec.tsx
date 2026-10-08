@@ -204,6 +204,92 @@ describe('TryOutResponsePreview history', () => {
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
   });
 
+  test('shows empty content for a chain request skipped after fail-fast (no top-level fallback)', () => {
+    const threeRequestSuite: TestSuite = {
+      suiteType: SuiteType.Deployment,
+      inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }],
+      additionalRequests: [
+        { inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] },
+        { inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] },
+      ],
+    };
+    const history: TryOutHistoryEntry[] = [
+      { ...entry({ req: 1 }, { out: 'a' }), requestIndex: 0 },
+      {
+        resolvedRequest: { body: { model: 'bad', input: 'x' } },
+        response: { statusCode: 0, error: 'REQUEST_BODY_VALIDATION_ERROR', body: { error: 'bad model' } },
+        requestIndex: 1,
+      },
+    ];
+
+    render(
+      <TryOutResponsePreview
+        response={{ statusCode: 0, error: 'REQUEST_BODY_VALIDATION_ERROR', body: { error: 'bad model' } }}
+        resolvedRequest={{ body: { model: 'bad', input: 'x' } }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={threeRequestSuite}
+        schema={schema}
+        selectedRequestIndex={2}
+      />,
+    );
+
+    expect(screen.queryByText('JsonEditor:{"model":"bad","input":"x"}')).not.toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"error":"bad model"}')).not.toBeInTheDocument();
+    expect(screen.queryByText('TopLevelResponseBody')).not.toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
+  });
+
+  test('status banner follows the selected request, not the suite-level last failure', () => {
+    const threeRequestSuite: TestSuite = {
+      suiteType: SuiteType.Deployment,
+      inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }],
+      additionalRequests: [
+        { inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] },
+        { inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] },
+      ],
+    };
+    const history: TryOutHistoryEntry[] = [
+      { ...entry({ req: 1 }, { out: 'a' }), requestIndex: 0 },
+      {
+        resolvedRequest: { body: { model: 'bad' } },
+        response: { statusCode: 0, error: 'REQUEST_BODY_VALIDATION_ERROR' },
+        requestIndex: 1,
+      },
+    ];
+
+    const { rerender } = render(
+      <TryOutResponsePreview
+        response={{ statusCode: 0, error: 'REQUEST_BODY_VALIDATION_ERROR' }}
+        resolvedRequest={{ body: { model: 'bad' } }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={threeRequestSuite}
+        schema={schema}
+        selectedRequestIndex={0}
+      />,
+    );
+
+    expect(screen.getByText('200')).toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
+
+    rerender(
+      <TryOutResponsePreview
+        response={{ statusCode: 0, error: 'REQUEST_BODY_VALIDATION_ERROR' }}
+        resolvedRequest={{ body: { model: 'bad' } }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={threeRequestSuite}
+        schema={schema}
+        selectedRequestIndex={1}
+      />,
+    );
+
+    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.queryByText('200')).not.toBeInTheDocument();
+  });
+
   test('single-entry history uses top-level pair without Turn label', () => {
     render(
       <TryOutResponsePreview
