@@ -241,12 +241,12 @@ describe('CreateAsset', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/toolset%3Aplatform'));
   });
 
-  test('creates through the public action and redirects to the versioned path on a public folder', async () => {
+  test('creates through the public action and redirects through the selected folder and version', async () => {
     const push = vi.fn();
     (useRouter as Mock).mockReturnValue({ push, refresh: vi.fn() });
     vi.mocked(createApp).mockResolvedValue({
       success: true,
-      response: { name: 't', path: 'public/t__1.0', folderId: 'public/', version: '1.0' },
+      response: { name: 't' },
     } as never);
 
     const { ctx, setFilePath } = makeContext();
@@ -261,6 +261,6 @@ describe('CreateAsset', () => {
     expect(createApp).toHaveBeenCalledWith(expect.objectContaining({ name: 't', folderId: 'public/' }));
 
     await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
-    expect(push).toHaveBeenCalledWith('/assets-applications/t?path=public%2Ft__1.0');
+    expect(push).toHaveBeenCalledWith('/assets-applications/t?path=public%2Ft__1.0.0');
   });
 });
