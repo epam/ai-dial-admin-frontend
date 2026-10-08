@@ -61,7 +61,7 @@ export const getTargetUrl = (
       ? `applications/${(application as AssetApp)?._metadata?.path}`
       : application?.name;
   try {
-    const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
+    const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}&applicationName=${encodeURIComponent(frameConfig?.name as string)}`;
     return new URL(iframeUrl);
   } catch (error) {
     if (error) {
