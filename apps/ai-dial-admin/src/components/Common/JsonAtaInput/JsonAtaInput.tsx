@@ -45,7 +45,7 @@ const JsonAtaInput: FC<Props> = ({
   const [highlightIndex, setHighlightIndex] = useState(0);
   const expressionFieldRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  const resizeExpressionTextarea = useCallback(() => {
     const textarea = expressionFieldRef.current?.querySelector('textarea');
     if (!textarea) return;
 
@@ -53,7 +53,19 @@ const JsonAtaInput: FC<Props> = ({
     textarea.style.height = '0px';
     const contentHeight = textarea.scrollHeight;
     textarea.style.height = `${Math.max(contentHeight, currentHeight)}px`;
-  }, [expression, isModalOpen]);
+  }, []);
+
+  useLayoutEffect(() => {
+    resizeExpressionTextarea();
+  }, [expression, resizeExpressionTextarea]);
+
+  const onExpressionFieldRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      expressionFieldRef.current = node;
+      if (node) resizeExpressionTextarea();
+    },
+    [resizeExpressionTextarea],
+  );
 
   const treeNodes = useMemo(() => {
     if (!responseSchema || responseSchema.type !== 'object') return [];
@@ -143,10 +155,10 @@ const JsonAtaInput: FC<Props> = ({
         >
           <div className="px-6 py-4 h-[540px] flex flex-col gap-4">
             <SchemaTree responseSchema={responseSchema} onSelect={onPickFromSchema} />
-            <div className="relative" ref={expressionFieldRef}>
+            <div className="relative" ref={onExpressionFieldRef}>
               <DialTextarea
                 id="expression"
-                className="resize-y !min-h-[36px] !max-h-[76px]"
+                className="resize-y !min-h-[36px] !max-h-[164px]"
                 labelProps={{ label: header, required: true }}
                 placeholder={t(EntityPlaceholdersI18nKey.Expression)}
                 value={expression}
