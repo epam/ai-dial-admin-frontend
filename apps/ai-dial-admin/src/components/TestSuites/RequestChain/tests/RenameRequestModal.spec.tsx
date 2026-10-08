@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import RenameRequestModal from '../RenameRequestModal';
 
 describe('RenameRequestModal', () => {
@@ -27,6 +27,24 @@ describe('RenameRequestModal', () => {
   test('disables Confirm when the name is blank', () => {
     render(<RenameRequestModal isOpen initialName="" onClose={vi.fn()} onConfirm={vi.fn()} />);
 
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Confirm })).toBeDisabled();
+  });
+
+  test('disables Confirm and shows the length hint for a 1-character name', () => {
+    render(<RenameRequestModal isOpen initialName="Requests 2" onClose={vi.fn()} onConfirm={vi.fn()} />);
+
+    fireEvent.change(screen.getByDisplayValue('Requests 2'), { target: { value: 'a' } });
+
+    expect(screen.getByText(ErrorI18nKey.MinMaxLength)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Confirm })).toBeDisabled();
+  });
+
+  test('disables Confirm and shows the length hint when the name exceeds 255 characters', () => {
+    render(<RenameRequestModal isOpen initialName="Requests 2" onClose={vi.fn()} onConfirm={vi.fn()} />);
+
+    fireEvent.change(screen.getByDisplayValue('Requests 2'), { target: { value: 'a'.repeat(256) } });
+
+    expect(screen.getByText(ErrorI18nKey.MinMaxLength)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Confirm })).toBeDisabled();
   });
 
