@@ -39,6 +39,7 @@ interface Props {
   fileType: ImportFileType;
   isFilesValid?: boolean;
   configScope: ExportComponentType;
+  isAdminApiEnabled?: boolean;
   deploymentsEnabled?: boolean;
   isAnalyticsEnabled?: boolean;
   analyticsPolicy: CatalogResolutionPolicy;
@@ -54,6 +55,7 @@ const Files: FC<Props> = ({
   fileType,
   isFilesValid,
   configScope,
+  isAdminApiEnabled = true,
   deploymentsEnabled,
   isAnalyticsEnabled,
   analyticsPolicy,
@@ -70,8 +72,8 @@ const Files: FC<Props> = ({
   const isAnalytics = configScope === ExportComponentType.ANALYTICS;
 
   const scopes = useMemo(
-    () => getConfigScopes(!!deploymentsEnabled, !!isAnalyticsEnabled),
-    [deploymentsEnabled, isAnalyticsEnabled],
+    () => getConfigScopes(isAdminApiEnabled, !!deploymentsEnabled, !!isAnalyticsEnabled),
+    [isAdminApiEnabled, deploymentsEnabled, isAnalyticsEnabled],
   );
 
   const [activeResolution, setActiveResolution] = useState(ConflictResolutionPolicy.OVERRIDE);

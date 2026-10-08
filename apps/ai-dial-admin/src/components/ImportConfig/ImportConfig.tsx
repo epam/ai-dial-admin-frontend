@@ -9,6 +9,7 @@ import {
   importJsonConfigs,
   importZipConfig,
 } from '@/src/app/[lang]/import-config/actions';
+import { getConfigScopes } from '@/src/components/Common/ConfigScopeSelector/utils';
 import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
@@ -27,11 +28,12 @@ import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
 import Files from './Files/Files';
 
 interface Props {
+  isAdminApiEnabled?: boolean;
   deploymentsEnabled?: boolean;
   isAnalyticsEnabled?: boolean;
 }
 
-const ImportConfig: FC<Props> = ({ deploymentsEnabled, isAnalyticsEnabled }) => {
+const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled, isAnalyticsEnabled }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { showNotification } = useNotification();
@@ -39,7 +41,9 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled, isAnalyticsEnabled }) => 
   const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
   const [fileType, setFileType] = useState(ImportFileType.ARCHIVE);
-  const [configScope, setConfigScope] = useState(ExportComponentType.ADMIN);
+  const [configScope, setConfigScope] = useState(
+    () => getConfigScopes(isAdminApiEnabled, !!deploymentsEnabled, !!isAnalyticsEnabled)[0],
+  );
   const getReqRef = useRef(useProtectedRequest());
   const [isImporting, setIsImporting] = useState(false);
   const [analyticsPolicy, setAnalyticsPolicy] = useState(CatalogResolutionPolicy.FAIL_IF_EXISTS);
@@ -180,6 +184,7 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled, isAnalyticsEnabled }) => 
           fileType={fileType}
           isFilesValid={!!isFilesValid()}
           configScope={configScope}
+          isAdminApiEnabled={isAdminApiEnabled}
           deploymentsEnabled={deploymentsEnabled}
           isAnalyticsEnabled={isAnalyticsEnabled}
           analyticsPolicy={analyticsPolicy}
