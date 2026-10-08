@@ -13,13 +13,13 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
   const hasValueDisplay = value.valueRow != null || value.valueText != null;
 
   return (
-    <div className="flex flex-col items-center isolate">
-      <div className="h-1 w-[9px] relative z-[2] -mb-px">
+    <div className="heat-map-cell-tooltip flex flex-col items-center isolate">
+      <div className="heat-map-cell-tooltip-arrow h-1 w-[9px] relative z-[2] -mb-px">
         <div className="absolute left-1/2 top-0 -translate-x-1/2">
           <div className="tooltip-arrow" />
         </div>
       </div>
-      <div className="z-[1] flex gap-3 items-center rounded border border-primary bg-blackout px-2 py-1">
+      <div className="heat-map-cell-tooltip-body z-[1] flex gap-3 items-center rounded border border-primary bg-blackout px-2 py-1">
         <div className="flex flex-col gap-1 items-start shrink-0">
           {value.rows.map((row) => (
             <span key={row.label} className="dial-tiny-text text-secondary whitespace-nowrap">
