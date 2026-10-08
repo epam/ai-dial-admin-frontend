@@ -21,8 +21,8 @@ export const READ_SNIPPET_LIMIT = 100;
 // Mock literals, one per column type, chosen so a copied row is valid input for that type.
 // Three are not the obvious choice and are load-bearing:
 //   Decimal   — a string, so the digits reach the store intact rather than through a JSON float.
-//   Timestamp — space-separated; the insert path rejects an ISO-8601 `T` separator or `Z` suffix,
-//               even though queries return this column in exactly that form.
+//   Timestamp — ISO-8601 with a `T` separator and an explicit zone; the insert path rejects a space
+//               separator, a missing zone, a bare date, and an epoch number.
 //   Enum      — unreachable in practice, and deliberately not a plausible value: an enum column's sample
 //               comes from its own declared domain (see `sampleFor`), because no fixed literal can be
 //               inside a domain the column chooses. This entry exists because the map is exhaustive over
@@ -35,7 +35,7 @@ export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValu
   [AnalyticsFieldType.Decimal]: '94.25',
   [AnalyticsFieldType.Boolean]: true,
   [AnalyticsFieldType.Date]: '2026-01-15',
-  [AnalyticsFieldType.Timestamp]: '2026-01-15 10:00:00.000',
+  [AnalyticsFieldType.Timestamp]: '2026-01-15T10:00:00.000Z',
   [AnalyticsFieldType.Object]: {},
   [AnalyticsFieldType.Array]: [],
   [AnalyticsFieldType.Enum]: 'example',

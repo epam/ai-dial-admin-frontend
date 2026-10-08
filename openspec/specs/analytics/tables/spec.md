@@ -1023,7 +1023,7 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 - `decimal` — a **quoted** numeric string, so the digits reach the store exactly rather than through a JSON float
 - `boolean` — a boolean literal in the snippet's own syntax (`True` in Python, `true` in JSON and shell)
 - `date` — a `YYYY-MM-DD` literal
-- `timestamp` — a **space-separated** `YYYY-MM-DD HH:MM:SS.mmm` literal, which is what the insert path accepts; an ISO-8601 `T` separator or `Z` suffix is rejected on write
+- `timestamp` — an ISO-8601 literal with a `T` separator and an explicit zone (`2026-01-15T10:00:00.000Z`), the only form the insert path accepts; a space separator, a missing zone, a bare date, or an epoch number is rejected with `422 validation_error`
 - `object` — an empty object literal
 - `array` — a literal array of two values shaped by the column's `element_type`
 - `enum` — **one of the column's own declared values** (its first), never a generic example string: the domain is closed and the server itself refuses a value outside it, so a placeholder literal is a row the reader cannot insert
@@ -1047,7 +1047,7 @@ A table with no declared columns SHALL still render every tab, with the write sn
 
 **The panel's format guidance SHALL be generated from the schema, exactly as its snippets are, and SHALL name this table's own columns rather than the types they happen to have.** For each declared column whose type carries a value-format rule — a timestamp's representation, a decimal's quoting, an array's element shape — the panel SHALL state the rule against the column's name, listing the columns of that type when there is more than one. A rule no declared column's type uses SHALL be omitted entirely, so a table of strings and integers shows no format guidance.
 
-The timestamp entry SHALL state the write format **and** that queries return ISO-8601, so the reader learns the two directions differ rather than discovering it from a rejected insert.
+The timestamp entry SHALL state the write format — ISO-8601 with `Z` or an explicit offset — **and** that it is the same form queries return, so a value read back can be written unchanged.
 
 Rules that are not per-column SHALL be stated separately from the per-column list. These are the write batch maximum (10 000 rows per request) and, on the Read tab, the row limits below.
 
@@ -1056,7 +1056,7 @@ The Read tab SHALL state the row limits per surface, because they differ in kind
 - **REST** (`/v1/queries/execute-sql`) — a query with no `LIMIT` runs with a default of 100; an explicit `LIMIT` above 1 000 is **rejected**, not reduced.
 - **Flight SQL** — an oversized `LIMIT` is **clamped** to the endpoint's cap, never rejected; a query whose result exceeds that cap fails outright and returns no partial page. The cap is deployment-configured, so the panel SHALL describe it rather than printing a number.
 
-After the write snippets — not before them, since the generated snippet already satisfies the rules above — the panel SHALL surface the two likeliest rejections, phrased as the message the caller sees and what to change: an unknown column, and an authorization failure. The unknown-column rejection SHALL be presented as one message covering both a mistaken display name and a `_`-prefixed platform column, because the backend does not distinguish them.
+After the write snippets — not before them, since the generated snippet already satisfies the rules above — the panel SHALL surface the likeliest rejections, phrased as the message the caller sees and what to change: an unknown column, a missing or null value in a non-nullable column, and an authorization failure. The authorization failure SHALL be stated as the `403 forbidden` the backend actually returns, never as "not authorized". The non-nullable rejection (`422`, "column '<col>' is not nullable and must be present with a non-null value") SHALL name this table's non-nullable, non-platform columns, and SHALL be omitted when the table has none. The unknown-column rejection SHALL be presented as one message covering both a mistaken display name and a `_`-prefixed platform column, because the backend does not distinguish them.
 
 #### Scenario: Write snippets key by the physical source name
 
@@ -1099,11 +1099,17 @@ After the write snippets — not before them, since the generated snippet alread
 - **WHEN** the **Read data** tab renders
 - **THEN** it states that any of the table's columns may be selected, so the snippet's projection is not read as a restriction
 
-#### Scenario: Timestamp columns use the insert format and name the asymmetry
+#### Scenario: Timestamp columns use the insert format
 
 - **WHEN** a table has a `timestamp` column
-- **THEN** its value in the write snippets is a space-separated `YYYY-MM-DD HH:MM:SS.mmm` literal, with no `T` separator and no `Z` suffix
-- **AND** the format guidance states that queries return that column as ISO-8601
+- **THEN** its value in the write snippets is the ISO-8601 literal `2026-01-15T10:00:00.000Z`
+- **AND** the format guidance states that this is the same form queries return
+
+#### Scenario: Non-nullable columns are named as required
+
+- **WHEN** a writable table declares non-nullable columns
+- **THEN** the rejection guidance names each of them as required with a non-null value in every row
+- **AND** when every column is nullable, no such rejection is shown
 
 #### Scenario: Decimal columns are quoted
 

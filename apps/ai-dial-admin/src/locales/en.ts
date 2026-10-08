@@ -3317,7 +3317,7 @@ export default {
       'Flight SQL instead clamps an oversized LIMIT to its configured cap rather than rejecting it. A query whose result exceeds that cap fails outright instead of streaming a partial page.',
     ConnectFormats: 'Value formats in this table',
     ConnectFormatTimestamp:
-      '{columns} — send as YYYY-MM-DD HH:MM:SS.mmm; a T separator or trailing Z is rejected. Queries return this value as ISO-8601, so the two directions differ.',
+      '{columns} — send as ISO-8601 with Z or an explicit offset, e.g. 2026-01-15T10:00:00.000Z. This is the same form queries return, so a value read back can be written unchanged.',
     ConnectFormatDate: '{columns} — send as YYYY-MM-DD.',
     ConnectFormatDecimal:
       '{columns} — quoted, so the digits arrive exactly. A plain number is accepted too, but passes through a float and loses precision beyond what a double carries.',
@@ -3327,7 +3327,9 @@ export default {
     ConnectRejected: 'If a row is rejected',
     ConnectUnknownColumn:
       '"unknown column" — the row names something this table does not have. Check it against the Name column in the grid, not Display name, and drop any field starting with an underscore; the platform fills those in.',
-    ConnectNotAuthorized: '"not authorized" — the key carries none of the write roles listed above.',
+    ConnectRequiredColumns:
+      '422 "is not nullable and must be present with a non-null value" — every row must carry {columns}, each with a non-null value.',
+    ConnectForbidden: '403 forbidden — the key carries none of the write roles listed above.',
     ConnectPython: 'Python',
     ConnectPythonHint: 'Python 3.11 or newer, standard library only — nothing to install.',
     ConnectCurl: 'cURL',
