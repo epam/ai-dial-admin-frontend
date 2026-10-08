@@ -24,8 +24,8 @@ export interface DialTokenizer {
 
 export interface DialModelPricing {
   unit?: PricingType;
-  prompt?: string;
-  completion?: string;
+  prompt?: PricingRate;
+  completion?: PricingRate;
   // An absent cache rate tells DIAL Core to bill cached tokens at the prompt rate; '0' bills them as
   // free. Never default these to '0' — the two mean different invoices. A decision tree carries the
   // same rule per branch: an omitted ifTrue/ifFalse falls back to the prompt rate.
@@ -64,8 +64,8 @@ export interface PricingRateNode {
   ifFalse?: PricingRate;
 }
 
-// A cache rate on the wire: a flat per-token rate string, or Core's recursive decision tree whose
-// branches are themselves the same union. Flat is distinguished by typeof, mirroring Core's
+// A model pricing rate on the wire: a flat per-token rate string, or Core's recursive decision tree
+// whose branches are themselves the same union. Flat is distinguished by typeof, mirroring Core's
 // PricingRate (de)serializers.
 export type PricingRate = string | PricingRateNode;
 
