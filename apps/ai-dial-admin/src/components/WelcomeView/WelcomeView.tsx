@@ -13,6 +13,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getIsConfigTransferEnabled } from '@/src/utils/env/get-config-transfer-toggle';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { WelcomeViewI18nKey } from './i18n';
 import MenuGroup from './MenuGroup';
@@ -60,7 +61,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
       <div className="mb-6 flex flex-col">
         <h2 className="mb-3">{t(WelcomeViewI18nKey.QuickActions)}</h2>
         <div className="flex flex-row gap-x-3">
-          {!isReadOnlyAdmin && featureFlags.adminApiEnabled && (
+          {!isReadOnlyAdmin && getIsConfigTransferEnabled(featureFlags) && (
             <>
               <DialNeutralButton
                 iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} widths={24} height={24} />}
