@@ -1,3 +1,4 @@
+import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { DlqStage } from '@/src/models/analytics/pipeline-dlq';
 
 /**
@@ -31,6 +32,20 @@ export const DLQ_STAGE_COLOR: Record<DlqStage, string> = {
   [DlqStage.Upsert]: 'bg-red-400',
   [DlqStage.GroupFetch]: 'bg-orange-400',
   [DlqStage.GroupMap]: 'bg-secondary',
+};
+
+/**
+ * What each stage does and what a failure there means, in words for a reader who has not read the runner.
+ * A record over every stage, so a stage added to the model fails to compile until it is described.
+ */
+export const DLQ_STAGE_DESCRIPTION: Record<DlqStage, AnalyticsPipelinesI18nKey> = {
+  [DlqStage.InputMap]: AnalyticsPipelinesI18nKey.FailuresStageDescInputMap,
+  [DlqStage.DialCall]: AnalyticsPipelinesI18nKey.FailuresStageDescDialCall,
+  [DlqStage.Validate]: AnalyticsPipelinesI18nKey.FailuresStageDescValidate,
+  [DlqStage.OutputMap]: AnalyticsPipelinesI18nKey.FailuresStageDescOutputMap,
+  [DlqStage.Upsert]: AnalyticsPipelinesI18nKey.FailuresStageDescUpsert,
+  [DlqStage.GroupFetch]: AnalyticsPipelinesI18nKey.FailuresStageDescGroupFetch,
+  [DlqStage.GroupMap]: AnalyticsPipelinesI18nKey.FailuresStageDescGroupMap,
 };
 
 /** The tallest the failures grid grows before it scrolls itself: enough rows to scan, still a card. */
