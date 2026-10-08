@@ -302,8 +302,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   t: (s: string) => string,
   view: ActivityAuditView = ActivityAuditView.Config,
   isSingleEntity = false,
+  // Config groups under the admin Import parent; Analytics passes it for the global page, where it builds Import rows.
+  hasRowExpander = !isSingleEntity && view === ActivityAuditView.Config,
 ): ColDef[] => [
-  ...(!isSingleEntity && view === ActivityAuditView.Config
+  ...(hasRowExpander
     ? [
         {
           headerName: '',

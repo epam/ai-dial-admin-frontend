@@ -447,11 +447,11 @@ describe('ActivityAuditList :: Analytics view rows', () => {
     expect(getAnalyticsActivitiesMock).toHaveBeenCalledOnce();
   });
 
-  test('renders neither the expander column nor the Version column', () => {
+  test('renders the expander column for import groups and no Version column', () => {
     render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
 
     const fields = lastColumnDefs().map((column) => column.field);
-    expect(fields).not.toContain('expanderColumn');
+    expect(fields).toContain('expanderColumn');
     expect(fields).not.toContain('version');
     expect(fields).toContain(RESOURCE_ID_FIELD);
   });
@@ -1096,5 +1096,100 @@ describe('ActivityAuditList :: Since Creation option', () => {
         },
       ]),
     );
+  });
+});
+
+describe('ActivityAuditList :: Analytics import grouping', () => {
+  const IMPORT_ID_FIELD = 'importId';
+  const GROUP_ID = 'import:i-1';
+
+  const isImportRequest = (args: unknown[]) =>
+    ((args[3] ?? []) as FilterDto[]).some((filter) => filter.column === IMPORT_ID_FIELD);
+
+  const importRequests = () => getAnalyticsActivitiesMock.mock.calls.filter(isImportRequest);
+
+  const listedIds = (successCallback: ReturnType<typeof vi.fn>) =>
+    (successCallback.mock.calls[0][0] as DialActivity[]).map((row) => row.activityId);
+
+  const imported = (activityId: string) =>
+    activity({ activityId, importId: 'i-1', activityType: ActivityAuditType.Create });
+
+  test('groups an import under one Import row, requesting it by importId', async () => {
+    getAnalyticsActivitiesMock.mockImplementation((...args: unknown[]) =>
+      Promise.resolve(
+        isImportRequest(args)
+          ? onePage([imported('p1'), imported('p2')])
+          : onePage([imported('p1'), activity({ activityId: 'plain' }), imported('p2')]),
+      ),
+    );
+    render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
+    const { successCallback } = await requestRows();
+
+    expect(listedIds(successCallback)).toEqual([GROUP_ID, 'p1', 'p2', 'plain']);
+    expect(importRequests()).toHaveLength(1);
+    expect(importRequests()[0][3]).toContainEqual({
+      column: IMPORT_ID_FIELD,
+      value: 'i-1',
+      operator: FilterOperatorDto.INCLUDES,
+    });
+  });
+
+  test('lists an import spanning two pages once, complete', async () => {
+    getAnalyticsActivitiesMock.mockImplementation((...args: unknown[]) => {
+      if (isImportRequest(args)) return Promise.resolve(onePage([imported('p1'), imported('p2'), imported('p3')]));
+      return Promise.resolve(
+        args[1] === 0
+          ? { data: [imported('p1')], total: 3, totalPages: 2 }
+          : { data: [imported('p2'), activity({ activityId: 'plain' })], total: 3, totalPages: 2 },
+      );
+    });
+    render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
+    const { successCallback } = await requestRows(0, PAGE_SIZE * 3);
+
+    expect(listedIds(successCallback)).toEqual([GROUP_ID, 'p1', 'p2', 'p3', 'plain']);
+    expect(importRequests()).toHaveLength(1);
+  });
+
+  test.each([
+    ['rejected', () => Promise.reject(new Error('down'))],
+    ['answered with no page', () => Promise.resolve(null)],
+  ])('lists an import flat on this and later pages when its request is %s', async (_, failure) => {
+    getAnalyticsActivitiesMock.mockImplementation((...args: unknown[]) => {
+      if (isImportRequest(args)) return failure();
+      return Promise.resolve(
+        args[1] === 0
+          ? { data: [imported('p1')], total: 2, totalPages: 2 }
+          : { data: [imported('p2')], total: 2, totalPages: 2 },
+      );
+    });
+    render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
+    const { successCallback, failCallback } = await requestRows(0, PAGE_SIZE * 3);
+
+    expect(failCallback).not.toHaveBeenCalled();
+    expect(listedIds(successCallback)).toEqual(['p1', 'p2']);
+    // A failed import is not asked for again on the next page.
+    expect(importRequests()).toHaveLength(1);
+  });
+
+  test("requests an import's activities with the reader's filters as well", async () => {
+    getAnalyticsActivitiesMock.mockImplementation((...args: unknown[]) => Promise.resolve(onePage([imported('p1')])));
+    render(<ActivityAuditList viewMode={ActivityAuditView.Analytics} />);
+    await requestRows();
+
+    const feedFilters = getAnalyticsActivitiesMock.mock.calls.find(
+      (call) => !isImportRequest(call),
+    )?.[3] as FilterDto[];
+    expect(feedFilters.length).toBeGreaterThan(0);
+    expect(importRequests()[0][3]).toEqual(expect.arrayContaining(feedFilters));
+  });
+
+  test('keeps an entity Audit tab flat, without the expander column', async () => {
+    getAnalyticsActivitiesMock.mockResolvedValue(onePage([imported('p1')]));
+    renderAnalyticsTab();
+    const { successCallback } = await requestRows();
+
+    expect(listedIds(successCallback)).toEqual(['p1']);
+    expect(importRequests()).toHaveLength(0);
+    expect(lastColumnDefs().map((column) => column.field)).not.toContain('expanderColumn');
   });
 });

@@ -123,13 +123,23 @@ export const getAnalyticsActivityAuditColumns = (
   t: (key: string) => string,
   open?: (activity?: DialActivity) => void,
   isSingleEntity?: boolean,
+  isGlobalList?: boolean,
 ): ColDef[] => {
   const actions = [];
   if (open) {
-    actions.push(getOpenInNewTabOperation(open));
+    actions.push(
+      getOpenInNewTabOperation(
+        open,
+        void 0,
+        (_, node) => (node.data as DialActivity)?.activityType === ActivityAuditType.Import,
+      ),
+    );
   }
 
-  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity), ACTION_COLUMN(actions)];
+  return [
+    ...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, isSingleEntity, !!isGlobalList),
+    ACTION_COLUMN(actions),
+  ];
 };
 
 /**
