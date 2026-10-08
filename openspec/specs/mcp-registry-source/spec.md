@@ -62,11 +62,9 @@ Callers SHALL NOT provide filter values — the filter is an implementation deta
 
 A `getContainerMcpServers()` server action SHALL be created that accepts `{ search?, cursor?, limit }`, authenticates, and delegates to `McpRegistryApi.getContainerMcpServers()`. This replaces the current generic `getMcpServers()` action for container use cases.
 
-### Server Action Accumulates Results with minResults
+### Server Action Makes a Single Registry Fetch
 
-The `getContainerMcpServers` server action SHALL accept an optional `minResults` param. When provided, it SHALL fetch multiple BE pages until `minResults` results are accumulated or the upstream cursor is exhausted. When omitted, a single fetch SHALL be made.
-
-The accumulation loop SHALL NOT break on empty responses — only when the cursor is exhausted.
+The `getContainerMcpServers` server action SHALL make one BE request per call and SHALL NOT accumulate results across BE pages. The grid datasource fills a block: it SHALL request `MCP_REGISTRY_PAGE_SIZE` rows per block, repeat the call with the returned cursor while the block is short and a cursor remains, and remember the starting cursor of each block by its start row so an evicted block refetches from its own cursor.
 
 ### Typed Request and Filter DTOs
 

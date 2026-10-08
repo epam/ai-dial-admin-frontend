@@ -57,17 +57,13 @@ Callers SHALL NOT provide filter values — the filter is an implementation deta
 
 ### Requirement: Purpose-specific server action for toolset MCP servers
 
-A `getToolsetMcpServers()` server action SHALL be created that accepts `{ search?, cursor?, limit?, minResults? }`, authenticates via `getUserToken()`, and delegates to `McpRegistryApi.getToolsetMcpServers()`.
+A `getToolsetMcpServers()` server action SHALL be created that accepts `{ search?, cursor?, limit? }`, authenticates via `getUserToken()`, and delegates to `McpRegistryApi.getToolsetMcpServers()`.
 
-When `minResults` is provided, the action SHALL fetch multiple BE pages until `minResults` results are accumulated or the cursor is exhausted. The accumulation loop SHALL NOT break on empty responses — only when the cursor is exhausted.
+The action SHALL NOT accumulate results across BE pages; the grid datasource repeats the call when a block needs filling.
 
-#### Scenario: Single fetch without minResults
+#### Scenario: Single fetch
 - **WHEN** `getToolsetMcpServers({ search: 'test', limit: 10 })` is called
 - **THEN** a single API call is made and the result returned directly
-
-#### Scenario: Accumulated fetch with minResults
-- **WHEN** `getToolsetMcpServers({ limit: 10, minResults: 20 })` is called and first page returns 10 results with a cursor
-- **THEN** a second fetch is made with the cursor until 20+ results are accumulated or cursor exhausted
 
 ### Requirement: Preferred remote selection
 
