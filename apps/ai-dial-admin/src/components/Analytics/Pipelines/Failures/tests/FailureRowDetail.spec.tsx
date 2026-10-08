@@ -70,6 +70,12 @@ describe('FailureRowDetail', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresGrainWriteItem)).toBeTruthy();
   });
 
+  test('describes the stage in the detail, where a keyboard reader can reach it', () => {
+    renderDetail(dlqItem({ stage: DlqStage.Validate }));
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.FailuresStageValue)).toBeTruthy();
+  });
+
   test('presents a multi-part validation message one failure per line', () => {
     renderDetail(dlqItem({ error: 'first failure; second failure' }));
 

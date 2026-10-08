@@ -9,6 +9,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import CopyableText from '@/src/components/Common/CopyableText/CopyableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { errorLines, pathOf, scopeOf } from '@/src/components/Analytics/Pipelines/Failures/failures';
+import { DLQ_STAGE_DESCRIPTION } from '@/src/constants/analytics/pipeline-dlq';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
@@ -107,6 +108,13 @@ const FailureRowDetail: FC<Props> = ({
             })}
           />
         )}
+        <LabelledText
+          label={t(AnalyticsPipelinesI18nKey.FailuresStage)}
+          text={t(AnalyticsPipelinesI18nKey.FailuresStageValue, {
+            stage: item.stage,
+            description: t(DLQ_STAGE_DESCRIPTION[item.stage]),
+          })}
+        />
         <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresPath)} text={t(PATH_LABEL[pathOf(item)])} />
         <LabelledText label={t(AnalyticsPipelinesI18nKey.FailuresFailedAt)} text={failedAt} />
         {/* Plain text, not a link: the console has no page for a backfill run to link to. */}

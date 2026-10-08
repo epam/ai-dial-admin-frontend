@@ -2829,14 +2829,13 @@ export default {
     TriggerGroup: 'Group',
     EnabledYes: 'Enabled',
     EnabledNo: 'Disabled',
-    CronPreset: 'Runs',
-    CronExpression: 'Cron expression',
+    CronSchedule: 'Schedule',
+    CronPresets: 'Presets',
     CronInvalid: 'Enter a six-field cron expression: seconds, minutes, hours, day of month, month, day of week.',
     CronEveryMinute: 'Every minute',
     CronEveryFiveMinutes: 'Every 5 minutes',
     CronHourly: 'Hourly',
     CronDailyMidnight: 'Daily at midnight',
-    CronCustom: 'Custom',
     ReadyWhenIdle: 'Idle for',
     ReadyWhenMaxStaleness: 'Max staleness',
     ReadyWhenCostCeiling: 'Cost ceiling',
@@ -2869,9 +2868,10 @@ export default {
     NextRun: 'Next run',
     Lag: 'Behind its input',
     LagSeconds: '{count}s',
-    Backlog: 'Backlog',
-    BacklogYes: 'Working through a backlog',
-    BacklogNo: 'Caught up',
+    ProgressStatus: 'Status',
+    StatusUpToDate: 'Up to date',
+    StatusCatchingUp: 'Catching up',
+    DataUpTo: 'Data up to',
     DrainedAt: 'Drained at',
     ClampedByTitle: 'Waiting for its input',
     ClampedBy:
@@ -2901,7 +2901,7 @@ export default {
     RuntimeNotTracked: 'Not running',
     RuntimeNotTrackedTitle: 'Nothing is running this pipeline',
     RuntimeNotTrackedMessage:
-      'It is enabled, but the runtime service has not taken it on — either it cannot execute this declaration, or it has not picked the pipeline up yet. Check again shortly; if it persists, the service log names the reason.',
+      'The runtime service has not picked this pipeline up yet. This is normal for a minute after enabling or saving — use Read again. If it persists, the service cannot execute this declaration, and its log names the reason.',
     RuntimeHeld: 'Held',
     RuntimeOverBudget: 'Over budget',
     RuntimeBackpressured: 'Backpressured',
@@ -2914,7 +2914,6 @@ export default {
     SectionQueue: 'Queue',
     SectionGroups: 'Groups',
     SectionSpend: 'Spend today',
-    LastScan: 'Last scan',
     RunningNowYes: 'Running now',
     SectionProgress: 'Progress',
     RunFailedAt: 'Last run failed at',
@@ -3075,6 +3074,21 @@ export default {
     FailuresAllLoaded: '· all of them',
     FailuresFailedAt: 'Failed at',
     FailuresStage: 'Stage',
+    FailuresStageValue: '{stage}: {description}',
+    FailuresStageDescInputMap:
+      'Builds the model request from the source row, using the input mapping. A failure here means the row values could not be turned into a request.',
+    FailuresStageDescDialCall:
+      'Sends the request to the model through DIAL Core. A failure here is the model call itself: a refusal, a timeout or an error from the model or Core.',
+    FailuresStageDescValidate:
+      'Checks the model answer against the declared output schema. A failure here means the answer came back in a shape the pipeline cannot accept.',
+    FailuresStageDescOutputMap:
+      'Maps the validated answer onto the target table columns. A failure here means a value could not be converted into its column.',
+    FailuresStageDescUpsert:
+      'Writes the computed row into the target table. A failure here is the write, not the model.',
+    FailuresStageDescGroupFetch:
+      'Loads the member rows of a group for a group-triggered pipeline. A failure here means the group rows could not be read.',
+    FailuresStageDescGroupMap:
+      'Maps the member rows of a group into the model request. A failure here means the group could not be turned into a request.',
     FailuresError: 'Error',
     FailuresDetails: 'Details',
     FailuresActions: 'Actions',

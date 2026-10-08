@@ -153,6 +153,12 @@ describe('PipelineDetailView', () => {
     expect(alerts[0].compareDocumentPosition(facts()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  test('lets a long last error wrap instead of running past the alert', () => {
+    renderView({ state: { last_error: 'I/O error on POST request for "http://dial-adas.svc.cluster.local:80/v1/x"' } });
+
+    expect(screen.getByText(/I\/O error on POST/).closest('[class*="overflow-wrap"]')).not.toBeNull();
+  });
+
   test('raises nothing while the runtime reports no such state', () => {
     renderView({ state: { lag_seconds: 12 } });
 
@@ -563,7 +569,7 @@ describe('PipelineDetailView', () => {
 
     const input = boundField('dial_usage_log');
     const target = boundField('usage_rollup');
-    const runs = screen.getByLabelText(AnalyticsPipelinesI18nKey.CronPreset, { exact: false });
+    const runs = screen.getByLabelText(AnalyticsPipelinesI18nKey.CronSchedule, { exact: false });
 
     expect(input.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // What it reads and writes is settled before when it runs, which is the order the fields are filled in.

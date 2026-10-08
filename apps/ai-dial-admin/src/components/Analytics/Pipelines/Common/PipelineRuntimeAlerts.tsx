@@ -4,6 +4,7 @@ import { FC } from 'react';
 
 import { Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
+import { NOTIFICATION_MESSAGE_WRAP_CLASS } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Pipeline } from '@/src/models/analytics/pipeline';
@@ -42,6 +43,7 @@ const PipelineRuntimeAlerts: FC<Props> = ({ pipeline }) => {
           role="status"
           title={t(AnalyticsPipelinesI18nKey.LastErrorTitle)}
           message={state.last_error}
+          textClassName={NOTIFICATION_MESSAGE_WRAP_CLASS}
         />
       )}
 
