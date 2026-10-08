@@ -45,7 +45,7 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, primaryRunName, comparedRu
   const suiteName = testSuite?.name || suiteId;
 
   return (
-    <div className="flex flex-col gap-8 border-b border-primary pb-8 sm:flex-row">
+    <div className="flex flex-col gap-8 pb-8 sm:flex-row">
       {!!suiteId && (
         <DialLabelledText
           label={t(RunsI18nKey.TestSuite)}

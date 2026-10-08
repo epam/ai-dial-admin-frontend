@@ -76,7 +76,7 @@ const FileSelectInput: FC<Props> = ({ value, label, elementId, disabled, inputCl
                   <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
                 </div>
               )}
-              <div className="grow">
+              <div className="grow min-h-0 overflow-hidden">
                 {activeTab === EntityViewTab.Public && (
                   <PublicFileManager
                     value={isPublicFile ? filePath : ''}
