@@ -36,7 +36,7 @@ interface TestModel {
 
 describe('Pricing', () => {
   const renderPricing = (pricing?: DialModelPricing, onChangeModel = vi.fn()) => {
-    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} isAsset />);
+    render(<Pricing<TestModel> model={{ pricing }} onChangeModel={onChangeModel} />);
     return onChangeModel;
   };
 
@@ -58,13 +58,41 @@ describe('Pricing', () => {
     isReadOnlyAdminMock.mockReturnValue(false);
   });
 
-  test('renders a cache read and a cache write field alongside the existing rates', () => {
+  test('renders every rate field without an asset-specific prop', () => {
     renderPricing(tokenPricing);
 
     expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.PromptPrice })).toBeTruthy();
     expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.CompletionPrice })).toBeTruthy();
     expect(cacheReadField()).toBeTruthy();
     expect(cacheWriteField()).toBeTruthy();
+  });
+
+  test('renders flat rate controls in one row', () => {
+    const { container } = render(<Pricing<TestModel> model={{ pricing: tokenPricing }} onChangeModel={vi.fn()} />);
+
+    const pricingControls = container.querySelector('div.flex.gap-x-2.gap-y-4.items-start');
+    expect(pricingControls).toHaveClass('flex-row');
+  });
+
+  test('renders the pricing group vertically when a rate is conditional', () => {
+    const { container } = render(
+      <Pricing<TestModel>
+        model={{
+          pricing: {
+            ...tokenPricing,
+            prompt: {
+              test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+              ifTrue: '0.000006',
+              ifFalse: '0.00000375',
+            },
+          },
+        }}
+        onChangeModel={vi.fn()}
+      />,
+    );
+
+    const pricingControls = container.querySelector('div.flex.gap-x-2.gap-y-4.items-start');
+    expect(pricingControls).toHaveClass('flex-col');
   });
 
   test('displays stored cache rates scaled per million under the token unit', () => {
@@ -180,6 +208,34 @@ describe('Pricing', () => {
     expect(onChangeModel).toHaveBeenCalledWith({ pricing: undefined });
   });
 
+  test('converts a prompt rate to a conditional tree and preserves token scaling', async () => {
+    const user = userEvent.setup();
+    const onChangeModel = renderPricing({ unit: PricingType.Token, prompt: '0.0000008' });
+
+    const [promptToggle] = screen.getAllByRole('button', { name: ModelViewI18nKey.ConfigureConditional });
+    await user.click(promptToggle);
+
+    const model = onChangeModel.mock.lastCall?.[0] as TestModel | undefined;
+    const prompt = model?.pricing?.prompt;
+    expect(prompt).toMatchObject({ test: { operator: PricingOperator.EQ } });
+    expect(Number((prompt as PricingRateNode).ifTrue)).toBeCloseTo(8e-7, 12);
+    expect(Number((prompt as PricingRateNode).ifFalse)).toBeCloseTo(8e-7, 12);
+  });
+
+  test('displays every leaf of a stored completion tree per million', () => {
+    renderPricing({
+      unit: PricingType.Token,
+      completion: {
+        test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
+        ifTrue: '0.000006',
+        ifFalse: '0.00000375',
+      },
+    });
+
+    expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfTrue })).toHaveValue(6);
+    expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfFalse })).toHaveValue(3.75);
+  });
+
   const treeCacheWrite: PricingRate = {
     test: { field: 'ttl', operator: PricingOperator.EQ, value: '1h' },
     ifTrue: '0.000006',
@@ -228,8 +284,8 @@ describe('Pricing', () => {
     const user = userEvent.setup();
     const onChangeModel = renderPricing({ unit: PricingType.Token, cacheRead: '0.0000002' });
 
-    // Both cache fields are flat, so each offers a toggle; the first in the DOM is cache read.
-    const [cacheReadToggle] = screen.getAllByRole('button', { name: ModelViewI18nKey.ConfigureConditional });
+    // Prompt, completion, and both cache fields offer a toggle; cache read is third in the DOM.
+    const cacheReadToggle = screen.getAllByRole('button', { name: ModelViewI18nKey.ConfigureConditional })[2];
     await user.click(cacheReadToggle);
 
     const model = onChangeModel.mock.lastCall?.[0] as TestModel | undefined;
@@ -240,9 +296,9 @@ describe('Pricing', () => {
     expect(Number((cacheRead as PricingRateNode).ifFalse)).toBeCloseTo(2e-7, 12);
   });
 
-  test('renders an open tree fully disabled for a read-only administrator', () => {
+  test('renders an open prompt tree fully disabled for a read-only administrator', () => {
     isReadOnlyAdminMock.mockReturnValue(true);
-    renderPricing({ unit: PricingType.Token, cacheWrite: treeCacheWrite });
+    renderPricing({ unit: PricingType.Token, prompt: treeCacheWrite });
 
     expect(screen.queryByRole('button', { name: ModelViewI18nKey.UseFlatRate })).toBeNull();
     expect(screen.getByRole('spinbutton', { name: ModelViewI18nKey.IfTrue })).toBeDisabled();

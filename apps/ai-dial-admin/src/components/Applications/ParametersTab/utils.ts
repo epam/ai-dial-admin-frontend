@@ -57,7 +57,9 @@ export const getTargetUrl = (
   frameConfig?: FrameConfig | null,
 ) => {
   const id =
-    view === ApplicationRoute.AssetsApplications ? `applications/${(application as AssetApp).path}` : application?.name;
+    view === ApplicationRoute.AssetsApplications
+      ? `applications/${(application as AssetApp)?._metadata?.path}`
+      : application?.name;
   try {
     const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
     return new URL(iframeUrl);
@@ -71,19 +73,14 @@ export const getTargetUrl = (
 export const getAppRunner = (
   entity: DialApplication | DialApplicationResource,
   applicationSchemes?: DialApplicationScheme[] | null,
-  view?: ApplicationRoute,
 ): DialApplicationScheme | undefined => {
   if (!applicationSchemes) return entity as DialApplicationScheme;
 
   return applicationSchemes?.find((scheme) => {
-    const schemaSourceId =
-      view === ApplicationRoute.AssetsApplications
-        ? (entity as DialApplicationResource).application_type_schema_id
-        : getSchemaSourceId((entity as DialApplication).source);
-    const editorUrl =
-      view === ApplicationRoute.AssetsApplications
-        ? (entity as DialApplicationResource).editor_url
-        : (entity as DialApplication).editorUrl;
+    const resource = entity as DialApplicationResource;
+    const application = entity as DialApplication;
+    const schemaSourceId = resource.application_type_schema_id || getSchemaSourceId(application.source);
+    const editorUrl = resource.editor_url || application.editorUrl;
 
     return (
       (schemaSourceId && schemaSourceId === scheme.$id) ||

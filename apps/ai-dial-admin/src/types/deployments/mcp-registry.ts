@@ -72,7 +72,6 @@ export type McpRegistryFetchFn = (params: {
   search?: string;
   cursor?: string;
   limit?: number;
-  minResults?: number;
 }) => Promise<ServerActionResponse>;
 
 export interface McpServersRequestDto {

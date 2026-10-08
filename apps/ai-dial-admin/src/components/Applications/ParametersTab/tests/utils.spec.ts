@@ -16,6 +16,7 @@ import {
 } from '../utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import {
   ApplicationSourceType,
   DialApplication,
@@ -77,6 +78,18 @@ describe('getFrameConfig', () => {
 });
 
 describe('getAppRunner', () => {
+  test('returns scheme matching an application publication resource schema ID', () => {
+    const entity = { application_type_schema_id: 'scheme-123' } as unknown as DialApplicationResource;
+    const schemes = [
+      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
+      { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
+    ];
+
+    const result = getAppRunner(entity, schemes);
+
+    expect(result).toEqual(schemes[0]);
+  });
+
   test('returns scheme matching source applicationTypeSchemaId', () => {
     const entity = { source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'scheme-123' } };
     const schemes = [
@@ -721,7 +734,7 @@ describe('getTargetUrl', () => {
   };
 
   test('should return URL for AssetsApplications route', () => {
-    const application = { path: 'my-app/v1', name: 'my-app' } as any;
+    const application = { _metadata: { path: 'my-app/v1' }, name: 'my-app' } as any;
     const result = getTargetUrl(ApplicationRoute.AssetsApplications, application, frameConfig);
 
     expect(result).toBeInstanceOf(URL);

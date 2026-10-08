@@ -13,7 +13,8 @@ import { IconFileDescription } from '@tabler/icons-react';
 import { isEqual } from 'lodash';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { CACHE_LIMIT, infiniteGridOptions, SINGLE_ROW_SELECTION, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { MCP_REGISTRY_PAGE_SIZE } from '@/src/constants/deployments/mcp-registry';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { MCP_REGISTRY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
@@ -45,6 +46,8 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     ...SINGLE_ROW_SELECTION,
+    cacheBlockSize: MCP_REGISTRY_PAGE_SIZE,
+    maxBlocksInCache: Math.floor(CACHE_LIMIT / MCP_REGISTRY_PAGE_SIZE),
     selectionColumnDef: {
       ...SINGLE_ROW_SELECTION.selectionColumnDef,
       cellRenderer: (data: { data?: McpServer }) => {
@@ -84,44 +87,59 @@ const McpRegistryGrid: FC<Props> = ({ selectedServer, onSelect, fetchServers, vi
   );
 
   const gridDataSource: IDatasource = useMemo(() => {
-    let nextCursor = '';
+    // Registry cursor to start each block from, keyed by block start row, so a block evicted from the
+    // cache is refetched from its own cursor rather than the latest one
+    const blockCursors = new Map<number, string>();
     let filters: FilterDto[] = [];
     return {
-      getRows: (params: IGetRowsParams) => {
+      getRows: async (params: IGetRowsParams) => {
         gridApi?.setGridOption('loading', true);
         const currentFilters = getRequestFilters(params.filterModel);
         if (!isEqual(filters, currentFilters)) {
-          nextCursor = '';
+          blockCursors.clear();
         }
         filters = currentFilters;
+
+        if (params.startRow > 0 && !blockCursors.has(params.startRow)) {
+          params.failCallback();
+          gridApi?.setGridOption('loading', false);
+          return;
+        }
 
         const searchFilter = currentFilters.find(({ column }) => column === 'name');
         const search = searchFilter ? String(searchFilter.value) : undefined;
 
-        fetchServersRef
-          .current({
-            cursor: nextCursor || undefined,
-            limit: 100,
-            minResults: 100,
-            search,
-          })
-          .then(({ response, success }) => {
-            if (success) {
-              const servers = (response.servers || []).map((s: McpServerResponse) => ({
+        try {
+          const servers: McpServer[] = [];
+          let cursor = blockCursors.get(params.startRow) || undefined;
+
+          // A short page with a cursor would leave gaps in the block, so top it up to the block size
+          do {
+            const { response, success } = await fetchServersRef.current({
+              cursor,
+              limit: MCP_REGISTRY_PAGE_SIZE - servers.length,
+              search,
+            });
+            if (!success) {
+              params.failCallback();
+              return;
+            }
+            servers.push(
+              ...(response.servers || []).map((s: McpServerResponse) => ({
                 ...s.server,
                 updatedAt: (s._meta?.[REGISTRY_META_KEY] as Record<string, unknown>)?.updatedAt,
-              }));
-              nextCursor = String(response.metadata?.nextCursor || '');
-              params.successCallback(servers, nextCursor ? undefined : params.startRow + servers.length);
-            } else {
-              params.failCallback();
-            }
-            gridApi?.setGridOption('loading', false);
-          })
-          .catch(() => {
-            params.failCallback();
-            gridApi?.setGridOption('loading', false);
-          });
+              })),
+            );
+            cursor = response.metadata?.nextCursor || undefined;
+          } while (cursor && servers.length < MCP_REGISTRY_PAGE_SIZE);
+
+          blockCursors.set(params.startRow + MCP_REGISTRY_PAGE_SIZE, cursor ?? '');
+          params.successCallback(servers, cursor ? undefined : params.startRow + servers.length);
+        } catch {
+          params.failCallback();
+        } finally {
+          gridApi?.setGridOption('loading', false);
+        }
       },
     };
   }, [gridApi]);

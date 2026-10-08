@@ -5,21 +5,19 @@ import { useCallback } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModelPricing, PricingRate, PricingType } from '@/src/models/dial/model';
 import PricingRateControl from './PricingRateControl';
-import { getMultipliedRate, getMultipliedValue, getPriceRealValue, getRealRate } from './utils';
+import { getMultipliedRate, getRealRate } from './utils';
 
 interface Props<T> {
   model: T;
   onChangeModel: (model: T) => void;
-  isAsset?: boolean;
 }
 
-const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel, isAsset }: Props<T>) => {
+const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -45,6 +43,12 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
   // DIAL Core drops a model whose cache rates are set under any unit but `token`, so the inputs stay
   // disabled rather than letting that state be saved.
   const isCacheRateDisabled = !isTokenType || isReadOnlyAdmin;
+  const hasConditionalRate = [
+    model.pricing?.prompt,
+    model.pricing?.completion,
+    model.pricing?.cacheRead,
+    model.pricing?.cacheWrite,
+  ].some((rate) => typeof rate === 'object');
 
   const onChangePricingType = useCallback(
     (type: string) => {
@@ -57,23 +61,19 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
   );
 
   const onChangeCompletion = useCallback(
-    (completion?: number | string) => {
-      const value = getPriceRealValue(completion, isTokenType);
-      onChangeModel({ ...model, pricing: { ...model.pricing, completion: value } });
+    (completion: PricingRate | undefined) => {
+      onChangeModel({ ...model, pricing: { ...model.pricing, completion: getRealRate(completion, isTokenType) } });
     },
     [isTokenType, onChangeModel, model],
   );
 
   const onChangePrompt = useCallback(
-    (prompt?: number | string) => {
-      const value = getPriceRealValue(prompt, isTokenType);
-      onChangeModel({ ...model, pricing: { ...model.pricing, prompt: value } });
+    (prompt: PricingRate | undefined) => {
+      onChangeModel({ ...model, pricing: { ...model.pricing, prompt: getRealRate(prompt, isTokenType) } });
     },
     [isTokenType, onChangeModel, model],
   );
 
-  // Cache rates are flat-or-tree values: the control works in display units, and the whole tree is
-  // scaled back to per-token at this boundary, where an emptied branch also drops out of the model.
   const onChangeCacheRead = useCallback(
     (cacheRead: PricingRate | undefined) => {
       onChangeModel({ ...model, pricing: { ...model.pricing, cacheRead: getRealRate(cacheRead, isTokenType) } });
@@ -106,44 +106,39 @@ const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeMode
         disabled={isReadOnlyAdmin}
       />
 
-      <div className="flex flex-col gap-y-4 lg:flex-row lg:gap-x-2 lg:items-center">
-        <PriceControl
+      <div className={classNames('flex gap-x-2 gap-y-4 items-start', hasConditionalRate ? 'flex-col' : 'flex-row')}>
+        <PricingRateControl
           elementId="promptsPrice"
           label={t(ModelViewI18nKey.PromptPrice)}
-          value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
+          value={getMultipliedRate(model.pricing?.prompt, isTokenType)}
           onChange={onChangePrompt}
-          containerClassName="w-[120px]"
           disabled={isPriceDisabled}
         />
 
-        <PriceControl
+        <PricingRateControl
           elementId="completionsPrice"
           label={t(ModelViewI18nKey.CompletionPrice)}
-          value={getMultipliedValue(model.pricing?.completion, isTokenType)}
+          value={getMultipliedRate(model.pricing?.completion, isTokenType)}
           onChange={onChangeCompletion}
-          containerClassName="w-[120px]"
           disabled={isPriceDisabled}
         />
-      </div>
-      {isAsset && (
-        <div className="flex flex-col gap-y-4 flex-wrap lg:flex-row lg:gap-x-2 lg:items-start">
-          <PricingRateControl
-            elementId="cacheReadPrice"
-            label={t(ModelViewI18nKey.CacheReadPrice)}
-            value={getMultipliedRate(model.pricing?.cacheRead, isTokenType)}
-            onChange={onChangeCacheRead}
-            disabled={isCacheRateDisabled}
-          />
 
-          <PricingRateControl
-            elementId="cacheWritePrice"
-            label={t(ModelViewI18nKey.CacheWritePrice)}
-            value={getMultipliedRate(model.pricing?.cacheWrite, isTokenType)}
-            onChange={onChangeCacheWrite}
-            disabled={isCacheRateDisabled}
-          />
-        </div>
-      )}
+        <PricingRateControl
+          elementId="cacheReadPrice"
+          label={t(ModelViewI18nKey.CacheReadPrice)}
+          value={getMultipliedRate(model.pricing?.cacheRead, isTokenType)}
+          onChange={onChangeCacheRead}
+          disabled={isCacheRateDisabled}
+        />
+
+        <PricingRateControl
+          elementId="cacheWritePrice"
+          label={t(ModelViewI18nKey.CacheWritePrice)}
+          value={getMultipliedRate(model.pricing?.cacheWrite, isTokenType)}
+          onChange={onChangeCacheWrite}
+          disabled={isCacheRateDisabled}
+        />
+      </div>
     </div>
   );
 };

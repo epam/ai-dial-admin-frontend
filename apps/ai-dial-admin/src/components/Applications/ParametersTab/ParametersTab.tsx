@@ -72,10 +72,11 @@ const ParametersTab: FC<Props> = ({
   const [isAddClicked, setIsAddClicked] = useState(false);
 
   useEffect(() => {
-    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes, view);
-
+    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
     setIsSchemeLoading(true);
-    resolveAppRunnerScheme(foundRunner).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
+    resolveAppRunnerScheme(
+      foundRunner ?? { $id: (application as DialApplicationResource).application_type_schema_id },
+    ).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
       const scheme = resolvedScheme ?? resolvedRunner;
       setIsSchemeLoading(false);
       setScheme(scheme);
@@ -103,10 +104,12 @@ const ParametersTab: FC<Props> = ({
   }, [application, frameConfig, view]);
 
   const applicationProperties = useMemo(() => {
-    return view === ApplicationRoute.AssetsApplications
-      ? (application as DialApplicationResource)?.application_properties || {}
-      : (application as DialApplication)?.applicationProperties || {};
-  }, [application, view]);
+    return (
+      (application as DialApplicationResource)?.application_properties ||
+      (application as DialApplication)?.applicationProperties ||
+      {}
+    );
+  }, [application]);
 
   const jsonSchema = useMemo(
     () =>

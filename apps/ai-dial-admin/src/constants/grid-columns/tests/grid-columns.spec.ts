@@ -52,21 +52,25 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
   });
 
-  test('MODELS_COLUMNS cache rate tooltips keep flat values and format trees', () => {
+  test('MODELS_COLUMNS pricing rate tooltips keep flat values and format trees', () => {
     const t = (s: string) => s;
-    const [cacheReadColumn] = MODELS_COLUMNS(t).filter((c) => c.field === 'pricing.cacheRead');
-    const tooltip = (pricing: Record<string, unknown>) =>
-      cacheReadColumn.tooltipValueGetter!({ data: { pricing } } as never);
+    const cols = MODELS_COLUMNS(t);
+    const promptColumn = cols.find((c) => c.field === 'pricing.prompt')!;
+    const completionColumn = cols.find((c) => c.field === 'pricing.completion')!;
+    const cacheReadColumn = cols.find((c) => c.field === 'pricing.cacheRead')!;
+    const tooltip = (column: ColDef, pricing: Record<string, unknown>) =>
+      column.tooltipValueGetter!({ data: { pricing } } as never);
 
-    expect(tooltip({ unit: 'token', cacheRead: '0.0000002' })).toBe('0.0000002');
+    expect(tooltip(cacheReadColumn, { unit: 'token', cacheRead: '0.0000002' })).toBe('0.0000002');
 
     const tree = {
       test: { field: 'ttl', operator: '==', value: '1h' },
       ifTrue: '0.000006',
       ifFalse: '0.00000375',
     };
-    expect(tooltip({ unit: 'token', cacheRead: tree })).toBe('ttl == 1h ? 6 : 3.75');
-    expect(tooltip({ unit: undefined, cacheRead: tree })).toBe('ttl == 1h ? 0.000006 : 0.00000375');
+    expect(tooltip(promptColumn, { unit: 'token', prompt: tree })).toBe('ttl == 1h ? 6 : 3.75');
+    expect(tooltip(completionColumn, { unit: undefined, completion: tree })).toBe('ttl == 1h ? 0.000006 : 0.00000375');
+    expect(tooltip(cacheReadColumn, { unit: 'token', cacheRead: tree })).toBe('ttl == 1h ? 6 : 3.75');
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {
@@ -143,6 +147,15 @@ describe('Constants :: grid columns', () => {
       'parentActivityId',
     ]);
     expect(cols.some((c) => c.field === 'expanderColumn')).toBe(false);
+  });
+
+  test('ACTIVITY_AUDIT_COLUMNS adds the expander to the Analytics view only when asked', () => {
+    const t = (s: string) => s;
+
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics, false, true)[0].field).toBe('expanderColumn');
+    expect(ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Analytics).some((c) => c.field === 'expanderColumn')).toBe(
+      false,
+    );
   });
 
   test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {

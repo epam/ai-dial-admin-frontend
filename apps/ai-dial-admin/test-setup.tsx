@@ -212,6 +212,11 @@ if (typeof Document.prototype.queryCommandSupported !== 'function') {
   });
 }
 
+// ------------------ Stub document.elementFromPoint (absent in jsdom, used by ui-kit Dropdown) ------------------
+if (typeof document.elementFromPoint !== 'function') {
+  document.elementFromPoint = () => null;
+}
+
 // ------------------ Mock ResizeObserver ------------------
 class ResizeObserverMock {
   constructor(public callback: ResizeObserverCallback) {}

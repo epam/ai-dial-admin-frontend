@@ -50,17 +50,27 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import ExportTopics from './Structure/Topics';
 
 interface Props {
+  isAdminApiEnabled?: boolean;
   enableExportConfigMap?: boolean;
   deploymentsEnabled?: boolean;
   isAnalyticsEnabled?: boolean;
 }
 
-const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled, isAnalyticsEnabled }) => {
+const ExportConfig: FC<Props> = ({
+  isAdminApiEnabled = true,
+  enableExportConfigMap,
+  deploymentsEnabled,
+  isAnalyticsEnabled,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const { showNotification } = useNotification();
-  const [selectedComponentType, setSelectedComponentType] = useState<ExportComponentType>(ExportComponentType.ADMIN);
+  const scopes = useMemo(
+    () => getConfigScopes(isAdminApiEnabled, !!deploymentsEnabled, !!isAnalyticsEnabled),
+    [isAdminApiEnabled, deploymentsEnabled, isAnalyticsEnabled],
+  );
+  const [selectedComponentType, setSelectedComponentType] = useState<ExportComponentType>(scopes[0]);
   const [selectedExportFormat, setSelectedExportFormat] = useState(ExportFormat.ADMIN);
   const [selectedExportType, setSelectedExportType] = useState(ExportType.Full);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,11 +80,6 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled, is
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const isAdminContext = selectedComponentType === ExportComponentType.ADMIN;
-
-  const scopes = useMemo(
-    () => getConfigScopes(!!deploymentsEnabled, !!isAnalyticsEnabled),
-    [deploymentsEnabled, isAnalyticsEnabled],
-  );
 
   const exportTypes: RadioButtonWithContent[] = [
     {

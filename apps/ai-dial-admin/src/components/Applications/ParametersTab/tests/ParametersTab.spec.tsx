@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { ApplicationSourceType } from '@/src/models/dial/application';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
@@ -18,7 +19,16 @@ vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   }),
 }));
 
+vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
+  __esModule: true,
+  default: ({ data }: { data: Record<string, string> }) => <div>{data.model}</div>,
+}));
+
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', async () => {
@@ -55,6 +65,30 @@ describe('Applications - ApplicationParametersTab', () => {
     render(<ParametersTab application={{ editorUrl: 'editorUrl' }} />);
 
     expect(await screen.findByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
+  });
+
+  test('renders publication resource configuration from its declared schema', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', undefined);
+    vi.mocked(getResolvedRunnerSchema).mockResolvedValueOnce({
+      success: true,
+      response: { $id: 'publication-scheme', properties: { model: { type: 'string' } } },
+    } as never);
+
+    render(
+      <ParametersTab
+        application={
+          {
+            application_type_schema_id: 'publication-scheme',
+            application_properties: { model: 'publication-model' },
+          } as unknown as DialApplicationResource
+        }
+        applicationSchemes={[{ $id: 'publication-scheme' }]}
+        view={ApplicationRoute.ApplicationPublications}
+      />,
+    );
+
+    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('publication-scheme'));
+    expect(await screen.findByText('publication-model')).toBeInTheDocument();
   });
 
   test('resolves a platform-origin runner via its content $id before rendering', async () => {
