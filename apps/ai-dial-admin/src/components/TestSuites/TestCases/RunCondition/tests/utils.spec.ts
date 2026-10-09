@@ -145,6 +145,39 @@ describe('RunCondition utils', () => {
     expect(filters[0].predicates).toEqual([{ operator: RunConditionOperator.Contain, value: 'gpt' }]);
   });
 
+  test('deserializeRunConditionFilters keeps isArray false when merging same scalar field', () => {
+    const original = serializeRunConditionFilters([
+      {
+        id: '1',
+        field: 'test_case_name',
+        displayName: 'Test case name',
+        isArray: false,
+        logicalOp: RunConditionLogicalOp.And,
+        predicates: [{ operator: RunConditionOperator.Contain, value: 'a' }],
+      },
+      {
+        id: '2',
+        field: 'test_case_name',
+        displayName: 'Test case name',
+        isArray: false,
+        logicalOp: RunConditionLogicalOp.And,
+        predicates: [{ operator: RunConditionOperator.Equal, value: 'b' }],
+      },
+    ]);
+
+    const filters = deserializeRunConditionFilters(original);
+
+    expect(filters).toHaveLength(1);
+    expect(filters[0].isArray).toBe(false);
+    expect(filters[0].predicates).toHaveLength(2);
+    expect(getRunConditionOperatorOptions(filters[0].isArray).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+      RunConditionOperator.Equal,
+      RunConditionOperator.NotEqual,
+    ]);
+  });
+
   test('buildIncludedIdsQuery scopes by dataset_id and selects id', () => {
     const filter: FilterNode = {
       op: ComparisonOp.Co,
