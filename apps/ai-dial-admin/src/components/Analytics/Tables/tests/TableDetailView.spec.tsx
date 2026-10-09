@@ -18,7 +18,7 @@ import {
   TabsI18nKey,
 } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus } from '@/src/models/analytics/table';
 
 // The view is only reachable with analytics on in practice, so that is the default here; the flag-off
 // case is asserted explicitly below.
@@ -777,6 +777,7 @@ describe('TableDetailView scan-metadata column guards', () => {
         { source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid },
         { source_name: 'request_time', name: 'request_time', type: AnalyticsFieldType.Timestamp },
         { source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal },
+        { source_name: 'note', name: 'note', type: AnalyticsFieldType.String },
       ],
     });
 
@@ -789,7 +790,33 @@ describe('TableDetailView scan-metadata column guards', () => {
     expect(
       screen.queryByRole('button', { name: `request_time:${ActionMenuOperationI18nKey.Delete}` }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: `total:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `note:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+  });
+
+  test('offers no delete action for an ordering-key or partition column', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={{
+          ...scannable(),
+          columns: [
+            ...(scannable().columns ?? []),
+            { source_name: 'event_day', name: 'event_day', type: AnalyticsFieldType.Date },
+          ],
+          partition_by: { column: 'event_day', granularity: PartitionGranularity.Month },
+        }}
+        apiBaseUrl=""
+        flightUri=""
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: `total:${ActionMenuOperationI18nKey.Delete}` }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `event_day:${ActionMenuOperationI18nKey.Delete}` }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `note:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
   });
 
   test('still offers the edit action for a scan-metadata column, with the sensitive guard set', async () => {

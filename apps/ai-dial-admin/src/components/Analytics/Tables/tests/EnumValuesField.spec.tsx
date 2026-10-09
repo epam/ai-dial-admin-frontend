@@ -39,10 +39,13 @@ describe('EnumValuesField', () => {
     expect(view.container.querySelector('label')?.parentElement?.className).not.toContain('sr-only');
   });
 
-  // The declared-order note is deliberately NOT here: anything rendered beneath the control lifts it out of
-  // line with the row's other inputs, so `ColumnRowsEditor` states it once for the row set instead.
-  test('renders nothing beneath the control', () => {
+  test('states the declared-order consequence beneath the control', () => {
     renderField();
+    expect(screen.getByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toBeInTheDocument();
+  });
+
+  test('states no ordering consequence when disabled', () => {
+    renderField({ disabled: true });
     expect(screen.queryByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toBeNull();
   });
 

@@ -6,6 +6,7 @@ import { DialFormPopup, DialLoader, DialSelectField, PopupSize, SelectOption } f
 
 import { getRoles, getTableAccess, replaceTableAccess } from '@/src/app/[lang]/tables/actions';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { customMultiSelectTagsRenderer } from '@/src/components/Grid/CellRenderers/MultiSelectTagsRenderer';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -106,6 +107,7 @@ const TableAccessPanel: FC<Props> = ({ name, onClose }) => {
             <DialSelectField
               id="table-access-write-roles"
               multiple
+              customMultiSelectTagsRenderer={customMultiSelectTagsRenderer}
               label={t(AnalyticsTablesI18nKey.WriteRoles)}
               captionDescription={t(AnalyticsTablesI18nKey.WriteRolesCaption)}
               options={roleOptions}
@@ -115,6 +117,7 @@ const TableAccessPanel: FC<Props> = ({ name, onClose }) => {
             <DialSelectField
               id="table-access-modify-roles"
               multiple
+              customMultiSelectTagsRenderer={customMultiSelectTagsRenderer}
               label={t(AnalyticsTablesI18nKey.ModifyRoles)}
               captionDescription={t(AnalyticsTablesI18nKey.ModifyRolesCaption)}
               options={roleOptions}

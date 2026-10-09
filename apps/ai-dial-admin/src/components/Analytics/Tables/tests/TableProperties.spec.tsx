@@ -194,11 +194,29 @@ describe('TableProperties schema metadata', () => {
     expect(screen.getByText('request_time')).toBeInTheDocument();
   });
 
-  test('a source declaring no scan metadata shows neither label and no substitute message', () => {
+  test('a source declaring no scan metadata shows neither label and states that it is not scannable', () => {
     renderProperties(table({ ordering_key: ['event_id'] }));
 
     expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.VersionColumn)).not.toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.NotScannable)).toBeInTheDocument();
+  });
+
+  test('a source declaring the pair, or either member, makes no not-scannable statement', () => {
+    const { unmount } = renderProperties(
+      table({ ordering_key: ['total'], identity_column: 'event_id', version_column: 'request_time' }),
+    );
+    expect(screen.queryByText(AnalyticsTablesI18nKey.NotScannable)).not.toBeInTheDocument();
+    unmount();
+
+    renderProperties(table({ ordering_key: ['event_id'], version_column: 'request_time' }));
+    expect(screen.queryByText(AnalyticsTablesI18nKey.NotScannable)).not.toBeInTheDocument();
+  });
+
+  test('an enrichment makes no not-scannable statement', () => {
+    renderProperties(table({ name: 'order_flags', type: AnalyticsTableType.Enrichment, source_table: 'orders' }));
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.NotScannable)).not.toBeInTheDocument();
   });
 
   test('a source declaring only one member shows that one and omits the other', () => {

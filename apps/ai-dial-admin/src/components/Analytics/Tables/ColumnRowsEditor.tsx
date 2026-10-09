@@ -14,7 +14,7 @@ import { COLUMN_TYPE_OPTIONS, ELEMENT_TYPE_OPTIONS } from '@/src/constants/analy
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
-import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
+import { createColumnRow, isNullableLockedType } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
 
@@ -49,10 +49,13 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         const rowError = errors?.[index];
         const isArray = row.type === AnalyticsFieldType.Array;
         const isEnum = row.type === AnalyticsFieldType.Enum;
+        const isNullableLocked = isNullableLockedType(row.type);
         const onTypeChange = (v: string | string[]) => {
           const type = v as AnalyticsFieldType;
           update(row.id, {
             type,
+            // Reset so a hidden `true` cannot resurface on a later retype.
+            ...(isNullableLockedType(type) ? { nullable: false } : {}),
             ...(type !== AnalyticsFieldType.Array ? { element_type: '' } : {}),
             // Dropped for the same reason the element type is: a domain kept across a retype would be
             // submitted with a column that no longer has the type it belongs to.
@@ -61,7 +64,8 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         };
         // A validation error makes that field's column taller (label + input + error text). With
         // items-end (the normal bottom-aligned layout) that drags the erroring column's label out of
-        // line with its error-free siblings, so switch to top alignment whenever this row has any error.
+        // line with its error-free siblings, so switch to top alignment whenever this row has any error — or is
+        // an enum row, whose ordering note makes its value field taller the same way.
         const rowHasError = Boolean(
           rowError?.source_name ||
           rowError?.name ||
@@ -71,8 +75,9 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
           rowError?.element_type ||
           rowError?.enum_values,
         );
+        const isTopAligned = rowHasError || isEnum;
         return (
-          <div key={row.id} className={classNames('flex gap-2', rowHasError ? 'items-start' : 'items-end')}>
+          <div key={row.id} className={classNames('flex gap-2', isTopAligned ? 'items-start' : 'items-end')}>
             <DialInput
               id={`col-name-${row.id}`}
               containerClassName="flex-[2] min-w-[160px]"
@@ -153,13 +158,16 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               onChange={(v) => update(row.id, { tag: v ?? '' })}
             />
             <div
-              className={classNames('flex h-[38px] items-center gap-2', rowHasError && first && LABEL_ROW_OFFSET_CLASS)}
+              className={classNames(
+                'flex h-[38px] items-center gap-2',
+                isTopAligned && first && LABEL_ROW_OFFSET_CLASS,
+              )}
             >
               <DialSwitch
                 switchId={`col-nullable-${row.id}`}
                 label={t(AnalyticsTablesI18nKey.Nullable)}
-                isOn={!isArray && row.nullable}
-                disabled={isArray}
+                isOn={!isNullableLocked && row.nullable}
+                disabled={isNullableLocked}
                 onChange={(value) => update(row.id, { nullable: value })}
               />
               <DialSwitch
@@ -173,9 +181,6 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
           </div>
         );
       })}
-      {/* Stated once for the row set rather than per enum row: it is a property of the type, and anything
-          rendered beneath a field would lift that field out of line with the row's other inputs. */}
-      {hasEnumRow && <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesOrderHint)}</p>}
       <div>
         <DialGhostButton
           label={t(AnalyticsTablesI18nKey.AddColumn)}

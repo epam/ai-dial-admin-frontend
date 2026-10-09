@@ -23,6 +23,9 @@ const renderPopup = (props?: Partial<Parameters<typeof EditColumnPopup>[0]>) => 
   return { onSubmit, onClose };
 };
 
+const nullableSwitch = () => screen.getAllByRole('checkbox')[0];
+const sensitiveSwitch = () => screen.getAllByRole('checkbox')[1];
+
 const setInput = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
@@ -127,7 +130,7 @@ describe('EditColumnPopup', () => {
     const user = userEvent.setup();
     const { onSubmit } = renderPopup();
 
-    const sensitive = screen.getByRole('checkbox');
+    const sensitive = sensitiveSwitch();
     expect(sensitive).not.toBeChecked();
     fireEvent.click(sensitive);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
@@ -138,7 +141,7 @@ describe('EditColumnPopup', () => {
   test('sensitiveDisabled disables the switch and explains why', () => {
     renderPopup({ sensitiveDisabled: true });
 
-    expect(screen.getByRole('checkbox')).toBeDisabled();
+    expect(sensitiveSwitch()).toBeDisabled();
     expect(screen.getByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).toBeInTheDocument();
   });
 
@@ -159,8 +162,32 @@ describe('EditColumnPopup', () => {
   test('the switch is enabled and unexplained by default', () => {
     renderPopup();
 
-    expect(screen.getByRole('checkbox')).toBeEnabled();
+    expect(sensitiveSwitch()).toBeEnabled();
     expect(screen.queryByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).not.toBeInTheDocument();
+  });
+
+  test("shows a nullable column's flag on and a non-nullable one's off, read-only and explained", () => {
+    const { unmount } = render(
+      <EditColumnPopup column={{ ...COLUMN, nullable: true }} onClose={vi.fn()} onSubmit={vi.fn()} />,
+    );
+    const nullable = nullableSwitch();
+    expect(nullable).toBeChecked();
+    expect(nullable).toBeDisabled();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ColumnNullableFixed)).toBeInTheDocument();
+    unmount();
+
+    renderPopup();
+    expect(nullableSwitch()).not.toBeChecked();
+  });
+
+  test('an edit patch never carries the nullable flag', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup();
+
+    setInput(AnalyticsTablesI18nKey.Tag, 'cost');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', tag: 'cost' }] });
   });
 
   describe('an enum column', () => {
