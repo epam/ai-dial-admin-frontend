@@ -343,6 +343,49 @@ describe('Activity Audit List utils :: getGridFilters', () => {
       expect(activityType?.value).toBe('GLO');
     });
 
+    test('an exact label under equals resolves to its enum', () => {
+      const result = getGridFilters(
+        { resourceType: { filter: 'Global Firewall', type: GridFilterType.EQUALS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('an exact label under not-equal resolves to its enum', () => {
+      const result = getGridFilters(
+        { resourceType: { filter: 'mcp container', type: GridFilterType.NOT_EQUAL, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.NOT_EQUAL,
+        value: ActivityAuditResourceType.MCP_DEPLOYMENT,
+      });
+    });
+
+    test.each([
+      ['a label shared by several types', 'model serving'],
+      ['a partial label', 'global'],
+      ['a typed enum name', 'ImageBuildDomainWhitelist'],
+      ['a name inherited from Object', 'constructor'],
+    ])('%s is sent unchanged under equals', (_name, typed) => {
+      const result = getGridFilters(
+        { resourceType: { filter: typed, type: GridFilterType.EQUALS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(result[0]).toEqual({ column: 'resourceType', operator: FilterOperatorDto.EQUALS, value: typed });
+    });
+
     test('omitting the labelMap leaves resourceType filters untouched', () => {
       const gridFilter = {
         resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },

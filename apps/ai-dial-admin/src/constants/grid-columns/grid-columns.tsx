@@ -125,7 +125,7 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn, rightAlignedColumn } from './configs';
-import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
+import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter, exactMatchFilter } from './filters';
 import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/SessionCellRenderer';
 import TopicsCellRenderer from '@/src/components/Analytics/SessionsTrace/List/TopicsCellRenderer';
 import ProvenanceHeaderGroup from '@/src/components/Analytics/SessionsTrace/List/ProvenanceHeaderGroup';
@@ -300,6 +300,10 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
   },
 ];
 
+// Core takes a substring on these columns; the analytics backend does not.
+const getExactValueFilter = (view: ActivityAuditView): Partial<ColDef> =>
+  view === ActivityAuditView.Analytics ? exactMatchFilter : baseStringFilter;
+
 export const ACTIVITY_AUDIT_COLUMNS = (
   t: (s: string) => string,
   view: ActivityAuditView = ActivityAuditView.Config,
@@ -325,7 +329,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   {
     field: 'activityType',
     headerName: 'Activity type',
-    ...baseStringFilter,
+    ...getExactValueFilter(view),
     cellRenderer: ChildrenActivityTypeCellRenderer,
     cellRendererParams: {
       showIcon: !isSingleEntity,
@@ -338,7 +342,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
           tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-          ...baseStringFilter,
+          ...getExactValueFilter(view),
         } as ColDef,
         { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
       ]
@@ -355,8 +359,8 @@ export const ACTIVITY_AUDIT_COLUMNS = (
     filter: false,
   },
   { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
-  { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
-  { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
+  { field: 'activityId', headerName: 'Activity ID', ...getExactValueFilter(view) },
+  { field: 'parentActivityId', headerName: 'Parent ID', ...getExactValueFilter(view) },
 ];
 
 export const BASE_KEYS_COLUMNS: ColDef[] = [
