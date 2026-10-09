@@ -2069,6 +2069,7 @@ export default {
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',
+    DuplicateSchemaFieldName: "Field name '{name}' is already used. Names must be unique, ignoring case.",
     DuplicateResponseColumnName: "Column name '{name}' is already used.",
     DuplicateResponseColumnNameInPreviousRequest: "Column name '{name}' is already used in a previous request.",
     MetricNameInvalidChars: 'Name must not contain "::" symbols',
