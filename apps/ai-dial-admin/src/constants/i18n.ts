@@ -2008,6 +2008,7 @@ export enum TestSuitesI18nKey {
   EditField = 'TestSuites.EditField',
   NoSchemaFields = 'TestSuites.NoSchemaFields',
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  DuplicateSchemaFieldName = 'TestSuites.DuplicateSchemaFieldName',
   DuplicateResponseColumnName = 'TestSuites.DuplicateResponseColumnName',
   DuplicateResponseColumnNameInPreviousRequest = 'TestSuites.DuplicateResponseColumnNameInPreviousRequest',
   MetricNameInvalidChars = 'TestSuites.MetricNameInvalidChars',

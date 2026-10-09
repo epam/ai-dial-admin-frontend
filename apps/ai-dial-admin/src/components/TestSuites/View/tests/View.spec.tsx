@@ -1,6 +1,6 @@
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import TestSuiteView from '../View';
@@ -23,6 +23,15 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
     deploymentId: 'deployment-1',
     $type: 'dial-application',
   }),
+}));
+
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDataset: vi.fn().mockResolvedValue({
+    response: { id: 'dataset-1', name: 'Dataset 1', testCaseSchema: [] },
+    etag: 'dataset-etag',
+  }),
+  updateDataset: vi.fn(),
+  updateTestCases: vi.fn(),
 }));
 
 // Mock next/navigation
@@ -62,12 +71,17 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock the child components
-vi.mock('./TabsContent', () => ({
-  default: ({ activeTab, selectedTestSuite, onChange }: any) => (
+vi.mock('@/src/components/TestSuites/View/TabsContent', () => ({
+  default: ({ activeTab, selectedTestSuite, onChange, onChangeDataset }: any) => (
     <div>
       <div>Active Tab: {activeTab}</div>
       <div>Test Suite: {selectedTestSuite.name}</div>
       <button onClick={() => onChange({ ...selectedTestSuite, name: 'Modified Suite' })}>Modify Suite</button>
+      <button
+        onClick={() => onChangeDataset({ id: 'dataset-1', name: 'Dataset 1', testCaseSchema: [{ name: 'renamed' }] })}
+      >
+        Update dataset schema
+      </button>
     </div>
   ),
 }));
@@ -137,6 +151,40 @@ describe('TestSuiteView', () => {
 
     expect(screen.getByText('Entity: Test Suite 1')).toBeInTheDocument();
     expect(screen.getByText('Changed: false')).toBeInTheDocument();
+  });
+
+  describe('Dataset schema updates', () => {
+    const testSuiteWithDataset = { ...mockTestSuite, datasetId: 'dataset-1' };
+
+    test('refreshes the TestSuite validation after a successful dataset schema update', async () => {
+      const user = userEvent.setup();
+      const { updateDataset } = await import('@/src/app/[lang]/datasets/actions');
+      (updateDataset as Mock).mockResolvedValue({ success: true });
+
+      render(<TestSuiteView originalTestSuite={testSuiteWithDataset} etag="etag" />);
+
+      await user.click(screen.getByRole('button', { name: 'Update dataset schema' }));
+
+      await waitFor(() => expect(mockRefresh).toHaveBeenCalledOnce());
+    });
+
+    test('does not refresh the TestSuite validation after a failed dataset schema update', async () => {
+      const user = userEvent.setup();
+      const { updateDataset } = await import('@/src/app/[lang]/datasets/actions');
+      let resolveUpdate: (result: { success: boolean }) => void = () => undefined;
+      (updateDataset as Mock).mockReturnValue(
+        new Promise((resolve) => {
+          resolveUpdate = resolve;
+        }),
+      );
+
+      render(<TestSuiteView originalTestSuite={testSuiteWithDataset} etag="etag" />);
+      await user.click(screen.getByRole('button', { name: 'Update dataset schema' }));
+
+      await act(async () => resolveUpdate({ success: false }));
+
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
   });
 
   describe('Save double-click guard', () => {
