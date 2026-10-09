@@ -44,7 +44,7 @@ describe('FileProperties', () => {
     render(<FilesProperties publication={publication} setAddedFiles={vi.fn()} />);
 
     expect(screen.getByText(`${PublicationsI18nKey.FilesListTitle}: 2`)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders files list title with empty files', () => {

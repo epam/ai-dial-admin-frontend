@@ -276,3 +276,18 @@ describe('getGridOptions — file manager grid design', () => {
     expect(options.containerClassName).toBe(FILE_MANAGER_GRID_CLASS);
   });
 });
+
+describe('getGridOptions — row height', () => {
+  const getRowHeight = (view: ApplicationRoute) =>
+    getGridOptions(view, false, [], translate).additionalGridOptions?.rowHeight;
+
+  test('uses the 56px icon row height for Catalog lists', () => {
+    expect(getRowHeight(ApplicationRoute.PlatformModels)).toBe(56);
+    expect(getRowHeight(ApplicationRoute.PlatformKeys)).toBe(56);
+  });
+
+  test('keeps the 40px row height for Assets lists', () => {
+    expect(getRowHeight(ApplicationRoute.Files)).toBe(40);
+    expect(getRowHeight(ApplicationRoute.AssetsApplications)).toBe(40);
+  });
+});

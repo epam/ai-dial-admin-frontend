@@ -9,7 +9,7 @@ describe('RoutesList', () => {
 
     render(<RoutesList data={data} />);
     expect(screen.getByText(MenuI18nKey.Routes)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders with empty data', () => {

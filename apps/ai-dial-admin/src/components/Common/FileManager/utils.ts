@@ -6,7 +6,7 @@ import { ColDef, ITextFilterParams } from 'ag-grid-community';
 import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
-import { ROW_HEIGHT } from '@/src/components/Grid/constants';
+import { ASSETS_ROW_HEIGHT, ICON_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -22,6 +22,7 @@ import {
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
+import { isCatalogView } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -183,7 +184,7 @@ export const getGridOptions = (
           : GridSelectionMode.MULTIPLE,
     actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
     additionalGridOptions: {
-      rowHeight: ROW_HEIGHT,
+      rowHeight: isCatalogView(view) ? ICON_ROW_HEIGHT : ASSETS_ROW_HEIGHT,
       defaultColDef: {
         minWidth: 150,
         floatingFilter: true,

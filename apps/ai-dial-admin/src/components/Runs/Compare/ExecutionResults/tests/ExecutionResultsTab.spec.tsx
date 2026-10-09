@@ -135,7 +135,7 @@ describe('ExecutionResultsTab', () => {
     expect(getRunMock).toHaveBeenCalledWith('run-1');
     expect(getRunMock).toHaveBeenCalledWith('run-sibling');
     expect(getTestCaseRunResultsMock).toHaveBeenCalledTimes(2);
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareDiffLabel')).toBeInTheDocument();
   });
 
@@ -164,7 +164,7 @@ describe('ExecutionResultsTab', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
     });
 
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
@@ -305,8 +305,10 @@ describe('ExecutionResultsTab', () => {
     expect(viewDifferencesInput).toBeTruthy();
     await user.click(viewDifferencesInput!);
 
+    await waitFor(() => {
+      expect(screen.queryByText('Test Case 2')).not.toBeInTheDocument();
+    });
     expect(screen.getByText('Test Case 1')).toBeInTheDocument();
-    expect(screen.queryByText('Test Case 2')).not.toBeInTheDocument();
   });
 
   test('hides diff legend when row detail panel is open', async () => {
@@ -358,7 +360,7 @@ describe('ExecutionResultsTab', () => {
     renderExecutionResultsTab({ showDisplayPanel: true });
 
     await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
     });
 
     expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();

@@ -3,6 +3,7 @@ import {
   isAssetView,
   isAssetWithVersion,
   isBuildersView,
+  isCatalogView,
   isEntitiesWithDisplayVersion,
   isEvaluationView,
   isToolsetRoute,
@@ -154,5 +155,26 @@ describe('Utils :: hasTopicCatalogue', () => {
     undefined,
   ])('Should return true for %s', (route) => {
     expect(hasTopicCatalogue(route)).toBeTruthy();
+  });
+});
+
+describe('isCatalogView', () => {
+  test('is true for every Catalog list', () => {
+    [
+      ApplicationRoute.PlatformModels,
+      ApplicationRoute.PlatformInterceptors,
+      ApplicationRoute.PlatformTranslators,
+      ApplicationRoute.PlatformRoutes,
+      ApplicationRoute.PlatformAppRunners,
+      ApplicationRoute.PlatformCatalogSchemas,
+      ApplicationRoute.PlatformRoles,
+      ApplicationRoute.PlatformKeys,
+    ].forEach((view) => expect(isCatalogView(view)).toBe(true));
+  });
+
+  test('is false for Assets lists and a missing view', () => {
+    expect(isCatalogView(ApplicationRoute.Files)).toBe(false);
+    expect(isCatalogView(ApplicationRoute.AssetsApplications)).toBe(false);
+    expect(isCatalogView()).toBe(false);
   });
 });

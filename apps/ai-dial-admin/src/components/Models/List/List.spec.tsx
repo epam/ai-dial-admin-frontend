@@ -9,7 +9,7 @@ describe('ModelsList', () => {
 
     render(<ModelsList data={data} />);
     expect(screen.getByText(MenuI18nKey.Models)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders with empty data', () => {
