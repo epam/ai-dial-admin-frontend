@@ -33,6 +33,8 @@ const ACTION_COL = 'w-6 shrink-0 flex items-center justify-center';
 
 const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, onClear }) => {
   const t = useI18n();
+  // Merged same-field scalar filters keep multiple predicates without being arrays
+  const allowMultiplePredicates = draft.isArray || draft.predicates.length > 1;
 
   const fieldSelectOptions: SelectOption[] = useMemo(
     () => fieldOptions.map((o) => ({ value: o.field, label: o.displayName })),
@@ -173,7 +175,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
         </div>
       </div>
 
-      {draft.isArray
+      {allowMultiplePredicates
         ? draft.predicates.slice(1).map((predicate, i) => (
             <div key={i + 1} className="flex items-center gap-2">
               <div className={`${FIELD_COL} flex justify-end`}>
@@ -221,7 +223,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
           ))
         : null}
 
-      {draft.isArray ? (
+      {allowMultiplePredicates ? (
         <div className="flex items-center gap-2">
           <div className={FIELD_COL} />
           <div className={OPERATOR_COL}>

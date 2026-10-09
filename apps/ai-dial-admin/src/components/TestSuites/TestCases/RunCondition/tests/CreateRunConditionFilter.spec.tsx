@@ -75,6 +75,33 @@ describe('CreateRunConditionFilter', () => {
     ]);
   });
 
+  test('shows all four operators for a merged multi-predicate scalar field', () => {
+    render(
+      <CreateRunConditionFilter
+        draft={baseDraft({
+          field: 'test_case_name',
+          displayName: 'Test case name',
+          isArray: false,
+          predicates: [
+            { operator: RunConditionOperator.Contain, value: 'a' },
+            { operator: RunConditionOperator.Equal, value: 'b' },
+          ],
+        })}
+        fieldOptions={fieldOptions}
+        onChange={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    expect(operatorLabels()).toEqual([
+      TelemetryI18nKey.FilterConditionContain,
+      TelemetryI18nKey.FilterConditionNotContain,
+      TelemetryI18nKey.FilterConditionEqual,
+      TelemetryI18nKey.FilterConditionNotEqual,
+    ]);
+    expect(screen.getByRole('combobox', { name: 'operator-1' })).toBeInTheDocument();
+  });
+
   test('coerces Equal to Contain when switching to an array field', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
