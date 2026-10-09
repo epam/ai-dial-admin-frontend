@@ -67,23 +67,27 @@ describe('CatalogSchemaField', () => {
 
     await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
 
-    expect(screen.getByText('Model card')).toBeTruthy();
-    expect(screen.getByText('Agent card')).toBeTruthy();
+    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
+    expect(screen.getByText(fileDeclared.$id)).toBeTruthy();
   });
 
-  test('tells same-named schemas apart by their id', async () => {
+  /**
+   * Display names are not unique, and under the entity-kind filter they tend to repeat the kind —
+   * three interceptor schemas all reading "Interceptor". The `$id` is what distinguishes them.
+   */
+  test('identifies an option by its id rather than its display name', async () => {
     const user = userEvent.setup();
     const namesake: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': 'Model card' };
     renderField({ options: [apiWritten, namesake] });
 
     await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
 
-    expect(screen.getAllByText('Model card')).toHaveLength(2);
+    expect(screen.queryAllByText('Model card')).toHaveLength(0);
     expect(screen.getByText(apiWritten.$id)).toBeTruthy();
     expect(screen.getByText(namesake.$id)).toBeTruthy();
   });
 
-  test('adds no id beside a schema that has no display name', async () => {
+  test('shows the id once for a schema that has no display name', async () => {
     const user = userEvent.setup();
     const unnamed: CatalogSchemaOption = { ...fileDeclared, 'dial:catalogDisplayName': '' };
     renderField({ options: [unnamed] });
@@ -99,7 +103,7 @@ describe('CatalogSchemaField', () => {
     renderField({ onChange });
 
     await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
-    await user.click(screen.getByText('Agent card'));
+    await user.click(screen.getByText(fileDeclared.$id));
 
     expect(onChange).toHaveBeenCalledWith(fileDeclared.$id);
   });
@@ -121,8 +125,8 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
-    await user.click(screen.getAllByText('Model card').at(-1)!);
+    await user.click(screen.getByRole('button', { name: apiWritten.$id }));
+    await user.click(screen.getAllByText(apiWritten.$id).at(-1)!);
 
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -143,7 +147,7 @@ describe('CatalogSchemaField', () => {
     const onChange = vi.fn();
     renderField({ schemaId: apiWritten.$id, onChange });
 
-    await user.click(screen.getByRole('button', { name: `Model card ${apiWritten.$id}` }));
+    await user.click(screen.getByRole('button', { name: apiWritten.$id }));
     await user.click(screen.getByText(BasicI18nKey.None));
 
     expect(onChange).toHaveBeenCalledWith(undefined);
@@ -198,18 +202,18 @@ describe('CatalogSchemaField — filtered to an entity kind', () => {
 
     await user.click(screen.getByRole('button', { name: 'EntityPlaceholders.SelectCatalogSchema' }));
 
-    expect(screen.getByText('Model card')).toBeTruthy();
-    expect(screen.getByText('Kindless card')).toBeTruthy();
-    expect(screen.queryByText('Agent card')).toBeNull();
+    expect(screen.getByText(apiWritten.$id)).toBeTruthy();
+    expect(screen.getByText(kindless.$id)).toBeTruthy();
+    expect(screen.queryByText(fileDeclared.$id)).toBeNull();
   });
 
   test('keeps offering the selected schema when its kind does not match', async () => {
     const user = userEvent.setup();
     renderField({ schemaId: fileDeclared.$id });
 
-    await user.click(screen.getByRole('button', { name: `Agent card ${fileDeclared.$id}` }));
+    await user.click(screen.getByRole('button', { name: fileDeclared.$id }));
 
-    expect(screen.getAllByText('Agent card').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(fileDeclared.$id).length).toBeGreaterThan(0);
   });
 
   test('hands the browse modal the deployment kind and the unfiltered options', async () => {

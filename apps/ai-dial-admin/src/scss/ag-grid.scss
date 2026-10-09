@@ -72,6 +72,11 @@
   }
 }
 
+// The file manager grid is framed by a 1px border with an 8px radius (replaces the library's rounded-xl + shadow).
+.file-manager-grid {
+  @apply border border-solid border-tertiary rounded-lg overflow-hidden !shadow-none;
+}
+
 // The file manager grid design draws row dividers at half weight (header divider stays 1px).
 .file-manager-grid .ag-root-wrapper .ag-row {
   border-bottom-width: 0.5px;

@@ -129,14 +129,14 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
   }, [isSkipRefresh, rowData, gridApi]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full min-h-0">
       {duplicateName && (
         <DialNotification
           variant={NotificationVariant.Error}
           message={t(TestSuitesI18nKey.DuplicateSchemaFieldName, { name: duplicateName })}
         />
       )}
-      <div className="flex flex-row justify-between items-center">
+      <div className="flex flex-row justify-between items-center shrink-0">
         <span className="dial-small-text">{t(TestSuitesI18nKey.SchemaDescription)}</span>
         <DialNeutralButton
           label={t(BasicI18nKey.AddField)}
@@ -145,7 +145,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
         />
       </div>
 
-      <div className="min-h-0 overflow-auto h-[300px]">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <GridView<TestCaseSchema>
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}

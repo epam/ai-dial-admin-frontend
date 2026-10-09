@@ -98,30 +98,35 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
   );
 
   return (
-    <DialFileManager
-      className="p-0 gap-0 bg-layer-3 !grid-rows-1"
-      gridClassName="p-3"
-      path={filePath}
-      items={files as []}
-      filesLoading={isFetchingFiles}
-      showNavigationPanel={false}
-      navigationPanelOptions={{ searchable: false }}
-      sortOptions={{ sortable: false }}
-      treeOptions={getTreeOptions(
-        isReadOnlyAdmin,
-        isFetchingFiles,
-        value ? expandedFolders : loadedPaths,
-        expandedFolders,
-        ApplicationRoute.Files,
-        setExpandedFolders,
-        t,
-      )}
-      defaultSelectedPaths={value ? new Set([value]) : void 0}
-      gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
-      onPathChange={handleOnPathChange}
-      onFolderPopupPathChange={handleFolderPopupPathChange}
-      handleSelectionClick={handleSelectionClick}
-    />
+    <div className="size-full min-h-0">
+      <DialFileManager
+        className="p-0 gap-0 bg-layer-3 !grid-rows-1"
+        gridClassName="p-3"
+        // Library always mounts a h-[64px] content-header row; hide it when breadcrumb/toolbar are unused.
+        contentHeaderClassName="hidden"
+        contentClassName="!px-3 !gap-0 !pb-0"
+        path={filePath}
+        items={files as []}
+        filesLoading={isFetchingFiles}
+        showNavigationPanel={false}
+        navigationPanelOptions={{ searchable: false }}
+        sortOptions={{ sortable: false }}
+        treeOptions={getTreeOptions(
+          isReadOnlyAdmin,
+          isFetchingFiles,
+          value ? expandedFolders : loadedPaths,
+          expandedFolders,
+          ApplicationRoute.Files,
+          setExpandedFolders,
+          t,
+        )}
+        defaultSelectedPaths={value ? new Set([value]) : void 0}
+        gridOptions={getGridOptions(ApplicationRoute.Files, isReadOnlyAdmin, FILES_GRID_COLUMNS, t, true)}
+        onPathChange={handleOnPathChange}
+        onFolderPopupPathChange={handleFolderPopupPathChange}
+        handleSelectionClick={handleSelectionClick}
+      />
+    </div>
   );
 };
 

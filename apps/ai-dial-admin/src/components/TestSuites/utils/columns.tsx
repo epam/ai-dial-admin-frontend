@@ -587,7 +587,11 @@ export const getColumnsGridColumns = (
         onChange,
         hideTriangle: true,
       },
+      // Keep narrow and stable across request switches: without suppressSizeToFit,
+      // AgGridWrapper's fitGridWidth (sizeColumnsToFit) can expand this past the flex:1 share.
       flex: 1,
+      maxWidth: 200,
+      suppressSizeToFit: true,
     },
     {
       headerName: 'JSON Path',
@@ -604,6 +608,7 @@ export const getColumnsGridColumns = (
       },
       tooltipValueGetter: () => undefined,
       flex: 2,
+      minWidth: 200,
     },
     {
       headerName: 'Data type',
@@ -612,7 +617,9 @@ export const getColumnsGridColumns = (
       sortable: false,
       filter: false,
       floatingFilter: false,
+      width: 160,
       maxWidth: 200,
+      suppressSizeToFit: true,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
         items: getSchemaTypes().map((type) => ({ value: type.toUpperCase(), label: type })),

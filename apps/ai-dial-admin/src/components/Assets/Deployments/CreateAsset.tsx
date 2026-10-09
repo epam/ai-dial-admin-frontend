@@ -28,9 +28,11 @@ import {
   DUAL_BUCKET_VIEWS,
   getRootFolder,
   getRootFolders,
+  isFlatPlatformView,
   isPlatformBucketPath,
   isPlatformDualBucketView,
 } from '@/src/utils/files/root-folder';
+import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { DialResource } from '@/src/models/dial/resource';
@@ -98,13 +100,22 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             getCreateNotificationDescription(view, currentEntity.name, t),
           ),
         );
-        router.push(getUrnForEntity(view, res.response || currentEntity));
+        const isFlatAsset = isFlatPlatformView(view) || isPlatformDualBucketCreate;
+        let redirectEntity: Parameters<typeof getUrnForEntity>[1];
+        if (isFlatAsset) {
+          redirectEntity = { ...currentEntity, folderId: folderPath };
+        } else if (isVersionlessAssetView(view)) {
+          redirectEntity = { name: currentEntity.name, folderId: folderPath };
+        } else {
+          redirectEntity = { name: currentEntity.name, version: currentEntity.version, folderId: folderPath };
+        }
+        router.push(getUrnForEntity(view, redirectEntity));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [folderContext, currentEntity, onClose, router, showNotification, t, view]);
+  }, [folderContext, currentEntity, isPlatformDualBucketCreate, onClose, router, showNotification, t, view]);
 
   const onChangeEntity = useCallback((entity: object) => {
     setCurrentEntity(entity as DialResource);
