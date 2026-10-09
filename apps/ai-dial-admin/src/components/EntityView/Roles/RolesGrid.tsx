@@ -4,6 +4,7 @@ import { DialGhostButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IRowNode } from 'ag-grid-community';
 
+import { ICON_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -94,7 +95,9 @@ const RolesGrid: FC<Props> = ({
     [onChangeEntity, entity],
   );
 
+  // Columns reach the grid through the api, so the wrapper cannot detect the icon name column itself.
   const options: GridOptions = {
+    rowHeight: ICON_ROW_HEIGHT,
     suppressCellFocus: true,
     suppressHeaderFocus: true,
   };
