@@ -24,11 +24,18 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
 const expandResourceTypeFilter = (filter: GridFilter, map: ResourceTypeLabelMap): GridFilter => {
-  if (filter.type !== GridFilterType.CONTAINS || typeof filter.filter !== 'string') {
+  if (typeof filter.filter !== 'string') {
     return filter;
   }
   const needle = filter.filter.toLowerCase();
   if (!needle) {
+    return filter;
+  }
+  if (filter.type === GridFilterType.EQUALS || filter.type === GridFilterType.NOT_EQUAL) {
+    const labelled = Object.hasOwn(map, needle) ? map[needle] : undefined;
+    return labelled?.length === 1 ? { ...filter, filter: labelled[0] } : filter;
+  }
+  if (filter.type !== GridFilterType.CONTAINS) {
     return filter;
   }
   const matched = new Set<ActivityAuditResourceType>();
