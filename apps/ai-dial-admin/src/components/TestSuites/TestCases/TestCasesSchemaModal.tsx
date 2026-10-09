@@ -5,6 +5,7 @@ import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { getDuplicateFieldNames } from '@/src/utils/evaluation/schema-fields';
 import SchemaManager from '../TestCaseSchema/SchemaManager';
 
 interface Props {
@@ -37,7 +38,7 @@ const TestCasesSchemaModal: FC<Props> = ({ isModalOpen, initialSchema, onClose, 
       }}
       confirmLabel={t(ButtonsI18nKey.Apply)}
       size={PopupSize.Lg}
-      disableConfirmButton={schema.some((item) => !item.name || !item.type)}
+      disableConfirmButton={schema.some((item) => !item.name || !item.type) || getDuplicateFieldNames(schema).size > 0}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-y-8">
         <SchemaManager
