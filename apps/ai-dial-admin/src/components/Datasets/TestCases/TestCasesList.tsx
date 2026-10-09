@@ -45,13 +45,11 @@ import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface DatasetTestCasesActions {
   getDirtyTestCases: () => DatasetTestCase[];
-  /** Pass the schema just persisted, so the refetch that follows a save does not remap against the old one. */
   clearDirtyAndRefresh: (savedSchema?: TestCaseSchema[]) => void;
 }
 
 interface Props {
   dataset: Dataset;
-  /** Server-side schema; fields renamed since then are shown under their new name before save. */
   savedSchema?: TestCaseSchema[];
   testCasesActionsRef?: RefObject<DatasetTestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
