@@ -6,15 +6,6 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { GroupKey } from '@/src/models/analytics/pipeline';
 
-// Swapped for native selects so the options can be read, as `SourceField.spec` does for the same control.
-vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
-  return {
-    ...actual,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  };
-});
-
 // The 2.0 select keeps its options in an overlay, so the field is swapped for a native select
 // the options can be read out of — as it was when this field was the 1.0 `DialSelectField`.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
