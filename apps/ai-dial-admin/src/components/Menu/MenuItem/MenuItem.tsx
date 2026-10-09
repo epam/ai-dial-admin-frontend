@@ -1,12 +1,9 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC } from 'react';
 import classNames from 'classnames';
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 
@@ -15,59 +12,39 @@ import MenuItemContent from './MenuItemContent';
 interface Props {
   config: MenuGroupConfiguration;
   activeMenuItem: string;
-  isOpenByDefault: boolean;
   isSidebarOpen: boolean;
+  hasDivider?: boolean;
 }
 
-const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, isSidebarOpen }) => {
+const MenuItem: FC<Props> = ({ config, activeMenuItem, isSidebarOpen, hasDivider }) => {
   const t = useI18n();
 
-  const [isOpen, setIsOpen] = useState(isOpenByDefault);
-
-  const onClick = useCallback(() => {
-    setIsOpen(!isOpen);
-  }, [isOpen]);
-
-  const iconClassName = isOpenByDefault ? 'text-accent-primary' : 'text-secondary';
-
   return (
-    <li className="flex flex-col">
-      <DialTooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement="right">
-        <button
-          className="flex w-full px-3 py-2 flex-row justify-between rounded items-center hover:bg-accent-primary-alpha cursor-pointer group"
-          onClick={onClick}
-          aria-label="button"
-        >
-          <div className="flex flex-row items-center flex-1 min-w-0">
-            <div className={classNames('mr-4', iconClassName)}>{config.icon}</div>
-            <span className="text-left truncate text-primary"> {t(config.key) ?? ''}</span>
-          </div>
-          {config.isPreview && isSidebarOpen && (
-            <div className="ml-2 mr-1 shrink-0">
+    <li className={classNames('flex flex-col', isSidebarOpen && '[&:not(:first-child)]:mt-3')}>
+      {isSidebarOpen ? (
+        <div className="flex flex-row items-center justify-between px-4 py-1 text-[11px] text-tertiary uppercase tracking-[0.06em] whitespace-nowrap select-none cursor-default leading-4 font-semibold">
+          <span className="truncate">{t(config.key) ?? ''}</span>
+          {config.isPreview && (
+            <div className="ml-2 shrink-0 normal-case tracking-normal">
               <PreviewTag />
             </div>
           )}
-          {isSidebarOpen && (
-            <div className={classNames('ml-4', iconClassName)}>
-              {isOpen ? <IconChevronUp {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
-            </div>
-          )}
-        </button>
-      </DialTooltip>
-      {isOpen && !!config.items.length && (
-        <div className="flex flex-row w-full relative my-1">
-          <div className="bg-layer-4 w-px absolute left-[23px] inset-y-[12px]"></div>
-          <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-            {config.items.map((menuItem) => (
+        </div>
+      ) : (
+        hasDivider && <div role="separator" className="w-8 mx-auto my-2 border-t border-tertiary" />
+      )}
+      {!!config.items.length && (
+        <ul aria-label={t(config.key)} className="flex flex-col gap-px pt-0.5">
+          {config.items.map((menuItem) => (
+            <li key={menuItem.key}>
               <MenuItemContent
-                key={menuItem.key}
                 menuItem={menuItem}
                 isActive={activeMenuItem === menuItem.href}
                 isSidebarOpen={isSidebarOpen}
               />
-            ))}
-          </div>
-        </div>
+            </li>
+          ))}
+        </ul>
       )}
     </li>
   );
