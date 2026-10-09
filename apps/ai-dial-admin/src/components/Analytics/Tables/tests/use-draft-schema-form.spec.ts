@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
+import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsTable,
@@ -10,6 +11,7 @@ import {
   PartitionGranularity,
   TableStatus,
 } from '@/src/models/analytics/table';
+import { ColumnRow } from '@/src/models/analytics/tables-ui';
 
 const t = (key: string) => key;
 
@@ -358,6 +360,108 @@ describe('useDraftSchemaForm enrichment', () => {
       grain_key: 'order_id',
       cardinality: Cardinality.ZeroOrOne,
     });
+  });
+});
+
+describe('useDraftSchemaForm — key selections', () => {
+  const setColumns = (result: { current: ReturnType<typeof useDraftSchemaForm> }, rows: Partial<ColumnRow>[]) =>
+    act(() =>
+      result.current.update(
+        'columns',
+        rows.map((r) => ({ ...createColumnRow(), ...r })),
+      ),
+    );
+
+  test('each key select offers only the columns its backend rule accepts', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [
+      { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+      { source_name: 'maybe', name: 'maybe', type: AnalyticsFieldType.String, nullable: true },
+      { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+      { source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp },
+      { source_name: 'closed_at', name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true },
+    ]);
+
+    expect(result.current.orderingOptions.map((o) => o.value)).toEqual(['id', 'seen_at']);
+    expect(result.current.partitionNames).toEqual(['seen_at']);
+  });
+
+  test('a stale ordering key is never submitted, even when it bypassed the form update', () => {
+    const stored: AnalyticsTable = {
+      ...source,
+      columns: [{ source_name: 'maybe', name: 'maybe', type: AnalyticsFieldType.String, nullable: true }],
+      ordering_key: ['maybe'],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(stored, null, t));
+
+    expect(result.current.canMaterialize).toBe(false);
+    expect(result.current.buildDto()).not.toHaveProperty('ordering_key');
+  });
+
+  test('flipping a chosen ordering key column to nullable removes it from the selection', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [{ source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid }]);
+    act(() => result.current.update('orderingKey', ['id']));
+
+    act(() => result.current.update('columns', [{ ...result.current.form.columns[0], nullable: true }]));
+
+    expect(result.current.form.orderingKey).toEqual([]);
+  });
+
+  test('renaming a column carries the ordering key and partition column to the new name', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }]);
+    act(() => {
+      result.current.update('orderingKey', ['seen_at']);
+      result.current.update('partitionColumn', 'seen_at');
+      result.current.update('granularity', PartitionGranularity.Month);
+    });
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'seen_on', name: 'seen_on' },
+      ]),
+    );
+
+    expect(result.current.form.orderingKey).toEqual(['seen_on']);
+    expect(result.current.form.partitionColumn).toBe('seen_on');
+    expect(result.current.form.granularity).toBe(PartitionGranularity.Month);
+  });
+
+  test('the Identity column is not offered as Version, and the Version column not as Identity', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+    setColumns(result, [
+      { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+      { source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp },
+      { source_name: 'saved_at', name: 'saved_at', type: AnalyticsFieldType.Timestamp },
+    ]);
+
+    act(() => result.current.update('identityColumn', 'seen_at'));
+    expect(result.current.versionNames).toEqual(['saved_at']);
+    expect(result.current.identityNames).toEqual(['id', 'seen_at', 'saved_at']);
+
+    act(() => result.current.update('identityColumn', ''));
+    expect(result.current.versionNames).toEqual(['seen_at', 'saved_at']);
+
+    act(() => result.current.update('versionColumn', 'saved_at'));
+    expect(result.current.identityNames).toEqual(['id', 'seen_at']);
+  });
+});
+
+describe('useDraftSchemaForm enrichment grain key', () => {
+  test('offers the source table columns except Object ones', () => {
+    const src: AnalyticsTable = {
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      status: TableStatus.Active,
+      columns: [
+        { source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid },
+        { source_name: 'payload', name: 'payload', type: AnalyticsFieldType.Object },
+      ],
+    };
+    const { result } = renderHook(() => useDraftSchemaForm(enrichment, src, t));
+
+    expect(result.current.grainOptions).toEqual([{ value: 'id', label: 'id' }]);
   });
 });
 

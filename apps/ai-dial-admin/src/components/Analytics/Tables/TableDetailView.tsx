@@ -48,6 +48,7 @@ import {
   createColumnRow,
   getColumnRowErrors,
   hasColumnRowErrors,
+  isDropRestrictedColumn,
   isRenameRestricted,
   isScanMetadataColumn,
   parseRowsJson,
@@ -365,7 +366,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       if (isPinnedRow(api, node)) return true;
       const column = node.data as AnalyticsTableColumn | undefined;
       if (!column) return false;
-      return isScanMetadataColumn(table, column);
+      return isDropRestrictedColumn(table, column);
     },
     [table],
   );

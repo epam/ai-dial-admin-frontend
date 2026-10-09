@@ -2713,6 +2713,8 @@ export enum AnalyticsTablesI18nKey {
   ScanPairIncomplete = 'AnalyticsTables.ScanPairIncomplete',
   ScanPairRequired = 'AnalyticsTables.ScanPairRequired',
   ScanColumnNotSensitive = 'AnalyticsTables.ScanColumnNotSensitive',
+  NotScannable = 'AnalyticsTables.NotScannable',
+  ColumnNullableFixed = 'AnalyticsTables.ColumnNullableFixed',
   SourceTable = 'AnalyticsTables.SourceTable',
   GrainKey = 'AnalyticsTables.GrainKey',
   GrainKeyHint = 'AnalyticsTables.GrainKeyHint',

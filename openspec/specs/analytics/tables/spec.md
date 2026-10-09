@@ -89,13 +89,15 @@ The write discipline is a **source-only** field. The create-enrichment popup SHA
 
 The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name, status badge, and kind (source or enrichment) regardless of status; the kind SHALL be presented as a neutral tag rather than a second status-colored badge, since it is fixed for the table's lifetime. When the table has a `description`, the description SHALL be shown beneath them regardless of status too — on its own row below the row that carries the name and the header actions, spanning the full header width. It SHALL be **readable without hovering**: held to **one line** with a **Show more** control on that same line, revealing the rest in place and appearing only when the line cannot hold it. Putting the control beneath the text would spend a second line on every description, including the ones that needed none. A description is the one field on this page written to be read, so an ellipsis tooltip — which asks for a hover and is unreachable by keyboard — is not enough for it. It SHALL NOT share the title row with the header actions, which is what previously cut it to the width they left over. The header actions SHALL NOT be compressed to make room for it: whatever the description contains, every action control SHALL keep its label on one line.
 
-The header SHALL also show a read-only schema-metadata summary. While the table is `ACTIVE` that summary SHALL carry, for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, the source table it enriches — labelled **Source**, as the pipeline pages label the same relation — and its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. For a `PENDING`/`FAILED` table the summary SHALL carry an **enrichment**'s source table and nothing else: that value is fixed at create time and so is absent from the schema-definition surface, while a source table's own key, partition, and scan-metadata fields are exposed there as editable inputs instead.
+The header SHALL also show a read-only schema-metadata summary. While the table is `ACTIVE` that summary SHALL carry, for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, the source table it enriches — labelled **Source**, as the pipeline pages label the same relation — and its grain key when set. A scan-metadata value the definition does not declare SHALL be omitted. When an `ACTIVE` **source** declares neither, the summary SHALL instead state that the table is not scannable — it cannot be read incrementally. An enrichment carries no such statement. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. For a `PENDING`/`FAILED` table the summary SHALL carry an **enrichment**'s source table and nothing else: that value is fixed at create time and so is absent from the schema-definition surface, while a source table's own key, partition, and scan-metadata fields are exposed there as editable inputs instead.
 
 For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid (name, type, tag, display name, description, nullable rendered as a true/false value); the physical source name SHALL NOT be shown as its own grid column — it is an internal identifier surfaced only where an operation requires it (see "Table detail row writes", whose insert template must key by source name). A long **display name** or **description** SHALL be truncated in its cell with the full value reachable via the grid's ellipsis tooltip, which is how every other grid in the console presents a value too long for its column. The header's description is the one the page holds to a line with a **Show more** control; inside the grid that control competed with the row for width and, on a cell the grid does not clip, printed the description across the next column. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions; the delete action SHALL NOT be offered for a column the table's `identity_column` or `version_column` names, since the backend rejects dropping one (422, nothing repoints the pair). Scan-metadata membership SHALL be matched on the column's physical source name, which a rename may have made different from its exposed name. The column name SHALL also be editable inline in the grid — this SHALL rename the column's exposed name only; the immutable physical source name is unaffected. Renaming a scan-metadata column SHALL remain allowed: the backend repoints the stored pair in the same transaction, and the post-change refresh SHALL therefore show the summary carrying the new name.
 
 For an **enrichment** table, the columns grid SHALL additionally show the table's grain key as a pinned, non-editable row at the top of the grid — it carries no action menu and its name is not inline-editable. Because the grain key is never included in the table's declared `columns` (the backend derives its physical type from the matching column on the enrichment's source table and never exposes it as an ordinary column), the pinned row's type/tag/display-name metadata SHALL be backfilled by looking up the source table's column of the same name; when no matching source column is found, the row SHALL still render (name only, blank type/tag/display name) rather than being omitted.
 
-The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable; a scan-metadata column SHALL NOT be added to that set, since renaming one is allowed. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch, which SHALL be disabled for a column the `identity_column` or `version_column` names — the backend rejects setting `sensitive: true` on one (422) — while that column's name and other metadata fields stay editable. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
+The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag, and showing the column's nullable flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, partition, and `_`-prefixed system columns) while the metadata fields remain editable; a scan-metadata column SHALL NOT be added to that set, since renaming one is allowed. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch, which SHALL be disabled for a column the `identity_column` or `version_column` names — the backend rejects setting `sensitive: true` on one (422) — while that column's name and other metadata fields stay editable. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed. The nullable flag SHALL be shown as a disabled switch, because nullability is fixed once the column exists: it is displayed for reference and is never part of the patch.
+
+The delete action SHALL NOT be offered for a column that the table's ordering key, its partition column, its grain key (the pinned row), its `identity_column` or its `version_column` names, because the backend rejects dropping any of them (422). Every other column's delete action is unaffected.
 
 Adding columns SHALL be available from the header via a form popup reusing the column-row editor, including its optional display name and description fields, its element-type control, and its disabled-Nullable behavior for Array-typed rows (see "Define and materialize a table schema"). A column added here SHALL therefore be able to carry its display name and description in the same request that creates it, with no follow-up edit needed; the same optionality, blank-omission, and length rules stated there apply. Every live schema change SHALL be sent as a schema patch to `updateTableSchema` (`PATCH /v1/tables/{name}/schema`), and on success the detail view SHALL refresh from the server. Deleting the whole table SHALL be offered from this view's header (behind a confirmation identifying the table by name) as well as from the catalog list's row action menu; editing its catalog metadata (description/tag order) SHALL NOT be offered here and lives only in that row action menu (see "Tables catalog page").
 
@@ -190,7 +192,7 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 - **WHEN** an `ACTIVE` **source** table whose definition declares `identity_column` and `version_column` renders
 - **THEN** both values are shown in the header summary alongside the ordering key
-- **AND** a source declaring neither shows neither label and no substitute message
+- **AND** a source declaring neither shows neither label and states that the table is not scannable
 - **AND** a source declaring only one shows that one and omits the other
 
 #### Scenario: A system scan-metadata column is not an error
@@ -226,6 +228,30 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 - **WHEN** the enrichment's source table has no column matching the grain key's name
 - **THEN** the pinned row still renders, showing the grain key name with blank type, tag, and display name
+
+#### Scenario: An ordering-key or partition column cannot be dropped
+
+- **WHEN** the columns grid renders a column named by the table's ordering key, or the table's partition column
+- **THEN** that row's action menu offers no delete action
+- **AND** every other column's delete action is unaffected
+
+#### Scenario: A partition column cannot be renamed
+
+- **WHEN** the user opens the edit modal for the table's partition column
+- **THEN** the Name field is disabled
+- **AND** the display name, tag, description and sensitive fields remain editable
+
+#### Scenario: The edit modal shows Nullable read-only
+
+- **WHEN** the user opens the edit modal for a nullable column, and for a non-nullable one
+- **THEN** the modal shows a Nullable switch that is disabled, on for the first and off for the second
+- **AND** a change to any editable field still submits a patch that carries no nullable member
+
+#### Scenario: A source declaring neither scan-metadata member states it is not scannable
+
+- **WHEN** an `ACTIVE` **source** table whose definition declares neither `identity_column` nor `version_column` renders
+- **THEN** the header summary states that the table is not scannable
+- **AND** an `ACTIVE` source declaring the pair, and an enrichment, carry no such statement
 
 #### Scenario: A scan-metadata column cannot be dropped
 
@@ -384,6 +410,8 @@ The options SHALL be presented in alphabetical order, independently of the order
 
 The options SHALL additionally include every role name the table already grants, even when the catalog does not offer it. A closed select renders only the values that match an option, so without this a grant naming a role outside the catalog — one declared only in Core's configuration file, or any of them when the catalog read failed — would be invisible and would be dropped by the next unrelated edit, silently revoking access that is still in effect.
 
+A role field whose selected roles do not all fit SHALL show as many role tags as fit, followed by a count of the remaining ones, rather than clipping the tags or letting them overflow the field.
+
 While the initial fetch (the table's current access and the role catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed role-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds. A failed role-catalog fetch SHALL still leave the table's existing grants selected and selectable rather than emptying the lists.
 
 #### Scenario: Full admin edits the role lists
@@ -432,6 +460,12 @@ While the initial fetch (the table's current access and the role catalog, reques
 - **WHEN** the role catalog fails to load even though the table's current access loads successfully
 - **THEN** an error notification distinct from the access-load-failure notification is shown
 - **AND** the roles the table already grants remain offered and selected
+
+#### Scenario: Many selected roles collapse to a count
+
+- **WHEN** a role field holds more selected roles than fit in its width
+- **THEN** it shows the tags that fit followed by a `+N` count of the rest
+- **AND** the count is not shown when every selected role fits
 
 ### Requirement: System-owned tables are read-only
 
@@ -520,21 +554,23 @@ The UI SHALL surface a table's lifecycle `status` (`PENDING`, `ACTIVE`, `FAILED`
 
 ### Requirement: Define and materialize a table schema
 
-For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (a single **Name** field, used as both the column's exposed name and its physical source name since the two are always equal at definition time, type, nullable, optional tag, optional display name, optional description, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared column names, an optional partition (a temporal column + a day/month/year granularity), and an optional scan-metadata pair (`identity_column` and `version_column`); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, tag length, display-name length, and description length exactly as the create/add-columns editor validates today, against both the exposed-name and source-name uniqueness constraints (which the merged Name field satisfies identically).
+For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (a single **Name** field, used as both the column's exposed name and its physical source name since the two are always equal at definition time, type, nullable, optional tag, optional display name, optional description, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared columns that can key a table, an optional partition (a temporal column + a day/month/year granularity), and an optional scan-metadata pair (`identity_column` and `version_column`); for an **enrichment**, its columns plus a grain key chosen from those of its source table's columns that can key a table. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, tag length, display-name length, and description length exactly as the create/add-columns editor validates today, against both the exposed-name and source-name uniqueness constraints (which the merged Name field satisfies identically).
 
 The same document MAY instead be authored as JSON — see "JSON editor for a table draft" — in which case that requirement's seeding rule, save gate and submission sequence apply and the rules in this requirement's remaining paragraphs govern the column-by-column surface only.
 
 The **display name** and **description** fields SHALL be optional and SHALL be presented inline on the column row alongside its other fields, with field labels rendered on the first row only, as the row's existing fields already are. A blank value SHALL be valid and SHALL be omitted from the submitted column, exactly as a blank tag is — the service treats an absent metadata field as "not set". A display name longer than 128 characters or a description longer than 1024 characters SHALL be rejected client-side with a per-row validation message and SHALL disable Save, because the service answers 422 for either (the same caps and the same message the per-column edit modal already applies).
 
-An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
+An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column. An Object-typed row's Nullable control SHALL be disabled and forced off in the same way, because the backend rejects a nullable object column (the store has no nullable form of its JSON type). Retyping a row to Object SHALL switch its Nullable off.
 
-For a **source** table, the Partition column field's label SHALL carry an info affordance whose text includes the fact that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious; the affordance and the rest of its text follow "Table schema keys are explained where they are chosen and where they are read". The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
+For a **source** table, the Partition column field's label SHALL carry an info affordance whose text includes the fact that only non-nullable Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious; the affordance and the rest of its text follow "Table schema keys are explained where they are chosen and where they are read". The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
-For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
+The key fields SHALL offer only columns the backend accepts as a key, so that a rejection it always answers (422 `validation_error`) cannot be reached from the surface. The **Ordering key** SHALL offer the declared columns that are non-nullable and not `Object`-typed. The **Partition column** SHALL offer the declared `Date` and `Timestamp` columns that are non-nullable; a sensitive column remains eligible, because the backend does not reject it. An enrichment's **Grain key** SHALL offer its source table's columns that are not `Object`-typed. A column row can still be declared nullable or `Object`; it is only not offered as a key.
+
+For a **source** table only, the surface SHALL offer two additional optional selects — **Identity column** and **Version column** — the pair the governed incremental scan pages a source by. An **enrichment** SHALL offer neither (the backend rejects either member for an enrichment with 422). The Identity column options SHALL be the declared columns that are non-nullable and not sensitive; the Version column options SHALL be that same set narrowed to `Timestamp`-typed columns (`Date` SHALL NOT be offered — the backend requires `timestamp`). The column chosen as the Identity column SHALL NOT be offered as the Version column, and the column chosen as the Version column SHALL NOT be offered as the Identity column, so one column can never fill both roles; clearing either selection offers its column again in the other select. Both labels SHALL carry an info affordance stating that these values are promises the service does not verify (the version is assigned at ingest, monotonic, and never backdated; the identity is unique per row) — see "Table schema keys are explained where they are chosen and where they are read" for the affordance and the rest of its text.
 
 Because the scan requires **both** members and the backend accepts one alone — producing a table that is permanently unscannable, since `POST /v1/tables/{name}/schema` answers 409 once the table is `ACTIVE` and no `PATCH` member sets the pair — the surface SHALL treat the pair as all-or-nothing: while exactly one of the two is chosen, Save SHALL be disabled and the empty field SHALL show a validation message naming the other as required alongside it. Choosing neither SHALL be valid and SHALL leave the table unscannable, which is the correct declaration for a source whose row identity is its whole ordering key.
 
-A selection SHALL be cleared when the column it references stops qualifying — renamed, removed, retyped, or flipped to nullable or sensitive in the column rows — so the submission can never carry a stale or now-invalid column name. For a `FAILED` table, both selects SHALL be seeded from the values the definition already stores, because an omitted member leaves any stored value unchanged rather than clearing it; when the definition stores either member, both selects SHALL be required (the pair cannot be cleared by re-posting).
+A key selection — the Ordering key, the Partition column, the Identity column and the Version column — SHALL be cleared when the column it references stops qualifying under that field's own rule — removed, retyped, or flipped to nullable or sensitive in the column rows — so the submission can never carry a stale or now-invalid column name. When the referenced column is renamed, the selection SHALL follow it to the new name, in all four fields alike, so that none keeps a name that no longer matches a column; a rename to a blank name SHALL clear the selection. Clearing a Partition column SHALL also clear its granularity. For a `FAILED` table, both selects SHALL be seeded from the values the definition already stores, because an omitted member leaves any stored value unchanged rather than clearing it; when the definition stores either member, both selects SHALL be required (the pair cannot be cleared by re-posting).
 
 While the column-by-column surface is the active one, submitting the schema (a header **Save** action) SHALL send the whole document via `defineTableSchema` (`POST /v1/tables/{name}/schema`) and SHALL send no other request — that surface has no `description` or `tag_order` field, so a save from it can never change catalog metadata. `defineTableSchema` defines the schema **and** materializes the table in the same call — there is no separate save-draft step, and no way to persist an incomplete schema. Each submitted column SHALL carry `display_name` and `description` only when the corresponding field is non-blank, and SHALL omit either key otherwise. The submitted payload SHALL carry `identity_column`/`version_column` only when chosen, and SHALL omit either key when unset. Save SHALL be disabled until the schema is complete for its kind (a source needs at least one valid column, a non-empty ordering key, and a complete-or-absent scan-metadata pair; an enrichment needs a grain key), since the backend rejects an incomplete submission (422) without persisting it. While the draft is unchanged the header offers no Save to disable — see "A changed table draft's header offers Discard and Save", which also states that this completeness gate governs the column-by-column surface only. On success the view SHALL refresh showing the table `ACTIVE` with its live column surface. On a backend (ClickHouse) failure the table becomes `FAILED`; the detail view SHALL present the same schema-definition surface with an indication that activation failed, allowing the user to adjust the schema and resubmit. While the table is not `ACTIVE`, the write-rows action SHALL NOT be offered.
 
@@ -577,6 +613,13 @@ While the column-by-column surface is the active one, submitting the schema (a h
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
 
+#### Scenario: Object column cannot be nullable
+
+- **WHEN** a column row's type is Object
+- **THEN** its Nullable control is disabled and shows off
+- **AND** the built column payload does not send `nullable: true` for that row
+- **AND** a row that had Nullable on and is then retyped to Object shows it off
+
 #### Scenario: A type-specific column keeps every row aligned
 
 - **WHEN** a row below the first is typed Array or enum
@@ -614,7 +657,7 @@ While the column-by-column surface is the active one, submitting the schema (a h
 
 - **WHEN** a source table's schema-definition surface renders
 - **THEN** the Partition column field's label carries a focusable info affordance
-- **AND** its hint text states that only Date/Timestamp columns are selectable
+- **AND** its hint text states that only non-nullable Date/Timestamp columns are selectable
 
 #### Scenario: Granularity is hidden until a partition column is chosen
 
@@ -658,8 +701,47 @@ While the column-by-column surface is the active one, submitting the schema (a h
 
 #### Scenario: A scan-metadata selection is cleared when its column stops qualifying
 
-- **WHEN** the column currently chosen as the Version column is retyped away from `Timestamp`, renamed, removed, or flipped to nullable or sensitive
+- **WHEN** the column currently chosen as the Version column is retyped away from `Timestamp`, removed, or flipped to nullable or sensitive
 - **THEN** the Version column selection is cleared, so the submission cannot carry a stale or invalid column name
+
+#### Scenario: The Ordering key offers only columns that can key a table
+
+- **WHEN** the declared column rows include a nullable `string`, a non-nullable `string`, and a non-nullable `object`
+- **THEN** the Ordering key options are only the non-nullable `string`
+
+#### Scenario: The Partition column offers only non-nullable temporal columns
+
+- **WHEN** the declared column rows include a non-nullable `timestamp`, a nullable `timestamp`, a sensitive non-nullable `date`, and a non-nullable `string`
+- **THEN** the Partition column options are the non-nullable `timestamp` and the sensitive non-nullable `date`
+
+#### Scenario: An enrichment's Grain key excludes Object columns of its source
+
+- **WHEN** an enrichment's source table has a `string` column and an `object` column
+- **THEN** the Grain key options include the `string` column and exclude the `object` column
+
+#### Scenario: An Ordering key or Partition selection is dropped when its column stops qualifying
+
+- **WHEN** the column chosen in the Ordering key or as the Partition column is flipped to nullable, or the Ordering key's column is retyped to `object`
+- **THEN** that selection is removed, and the removed Partition column also clears its granularity
+- **AND** the submission carries neither the stale key nor the stale granularity
+
+#### Scenario: Renaming a column carries every selection that references it
+
+- **WHEN** a column chosen as the Ordering key, the Partition column, the Identity column or the Version column is renamed
+- **THEN** each of those fields shows the new name and keeps its selection
+- **AND** the Ordering key shows no tag for the old name
+
+#### Scenario: Renaming a selected column to a blank name clears the selection
+
+- **WHEN** the name of a column chosen in any of the four key fields is cleared to blank
+- **THEN** that selection is cleared
+
+#### Scenario: Identity and Version never offer the same column
+
+- **WHEN** a column is chosen as the Identity column, and it is also a non-nullable, non-sensitive `timestamp`
+- **THEN** the Version column options do not include it
+- **AND** clearing the Identity column offers it as a Version column again
+- **AND** choosing a Version column removes it from the Identity column options in the same way
 
 #### Scenario: A FAILED table's stored pair is seeded and cannot be cleared
 
@@ -681,12 +763,12 @@ SQL-clause vocabulary. Each hint SHALL carry at least the following, and SHALL N
 
 | Field | The hint SHALL state |
 | --- | --- |
-| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first |
-| Partition column | Rows are grouped into time chunks and a query filtered on this column skips the chunks it does not cover; most tables need no partition; only Date and Timestamp columns are eligible |
+| Ordering key | Rows are stored in this order, and filtering or sorting by the key's leading columns reads only part of the table; the most-filtered columns belong first; eligible columns are non-empty and not Object |
+| Partition column | Rows are grouped into time chunks and a query filtered on this column skips the chunks it does not cover; most tables need no partition; only non-empty Date and Timestamp columns are eligible |
 | Granularity | How much time one chunk covers, and that too many small chunks read slower rather than faster |
 | Identity column | With Version column, it lets pipelines read the table in batches without handling a row twice; the value must differ in every row, uniqueness is not validated, and repeated values cause skipped rows; eligible columns are non-empty and not sensitive |
 | Version column | It is how a pipeline tells which rows are new since its last pass; the value is expected at write time and must never move backwards, is not validated, and a backdated value causes missed rows; eligible columns are non-empty, non-sensitive Timestamp columns |
-| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row |
+| Grain key | It links this table to its source table, a row attaches to every source row carrying the same value, and only one row is kept per value — a repeated key replaces the previous row; Object columns are not eligible |
 
 On the schema-definition surface the key fields SHALL be grouped under a **Keys** sub-header carrying a
 single note stating that the keys are set once, when the table is created, and are fixed afterwards.
@@ -724,6 +806,13 @@ competing name. A non-focusable icon SHALL NOT be used for this purpose anywhere
 - **WHEN** a key field's info affordance renders on either surface
 - **THEN** it is a control that can be focused by keyboard, and its accessible name is the hint text
 
+#### Scenario: Key hints state which columns are eligible
+
+- **WHEN** the Ordering key, Partition column or Grain key hint renders
+- **THEN** the Ordering key hint states that eligible columns are non-empty and not Object
+- **AND** the Partition column hint states that only non-empty Date and Timestamp columns are eligible
+- **AND** the Grain key hint states that Object columns are not eligible
+
 ### Requirement: A column may be declared with an enum type and a closed, ordered value list
 
 The column-type vocabulary the schema editors offer SHALL include **enum**, a string column whose value set is
@@ -736,7 +825,9 @@ Array row offers, laid out as a column of the whole editor on the terms stated f
 "Define and materialize a table schema". The control SHALL present the declared values as an **ordered** list the user can reorder,
 because a value's position in the list becomes its numeric id in the physical type and the column therefore
 sorts in **declared order, not alphabetically**. The control SHALL state that ordering consequence, since
-nothing about a list of values otherwise suggests it.
+nothing about a list of values otherwise suggests it. The statement SHALL sit beneath that enum row's own value
+list, not once for the whole column grid, so it reads as being about that column's values; a grid with no enum
+row SHALL carry no such statement.
 
 Each value SHALL be validated client-side against the service's rules, with a per-value message and Save
 disabled while any is violated:
@@ -745,6 +836,11 @@ disabled while any is violated:
 - each value non-blank after trimming
 - each value at most **64** characters
 - values **distinct after trimming** — two entries differing only in surrounding whitespace collide
+
+The value-list popup is the shared list popup and applies its own per-value length rule, which is not the one
+above. The rules above are checked on the column row, and they decide whether Save is enabled; a value the popup
+accepts but the row rejects (longer than 64 characters) leaves the row showing its validation message after the
+popup is applied.
 
 Values SHALL be submitted **trimmed**, which is how the service stores and materializes them. A value MAY
 contain any characters, including commas and quotes, so the control MUST NOT treat any character as a
@@ -776,6 +872,17 @@ enrichment's **grain key**, on the same terms as any other non-nullable, non-sen
 - **WHEN** a row below the first is typed enum
 - **THEN** its value list renders without a second copy of the column's label beside the control
 - **AND** the column's label stays on the first row, whose value cell is empty
+
+#### Scenario: The ordering note sits beneath the enum row's own value list
+
+- **WHEN** a column row is typed enum
+- **THEN** a note that the column sorts in declared order, not alphabetically, is shown beneath that row's value list
+- **AND** the other fields of that row stay aligned with its other controls
+
+#### Scenario: A grid without an enum row has no ordering note
+
+- **WHEN** no column row is typed enum
+- **THEN** no statement about declared-order sorting is shown
 
 #### Scenario: Declared values are submitted in the authored order
 

@@ -3231,10 +3231,10 @@ export default {
     KeysNote: 'Define how the table is stored and read. Set once, when the table is created, and fixed afterwards.',
     OrderingKey: 'Ordering key',
     OrderingKeyHint:
-      'Rows are stored in this order, and that order is what makes reads fast: a query filtering or sorting by the key’s leading columns narrows to a few blocks of rows instead of scanning the table. The columns used most often in filters belong at the front, starting with the one that rules out the most rows.',
+      'Rows are stored in this order, and that order is what makes reads fast: a query filtering or sorting by the key’s leading columns narrows to a few blocks of rows instead of scanning the table. The columns used most often in filters belong at the front, starting with the one that rules out the most rows. Eligible columns are those never empty and not of Object type.',
     PartitionColumn: 'Partition column',
     PartitionColumnHint:
-      'Groups rows into time chunks — one per month, for example. A query filtered on this column reads only the chunks it covers and skips the rest. Most tables need no partition at all: row order already handles filtering, and a partition pays off mainly on a large table that is always queried by time. Only Date and Timestamp columns are eligible.',
+      'Groups rows into time chunks — one per month, for example. A query filtered on this column reads only the chunks it covers and skips the rest. Most tables need no partition at all: row order already handles filtering, and a partition pays off mainly on a large table that is always queried by time. Only Date and Timestamp columns that are never empty are eligible.',
     Granularity: 'Granularity',
     GranularityHint:
       'How much time one chunk covers. Month suits almost every table. Year fits a small table or queries that span long periods; Day fits only a fast-growing table queried a day at a time — a table split into thousands of tiny chunks reads slower, not faster.',
@@ -3249,9 +3249,12 @@ export default {
     ScanPairRequired:
       'Identity column and Version column are both required here — this table already declares them, and re-saving cannot clear them.',
     ScanColumnNotSensitive: 'A column used by the incremental scan cannot be marked sensitive.',
+    NotScannable:
+      'This table is not scannable: it declares no identity and version columns, so it cannot be read incrementally.',
+    ColumnNullableFixed: 'Whether a column accepts empty values is fixed when the column is created.',
     GrainKey: 'Grain key',
     GrainKeyHint:
-      'Links this table to its source table. A row here attaches to every source row carrying the same value, so its fields can be read side by side with the source’s. Only one row is kept per value — a repeated key replaces the previous row rather than adding a second one.',
+      'Links this table to its source table. A row here attaches to every source row carrying the same value, so its fields can be read side by side with the source’s. Only one row is kept per value — a repeated key replaces the previous row rather than adding a second one. Object columns are not eligible.',
     ColumnName: 'Name',
     Tag: 'Tag',
     ElementType: 'Element type',

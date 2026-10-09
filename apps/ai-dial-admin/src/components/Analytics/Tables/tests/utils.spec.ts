@@ -7,12 +7,17 @@ import {
   createDraftSchemaForm,
   createTableForm,
   getColumnRowErrors,
+  getGrainKeyColumnNames,
   getIdentityColumnNames,
+  getOrderingKeyColumnNames,
+  getPartitionColumnNames,
   getVersionColumnNames,
   hasColumnRowErrors,
+  isDropRestrictedColumn,
   isRenameRestricted,
   isScanMetadataColumn,
   parseRowsJson,
+  reconcileKeySelections,
   tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
@@ -25,7 +30,7 @@ import {
   PartitionGranularity,
   TableWriteMode,
 } from '@/src/models/analytics/table';
-import { ColumnEditValues, ColumnRow } from '@/src/models/analytics/tables-ui';
+import { ColumnEditValues, ColumnRow, KeySelections } from '@/src/models/analytics/tables-ui';
 
 describe('createTableForm', () => {
   test('starts blank, defaulting the enrichment source table to the first source in the catalog', () => {
@@ -154,6 +159,125 @@ describe('getIdentityColumnNames / getVersionColumnNames', () => {
     expect(getVersionColumnNames(dupes)).toEqual(['seen_at']);
     expect(getIdentityColumnNames([])).toEqual([]);
     expect(getVersionColumnNames([])).toEqual([]);
+  });
+});
+
+describe('key column eligibility', () => {
+  const rows: ColumnRow[] = [
+    row({ source_name: 'id', type: AnalyticsFieldType.Uuid }),
+    row({ source_name: 'maybe', type: AnalyticsFieldType.String, nullable: true }),
+    row({ source_name: 'payload', type: AnalyticsFieldType.Object }),
+    row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    row({ source_name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true }),
+    row({ source_name: 'secret_day', type: AnalyticsFieldType.Date, sensitive: true }),
+  ];
+
+  test('the ordering key excludes nullable and Object columns', () => {
+    expect(getOrderingKeyColumnNames(rows)).toEqual(['id', 'seen_at', 'secret_day']);
+  });
+
+  test('the partition column offers only non-nullable Date and Timestamp columns, sensitive included', () => {
+    expect(getPartitionColumnNames(rows)).toEqual(['seen_at', 'secret_day']);
+  });
+
+  test('the grain key excludes Object columns of the source table and keeps the rest', () => {
+    const column = (source_name: string, type: AnalyticsFieldType): AnalyticsTableColumn => ({
+      source_name,
+      name: source_name,
+      type,
+    });
+    expect(
+      getGrainKeyColumnNames([
+        column('id', AnalyticsFieldType.Uuid),
+        column('payload', AnalyticsFieldType.Object),
+        column('maybe', AnalyticsFieldType.String),
+      ]),
+    ).toEqual(['id', 'maybe']);
+  });
+});
+
+describe('reconcileKeySelections', () => {
+  const selections: KeySelections = {
+    orderingKey: ['id', 'seen_at'],
+    partitionColumn: 'seen_at',
+    granularity: PartitionGranularity.Month,
+    identityColumn: 'id',
+    versionColumn: 'seen_at',
+  };
+  const id = row({ source_name: 'id', name: 'id', type: AnalyticsFieldType.Uuid });
+  const seenAt = row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp });
+  const prevRows = [id, seenAt];
+
+  test('leaves every selection alone when nothing it references changed', () => {
+    expect(reconcileKeySelections(prevRows, [{ ...id }, { ...seenAt }], selections)).toEqual(selections);
+  });
+
+  test('carries a renamed column to its new name in all four fields', () => {
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+    expect(reconcileKeySelections(prevRows, [id, renamed], selections)).toEqual({
+      orderingKey: ['id', 'seen_on'],
+      partitionColumn: 'seen_on',
+      granularity: PartitionGranularity.Month,
+      identityColumn: 'id',
+      versionColumn: 'seen_on',
+    });
+  });
+
+  test('clears the selections of a column renamed to a blank name, and the granularity with the partition', () => {
+    const blank = { ...seenAt, source_name: '', name: '' };
+    expect(reconcileKeySelections(prevRows, [id, blank], selections)).toEqual({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+      identityColumn: 'id',
+      versionColumn: '',
+    });
+  });
+
+  test('does not follow a rename while another row still carries the old name', () => {
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+    const twin = row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp });
+    expect(reconcileKeySelections(prevRows, [id, renamed, twin], selections).partitionColumn).toBe('seen_at');
+  });
+
+  test('does not move a selection onto a name that another row already carries', () => {
+    const taken = row({ source_name: 'seen_on', name: 'seen_on', type: AnalyticsFieldType.Timestamp });
+    const renamed = { ...seenAt, source_name: 'seen_on', name: 'seen_on' };
+
+    expect(reconcileKeySelections([id, seenAt, taken], [id, renamed, taken], selections).partitionColumn).toBe('');
+  });
+
+  test('drops an ordering key or partition column flipped to nullable, and an ordering key retyped to Object', () => {
+    const nullable = { ...seenAt, nullable: true };
+    expect(reconcileKeySelections(prevRows, [id, nullable], selections)).toMatchObject({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+    });
+    const asObject = { ...id, type: AnalyticsFieldType.Object };
+    expect(reconcileKeySelections(prevRows, [asObject, seenAt], selections)).toMatchObject({
+      orderingKey: ['seen_at'],
+      identityColumn: 'id',
+    });
+  });
+
+  test('drops a removed column from every field and keeps an empty granularity untouched', () => {
+    expect(reconcileKeySelections(prevRows, [id], { ...selections, granularity: '' })).toEqual({
+      orderingKey: ['id'],
+      partitionColumn: '',
+      granularity: '',
+      identityColumn: 'id',
+      versionColumn: '',
+    });
+  });
+
+  test('collapses two ordering-key entries that land on the same name', () => {
+    const other = row({ source_name: 'other', name: 'other', type: AnalyticsFieldType.String });
+    const renamed = { ...other, source_name: 'id', name: 'id' };
+    const two = { ...selections, orderingKey: ['id', 'other'] };
+    expect(reconcileKeySelections([id, other], [{ ...id, source_name: 'gone' }, renamed], two).orderingKey).toEqual([
+      'id',
+    ]);
   });
 });
 
@@ -295,6 +419,20 @@ describe('toTableColumns', () => {
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid, nullable: true, tag: 'identity' },
       { source_name: 'x', name: 'x', type: AnalyticsFieldType.Long, nullable: false },
     ]);
+  });
+
+  test('an Array or Object row never carries nullable: true, whatever the stored flag says', () => {
+    const rows = [
+      row({
+        source_name: 'tags',
+        name: 'tags',
+        type: AnalyticsFieldType.Array,
+        element_type: AnalyticsFieldType.String,
+        nullable: true,
+      }),
+      row({ source_name: 'extra', name: 'extra', type: AnalyticsFieldType.Object, nullable: true }),
+    ];
+    expect(toTableColumns(rows).map((c) => c.nullable)).toEqual([false, false]);
   });
 
   test('sensitive rows carry sensitive: true; non-sensitive rows omit the field', () => {
@@ -609,8 +747,52 @@ describe('isRenameRestricted', () => {
     expect(isRenameRestricted(tableWith({ ordering_key: ['request_time'] }), column('request_time'))).toBe(true);
   });
 
+  test('a partition column is restricted', () => {
+    const partitioned = tableWith({ partition_by: { column: 'event_date', granularity: PartitionGranularity.Month } });
+    expect(isRenameRestricted(partitioned, column('event_date'))).toBe(true);
+  });
+
   test('ordinary columns are not restricted', () => {
     expect(isRenameRestricted(tableWith({ ordering_key: ['request_time'] }), column('total_money'))).toBe(false);
+  });
+});
+
+describe('isDropRestrictedColumn', () => {
+  const tableWith = (overrides?: Partial<AnalyticsTable>): AnalyticsTable => ({
+    name: 'events',
+    type: AnalyticsTableType.Source,
+    ordering_key: ['request_time'],
+    partition_by: { column: 'event_date', granularity: PartitionGranularity.Month },
+    identity_column: 'event_id',
+    version_column: 'ingested_at',
+    ...overrides,
+  });
+  const column = (source_name: string): AnalyticsTableColumn => ({
+    source_name,
+    name: source_name,
+    type: AnalyticsFieldType.String,
+  });
+
+  test.each(['request_time', 'event_date', 'event_id', 'ingested_at'])(
+    'the %s column, named by a key of the table, cannot be dropped',
+    (name) => {
+      expect(isDropRestrictedColumn(tableWith(), column(name))).toBe(true);
+    },
+  );
+
+  test('an ordinary column can be dropped, and so can every column of a table with no keys declared', () => {
+    expect(isDropRestrictedColumn(tableWith(), column('total_money'))).toBe(false);
+    expect(
+      isDropRestrictedColumn(
+        tableWith({
+          ordering_key: undefined,
+          partition_by: undefined,
+          identity_column: undefined,
+          version_column: undefined,
+        }),
+        column('request_time'),
+      ),
+    ).toBe(false);
   });
 });
 
