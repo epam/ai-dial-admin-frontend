@@ -49,20 +49,17 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, size = 80, onChange }) => {
 
   const getImageSrc = () => {
     return (
-      <div
-        className="bg-controls-enable-primary rounded-full group relative border border-primary hover:border-hover shrink-0"
-        style={{ width: size }}
-      >
+      <div className="bg-layer-sunken rounded-md group relative hover:border-hover shrink-0" style={{ width: size }}>
         <Image
           role="icon"
           src={getIconPath(src)}
           alt="entityImage"
           width={size}
           height={size}
-          className="rounded-full"
+          className="rounded-md"
           onError={() => setSrc('/images/icons/fallback-entity-icon.svg')}
         />
-        <div className="absolute inset-0 bg-accent-primary-alpha rounded-full opacity-0 group-hover:opacity-70 transition-opacity duration-200 pointer-events-none" />
+        <div className="absolute inset-0 bg-accent-primary-alpha rounded-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 pointer-events-none" />
       </div>
     );
   };

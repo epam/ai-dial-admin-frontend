@@ -36,13 +36,26 @@ describe('DisplayNameCellRenderer', () => {
     );
 
     expect(screen.getByRole('img', { name: 'type icon' })).toBeInTheDocument();
-    expect(screen.queryByText('C')).not.toBeInTheDocument();
+    expect(screen.queryByText('CH')).not.toBeInTheDocument();
   });
 
   test('shows the initials fallback when no type icon or iconUrl is supplied', () => {
     render(<DisplayNameCellRenderer {...params({ displayName: 'Chat', name: 'chat' })} />);
 
-    expect(screen.getByText('C')).toBeInTheDocument();
+    expect(screen.getByText('CH')).toBeInTheDocument();
+  });
+
+  test('derives two initials from a multi-word display name', () => {
+    render(<DisplayNameCellRenderer {...params({ displayName: 'Claude Opus', name: 'claude-opus' })} />);
+
+    expect(screen.getByText('CO')).toBeInTheDocument();
+  });
+
+  test('shows the entity image instead of initials when an iconUrl is supplied', () => {
+    render(<DisplayNameCellRenderer {...params({ displayName: 'Chat', name: 'chat', iconUrl: 'files/chat.png' })} />);
+
+    expect(screen.getByAltText('entityImage')).toBeInTheDocument();
+    expect(screen.queryByText('CH')).not.toBeInTheDocument();
   });
 
   test('renders without crashing when neither displayName nor name is set', () => {

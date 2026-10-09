@@ -37,7 +37,7 @@ describe('ContainersList', () => {
       />,
     );
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders with empty list', () => {

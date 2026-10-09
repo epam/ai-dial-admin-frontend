@@ -5,8 +5,9 @@ const { mockState } = vi.hoisted(() => ({
   mockState: { lastProps: null as Record<string, unknown> | null },
 }));
 
-vi.mock('ag-grid-react', () => ({
-  AgGridReact: (props: Record<string, unknown>) => {
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  Grid: (props: Record<string, unknown>) => {
     mockState.lastProps = props;
     return null;
   },
@@ -32,6 +33,7 @@ const createFakeApi = () => {
   const listeners: Record<string, ((event?: unknown) => void)[]> = {};
   return {
     listeners,
+    getGridOption: vi.fn(),
     getVerticalPixelRange: vi.fn(() => ({ top: 0, bottom: 100 })),
     getFirstDisplayedRowIndex: vi.fn(() => 0),
     getLastDisplayedRowIndex: vi.fn(() => 20),
@@ -63,8 +65,8 @@ const createFakeApi = () => {
 
 const fireOnGridReady = (api: ReturnType<typeof createFakeApi>) => {
   act(() => {
-    const onGridReady = mockState.lastProps?.onGridReady as ((event: { api: unknown }) => void) | undefined;
-    onGridReady?.({ api });
+    const onGridApiChange = mockState.lastProps?.onGridApiChange as ((api: unknown) => void) | undefined;
+    onGridApiChange?.(api);
   });
 };
 
@@ -84,8 +86,8 @@ describe('Events', () => {
     expect(mockState.lastProps?.rowData).toEqual([baseEvent('1', 1)]);
     expect(typeof mockState.lastProps?.getRowId).toBe('function');
 
-    const getRowId = mockState.lastProps?.getRowId as (p: { data: { id: string } }) => string;
-    expect(getRowId({ data: { id: 'abc' } })).toBe('abc');
+    const getRowId = mockState.lastProps?.getRowId as (row: { id: string }) => string;
+    expect(getRowId({ id: 'abc' })).toBe('abc');
   });
 
   test('auto-follow: at-top scroll → ensureIndexVisible(0, top) on modelUpdated after prepend', () => {
