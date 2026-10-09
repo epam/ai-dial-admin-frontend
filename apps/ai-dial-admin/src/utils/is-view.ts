@@ -103,3 +103,20 @@ export const isDeploymentManagerView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.ApplicationContainers
   );
 };
+
+/**
+ * Catalog lists render through the same file manager as Assets but have an icon next to the name.
+ * An explicit list, so a new surface falls back to the denser Assets height until it is added here.
+ */
+const CATALOG_VIEWS: readonly ApplicationRoute[] = [
+  ApplicationRoute.PlatformModels,
+  ApplicationRoute.PlatformInterceptors,
+  ApplicationRoute.PlatformTranslators,
+  ApplicationRoute.PlatformRoutes,
+  ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformCatalogSchemas,
+  ApplicationRoute.PlatformRoles,
+  ApplicationRoute.PlatformKeys,
+];
+
+export const isCatalogView = (view?: ApplicationRoute): boolean => !!view && CATALOG_VIEWS.includes(view);

@@ -19,7 +19,7 @@ describe('EntityInterceptors', () => {
       />,
     );
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('opens add modal when Add button is clicked', () => {

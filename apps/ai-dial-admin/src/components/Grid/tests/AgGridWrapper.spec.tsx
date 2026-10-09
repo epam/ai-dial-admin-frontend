@@ -1,12 +1,14 @@
 import { act, render } from '@testing-library/react';
+import type { ColDef } from 'ag-grid-community';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { mockState } = vi.hoisted(() => ({
   mockState: { lastProps: null as Record<string, unknown> | null },
 }));
 
-vi.mock('ag-grid-react', () => ({
-  AgGridReact: (props: Record<string, unknown>) => {
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
+  Grid: (props: Record<string, unknown>) => {
     mockState.lastProps = props;
     return null;
   },
@@ -19,19 +21,23 @@ vi.mock('@/src/components/Grid/utils', async (importOriginal) => ({
 
 import { saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 import AgGridWrapper from '../AgGridWrapper';
+import DisplayNameCellRenderer from '../CellRenderers/DisplayNameCellRenderer';
+import RadioNameCellRenderer from '../CellRenderers/RadioNameCellRenderer';
 
 const makeFakeApi = () => ({
   applyColumnState: vi.fn(),
   setFilterModel: vi.fn(),
-  updateGridOptions: vi.fn(),
   getColumnState: vi.fn(() => []),
   getFilterModel: vi.fn(() => ({})),
+  getGridOption: vi.fn(),
 });
 
-const fireOnGridReady = (api: ReturnType<typeof makeFakeApi>) => {
+const gridOptions = () => mockState.lastProps?.additionalGridOptions as Record<string, unknown>;
+
+const fireGridApiChange = (api: ReturnType<typeof makeFakeApi>) => {
   act(() => {
-    const onGridReady = mockState.lastProps?.onGridReady as ((event: { api: unknown }) => void) | undefined;
-    onGridReady?.({ api });
+    const onGridApiChange = mockState.lastProps?.onGridApiChange as ((api: unknown) => void) | undefined;
+    onGridApiChange?.(api);
   });
 };
 
@@ -40,102 +46,159 @@ describe('AgGridWrapper', () => {
     mockState.lastProps = null;
   });
 
-  describe('legacy path (isLiveData unset)', () => {
-    test('rowData / columnDefs / getRowId are NOT passed to AgGridReact as React props', () => {
-      render(
-        <AgGridWrapper
-          columnDefs={[{ field: 'id' }]}
-          rowData={[{ id: '1' }]}
-          getRowId={({ data }) => (data as { id: string }).id}
-        />,
-      );
-      expect(mockState.lastProps?.rowData).toBeUndefined();
-      expect(mockState.lastProps?.columnDefs).toBeUndefined();
-      expect(mockState.lastProps?.getRowId).toBeUndefined();
+  test('passes rowData and columnDefs to the kit grid as props', () => {
+    const rowData = [{ id: '1' }];
+    const columnDefs = [{ field: 'id' }];
+
+    render(<AgGridWrapper columnDefs={columnDefs} rowData={rowData} />);
+
+    expect(mockState.lastProps?.rowData).toEqual(rowData);
+    expect(mockState.lastProps?.columnDefs).toEqual(columnDefs);
+  });
+
+  test('forwards the grid-ready callback with the api once the kit grid exposes it', () => {
+    const onGridReady = vi.fn();
+    const api = makeFakeApi();
+
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} onGridReady={onGridReady} />);
+    fireGridApiChange(api);
+
+    expect(onGridReady).toHaveBeenCalledWith(expect.objectContaining({ api }));
+  });
+
+  test('lets caller grid options override the wrapper defaults', () => {
+    render(
+      <AgGridWrapper
+        columnDefs={[{ field: 'id' }]}
+        rowData={[]}
+        additionalGridOptions={{ preventDefaultOnContextMenu: false }}
+      />,
+    );
+
+    expect(gridOptions().preventDefaultOnContextMenu).toBe(false);
+  });
+
+  describe('row and header height', () => {
+    test('uses the 40px default header', () => {
+      render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+      expect(gridOptions().headerHeight).toBe(40);
     });
 
-    test('imperative state restore runs on every rowData change', () => {
+    test('leaves the kit row height for a list without an icon next to the name', () => {
+      render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+      expect('rowHeight' in gridOptions()).toBe(false);
+    });
+
+    test('uses 56px rows when the name cell carries an icon', () => {
+      render(<AgGridWrapper columnDefs={[{ field: 'name', cellRenderer: DisplayNameCellRenderer }]} rowData={[]} />);
+
+      expect(gridOptions().rowHeight).toBe(56);
+    });
+
+    test('finds the icon name column inside a column group', () => {
+      render(
+        <AgGridWrapper
+          columnDefs={[
+            { headerName: 'Group', children: [{ field: 'name', cellRenderer: RadioNameCellRenderer }] } as ColDef,
+          ]}
+          rowData={[]}
+        />,
+      );
+
+      expect(gridOptions().rowHeight).toBe(56);
+    });
+
+    test('keeps a custom row height supplied by the caller', () => {
+      const getRowHeight = vi.fn(() => 64);
+      const { rerender } = render(
+        <AgGridWrapper
+          columnDefs={[{ field: 'name', cellRenderer: DisplayNameCellRenderer }]}
+          rowData={[]}
+          additionalGridOptions={{ rowHeight: 80 }}
+        />,
+      );
+
+      expect(gridOptions().rowHeight).toBe(80);
+
+      rerender(
+        <AgGridWrapper
+          columnDefs={[{ field: 'name', cellRenderer: DisplayNameCellRenderer }]}
+          rowData={[]}
+          additionalGridOptions={{ getRowHeight }}
+        />,
+      );
+
+      expect(gridOptions().getRowHeight).toBe(getRowHeight);
+    });
+  });
+
+  test('provides a copy item in the row context menu, plus open-in-new-tab when a href exists', () => {
+    const { rerender } = render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+    const getItems = mockState.lastProps?.getContextMenuItems as (row: object) => { key: string }[];
+
+    expect(getItems({ id: '1' }).map((item) => item.key)).toEqual(['copy']);
+
+    rerender(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} getHref={() => '/entity/1'} />);
+    const getItemsWithHref = mockState.lastProps?.getContextMenuItems as (row: object) => { key: string }[];
+
+    expect(getItemsWithHref({ id: '1' }).map((item) => item.key)).toEqual(['copy', 'open-in-new-tab']);
+  });
+
+  describe('state restore', () => {
+    test('applies default sorts once the api is available', () => {
       const api = makeFakeApi();
-      const rowData = [{ id: '1' }];
+
+      render(<AgGridWrapper columnDefs={[{ field: 'id', sort: 'asc' }]} rowData={[{ id: '1' }]} />);
+      fireGridApiChange(api);
+
+      expect(api.applyColumnState).toHaveBeenCalledWith({ state: [{ colId: 'id', sort: 'asc' }] });
+    });
+
+    test('does not re-apply state when only rowData changes', () => {
+      const api = makeFakeApi();
       const columnDefs = [{ field: 'id' }];
-
-      const { rerender } = render(<AgGridWrapper columnDefs={columnDefs} rowData={rowData} />);
-      fireOnGridReady(api);
-
-      // After onGridReady → re-render → effect runs once.
-      expect(api.updateGridOptions).toHaveBeenCalled();
-      expect(api.applyColumnState).toHaveBeenCalled();
-
-      api.updateGridOptions.mockClear();
+      const { rerender } = render(<AgGridWrapper columnDefs={columnDefs} rowData={[{ id: '1' }]} />);
+      fireGridApiChange(api);
       api.applyColumnState.mockClear();
-      api.setFilterModel.mockClear();
 
-      rerender(<AgGridWrapper columnDefs={columnDefs} rowData={[...rowData, { id: '2' }]} />);
+      rerender(<AgGridWrapper columnDefs={columnDefs} rowData={[{ id: '1' }, { id: '2' }]} />);
 
-      expect(api.updateGridOptions).toHaveBeenCalled();
+      expect(api.applyColumnState).not.toHaveBeenCalled();
+    });
+
+    test('re-applies state when columnDefs change', () => {
+      const api = makeFakeApi();
+      const { rerender } = render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} />);
+      fireGridApiChange(api);
+      api.applyColumnState.mockClear();
+
+      rerender(<AgGridWrapper columnDefs={[{ field: 'id' }, { field: 'message' }]} rowData={[{ id: '1' }]} />);
+
       expect(api.applyColumnState).toHaveBeenCalled();
     });
   });
 
-  describe('live path (isLiveData={true})', () => {
-    test('rowData and columnDefs are passed to AgGridReact as React props', () => {
-      const rowData = [{ id: '1' }];
-      const columnDefs = [{ field: 'id' }];
+  describe('live data', () => {
+    test('turns row animation off', () => {
+      render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData />);
 
-      render(<AgGridWrapper columnDefs={columnDefs} rowData={rowData} isLiveData />);
-
-      expect(mockState.lastProps?.rowData).toEqual(rowData);
-      expect(mockState.lastProps?.columnDefs).toEqual(columnDefs);
+      expect(gridOptions().animateRows).toBe(false);
     });
 
-    test('getRowId is forwarded when provided, omitted otherwise', () => {
+    test('adapts getRowId to the kit signature when provided, omits it otherwise', () => {
       const getRowId = ({ data }: { data: { id: string } }) => data.id;
-
       const { rerender } = render(
         <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData getRowId={getRowId} />,
       );
-      expect(mockState.lastProps?.getRowId).toBe(getRowId);
+      const kitGetRowId = mockState.lastProps?.getRowId as (row: { id: string }) => string;
+
+      expect(kitGetRowId({ id: 'row-1' })).toBe('row-1');
 
       rerender(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData />);
+
       expect(mockState.lastProps?.getRowId).toBeUndefined();
-    });
-
-    test('rowData change does NOT re-apply persisted state', () => {
-      const api = makeFakeApi();
-      const rowData = [{ id: '1' }];
-      const columnDefs = [{ field: 'id' }];
-
-      const { rerender } = render(<AgGridWrapper columnDefs={columnDefs} rowData={rowData} isLiveData />);
-      fireOnGridReady(api);
-
-      // Initial mount: live-data effect applies default sorts once.
-      expect(api.applyColumnState).toHaveBeenCalledTimes(1);
-      expect(api.updateGridOptions).not.toHaveBeenCalled();
-
-      api.applyColumnState.mockClear();
-      api.setFilterModel.mockClear();
-      api.updateGridOptions.mockClear();
-
-      rerender(<AgGridWrapper columnDefs={columnDefs} rowData={[...rowData, { id: '2' }]} isLiveData />);
-
-      expect(api.applyColumnState).not.toHaveBeenCalled();
-      expect(api.setFilterModel).not.toHaveBeenCalled();
-      expect(api.updateGridOptions).not.toHaveBeenCalled();
-    });
-
-    test('columnDefs change re-applies persisted state', () => {
-      const api = makeFakeApi();
-      const columnDefs = [{ field: 'id' }];
-
-      const { rerender } = render(<AgGridWrapper columnDefs={columnDefs} rowData={[{ id: '1' }]} isLiveData />);
-      fireOnGridReady(api);
-      api.applyColumnState.mockClear();
-
-      rerender(
-        <AgGridWrapper columnDefs={[{ field: 'id' }, { field: 'message' }]} rowData={[{ id: '1' }]} isLiveData />,
-      );
-
-      expect(api.applyColumnState).toHaveBeenCalled();
     });
   });
 });
@@ -148,13 +211,13 @@ describe('AgGridWrapper — column state persistence', () => {
     const result = render(
       <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} storageKey={STORAGE_KEY} />,
     );
-    fireOnGridReady(makeFakeApi());
+    fireGridApiChange(makeFakeApi());
     return result;
   };
 
   const fireColumnResized = (source: string) => {
     act(() => {
-      const onColumnResized = mockState.lastProps?.onColumnResized as ((event: unknown) => void) | undefined;
+      const onColumnResized = gridOptions().onColumnResized as ((event: unknown) => void) | undefined;
       onColumnResized?.({ source, api: makeFakeApi() });
       vi.advanceTimersByTime(DEBOUNCE_MS);
     });
@@ -194,15 +257,18 @@ describe('AgGridWrapper — sizing strategy', () => {
     mockState.lastProps = null;
   });
 
-  test('fits the grid width for a grid without persisted state', () => {
+  test('leaves the kit fit-to-width sizing in place for a grid without persisted state', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
 
-    expect(mockState.lastProps?.autoSizeStrategy).toEqual({ type: 'fitGridWidth' });
+    expect('autoSizeStrategy' in gridOptions()).toBe(false);
+    expect('onGridSizeChanged' in gridOptions()).toBe(false);
   });
 
-  test('applies no sizing strategy for a grid with persisted state', () => {
+  test('disables fit-to-width sizing for a grid with persisted state', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} storageKey="runs-v2" />);
 
-    expect(mockState.lastProps?.autoSizeStrategy).toBeUndefined();
+    expect(gridOptions().autoSizeStrategy).toBeUndefined();
+    expect(gridOptions().onGridSizeChanged).toBeUndefined();
+    expect('autoSizeStrategy' in gridOptions()).toBe(true);
   });
 });

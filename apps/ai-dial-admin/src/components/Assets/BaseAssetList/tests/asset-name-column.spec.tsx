@@ -52,7 +52,7 @@ describe('getAssetNameColumn', () => {
       .cellRenderer as (p: ICellRendererParams) => React.ReactNode;
     render(<>{cellRenderer(params({ name: 'gpt', displayName: 'Gpt', nodeType: DialFileNodeType.ITEM }))}</>);
 
-    expect(screen.getByText('G')).toBeInTheDocument();
+    expect(screen.getByText('GP')).toBeInTheDocument();
   });
 
   test('maps exactly the five asset views to a type icon', () => {

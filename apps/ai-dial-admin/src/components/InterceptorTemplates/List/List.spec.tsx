@@ -16,6 +16,6 @@ describe('Interceptor Templates List', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: MenuI18nKey.InterceptorTemplates })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 });
