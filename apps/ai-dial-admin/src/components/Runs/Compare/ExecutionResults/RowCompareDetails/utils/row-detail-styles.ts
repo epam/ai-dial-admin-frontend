@@ -20,9 +20,9 @@ export const compareDiffKindToDataAttr = (kind: MetricDeltaKind): string | undef
 };
 
 const DIFF_BASE_CLASSES: Record<Exclude<MetricDeltaKind, MetricDeltaKind.Empty>, string> = {
-  [MetricDeltaKind.Added]: 'bg-success border-solid border-t border-b border-accent-secondary',
-  [MetricDeltaKind.Changed]: 'bg-info border-solid border-t border-b border-accent-primary',
-  [MetricDeltaKind.Removed]: 'bg-error border-solid border-t border-b border-error',
+  [MetricDeltaKind.Added]: 'border-solid border-t border-b border-accent-secondary',
+  [MetricDeltaKind.Changed]: 'border-solid border-t border-b border-accent-primary',
+  [MetricDeltaKind.Removed]: 'border-solid border-t border-b border-error',
 };
 
 const DIFF_EDGE_BY_COLUMN: Record<CompareDiffColumn, string> = {
@@ -60,9 +60,9 @@ export const getCompareDiffCellProps = (
 export type CompareDiffPivotPosition = 'top' | 'middle' | 'bottom' | 'single';
 
 const DIFF_PIVOT_BASE_CLASSES: Record<Exclude<MetricDeltaKind, MetricDeltaKind.Empty>, string> = {
-  [MetricDeltaKind.Added]: 'bg-success border-solid border-l border-r border-accent-secondary',
-  [MetricDeltaKind.Changed]: 'bg-info border-solid border-l border-r border-accent-primary',
-  [MetricDeltaKind.Removed]: 'bg-error border-solid border-l border-r border-error',
+  [MetricDeltaKind.Added]: 'border-solid border-l border-r border-accent-secondary',
+  [MetricDeltaKind.Changed]: 'border-solid border-l border-r border-accent-primary',
+  [MetricDeltaKind.Removed]: 'border-solid border-l border-r border-error',
 };
 
 const DIFF_PIVOT_EDGE_BY_POSITION: Record<CompareDiffPivotPosition, string> = {
