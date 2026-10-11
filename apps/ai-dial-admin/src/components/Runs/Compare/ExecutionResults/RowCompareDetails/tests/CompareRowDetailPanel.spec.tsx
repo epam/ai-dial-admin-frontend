@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
+
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
@@ -45,6 +47,8 @@ const row = {
   _compared: { id: 'r2', testCaseName: 'Case 1' },
 } as CompareAnalyticsRow;
 
+const runs = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' });
+
 describe('CompareRowDetailPanel', () => {
   test('persists Display tree after sections load', async () => {
     const onDisplayTreeChange = vi.fn();
@@ -52,8 +56,7 @@ describe('CompareRowDetailPanel', () => {
     render(
       <CompareRowDetailPanel
         row={row}
-        primaryRunName="Run A"
-        comparedRunName="Run B"
+        runs={runs}
         onClose={vi.fn()}
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={vi.fn()}
@@ -71,8 +74,7 @@ describe('CompareRowDetailPanel', () => {
     render(
       <CompareRowDetailPanel
         row={row}
-        primaryRunName="Run A"
-        comparedRunName="Run B"
+        runs={runs}
         onClose={vi.fn()}
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={vi.fn()}
@@ -91,8 +93,7 @@ describe('CompareRowDetailPanel', () => {
     render(
       <CompareRowDetailPanel
         row={row}
-        primaryRunName="Run A"
-        comparedRunName="Run B"
+        runs={runs}
         onClose={vi.fn()}
         position={SidebarPosition.Right}
         onSwitchDisplayMode={vi.fn()}

@@ -1,16 +1,11 @@
 import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
-import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
-import {
-  RUN_COMPARE_PRIMARY_INDEX,
-  RUN_COMPARE_SECONDARY_INDEX,
-  formatCompareRunIndexHeader,
-} from '@/src/components/Runs/Compare/constants';
+import { CompareRunEdge, formatCompareRunIndexHeader } from '@/src/components/Runs/Compare/constants';
 import {
   compareScoreColDef,
   DEFAULT_COMPARE_DELTA_HEADER,
@@ -32,6 +27,13 @@ import {
   TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
+import {
+  getCompareRowResult,
+  getCompareRunColId,
+  getCompareRunEdge,
+  getCompareRuns,
+} from '@/src/components/Runs/Compare/utils';
 import {
   formatCompareExtractedCellValue,
   formatCompareMetricCellValue,
@@ -51,7 +53,13 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
 
-type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
+interface RunColumnContext {
+  run: CompareRun;
+  edge: CompareRunEdge;
+  hideHighlights?: boolean;
+}
+
+const DEFAULT_COMPARE_RUNS = getCompareRuns({ id: '', name: '' }, { id: '', name: '' });
 
 const compareRunIndexHeaderDef = (
   runIndex: CompareRunIndex,
@@ -63,60 +71,29 @@ const compareRunIndexHeaderDef = (
   headerComponentParams: { runIndex, label, isRightAligned },
 });
 
+/** Builds one column per run, in display order; each knows which edge of its pair it sits at. */
+const buildRunColumns = (
+  runs: CompareRun[],
+  hideHighlights: boolean | undefined,
+  build: (context: RunColumnContext) => ColDef,
+): ColDef[] => runs.map((run, position) => build({ run, edge: getCompareRunEdge(position), hideHighlights }));
+
 const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string, unknown> => {
   return results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(result.extractedColumns || {}) }), {});
 };
 
-const buildMetricColumn = (groupKey: string, key: string, theme?: string): ColDef => ({
-  field: `${groupKey}_${key}`,
-  colId: `${groupKey}_${key}`,
-  headerName: key,
-  ...NUMBER_FILTER_COL_DEF,
-  ...rightAlignedColumn,
-  valueGetter: (params) => {
-    const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
-    if (!groupExists) return '—';
-    const value = params.data?.metricValues?.[groupKey]?.[key];
-    return formatCompareMetricCellValue(value);
-  },
-  cellStyle: (params) => {
-    const value = params.data?.metricValues?.[groupKey]?.[key];
-    if (typeof value === 'number' && value >= 0 && value <= 1) {
-      const colors = getAccuracyColors(value, theme);
-      return { backgroundColor: colors.bg };
-    }
-    return undefined;
-  },
-});
+type PairKindGetter = (params: { data?: CompareAnalyticsRow }) => MetricDeltaKind;
 
-const buildExtractedColumn = (key: string, hideHighlights?: boolean): ColDef => ({
-  field: `extracted_${key}`,
-  colId: `extracted_${key}`,
-  headerName: key,
-  flex: 1,
-  minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
-  ...NO_FILTER_COL_DEF,
-  valueGetter: (params) => {
-    const value = params.data?.extractedColumns?.[key];
-    return formatCompareExtractedCellValue(value);
-  },
-  ...maybePairCellClassRules(hideHighlights, getExtractedPairKind(key), 'primary'),
-});
-
-type ComparePairSide = 'primary' | 'secondary';
-
-const buildComparePairCellClassRules = (
-  getKind: (params: { data?: CompareAnalyticsRow }) => MetricDeltaKind,
-  side: ComparePairSide,
-) => ({
-  [`compare-metric-improved-${side}`]: (params: { data?: CompareAnalyticsRow }) =>
+const buildComparePairCellClassRules = (getKind: PairKindGetter, edge: CompareRunEdge) => ({
+  [`compare-metric-improved-${edge}`]: (params: { data?: CompareAnalyticsRow }) =>
     getKind(params) === MetricDeltaKind.Added,
-  [`compare-metric-new-${side}`]: (params: { data?: CompareAnalyticsRow }) =>
+  [`compare-metric-new-${edge}`]: (params: { data?: CompareAnalyticsRow }) =>
     getKind(params) === MetricDeltaKind.Changed,
-  [`compare-metric-regressed-${side}`]: (params: { data?: CompareAnalyticsRow }) =>
+  [`compare-metric-regressed-${edge}`]: (params: { data?: CompareAnalyticsRow }) =>
     getKind(params) === MetricDeltaKind.Removed,
 });
 
+// A diff is always read baseline → compared, so the kind is shared by both cells of a pair wherever they sit.
 const getComparePairKind =
   (resolveValues: (row: CompareAnalyticsRow) => { primary: unknown; secondary: unknown }, isNumeric = false) =>
   (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
@@ -137,7 +114,7 @@ const getMetricPairKind = (groupKey: string, key: string) =>
     true,
   );
 
-const getStatusPairKind = (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
+const getStatusPairKind: PairKindGetter = (params) => {
   if (!params.data) {
     return MetricDeltaKind.Empty;
   }
@@ -167,69 +144,30 @@ const getExtractedPairKind = (key: string) =>
     secondary: row._compared?.extractedColumns?.[key] ?? null,
   }));
 
-const maybePairCellClassRules = (
-  hideHighlights: boolean | undefined,
-  getKind: (params: { data?: CompareAnalyticsRow }) => MetricDeltaKind,
-  side: ComparePairSide,
-) => (hideHighlights ? {} : { cellClassRules: buildComparePairCellClassRules(getKind, side) });
+/** The edge picks which side of the diff box stays open, so the box closes around the pair on screen. */
+const pairCellClassRules = ({ edge, hideHighlights }: RunColumnContext, getKind: PairKindGetter) =>
+  hideHighlights ? {} : { cellClassRules: buildComparePairCellClassRules(getKind, edge) };
 
-const buildComparedMetricColumn = (
-  groupKey: string,
-  key: string,
-  _errorText?: string,
-  hideHighlights?: boolean,
-): ColDef => {
-  const getRawValue = (params: { data?: CompareAnalyticsRow }) =>
-    params.data?._compared?.metricValues?.[groupKey]?.[key];
-
-  const getDisplayValue = (params: { data?: CompareAnalyticsRow }) => {
-    if (!params.data?._compared) return '—';
-    const source = params.data._compared;
-    const groupExists = source.metricValues != null && groupKey in source.metricValues;
-    if (!groupExists) return '—';
-    const value = getRawValue(params);
-    return formatCompareMetricCellValue(value);
-  };
+const buildRunMetricColumn = (context: RunColumnContext, groupKey: string, key: string): ColDef => {
+  const { run } = context;
+  const colId = getCompareRunColId(run.slot, `${groupKey}_${key}`);
 
   return {
-    colId: `cmp_${groupKey}_${key}`,
-    field: `cmp_${groupKey}_${key}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, undefined, true),
+    colId,
+    field: colId,
+    ...compareRunIndexHeaderDef(run.index, undefined, true),
     ...NUMBER_FILTER_COL_DEF,
     ...compareScoreColDef,
     ...rightAlignedColumn,
     cellClass: 'p-0',
     cellRenderer: ScoreCellRenderer,
-    valueGetter: (params) => getDisplayValue(params),
-    ...maybePairCellClassRules(hideHighlights, getMetricPairKind(groupKey, key), 'secondary'),
-  };
-};
-
-const buildComparePrimaryMetricColumn = (
-  groupKey: string,
-  key: string,
-  _errorText?: string,
-  hideHighlights?: boolean,
-  theme?: string,
-): ColDef => {
-  const getRawValue = (params: { data?: CompareAnalyticsRow }) => params.data?.metricValues?.[groupKey]?.[key];
-
-  const getDisplayValue = (params: { data?: CompareAnalyticsRow }) => {
-    const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
-    if (!groupExists) return '—';
-    const value = getRawValue(params);
-    return formatCompareMetricCellValue(value);
-  };
-
-  return {
-    ...buildMetricColumn(groupKey, key, theme),
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, undefined, true),
-    ...compareScoreColDef,
-    cellClass: 'p-0',
-    cellStyle: undefined,
-    cellRenderer: ScoreCellRenderer,
-    valueGetter: (params) => getDisplayValue(params),
-    ...maybePairCellClassRules(hideHighlights, getMetricPairKind(groupKey, key), 'primary'),
+    valueGetter: (params) => {
+      const result = params.data && getCompareRowResult(params.data, run.slot);
+      const groupExists = result?.metricValues != null && groupKey in result.metricValues;
+      if (!groupExists) return '—';
+      return formatCompareMetricCellValue(result?.metricValues?.[groupKey]?.[key]);
+    },
+    ...pairCellClassRules(context, getMetricPairKind(groupKey, key)),
   };
 };
 
@@ -258,59 +196,97 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
   },
 });
 
-const buildComparedExtractedColumn = (key: string, hideHighlights?: boolean): ColDef => ({
-  colId: `cmp_extracted_${key}`,
-  field: `cmp_extracted_${key}`,
-  ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX),
-  flex: 1,
-  minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
-  ...NO_FILTER_COL_DEF,
-  valueGetter: (params) => {
-    if (!params.data?._compared) return '—';
-    const value = params.data._compared.extractedColumns?.[key];
-    return formatCompareExtractedCellValue(value);
-  },
-  ...maybePairCellClassRules(hideHighlights, getExtractedPairKind(key), 'secondary'),
-});
+const buildRunExtractedColumn = (context: RunColumnContext, key: string): ColDef => {
+  const { run } = context;
+  const colId = getCompareRunColId(run.slot, `extracted_${key}`);
+
+  return {
+    colId,
+    field: colId,
+    ...compareRunIndexHeaderDef(run.index),
+    flex: 1,
+    minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => {
+      const result = params.data && getCompareRowResult(params.data, run.slot);
+      if (!result) return '—';
+      return formatCompareExtractedCellValue(result.extractedColumns?.[key]);
+    },
+    ...pairCellClassRules(context, getExtractedPairKind(key)),
+  };
+};
 
 type CompareIndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 
-const buildCompareIndexColumnPair = (
+const buildRunIndexColumn = (
+  context: RunColumnContext,
   field: CompareIndexColumnField,
   label: string,
   width: number,
-): [ColDef, ColDef] => [
-  {
-    field,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label, true),
-    colId: field,
-    hide: true,
-    ...NO_FILTER_COL_DEF,
-    ...fixedWidthColDef(width),
-    ...rightAlignedColumn,
-    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-      params.data?.[field] != null ? params.data[field]! + 1 : null,
+): ColDef => ({
+  colId: getCompareRunColId(context.run.slot, field),
+  ...compareRunIndexHeaderDef(context.run.index, label, true),
+  hide: true,
+  ...NO_FILTER_COL_DEF,
+  ...fixedWidthColDef(width),
+  ...rightAlignedColumn,
+  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+    const index = params.data && getCompareRowResult(params.data, context.run.slot)?.[field];
+    return index != null ? index + 1 : '—';
   },
-  {
-    colId: `cmp_${field}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label, true),
-    hide: true,
-    ...NO_FILTER_COL_DEF,
-    ...fixedWidthColDef(width),
-    ...rightAlignedColumn,
-    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-      params.data?._compared?.[field] != null ? params.data._compared[field]! + 1 : '—',
+});
+
+const buildRunHttpColumn = (context: RunColumnContext): ColDef => ({
+  colId: getCompareRunColId(context.run.slot, 'http'),
+  ...compareRunIndexHeaderDef(context.run.index, 'HTTP', true),
+  hide: true,
+  ...NO_FILTER_COL_DEF,
+  ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+  ...rightAlignedColumn,
+  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+    (params.data && getCompareRowResult(params.data, context.run.slot))?.responseStatusCode ?? '—',
+  ...pairCellClassRules(context, getHttpPairKind),
+});
+
+const buildRunDurationColumn = (context: RunColumnContext): ColDef => ({
+  colId: getCompareRunColId(context.run.slot, 'duration'),
+  ...compareRunIndexHeaderDef(context.run.index, 'Duration', true),
+  hide: true,
+  ...NO_FILTER_COL_DEF,
+  ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+  ...rightAlignedColumn,
+  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
+    const result = params.data && getCompareRowResult(params.data, context.run.slot);
+    if (!result) return '—';
+    return getFormattedDuration(getCompareRowDurationMs(result) ?? undefined);
   },
-];
+  ...pairCellClassRules(context, getDurationPairKind),
+});
+
+const buildRunStatusColumn = (context: RunColumnContext): ColDef => ({
+  colId: getCompareRunColId(context.run.slot, 'status'),
+  ...compareRunIndexHeaderDef(context.run.index),
+  ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
+  maxWidth: STATUS_COLUMN_WIDTH,
+  ...NO_FILTER_COL_DEF,
+  valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+    (params.data && getCompareRowResult(params.data, context.run.slot))?.executionStatus,
+  cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) =>
+    ExecutionStatusCellRenderer({
+      ...params,
+      data: (params.data && getCompareRowResult(params.data, context.run.slot)) ?? null,
+    }),
+  ...pairCellClassRules(context, getStatusPairKind),
+});
 
 /**
- * An index column is a primary/secondary pair here, so a field the merged rows never vary is expanded
- * to both colIds — the pair is one reading and is shown or hidden as one.
+ * An index column is a pair of per-run columns here, so a field the merged rows never vary is expanded
+ * to every run's colId — the pair is one reading and is shown or hidden as one.
  */
-const getUniformComparePairFields = (results: AnalyticsResult[]): Set<string> => {
-  const uniform = getUniformExecutionFields(results);
-  return new Set([...uniform, ...[...uniform].map((field) => `cmp_${field}`)]);
-};
+const getUniformComparePairFields = (results: AnalyticsResult[], runs: CompareRun[]): Set<string> =>
+  new Set(
+    [...getUniformExecutionFields(results)].flatMap((field) => runs.map((run) => getCompareRunColId(run.slot, field))),
+  );
 
 /**
  * Shares the Extraction Result grid's variation rule so the two cannot drift on what "varies" means.
@@ -318,70 +294,35 @@ const getUniformComparePairFields = (results: AnalyticsResult[]): Set<string> =>
  * opens on the metrics being compared — so this is a no-op today and stays one until those defaults
  * are deliberately loosened.
  */
-const getComparedExecutionColumns = (results: AnalyticsResult[], hideHighlights?: boolean): ColGroupDef => ({
+const getComparedExecutionColumns = (
+  results: AnalyticsResult[],
+  runs: CompareRun[],
+  hideHighlights?: boolean,
+): ColGroupDef => ({
   headerName: EXECUTION_GROUP_HEADER,
   children: hideUniformColumns(
     [
-      ...buildCompareIndexColumnPair('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
-      ...buildCompareIndexColumnPair('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
-      ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
-      {
-        field: 'responseStatusCode',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP', true),
-        colId: 'http',
-        hide: true,
-        ...NO_FILTER_COL_DEF,
-        ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
-        ...rightAlignedColumn,
-        valueGetter: (params) => params.data?.responseStatusCode ?? '—',
-        ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
-      },
-      {
-        colId: 'cmp_http',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP', true),
-        hide: true,
-        ...NO_FILTER_COL_DEF,
-        ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
-        ...rightAlignedColumn,
-        valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
-        ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'secondary'),
-      },
-      {
-        field: 'durationMs',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration', true),
-        colId: 'duration',
-        hide: true,
-        ...NO_FILTER_COL_DEF,
-        ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
-        ...rightAlignedColumn,
-        valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-          getFormattedDuration(params.data ? (getCompareRowDurationMs(params.data) ?? undefined) : undefined),
-        ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'primary'),
-      },
-      {
-        colId: 'cmp_duration',
-        ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration', true),
-        hide: true,
-        ...NO_FILTER_COL_DEF,
-        ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
-        ...rightAlignedColumn,
-        valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
-          if (!params.data?._compared) return '—';
-          return getFormattedDuration(getCompareRowDurationMs(params.data._compared) ?? undefined);
-        },
-        ...maybePairCellClassRules(hideHighlights, getDurationPairKind, 'secondary'),
-      },
+      ...buildRunColumns(runs, hideHighlights, (context) =>
+        buildRunIndexColumn(context, 'runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
+      ),
+      ...buildRunColumns(runs, hideHighlights, (context) =>
+        buildRunIndexColumn(context, 'requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
+      ),
+      ...buildRunColumns(runs, hideHighlights, (context) =>
+        buildRunIndexColumn(context, 'turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
+      ),
+      ...buildRunColumns(runs, hideHighlights, buildRunHttpColumn),
+      ...buildRunColumns(runs, hideHighlights, buildRunDurationColumn),
     ],
-    getUniformComparePairFields(results),
+    getUniformComparePairFields(results, runs),
   ),
 });
 
 const getComparedMetricGroupColumns = (
   metrics: Record<string, Record<string, unknown>>,
-  errorText?: string,
+  runs: CompareRun[],
   deltaHeader: string = DEFAULT_COMPARE_DELTA_HEADER,
   hideHighlights?: boolean,
-  theme?: string,
 ): ColGroupDef[] =>
   Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
@@ -389,45 +330,21 @@ const getComparedMetricGroupColumns = (
       headerName: key,
       headerGroupComponent: EllipsisHeaderGroup,
       children: [
-        buildComparePrimaryMetricColumn(groupKey, key, errorText, hideHighlights, theme),
-        buildComparedMetricColumn(groupKey, key, errorText, hideHighlights),
+        ...buildRunColumns(runs, hideHighlights, (context) => buildRunMetricColumn(context, groupKey, key)),
         buildMetricDeltaColumn(groupKey, key, deltaHeader),
       ],
     })),
   }));
 
-const getComparedExecutionStatusGroup = (hideHighlights?: boolean): ColGroupDef => ({
+const getComparedExecutionStatusGroup = (runs: CompareRun[], hideHighlights?: boolean): ColGroupDef => ({
   headerName: '',
   context: { panelName: EXECUTION_STATUS_GROUP_HEADER },
-  children: [
-    {
-      field: 'executionStatus',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX),
-      colId: 'status',
-      ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
-      maxWidth: STATUS_COLUMN_WIDTH,
-      ...NO_FILTER_COL_DEF,
-      cellRenderer: ExecutionStatusCellRenderer,
-      ...maybePairCellClassRules(hideHighlights, getStatusPairKind, 'primary'),
-    },
-    {
-      colId: 'cmp_status',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX),
-      ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
-      maxWidth: STATUS_COLUMN_WIDTH,
-      ...NO_FILTER_COL_DEF,
-      cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) =>
-        ExecutionStatusCellRenderer({
-          ...params,
-          data: params.data?._compared ?? null,
-        }),
-      ...maybePairCellClassRules(hideHighlights, getStatusPairKind, 'secondary'),
-    },
-  ],
+  children: buildRunColumns(runs, hideHighlights, buildRunStatusColumn),
 });
 
 const getComparedExtractedGroupColumn = (
   extracted: Record<string, unknown>,
+  runs: CompareRun[],
   hideHighlights?: boolean,
 ): ColGroupDef | null => {
   const keys = Object.keys(extracted);
@@ -437,28 +354,26 @@ const getComparedExtractedGroupColumn = (
     headerName: EXTRACTED_GROUP_HEADER,
     children: keys.map((key) => ({
       headerName: key,
-      children: [
-        { ...buildExtractedColumn(key, hideHighlights), ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX) },
-        buildComparedExtractedColumn(key, hideHighlights),
-      ],
+      children: buildRunColumns(runs, hideHighlights, (context) => buildRunExtractedColumn(context, key)),
     })),
   };
 };
 
 export const getCompareColumnsCompare = (
   results: CompareAnalyticsRow[],
-  errorText?: string,
+  _errorText?: string,
   deltaHeader: string = DEFAULT_COMPARE_DELTA_HEADER,
   options?: CompareColumnsCompareOptions,
 ): (ColDef | ColGroupDef)[] => {
   const hideHighlights = options?.hideHighlights ?? false;
+  const runs = options?.runs ?? DEFAULT_COMPARE_RUNS;
   const allResults: AnalyticsResult[] = [...results, ...results.flatMap((r) => (r._compared ? [r._compared] : []))];
   const metrics = options?.metricsSchema ?? mergeCompareMetricValuesSchema(allResults);
   const extracted = mergeExtractedColumnsSchema(allResults);
-  const extractedGroup = getComparedExtractedGroupColumn(extracted, hideHighlights);
+  const extractedGroup = getComparedExtractedGroupColumn(extracted, runs, hideHighlights);
 
   return [
-    getComparedExecutionStatusGroup(hideHighlights),
+    getComparedExecutionStatusGroup(runs, hideHighlights),
     {
       field: 'testCaseName',
       headerName: 'Test Case name',
@@ -467,8 +382,8 @@ export const getCompareColumnsCompare = (
       ...TEXT_FILTER_COL_DEF,
       suppressSpanHeaderHeight: true,
     },
-    getComparedExecutionColumns(allResults, hideHighlights),
-    ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights, options?.theme),
+    getComparedExecutionColumns(allResults, runs, hideHighlights),
+    ...getComparedMetricGroupColumns(metrics, runs, deltaHeader, hideHighlights),
     ...(extractedGroup ? [extractedGroup] : []),
   ];
 };

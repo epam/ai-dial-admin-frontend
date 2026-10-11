@@ -4,6 +4,7 @@ import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/compo
 import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
@@ -40,8 +41,7 @@ const buildOptions = {
   colorDisplayMode: HeatMapColorDisplayMode.Absolute,
   expandedGroups: new Set<string>(),
   onToggleGroup: vi.fn(),
-  primaryRunName: 'Run #1',
-  comparedRunName: 'Run #2',
+  runs: getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' }),
   theme: 'dark',
 };
 

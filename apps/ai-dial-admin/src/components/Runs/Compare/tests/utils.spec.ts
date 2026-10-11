@@ -1,7 +1,16 @@
 import { describe, expect, test } from 'vitest';
 
-import { CompareRunSlot, CompareViewTab } from '../constants';
-import { getCompareRunsPath, getCompareRunsUrn, getCompareViewTabs, getSelectableCompareRuns } from '../utils';
+import { CompareRunEdge, CompareRunSlot, CompareViewTab } from '../constants';
+import {
+  getCompareRunsPath,
+  getCompareRunsUrn,
+  getCompareViewTabs,
+  getSelectableCompareRuns,
+  getCompareRowResult,
+  getCompareRunColId,
+  getCompareRunEdge,
+  getCompareRuns,
+} from '../utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
 describe('Runs Compare :: getSelectableCompareRuns', () => {
@@ -45,5 +54,45 @@ describe('Runs Compare :: getCompareViewTabs', () => {
       { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap },
       { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
     ]);
+  });
+});
+
+describe('Runs Compare :: getCompareRuns', () => {
+  const primary = { id: 'run-1', name: 'Run #1' };
+  const compared = { id: 'run-2', name: 'Run #2' };
+
+  test('lists the baseline first by default', () => {
+    expect(getCompareRuns(primary, compared)).toEqual([
+      { ...primary, slot: CompareRunSlot.Primary, index: '1', isBaseline: true },
+      { ...compared, slot: CompareRunSlot.Secondary, index: '2', isBaseline: false },
+    ]);
+  });
+
+  test('flipping only reverses the order: the primary run stays the baseline and keeps its index', () => {
+    const runs = getCompareRuns(primary, compared, true);
+
+    expect(runs.map((run) => run.id)).toEqual(['run-2', 'run-1']);
+    expect(runs.map((run) => run.isBaseline)).toEqual([false, true]);
+    expect(runs.map((run) => run.index)).toEqual(['2', '1']);
+  });
+});
+
+describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareRunEdge', () => {
+  test('resolves the result a row holds for each slot', () => {
+    const compared = { id: 'cmp' };
+    const row = { id: 'primary', _compared: compared } as never;
+
+    expect(getCompareRowResult(row, CompareRunSlot.Primary)).toBe(row);
+    expect(getCompareRowResult(row, CompareRunSlot.Secondary)).toBe(compared);
+  });
+
+  test('prefixes secondary column ids only', () => {
+    expect(getCompareRunColId(CompareRunSlot.Primary, 'status')).toBe('status');
+    expect(getCompareRunColId(CompareRunSlot.Secondary, 'status')).toBe('cmp_status');
+  });
+
+  test('the first position is the start of the pair, later ones the end', () => {
+    expect(getCompareRunEdge(0)).toBe(CompareRunEdge.Start);
+    expect(getCompareRunEdge(1)).toBe(CompareRunEdge.End);
   });
 });

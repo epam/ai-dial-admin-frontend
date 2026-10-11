@@ -5,13 +5,13 @@ import { FC } from 'react';
 
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
   row: CompareAnalyticsRow;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onClose: () => void;
   onSwitchToSidebar: () => void;
   focusFieldKey?: string | null;
@@ -28,8 +28,7 @@ interface Props {
 
 const CompareRowDetailBottomPanel: FC<Props> = ({
   row,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onClose,
   onSwitchToSidebar,
   focusFieldKey,
@@ -47,8 +46,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
     <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
       <CompareRowDetailPanel
         row={row}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
+        runs={runs}
         onClose={onClose}
         position={SidebarPosition.Bottom}
         onSwitchDisplayMode={onSwitchToSidebar}

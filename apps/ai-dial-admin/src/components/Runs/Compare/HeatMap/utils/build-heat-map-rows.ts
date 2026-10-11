@@ -1,5 +1,7 @@
 import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { getCompareRowResult } from '@/src/components/Runs/Compare/utils';
 import {
   getNumericMetricValue,
   roundMetricValue,
@@ -34,13 +36,13 @@ const buildMetricValuesForRun = (
   mergedRows: CompareAnalyticsRow[],
   groupKey: string,
   metricKey: string,
-  isCompared: boolean,
+  slot: CompareRunSlot,
 ): Record<string, number | null | undefined> => {
   const values: Record<string, number | null | undefined> = {};
 
   for (const row of mergedRows) {
     const colId = getHeatMapTestCaseColId(row);
-    const source = isCompared ? row._compared : row;
+    const source = getCompareRowResult(row, slot);
     const groupExists = source?.metricValues != null && groupKey in source.metricValues;
 
     if (!groupExists) {
@@ -139,10 +141,13 @@ export const buildHeatMapDeltaRows = (mergedRows: CompareAnalyticsRow[]): HeatMa
 export const buildHeatMapRowsForMode = (
   mergedRows: CompareAnalyticsRow[],
   colorDisplayMode: HeatMapColorDisplayMode,
+  runs: CompareRun[],
 ): HeatMapRow[] =>
-  colorDisplayMode === HeatMapColorDisplayMode.Delta ? buildHeatMapDeltaRows(mergedRows) : buildHeatMapRows(mergedRows);
+  colorDisplayMode === HeatMapColorDisplayMode.Delta
+    ? buildHeatMapDeltaRows(mergedRows)
+    : buildHeatMapRows(mergedRows, runs);
 
-export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[] => {
+export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[], runs: CompareRun[]): HeatMapRow[] => {
   const allResults: AnalyticsResult[] = [
     ...mergedRows,
     ...mergedRows.flatMap((row) => (row._compared ? [row._compared] : [])),
@@ -161,28 +166,17 @@ export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[
     });
 
     for (const metricKey of Object.keys(groupValues)) {
-      const primaryValues = buildMetricValuesForRun(mergedRows, groupKey, metricKey, false);
-      const comparedValues = buildMetricValuesForRun(mergedRows, groupKey, metricKey, true);
-
-      rows.push({
-        id: `metric_${groupKey}_${RUN_COMPARE_PRIMARY_INDEX}_${metricKey}`,
-        rowType: HeatMapRowType.Metric,
-        groupKey,
-        metricKey,
-        runIndex: RUN_COMPARE_PRIMARY_INDEX,
-        label: metricKey,
-        values: primaryValues,
-      });
-
-      rows.push({
-        id: `metric_${groupKey}_${RUN_COMPARE_SECONDARY_INDEX}_${metricKey}`,
-        rowType: HeatMapRowType.Metric,
-        groupKey,
-        metricKey,
-        runIndex: RUN_COMPARE_SECONDARY_INDEX,
-        label: metricKey,
-        values: comparedValues,
-      });
+      for (const run of runs) {
+        rows.push({
+          id: `metric_${groupKey}_${run.index}_${metricKey}`,
+          rowType: HeatMapRowType.Metric,
+          groupKey,
+          metricKey,
+          runIndex: run.index,
+          label: metricKey,
+          values: buildMetricValuesForRun(mergedRows, groupKey, metricKey, run.slot),
+        });
+      }
     }
   }
 

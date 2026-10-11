@@ -9,20 +9,19 @@ import {
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
-import { RUN_COMPARE_PRIMARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
   HeatMapCellTooltipData,
   HeatMapColorDisplayMode,
   HeatMapRow,
   HeatMapRowType,
 } from '@/src/components/Runs/Compare/HeatMap/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
 interface BuildHeatMapCellTooltipDataOptions {
   colorDisplayMode: HeatMapColorDisplayMode;
   testCaseLabel: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   colId: string;
 }
 
@@ -30,6 +29,11 @@ interface BuildHeatMapCellTooltipDataOptions {
 const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
 
 const formatCompareRunLabel = (runIndex: string, runName: string): string => `[${runIndex}] ${runName}`;
+
+const getRunLabel = (runs: CompareRun[], runIndex: string): string | undefined => {
+  const run = runs.find((candidate) => candidate.index === runIndex);
+  return run ? formatCompareRunLabel(run.index, run.name) : undefined;
+};
 
 const buildValueSwatch = (value: number, isDeltaMode: boolean): HeatMapCellTooltipSwatch => {
   const mode = isDeltaMode ? ScoreColorMode.Delta : ScoreColorMode.Absolute;
@@ -46,7 +50,7 @@ const buildValueSwatch = (value: number, isDeltaMode: boolean): HeatMapCellToolt
 
 export const buildHeatMapCellTooltipData = (
   params: ITooltipParams<HeatMapRow>,
-  { colorDisplayMode, testCaseLabel, primaryRunName, comparedRunName, colId }: BuildHeatMapCellTooltipDataOptions,
+  { colorDisplayMode, testCaseLabel, runs, colId }: BuildHeatMapCellTooltipDataOptions,
 ): HeatMapCellTooltipData | undefined => {
   const row = params.data;
   if (!row || row.rowType === HeatMapRowType.Group) {
@@ -70,8 +74,7 @@ export const buildHeatMapCellTooltipData = (
     };
 
     if (!isDeltaMode && row.runIndex != null) {
-      const runName = row.runIndex === RUN_COMPARE_PRIMARY_INDEX ? primaryRunName : comparedRunName;
-      tooltipData.runLabel = formatCompareRunLabel(row.runIndex, runName);
+      tooltipData.runLabel = getRunLabel(runs, row.runIndex);
     }
 
     return tooltipData;
@@ -86,8 +89,7 @@ export const buildHeatMapCellTooltipData = (
   };
 
   if (!isDeltaMode && row.runIndex != null) {
-    const runName = row.runIndex === RUN_COMPARE_PRIMARY_INDEX ? primaryRunName : comparedRunName;
-    tooltipData.runLabel = formatCompareRunLabel(row.runIndex, runName);
+    tooltipData.runLabel = getRunLabel(runs, row.runIndex);
   }
 
   return tooltipData;

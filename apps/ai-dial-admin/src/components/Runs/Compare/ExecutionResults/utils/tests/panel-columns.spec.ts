@@ -10,6 +10,7 @@ import {
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import {
   buildComparePanelColumnTree,
@@ -19,6 +20,10 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 
 const runNames = { primary: 'Run #316', secondary: 'Run #315' };
+const primaryRun = { id: 'run-316', name: runNames.primary };
+const comparedRun = { id: 'run-315', name: runNames.secondary };
+const runs = getCompareRuns(primaryRun, comparedRun);
+const flippedRuns = getCompareRuns(primaryRun, comparedRun, true);
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
@@ -52,7 +57,7 @@ const getColId = (col: ColDef): string | undefined => (col.colId ?? col.field) a
 
 describe('panel-columns', () => {
   test('buildComparePanelColumnTree nests execution fields under run leaves', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const httpGroup = getChildren(executionGroup).find((col) => col.headerName === 'HTTP') as ColDef;
     const httpLeaves = getChildren(httpGroup);
@@ -68,7 +73,7 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree hides execution leaves by default', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const executionLeaves = getChildren(executionGroup).flatMap((fieldGroup) => getChildren(fieldGroup));
 
@@ -76,7 +81,7 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree exposes Request and Turn as execution field groups', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
     const fieldGroups = getChildren(executionGroup);
 
@@ -96,7 +101,7 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree nests execution status and metric groups', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const statusGroup = panelTree[0] as ColDef;
     const metricGroup = panelTree.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
     const precisionGroup = getChildren(metricGroup).find((col) => col.headerName === 'Precision') as ColDef;
@@ -110,7 +115,7 @@ describe('panel-columns', () => {
   });
 
   test('buildComparePanelColumnTree nests extracted fields under run leaves', () => {
-    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runs);
     const extractedGroup = panelTree.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
     const answerGroup = getChildren(extractedGroup).find((col) => col.headerName === 'answer') as ColDef;
 
@@ -121,7 +126,7 @@ describe('panel-columns', () => {
 
   test('flatten roundtrip preserves flat grid colIds and order', () => {
     const flatDefs = getFlatDefs();
-    const panelTree = buildComparePanelColumnTree(flatDefs, runNames);
+    const panelTree = buildComparePanelColumnTree(flatDefs, runs);
     const flattened = flattenComparePanelColumnTree(panelTree);
 
     const collectColIds = (cols: ColDef[]): string[] =>
@@ -139,7 +144,7 @@ describe('panel-columns', () => {
 
   test('flatten keeps the metric level so the grid stays three levels deep', () => {
     const flatDefs = getFlatDefs();
-    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(flatDefs, runNames));
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(flatDefs, runs));
     const metricGroup = flattened.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
     const precisionGroup = getChildren(metricGroup)[0];
 
@@ -154,7 +159,7 @@ describe('panel-columns', () => {
   });
 
   test('flatten keeps the extracted field level so the grid stays three levels deep', () => {
-    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(getFlatDefs(), runNames));
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(getFlatDefs(), runs));
     const extractedGroup = flattened.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
     const answerGroup = getChildren(extractedGroup)[0];
 
@@ -165,7 +170,7 @@ describe('panel-columns', () => {
 
   test('preservePanelHideState copies hide flags by colId', () => {
     const flatDefs = getFlatDefs();
-    const panelTree = buildComparePanelColumnTree(flatDefs, runNames);
+    const panelTree = buildComparePanelColumnTree(flatDefs, runs);
     const hiddenFlatDefs = flatDefs.map((col) => {
       const children = getChildren(col);
       if (children.length === 0) {
@@ -177,7 +182,7 @@ describe('panel-columns', () => {
         children: children.map((child) => (getColId(child) === 'http' ? { ...child, hide: true } : child)),
       };
     });
-    const hiddenPanelTree = buildComparePanelColumnTree(hiddenFlatDefs, runNames);
+    const hiddenPanelTree = buildComparePanelColumnTree(hiddenFlatDefs, runs);
     const mergedPanelTree = preservePanelHideState(panelTree, hiddenPanelTree);
 
     const flattened = flattenComparePanelColumnTree(mergedPanelTree);
@@ -223,5 +228,32 @@ describe('panel-columns', () => {
     const executionLeaves = getChildren(executionGroup);
 
     expect(executionLeaves.every((leaf) => leaf.hide !== true)).toBe(true);
+  });
+});
+
+describe('Runs Compare :: buildComparePanelColumnTree run order', () => {
+  const getLeafPanelNames = (node: ColDef): (string | undefined)[] =>
+    ((node as ColGroupDef).children as ColDef[]).map((leaf) => (leaf.context as CompareColumnPanelContext)?.panelName);
+
+  test('lists the compared run before the primary run in every pair, keeping delta last', () => {
+    const tree = buildComparePanelColumnTree(getFlatDefs(), flippedRuns);
+    const metricGroup = tree.find((node) =>
+      ((node as ColGroupDef).children as ColGroupDef[])?.some((child) => child.headerName === 'Precision'),
+    ) as ColGroupDef;
+    const metric = (metricGroup.children as ColGroupDef[])[0];
+    const status = tree.find(
+      (node) => (node.context as CompareColumnPanelContext | undefined)?.panelName === EXECUTION_STATUS_GROUP_HEADER,
+    ) as ColDef;
+
+    expect(getLeafPanelNames(metric)).toEqual([runNames.secondary, runNames.primary, DEFAULT_COMPARE_DELTA_HEADER]);
+    expect(getLeafPanelNames(status)).toEqual([runNames.secondary, runNames.primary]);
+  });
+
+  test('flattening a flipped tree keeps the compared column first in the grid defs', () => {
+    const tree = buildComparePanelColumnTree(getFlatDefs(), flippedRuns);
+    const flat = flattenComparePanelColumnTree(tree);
+    const status = flat.find((node) => (node as ColGroupDef).children?.some((c) => (c as ColDef).colId === 'status'));
+
+    expect(((status as ColGroupDef).children as ColDef[]).map((leaf) => leaf.colId)).toEqual(['cmp_status', 'status']);
   });
 });

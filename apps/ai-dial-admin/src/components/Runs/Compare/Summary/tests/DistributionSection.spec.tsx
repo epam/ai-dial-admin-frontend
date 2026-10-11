@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import DistributionSection from '../DistributionSection';
 
 const executeStructuredQueryMock = vi.fn();
@@ -66,14 +67,14 @@ const COMPARED_SCORES: MetricScoresData = {
   },
 };
 
-const Controlled: FC = () => {
+const Controlled: FC<{ isFlipped?: boolean }> = ({ isFlipped = false }) => {
+  const runs = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }, isFlipped);
   const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
   return (
     <DistributionSection
       primaryRunId="run-1"
       comparedRunId="run-2"
-      primaryRunName="Run #316"
-      comparedRunName="Run #315"
+      runs={runs}
       metricOptions={METRIC_OPTIONS}
       primaryMetricScores={PRIMARY_SCORES}
       comparedMetricScores={COMPARED_SCORES}
@@ -115,5 +116,22 @@ describe('Compare Summary :: DistributionSection', () => {
     expect(avgCard).toHaveTextContent('Run #316:0.8');
     expect(avgCard).toHaveTextContent('Run #315:0.3');
     expect(avgCard).toHaveTextContent('delta:-0.5');
+  });
+
+  test('lists the compared run first when flipped, keeping the delta measured against the baseline', async () => {
+    render(<Controlled isFlipped />);
+
+    fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
+      target: { value: 'ragas.context_recall' },
+    });
+
+    const avgCard = await screen.findByRole('region', { name: 'AVG' });
+    const text = avgCard.textContent ?? '';
+    expect(text.indexOf('Run #315:0.3')).toBeLessThan(text.indexOf('Run #316:0.8'));
+    expect(avgCard).toHaveTextContent('delta:-0.5');
+
+    const histogram = await screen.findByRole('figure', { name: 'Runs.DistributionValueTitle' });
+    const histogramText = histogram.textContent ?? '';
+    expect(histogramText.indexOf('Run #315')).toBeLessThan(histogramText.indexOf('Run #316'));
   });
 });

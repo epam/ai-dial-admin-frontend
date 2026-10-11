@@ -7,6 +7,9 @@ import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
+
+const runs = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #317' });
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
@@ -60,8 +63,7 @@ const ControlledHeatMapTab: FC<{
         primaryRunId="run-1"
         comparedRunId="run-sibling"
         onlyMatchingTestCases={false}
-        primaryRunName="Run #316"
-        comparedRunName="Run #317"
+        runs={runs}
         colorDisplayMode={colorDisplayMode}
         onColorDisplayModeChange={vi.fn()}
         selectedMetricGroups={selectedMetricGroups}
@@ -198,8 +200,7 @@ describe('HeatMapTab', () => {
             primaryRunId="run-1"
             comparedRunId="run-sibling"
             onlyMatchingTestCases={false}
-            primaryRunName="Run #316"
-            comparedRunName="Run #317"
+            runs={runs}
             colorDisplayMode={colorDisplayMode}
             onColorDisplayModeChange={vi.fn()}
             selectedMetricGroups={new Set(['Accuracy', 'Quality'])}

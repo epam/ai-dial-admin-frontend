@@ -87,3 +87,10 @@ export const getCompareDiffPivotCellProps = (
     [COMPARE_DIFF_DATA_ATTR]: dataAttr,
   };
 };
+
+/** Which edge of the diff box a run's row owns, from where it sits among the displayed runs. */
+export const getCompareDiffPivotPosition = (position: number, count: number): CompareDiffPivotPosition => {
+  if (count <= 1) return 'single';
+  if (position === 0) return 'top';
+  return position === count - 1 ? 'bottom' : 'middle';
+};

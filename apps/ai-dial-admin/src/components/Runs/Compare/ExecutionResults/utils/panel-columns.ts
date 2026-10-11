@@ -1,22 +1,21 @@
 import { ColDef, ColGroupDef } from 'ag-grid-community';
 
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
   EXTRACTED_GROUP_HEADER,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
-import { CompareColumnPanelContext, ComparePanelRunNames } from '@/src/components/Runs/Compare/ExecutionResults/models';
-
-type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
+import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/ExecutionResults/models';
+import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
+import { getCompareRunColId } from '@/src/components/Runs/Compare/utils';
 
 const EXECUTION_FIELD_GROUPS = [
-  { fieldLabel: '# Run number', primaryColId: 'runIndex', secondaryColId: 'cmp_runIndex' },
-  { fieldLabel: 'Request', primaryColId: 'requestIndex', secondaryColId: 'cmp_requestIndex' },
-  { fieldLabel: 'Turn', primaryColId: 'turnIndex', secondaryColId: 'cmp_turnIndex' },
-  { fieldLabel: 'HTTP', primaryColId: 'http', secondaryColId: 'cmp_http' },
-  { fieldLabel: 'Duration', primaryColId: 'duration', secondaryColId: 'cmp_duration' },
+  { fieldLabel: '# Run number', colId: 'runIndex' },
+  { fieldLabel: 'Request', colId: 'requestIndex' },
+  { fieldLabel: 'Turn', colId: 'turnIndex' },
+  { fieldLabel: 'HTTP', colId: 'http' },
+  { fieldLabel: 'Duration', colId: 'duration' },
 ] as const;
 
 const getColId = (col: ColDef): string | undefined => (col.colId ?? col.field) as string | undefined;
@@ -57,35 +56,35 @@ const stripPanelContext = (col: ColDef): ColDef => {
   return { ...col, context: Object.keys(rest).length > 0 ? rest : undefined };
 };
 
+/** One panel leaf per run, in display order, for the column every run owns under `baseColId`. */
+const wrapRunLeaves = (leaves: ColDef[], baseColId: string, runs: CompareRun[]): ColDef[] =>
+  runs.map((run) =>
+    wrapPanelLeaf(findLeafByColId(leaves, getCompareRunColId(run.slot, baseColId)), run.name, run.index),
+  );
+
+const hasEveryRunColumn = (leaves: ColDef[], baseColId: string, runs: CompareRun[]): boolean =>
+  runs.every((run) => findLeafByColId(leaves, getCompareRunColId(run.slot, baseColId)));
+
 const nestPairedFieldGroup = (
   fieldLabel: string,
-  primaryColId: string,
-  secondaryColId: string,
+  baseColId: string,
   leaves: ColDef[],
-  runNames: ComparePanelRunNames,
+  runs: CompareRun[],
 ): ColGroupDef => {
-  const primary = findLeafByColId(leaves, primaryColId);
-  const secondary = findLeafByColId(leaves, secondaryColId);
-  if (!primary || !secondary) {
+  if (!hasEveryRunColumn(leaves, baseColId, runs)) {
     return { headerName: fieldLabel, children: [] };
   }
 
-  return {
-    headerName: fieldLabel,
-    children: [
-      wrapPanelLeaf(primary, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-      wrapPanelLeaf(secondary, runNames.secondary, RUN_COMPARE_SECONDARY_INDEX),
-    ],
-  };
+  return { headerName: fieldLabel, children: wrapRunLeaves(leaves, baseColId, runs) };
 };
 
-const nestExecutionGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestExecutionGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const leaves = getChildren(group);
 
   return {
     headerName: EXECUTION_GROUP_HEADER,
-    children: EXECUTION_FIELD_GROUPS.map(({ fieldLabel, primaryColId, secondaryColId }) =>
-      nestPairedFieldGroup(fieldLabel, primaryColId, secondaryColId, leaves, runNames),
+    children: EXECUTION_FIELD_GROUPS.map(({ fieldLabel, colId }) =>
+      nestPairedFieldGroup(fieldLabel, colId, leaves, runs),
     ),
   };
 };
@@ -99,25 +98,20 @@ const isExecutionStatusGroup = (group: ColDef): boolean => {
   return getChildren(group).some((child) => getColId(child) === 'status');
 };
 
-const nestExecutionStatusGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestExecutionStatusGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const leaves = getChildren(group);
-  const primary = findLeafByColId(leaves, 'status');
-  const secondary = findLeafByColId(leaves, 'cmp_status');
-  if (!primary || !secondary) {
+  if (!hasEveryRunColumn(leaves, 'status', runs)) {
     return group;
   }
 
   return {
     headerName: '',
     context: { panelName: EXECUTION_STATUS_GROUP_HEADER },
-    children: [
-      wrapPanelLeaf(primary, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-      wrapPanelLeaf(secondary, runNames.secondary, RUN_COMPARE_SECONDARY_INDEX),
-    ],
+    children: wrapRunLeaves(leaves, 'status', runs),
   };
 };
 
-const nestMetricGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestMetricGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const groupKey = group.headerName ?? '';
 
   return {
@@ -130,16 +124,7 @@ const nestMetricGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): Co
       return {
         ...metricGroup,
         children: [
-          wrapPanelLeaf(
-            findLeafByColId(leaves, `${groupKey}_${metricKey}`),
-            runNames.primary,
-            RUN_COMPARE_PRIMARY_INDEX,
-          ),
-          wrapPanelLeaf(
-            findLeafByColId(leaves, `cmp_${groupKey}_${metricKey}`),
-            runNames.secondary,
-            RUN_COMPARE_SECONDARY_INDEX,
-          ),
+          ...wrapRunLeaves(leaves, `${groupKey}_${metricKey}`, runs),
           wrapPanelLeaf(findLeafByColId(leaves, `delta_${groupKey}_${metricKey}`), DEFAULT_COMPARE_DELTA_HEADER),
         ],
       };
@@ -147,7 +132,7 @@ const nestMetricGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): Co
   };
 };
 
-const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
+const nestExtractedGroup = (group: ColGroupDef, runs: CompareRun[]): ColGroupDef => {
   const leaves = getLeaves(group);
   const fieldKeys = leaves
     .map((leaf) => getColId(leaf))
@@ -158,21 +143,14 @@ const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames):
     headerName: EXTRACTED_GROUP_HEADER,
     children: fieldKeys.map((key) => ({
       headerName: key,
-      children: [
-        wrapPanelLeaf(findLeafByColId(leaves, `extracted_${key}`)!, runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-        wrapPanelLeaf(
-          findLeafByColId(leaves, `cmp_extracted_${key}`)!,
-          runNames.secondary,
-          RUN_COMPARE_SECONDARY_INDEX,
-        ),
-      ],
+      children: wrapRunLeaves(leaves, `extracted_${key}`, runs),
     })),
   };
 };
 
 const isMetricGroup = (group: ColDef): boolean => getLeaves(group).some((leaf) => getColId(leaf)?.startsWith('delta_'));
 
-const nestTopLevelNode = (node: ColDef, runNames: ComparePanelRunNames): ColDef => {
+const nestTopLevelNode = (node: ColDef, runs: CompareRun[]): ColDef => {
   const children = getChildren(node);
   if (children.length === 0) {
     return node;
@@ -181,16 +159,16 @@ const nestTopLevelNode = (node: ColDef, runNames: ComparePanelRunNames): ColDef 
   const group = node as ColGroupDef;
 
   if (isExecutionStatusGroup(group)) {
-    return nestExecutionStatusGroup(group, runNames);
+    return nestExecutionStatusGroup(group, runs);
   }
   if (group.headerName === EXECUTION_GROUP_HEADER) {
-    return nestExecutionGroup(group, runNames);
+    return nestExecutionGroup(group, runs);
   }
   if (group.headerName === EXTRACTED_GROUP_HEADER) {
-    return nestExtractedGroup(group, runNames);
+    return nestExtractedGroup(group, runs);
   }
   if (isMetricGroup(group)) {
-    return nestMetricGroup(group, runNames);
+    return nestMetricGroup(group, runs);
   }
 
   return group;
@@ -293,10 +271,10 @@ export const preserveFlatColDefHideState = (newDefs: ColDef[], oldDefs: ColDef[]
 
 export const buildComparePanelColumnTree = (
   flatDefs: ColDef[],
-  runNames: ComparePanelRunNames,
+  runs: CompareRun[],
   prevPanelTree?: ColDef[],
 ): ColDef[] => {
-  const nestedTree = flatDefs.map((node) => nestTopLevelNode(node, runNames));
+  const nestedTree = flatDefs.map((node) => nestTopLevelNode(node, runs));
 
   return prevPanelTree ? preservePanelHideState(nestedTree, prevPanelTree) : nestedTree;
 };

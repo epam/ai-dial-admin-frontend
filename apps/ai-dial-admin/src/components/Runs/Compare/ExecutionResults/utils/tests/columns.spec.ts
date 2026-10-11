@@ -24,6 +24,7 @@ import {
   STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
@@ -104,14 +105,14 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: makeResult({ executionStatus: ExtractionResultStatus.SUCCESS }),
     });
 
-    expect(primaryCol.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
-    expect(secondaryCol.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
-    expect(primaryCol.cellClassRules?.['compare-metric-regressed-primary']?.({ data: removedRow })).toBe(true);
-    expect(secondaryCol.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: removedRow })).toBe(true);
-    expect(primaryCol.cellClassRules?.['compare-metric-improved-primary']?.({ data: addedRow })).toBe(true);
-    expect(secondaryCol.cellClassRules?.['compare-metric-improved-secondary']?.({ data: addedRow })).toBe(true);
-    expect(primaryCol.cellClassRules?.['compare-metric-new-primary']?.({ data: sameStatusRow })).toBe(false);
-    expect(secondaryCol.cellClassRules?.['compare-metric-new-secondary']?.({ data: sameStatusRow })).toBe(false);
+    expect(primaryCol.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-regressed-start']?.({ data: removedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-regressed-end']?.({ data: removedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-improved-start']?.({ data: addedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-improved-end']?.({ data: addedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-new-start']?.({ data: sameStatusRow })).toBe(false);
+    expect(secondaryCol.cellClassRules?.['compare-metric-new-end']?.({ data: sameStatusRow })).toBe(false);
   });
 
   test('execution columns highlight http and duration diffs', () => {
@@ -138,10 +139,10 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: makeResult({ responseStatusCode: 500, execDurationMs: 250 }),
     });
 
-    expect(httpPrimary?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
-    expect(httpSecondary?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
-    expect(durationPrimary?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
-    expect(durationSecondary?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(httpPrimary?.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+    expect(httpSecondary?.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
+    expect(durationPrimary?.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+    expect(durationSecondary?.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
     expect(runPrimary?.cellClassRules).toBeUndefined();
   });
 
@@ -206,8 +207,8 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: makeResult({ extractedColumns: { answer: 'no' } }),
     });
 
-    expect(primaryCol?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
-    expect(secondaryCol?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(primaryCol?.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+    expect(secondaryCol?.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
   });
 
   test('EXECUTION group has flat columns with run index in header name', () => {
@@ -268,8 +269,8 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
     const row = makeRow({ _compared: makeResult() });
 
-    expect(byColId('requestIndex').valueGetter({ data: row })).toBeNull();
-    expect(byColId('turnIndex').valueGetter({ data: row })).toBeNull();
+    expect(byColId('requestIndex').valueGetter({ data: row })).toBe('—');
+    expect(byColId('turnIndex').valueGetter({ data: row })).toBe('—');
     expect(byColId('cmp_requestIndex').valueGetter({ data: row })).toBe('—');
     expect(byColId('cmp_turnIndex').valueGetter({ data: row })).toBe('—');
     expect(byColId('cmp_requestIndex').valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
@@ -416,14 +417,12 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: null as unknown as number } } }),
     });
 
-    expect(primaryPrecision.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
-    expect(secondaryPrecision.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
-    expect(primaryRecall.cellClassRules?.['compare-metric-improved-primary']?.({ data: addedRow })).toBe(true);
-    expect(secondaryRecall.cellClassRules?.['compare-metric-improved-secondary']?.({ data: addedRow })).toBe(true);
-    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: removedRow })).toBe(true);
-    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: removedRow })).toBe(
-      true,
-    );
+    expect(primaryPrecision.cellClassRules?.['compare-metric-new-start']?.({ data: changedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-new-end']?.({ data: changedRow })).toBe(true);
+    expect(primaryRecall.cellClassRules?.['compare-metric-improved-start']?.({ data: addedRow })).toBe(true);
+    expect(secondaryRecall.cellClassRules?.['compare-metric-improved-end']?.({ data: addedRow })).toBe(true);
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-start']?.({ data: removedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-end']?.({ data: removedRow })).toBe(true);
   });
 
   test('metric columns highlight removed when _compared is null', () => {
@@ -444,10 +443,8 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: null,
     });
 
-    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: unmatchedRow })).toBe(true);
-    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: unmatchedRow })).toBe(
-      true,
-    );
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-start']?.({ data: unmatchedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-end']?.({ data: unmatchedRow })).toBe(true);
   });
 
   test('does not include a pinned eye action column', () => {
@@ -579,5 +576,95 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const hiddenColIds = (execution.children as ColDef[]).filter((col) => col.hide).map((col) => col.colId);
 
     expect(hiddenColIds).toEqual(expect.arrayContaining(indexPairs));
+  });
+});
+
+describe('Runs Compare :: getCompareColumnsCompare run order', () => {
+  const rows = [
+    makeRow({
+      metricValues: { Accuracy: { precision: 0.5 } },
+      extractedColumns: { answer: 'yes' },
+      _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } }, extractedColumns: { answer: 'no' } }),
+    }),
+  ];
+  const runs = getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' });
+  const flippedRuns = getCompareRuns({ id: 'run-1', name: 'Run #1' }, { id: 'run-2', name: 'Run #2' }, true);
+  const PAIRED_COL_IDS = ['status', 'http', 'duration', 'runIndex', 'Accuracy_precision', 'extracted_answer'];
+  // The index columns are paired but carry no diff highlight.
+  const HIGHLIGHTED_COL_IDS = PAIRED_COL_IDS.filter((colId) => colId !== 'runIndex');
+
+  const collectLeaves = (cols: (ColDef | ColGroupDef)[]): ColDef[] =>
+    cols.flatMap((col) => {
+      const children = (col as ColGroupDef).children as (ColDef | ColGroupDef)[] | undefined;
+      return children ? collectLeaves(children) : [col as ColDef];
+    });
+  const getColIds = (options?: { runs?: typeof runs }) =>
+    collectLeaves(getCompareColumnsCompare(rows, undefined, undefined, options)).map((col) => col.colId as string);
+  const getRuleKeys = (options: { runs?: typeof runs }, colId: string): string[] => {
+    const leaf = collectLeaves(getCompareColumnsCompare(rows, undefined, undefined, options)).find(
+      (col) => col.colId === colId,
+    );
+    return Object.keys((leaf?.cellClassRules as Record<string, unknown>) ?? {});
+  };
+
+  test('lists the primary column first when runs are in baseline-first order', () => {
+    [undefined, { runs }].forEach((options) => {
+      const colIds = getColIds(options);
+
+      PAIRED_COL_IDS.forEach((colId) => {
+        expect(colIds.indexOf(colId)).toBeLessThan(colIds.indexOf(`cmp_${colId}`));
+      });
+    });
+  });
+
+  test('lists the compared column ahead of the primary one in every pair when flipped', () => {
+    const colIds = getColIds({ runs: flippedRuns });
+
+    PAIRED_COL_IDS.forEach((colId) => {
+      expect(colIds.indexOf(`cmp_${colId}`)).toBeLessThan(colIds.indexOf(colId));
+    });
+  });
+
+  test('keeps the same columns and the delta column right after the pair when flipped', () => {
+    const flippedIds = getColIds({ runs: flippedRuns });
+
+    expect(flippedIds.indexOf('delta_Accuracy_precision')).toBe(flippedIds.indexOf('Accuracy_precision') + 1);
+    expect([...flippedIds].sort()).toEqual([...getColIds()].sort());
+  });
+
+  test('keeps run index badges with their run', () => {
+    const headers = collectLeaves(getCompareColumnsCompare(rows, undefined, undefined, { runs: flippedRuns }))
+      .filter((col) => col.colId === 'status' || col.colId === 'cmp_status')
+      .map((col) => col.headerName);
+
+    expect(headers).toEqual([
+      formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX),
+      formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX),
+    ]);
+  });
+
+  test('closes the diff box by position: the first column opens its right edge, the last its left edge', () => {
+    HIGHLIGHTED_COL_IDS.forEach((colId) => {
+      expect(getRuleKeys({ runs }, colId)).not.toHaveLength(0);
+      expect(getRuleKeys({ runs }, colId).every((key) => key.endsWith('-start'))).toBe(true);
+      expect(getRuleKeys({ runs }, `cmp_${colId}`).every((key) => key.endsWith('-end'))).toBe(true);
+
+      expect(getRuleKeys({ runs: flippedRuns }, colId).every((key) => key.endsWith('-end'))).toBe(true);
+      expect(getRuleKeys({ runs: flippedRuns }, `cmp_${colId}`).every((key) => key.endsWith('-start'))).toBe(true);
+    });
+  });
+
+  test('reads the diff kind baseline-to-compared whichever way the runs are displayed', () => {
+    const changedRow = makeRow({
+      metricValues: { Accuracy: { precision: 0.5 } },
+      _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
+    });
+    const leaves = collectLeaves(getCompareColumnsCompare([changedRow], undefined, undefined, { runs: flippedRuns }));
+    type RuleCol = { cellClassRules: Record<string, (p: { data?: CompareAnalyticsRow }) => boolean> };
+    const primaryCol = leaves.find((col) => col.colId === 'Accuracy_precision') as unknown as RuleCol;
+    const comparedCol = leaves.find((col) => col.colId === 'cmp_Accuracy_precision') as unknown as RuleCol;
+
+    expect(primaryCol.cellClassRules['compare-metric-new-end']({ data: changedRow })).toBe(true);
+    expect(comparedCol.cellClassRules['compare-metric-new-start']({ data: changedRow })).toBe(true);
   });
 });

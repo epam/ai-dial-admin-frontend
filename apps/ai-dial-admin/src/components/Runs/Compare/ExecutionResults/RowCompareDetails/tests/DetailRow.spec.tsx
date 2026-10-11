@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import DetailRow from '../DetailRow';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 
@@ -17,7 +18,9 @@ const row = (fieldKey: string, overrides: Partial<RowDetailField> = {}): RowDeta
   ...overrides,
 });
 
-const renderDetailRow = (fieldRow: RowDetailField) =>
+const runs = getCompareRuns({ id: 'run-1', name: 'Run A' }, { id: 'run-2', name: 'Run B' });
+
+const renderDetailRow = (fieldRow: RowDetailField, displayedRuns = runs) =>
   render(
     <DetailRow
       row={fieldRow}
@@ -27,6 +30,7 @@ const renderDetailRow = (fieldRow: RowDetailField) =>
       onOpenDiff={vi.fn()}
       openDiffLabel="Open diff"
       hideHighlights={false}
+      runs={displayedRuns}
     />,
   );
 
@@ -88,5 +92,34 @@ describe('DetailRow alignment', () => {
     const { container } = renderDetailRow(row('httpStatusCode', { isNumeric: true, isMetric: false }));
 
     expect(getDeltaCell(container, 'httpStatusCode')).not.toHaveClass('text-right');
+  });
+});
+
+describe('DetailRow run order', () => {
+  const getValueTexts = (container: HTMLElement) => getValueCells(container, 'answer').map((cell) => cell.textContent);
+
+  test('renders the values in the order of the runs it is given', () => {
+    const answer = row('answer', { primaryRaw: 'Berlin', secondaryRaw: 'Paris', isNumeric: false });
+
+    expect(getValueTexts(renderDetailRow(answer).container)).toEqual(['Berlin', 'Paris']);
+    expect(getValueTexts(renderDetailRow(answer, [...runs].reverse()).container)).toEqual(['Paris', 'Berlin']);
+  });
+
+  test('shows the no-match label on the secondary run wherever it is displayed', () => {
+    const answer = row('answer', { primaryRaw: 'Berlin', secondaryRaw: null, isNumeric: false });
+    const { container } = render(
+      <DetailRow
+        row={answer}
+        hasComparedMatch={false}
+        noMatchLabel="No match"
+        failedLabel="Failed"
+        onOpenDiff={vi.fn()}
+        openDiffLabel="Open diff"
+        hideHighlights={false}
+        runs={[...runs].reverse()}
+      />,
+    );
+
+    expect(getValueTexts(container)).toEqual(['No match', 'Berlin']);
   });
 });

@@ -1,8 +1,17 @@
+import { ReactNode } from 'react';
+
 import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import { getMetricStatCards } from '@/src/components/Runs/Summary/utils';
 
-import { CompareBarGroup, CompareMetricStatCard } from './models';
+import { CompareBarGroup, CompareCardItems, CompareMetricStatCard } from './models';
+
+/** Titled values for a compare card, one per run, in the order the runs are displayed. */
+export const toCompareCardItems = (runs: CompareRun[], getValue: (run: CompareRun) => ReactNode): CompareCardItems => {
+  const [first, second] = runs.map((run) => ({ title: run.name, value: getValue(run) }));
+  return [first, second];
+};
 
 /** Statistics present on either run, in canonical Metric Scores control order. */
 export const unionStatistics = (primary: string[], compared: string[]): string[] =>

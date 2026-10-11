@@ -5,6 +5,7 @@ import { FC } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import DetailRow from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/DetailRow';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RowDetailField, RowDetailSection } from '@/src/components/Runs/Details/RowDetails/models';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
   onOpenDiff: (row: RowDetailField) => void;
   openDiffLabel: string;
   hideHighlights: boolean;
+  runs: CompareRun[];
 }
 
 const SectionRows: FC<Props> = ({
@@ -31,6 +33,7 @@ const SectionRows: FC<Props> = ({
   onOpenDiff,
   openDiffLabel,
   hideHighlights,
+  runs,
 }) => (
   <>
     <button
@@ -56,6 +59,7 @@ const SectionRows: FC<Props> = ({
           onOpenDiff={onOpenDiff}
           openDiffLabel={openDiffLabel}
           hideHighlights={hideHighlights}
+          runs={runs}
         />
       ))}
   </>

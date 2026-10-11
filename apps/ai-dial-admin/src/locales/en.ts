@@ -2468,7 +2468,7 @@ export default {
     TextDiff: 'Text',
     RunCompareNoMatch: 'No matching test case in compared run',
     RunComparison: 'Run Comparison',
-    RunCompareVs: 'vs.',
+    RunCompareFlip: 'Flip runs order',
     RunCompareAddRun: 'Add',
     RunCompareAddSecondRunTitle: 'Add a second run to start comparing.',
     RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',

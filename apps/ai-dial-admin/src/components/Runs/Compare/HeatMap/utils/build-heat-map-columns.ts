@@ -19,6 +19,7 @@ import {
   hasHeatMapMultiSubRuns,
   hasHeatMapMultiTurns,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 
@@ -26,8 +27,7 @@ interface BuildHeatMapColumnsOptions {
   colorDisplayMode: HeatMapColorDisplayMode;
   expandedGroups: Set<string>;
   onToggleGroup: (groupKey: string) => void;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
 }
 
 const isHeatMapGroupRow = (row: HeatMapRow | undefined): boolean =>
@@ -35,7 +35,7 @@ const isHeatMapGroupRow = (row: HeatMapRow | undefined): boolean =>
 
 export const buildHeatMapColumns = (
   mergedRows: CompareAnalyticsRow[],
-  { colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName }: BuildHeatMapColumnsOptions,
+  { colorDisplayMode, expandedGroups, onToggleGroup, runs }: BuildHeatMapColumnsOptions,
 ): ColDef<HeatMapRow>[] => {
   const includeSubRunIndex = hasHeatMapMultiSubRuns(mergedRows);
   const includeRequestIndex = hasHeatMapMultiRequests(mergedRows);
@@ -95,8 +95,7 @@ export const buildHeatMapColumns = (
         buildHeatMapCellTooltipData(params, {
           colorDisplayMode,
           testCaseLabel: headerLabel,
-          primaryRunName,
-          comparedRunName,
+          runs,
           colId,
         }),
     };

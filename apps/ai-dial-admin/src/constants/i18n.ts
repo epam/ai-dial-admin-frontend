@@ -2280,7 +2280,7 @@ export enum RunsI18nKey {
   InputBindings = 'Runs.InputBindings',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
   RunComparison = 'Runs.RunComparison',
-  RunCompareVs = 'Runs.RunCompareVs',
+  RunCompareFlip = 'Runs.RunCompareFlip',
   RunCompareAddRun = 'Runs.RunCompareAddRun',
   RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',

@@ -1,12 +1,12 @@
 'use client';
 
-import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
+import { IconAdjustmentsHorizontal, IconArrowsLeftRight } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialGhostIconButton, DialSwitch, DialTabs, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -15,21 +15,18 @@ import CompareRowDetailBottomPanel from '@/src/components/Runs/Compare/Execution
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { ROW_DETAIL_BOTTOM_CLASS, ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Details/RowDetails/constants';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
-import {
-  CompareRunSlot,
-  CompareViewTab,
-  RUN_COMPARE_PRIMARY_INDEX,
-  RUN_COMPARE_SECONDARY_INDEX,
-} from '@/src/components/Runs/Compare/constants';
+import { CompareRunSlot, CompareViewTab } from '@/src/components/Runs/Compare/constants';
 import HeatMapToolbar from '@/src/components/Runs/Compare/HeatMap/HeatMapToolbar';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { resolveMetricGroupsSelection } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
+import { swapComparePairColumnState } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-state';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import { useCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 import {
   fetchSuiteCompletedRuns,
   getCompareRunsUrn,
   getCompareViewTabs,
+  getCompareRuns,
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
@@ -68,6 +65,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [activeTab, setActiveTab] = useState(CompareViewTab.SummaryOverview);
   const [onlyMatchingTestCases, setOnlyMatchingTestCases] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
@@ -93,6 +91,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   selectedRowRef.current = selectedRow;
   const focusFieldKeyRef = useRef(focusFieldKey);
   focusFieldKeyRef.current = focusFieldKey;
+  const detailPositionRef = useRef(detailPosition);
+  detailPositionRef.current = detailPosition;
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
   const fieldSchema = useMemo(() => {
@@ -168,6 +168,19 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const primaryRunName = run?.testRunName || primaryRunId;
   const comparedRun = suiteRuns.find((suiteRun) => suiteRun.id === comparedRunId);
   const comparedRunName = comparedRun?.testRunName || comparedRunId;
+  const runs = useMemo(
+    () =>
+      getCompareRuns(
+        { id: primaryRunId, name: primaryRunName },
+        { id: comparedRunId, name: comparedRunName },
+        isFlipped,
+      ),
+    [primaryRunId, primaryRunName, comparedRunId, comparedRunName, isFlipped],
+  );
+  const isEditDisabledBySlot: Record<CompareRunSlot, boolean> = {
+    [CompareRunSlot.Primary]: isPrimaryEditDisabled,
+    [CompareRunSlot.Secondary]: isSecondaryEditDisabled,
+  };
 
   const openSelectRun = (slot: CompareRunSlot) => setSelectRunSlot(slot);
   const closeSelectRun = () => setSelectRunSlot(null);
@@ -196,6 +209,15 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     },
     [selectRunSlot, comparedRunId, primaryRunId, router],
   );
+
+  const onFlipRuns = useCallback(() => {
+    setIsFlipped((prev) => !prev);
+
+    const { columnState } = tabState.executionResults;
+    if (columnState) {
+      setExecutionResultsState({ columnState: swapComparePairColumnState(columnState) });
+    }
+  }, [tabState.executionResults, setExecutionResultsState]);
 
   const onChangeActiveTab = useCallback((tab: string) => {
     setActiveTab(tab as CompareViewTab);
@@ -268,8 +290,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       const content = isBottom ? (
         <CompareRowDetailBottomPanel
           row={row}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onClose={closeRowDetail}
           onSwitchToSidebar={switchToSidebar}
           focusFieldKey={fieldKey}
@@ -286,8 +307,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       ) : (
         <CompareRowDetailPanel
           row={row}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onClose={closeRowDetail}
           position={SidebarPosition.Right}
           onSwitchDisplayMode={switchToBottom}
@@ -307,8 +327,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       sidebarRef.current.showSidebar(content, className, position);
     },
     [
-      primaryRunName,
-      comparedRunName,
+      runs,
       closeRowDetail,
       switchToBottom,
       switchToSidebar,
@@ -333,6 +352,18 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     },
     [showDetailPanel, detailPosition],
   );
+
+  useEffect(() => {
+    const currentRow = selectedRowRef.current;
+    if (currentRow) {
+      showDetailPanelRef.current(
+        currentRow,
+        detailPositionRef.current,
+        focusFieldKeyRef.current,
+        focusRequestIdRef.current,
+      );
+    }
+  }, [runs]);
 
   useEffect(() => {
     if (activeTab !== CompareViewTab.ExecutionResults) {
@@ -369,21 +400,26 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
       <div className="flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          {run && (
-            <CompareRunTag
-              runIndex={RUN_COMPARE_PRIMARY_INDEX}
-              name={primaryRunName}
-              onEdit={() => openSelectRun(CompareRunSlot.Primary)}
-              isEditDisabled={isPrimaryEditDisabled}
-            />
-          )}
-          <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareVs)}</span>
-          <CompareRunTag
-            runIndex={RUN_COMPARE_SECONDARY_INDEX}
-            name={comparedRunName}
-            onEdit={() => openSelectRun(CompareRunSlot.Secondary)}
-            isEditDisabled={isSecondaryEditDisabled}
-          />
+          {runs.map((compareRun, position) => (
+            <Fragment key={compareRun.slot}>
+              {position > 0 && (
+                <DialGhostIconButton
+                  size={ElementSize.Small}
+                  icon={<IconArrowsLeftRight size={16} aria-hidden />}
+                  aria-label={t(RunsI18nKey.RunCompareFlip)}
+                  title={t(RunsI18nKey.RunCompareFlip)}
+                  onClick={onFlipRuns}
+                />
+              )}
+              {(compareRun.slot !== CompareRunSlot.Primary || run) && (
+                <CompareRunTag
+                  run={compareRun}
+                  onEdit={() => openSelectRun(compareRun.slot)}
+                  isEditDisabled={isEditDisabledBySlot[compareRun.slot]}
+                />
+              )}
+            </Fragment>
+          ))}
         </div>
         <DialSwitch
           switchId="onlyMatchingTestCases"
@@ -418,8 +454,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           activeTab={activeTab}
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onlyMatchingTestCases={onlyMatchingTestCases}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
