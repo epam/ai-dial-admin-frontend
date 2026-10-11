@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { ACCURACY_COLOR_MAP, DELTA_POSITIVE_COLOR_MAP } from '@/src/components/Common/ColorScale/constants';
+import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
+import { getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
@@ -13,7 +14,6 @@ const baseOptions = {
   primaryRunName: 'Run #316',
   comparedRunName: 'Run #317',
   colId,
-  theme: 'dark',
 };
 
 const metricRow = {
@@ -33,6 +33,8 @@ describe('buildHeatMapCellTooltipData', () => {
       colorDisplayMode: HeatMapColorDisplayMode.Absolute,
     });
 
+    const bucketKey = getScoreCellBucketKey(0.812, ScoreColorMode.Absolute)!;
+
     expect(result).toEqual({
       testCase: 'Row 001',
       metric: 'Context Appropriateness',
@@ -40,8 +42,7 @@ describe('buildHeatMapCellTooltipData', () => {
       runLabel: '[2] Run #317',
       valueRow: {
         value: '0.812',
-        backgroundColor: ACCURACY_COLOR_MAP[0.9].bg,
-        borderColor: ACCURACY_COLOR_MAP[0.9].border,
+        className: `bg-score-${bucketKey} border-score-${bucketKey}`,
       },
       valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
     });
@@ -59,14 +60,15 @@ describe('buildHeatMapCellTooltipData', () => {
       colorDisplayMode: HeatMapColorDisplayMode.Delta,
     });
 
+    const bucketKey = getScoreCellBucketKey(0.95, ScoreColorMode.Delta)!;
+
     expect(result).toMatchObject({
       testCase: 'Row 001',
       metric: 'Context Appropriateness',
       input: 'Recall',
       valueRow: {
         value: '+0.950',
-        backgroundColor: DELTA_POSITIVE_COLOR_MAP[1.0].bg,
-        borderColor: DELTA_POSITIVE_COLOR_MAP[1.0].border,
+        className: `bg-score-${bucketKey} border-score-${bucketKey}`,
       },
       valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
     });
@@ -129,17 +131,17 @@ describe('buildHeatMapCellTooltipData', () => {
     expect(result).toBeUndefined();
   });
 
-  test('returns absolute tooltip with light-theme swatch colors', () => {
+  test('returns absolute tooltip with the score bucket swatch classes', () => {
     const result = buildHeatMapCellTooltipData({ data: metricRow } as never, {
       ...baseOptions,
-      theme: 'light',
       colorDisplayMode: HeatMapColorDisplayMode.Absolute,
     });
 
+    const bucketKey = getScoreCellBucketKey(0.812, ScoreColorMode.Absolute)!;
+
     expect(result?.valueRow).toEqual({
       value: '0.812',
-      backgroundColor: '#a1f5bf',
-      borderColor: ACCURACY_COLOR_MAP[0.9].border,
+      className: `bg-score-${bucketKey} border-score-${bucketKey}`,
     });
   });
 

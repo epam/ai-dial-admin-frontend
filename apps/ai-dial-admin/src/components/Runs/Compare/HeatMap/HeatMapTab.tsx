@@ -20,7 +20,6 @@ import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/He
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, isMatchedCompareRow, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -51,7 +50,6 @@ const HeatMapTab: FC<Props> = ({
   setHeatMapState,
 }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
 
   const [hasLoadError, setHasLoadError] = useState(false);
   const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
@@ -174,9 +172,8 @@ const HeatMapTab: FC<Props> = ({
       onToggleGroup,
       primaryRunName,
       comparedRunName,
-      theme: currentTheme,
     });
-  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName, currentTheme]);
+  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
 
   const headerLabels = useMemo(
     () => (mergedRowData ? getHeatMapTestCaseHeaderLabels(mergedRowData) : []),

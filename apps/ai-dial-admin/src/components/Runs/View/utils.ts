@@ -2,7 +2,7 @@ import { ColDef, ColGroupDef } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
-import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
+import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
 import {
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -111,10 +111,11 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           field: `${groupKey}_${key}`,
           colId: `${groupKey}_${key}`,
           headerName: key,
-          cellRenderer: MetricScoreCellRenderer,
+          cellRenderer: ScoreCellRenderer,
           ...NUMBER_FILTER_COL_DEF,
           ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
           ...rightAlignedColumn,
+          cellClass: 'p-0',
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';

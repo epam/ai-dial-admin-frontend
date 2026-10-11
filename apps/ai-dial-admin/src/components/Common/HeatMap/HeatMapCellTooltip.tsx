@@ -3,6 +3,8 @@
 import { ITooltipParams } from 'ag-grid-community';
 import { FC } from 'react';
 
+import classNames from 'classnames';
+
 import { HeatMapCellTooltipContent } from '@/src/components/Common/HeatMap/models';
 
 const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>> = ({ value }) => {
@@ -40,11 +42,7 @@ const HeatMapCellTooltip: FC<ITooltipParams<unknown, HeatMapCellTooltipContent>>
             <div className="flex items-center gap-1">
               <span
                 aria-hidden
-                className="size-[15px] rounded-sm shrink-0"
-                style={{
-                  backgroundColor: value.valueRow.backgroundColor,
-                  border: `1px solid ${value.valueRow.borderColor}`,
-                }}
+                className={classNames('size-[15px] rounded-sm shrink-0 border', value.valueRow.className)}
               />
               <span className="dial-tiny-text text-primary whitespace-nowrap">{value.valueRow.value}</span>
             </div>

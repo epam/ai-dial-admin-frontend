@@ -1,13 +1,14 @@
 import { ITooltipParams } from 'ag-grid-community';
 
-import { getAccuracyColors, getDeltaColors } from '@/src/components/Common/ColorScale/utils';
-import { DELTA_NEUTRAL_SEGMENT } from '@/src/components/Common/ColorScale/constants';
-import { HEAT_MAP_GROUP_ROW_BG, HEAT_MAP_STROKE_TERTIARY } from '@/src/components/Common/HeatMap/constants';
+import classNames from 'classnames';
+
 import { HeatMapCellTooltipSwatch } from '@/src/components/Common/HeatMap/models';
 import {
   formatHeatMapCellValue,
   formatHeatMapDeltaCellValue,
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
+import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 import { RUN_COMPARE_PRIMARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
   HeatMapCellTooltipData,
@@ -23,48 +24,29 @@ interface BuildHeatMapCellTooltipDataOptions {
   primaryRunName: string;
   comparedRunName: string;
   colId: string;
-  theme: string;
 }
+
+/** Neutral swatch for an out-of-range or zero-delta value — no score bucket applies. */
+const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
 
 const formatCompareRunLabel = (runIndex: string, runName: string): string => `[${runIndex}] ${runName}`;
 
-const getAbsoluteSwatchColors = (value: number, theme: string): { bg: string; border: string } => {
-  if (value >= 0 && value <= 1) {
-    return getAccuracyColors(value, theme);
-  }
-
-  return { bg: HEAT_MAP_GROUP_ROW_BG, border: HEAT_MAP_STROKE_TERTIARY };
-};
-
-const getDeltaSwatchColors = (value: number, theme: string): { bg: string; border: string } => {
-  if (value === 0) {
-    return DELTA_NEUTRAL_SEGMENT;
-  }
-
-  return getDeltaColors(value, theme) ?? DELTA_NEUTRAL_SEGMENT;
-};
-
-const buildValueSwatch = (value: number, isDeltaMode: boolean, theme: string): HeatMapCellTooltipSwatch => {
-  const colors = isDeltaMode ? getDeltaSwatchColors(value, theme) : getAbsoluteSwatchColors(value, theme);
+const buildValueSwatch = (value: number, isDeltaMode: boolean): HeatMapCellTooltipSwatch => {
+  const mode = isDeltaMode ? ScoreColorMode.Delta : ScoreColorMode.Absolute;
+  const isInRange = mode === ScoreColorMode.Delta ? value >= -1 && value <= 1 : value >= 0 && value <= 1;
+  const bucketKey = isInRange ? getScoreCellBucketKey(value, mode) : null;
+  const classes = getScoreCellBucketClasses(bucketKey);
   const formattedValue = isDeltaMode ? formatHeatMapDeltaCellValue(value) : formatHeatMapCellValue(value);
 
   return {
     value: formattedValue,
-    backgroundColor: colors.bg,
-    borderColor: colors.border,
+    className: classes ? classNames(classes.background, classes.border) : NEUTRAL_SWATCH_CLASSNAME,
   };
 };
 
 export const buildHeatMapCellTooltipData = (
   params: ITooltipParams<HeatMapRow>,
-  {
-    colorDisplayMode,
-    testCaseLabel,
-    primaryRunName,
-    comparedRunName,
-    colId,
-    theme,
-  }: BuildHeatMapCellTooltipDataOptions,
+  { colorDisplayMode, testCaseLabel, primaryRunName, comparedRunName, colId }: BuildHeatMapCellTooltipDataOptions,
 ): HeatMapCellTooltipData | undefined => {
   const row = params.data;
   if (!row || row.rowType === HeatMapRowType.Group) {
@@ -99,7 +81,7 @@ export const buildHeatMapCellTooltipData = (
     testCase: testCaseLabel,
     metric: row.groupKey,
     input,
-    valueRow: buildValueSwatch(value, isDeltaMode, theme),
+    valueRow: buildValueSwatch(value, isDeltaMode),
     valueLabelKey,
   };
 

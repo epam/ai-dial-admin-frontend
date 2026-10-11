@@ -1,11 +1,9 @@
 import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
-import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/constants';
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
-import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import {
@@ -52,6 +50,7 @@ import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { getUniformExecutionFields, hideUniformColumns } from '@/src/utils/evaluation/column-variation';
+import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
 
 type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
 
@@ -200,6 +199,7 @@ const buildComparedMetricColumn = (
     ...NUMBER_FILTER_COL_DEF,
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     ...rightAlignedColumn,
+    cellClass: 'p-0',
     cellRendererSelector: (params) => {
       if (!params.data?._compared) return;
       const source = params.data._compared;
@@ -209,8 +209,7 @@ const buildComparedMetricColumn = (
       if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
-          component: MetricScoreCellRenderer,
-          params: { getMetricValue: getDisplayValue, width: SCORE_INDICATOR_COMPARE_WIDTH },
+          component: ScoreCellRenderer,
         };
       }
     },
@@ -239,6 +238,7 @@ const buildComparePrimaryMetricColumn = (
     ...buildMetricColumn(groupKey, key, theme),
     ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key, true),
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    cellClass: 'p-0',
     cellStyle: undefined,
     cellRendererSelector: (params) => {
       const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
@@ -247,8 +247,7 @@ const buildComparePrimaryMetricColumn = (
       if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
-          component: MetricScoreCellRenderer,
-          params: { getMetricValue: getDisplayValue, width: SCORE_INDICATOR_COMPARE_WIDTH },
+          component: ScoreCellRenderer,
         };
       }
     },

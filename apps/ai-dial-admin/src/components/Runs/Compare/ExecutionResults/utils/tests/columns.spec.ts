@@ -337,8 +337,8 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const secondaryPrecision = metricGroup.children[1];
     const deltaPrecision = metricGroup.children[2];
 
-    expect(primaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
-    expect(secondaryPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
+    expect(primaryPrecision).toMatchObject({ cellClass: 'p-0', headerClass: 'align-right' });
+    expect(secondaryPrecision).toMatchObject({ cellClass: 'p-0', headerClass: 'align-right' });
     expect(deltaPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
     expect(primaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
     expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBe(true);

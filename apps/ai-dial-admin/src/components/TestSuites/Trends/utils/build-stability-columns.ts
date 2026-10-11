@@ -1,32 +1,29 @@
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
 
-import { getAccuracyColors, getAccuracyHeatCellStyle } from '@/src/components/Common/ColorScale/utils';
 import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
 import HeatMapCellTooltip from '@/src/components/Common/HeatMap/HeatMapCellTooltip';
 import HeatMapLabelCellRenderer from '@/src/components/Common/HeatMap/HeatMapLabelCellRenderer';
-import HeatMapValueCellRenderer from '@/src/components/Common/HeatMap/HeatMapValueCellRenderer';
 import {
-  HEAT_MAP_GROUP_ROW_BG,
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_LABEL_COL_WIDTH,
-  HEAT_MAP_STROKE_TERTIARY,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   getHeatMapDefaultCellStyle,
 } from '@/src/components/Common/HeatMap/constants';
-import {
-  HeatMapCellTooltipContent,
-  HeatMapGridRow,
-  HeatMapValueFormatMode,
-} from '@/src/components/Common/HeatMap/models';
+import { HeatMapCellTooltipContent, HeatMapGridRow } from '@/src/components/Common/HeatMap/models';
 import { formatHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
+import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 import { StabilityCellMeta } from '@/src/components/TestSuites/Trends/utils/pivot-stability';
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+
+/** Neutral swatch for a missing/out-of-range score — no score bucket applies. */
+const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
 
 interface BuildStabilityColumnsOptions {
   testCaseColIds: string[];
   headerLabels: string[];
   cellMeta: Record<string, Record<string, StabilityCellMeta>>;
-  theme: string;
   labels: {
     testCase: string;
     run: string;
@@ -43,7 +40,6 @@ const buildStabilityTooltip = (
   colId: string,
   testCaseLabel: string,
   cellMeta: Record<string, Record<string, StabilityCellMeta>>,
-  theme: string,
   labels: BuildStabilityColumnsOptions['labels'],
 ): HeatMapCellTooltipContent | undefined => {
   if (!row) {
@@ -72,26 +68,18 @@ const buildStabilityTooltip = (
 
   tooltipRows.push({ label: labels.passed, value: passedText });
 
-  if (typeof meta.score === 'number' && meta.score >= 0 && meta.score <= 1) {
-    const colors = getAccuracyColors(meta.score, theme);
-    return {
-      rows: tooltipRows,
-      valueLabel: labels.score,
-      valueRow: {
-        value: scoreText,
-        backgroundColor: colors.bg,
-        borderColor: colors.border,
-      },
-    };
-  }
+  const bucketKey =
+    typeof meta.score === 'number' && meta.score >= 0 && meta.score <= 1
+      ? getScoreCellBucketKey(meta.score, ScoreColorMode.Absolute)
+      : null;
+  const classes = getScoreCellBucketClasses(bucketKey);
 
   return {
     rows: tooltipRows,
     valueLabel: labels.score,
     valueRow: {
       value: scoreText,
-      backgroundColor: HEAT_MAP_GROUP_ROW_BG,
-      borderColor: HEAT_MAP_STROKE_TERTIARY,
+      className: classes ? `${classes.background} ${classes.border}` : NEUTRAL_SWATCH_CLASSNAME,
     },
   };
 };
@@ -100,7 +88,6 @@ export const buildStabilityColumns = ({
   testCaseColIds,
   headerLabels,
   cellMeta,
-  theme,
   labels,
 }: BuildStabilityColumnsOptions): ColDef<HeatMapGridRow>[] => {
   const labelColumn: ColDef<HeatMapGridRow> = {
@@ -129,24 +116,21 @@ export const buildStabilityColumns = ({
       headerClass: 'heat-map-test-case-header',
       minWidth: HEAT_MAP_VALUE_COL_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
-      cellRenderer: HeatMapValueCellRenderer,
-      cellRendererParams: { formatMode: HeatMapValueFormatMode.Absolute },
+      cellRenderer: ScoreCellRenderer,
+      cellRendererParams: { mode: ScoreColorMode.Absolute },
       valueGetter: (params: ValueGetterParams<HeatMapGridRow>) => {
         const value = params.data?.values?.[colId];
-        if (value === undefined) {
-          return null;
-        }
-        return formatHeatMapCellValue(value);
+        return value === undefined ? null : value;
       },
       cellStyle: (params) => {
         const value = params.data?.values?.[colId];
         if (typeof value === 'number' && value >= 0 && value <= 1) {
-          return getAccuracyHeatCellStyle(value, theme);
+          return undefined;
         }
         return getHeatMapDefaultCellStyle();
       },
       tooltipComponent: HeatMapCellTooltip,
-      tooltipValueGetter: (params) => buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, theme, labels),
+      tooltipValueGetter: (params) => buildStabilityTooltip(params.data, colId, headerLabel, cellMeta, labels),
     };
   });
 

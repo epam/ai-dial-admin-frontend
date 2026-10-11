@@ -8,8 +8,8 @@ export interface HeatMapGridRow {
 
 export interface HeatMapCellTooltipSwatch {
   value: string;
-  backgroundColor: string;
-  borderColor: string;
+  /** Tailwind `bg-*`/`border-*` classes — see `Common/ScoreCell/utils.ts`'s `getScoreCellBucketClasses`. */
+  className: string;
 }
 
 /** Domain-free tooltip payload: labels are already translated. */
@@ -18,9 +18,4 @@ export interface HeatMapCellTooltipContent {
   valueLabel?: string;
   valueRow?: HeatMapCellTooltipSwatch;
   valueText?: string;
-}
-
-export enum HeatMapValueFormatMode {
-  Absolute = 'absolute',
-  Delta = 'delta',
 }

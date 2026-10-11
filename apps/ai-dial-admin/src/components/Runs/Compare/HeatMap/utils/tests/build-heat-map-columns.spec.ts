@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
@@ -92,5 +92,24 @@ describe('buildHeatMapColumns', () => {
       getHeatMapTestCaseColId(rows[1]),
     ]);
     expect(new Set(testCaseColumns.map((col) => col.colId)).size).toBe(2);
+  });
+
+  test('draws only a right border on the label column', () => {
+    const rows = [makeRow({ testCaseName: 'BLR' })];
+    const [labelColumn] = buildHeatMapColumns(rows, buildOptions);
+
+    expect(labelColumn.cellStyle).toMatchObject({
+      borderRight: expect.any(String),
+      borderBottom: 'none',
+      borderLeft: 'none',
+      borderTop: 'none',
+    });
+  });
+
+  test('leaves value cells borderless — borders come from ScoreCellRenderer', () => {
+    const rows = [makeRow({ testCaseName: 'BLR' })];
+    const [, valueColumn] = buildHeatMapColumns(rows, buildOptions);
+
+    expect(valueColumn.cellStyle).toEqual({ border: 'none' });
   });
 });

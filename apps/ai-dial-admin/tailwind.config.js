@@ -195,20 +195,125 @@ const textColorsToRemove = {
   'controls-disable': 'var(--controls-text-disable, #ACB3C3)',
 };
 
+/**
+ * Score-cell palette (`Common/ScoreCell`) — one swatch per bucket of the "absolute" 0.00-1.00 score
+ * scale (`abs-00`…`abs-11`, red to green, `abs-00`/`abs-11` the exact-0/exact-1 edge buckets) and the
+ * "delta" -1.00..+1.00 scale (`delta-n4`…`delta-n1` negative, `delta-p1`…`delta-p4` positive).
+ * Source: Figma "DIAL Data Visualization" file, "UI Colors: Heat Map - Absolute values" /
+ * "- Delta" frames (node 62:572 / 72:409), pulled via the Figma MCP's variable defs — not
+ * hand-transcribed. Dark Mode values are the fallback here, matching every other token in this file;
+ * Light Mode has no entry in this app's theme service (these buckets are new), so
+ * `Common/ScoreCell/utils.ts` overrides these custom properties inline when the active theme isn't
+ * dark, the same mechanism `applyThemeColors` uses for every other token.
+ */
+const scoreCellBackgroundColors = {
+  'score-abs-00': 'var(--score-abs-00-bg, #75010180)',
+  'score-abs-01': 'var(--score-abs-01-bg, #69100b80)',
+  'score-abs-02': 'var(--score-abs-02-bg, #6c210d80)',
+  'score-abs-03': 'var(--score-abs-03-bg, #59210a80)',
+  'score-abs-04': 'var(--score-abs-04-bg, #5f2b1880)',
+  'score-abs-05': 'var(--score-abs-05-bg, #53320e80)',
+  'score-abs-06': 'var(--score-abs-06-bg, #362a0e80)',
+  'score-abs-07': 'var(--score-abs-07-bg, #403d1280)',
+  'score-abs-08': 'var(--score-abs-08-bg, #22351380)',
+  'score-abs-09': 'var(--score-abs-09-bg, #0d372680)',
+  'score-abs-10': 'var(--score-abs-10-bg, #022d1c80)',
+  'score-abs-11': 'var(--score-abs-11-bg, #01361180)',
+  'score-delta-n4': 'var(--score-delta-n4-bg, #75010180)',
+  'score-delta-n3': 'var(--score-delta-n3-bg, #6c210d80)',
+  'score-delta-n2': 'var(--score-delta-n2-bg, #48171980)',
+  'score-delta-n1': 'var(--score-delta-n1-bg, #2b0f0480)',
+  'score-delta-p1': 'var(--score-delta-p1-bg, #1e2a1680)',
+  'score-delta-p2': 'var(--score-delta-p2-bg, #283f1680)',
+  'score-delta-p3': 'var(--score-delta-p3-bg, #30511b80)',
+  'score-delta-p4': 'var(--score-delta-p4-bg, #32640b80)',
+};
+
+const scoreCellTextColors = {
+  'score-abs-00': 'var(--score-abs-00-text, #ff4e50)',
+  'score-abs-01': 'var(--score-abs-01-text, #f26b5b)',
+  'score-abs-02': 'var(--score-abs-02-text, #e5764a)',
+  'score-abs-03': 'var(--score-abs-03-text, #e08c3f)',
+  'score-abs-04': 'var(--score-abs-04-text, #d9a638)',
+  'score-abs-05': 'var(--score-abs-05-text, #d4be3a)',
+  'score-abs-06': 'var(--score-abs-06-text, #b8c94a)',
+  'score-abs-07': 'var(--score-abs-07-text, #7ec96b)',
+  'score-abs-08': 'var(--score-abs-08-text, #4ecba8)',
+  'score-abs-09': 'var(--score-abs-09-text, #4ec5c5)',
+  'score-abs-10': 'var(--score-abs-10-text, #4dc87a)',
+  'score-abs-11': 'var(--score-abs-11-text, #30e070)',
+  'score-delta-n4': 'var(--score-delta-n4-text, #ff4e50)',
+  'score-delta-n3': 'var(--score-delta-n3-text, #f26b5b)',
+  'score-delta-n2': 'var(--score-delta-n2-text, #e5764a)',
+  'score-delta-n1': 'var(--score-delta-n1-text, #a57a1d)',
+  'score-delta-p1': 'var(--score-delta-p1-text, #9aa63c)',
+  'score-delta-p2': 'var(--score-delta-p2-text, #67a455)',
+  'score-delta-p3': 'var(--score-delta-p3-text, #4dc87a)',
+  'score-delta-p4': 'var(--score-delta-p4-text, #30e070)',
+};
+
+const scoreCellBorderColors = {
+  'score-abs-00': 'var(--score-abs-00-border, #ff4e50)',
+  'score-abs-01': 'var(--score-abs-01-border, #f26b5b)',
+  'score-abs-02': 'var(--score-abs-02-border, #e5764a)',
+  'score-abs-03': 'var(--score-abs-03-border, #e08c3f)',
+  'score-abs-04': 'var(--score-abs-04-border, #d9a638)',
+  'score-abs-05': 'var(--score-abs-05-border, #d4be3a)',
+  'score-abs-06': 'var(--score-abs-06-border, #b8c94a)',
+  'score-abs-07': 'var(--score-abs-07-border, #7ec96b)',
+  'score-abs-08': 'var(--score-abs-08-border, #4ecba8)',
+  'score-abs-09': 'var(--score-abs-09-border, #4ec5c5)',
+  'score-abs-10': 'var(--score-abs-10-border, #4dc87a)',
+  'score-abs-11': 'var(--score-abs-11-border, #30e070)',
+  // Delta's most-negative bucket is the one case where border and text diverge in Dark Mode
+  // (border uses Red/800, text uses the brighter Red/600) — every other bucket matches its text color.
+  'score-delta-n4': 'var(--score-delta-n4-border, #eb503e)',
+  'score-delta-n3': 'var(--score-delta-n3-border, #f26b5b)',
+  'score-delta-n2': 'var(--score-delta-n2-border, #e5764a)',
+  'score-delta-n1': 'var(--score-delta-n1-border, #a57a1d)',
+  'score-delta-p1': 'var(--score-delta-p1-border, #9aa63c)',
+  'score-delta-p2': 'var(--score-delta-p2-border, #67a455)',
+  'score-delta-p3': 'var(--score-delta-p3-border, #4dc87a)',
+  'score-delta-p4': 'var(--score-delta-p4-border, #30e070)',
+};
+
+/**
+ * The "border matches background" variant: the same CSS variable as `scoreCellBackgroundColors`,
+ * exposed as a `borderColor` token too. This is the *default* border for a score cell — invisible
+ * against its own background, so adjacent score cells read as one continuous field instead of a grid
+ * of divided boxes — as opposed to `scoreCellBorderColors` above, which is the visible accent border
+ * used only when a border is explicitly requested or values are hidden.
+ */
+const scoreCellBackgroundBorderColors = Object.fromEntries(
+  Object.entries(scoreCellBackgroundColors).map(([key, value]) => [`${key}-bg`, value]),
+);
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
+  safelist: [{ pattern: /^(bg|text|border)-score-(abs-(0[0-9]|1[01])|delta-[np][1-4])(-bg)?$/ }],
   theme: {
-    backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove },
-    borderColor: { ...borderColors, ...borderColorsToRemove },
-    stroke: { ...borderColors, ...borderColorsToRemove },
+    backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove, ...scoreCellBackgroundColors },
+    borderColor: {
+      ...borderColors,
+      ...borderColorsToRemove,
+      ...scoreCellBorderColors,
+      ...scoreCellBackgroundBorderColors,
+    },
+    stroke: { ...borderColors, ...borderColorsToRemove, ...scoreCellBorderColors, ...scoreCellBackgroundBorderColors },
     // SVG fills paint surfaces (a tooltip arrow, a chart area), so the fill scale
     // follows the background tokens the way `stroke` follows the border ones.
-    fill: { none: 'none', current: 'currentColor', ...backgroundsColors, ...backgroundsColorsToRemove },
+    fill: {
+      none: 'none',
+      current: 'currentColor',
+      ...backgroundsColors,
+      ...backgroundsColorsToRemove,
+      ...scoreCellBackgroundColors,
+    },
     divideColor: { ...borderColors, ...borderColorsToRemove },
     placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...textColorsToRemove },
+    textColor: { ...textColors, ...textColorsToRemove, ...scoreCellTextColors },
     gradientColorStops: { ...backgroundsColors, ...backgroundsColorsToRemove },
 
     extend: {
@@ -219,7 +324,12 @@ module.exports = {
         desktop: { min: '1280px', max: '2559px' },
         large_desktop: { min: '2560px' },
       },
-      outlineColor: { ...borderColors, ...borderColorsToRemove },
+      outlineColor: {
+        ...borderColors,
+        ...borderColorsToRemove,
+        ...scoreCellBorderColors,
+        ...scoreCellBackgroundBorderColors,
+      },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #161B2D4D)',
         xs: `0 1px 4px 0 ${shadowColors['xs-1']}, 0 1px 2px 0 ${shadowColors['xs-2']}`,
