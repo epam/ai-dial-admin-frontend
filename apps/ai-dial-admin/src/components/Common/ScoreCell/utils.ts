@@ -45,6 +45,5 @@ export const getScoreCellBucketClasses = (bucketKey: string | null): ScoreCellBu
         background: `bg-score-${bucketKey}`,
         text: `text-score-${bucketKey}`,
         border: `border-score-${bucketKey}`,
-        backgroundBorder: `border-score-${bucketKey}-bg`,
       }
     : null;

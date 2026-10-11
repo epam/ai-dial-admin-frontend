@@ -277,31 +277,19 @@ const scoreCellBorderColors = {
   'score-delta-p4': 'var(--score-delta-p4-border, #30e070)',
 };
 
-/**
- * The "border matches background" variant: the same CSS variable as `scoreCellBackgroundColors`,
- * exposed as a `borderColor` token too. This is the *default* border for a score cell — invisible
- * against its own background, so adjacent score cells read as one continuous field instead of a grid
- * of divided boxes — as opposed to `scoreCellBorderColors` above, which is the visible accent border
- * used only when a border is explicitly requested or values are hidden.
- */
-const scoreCellBackgroundBorderColors = Object.fromEntries(
-  Object.entries(scoreCellBackgroundColors).map(([key, value]) => [`${key}-bg`, value]),
-);
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
-  safelist: [{ pattern: /^(bg|text|border)-score-(abs-(0[0-9]|1[01])|delta-[np][1-4])(-bg)?$/ }],
+  safelist: [{ pattern: /^(bg|text|border)-score-(abs-(0[0-9]|1[01])|delta-[np][1-4])$/ }],
   theme: {
     backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove, ...scoreCellBackgroundColors },
     borderColor: {
       ...borderColors,
       ...borderColorsToRemove,
       ...scoreCellBorderColors,
-      ...scoreCellBackgroundBorderColors,
     },
-    stroke: { ...borderColors, ...borderColorsToRemove, ...scoreCellBorderColors, ...scoreCellBackgroundBorderColors },
+    stroke: { ...borderColors, ...borderColorsToRemove, ...scoreCellBorderColors },
     // SVG fills paint surfaces (a tooltip arrow, a chart area), so the fill scale
     // follows the background tokens the way `stroke` follows the border ones.
     fill: {
@@ -328,7 +316,6 @@ module.exports = {
         ...borderColors,
         ...borderColorsToRemove,
         ...scoreCellBorderColors,
-        ...scoreCellBackgroundBorderColors,
       },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #161B2D4D)',

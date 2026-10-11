@@ -53,7 +53,6 @@ describe('getScoreCellBucketClasses', () => {
       background: 'bg-score-abs-00',
       text: 'text-score-abs-00',
       border: 'border-score-abs-00',
-      backgroundBorder: 'border-score-abs-00-bg',
     });
   });
 });

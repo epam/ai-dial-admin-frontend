@@ -7,17 +7,13 @@ import {
   formatHeatMapCellValueForMode,
   shouldShowHeatMapCellValue,
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
-import { ScoreCellBorderSides, ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
+import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 
 const MISSING_DISPLAY = '—';
 
 interface ScoreCellRendererParams extends ICellRendererParams {
   mode?: ScoreColorMode;
-  /** Opt into a visible, bucket-accent-colored border (configurable sides) instead of the default
-   * background-colored (effectively invisible) one. Ignored while the value is hidden — see `isHidden`. */
-  isBorderVisible?: boolean;
-  borderSides?: ScoreCellBorderSides;
 }
 
 const isInScoreRange = (value: number, mode: ScoreColorMode): boolean =>
@@ -25,17 +21,6 @@ const isInScoreRange = (value: number, mode: ScoreColorMode): boolean =>
 
 const isScoreValue = (value: unknown, mode: ScoreColorMode): value is number =>
   typeof value === 'number' && !Number.isNaN(value) && isInScoreRange(value, mode);
-
-/** Which side classes draw the border — bare `border` (all sides) when the consumer doesn't pick specific ones. */
-const getBorderSideClasses = (borderSides?: ScoreCellBorderSides): string =>
-  borderSides
-    ? classNames(
-        borderSides.top && 'border-t',
-        borderSides.right && 'border-r',
-        borderSides.bottom && 'border-b',
-        borderSides.left && 'border-l',
-      )
-    : 'border';
 
 /**
  * Right-aligned number on a bucket-colored background — the shared `score-cell-rendering` contract
@@ -46,21 +31,12 @@ const getBorderSideClasses = (borderSides?: ScoreCellBorderSides): string =>
  * `Common/ScoreCell/utils.ts`.
  *
  * Border behavior:
- * - Value visible, no explicit border requested (the default): a right+bottom border colored to
- *   match the cell's own background, so neighboring score cells read as one continuous field rather
- *   than a grid of divided boxes.
+ * - Value visible: no border, so neighboring score cells read as one continuous field rather than a
+ *   grid of divided boxes.
  * - Value hidden (see `isHidden` below): a right+bottom border in the bucket's visible accent color,
  *   so the grid structure stays legible once the numbers themselves are gone.
- * - `isBorderVisible`: the bucket's accent-colored border on the requested (or all) sides, taking
- *   priority over the default — but not over the hidden-value case above.
  */
-const ScoreCellRenderer = ({
-  value,
-  column,
-  mode = ScoreColorMode.Absolute,
-  isBorderVisible = false,
-  borderSides,
-}: ScoreCellRendererParams) => {
+const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: ScoreCellRendererParams) => {
   const columnWidth = column?.getActualWidth();
   const isHidden = columnWidth != null && !shouldShowHeatMapCellValue(columnWidth);
 
@@ -92,12 +68,8 @@ const ScoreCellRenderer = ({
   const displayText = formatHeatMapCellValueForMode(value, mode === ScoreColorMode.Delta);
   const isZeroDelta = mode === ScoreColorMode.Delta && value === 0;
 
-  const borderClasses = classes
-    ? classNames(
-        isHidden || isBorderVisible ? classes.border : classes.backgroundBorder,
-        isHidden ? 'border-r border-b' : isBorderVisible ? getBorderSideClasses(borderSides) : 'border-r border-b',
-      )
-    : undefined;
+  const borderClasses = isHidden && classes ? classNames(classes.border, 'border-r border-b') : undefined;
+  const isBorderless = !isHidden && !isZeroDelta;
   const zeroDeltaClasses = isZeroDelta ? 'bg-layer-2 border-r border-tertiary' : undefined;
 
   return (
@@ -105,7 +77,8 @@ const ScoreCellRenderer = ({
       className={classNames(
         'flex items-center justify-end size-full overflow-hidden px-1',
         classes?.background,
-        isHidden || isZeroDelta ? borderClasses : 'border-none',
+        isBorderless && 'border-none',
+        borderClasses,
         zeroDeltaClasses,
       )}
       role={isHidden ? 'group' : undefined}
