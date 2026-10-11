@@ -26,4 +26,19 @@ describe('CompareRunIndexHeader alignment', () => {
 
     expect(container.querySelector('.justify-end')).toBeNull();
   });
+
+  test('right-aligns a badge-only header when isRightAligned is set', () => {
+    const { container } = render(
+      <CompareRunIndexHeader {...headerParams} runIndex={RUN_COMPARE_PRIMARY_INDEX} isRightAligned />,
+    );
+
+    expect(container.firstElementChild).toHaveClass('justify-end');
+    expect(container.firstElementChild).not.toHaveClass('justify-center');
+  });
+
+  test('centers a badge-only header by default', () => {
+    const { container } = render(<CompareRunIndexHeader {...headerParams} runIndex={RUN_COMPARE_PRIMARY_INDEX} />);
+
+    expect(container.firstElementChild).toHaveClass('justify-center');
+  });
 });

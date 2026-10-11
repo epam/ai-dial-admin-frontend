@@ -1,19 +1,19 @@
 import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
-import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import {
   RUN_COMPARE_PRIMARY_INDEX,
   RUN_COMPARE_SECONDARY_INDEX,
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
+  compareScoreColDef,
   DEFAULT_COMPARE_DELTA_HEADER,
-  DELTA_COLUMN_WIDTH,
   DURATION_COLUMN_WIDTH,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
@@ -22,7 +22,6 @@ import {
   fixedWidthColDef,
   formatCompareColumnHeader,
   HTTP_COLUMN_WIDTH,
-  METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
   REQUEST_INDEX_COLUMN_WIDTH,
@@ -195,24 +194,12 @@ const buildComparedMetricColumn = (
   return {
     colId: `cmp_${groupKey}_${key}`,
     field: `cmp_${groupKey}_${key}`,
-    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key, true),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, undefined, true),
     ...NUMBER_FILTER_COL_DEF,
-    ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    ...compareScoreColDef,
     ...rightAlignedColumn,
     cellClass: 'p-0',
-    cellRendererSelector: (params) => {
-      if (!params.data?._compared) return;
-      const source = params.data._compared;
-      const groupExists = source.metricValues != null && groupKey in source.metricValues;
-      if (!groupExists) return;
-      const value = getRawValue(params);
-      if (value == null) return;
-      if (isScoreIndicatorValue(value)) {
-        return {
-          component: ScoreCellRenderer,
-        };
-      }
-    },
+    cellRenderer: ScoreCellRenderer,
     valueGetter: (params) => getDisplayValue(params),
     ...maybePairCellClassRules(hideHighlights, getMetricPairKind(groupKey, key), 'secondary'),
   };
@@ -236,21 +223,11 @@ const buildComparePrimaryMetricColumn = (
 
   return {
     ...buildMetricColumn(groupKey, key, theme),
-    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key, true),
-    ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, undefined, true),
+    ...compareScoreColDef,
     cellClass: 'p-0',
     cellStyle: undefined,
-    cellRendererSelector: (params) => {
-      const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
-      if (!groupExists) return;
-      const value = getRawValue(params);
-      if (value == null) return;
-      if (isScoreIndicatorValue(value)) {
-        return {
-          component: ScoreCellRenderer,
-        };
-      }
-    },
+    cellRenderer: ScoreCellRenderer,
     valueGetter: (params) => getDisplayValue(params),
     ...maybePairCellClassRules(hideHighlights, getMetricPairKind(groupKey, key), 'primary'),
   };
@@ -269,7 +246,7 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
     ...baseNumberFilter.filterParams,
     buttons: ['reset'],
   },
-  ...fixedWidthColDef(DELTA_COLUMN_WIDTH),
+  ...compareScoreColDef,
   ...rightAlignedColumn,
   cellRenderer: CompareDeltaCellRenderer,
   cellRendererParams: { groupKey, metricKey: key },
@@ -284,7 +261,7 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
 const buildComparedExtractedColumn = (key: string, hideHighlights?: boolean): ColDef => ({
   colId: `cmp_extracted_${key}`,
   field: `cmp_extracted_${key}`,
-  ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
+  ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX),
   flex: 1,
   minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
   ...NO_FILTER_COL_DEF,
@@ -408,11 +385,15 @@ const getComparedMetricGroupColumns = (
 ): ColGroupDef[] =>
   Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
-    children: Object.keys(groupValues).flatMap((key) => [
-      buildComparePrimaryMetricColumn(groupKey, key, errorText, hideHighlights, theme),
-      buildComparedMetricColumn(groupKey, key, errorText, hideHighlights),
-      buildMetricDeltaColumn(groupKey, key, deltaHeader),
-    ]),
+    children: Object.keys(groupValues).map((key) => ({
+      headerName: key,
+      headerGroupComponent: EllipsisHeaderGroup,
+      children: [
+        buildComparePrimaryMetricColumn(groupKey, key, errorText, hideHighlights, theme),
+        buildComparedMetricColumn(groupKey, key, errorText, hideHighlights),
+        buildMetricDeltaColumn(groupKey, key, deltaHeader),
+      ],
+    })),
   }));
 
 const getComparedExecutionStatusGroup = (hideHighlights?: boolean): ColGroupDef => ({
@@ -454,10 +435,13 @@ const getComparedExtractedGroupColumn = (
 
   return {
     headerName: EXTRACTED_GROUP_HEADER,
-    children: keys.flatMap((key) => [
-      { ...buildExtractedColumn(key, hideHighlights), ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key) },
-      buildComparedExtractedColumn(key, hideHighlights),
-    ]),
+    children: keys.map((key) => ({
+      headerName: key,
+      children: [
+        { ...buildExtractedColumn(key, hideHighlights), ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX) },
+        buildComparedExtractedColumn(key, hideHighlights),
+      ],
+    })),
   };
 };
 

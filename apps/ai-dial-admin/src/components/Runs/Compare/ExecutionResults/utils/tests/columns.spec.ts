@@ -2,6 +2,8 @@ import { ColDef, ColGroupDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
+import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
   RUN_COMPARE_PRIMARY_INDEX,
@@ -9,7 +11,6 @@ import {
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
-  DELTA_COLUMN_WIDTH,
   DEFAULT_COMPARE_DELTA_HEADER,
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -18,7 +19,7 @@ import {
   EXECUTION_STATUS_GROUP_HEADER,
   formatCompareColumnHeader,
   HTTP_COLUMN_WIDTH,
-  METRIC_COLUMN_WIDTH,
+  COMPARE_SCORE_COLUMN_MIN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
@@ -38,6 +39,13 @@ const makeResult = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyt
   runIndex: 1,
   ...overrides,
 });
+
+// Metric groups nest a metric level (primary, secondary, delta) under the group; most assertions only
+// care about the leaves, so this lifts them back to a single level.
+const withFlattenedMetricLeaves = (col: ColDef | ColGroupDef): ColGroupDef => {
+  const group = col as ColGroupDef;
+  return { ...group, children: (group.children as ColGroupDef[]).flatMap((metric) => metric.children) };
+};
 
 describe('Runs Compare :: getCompareColumnsCompare', () => {
   test('groups status columns under execution status without a visible group header', () => {
@@ -188,9 +196,9 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
         _compared: makeResult({ extractedColumns: { answer: 'no' } }),
       }),
     ]);
-    const extractedGroup = cols.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as {
-      children: ExtractedCol[];
-    };
+    const extractedGroup = withFlattenedMetricLeaves(
+      cols.find((col) => col.headerName === EXTRACTED_GROUP_HEADER)!,
+    ) as { children: ExtractedCol[] };
     const primaryCol = extractedGroup.children.find((col) => col.colId === 'extracted_answer');
     const secondaryCol = extractedGroup.children.find((col) => col.colId === 'cmp_extracted_answer');
     const changedRow = makeRow({
@@ -281,11 +289,11 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(secondaryCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
-  test('metric groups have primary, secondary, and delta columns per metric key', () => {
+  test('metric groups nest a metric level holding primary, secondary, and delta columns', () => {
     const rows = [
       makeRow({
-        metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
-        _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5 } } }),
+        metricValues: { 'Overall Accuracy': { Precision: 0.8, Recall: 0.7 } },
+        _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5, Recall: 0.6 } } }),
       }),
     ];
     const cols = getCompareColumnsCompare(rows, undefined, DEFAULT_COMPARE_DELTA_HEADER);
@@ -293,28 +301,61 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       headerName: string;
       children: {
         headerName: string;
-        colId?: string;
-        width?: number;
-        filter?: string | boolean;
-        floatingFilter?: boolean;
-        floatingFilterComponent?: unknown;
+        headerGroupComponent?: unknown;
+        children: {
+          headerName: string;
+          colId?: string;
+          width?: number;
+          minWidth?: number;
+          flex?: number;
+          suppressSizeToFit?: boolean;
+          filter?: string | boolean;
+          floatingFilter?: boolean;
+          floatingFilterComponent?: unknown;
+          headerComponent?: unknown;
+          headerComponentParams?: { label?: string };
+        }[];
       }[];
     };
 
     expect(metricGroup.headerName).toBe('Overall Accuracy');
-    expect(metricGroup.children).toHaveLength(3);
-    expect(metricGroup.children[0].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Precision'));
-    expect(metricGroup.children[0].width).toBe(METRIC_COLUMN_WIDTH);
-    expect(metricGroup.children[1].headerName).toBe(
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Precision'),
-    );
-    expect(metricGroup.children[1].colId).toBe('cmp_Overall Accuracy_Precision');
-    expect(metricGroup.children[2].headerName).toBe(DEFAULT_COMPARE_DELTA_HEADER);
-    expect(metricGroup.children[2].colId).toBe('delta_Overall Accuracy_Precision');
-    expect(metricGroup.children[2].width).toBe(DELTA_COLUMN_WIDTH);
-    expect(metricGroup.children[2].filter).toBe('agNumberColumnFilter');
-    expect(metricGroup.children[2].floatingFilter).toBe(true);
-    expect(metricGroup.children[2].floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
+    expect(metricGroup.children.map((metric) => metric.headerName)).toEqual(['Precision', 'Recall']);
+
+    const [primary, secondary, delta] = metricGroup.children[0].children;
+    expect(metricGroup.children[0].children).toHaveLength(3);
+    expect(primary.colId).toBe('Overall Accuracy_Precision');
+    expect(primary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX));
+    expect(primary.headerComponent).toBe(CompareRunIndexHeader);
+    expect(primary.headerComponentParams?.label).toBeUndefined();
+    expect(metricGroup.children[0].headerGroupComponent).toBe(EllipsisHeaderGroup);
+    expect(secondary.colId).toBe('cmp_Overall Accuracy_Precision');
+    expect(secondary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX));
+    expect(secondary.headerComponentParams?.label).toBeUndefined();
+    expect(delta.headerName).toBe(DEFAULT_COMPARE_DELTA_HEADER);
+    expect(delta.colId).toBe('delta_Overall Accuracy_Precision');
+    for (const col of [primary, secondary, delta]) {
+      expect(col).toMatchObject({
+        width: COMPARE_SCORE_COLUMN_MIN_WIDTH,
+        minWidth: COMPARE_SCORE_COLUMN_MIN_WIDTH,
+        flex: 0,
+        suppressSizeToFit: true,
+      });
+    }
+    expect(COMPARE_SCORE_COLUMN_MIN_WIDTH).toBe(80);
+    expect(delta.filter).toBe('agNumberColumnFilter');
+    expect(delta.floatingFilter).toBe(true);
+    expect(delta.floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
+    expect(metricGroup.children[1].children[2].colId).toBe('delta_Overall Accuracy_Recall');
+  });
+
+  test('primary and secondary score columns always use ScoreCellRenderer so missing values render as styled dashes', () => {
+    const cols = getCompareColumnsCompare([makeRow({ metricValues: { grp: { score: 0.8 } }, _compared: null })]);
+    const [primary, secondary] = withFlattenedMetricLeaves(cols[3]).children as ColDef[];
+
+    expect(primary.cellRenderer).toBe(ScoreCellRenderer);
+    expect(secondary.cellRenderer).toBe(ScoreCellRenderer);
+    expect(primary.cellRendererSelector).toBeUndefined();
+    expect(secondary.cellRendererSelector).toBeUndefined();
   });
 
   test('primary, secondary, and delta metric columns are right-aligned', () => {
@@ -325,7 +366,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       }),
     ];
     const cols = getCompareColumnsCompare(rows);
-    const metricGroup = cols[3] as {
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as {
       children: {
         colId?: string;
         cellClass?: string;
@@ -356,7 +397,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
         }),
       }),
     ]);
-    const metricGroup = cols[3] as { children: MetricCol[] };
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as { children: MetricCol[] };
     const primaryPrecision = metricGroup.children[0];
     const secondaryPrecision = metricGroup.children[1];
     const primaryRecall = metricGroup.children[3];
@@ -395,7 +436,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
         _compared: null,
       }),
     ]);
-    const metricGroup = cols[3] as { children: MetricCol[] };
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as { children: MetricCol[] };
     const primaryPrecision = metricGroup.children[0];
     const secondaryPrecision = metricGroup.children[1];
     const unmatchedRow = makeRow({
@@ -415,26 +456,31 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(cols.some((col) => (col as ColDef).pinned === 'right')).toBe(false);
   });
 
-  test('extracted group has paired columns with run index in header name', () => {
+  test('extracted group nests a field level holding the primary and secondary columns', () => {
     const rows = [
       makeRow({
-        extractedColumns: { answer: 'yes' },
-        _compared: makeResult({ extractedColumns: { answer: 'no' } }),
+        extractedColumns: { answer: 'yes', reason: 'ok' },
+        _compared: makeResult({ extractedColumns: { answer: 'no', reason: 'bad' } }),
       }),
     ];
     const cols = getCompareColumnsCompare(rows);
     const extractedGroup = cols.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as {
       headerName: string;
-      children: { headerName: string; colId?: string }[];
+      children: {
+        headerName: string;
+        children: { headerName: string; colId?: string; headerComponent?: unknown }[];
+      }[];
     };
 
-    expect(extractedGroup.headerName).toBe(EXTRACTED_GROUP_HEADER);
-    expect(extractedGroup.children).toHaveLength(2);
-    expect(extractedGroup.children[0].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'answer'));
-    expect(extractedGroup.children[1].headerName).toBe(
-      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'answer'),
-    );
-    expect(extractedGroup.children[1].colId).toBe('cmp_extracted_answer');
+    expect(extractedGroup.children.map((field) => field.headerName)).toEqual(['answer', 'reason']);
+
+    const [primary, secondary] = extractedGroup.children[0].children;
+    expect(extractedGroup.children[0].children).toHaveLength(2);
+    expect(primary.colId).toBe('extracted_answer');
+    expect(primary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX));
+    expect(primary.headerComponent).toBe(CompareRunIndexHeader);
+    expect(secondary.colId).toBe('cmp_extracted_answer');
+    expect(secondary.headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX));
   });
 
   test('metric valueGetters return dash for null metric values', () => {
@@ -445,7 +491,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       }),
     ];
     const cols = getCompareColumnsCompare(rows);
-    const metricGroup = cols[3] as {
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as {
       children: { valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
     };
     const primaryCol = metricGroup.children[0];
@@ -459,7 +505,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
   test('compared valueGetters return dash when _compared is null', () => {
     const rows = [makeRow({ metricValues: { grp: { score: 0.8 } }, _compared: null })];
     const cols = getCompareColumnsCompare(rows);
-    const metricGroup = cols[3] as {
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as {
       children: { headerName: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
     };
     const secondaryCol = metricGroup.children[1];
@@ -502,7 +548,9 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(statusGroup.children[0].cellClassRules).toBeUndefined();
     expect(statusGroup.children[1].cellClassRules).toBeUndefined();
 
-    const metricGroup = cols[3] as { children: { cellClassRules?: Record<string, unknown> }[] };
+    const metricGroup = withFlattenedMetricLeaves(cols[3]) as {
+      children: { cellClassRules?: Record<string, unknown> }[];
+    };
     const primaryPrecision = metricGroup.children[0];
     const secondaryPrecision = metricGroup.children[1];
 

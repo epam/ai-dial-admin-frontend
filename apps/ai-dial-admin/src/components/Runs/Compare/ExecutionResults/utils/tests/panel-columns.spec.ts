@@ -1,6 +1,7 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ColGroupDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
+import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
@@ -134,6 +135,32 @@ describe('panel-columns', () => {
       });
 
     expect(collectColIds(flattened)).toEqual(collectColIds(flatDefs));
+  });
+
+  test('flatten keeps the metric level so the grid stays three levels deep', () => {
+    const flatDefs = getFlatDefs();
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(flatDefs, runNames));
+    const metricGroup = flattened.find((col) => col.headerName === 'Overall Accuracy') as ColDef;
+    const precisionGroup = getChildren(metricGroup)[0];
+
+    expect(precisionGroup.headerName).toBe('Precision');
+    expect((precisionGroup as ColGroupDef).headerGroupComponent).toBe(EllipsisHeaderGroup);
+    expect(getChildren(precisionGroup).map(getColId)).toEqual([
+      'Overall Accuracy_Precision',
+      'cmp_Overall Accuracy_Precision',
+      'delta_Overall Accuracy_Precision',
+    ]);
+    expect(getChildren(precisionGroup).every((leaf) => leaf.context == null)).toBe(true);
+  });
+
+  test('flatten keeps the extracted field level so the grid stays three levels deep', () => {
+    const flattened = flattenComparePanelColumnTree(buildComparePanelColumnTree(getFlatDefs(), runNames));
+    const extractedGroup = flattened.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as ColDef;
+    const answerGroup = getChildren(extractedGroup)[0];
+
+    expect(answerGroup.headerName).toBe('answer');
+    expect(getChildren(answerGroup).map(getColId)).toEqual(['extracted_answer', 'cmp_extracted_answer']);
+    expect(getChildren(answerGroup).every((leaf) => leaf.context == null)).toBe(true);
   });
 
   test('preservePanelHideState copies hide flags by colId', () => {

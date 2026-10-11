@@ -24,6 +24,11 @@ const getColId = (col: ColDef): string | undefined => (col.colId ?? col.field) a
 const getChildren = (node: ColDef): ColDef[] =>
   'children' in node && node.children ? (node.children as ColDef[]) : [];
 
+const getLeaves = (node: ColDef): ColDef[] => {
+  const children = getChildren(node);
+  return children.length === 0 ? [node] : children.flatMap(getLeaves);
+};
+
 const findLeafByColId = (leaves: ColDef[], colId: string): ColDef | undefined =>
   leaves.find((leaf) => getColId(leaf) === colId);
 
@@ -114,35 +119,36 @@ const nestExecutionStatusGroup = (group: ColGroupDef, runNames: ComparePanelRunN
 
 const nestMetricGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
   const groupKey = group.headerName ?? '';
-  const leaves = getChildren(group);
-  const metricKeys = leaves
-    .map((leaf) => getColId(leaf))
-    .filter((colId): colId is string => colId?.startsWith(`delta_${groupKey}_`) ?? false)
-    .map((colId) => colId.slice(`delta_${groupKey}_`.length));
 
   return {
     headerName: groupKey,
-    children: metricKeys.map((metricKey) => {
-      const fieldChildren: ColDef[] = [
-        wrapPanelLeaf(findLeafByColId(leaves, `${groupKey}_${metricKey}`), runNames.primary, RUN_COMPARE_PRIMARY_INDEX),
-        wrapPanelLeaf(
-          findLeafByColId(leaves, `cmp_${groupKey}_${metricKey}`),
-          runNames.secondary,
-          RUN_COMPARE_SECONDARY_INDEX,
-        ),
-        wrapPanelLeaf(findLeafByColId(leaves, `delta_${groupKey}_${metricKey}`), DEFAULT_COMPARE_DELTA_HEADER),
-      ];
+    // Spreading the grid's metric level keeps its header renderer, which `flattenGroupedNode` hands back to the grid.
+    children: (group.children as ColGroupDef[]).map((metricGroup) => {
+      const leaves = getChildren(metricGroup);
+      const metricKey = metricGroup.headerName ?? '';
 
       return {
-        headerName: metricKey,
-        children: fieldChildren,
+        ...metricGroup,
+        children: [
+          wrapPanelLeaf(
+            findLeafByColId(leaves, `${groupKey}_${metricKey}`),
+            runNames.primary,
+            RUN_COMPARE_PRIMARY_INDEX,
+          ),
+          wrapPanelLeaf(
+            findLeafByColId(leaves, `cmp_${groupKey}_${metricKey}`),
+            runNames.secondary,
+            RUN_COMPARE_SECONDARY_INDEX,
+          ),
+          wrapPanelLeaf(findLeafByColId(leaves, `delta_${groupKey}_${metricKey}`), DEFAULT_COMPARE_DELTA_HEADER),
+        ],
       };
     }),
   };
 };
 
 const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames): ColGroupDef => {
-  const leaves = getChildren(group);
+  const leaves = getLeaves(group);
   const fieldKeys = leaves
     .map((leaf) => getColId(leaf))
     .filter((colId): colId is string => colId?.startsWith('extracted_') ?? false)
@@ -164,8 +170,7 @@ const nestExtractedGroup = (group: ColGroupDef, runNames: ComparePanelRunNames):
   };
 };
 
-const isMetricGroup = (group: ColDef): boolean =>
-  getChildren(group).some((child) => getColId(child)?.startsWith('delta_'));
+const isMetricGroup = (group: ColDef): boolean => getLeaves(group).some((leaf) => getColId(leaf)?.startsWith('delta_'));
 
 const nestTopLevelNode = (node: ColDef, runNames: ComparePanelRunNames): ColDef => {
   const children = getChildren(node);
@@ -195,6 +200,17 @@ const flattenGroupedNode = (node: ColDef): ColDef | ColGroupDef => {
   const children = getChildren(node);
   if (children.length === 0) {
     return stripPanelContext(node);
+  }
+
+  if (isMetricGroup(node) || node.headerName === EXTRACTED_GROUP_HEADER) {
+    // The grid keeps the per-field level, so only the panel-only leaf context is dropped.
+    return {
+      ...(node as ColGroupDef),
+      children: children.map((fieldGroup) => ({
+        ...fieldGroup,
+        children: getChildren(fieldGroup).map(stripPanelContext),
+      })),
+    } as ColGroupDef;
   }
 
   if (children.every((child) => getChildren(child).length > 0)) {

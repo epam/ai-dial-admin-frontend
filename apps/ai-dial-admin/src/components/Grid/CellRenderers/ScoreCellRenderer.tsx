@@ -48,8 +48,8 @@ const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: Sc
     return (
       <div
         className={classNames(
-          'flex items-center justify-end size-full overflow-hidden px-1',
-          isTextHidden && 'border-r border-tertiary',
+          'flex items-center justify-end size-full overflow-hidden',
+          isHidden ? 'border-r border-tertiary' : 'px-3',
         )}
         role={isTextHidden ? 'group' : undefined}
         aria-label={isTextHidden ? MISSING_DISPLAY : undefined}
@@ -75,11 +75,12 @@ const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: Sc
   return (
     <div
       className={classNames(
-        'flex items-center justify-end size-full overflow-hidden px-1',
+        'flex items-center justify-end size-full overflow-hidden',
         classes?.background,
         isBorderless && 'border-none',
         borderClasses,
         zeroDeltaClasses,
+        !isHidden && 'px-3',
       )}
       role={isHidden ? 'group' : undefined}
       aria-label={isHidden ? displayText : undefined}
