@@ -90,8 +90,8 @@ import {
   UPDATED_AT_COLUMN,
 } from '@epam/ai-dial-react-file-manager';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { MouseEvent, ReactNode } from 'react';
-import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
+import { ReactNode } from 'react';
+import { customMultiSelectTagsRenderer } from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { ASSET_TYPE_ICONS } from './constants';
@@ -103,14 +103,6 @@ export const getItems = (data: unknown) => {
     ?.slice()
     .sort((a, b) => compareVersions(a, b))
     .map((v) => ({ value: v, label: v })) as SelectOption[];
-};
-
-export const customMultiSelectTagsRenderer = (
-  options: SelectOption[],
-  selectedValues: string[],
-  handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
-) => {
-  return <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
 };
 
 /**

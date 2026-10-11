@@ -16,7 +16,7 @@ const MenuAction: FC<Props> = ({ tooltip, icon, onClick }) => {
       <button
         type="button"
         aria-label={tooltip}
-        className="p-1 rounded cursor-pointer hover:text-accent-primary hover:bg-controls-accent-alpha"
+        className="p-1 rounded-full cursor-pointer text-secondary hover:text-accent hover:bg-control-neutral-hover-muted focus-visible:text-accent focus-visible:bg-control-neutral-hover-muted"
         onClick={onClick}
       >
         {icon}

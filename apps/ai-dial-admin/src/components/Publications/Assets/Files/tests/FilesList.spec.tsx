@@ -23,6 +23,6 @@ describe('FilesList', () => {
     ];
 
     render(<FilesList files={files} action={ActionType.DELETE} />);
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 });

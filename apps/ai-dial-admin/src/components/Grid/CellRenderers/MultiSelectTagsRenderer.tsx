@@ -111,4 +111,10 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
   );
 };
 
+export const customMultiSelectTagsRenderer = (
+  options: SelectOption[],
+  selectedValues: string[],
+  handleRemoveTag: (event: MouseEvent<HTMLButtonElement>, val: string) => void,
+) => <MultiSelectTagsRenderer items={selectedValues} options={options} handleRemoveTag={handleRemoveTag} />;
+
 export default MultiSelectTagsRenderer;

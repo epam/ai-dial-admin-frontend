@@ -22,8 +22,9 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
     ...actual,
-    DialSelectField: ({ label, options, value, onChange }: any) => (
+    DialSelectField: ({ label, options, value, onChange, customMultiSelectTagsRenderer }: any) => (
       <div role="group" aria-label={label}>
+        {customMultiSelectTagsRenderer?.(options, value ?? [], vi.fn())}
         {options.map((o: any) => (
           <label key={o.value}>
             <input
@@ -44,6 +45,13 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     ),
   };
 });
+
+// jsdom cannot measure the container the real renderer fits tags into.
+vi.mock('@/src/components/Grid/CellRenderers/MultiSelectTagsRenderer', () => ({
+  customMultiSelectTagsRenderer: (_options: unknown, selectedValues: string[]) => (
+    <span>{`tags: ${selectedValues.join(',')}`}</span>
+  ),
+}));
 
 const toRow = (name: string): ConfigEntityRow => ({ name, displayName: name, origin: ConfigEntityOrigin.Api });
 const catalog = [toRow('analytics-writer'), toRow('analytics-editor'), toRow('analytics-viewer')];
@@ -87,6 +95,18 @@ describe('TableAccessPanel', () => {
     expect(within(modifyRolesGroup()).getByRole('checkbox', { name: 'analytics-editor' })).toBeChecked();
     expect(getTableAccess).toHaveBeenCalledWith('events');
     expect(getRoles).toHaveBeenCalledOnce();
+  });
+
+  test('hands each role field its own selected roles to collapse into a count when they do not fit', async () => {
+    (getTableAccess as any).mockResolvedValue({
+      success: true,
+      response: { write: ['analytics-writer', 'analytics-editor'], modify: ['analytics-viewer'] },
+    });
+    renderPanel();
+    await waitForLoaded();
+
+    expect(within(writeRolesGroup()).getByText('tags: analytics-writer,analytics-editor')).toBeInTheDocument();
+    expect(within(modifyRolesGroup()).getByText('tags: analytics-viewer')).toBeInTheDocument();
   });
 
   test('offers every catalog role, not just the granted ones, in alphabetical order', async () => {

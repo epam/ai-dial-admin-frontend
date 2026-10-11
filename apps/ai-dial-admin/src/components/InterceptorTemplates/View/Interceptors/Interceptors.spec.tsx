@@ -39,7 +39,7 @@ describe('Interceptors', () => {
     render(<Interceptors interceptorList={['Interceptor-1']} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
     });
   });
 });

@@ -25,8 +25,8 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
   const {
     form,
     update,
-    columnOptions,
-    temporalNames,
+    orderingOptions,
+    partitionNames,
     identityNames,
     versionNames,
     grainOptions,
@@ -73,7 +73,7 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
               />
             }
             required
-            options={columnOptions}
+            options={orderingOptions}
             value={form.orderingKey}
             onChange={(v) => update('orderingKey', v as string[])}
           />
@@ -88,7 +88,7 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
             }
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
-              ...temporalNames.map((s) => ({ value: s, label: s })),
+              ...partitionNames.map((s) => ({ value: s, label: s })),
             ]}
             value={form.partitionColumn}
             onChange={(v) => update('partitionColumn', v as string)}

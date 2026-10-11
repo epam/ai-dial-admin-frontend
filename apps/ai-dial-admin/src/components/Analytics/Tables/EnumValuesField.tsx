@@ -19,47 +19,38 @@ interface Props {
 }
 
 /**
- * An Enum column's declared value set, authored through the shared list popup Topics uses — used as it is,
- * not adapted. `draggable` is what makes it the right control here rather than a plain multi-select: the
- * declared order becomes each value's id in the physical type, so the column sorts in this order and
- * reordering the list is a real edit.
+ * An Enum column's declared value set, authored in the shared list popup Topics uses, as it is. `draggable`
+ * is the point: the declared order becomes each value's id in the physical type, so reordering is a real edit.
  *
- * Renders **label + field only**, nothing beneath: the column row bottom-aligns its fields, so anything this
- * adds below the control lifts it out of line with every other input in the row. The declared-order note
- * therefore lives once under the row set, in `ColumnRowsEditor`.
- *
- * Two consequences of taking the shared component as-is, both deliberate:
- *
- * - Its rows validate with the shared topic rule (2-255 characters), not the enum rule. The authoritative
- *   check is the column row's own — `getAnalyticsEnumValuesError` via `getColumnRowErrors` — which gates
- *   Save on the real service limits (1-512 values, each 1-64 characters, distinct after trimming). The
- *   popup's own check is therefore only ever stricter on the low end: a single-character value has to be
- *   entered as part of a set the row-level check then accepts.
- * - Its rows register in `SaveValidationContext` under a shared `topic_` key. The popup's Apply is gated on
- *   that map, so a stale entry left by another list would disable Apply here for no visible reason — hence
- *   the private provider below, which keeps this field's row validity to itself. It renders no element of
- *   its own, so the field stays a direct flex child of the row.
+ * - The popup validates each value with the topic rule (2-255 characters). The authoritative check is the row's
+ *   `getAnalyticsEnumValuesError` (1-64, distinct), so a value of 65-255 characters passes the popup and is
+ *   rejected on the row after Apply.
+ * - Its rows register under a shared `topic_` key in `SaveValidationContext`, so the private provider keeps a
+ *   stale entry from another list from disabling Apply here.
  */
 const EnumValuesField: FC<Props> = ({ rowId, values, errorText, isLabelHidden, disabled, onChange }) => {
   const t = useI18n();
 
   return (
     <SaveValidationContextProvider>
-      <Multiselect
-        draggable
-        required={!disabled}
-        disabled={disabled}
-        className={classNames('flex-1 min-w-[160px]', isLabelHidden && '[&>label]:sr-only')}
-        elementId={`col-enum-values-${rowId}`}
-        label={t(AnalyticsTablesI18nKey.EnumValues)}
-        heading={t(AnalyticsTablesI18nKey.EnumValues)}
-        addTitle={t(AnalyticsTablesI18nKey.EnumValuesAdd)}
-        addPlaceholder={t(AnalyticsTablesI18nKey.EnumValuePlaceholder)}
-        allItems={values}
-        selectedItems={values}
-        errorText={errorText}
-        onChangeItems={onChange}
-      />
+      <div className="flex min-w-[160px] flex-1 flex-col gap-1">
+        <Multiselect
+          draggable
+          required={!disabled}
+          disabled={disabled}
+          className={classNames(isLabelHidden && '[&>label]:sr-only')}
+          elementId={`col-enum-values-${rowId}`}
+          label={t(AnalyticsTablesI18nKey.EnumValues)}
+          heading={t(AnalyticsTablesI18nKey.EnumValues)}
+          addTitle={t(AnalyticsTablesI18nKey.EnumValuesAdd)}
+          addPlaceholder={t(AnalyticsTablesI18nKey.EnumValuePlaceholder)}
+          allItems={values}
+          selectedItems={values}
+          errorText={errorText}
+          onChangeItems={onChange}
+        />
+        {!disabled && <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesOrderHint)}</p>}
+      </div>
     </SaveValidationContextProvider>
   );
 };

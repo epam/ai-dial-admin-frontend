@@ -53,12 +53,15 @@ export interface CreateTableForm {
   write: TableWriteMode;
 }
 
-export interface DraftSchemaForm {
-  columns: ColumnRow[];
+export interface KeySelections {
   orderingKey: string[];
   partitionColumn: string;
   granularity: PartitionGranularity | '';
-  grainKey: string;
   identityColumn: string;
   versionColumn: string;
+}
+
+export interface DraftSchemaForm extends KeySelections {
+  columns: ColumnRow[];
+  grainKey: string;
 }

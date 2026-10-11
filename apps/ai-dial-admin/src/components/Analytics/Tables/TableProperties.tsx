@@ -151,6 +151,9 @@ const TableProperties: FC<Props> = ({ table, grainKeyRow, draft, actions, canMod
                   text={table.version_column}
                 />
               )}
+              {!table.identity_column && !table.version_column && (
+                <p className="dial-small-text text-secondary">{t(AnalyticsTablesI18nKey.NotScannable)}</p>
+              )}
             </>
           ) : (
             <>

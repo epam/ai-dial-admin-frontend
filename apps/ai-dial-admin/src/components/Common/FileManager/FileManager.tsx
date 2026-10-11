@@ -429,7 +429,7 @@ const FileManager: FC<Props> = ({
   return (
     <>
       <DialFileManager
-        className="bg-layer-2 pb-4 px-6"
+        className="bg-layer-2 pb-4 pl-2 pr-6"
         path={filePath}
         defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}
@@ -481,6 +481,7 @@ const FileManager: FC<Props> = ({
         customUploadFileAction={customUploadFileAction}
         maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH + 1}
         onNewFolderDepthExceeded={handleFolderNestingDepthExceeded}
+        contentClassName="gap-0 px-0 pb-0"
       />
       <MoveItemsModal
         isModalOpen={isMoveModalOpen}

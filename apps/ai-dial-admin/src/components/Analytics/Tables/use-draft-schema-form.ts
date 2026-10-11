@@ -4,11 +4,13 @@ import {
   buildDraftSchemaDto,
   createDraftSchemaForm,
   getColumnRowErrors,
+  getGrainKeyColumnNames,
   getIdentityColumnNames,
-  getSourceColumnNames,
-  getTemporalColumnNames,
+  getOrderingKeyColumnNames,
+  getPartitionColumnNames,
   getVersionColumnNames,
   hasColumnRowErrors,
+  reconcileKeySelections,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsTable, AnalyticsTableType, DraftSchemaDto } from '@/src/models/analytics/table';
@@ -20,8 +22,8 @@ type Translate = (key: string, args?: Record<string, string | number>) => string
 interface UseDraftSchemaFormReturn {
   form: DraftSchemaForm;
   update: <K extends keyof DraftSchemaForm>(key: K, value: DraftSchemaForm[K]) => void;
-  columnOptions: { value: string; label: string }[];
-  temporalNames: string[];
+  orderingOptions: { value: string; label: string }[];
+  partitionNames: string[];
   identityNames: string[];
   versionNames: string[];
   grainOptions: { value: string; label: string }[];
@@ -51,42 +53,30 @@ export const useDraftSchemaForm = (
   const update = <K extends keyof DraftSchemaForm>(key: K, value: DraftSchemaForm[K]) =>
     setForm((prev) => {
       const next = { ...prev, [key]: value };
-      // Retyping a column away from Date/Timestamp can invalidate an already-selected partition
-      // column; without this it silently keeps its (now stale) granularity selection too.
-      if (
-        key === 'columns' &&
-        next.partitionColumn &&
-        !getTemporalColumnNames(next.columns).includes(next.partitionColumn)
-      ) {
-        next.partitionColumn = '';
-        next.granularity = '';
-      }
-      // Same for the scan-metadata pair, which a rename, removal, retype, or a flip to nullable/sensitive can
-      // invalidate — buildDto must never emit a stale or now-unusable column name.
-      if (key === 'columns') {
-        if (next.identityColumn && !getIdentityColumnNames(next.columns).includes(next.identityColumn)) {
-          next.identityColumn = '';
-        }
-        if (next.versionColumn && !getVersionColumnNames(next.columns).includes(next.versionColumn)) {
-          next.versionColumn = '';
-        }
-      }
-      return next;
+      return key === 'columns' ? { ...next, ...reconcileKeySelections(prev.columns, next.columns, next) } : next;
     });
 
-  const sourceNames = useMemo(() => getSourceColumnNames(form.columns), [form.columns]);
-  const columnOptions = sourceNames.map((s) => ({ value: s, label: s }));
+  const orderingNames = useMemo(() => getOrderingKeyColumnNames(form.columns), [form.columns]);
+  const orderingOptions = orderingNames.map((s) => ({ value: s, label: s }));
 
-  const temporalNames = useMemo(() => getTemporalColumnNames(form.columns), [form.columns]);
-  const identityNames = useMemo(() => getIdentityColumnNames(form.columns), [form.columns]);
-  const versionNames = useMemo(() => getVersionColumnNames(form.columns), [form.columns]);
+  const partitionNames = useMemo(() => getPartitionColumnNames(form.columns), [form.columns]);
+  // The column chosen for one role is not offered for the other: a shared column would make the version its own
+  // tiebreaker, and rows with an equal version could then be skipped by the incremental scan.
+  const identityNames = useMemo(
+    () => getIdentityColumnNames(form.columns).filter((name) => name !== form.versionColumn),
+    [form.columns, form.versionColumn],
+  );
+  const versionNames = useMemo(
+    () => getVersionColumnNames(form.columns).filter((name) => name !== form.identityColumn),
+    [form.columns, form.identityColumn],
+  );
 
-  const grainOptions = (sourceTable?.columns ?? []).map((c) => ({ value: c.source_name, label: c.source_name }));
+  const grainOptions = getGrainKeyColumnNames(sourceTable?.columns ?? []).map((s) => ({ value: s, label: s }));
 
   const columnErrors = getColumnRowErrors(form.columns, { sourceNames: [], names: [] }, t);
   const invalidColumns = hasColumnRowErrors(columnErrors);
   const validColumns = toTableColumns(form.columns);
-  const validOrdering = form.orderingKey.filter((k) => sourceNames.includes(k));
+  const validOrdering = form.orderingKey.filter((k) => orderingNames.includes(k));
 
   const scanPairRequired = Boolean(table.identity_column || table.version_column);
   // The scan needs both halves, and the backend accepts one alone — which materializes a source that is
@@ -121,8 +111,8 @@ export const useDraftSchemaForm = (
   return {
     form,
     update,
-    columnOptions,
-    temporalNames,
+    orderingOptions,
+    partitionNames,
     identityNames,
     versionNames,
     grainOptions,

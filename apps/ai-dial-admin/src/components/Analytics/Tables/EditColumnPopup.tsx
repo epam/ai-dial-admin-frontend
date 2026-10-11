@@ -2,6 +2,8 @@
 
 import { FC, useState } from 'react';
 
+import { noop } from 'lodash';
+
 import { DialFormPopup, DialInput, DialSwitch, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
@@ -119,6 +121,14 @@ const EditColumnPopup: FC<Props> = ({
             <span className="dial-small-text text-secondary">{t(AnalyticsTablesI18nKey.EnumValuesImmutable)}</span>
           </div>
         )}
+        <DialSwitch
+          switchId="column-edit-nullable"
+          label={t(AnalyticsTablesI18nKey.Nullable)}
+          isOn={Boolean(column.nullable)}
+          disabled
+          caption={t(AnalyticsTablesI18nKey.ColumnNullableFixed)}
+          onChange={noop}
+        />
         <DialSwitch
           switchId="column-edit-sensitive"
           label={t(AnalyticsTablesI18nKey.Sensitive)}

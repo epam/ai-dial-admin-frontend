@@ -73,8 +73,8 @@ const fixtureDraft = (overrides?: DraftOverrides): ReturnType<typeof useDraftSch
   return {
     form,
     update: vi.fn(),
-    columnOptions: [],
-    temporalNames: [],
+    orderingOptions: [],
+    partitionNames: [],
     identityNames: identityNames ?? [],
     versionNames: versionNames ?? [],
     grainOptions: [],

@@ -116,9 +116,10 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
           return;
         }
         loadDataset();
+        router.refresh();
       });
     },
-    [datasetEtag, showNotification, loadDataset],
+    [datasetEtag, showNotification, loadDataset, router],
   );
 
   const onDiscard = useCallback(() => {

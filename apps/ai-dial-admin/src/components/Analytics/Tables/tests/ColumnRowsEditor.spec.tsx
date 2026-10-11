@@ -110,7 +110,27 @@ describe('ColumnRowsEditor', () => {
     expect(nullableSwitch).not.toBeChecked();
   });
 
-  test('the Nullable switch stays enabled for a non-Array row', () => {
+  test('the Nullable switch is disabled and forced off for an Object row, even if nullable was already true', () => {
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.Object, nullable: true })]} onChange={vi.fn()} />);
+
+    const nullableSwitch = screen.getByLabelText(AnalyticsTablesI18nKey.Nullable);
+    expect(nullableSwitch).toBeDisabled();
+    expect(nullableSwitch).not.toBeChecked();
+  });
+
+  test('retyping a nullable row to Object stores the flag off, so it does not return on a later retype', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row({ type: AnalyticsFieldType.String, nullable: true })]} onChange={onChange} />);
+
+    await user.selectOptions(screen.getByLabelText(AnalyticsTablesI18nKey.Type), AnalyticsFieldType.Object);
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ type: AnalyticsFieldType.Object, nullable: false }),
+    ]);
+  });
+
+  test('the Nullable switch stays enabled for a row that is neither Array nor Object', () => {
     render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
     expect(screen.getByLabelText(AnalyticsTablesI18nKey.Nullable)).toBeEnabled();
   });
@@ -245,12 +265,10 @@ describe('ColumnRowsEditor', () => {
       ]);
     });
 
-    // Stated once for the row set, not per row: a note under a field would lift that field out of line with
-    // the row's other inputs, which is exactly the misalignment this placement fixes.
-    test('states the declared-order consequence once, outside the rows', () => {
-      render(<ColumnRowsEditor rows={[enumRow(), enumRow()]} onChange={vi.fn()} />);
+    test('states the declared-order consequence beneath each enum row, and not for other rows', () => {
+      render(<ColumnRowsEditor rows={[enumRow(), row(), enumRow()]} onChange={vi.fn()} />);
 
-      expect(screen.getAllByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toHaveLength(1);
+      expect(screen.getAllByText(AnalyticsTablesI18nKey.EnumValuesOrderHint)).toHaveLength(2);
     });
 
     test('states nothing about ordering when no row is an enum', () => {

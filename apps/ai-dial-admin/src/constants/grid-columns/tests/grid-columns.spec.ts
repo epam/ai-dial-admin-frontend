@@ -119,6 +119,37 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'version')).toBe(false);
   });
 
+  describe('ACTIVITY_AUDIT_COLUMNS filter operators', () => {
+    const t = (s: string) => s;
+    const exactColumns = ['activityType', 'resourceType', 'activityId', 'parentActivityId'];
+    const filterParamsOf = (view: ActivityAuditView, field: string) =>
+      ACTIVITY_AUDIT_COLUMNS(t, view).find((c) => c.field === field)?.filterParams;
+
+    test.each(exactColumns)('%s offers only equals and not-equal in the Analytics view', (field) => {
+      expect(filterParamsOf(ActivityAuditView.Analytics, field)).toMatchObject({
+        filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
+        defaultOption: GridFilterType.EQUALS,
+      });
+    });
+
+    test.each([ActivityAuditView.Config, ActivityAuditView.Deployments])(
+      'keeps the text operators in the %s view',
+      (view) => {
+        exactColumns.forEach((field) => {
+          expect(filterParamsOf(view, field)).toMatchObject({
+            filterOptions: expect.arrayContaining([GridFilterType.CONTAINS, GridFilterType.NOT_CONTAINS]),
+          });
+        });
+      },
+    );
+
+    test('the Resource identifier column keeps its text operators in the Analytics view', () => {
+      expect(filterParamsOf(ActivityAuditView.Analytics, 'resourceId')).toMatchObject({
+        filterOptions: expect.arrayContaining([GridFilterType.CONTAINS]),
+      });
+    });
+  });
+
   test('ACTIVITY_AUDIT_COLUMNS returns expected columns for embedded (single-entity) Config view', () => {
     const t = (s: string) => s;
     const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config, true);
