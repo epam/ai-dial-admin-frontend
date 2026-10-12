@@ -27,7 +27,7 @@ import {
   getStopOperation,
 } from '@/src/constants/grid-columns/actions';
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ContainersI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -36,6 +36,7 @@ import { Notification } from '@/src/models/notification';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getContainerKind } from '@/src/utils/deployments/containers';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
@@ -50,11 +51,17 @@ interface Props {
 
 const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const t = useI18n();
+  const isUnified = route === ApplicationRoute.Containers;
+  // On the unified page the container kind comes from each row's `$type`, not from the route.
+  const getKind = useCallback(
+    (container?: Container | null): ApplicationRoute => getContainerKind(container?.$type) ?? route,
+    [route],
+  );
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const [duplicateNames, setDuplicateNames] = useState(names);
+  const [addedNames, setAddedNames] = useState<string[]>([]);
   const [currentContainer, setCurrentContainer] = useState<Container | null>(null);
   const [modalType, setModalType] = useState<ModalType>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,9 +123,9 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
 
   const onOpenInNewTabAction = useCallback(
     (container?: Container) => {
-      onOpenInNewTab(route, container);
+      onOpenInNewTab(getKind(container), container);
     },
-    [route],
+    [getKind],
   );
 
   const onContainerStatusChange = useCallback(
@@ -141,22 +148,24 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const onDuplicate = useCallback(
     (container: Container) => {
       if (currentContainer) {
-        setDuplicateNames((prev) => [...prev, container.name || '']);
+        setAddedNames((prev) => [...prev, container.name || '']);
         duplicateContainer(currentContainer.name || '', container.name || '', container.displayName || '').then(
           (res) => {
             if (res.success) {
               setCurrentContainer(null);
-              router.push(getUrnForEntity(route, res.response));
+              router.push(getUrnForEntity(getKind(currentContainer), res.response));
             } else {
-              setDuplicateNames((prev) => prev.filter((n) => n !== container.name));
+              setAddedNames((prev) => prev.filter((n) => n !== container.name));
               showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
             }
           },
         );
       }
     },
-    [currentContainer, route, router, showNotification],
+    [currentContainer, getKind, router, showNotification],
   );
+
+  const duplicateNames = [...names, ...addedNames];
 
   const columnDefs = [
     ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t), route),
@@ -184,16 +193,17 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
       interval = setInterval(async () => {
         const results = (await Promise.allSettled(pendingContainers.map((c) => getContainer(c?.name as string)))) || [];
 
-        results.forEach((res) => {
+        results.forEach((res, index) => {
           if (res.status === 'fulfilled') {
+            const kind = getKind(pendingContainers[index]);
             const container = res.value.response as Container;
             if (container?.status !== CONTAINER_STATUS.PENDING && container?.status !== CONTAINER_STATUS.STOPPING) {
               if (container?.status === CONTAINER_STATUS.RUNNING) {
                 showNotification(
                   getSuccessNotification(
                     t(ContainersI18nKey.ContainerRunSuccess, {
-                      type: getTranslatedType(route, t),
-                      entityType: getTranslatedDeploymentType(route, t),
+                      type: getTranslatedType(kind, t),
+                      entityType: getTranslatedDeploymentType(kind, t),
                     }),
                     t(ContainersI18nKey.ContainerSuccessDescription),
                     5000,
@@ -203,7 +213,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
               if (container?.status === CONTAINER_STATUS.FAILED) {
                 showNotification(
                   getErrorNotification(
-                    t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(route, t) }),
+                    t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(kind, t) }),
                     '',
                     res.value.requestId,
                     5000,
@@ -214,8 +224,8 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
                 showNotification(
                   getSuccessNotification(
                     t(ContainersI18nKey.ContainerStopSuccess, {
-                      type: getTranslatedType(route, t),
-                      entityType: getTranslatedDeploymentType(route, t),
+                      type: getTranslatedType(kind, t),
+                      entityType: getTranslatedDeploymentType(kind, t),
                     }),
                     '',
                     5000,
@@ -234,7 +244,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         clearInterval(interval);
       }
     };
-  }, [showNotification, route, t, router, containersList]);
+  }, [showNotification, getKind, t, router, containersList]);
 
   return (
     <>
@@ -243,15 +253,21 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
         isMainListView
-        listLabel={t(ContainersI18nKey.ContainersListTitle, {
-          type: getTranslatedType(route, t),
-          entityType: getTranslatedDeploymentType(route, t),
-        })}
+        listLabel={
+          isUnified
+            ? t(MenuI18nKey.Containers)
+            : t(ContainersI18nKey.ContainersListTitle, {
+                type: getTranslatedType(route, t),
+                entityType: getTranslatedDeploymentType(route, t),
+              })
+        }
         emptyDataProps={{
-          title: t(EntitiesI18nKey.NoContainersType, {
-            type: getTranslatedType(route, t),
-            entityType: getTranslatedDeploymentType(route, t),
-          }),
+          title: isUnified
+            ? t(EntitiesI18nKey.NoContainers)
+            : t(EntitiesI18nKey.NoContainersType, {
+                type: getTranslatedType(route, t),
+                entityType: getTranslatedDeploymentType(route, t),
+              }),
         }}
         isEnableColumnPanel
         storageKey={route}
@@ -265,8 +281,8 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         createPortal(
           <ContainerDuplicate
             title={t(ContainersI18nKey.DuplicateModalTitle, {
-              type: getTranslatedType(route, t),
-              entityType: getTranslatedDeploymentType(route, t),
+              type: getTranslatedType(getKind(currentContainer), t),
+              entityType: getTranslatedDeploymentType(getKind(currentContainer), t),
             })}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
@@ -282,7 +298,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         createPortal(
           <Delete
             onRemoveEntity={deleteContainer}
-            view={route}
+            view={getKind(currentContainer)}
             entity={{ ...currentContainer }}
             onCloseModal={onCloseModal}
           />,

@@ -98,23 +98,14 @@ Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment
 
 ### 6. **Deployments**
 
-- **Description**: A section for managing deployments and containers (MCP, interceptors, adapters).
+- **Description**: A section for managing deployments and containers (MCP, interceptors, adapters, applications).
 - **Items**:
   - **Model Servings**
     - **Key**: `ModelServings`
     - **Description**: Navigate to the model servings page to manage deployed model instances.
-  - **MCP Containers**
-    - **Key**: `McpContainers`
-    - **Description**: Navigate to the MCP containers page to manage Model Context Protocol containers.
-  - **Interceptor Containers**
-    - **Key**: `InterceptorContainers`
-    - **Description**: Navigate to the interceptor containers page to manage deployed interceptor containers.
-  - **Adapter Containers**
-    - **Key**: `AdapterContainers`
-    - **Description**: Navigate to the adapter containers page to manage deployed adapter containers.
-  - **Application Containers**
-    - **Key**: `ApplicationContainers`
-    - **Description**: Navigate to the application containers page to manage deployed application containers.
+  - **Containers**
+    - **Key**: `Containers`
+    - **Description**: Navigate to the containers page to manage MCP, interceptor, adapter and application containers; the Type column tells them apart and the create dialog asks for the type.
   - **Images**
     - **Key**: `Images`
     - **Description**: Navigate to the images page to manage container images.

@@ -472,16 +472,16 @@ describe('getAuditActivityHref', () => {
       '/model-servings/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_DEPLOYMENT, 'abc-123')).toBe(
-      '/mcp-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_DEPLOYMENT, 'abc-123')).toBe(
-      '/adapter-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_DEPLOYMENT, 'abc-123')).toBe(
-      '/application-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT, 'abc-123')).toBe(
-      '/interceptor-containers/gpt-4-turbo/abc-123',
+      '/containers/gpt-4-turbo/abc-123',
     );
   });
 

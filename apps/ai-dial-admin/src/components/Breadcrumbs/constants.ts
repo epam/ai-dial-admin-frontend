@@ -191,6 +191,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
     'InterceptorTemplates',
     MenuI18nKey.InterceptorTemplates,
   ),
+  [ApplicationRoute.Containers]: auditSubIdBreadcrumb('Containers', MenuI18nKey.Containers),
   [ApplicationRoute.InterceptorContainers]: auditSubIdBreadcrumb(
     'InterceptorContainers',
     MenuI18nKey.InterceptorContainers,

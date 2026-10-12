@@ -31,6 +31,8 @@ import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import EmptyFloatingFilter from '@/src/components/Grid/FloatingFilter/EmptyFloatingFilter';
 import { RUN_STATUS_VALUE_FILTER } from '@/src/components/Runs/List/run-status-filter-components';
 import { GridFilterType } from '@/src/types/grid-filter';
@@ -230,6 +232,47 @@ describe('Constants :: grid columns', () => {
     expect(cols1.some((c) => c.field === 'displayName')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
     expect(cols1.some((c) => c.field === 'topics')).toBe(true);
+  });
+
+  describe('CONTAINERS_COLUMNS on the unified containers list', () => {
+    const t = (s: string) => s;
+    const cols = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.Containers);
+    const find = (colId: string) => cols.find((c) => c.field === colId) as ColDef;
+    const format = (col: ColDef, data: unknown) =>
+      (col.valueFormatter as (params: { data: unknown; value: unknown }) => string)({ data, value: undefined });
+
+    test('adds a Type column that is absent from the model-servings columns', () => {
+      expect(find('$type')?.headerName).toBe('Type');
+      expect(
+        CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelServings).find((c) => c.headerName === 'Type'),
+      ).toBeUndefined();
+    });
+
+    test('formats the Type cell from the row type', () => {
+      expect(format(find('$type'), { $type: CONTAINER_TYPE.MCP })).toBe(EntitiesI18nKey.MCP);
+      expect(format(find('$type'), { $type: CONTAINER_TYPE.ADAPTER })).toBe(EntitiesI18nKey.Adapter);
+    });
+
+    test('formats the Source type cell as text, not an object', () => {
+      const data = {
+        $type: CONTAINER_TYPE.MCP,
+        source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'img' },
+      };
+
+      expect(format(find('source.$type'), data)).toBe(SourceI18nKey.InternalImage);
+      expect(format(find('source'), data)).toBe('img');
+    });
+
+    test('formats the time cells as local date-time text, not raw timestamps', () => {
+      const timestamp = Date.UTC(2026, 9, 12, 10, 30);
+      const created = find('createdAt');
+      const updated = find('updatedAt');
+      const formatValue = (col: ColDef) =>
+        (col.valueFormatter as (params: { value: unknown }) => string)({ value: timestamp });
+
+      expect(formatValue(created)).toBe(new Date(timestamp).toLocaleString());
+      expect(formatValue(updated)).toBe(new Date(timestamp).toLocaleString());
+    });
   });
 
   describe('CONTAINERS_COLUMNS resource columns', () => {

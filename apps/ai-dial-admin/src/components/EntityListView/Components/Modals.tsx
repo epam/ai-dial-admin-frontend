@@ -32,6 +32,7 @@ export enum ModalType {
   globalFirewall = 'globalFirewall',
   addImage = 'addImage',
   createContainer = 'createContainer',
+  createContainerType = 'createContainerType',
   createServingHF = 'createServingHF',
   createServingNIM = 'createServingNIM',
   createMcpDockerImage = 'createMcpDockerImage',

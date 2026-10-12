@@ -6,6 +6,9 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { createContainer } from '@/src/app/actions/deployments';
+import ContainerTypeModal from '@/src/components/Containers/List/ContainerTypeModal';
+import { ContainerCreateSource } from '@/src/components/Containers/List/models';
+import { getCreateModalType } from '@/src/components/Containers/List/utils';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -16,6 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getContainerKind } from '@/src/utils/deployments/containers';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -30,7 +34,7 @@ interface Props {
   isReadOnlyAdmin?: boolean;
 }
 
-const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
+const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) => {
   const t = useI18n();
   const router = useRouter();
   const isTabletScreen = useIsTabletScreen();
@@ -39,15 +43,26 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
+  const [createType, setCreateType] = useState<CONTAINER_TYPE>();
+
+  const isUnified = listRoute === ApplicationRoute.Containers;
+  // On the unified list the container kind follows the type chosen in the modal.
+  const route = (isUnified && getContainerKind(createType)) || listRoute;
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setModalType(void 0);
+    setCreateType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((type: ModalType) => {
     setIsModalOpen(true);
     setModalType(type);
+  }, []);
+
+  const onContinueCreate = useCallback((type: CONTAINER_TYPE, source: ContainerCreateSource) => {
+    setCreateType(type);
+    setModalType(getCreateModalType(type, source));
   }, []);
 
   const openHFServingModal = useCallback(() => {
@@ -176,11 +191,12 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
   );
 
   const showDropdown =
-    route === ApplicationRoute.ModelServings ||
-    route === ApplicationRoute.McpContainers ||
-    route === ApplicationRoute.AdapterContainers ||
-    route === ApplicationRoute.ApplicationContainers ||
-    route === ApplicationRoute.InterceptorContainers;
+    !isUnified &&
+    (route === ApplicationRoute.ModelServings ||
+      route === ApplicationRoute.McpContainers ||
+      route === ApplicationRoute.AdapterContainers ||
+      route === ApplicationRoute.ApplicationContainers ||
+      route === ApplicationRoute.InterceptorContainers);
 
   const getDropdownItems = () => {
     switch (route) {
@@ -210,10 +226,17 @@ const HeaderButtons: FC<Props> = ({ route, names, isReadOnlyAdmin }) => {
             <DialPrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={() => handleModalOpen(ModalType.createContainer)}
+              onClick={() => handleModalOpen(isUnified ? ModalType.createContainerType : ModalType.createContainer)}
             />
           ))}
       </div>
+
+      {isModalOpen &&
+        modalType === ModalType.createContainerType &&
+        createPortal(
+          <ContainerTypeModal isModalOpen={isModalOpen} onClose={handleModalClose} onContinue={onContinueCreate} />,
+          document.body,
+        )}
 
       {isModalOpen &&
         modalType === ModalType.createContainer &&
