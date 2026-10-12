@@ -1,5 +1,7 @@
 import { CellClassParams, ColDef } from 'ag-grid-community';
 
+import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+
 export {
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -36,6 +38,14 @@ export const EXECUTION_STATUS_GROUP_HEADER = 'Execution status';
 export const EXTRACTED_GROUP_HEADER = 'Extracted';
 
 export const formatCompareColumnHeader = (runIndex: string, label: string) => `[${runIndex}] ${label}`;
+
+/** Row-level diff box, drawn instead of the per-pair boxes when every visible pair differs. */
+export const COMPARE_ROW_DIFF_CLASS = 'compare-row-diff';
+export const COMPARE_ROW_DIFF_KIND_CLASS: Record<Exclude<MetricDeltaKind, MetricDeltaKind.Empty>, string> = {
+  [MetricDeltaKind.Added]: 'compare-row-diff-improved',
+  [MetricDeltaKind.Changed]: 'compare-row-diff-new',
+  [MetricDeltaKind.Removed]: 'compare-row-diff-regressed',
+};
 
 export const COMPARE_MISSING_DISPLAY = '—';
 
