@@ -20,7 +20,7 @@ const ExecutionStatusCellRenderer = (params: ICellRendererParams) => {
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <ExecutionStatusIcon status={status} />
+      <ExecutionStatusIcon status={status} size={16} />
     </div>
   );
 };

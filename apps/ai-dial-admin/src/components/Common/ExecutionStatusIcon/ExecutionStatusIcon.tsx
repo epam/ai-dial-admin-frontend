@@ -13,8 +13,8 @@ interface StatusIconConfig {
 }
 
 export const EXECUTION_STATUS_ICON_CONFIG: Record<ExtractionResultStatus, StatusIconConfig> = {
-  [ExtractionResultStatus.SUCCESS]: { Icon: IconCheck, className: 'text-success' },
-  [ExtractionResultStatus.FAILED]: { Icon: IconX, className: 'text-error' },
+  [ExtractionResultStatus.SUCCESS]: { Icon: IconCheck, className: 'text-score-abs-11 bg-score-abs-11 rounded' },
+  [ExtractionResultStatus.FAILED]: { Icon: IconX, className: 'text-error bg-error rounded' },
   [ExtractionResultStatus.TIMEOUT]: { Icon: IconClock, className: 'text-warning' },
   [ExtractionResultStatus.ERROR]: { Icon: IconAlertCircle, className: 'text-error' },
 };
