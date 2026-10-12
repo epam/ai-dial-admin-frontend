@@ -10,6 +10,7 @@ import ContainersHeader from '@/src/components/EntityHeaderControls/ContainersHe
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ApiRoute } from '@/src/constants/api-routes';
+import { useHelpRoute } from '@/src/context/HelpTopicContext';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import { CONTAINER_IGNORED_FIELDS } from '@/src/constants/editor';
 import { ContainersI18nKey, DeploymentsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
@@ -59,6 +60,8 @@ const ContainerView: FC<Props> = ({
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor, featureFlags } = useAppContext();
+
+  useHelpRoute(route);
 
   const imageNotInstalled = isImageNotInstalled(image);
 

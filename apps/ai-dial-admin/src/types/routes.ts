@@ -53,6 +53,9 @@ export enum ApplicationRoute {
   ActivityAudit = '/activity-audit',
 
   // Deployments
+  Containers = '/containers',
+  // The four `*Containers` members below are container *kinds* (what helpers and the `route`/`view`
+  // props of the container views switch on), not URLs: every container URL is `Containers`.
   InterceptorContainers = '/interceptor-containers',
   ModelServings = '/model-servings',
   McpContainers = '/mcp-containers',

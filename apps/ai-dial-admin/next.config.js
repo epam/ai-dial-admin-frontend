@@ -51,29 +51,29 @@ const nextConfig = {
         destination: '/model-servings/:path',
         permanent: true, // 308 Permanent Redirect (good for SEO)
       },
-      {
-        source: '/:prefix/mcp-deployments/:path',
-        destination: '/mcp-containers/:path',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
-
-      {
-        source: '/:prefix/mcp-deployments',
-        destination: '/mcp-containers',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
-
-      {
-        source: '/:prefix/interceptor-deployments/:path',
-        destination: '/interceptor-containers/:path',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
-
-      {
-        source: '/:prefix/interceptor-deployments',
-        destination: '/interceptor-containers',
-        permanent: true, // 308 Permanent Redirect (good for SEO)
-      },
+      // `*-deployments` are the oldest names; they go straight to the unified Containers pages.
+      ...['mcp', 'interceptor'].flatMap((slug) => [
+        {
+          source: `/:prefix/${slug}-deployments/:path`,
+          destination: '/containers/:path',
+          permanent: true, // 308 Permanent Redirect (good for SEO)
+        },
+        {
+          source: `/:prefix/${slug}-deployments`,
+          destination: '/containers',
+          permanent: true, // 308 Permanent Redirect (good for SEO)
+        },
+      ]),
+      // The per-type container pages were merged into the single Containers pages. `:path*` carries
+      // the container id and the audit detail segment (`/{id}/{activityId}`).
+      ...['adapter', 'application', 'interceptor', 'mcp'].flatMap((slug) => [
+        {
+          source: `/:prefix/${slug}-containers/:path*`,
+          destination: '/containers/:path*',
+          permanent: true,
+        },
+        { source: `/:prefix/${slug}-containers`, destination: '/containers', permanent: true },
+      ]),
     ];
   },
   transpilePackages: ['@epam/ai-dial-ui-kit', '@epam/ai-dial-react-file-manager'],

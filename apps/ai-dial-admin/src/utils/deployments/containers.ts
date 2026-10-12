@@ -28,6 +28,7 @@ import { getPathError, getPortError } from '@/src/utils/deployments/validation';
 import { DEFAULT_SCALING, DEFAULT_STRATEGY, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_KIND_BY_TYPE } from '@/src/constants/deployments/container-types';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 
@@ -287,6 +288,10 @@ export const sanitizeContainerProbe = (container: Container): Container => {
   }
   return { ...container, probeProperties: undefined };
 };
+
+/** The container kind (`ApplicationRoute.*Containers`) that helpers and view props switch on. */
+export const getContainerKind = (type?: CONTAINER_TYPE): ApplicationRoute | undefined =>
+  type ? CONTAINER_KIND_BY_TYPE[type] : undefined;
 
 export const getContainersByView = (
   view: ApplicationRoute,

@@ -62,15 +62,7 @@ describe('MENU_CONFIGURATION — Model Servings entry gating', () => {
     const group = findDeploymentsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key);
 
-    expect(keys).toEqual(
-      expect.arrayContaining([
-        MenuI18nKey.McpContainers,
-        MenuI18nKey.InterceptorContainers,
-        MenuI18nKey.AdapterContainers,
-        MenuI18nKey.ApplicationContainers,
-        MenuI18nKey.Images,
-      ]),
-    );
+    expect(keys).toEqual(expect.arrayContaining([MenuI18nKey.Containers, MenuI18nKey.Images]));
   });
 });
 

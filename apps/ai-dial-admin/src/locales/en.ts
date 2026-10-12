@@ -165,6 +165,7 @@ export default {
     SystemProperties: 'System Properties',
 
     Deployments: 'Deployments',
+    Containers: 'Containers',
     McpContainers: 'MCP Containers',
     InterceptorContainers: 'Interceptor Containers',
     AdapterContainers: 'Adapter Containers',
@@ -1874,6 +1875,9 @@ export default {
       MaxReplicas: 'Max replicas',
       MinReplicas: 'Min replicas',
     },
+    CreateContainerTitle: 'Create container',
+    ContainerTypeField: 'Container type',
+    ContainerSourceField: 'Source',
     FromInternalMcpImage: 'From Internal MCP Image',
     FromInternalAdapterImage: 'From Internal Adapter Image',
     FromInternalApplicationImage: 'From Internal Application Image',

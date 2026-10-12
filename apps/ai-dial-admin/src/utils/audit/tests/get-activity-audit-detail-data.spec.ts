@@ -478,14 +478,7 @@ describe('getActivityAuditDetailData :: page wiring', () => {
 
   const GLOBAL_PAGE = 'activity-audit/[id]/page.tsx';
 
-  const DEPLOYMENT_PAGES = [
-    'model-servings',
-    'mcp-containers',
-    'adapter-containers',
-    'application-containers',
-    'interceptor-containers',
-    'deployment-images',
-  ];
+  const DEPLOYMENT_PAGES = ['model-servings', 'containers', 'deployment-images'];
 
   const ADMIN_PAGES = [
     'models',

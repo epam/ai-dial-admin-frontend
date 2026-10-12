@@ -113,10 +113,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
               },
             ]
           : []),
-        { key: MenuI18nKey.McpContainers, href: ApplicationRoute.McpContainers },
-        { key: MenuI18nKey.InterceptorContainers, href: ApplicationRoute.InterceptorContainers },
-        { key: MenuI18nKey.AdapterContainers, href: ApplicationRoute.AdapterContainers },
-        { key: MenuI18nKey.ApplicationContainers, href: ApplicationRoute.ApplicationContainers },
+        { key: MenuI18nKey.Containers, href: ApplicationRoute.Containers },
         { key: MenuI18nKey.Images, href: ApplicationRoute.Images },
       ],
     },
