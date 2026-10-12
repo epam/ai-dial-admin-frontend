@@ -31,15 +31,15 @@ describe('Catalog schema asset :: tab set', () => {
 describe('Catalog schema asset :: menu placement', () => {
   const catalogItems = (flags: Partial<FeatureFlags> = {}) =>
     MENU_CONFIGURATION(16, { adminApiEnabled: true, ...flags } as FeatureFlags).find(
-      (group) => group.key === MenuI18nKey.Catalog,
+      (group) => group.key === MenuI18nKey.AiGateway,
     )?.items ?? [];
 
-  test('Should follow App Runners and precede Roles in the Catalog group', () => {
+  test('Should follow App Runners and close the AI Gateway group', () => {
     const keys = catalogItems().map((item) => item.key);
     const index = keys.indexOf(MenuI18nKey.PlatformCatalogSchemas);
 
     expect(keys[index - 1]).toEqual(MenuI18nKey.PlatformAppRunners);
-    expect(keys[index + 1]).toEqual(MenuI18nKey.PlatformRoles);
+    expect(index).toEqual(keys.length - 1);
   });
 
   test('Should link to the platform-catalog-schemas route', () => {
