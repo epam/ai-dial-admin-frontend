@@ -1,6 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { Avatar, AvatarShape, DialEllipsisTooltip, DialRadioButton } from '@epam/ai-dial-ui-kit';
+import { Avatar, DialEllipsisTooltip, DialRadioButton } from '@epam/ai-dial-ui-kit';
 
 export interface RadioNameCellRendererParams extends ICellRendererParams {
   /** Radio group name shared by every row, so the browser treats the column as one radio group. */
@@ -20,7 +20,7 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
 
   return (
     <div className="flex h-full items-center gap-2 overflow-hidden">
-      <span className="group/radio relative flex size-7 shrink-0 items-center justify-center">
+      <span className="group/radio relative flex size-10 shrink-0 items-center justify-center">
         <DialRadioButton
           name={groupName}
           value={rowId}
@@ -29,15 +29,7 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
           checked={isSelected}
           onChange={onSelect}
         />
-        {!isSelected && (
-          <Avatar
-            name={name}
-            shape={AvatarShape.Square}
-            size={40}
-            className={iconClassName}
-            textClassName="dial-h3-text"
-          />
-        )}
+        {!isSelected && <Avatar name={name} size={40} className={iconClassName} textClassName="dial-h3-text" />}
       </span>
 
       <label htmlFor={inputId} className="min-w-0 cursor-pointer">
