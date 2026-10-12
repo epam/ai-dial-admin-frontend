@@ -17,6 +17,7 @@ import { FrameConfig } from '@/src/models/frame-config';
 import { ParamsFields, ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
+import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
 import { ApplicationPropertyRow } from './models';
 
 export const getFrameConfig = (
@@ -57,7 +58,7 @@ export const getTargetUrl = (
   frameConfig?: FrameConfig | null,
 ) => {
   const id =
-    view === ApplicationRoute.AssetsApplications
+    view === ApplicationRoute.AssetsApplications && !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
       ? `applications/${(application as AssetApp)?._metadata?.path}`
       : application?.name;
   try {
