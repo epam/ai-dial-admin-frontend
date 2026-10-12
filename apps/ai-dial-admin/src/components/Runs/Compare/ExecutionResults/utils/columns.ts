@@ -18,7 +18,6 @@ import {
   formatCompareColumnHeader,
   HTTP_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
-  NUMBER_FILTER_COL_DEF,
   REQUEST_INDEX_COLUMN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
@@ -148,6 +147,27 @@ const getExtractedPairKind = (key: string) =>
 const pairCellClassRules = ({ edge, hideHighlights }: RunColumnContext, getKind: PairKindGetter) =>
   hideHighlights ? {} : { cellClassRules: buildComparePairCellClassRules(getKind, edge) };
 
+/** Funnel icon only, no inline input: the score and delta columns are too narrow for one. */
+const COMPACT_NUMBER_FILTER_COL_DEF: Pick<
+  ColDef,
+  | 'filter'
+  | 'floatingFilter'
+  | 'floatingFilterComponent'
+  | 'suppressFloatingFilterButton'
+  | 'suppressHeaderFilterButton'
+  | 'filterParams'
+> = {
+  filter: 'agNumberColumnFilter',
+  floatingFilter: true,
+  floatingFilterComponent: NumericGridFilterFloatingFilter,
+  suppressFloatingFilterButton: true,
+  suppressHeaderFilterButton: true,
+  filterParams: {
+    ...baseNumberFilter.filterParams,
+    buttons: ['reset'],
+  },
+};
+
 const buildRunMetricColumn = (context: RunColumnContext, groupKey: string, key: string): ColDef => {
   const { run } = context;
   const colId = getCompareRunColId(run.slot, `${groupKey}_${key}`);
@@ -156,7 +176,7 @@ const buildRunMetricColumn = (context: RunColumnContext, groupKey: string, key: 
     colId,
     field: colId,
     ...compareRunIndexHeaderDef(run.index, undefined, true),
-    ...NUMBER_FILTER_COL_DEF,
+    ...COMPACT_NUMBER_FILTER_COL_DEF,
     ...compareScoreColDef,
     ...rightAlignedColumn,
     cellClass: 'p-0',
@@ -175,15 +195,7 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
   colId: `delta_${groupKey}_${key}`,
   field: `delta_${groupKey}_${key}`,
   headerName: deltaHeader,
-  filter: 'agNumberColumnFilter',
-  floatingFilter: true,
-  floatingFilterComponent: NumericGridFilterFloatingFilter,
-  suppressFloatingFilterButton: true,
-  suppressHeaderFilterButton: true,
-  filterParams: {
-    ...baseNumberFilter.filterParams,
-    buttons: ['reset'],
-  },
+  ...COMPACT_NUMBER_FILTER_COL_DEF,
   ...compareScoreColDef,
   ...rightAlignedColumn,
   cellRenderer: CompareDeltaCellRenderer,
@@ -268,6 +280,8 @@ const buildRunStatusColumn = (context: RunColumnContext): ColDef => ({
   ...compareRunIndexHeaderDef(context.run.index),
   ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
   maxWidth: STATUS_COLUMN_WIDTH,
+  // Same as Test Case name: stay on the bottom header row instead of spanning up into the empty group rows.
+  suppressSpanHeaderHeight: true,
   ...NO_FILTER_COL_DEF,
   valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
     (params.data && getCompareRowResult(params.data, context.run.slot))?.executionStatus,

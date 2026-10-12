@@ -12,16 +12,11 @@ import {
 } from '@/src/components/Runs/Compare/constants';
 import {
   DEFAULT_COMPARE_DELTA_HEADER,
-  DURATION_COLUMN_WIDTH,
-  EXTRACTED_COLUMN_MIN_WIDTH,
   EXTRACTED_GROUP_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
   formatCompareColumnHeader,
-  HTTP_COLUMN_WIDTH,
   COMPARE_SCORE_COLUMN_MIN_WIDTH,
-  RUN_INDEX_COLUMN_WIDTH,
-  STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
@@ -49,6 +44,16 @@ const withFlattenedMetricLeaves = (col: ColDef | ColGroupDef): ColGroupDef => {
 };
 
 describe('Runs Compare :: getCompareColumnsCompare', () => {
+  test('keeps status and Test Case name columns on the bottom header row', () => {
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const statusGroup = cols[0] as { children: ColDef[] };
+    const testCaseName = cols.find((col) => (col as ColDef).colId === 'testCaseName') as ColDef;
+
+    expect(testCaseName.suppressSpanHeaderHeight).toBe(true);
+    expect(statusGroup.children.length).toBeGreaterThan(0);
+    expect(statusGroup.children.every((col) => col.suppressSpanHeaderHeight === true)).toBe(true);
+  });
+
   test('groups status columns under execution status without a visible group header', () => {
     const cols = getCompareColumnsCompare([
       makeRow({
@@ -347,6 +352,27 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(delta.floatingFilter).toBe(true);
     expect(delta.floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
     expect(metricGroup.children[1].children[2].colId).toBe('delta_Overall Accuracy_Recall');
+  });
+
+  test('score and delta columns use the compact filter-icon floating filter', () => {
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        metricValues: { grp: { score: 0.8 } },
+        _compared: makeResult({ metricValues: { grp: { score: 0.5 } } }),
+      }),
+    ]);
+    const scoreColumns = withFlattenedMetricLeaves(cols[3]).children as ColDef[];
+
+    expect(scoreColumns).toHaveLength(3);
+    for (const col of scoreColumns) {
+      expect(col).toMatchObject({
+        filter: 'agNumberColumnFilter',
+        floatingFilter: true,
+        floatingFilterComponent: NumericGridFilterFloatingFilter,
+        suppressFloatingFilterButton: true,
+        suppressHeaderFilterButton: true,
+      });
+    }
   });
 
   test('primary and secondary score columns always use ScoreCellRenderer so missing values render as styled dashes', () => {
