@@ -71,6 +71,11 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     title: 'How to manage Files',
   },
 
+  [ApplicationRoute.Publications]: {
+    listView: 'tutorials/admin/approvals-application-publications',
+    title: 'How to review Publication requests',
+  },
+
   [ApplicationRoute.ApplicationPublications]: {
     listView: 'tutorials/admin/approvals-application-publications',
     selectedView: 'tutorials/admin/approvals-application-publications#review-page',

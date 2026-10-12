@@ -147,140 +147,134 @@ describe('MENU_CONFIGURATION — admin API gating', () => {
   });
 });
 
-describe('MENU_CONFIGURATION — Approvals group', () => {
-  const findApprovalsGroup = (flags: FeatureFlags) =>
-    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Approvals);
+describe('MENU_CONFIGURATION — group order', () => {
+  test('lists the groups in the navigation order', () => {
+    const flags = {
+      ...baseFlags,
+      adminApiEnabled: true,
+      deploymentsEnabled: true,
+      evaluationEnabled: true,
+      analyticsEnabled: true,
+    };
 
-  test('lists publication types in order: Application, Toolset, Prompt, Conversation, File, Skill', () => {
-    const group = findApprovalsGroup(baseFlags);
-
-    expect(group?.items.map((item) => item.key)).toEqual([
-      MenuI18nKey.ApplicationPublications,
-      MenuI18nKey.ToolsetPublications,
-      MenuI18nKey.PromptPublications,
-      MenuI18nKey.ConversationPublications,
-      MenuI18nKey.FilePublications,
-      MenuI18nKey.SkillPublications,
+    expect(groupKeys(flags)).toEqual([
+      MenuI18nKey.Entities,
+      MenuI18nKey.AiGateway,
+      MenuI18nKey.Artifacts,
+      MenuI18nKey.Builders,
+      MenuI18nKey.AccessManagement,
+      MenuI18nKey.Deployments,
+      MenuI18nKey.Evaluation,
+      MenuI18nKey.Analytics,
+      MenuI18nKey.Governance,
+      MenuI18nKey.Audit,
     ]);
   });
 
-  test('Skill Publications links to the skill-publications route', () => {
-    const group = findApprovalsGroup(baseFlags);
-    const skillItem = group?.items.find((item) => item.key === MenuI18nKey.SkillPublications);
+  test('no longer has the Catalog, Assets, or Approvals groups', () => {
+    const keys = groupKeys(baseFlags) as string[];
 
-    expect(skillItem?.href).toBe(ApplicationRoute.SkillPublications);
+    expect(keys).not.toContain('Menu.Catalog');
+    expect(keys).not.toContain('Menu.Assets');
+    expect(keys).not.toContain('Menu.Approvals');
   });
 });
 
-describe('MENU_CONFIGURATION — Assets group', () => {
-  const findAssetsGroup = (flags: FeatureFlags) =>
-    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Assets);
+describe('MENU_CONFIGURATION — AI Gateway group', () => {
+  const findGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.AiGateway);
 
-  test('FoldersStorage is the last entry, immediately after Skills', () => {
-    const group = findAssetsGroup(baseFlags);
-    const keys = group?.items.map((item) => item.key) || [];
-
-    expect(keys[keys.length - 1]).toBe(MenuI18nKey.FoldersStorage);
-    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Skills);
-  });
-
-  test('Skills links to the /skills route', () => {
-    const group = findAssetsGroup(baseFlags);
-    const skillsItem = group?.items.find((item) => item.key === MenuI18nKey.Skills);
-
-    expect(skillsItem?.href).toBe(ApplicationRoute.Skills);
-  });
-
-  test('does not contain any platform entity items', () => {
-    const group = findAssetsGroup(baseFlags);
-    const keys = group?.items.map((item) => item.key) || [];
-
-    expect(keys).not.toContain(MenuI18nKey.PlatformModels);
-    expect(keys).not.toContain(MenuI18nKey.PlatformAppRunners);
-    expect(keys).not.toContain(MenuI18nKey.PlatformInterceptors);
-    expect(keys).not.toContain(MenuI18nKey.PlatformTranslators);
-    expect(keys).not.toContain(MenuI18nKey.PlatformRoutes);
-    expect(keys).not.toContain(MenuI18nKey.PlatformRoles);
-    expect(keys).not.toContain(MenuI18nKey.PlatformKeys);
-  });
-});
-
-describe('MENU_CONFIGURATION — Catalog group', () => {
-  const findCatalogGroup = (flags: FeatureFlags) =>
-    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Catalog);
-
-  test('includes a group with key MenuI18nKey.Catalog under any FeatureFlags value', () => {
-    const keys = groupKeys(baseFlags);
-
-    expect(keys).toContain(MenuI18nKey.Catalog);
-  });
-
-  test('Catalog group appears after Builders and before Assets', () => {
-    const keys = groupKeys(baseFlags);
-    const buildersIndex = keys.indexOf(MenuI18nKey.Builders);
-    const catalogIndex = keys.indexOf(MenuI18nKey.Catalog);
-    const assetsIndex = keys.indexOf(MenuI18nKey.Assets);
-
-    expect(catalogIndex).toBeGreaterThan(buildersIndex);
-    expect(catalogIndex).toBeLessThan(assetsIndex);
-  });
-
-  test('Catalog group carries CatalogDescription as its descriptionKey', () => {
-    const catalogGroup = findCatalogGroup(baseFlags);
-
-    expect(catalogGroup?.descriptionKey).toBe(MenuI18nKey.CatalogDescription);
-  });
-
-  test('Catalog group has isPreview: true', () => {
-    const catalogGroup = findCatalogGroup(baseFlags);
-
-    expect(catalogGroup?.isPreview).toBe(true);
-  });
-
-  test('Catalog group contains all seven platform entity items', () => {
-    const catalogGroup = findCatalogGroup(baseFlags);
-    const keys = catalogGroup?.items.map((item) => item.key) || [];
-
-    expect(keys).toContain(MenuI18nKey.PlatformModels);
-    expect(keys).toContain(MenuI18nKey.PlatformAppRunners);
-    expect(keys).toContain(MenuI18nKey.PlatformInterceptors);
-    expect(keys).toContain(MenuI18nKey.PlatformTranslators);
-    expect(keys).toContain(MenuI18nKey.PlatformRoutes);
-    expect(keys).toContain(MenuI18nKey.PlatformRoles);
-    expect(keys).toContain(MenuI18nKey.PlatformKeys);
-  });
-
-  test('Translators follows Interceptors and precedes Routes', () => {
-    const catalogGroup = findCatalogGroup(baseFlags);
-    const keys = catalogGroup?.items.map((item) => item.key) || [];
-
-    expect(keys.indexOf(MenuI18nKey.PlatformTranslators)).toBe(keys.indexOf(MenuI18nKey.PlatformInterceptors) + 1);
-    expect(keys.indexOf(MenuI18nKey.PlatformTranslators)).toBe(keys.indexOf(MenuI18nKey.PlatformRoutes) - 1);
-  });
-
-  test('platform items in Catalog have no individual isPreview flag (preview is on the group)', () => {
-    const catalogGroup = findCatalogGroup(baseFlags);
-    const platformKeys = [
+  test('lists models, toolsets, translators, routes, applications, application runners, catalog schemas', () => {
+    expect(findGroup(baseFlags)?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.PlatformModels,
-      MenuI18nKey.PlatformAppRunners,
-      MenuI18nKey.PlatformInterceptors,
+      MenuI18nKey.Toolsets,
       MenuI18nKey.PlatformTranslators,
       MenuI18nKey.PlatformRoutes,
+      MenuI18nKey.Applications,
+      MenuI18nKey.PlatformAppRunners,
+      MenuI18nKey.PlatformCatalogSchemas,
+    ]);
+  });
+
+  test('links Toolsets and Applications to the asset routes', () => {
+    const items = findGroup(baseFlags)?.items ?? [];
+
+    expect(items.find((item) => item.key === MenuI18nKey.Toolsets)?.href).toBe(ApplicationRoute.AssetsToolsets);
+    expect(items.find((item) => item.key === MenuI18nKey.Applications)?.href).toBe(ApplicationRoute.AssetsApplications);
+  });
+
+  test('carries no preview tag on any item', () => {
+    const items = findGroup(baseFlags)?.items ?? [];
+
+    expect(items.every((item) => item.isPreview === undefined)).toBe(true);
+  });
+});
+
+describe('MENU_CONFIGURATION — Artifacts group', () => {
+  test('lists skills, files, conversations, prompts', () => {
+    const group = MENU_CONFIGURATION(ICON_SIZE, baseFlags).find((item) => item.key === MenuI18nKey.Artifacts);
+
+    expect(group?.items.map((item) => item.key)).toEqual([
+      MenuI18nKey.Skills,
+      MenuI18nKey.Files,
+      MenuI18nKey.Conversations,
+      MenuI18nKey.Prompts,
+    ]);
+  });
+});
+
+describe('MENU_CONFIGURATION — Governance group', () => {
+  const findGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Governance);
+
+  test('lists roles, keys, folder permissions, interceptors, then Approvals', () => {
+    expect(findGroup(baseFlags)?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.PlatformRoles,
       MenuI18nKey.PlatformKeys,
-    ];
+      MenuI18nKey.FoldersStorage,
+      MenuI18nKey.PlatformInterceptors,
+      MenuI18nKey.Approvals,
+    ]);
+  });
 
-    for (const key of platformKeys) {
-      const item = catalogGroup?.items.find((i) => i.key === key);
-      expect(item?.isPreview).toBeUndefined();
+  test('Approvals links to the merged publications route', () => {
+    const approvals = findGroup(baseFlags)?.items.find((item) => item.key === MenuI18nKey.Approvals);
+
+    expect(approvals?.href).toBe(ApplicationRoute.Publications);
+  });
+});
+
+describe('MENU_CONFIGURATION — catalog token', () => {
+  const coreDirectKeys = [
+    MenuI18nKey.PlatformModels,
+    MenuI18nKey.PlatformTranslators,
+    MenuI18nKey.PlatformRoutes,
+    MenuI18nKey.PlatformAppRunners,
+    MenuI18nKey.PlatformCatalogSchemas,
+    MenuI18nKey.PlatformRoles,
+    MenuI18nKey.PlatformKeys,
+    MenuI18nKey.PlatformInterceptors,
+  ];
+  const allKeys = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).flatMap((group) => group.items.map((item) => item.key));
+
+  test('keeps every Core-direct item while catalog is enabled', () => {
+    const keys = allKeys({ ...baseFlags, catalogEnabled: true });
+
+    for (const key of coreDirectKeys) {
+      expect(keys).toContain(key);
     }
   });
 
-  test('getActualMenuItems includes the Catalog group when it has platform items', () => {
-    const config = MENU_CONFIGURATION(ICON_SIZE, baseFlags);
-    const actual = getActualMenuItems(config, []);
+  test('drops every Core-direct item, in any group, when catalog is disabled', () => {
+    const keys = allKeys({ ...baseFlags, catalogEnabled: false });
 
-    expect(actual.find((group) => group.key === MenuI18nKey.Catalog)).toBeDefined();
+    for (const key of coreDirectKeys) {
+      expect(keys).not.toContain(key);
+    }
+    expect(keys).toContain(MenuI18nKey.Skills);
+    expect(keys).toContain(MenuI18nKey.FoldersStorage);
+    expect(keys).toContain(MenuI18nKey.Approvals);
   });
 });
 
@@ -294,16 +288,16 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
     expect(group?.items.map((item) => item.key)).toEqual([
-      MenuI18nKey.Tables,
-      MenuI18nKey.Pipelines,
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsSessions,
+      MenuI18nKey.Tables,
+      MenuI18nKey.Pipelines,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
-      ApplicationRoute.AnalyticsTables,
-      ApplicationRoute.AnalyticsPipelines,
       ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.SessionsTrace,
+      ApplicationRoute.AnalyticsTables,
+      ApplicationRoute.AnalyticsPipelines,
     ]);
   });
 
@@ -337,9 +331,9 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
 
     expect(group).toBeDefined();
     expect(group?.items.map((item) => item.key)).toEqual([
+      MenuI18nKey.Queries,
       MenuI18nKey.Tables,
       MenuI18nKey.Pipelines,
-      MenuI18nKey.Queries,
     ]);
     expect(group?.items.map((item) => item.href)).not.toContain(ApplicationRoute.SessionsTrace);
   });

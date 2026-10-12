@@ -2,6 +2,8 @@
 
 This documentation describes the structure and contents of the menu items array used in the application. Each entry corresponds to a menu section with various properties, including its title, description, icon, and links to different routes.
 
+Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits. The `catalog` token is the exception that hides all Core-direct items — the ones keyed `Platform*` — wherever they are grouped.
+
 ---
 
 ## Menu Sections
@@ -26,7 +28,50 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Routes`
     - **Description**: Navigate to the routes page to manage the routes in the system.
 
-### 2. **Builders**
+### 2. **AI Gateway**
+
+- **Description**: A section for the entities DIAL Core serves, read and written directly against Core rather than through the admin backend. The items keyed `Platform*` are hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
+- **Items**:
+  - **Models**
+    - **Key**: `PlatformModels`
+    - **Description**: Navigate to the models page to manage the models DIAL Core serves, including their catalog metadata.
+  - **Toolsets**
+    - **Key**: `Toolsets`
+    - **Description**: Navigate to the assets toolsets page to manage toolset assets.
+  - **Translators**
+    - **Key**: `PlatformTranslators`
+    - **Description**: Navigate to the translators page to manage the interface translators DIAL Core applies between LLM API dialects.
+  - **Routes**
+    - **Key**: `PlatformRoutes`
+    - **Description**: Navigate to the routes page to manage Core's own routing rules.
+  - **Applications**
+    - **Key**: `Applications`
+    - **Description**: Navigate to the assets applications page for uploading and managing system applications.
+  - **App Runners**
+    - **Key**: `PlatformAppRunners`
+    - **Description**: Navigate to the app runners page to manage the application type schemas applications are built on.
+  - **Catalog Schemas**
+    - **Key**: `PlatformCatalogSchemas`
+    - **Description**: Navigate to the catalog schemas page to define the display metadata a model, agent, toolset, or interceptor can carry.
+
+### 3. **Artifacts**
+
+- **Description**: A section for managing reusable resources like skills, files, conversations, and prompts.
+- **Items**:
+  - **Skills**
+    - **Key**: `Skills`
+    - **Description**: Navigate to the skills page to manage reusable skills.
+  - **Files**
+    - **Key**: `Files`
+    - **Description**: Navigate to the files page for uploading and managing system files.
+  - **Conversations**
+    - **Key**: `Conversations`
+    - **Description**: Navigate to the conversations page to manage stored conversations.
+  - **Prompts**
+    - **Key**: `Prompts`
+    - **Description**: Navigate to the prompts page to manage and create prompts used in various workflows.
+
+### 4. **Builders**
 
 - **Description**: A section that provides access to tools for building applications.
 - **Items**:
@@ -40,53 +85,18 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `Adapters`
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
 
-### 3. **Catalog** [Preview]
+### 5. **Access Management**
 
-- **Description**: A section for the platform-bucket entities DIAL Core resolves itself, read and written directly against Core rather than through the admin backend.
+- **Description**: A section for managing roles and keys.
 - **Items**:
-  - **Models**
-    - **Key**: `PlatformModels`
-    - **Description**: Navigate to the Catalog models page to manage the models DIAL Core serves, including their catalog metadata.
-  - **Interceptors**
-    - **Key**: `PlatformInterceptors`
-    - **Description**: Navigate to the Catalog interceptors page to manage interceptors and their catalog metadata.
-  - **Translators**
-    - **Key**: `PlatformTranslators`
-    - **Description**: Navigate to the translators page to manage the interface translators DIAL Core applies between LLM API dialects.
-  - **Routes**
-    - **Key**: `PlatformRoutes`
-    - **Description**: Navigate to the Catalog routes page to manage Core's own routing rules.
-  - **App Runners**
-    - **Key**: `PlatformAppRunners`
-    - **Description**: Navigate to the app runners page to manage the application type schemas applications are built on.
-  - **Catalog Schemas**
-    - **Key**: `PlatformCatalogSchemas`
-    - **Description**: Navigate to the catalog schemas page to define the display metadata a model, agent, toolset, or interceptor can carry.
   - **Roles**
-    - **Key**: `PlatformRoles`
-    - **Description**: Navigate to the Catalog roles page to manage roles and their limits.
+    - **Key**: `Roles`
+    - **Description**: Navigate to the roles management page to assign and manage user roles.
   - **Keys**
-    - **Key**: `PlatformKeys`
-    - **Description**: Navigate to the keys page to manage the project keys Core issues.
+    - **Key**: `Keys`
+    - **Description**: Navigate to the keys management page for creating and managing API keys and secrets.
 
-### 4. **Assets**
-
-- **Description**: A section for managing assets like applications, toolsets, prompts, and files.
-- **Items**:
-  - **Applications**
-    - **Key**: `Applications`
-    - **Description**: Navigate to the assets applications page for uploading and managing system applications.
-  - **Toolsets**
-    - **Key**: `Toolsets`
-    - **Description**: Navigate to the assets toolsets page to manage toolset assets.
-  - **Prompts**
-    - **Key**: `Prompts`
-    - **Description**: Navigate to the prompts page to manage and create prompts used in various workflows.
-  - **Files**
-    - **Key**: `Files`
-    - **Description**: Navigate to the files page for uploading and managing system files.
-
-### 5. **Deployments**
+### 6. **Deployments**
 
 - **Description**: A section for managing deployments and containers (MCP, interceptors, adapters).
 - **Items**:
@@ -102,56 +112,52 @@ This documentation describes the structure and contents of the menu items array 
   - **Adapter Containers**
     - **Key**: `AdapterContainers`
     - **Description**: Navigate to the adapter containers page to manage deployed adapter containers.
+  - **Application Containers**
+    - **Key**: `ApplicationContainers`
+    - **Description**: Navigate to the application containers page to manage deployed application containers.
   - **Images**
     - **Key**: `Images`
     - **Description**: Navigate to the images page to manage container images.
 
-### 6. **Access Management**
+### 7. **Evaluation**
 
-- **Description**: A section for managing roles, keys, and folder storage.
+- **Description**: A section for managing test suites, evaluation runs, and datasets.
 - **Items**:
-  - **Roles**
-    - **Key**: `Roles`
-    - **Description**: Navigate to the roles management page to assign and manage user roles.
-  - **Keys**
-    - **Key**: `Keys`
-    - **Description**: Navigate to the keys management page for creating and managing API keys and secrets.
-  - **Folders Storage**
-    - **Key**: `FoldersStorage`
-    - **Description**: Manage folder storage and organization for different assets and files.
-
-### 7. **Approvals**
-
-- **Description**: A section for managing application, toolset, prompt, and file approvals.
-- **Items**:
-  - **Application Publications**
-    - **Key**: `ApplicationPublications`
-    - **Description**: Navigate to the application publications page to review and approve application submissions.
-  - **Toolset Publications**
-    - **Key**: `ToolsetPublications`
-    - **Description**: Navigate to the toolset publications page to review and approve toolset submissions.
-  - **Prompt Publications**
-    - **Key**: `PromptPublications`
-    - **Description**: Navigate to the prompt publications page to review and approve prompt submissions.
-  - **File Publications**
-    - **Key**: `FilePublications`
-    - **Description**: Navigate to the file publications page to review and approve files before they are shared.
-
-### 8. **Evaluation** [Preview]
-
-- **Description**: A section for managing datasets, test suites, and evaluation runs.
-- **Items**:
-  - **Datasets**
-    - **Key**: `Datasets`
-    - **Description**: Navigate to the datasets page to create and manage datasets used by test suites.
   - **Test Suites**
     - **Key**: `TestSuites`
     - **Description**: Navigate to the test suites page to create and manage test suites for evaluation.
   - **Runs**
     - **Key**: `Runs`
     - **Description**: Navigate to the runs page to view and manage evaluation run history and results.
+  - **Datasets**
+    - **Key**: `Datasets`
+    - **Description**: Navigate to the datasets page to create and manage datasets used by test suites.
 
-### 9. **Audit**
+### 8. **Analytics** [Preview]
+
+Documented per capability under `openspec/specs/analytics/`. Items, in order: Dashboards, Queries, Sessions, Tables, Pipelines.
+
+### 9. **Governance**
+
+- **Description**: A section for access, folder permissions, interceptors, and the approval of published artifacts. Roles, Keys, and Interceptors are Core-direct items (`Platform*`) hidden by the `catalog` token of `DISABLE_MENU_ITEMS`.
+- **Items**:
+  - **Roles**
+    - **Key**: `PlatformRoles`
+    - **Description**: Navigate to the roles page to manage roles and their limits.
+  - **Keys**
+    - **Key**: `PlatformKeys`
+    - **Description**: Navigate to the keys page to manage the project keys Core issues.
+  - **Folder Permissions**
+    - **Key**: `FoldersStorage`
+    - **Description**: Manage folder storage and organization for different assets and files.
+  - **Interceptors**
+    - **Key**: `PlatformInterceptors`
+    - **Description**: Navigate to the interceptors page to manage interceptors and their catalog metadata.
+  - **Approvals**
+    - **Key**: `Approvals`
+    - **Description**: Navigate to the approvals page (`/publications`) to review and approve publication requests. One list shows the requests of every resource type (Application, Toolset, Prompt, Conversation, File, Skill), told apart by the Type column; opening a row shows the type's review page.
+
+### 10. **Audit**
 
 - **Description**: A section for accessing telemetry data, logs, and audit information.
 - **Items**:
@@ -164,8 +170,3 @@ This documentation describes the structure and contents of the menu items array 
   - **Usage Log**
     - **Key**: `UsageLog`
     - **Description**: Navigate to the usage log page to view detailed usage logs and analytics.
-
----
-
-**Analytics** is the one menu section this document does not yet describe. Its structure is
-documented per capability under `openspec/specs/analytics/`.

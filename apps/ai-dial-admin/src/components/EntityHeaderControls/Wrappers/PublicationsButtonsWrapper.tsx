@@ -122,7 +122,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
         if (isPublish) {
           getAssetContext?.().fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
         }
-        router.push(view);
+        router.push(ApplicationRoute.Publications);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
@@ -143,7 +143,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
               }),
             ),
           );
-          router.push(view);
+          router.push(ApplicationRoute.Publications);
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
@@ -162,7 +162,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             t(PublicationsI18nKey.NotificationDeleteDescription, { entity: entityLabel, entityId: entity.requestName }),
           ),
         );
-        router.push(view);
+        router.push(ApplicationRoute.Publications);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }

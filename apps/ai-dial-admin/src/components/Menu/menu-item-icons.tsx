@@ -5,6 +5,7 @@ import {
   IconAppWindow,
   IconBolt,
   IconBox,
+  IconCircleCheck,
   IconBraces,
   IconListDetails,
   IconDatabase,
@@ -33,28 +34,23 @@ import {
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 
-// Pages without their own icon reuse the icon of the page they mirror (Catalog, Approvals, Deployments).
+// Pages without their own icon reuse the icon of the page they mirror (Catalog, Deployments).
 export const MENU_ITEM_ICONS: Partial<Record<MenuI18nKey, Icon>> = {
   [MenuI18nKey.Models]: IconSparkles,
   [MenuI18nKey.PlatformModels]: IconSparkles,
   [MenuI18nKey.Toolsets]: IconTool,
-  [MenuI18nKey.ToolsetPublications]: IconTool,
   [MenuI18nKey.PlatformTranslators]: IconLanguage,
   [MenuI18nKey.Routes]: IconRoute,
   [MenuI18nKey.PlatformRoutes]: IconRoute,
   [MenuI18nKey.Applications]: IconApps,
-  [MenuI18nKey.ApplicationPublications]: IconApps,
   [MenuI18nKey.ApplicationRunners]: IconAppWindow,
   [MenuI18nKey.PlatformAppRunners]: IconAppWindow,
   [MenuI18nKey.PlatformCatalogSchemas]: IconBraces,
   [MenuI18nKey.Skills]: IconBolt,
-  [MenuI18nKey.SkillPublications]: IconBolt,
   [MenuI18nKey.Files]: IconFile,
-  [MenuI18nKey.FilePublications]: IconFile,
   [MenuI18nKey.Conversations]: IconMessage,
-  [MenuI18nKey.ConversationPublications]: IconMessage,
   [MenuI18nKey.Prompts]: IconPrompt,
-  [MenuI18nKey.PromptPublications]: IconPrompt,
+  [MenuI18nKey.Approvals]: IconCircleCheck,
   [MenuI18nKey.ModelServings]: IconServer,
   [MenuI18nKey.McpContainers]: IconBox,
   [MenuI18nKey.InterceptorContainers]: IconBox,
