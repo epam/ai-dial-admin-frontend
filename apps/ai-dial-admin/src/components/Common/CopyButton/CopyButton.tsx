@@ -1,4 +1,11 @@
-import { DialIconButton, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import {
+  Button,
+  ButtonAppearance,
+  ButtonVariant,
+  DialIconButton,
+  DialNeutralButton,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
@@ -14,9 +21,18 @@ interface Props {
   className?: string;
   value?: string;
   size?: ElementSize;
+  /** Draws the labelled button with the 2.0 button instead of the 1.0 one. Off by default; a page opts in with its own migration. */
+  isDesignSystem2?: boolean;
 }
 
-const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size = ElementSize.Standard }) => {
+const CopyButton: FC<Props> = ({
+  buttonLabel,
+  value,
+  valueLabel,
+  className,
+  size = ElementSize.Standard,
+  isDesignSystem2,
+}) => {
   const { showNotification } = useNotification();
   const t = useI18n();
 
@@ -32,6 +48,18 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size
       showNotification(getCopyToClipboardNotification(customTitle));
     }
   }, [value, valueLabel, showNotification, t]);
+
+  if (buttonLabel && isDesignSystem2) {
+    return (
+      <Button
+        variant={ButtonVariant.Neutral}
+        appearance={ButtonAppearance.Outlined}
+        label={buttonLabel}
+        iconBefore={<IconCopy size={16} aria-hidden />}
+        onClick={onClick}
+      />
+    );
+  }
 
   return buttonLabel ? (
     <DialNeutralButton

@@ -302,16 +302,62 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
-  test('replaceTableAccess PUTs the lists to /v1/tables/{name}/access', async () => {
-    const access = { write: ['w'], modify: ['m'] };
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+  test('updateTableAccess PUTs only the given lists to /v1/tables/{name}/access', async () => {
+    const access = { write: ['w'] };
+    fetch.mockResponseOnce(JSON.stringify({ write: ['w'], ineffective_grants: [] }), JSON_HEADERS);
 
-    await instance.replaceTableAccess('events', access, TOKEN_MOCK);
+    const res = await instance.updateTableAccess('events', access, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'PUT', body: JSON.stringify(access) }),
     );
+    expect(res.response).toEqual({ write: ['w'], ineffective_grants: [] });
+  });
+
+  test('getRowPolicies issues GET /v1/tables/{name}/row-policies and returns the policies', async () => {
+    const policies = { policies: { 'team-x': { filter: { op: 'eq', args: [] } } } };
+    fetch.mockResponseOnce(JSON.stringify(policies), JSON_HEADERS);
+
+    const res = await instance.getRowPolicies('events', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(res.response).toEqual(policies);
+  });
+
+  test('putRowPolicy PUTs the policy to the role-scoped URL with the role encoded', async () => {
+    const policy = { filter: { op: 'eq', args: [] } } as any;
+    fetch.mockResponseOnce(JSON.stringify(policy), JSON_HEADERS);
+
+    await instance.putRowPolicy('events', 'team x/1', policy, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies/team%20x%2F1'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(policy) }),
+    );
+  });
+
+  test('deleteRowPolicy issues DELETE on the role-scoped URL', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.deleteRowPolicy('events', 'team-x', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/row-policies/team-x'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('a failed row-policy write surfaces the failure to the caller', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'region is not a column' }), { status: 422 });
+
+    const res = await instance.putRowPolicy('events', 'team-x', { filter: { op: 'eq', args: [] } } as any, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+    expect(res.status).toBe(422);
   });
 });
 

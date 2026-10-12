@@ -17,6 +17,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { deleteTable, getTable, getTables, updateTable } from '@/src/app/[lang]/tables/actions';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
+import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
@@ -131,7 +132,18 @@ const TablesView: FC<Props> = ({ initialTables }) => {
 
   const columns: ColDef[] = useMemo(
     () => [
-      { headerName: t(AnalyticsTablesI18nKey.Name), field: 'name', flex: 2 },
+      {
+        headerName: t(AnalyticsTablesI18nKey.Name),
+        field: 'name',
+        flex: 2,
+        cellRenderer: ({ data }: ICellRendererParams<AnalyticsTable>) =>
+          data && (
+            <span className="flex items-center gap-2">
+              <span className="truncate">{data.name}</span>
+              {data.permissions?.rows_restricted && <RowsRestrictedBadge />}
+            </span>
+          ),
+      },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', flex: 1 },
       // Populated for an enrichment only; a source table enriches nothing, so its cell stays blank.
       { headerName: t(AnalyticsTablesI18nKey.SourceTable), field: 'source_table', flex: 2 },

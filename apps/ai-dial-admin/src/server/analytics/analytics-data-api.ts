@@ -30,7 +30,10 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
+  RowPolicy,
+  RowPoliciesResponse,
   TableAccess,
+  TableAccessUpdateResult,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -106,6 +109,9 @@ export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURICom
 export const TABLE_SCHEMA_URL = (name: string): string => `${TABLE_URL(name)}/schema`;
 export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows`;
 export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/access`;
+export const TABLE_ROW_POLICIES_URL = (name: string): string => `${TABLE_URL(name)}/row-policies`;
+export const TABLE_ROW_POLICY_URL = (name: string, role: string): string =>
+  `${TABLE_ROW_POLICIES_URL(name)}/${encodeURIComponent(role)}`;
 
 export const CATALOG_URL = 'v1/catalog';
 export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
@@ -246,14 +252,29 @@ export class AnalyticsDataApi extends BaseApi {
     return this.postAction<WriteRowsDto>(TABLE_ROWS_URL(name), dto, token);
   }
 
-  // Per-table role lists (write/modify). Admin-only on the backend; a non-admin GET is rejected 403.
   getTableAccess(name: string, token: Token): Promise<ServerActionResponse<TableAccess>> {
     return this.getAction(TABLE_ACCESS_URL(name), token);
   }
 
-  // Full-replace of the table's role lists (admin-only).
-  replaceTableAccess(name: string, access: TableAccess, token: Token): Promise<ServerActionResponse> {
-    return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
+  updateTableAccess(
+    name: string,
+    access: Partial<TableAccess>,
+    token: Token,
+  ): Promise<ServerActionResponse<TableAccessUpdateResult>> {
+    return this.putAction<Partial<TableAccess>>(TABLE_ACCESS_URL(name), access, token);
+  }
+
+  getRowPolicies(name: string, token: Token): Promise<ServerActionResponse<RowPoliciesResponse>> {
+    return this.getAction(TABLE_ROW_POLICIES_URL(name), token);
+  }
+
+  putRowPolicy(name: string, role: string, policy: RowPolicy, token: Token): Promise<ServerActionResponse<RowPolicy>> {
+    return this.putAction<RowPolicy>(TABLE_ROW_POLICY_URL(name, role), policy, token);
+  }
+
+  // 404 when the role has no policy on the table.
+  deleteRowPolicy(name: string, role: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(TABLE_ROW_POLICY_URL(name, role), token);
   }
 
   async getPipelines(

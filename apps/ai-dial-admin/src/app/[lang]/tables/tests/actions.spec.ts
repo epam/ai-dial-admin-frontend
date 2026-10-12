@@ -17,7 +17,10 @@ import {
   getTable,
   getTableAccess,
   getTables,
-  replaceTableAccess,
+  updateTableAccess,
+  getRowPolicies,
+  putRowPolicy,
+  deleteRowPolicy,
   updateTable,
   updateTableSchema,
 } from '../actions';
@@ -112,13 +115,51 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.getTableAccess).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('replaceTableAccess passes name, access + token', async () => {
-    const access = { write: ['w'], modify: ['m'] };
-    (analyticsDataApi.replaceTableAccess as any).mockResolvedValue({ success: true });
+  test('updateTableAccess passes name, the partial access + token', async () => {
+    const access = { write: ['w'] };
+    (analyticsDataApi.updateTableAccess as any).mockResolvedValue({ success: true });
 
-    await replaceTableAccess('events', access);
+    await updateTableAccess('events', access);
 
-    expect(analyticsDataApi.replaceTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
+    expect(analyticsDataApi.updateTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
+  });
+
+  test('getRowPolicies passes name + token', async () => {
+    (analyticsDataApi.getRowPolicies as any).mockResolvedValue({ success: true, response: { policies: {} } });
+
+    await getRowPolicies('events');
+
+    expect(analyticsDataApi.getRowPolicies).toHaveBeenCalledWith('events', TOKEN_MOCK);
+  });
+
+  test('putRowPolicy passes name, role, policy + token', async () => {
+    const policy = { filter: { op: 'eq', args: [] } } as any;
+    (analyticsDataApi.putRowPolicy as any).mockResolvedValue({ success: true });
+
+    await putRowPolicy('events', 'team-x', policy);
+
+    expect(analyticsDataApi.putRowPolicy).toHaveBeenCalledWith('events', 'team-x', policy, TOKEN_MOCK);
+  });
+
+  test('deleteRowPolicy passes name, role + token', async () => {
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: true });
+
+    await deleteRowPolicy('events', 'team-x');
+
+    expect(analyticsDataApi.deleteRowPolicy).toHaveBeenCalledWith('events', 'team-x', TOKEN_MOCK);
+  });
+
+  test('deleteRowPolicy treats a 404 as success, because the policy is already gone', async () => {
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: false, status: 404 });
+
+    expect(await deleteRowPolicy('events', 'team-x')).toEqual({ success: true });
+  });
+
+  test('deleteRowPolicy reports any other failure', async () => {
+    const failure = { success: false, status: 500, errorMessage: 'boom' };
+    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue(failure);
+
+    expect(await deleteRowPolicy('events', 'team-x')).toEqual(failure);
   });
 
   test('getRoles reads the role catalog from Core, not from the admin backend', async () => {

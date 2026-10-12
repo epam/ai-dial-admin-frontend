@@ -1,5 +1,6 @@
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryFilterNode } from '@/src/models/analytics/query';
 import { ConfigEntityRow } from '@/src/models/dial/config-file';
 
 export enum AnalyticsTableType {
@@ -62,12 +63,16 @@ export interface AnalyticsTableGrain {
   cardinality?: Cardinality;
 }
 
-// The calling identity's effective per-table permissions, reported by the data-access service on the
-// table read surfaces: `write` — may insert rows; `modify` — may change schema/description. The two are
-// independent. A system table reports both false for every caller; in `none` security mode both are true.
+// The caller's effective per-table permissions, after implication (Read and Modify include Get). `sensitive`
+// is the clearance for sensitive columns, not a verb; `rows_restricted` says a row policy confines the caller.
+// A system table reports `write` and `modify` false for everyone.
 export interface TablePermissions {
+  get: boolean;
+  read: boolean;
+  sensitive: boolean;
   write: boolean;
   modify: boolean;
+  rows_restricted: boolean;
 }
 
 export interface AnalyticsTable {
@@ -89,11 +94,44 @@ export interface AnalyticsTable {
   permissions?: TablePermissions;
 }
 
-// A table's role-based access lists: raw provider role names permitted to write (insert rows) and to
-// modify (change schema/description). Managed via the admin-only access endpoint.
-export interface TableAccess {
-  write: string[];
-  modify: string[];
+export enum TableGrantKey {
+  Get = 'get',
+  Read = 'read',
+  Sensitive = 'sensitive',
+  Write = 'write',
+  Modify = 'modify',
+}
+
+// Raw provider role names per privilege. The access endpoint's PUT merges by key: a key left out is unchanged,
+// an empty list revokes.
+export type TableAccess = Record<TableGrantKey, string[]>;
+
+export enum IneffectiveGrantReason {
+  AlreadyGlobal = 'already_global',
+  EnrichmentReadInert = 'enrichment_read_inert',
+  SensitiveWithoutVerb = 'sensitive_without_verb',
+}
+
+export interface IneffectiveGrant {
+  role: string;
+  key: TableGrantKey;
+  reason: IneffectiveGrantReason;
+  message: string;
+}
+
+export interface TableAccessUpdateResult extends TableAccess {
+  permissions: TablePermissions;
+  ineffective_grants: IneffectiveGrant[];
+}
+
+export interface RowPolicy {
+  filter: QueryFilterNode;
+}
+
+export type RowPolicies = Record<string, RowPolicy>;
+
+export interface RowPoliciesResponse {
+  policies: RowPolicies;
 }
 
 export interface AnalyticsRoleCatalog {
