@@ -44,6 +44,7 @@ import {
   MetricDeltaKind,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { rightAlignedColumn } from '@/src/constants/grid-columns/configs';
 import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
@@ -179,7 +180,7 @@ const buildRunMetricColumn = (context: RunColumnContext, groupKey: string, key: 
     ...COMPACT_NUMBER_FILTER_COL_DEF,
     ...compareScoreColDef,
     ...rightAlignedColumn,
-    cellClass: 'p-0',
+    cellClass: ['p-0', NO_BORDER_CLASS],
     cellRenderer: ScoreCellRenderer,
     valueGetter: (params) => {
       const result = params.data && getCompareRowResult(params.data, run.slot);

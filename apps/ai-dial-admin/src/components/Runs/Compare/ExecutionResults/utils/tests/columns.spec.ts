@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import ScoreCellRenderer from '@/src/components/Grid/CellRenderers/ScoreCellRenderer';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import EllipsisHeaderGroup from '@/src/components/Grid/HeaderComponents/EllipsisHeaderGroup';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
@@ -396,7 +397,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const metricGroup = withFlattenedMetricLeaves(cols[3]) as {
       children: {
         colId?: string;
-        cellClass?: string;
+        cellClass?: string | string[];
         headerClass?: string;
         headerComponentParams?: { isRightAligned?: boolean };
       }[];
@@ -405,8 +406,8 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const secondaryPrecision = metricGroup.children[1];
     const deltaPrecision = metricGroup.children[2];
 
-    expect(primaryPrecision).toMatchObject({ cellClass: 'p-0', headerClass: 'align-right' });
-    expect(secondaryPrecision).toMatchObject({ cellClass: 'p-0', headerClass: 'align-right' });
+    expect(primaryPrecision).toMatchObject({ cellClass: ['p-0', NO_BORDER_CLASS], headerClass: 'align-right' });
+    expect(secondaryPrecision).toMatchObject({ cellClass: ['p-0', NO_BORDER_CLASS], headerClass: 'align-right' });
     expect(deltaPrecision).toMatchObject({ cellClass: 'align-right', headerClass: 'align-right' });
     expect(primaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
     expect(secondaryPrecision.headerComponentParams?.isRightAligned).toBe(true);
