@@ -6,17 +6,16 @@ import { useRouter } from 'next/navigation';
 
 import { GridApi, IRowNode } from 'ag-grid-community';
 import {
+  Button,
+  ButtonAppearance,
+  ButtonVariant,
   ConfirmationPopupVariant,
   DialConfirmationPopup,
-  DialDangerButton,
   DialEllipsisTooltip,
   DialFormPopup,
   DialGhostButton,
-  DialNeutralButton,
-  DialPrimaryButton,
-  DialTabs,
-  ElementSize,
   PopupSize,
+  Tabs,
 } from '@epam/ai-dial-ui-kit';
 import { IconPlugConnected } from '@tabler/icons-react';
 
@@ -38,7 +37,9 @@ import {
   splitDraftDocument,
 } from '@/src/components/Analytics/Tables/draft-document';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
+import AccessTab from '@/src/components/Analytics/Tables/access/AccessTab';
+import { useTableAccess } from '@/src/components/Analytics/Tables/access/use-table-access';
+import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
 import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
 import TableProperties from '@/src/components/Analytics/Tables/TableProperties';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
@@ -62,7 +63,7 @@ import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonTog
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -81,7 +82,7 @@ import {
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
+import { accessTab, auditTab, EntityViewTab, propertiesTab } from '@/src/utils/tabs/utils';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -115,7 +116,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
-  const [accessOpen, setAccessOpen] = useState(false);
   const [connectOpen, setConnectOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
@@ -131,7 +131,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const isEnrichment = table.type === AnalyticsTableType.Enrichment;
   const canConnect = !isEnrichment || isEnrichmentRead(table);
   const isActive = table.status === TableStatus.Active;
-  const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
+  // While an ACTIVE table's definition is shown as JSON, the header offers only copying it and leaving the view.
+  const isJsonViewOnly = isActive && isEditorEnabled;
+  const { canDelete, canWrite, canModify, canManageRoles, canChangeSensitive, isRowsRestricted } =
+    useAnalyticsTablePermissions(table);
+  // Read with the view: the tab's presence depends on it.
+  const access = useTableAccess(name, canManageRoles && isActive && featureFlags.analyticsEnabled);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
 
   const draft = useDraftSchemaForm(table, sourceTable, t);
@@ -383,7 +388,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   // recorded activities, so the tab could only ever be empty (design.md D12). FAILED and an unreported
   // status take the same branch as a draft — the branch that already renders the draft schema editor.
   // On an active table it needs no permission the detail view does not already require.
-  const tabs = useMemo(() => [propertiesTab(t), auditTab(t)], [t]);
+  const tabs = useMemo(
+    () => [propertiesTab(t), ...(access.isTabOffered ? [accessTab(t)] : []), auditTab(t)],
+    [t, access.isTabOffered],
+  );
+  // The selected tab can stop being offered (the access read was refused on a reload).
+  const selectedTab = tabs.some((tab) => tab.id === activeTab) ? activeTab : EntityViewTab.Properties;
 
   // `entity` is handed the document object exactly as EntityJsonEditor last produced it, and stored by
   // reference: the component keeps that same object in `lastEntityFromEditorRef` and skips its reseeding
@@ -435,10 +445,20 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const tabbedBody = (
     <>
       <div className="mb-6">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+        <Tabs
+          ariaLabel={name}
+          tabs={tabs}
+          activeTabId={selectedTab}
+          onTabChange={(tab) => setActiveTab(tab as EntityViewTab)}
+        />
       </div>
-      {activeTab === EntityViewTab.Properties && properties}
-      {activeTab === EntityViewTab.Audit && (
+      {selectedTab === EntityViewTab.Properties && properties}
+      {selectedTab === EntityViewTab.Access && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <AccessTab tableName={name} columns={columns} isSystem={isSystem} access={access} />
+        </div>
+      )}
+      {selectedTab === EntityViewTab.Audit && (
         <div className="flex min-h-0 flex-1 flex-col">
           <TableAudit table={table} />
         </div>
@@ -461,6 +481,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="truncate">{name}</h1>
             <TableStatusBadge status={table.status} />
+            {isRowsRestricted && <RowsRestrictedBadge hasTooltip />}
             {/* Neutral chip, not a second colored pill: the kind is a fixed identity fact, unlike the
                 status beside it, and the catalog grid is the only other place that states it. */}
             <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
@@ -477,24 +498,33 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           {/* `isActive` alone, not `isActive && canConnect`: on an active table the JSON-editor toggle
               is always in the container, so an enrichment with no source table viewed by a caller with
               no permissions still gets a header. Every other child keeps its own gate. */}
-          {(isActive || canDelete || canWrite || canModify || canManageRoles) && (
+          {(isActive || canDelete || canWrite || canModify) && (
             <div className="flex shrink-0 items-center gap-4">
-              {isChangeBarShown ? (
+              {isChangeBarShown && (
                 <ChangedEntityButtons
                   disableSave={!isEditorEnabled && !draft.canMaterialize}
                   onDiscard={onDiscard}
                   onSave={onTryToSave}
+                  isDesignSystem2
                 />
-              ) : (
+              )}
+              {isJsonViewOnly && (
                 <>
-                  {canManageRoles && (
-                    <DialNeutralButton
-                      label={t(AnalyticsTablesI18nKey.ManageAccess)}
-                      onClick={() => setAccessOpen(true)}
-                    />
-                  )}
+                  <CopyButton
+                    buttonLabel={t(ButtonsI18nKey.Copy)}
+                    valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
+                    value={copyValue}
+                    isDesignSystem2
+                  />
+                  <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                </>
+              )}
+              {!isChangeBarShown && !isJsonViewOnly && (
+                <>
                   {canDelete && (
-                    <DialDangerButton
+                    <Button
+                      variant={ButtonVariant.Danger}
+                      appearance={ButtonAppearance.Outlined}
                       label={t(AnalyticsTablesI18nKey.DeleteTable)}
                       onClick={() => setConfirmOpen(true)}
                     />
@@ -502,40 +532,40 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                   {isActive ? (
                     <>
                       {canModify && (
-                        <DialNeutralButton
+                        <Button
+                          variant={ButtonVariant.Neutral}
+                          appearance={ButtonAppearance.Outlined}
                           label={t(AnalyticsTablesI18nKey.AddColumns)}
                           onClick={() => setAddOpen(true)}
                         />
                       )}
                       {canWrite && !isEnrichment && (
-                        <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                        <Button
+                          variant={ButtonVariant.Neutral}
+                          appearance={ButtonAppearance.Outlined}
+                          label={t(AnalyticsTablesI18nKey.AddRows)}
+                          onClick={onAddRows}
+                        />
                       )}
                       {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
                           which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
                       {canConnect && (
-                        <DialPrimaryButton
+                        <Button
+                          variant={ButtonVariant.Primary}
                           label={t(AnalyticsTablesI18nKey.Connect)}
                           onClick={() => setConnectOpen(true)}
-                          iconBefore={<IconPlugConnected size={18} />}
+                          iconBefore={<IconPlugConnected size={18} aria-hidden />}
                         />
                       )}
-                      {/* After the primary Connect, not before it: Connect stays the last action, but the
-                          toggle — and, while it is on, the copy control beside it — is now the last
-                          control. Not permission-gated here: on an active table it opens a read-only view
-                          of the stored definition and writes nothing, and a system table, which reports
-                          {write:false, modify:false} to everyone, is the one whose definition is most often
-                          read as a document. */}
-                      {isActive && isEditorEnabled && (
-                        <CopyButton
-                          valueLabel={t(AnalyticsTablesI18nKey.JsonDefinition)}
-                          value={copyValue}
-                          size={ElementSize.Small}
-                        />
-                      )}
-                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
+                      {/* Not permission-gated: on an active table it opens a read-only view of the stored
+                          definition and writes nothing, and a system table is the one whose definition is
+                          most often read as a document. */}
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
                     </>
                   ) : (
-                    canModify && <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} />
+                    canModify && (
+                      <JsonToggle isEditorEnabled={isEditorEnabled} onToggleEditor={onToggleEditor} isDesignSystem2 />
+                    )
                   )}
                 </>
               )}
@@ -618,13 +648,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           column={editColumn}
           renameDisabled={isRenameRestricted(table, editColumn)}
           sensitiveDisabled={isScanMetadataColumn(table, editColumn)}
+          isSensitiveLocked={!canChangeSensitive}
           existingNames={columns.filter((c) => c.name !== editColumn.name).map((c) => c.name)}
           onClose={() => setEditColumn(null)}
           onSubmit={(patch) => void onSubmitEditColumn(patch)}
         />
       )}
-
-      {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
 
       {connectOpen && (
         <ConnectPanel

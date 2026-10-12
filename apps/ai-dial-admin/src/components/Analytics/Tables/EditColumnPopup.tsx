@@ -4,7 +4,8 @@ import { FC, useState } from 'react';
 
 import { noop } from 'lodash';
 
-import { DialFormPopup, DialInput, DialSwitch, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInput, DialSwitch, PopupSize, Tooltip } from '@epam/ai-dial-ui-kit';
+import { IconLock } from '@tabler/icons-react';
 
 import EnumValuesField from '@/src/components/Analytics/Tables/EnumValuesField';
 import { buildColumnEditPatch } from '@/src/components/Analytics/Tables/utils';
@@ -13,7 +14,7 @@ import {
   ANALYTICS_DISPLAY_NAME_MAX_LENGTH,
   ANALYTICS_TAG_MAX_LENGTH,
 } from '@/src/constants/analytics/tables';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsSchemaPatch, AnalyticsTableColumn } from '@/src/models/analytics/table';
@@ -24,6 +25,8 @@ interface Props {
   column: AnalyticsTableColumn;
   renameDisabled?: boolean;
   sensitiveDisabled?: boolean;
+  // The viewer lacks the sensitive clearance on this table, so the service would refuse the change.
+  isSensitiveLocked?: boolean;
   existingNames?: string[];
   onClose: () => void;
   onSubmit: (patch: AnalyticsSchemaPatch) => void;
@@ -33,6 +36,7 @@ const EditColumnPopup: FC<Props> = ({
   column,
   renameDisabled,
   sensitiveDisabled,
+  isSensitiveLocked,
   existingNames = [],
   onClose,
   onSubmit,
@@ -46,6 +50,11 @@ const EditColumnPopup: FC<Props> = ({
     description: column.description ?? '',
     sensitive: column.sensitive ?? false,
   });
+
+  const getSensitiveCaption = (): string | undefined => {
+    if (sensitiveDisabled) return t(AnalyticsTablesI18nKey.ScanColumnNotSensitive);
+    if (isSensitiveLocked) return t(AnalyticsTableAccessI18nKey.SensitiveLocked);
+  };
 
   const setValue = (key: 'name' | 'display_name' | 'tag' | 'description') => (value?: string) =>
     setValues((prev) => ({ ...prev, [key]: value ?? '' }));
@@ -129,14 +138,21 @@ const EditColumnPopup: FC<Props> = ({
           caption={t(AnalyticsTablesI18nKey.ColumnNullableFixed)}
           onChange={noop}
         />
-        <DialSwitch
-          switchId="column-edit-sensitive"
-          label={t(AnalyticsTablesI18nKey.Sensitive)}
-          isOn={values.sensitive}
-          disabled={sensitiveDisabled}
-          caption={sensitiveDisabled ? t(AnalyticsTablesI18nKey.ScanColumnNotSensitive) : undefined}
-          onChange={setSensitive}
-        />
+        <div className="flex items-start gap-2">
+          <DialSwitch
+            switchId="column-edit-sensitive"
+            label={t(AnalyticsTablesI18nKey.Sensitive)}
+            isOn={values.sensitive}
+            disabled={sensitiveDisabled || isSensitiveLocked}
+            caption={getSensitiveCaption()}
+            onChange={setSensitive}
+          />
+          {isSensitiveLocked && (
+            <Tooltip tooltip={t(AnalyticsTableAccessI18nKey.SensitiveLocked)}>
+              <IconLock size={16} className="text-secondary" aria-hidden />
+            </Tooltip>
+          )}
+        </div>
       </div>
     </DialFormPopup>
   );

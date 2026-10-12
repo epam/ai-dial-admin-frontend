@@ -68,6 +68,7 @@ export enum EntityViewTab {
   InputSchema = 'InputSchema',
   OutputSchema = 'OutputSchema',
   Schema = 'Schema',
+  Access = 'Access',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -110,6 +111,11 @@ export const rateLimitScheduleTab = (t: (key: string) => string) => ({
 export const parametersTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Parameters,
   label: t(TabsI18nKey.Parameters),
+});
+
+export const accessTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Access,
+  label: t(TabsI18nKey.Access),
 });
 
 export const auditTab = (t: (key: string) => string) => ({

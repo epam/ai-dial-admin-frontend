@@ -12,6 +12,7 @@ import {
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
 import {
   ActionMenuOperationI18nKey,
+  AnalyticsTableAccessI18nKey,
   AnalyticsTablesI18nKey,
   ButtonsI18nKey,
   EntitiesI18nKey,
@@ -74,13 +75,30 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const permissions = { canCreate: true, canDelete: true, canManageRoles: true, canWrite: true, canModify: true };
+const permissions = {
+  canCreate: true,
+  canDelete: true,
+  canManageRoles: true,
+  canWrite: true,
+  canModify: true,
+  canChangeSensitive: true,
+  isRowsRestricted: false,
+};
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
   useAnalyticsTablePermissions: () => permissions,
 }));
 
-// Panel loads server data on mount — stub it; its own behavior is covered in TableAccessPanel.spec.
-vi.mock('@/src/components/Analytics/Tables/TableAccessPanel', () => ({ default: () => <div>access panel</div> }));
+// The Access tab's data and its own behavior are covered in use-table-access.spec and AccessTab.spec; here
+// the hook reports whether the tab is offered, and the tab itself stands in for "the access tab rendered".
+const accessState = { isTabOffered: true };
+const useTableAccessSpy = vi.fn();
+vi.mock('@/src/components/Analytics/Tables/access/use-table-access', () => ({
+  useTableAccess: (...args: unknown[]) => {
+    useTableAccessSpy(...args);
+    return accessState;
+  },
+}));
+vi.mock('@/src/components/Analytics/Tables/access/AccessTab', () => ({ default: () => <div>access-tab</div> }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({
@@ -124,11 +142,11 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 // The popup's own behavior is covered in EditColumnPopup.spec.tsx; here we only assert which column it
 // opens for and the guard props it receives.
 vi.mock('@/src/components/Analytics/Tables/EditColumnPopup', () => ({
-  default: ({ column, renameDisabled, sensitiveDisabled }: any) => (
+  default: ({ column, renameDisabled, sensitiveDisabled, isSensitiveLocked }: any) => (
     <div>
       {`edit-popup: ${column.name} rename-disabled: ${Boolean(renameDisabled)} sensitive-disabled: ${Boolean(
         sensitiveDisabled,
-      )}`}
+      )} sensitive-locked: ${Boolean(isSensitiveLocked)}`}
     </div>
   ),
 }));
@@ -184,7 +202,15 @@ const table = (overrides: Partial<AnalyticsTable> = {}): AnalyticsTable => ({
 const setPerms = (over: Partial<typeof permissions>) =>
   Object.assign(
     permissions,
-    { canCreate: false, canDelete: false, canManageRoles: false, canWrite: false, canModify: false },
+    {
+      canCreate: false,
+      canDelete: false,
+      canManageRoles: false,
+      canWrite: false,
+      canModify: false,
+      canChangeSensitive: false,
+      isRowsRestricted: false,
+    },
     over,
   );
 
@@ -197,13 +223,19 @@ beforeEach(() => {
     canManageRoles: true,
     canWrite: true,
     canModify: true,
+    canChangeSensitive: true,
+    isRowsRestricted: false,
   });
+  Object.assign(accessState, { isTabOffered: true });
   // An enrichment table looks up its source table (see TableDetailView's grain-key-metadata effect);
   // default to none found so tests that don't care about it aren't broken by an unhandled promise.
   vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
   // The Connect panel reads the table's access lists on open; default to none so tests that only
   // exercise the header aren't tripped by an unhandled promise.
-  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: { write: [], modify: [] } });
+  vi.mocked(getTableAccess).mockResolvedValue({
+    success: true,
+    response: { get: [], read: [], sensitive: [], write: [], modify: [] },
+  });
 });
 
 describe('TableDetailView action gating', () => {
@@ -211,20 +243,18 @@ describe('TableDetailView action gating', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).toBeInTheDocument();
     expect(screen.queryByText(ButtonsI18nKey.Add)).not.toBeInTheDocument();
   });
 
-  test('the toolbar renders in Manage access, Delete, Add columns, Add rows, Connect order', () => {
+  test('the toolbar renders in Delete, Add columns, Add rows, Connect order', () => {
     const { container } = render(
       <TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />,
     );
 
     const text = container.textContent ?? '';
     const order = [
-      AnalyticsTablesI18nKey.ManageAccess,
       AnalyticsTablesI18nKey.DeleteTable,
       AnalyticsTablesI18nKey.AddColumns,
       AnalyticsTablesI18nKey.AddRows,
@@ -249,7 +279,6 @@ describe('TableDetailView action gating', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
   });
 
@@ -305,14 +334,13 @@ describe('TableDetailView action gating', () => {
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
   });
 
-  test('the role-management action is hidden when the user cannot manage roles', () => {
-    setPerms({ canWrite: true, canModify: true });
+  test('no header action manages access, since that lives in the Access tab', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
-    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /manage/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: new RegExp(TabsI18nKey.Access) })).toBeInTheDocument();
   });
 
   test('the delete confirmation names the table being deleted', async () => {
@@ -619,7 +647,6 @@ describe('TableDetailView enrichment tables', () => {
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).toBeInTheDocument();
   });
 });
 
@@ -901,7 +928,6 @@ describe('TableDetailView tabs', () => {
 
     const propertiesTab = screen.getByRole('tab', { name: TabsI18nKey.Properties });
     [
-      AnalyticsTablesI18nKey.ManageAccess,
       AnalyticsTablesI18nKey.DeleteTable,
       AnalyticsTablesI18nKey.AddColumns,
       AnalyticsTablesI18nKey.AddRows,
@@ -965,8 +991,8 @@ describe('TableDetailView tabs', () => {
 // surface — so presence of the read-only editor is asserted through its own mock label
 // (`definition-json`, see the JsonEditorBase mock above) rather than a heading.
 describe('TableDetailView JSON definition view', () => {
-  const jsonToggle = () => screen.getByRole('checkbox');
-  const copyControlName = `copy ${AnalyticsTablesI18nKey.JsonDefinition}`;
+  const jsonToggle = () => screen.getByRole('switch');
+  const copyControlName = ButtonsI18nKey.Copy;
 
   test('is present on an ACTIVE table for a caller with no permissions', () => {
     setPerms({});
@@ -1037,34 +1063,33 @@ describe('TableDetailView JSON definition view', () => {
     expect(editor.value).toBe(original);
   });
 
-  test('the toggle is the last header control, after every action, whether the JSON view is on or off', async () => {
+  test('the toggle is the last header control, after every action while the JSON view is off', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    [
+      AnalyticsTablesI18nKey.DeleteTable,
+      AnalyticsTablesI18nKey.AddColumns,
+      AnalyticsTablesI18nKey.AddRows,
+      AnalyticsTablesI18nKey.Connect,
+    ].forEach((name) => {
+      const action = screen.getByRole('button', { name });
+      expect(action.compareDocumentPosition(jsonToggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+
+  test('shows only the copy control and the toggle while the JSON view is on, the copy control first', async () => {
     const user = userEvent.setup();
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
-    const assertToggleIsLast = () => {
-      [
-        AnalyticsTablesI18nKey.ManageAccess,
-        AnalyticsTablesI18nKey.DeleteTable,
-        AnalyticsTablesI18nKey.AddColumns,
-        AnalyticsTablesI18nKey.AddRows,
-        AnalyticsTablesI18nKey.Connect,
-      ].forEach((name) => {
-        const action = screen.getByRole('button', { name });
-        // The toggle follows every other action in document order — i.e. it renders after, not before —
-        // which is what distinguishes this from a presence-only check that would pass under the old order.
-        expect(action.compareDocumentPosition(jsonToggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      });
-    };
-
-    assertToggleIsLast();
-
     await user.click(jsonToggle());
 
-    assertToggleIsLast();
-    const connect = screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect });
+    [
+      AnalyticsTablesI18nKey.DeleteTable,
+      AnalyticsTablesI18nKey.AddColumns,
+      AnalyticsTablesI18nKey.AddRows,
+      AnalyticsTablesI18nKey.Connect,
+    ].forEach((name) => expect(screen.queryByRole('button', { name })).toBeNull());
     const copy = screen.getByRole('button', { name: copyControlName });
-    // The copy control sits between Connect and the toggle, not merely somewhere in the header.
-    expect(connect.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(copy.compareDocumentPosition(jsonToggle()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -1115,24 +1140,23 @@ describe('TableDetailView JSON definition view', () => {
     expect(writeText).toHaveBeenCalledWith(editor.value);
   });
 
-  test('coexists with Manage access, Delete table, Add columns, Add rows and Connect, on or off', async () => {
+  test('hides every table action while the JSON view is on and restores them when it is turned off', async () => {
     const user = userEvent.setup();
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+    const names = [
+      AnalyticsTablesI18nKey.DeleteTable,
+      AnalyticsTablesI18nKey.AddColumns,
+      AnalyticsTablesI18nKey.AddRows,
+      AnalyticsTablesI18nKey.Connect,
+    ];
 
-    const assertActionsPresent = () =>
-      [
-        AnalyticsTablesI18nKey.ManageAccess,
-        AnalyticsTablesI18nKey.DeleteTable,
-        AnalyticsTablesI18nKey.AddColumns,
-        AnalyticsTablesI18nKey.AddRows,
-        AnalyticsTablesI18nKey.Connect,
-      ].forEach((name) => expect(screen.getByRole('button', { name })).toBeInTheDocument());
-
-    assertActionsPresent();
+    names.forEach((name) => expect(screen.getByRole('button', { name })).toBeInTheDocument());
 
     await user.click(jsonToggle());
+    names.forEach((name) => expect(screen.queryByRole('button', { name })).toBeNull());
 
-    assertActionsPresent();
+    await user.click(jsonToggle());
+    names.forEach((name) => expect(screen.getByRole('button', { name })).toBeInTheDocument());
   });
 
   test('offers no Save, Discard or changed-entity header, and issues no table write, while the toggle is on', async () => {
@@ -1172,5 +1196,93 @@ describe('TableDetailView JSON definition view', () => {
 
     expect(await screen.findByText(/^columns:/)).toBeInTheDocument();
     expect(jsonToggle()).not.toBeChecked();
+  });
+});
+
+describe('TableDetailView Access tab', () => {
+  const renderView = (initialTable: AnalyticsTable = table()) =>
+    render(<TableDetailView name="dial_usage_log" initialTable={initialTable} apiBaseUrl="" flightUri="" />);
+
+  test('is offered between Properties and Audit', () => {
+    renderView();
+
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      expect.stringContaining(TabsI18nKey.Properties),
+      expect.stringContaining(TabsI18nKey.Access),
+      expect.stringContaining(TabsI18nKey.Audit),
+    ]);
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Access })).toBeInTheDocument();
+  });
+
+  test('renders the access tab content when it is selected, keeping the header above it', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(screen.getByRole('tab', { name: new RegExp(TabsI18nKey.Access) }));
+
+    expect(screen.getByText('access-tab')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
+  });
+
+  test('is not offered when the access read was refused', () => {
+    accessState.isTabOffered = false;
+    renderView();
+
+    expect(screen.queryByRole('tab', { name: new RegExp(TabsI18nKey.Access) })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Properties })).toBeInTheDocument();
+  });
+
+  test('falls back to Properties when the selected Access tab stops being offered', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderView();
+    await user.click(screen.getByRole('tab', { name: new RegExp(TabsI18nKey.Access) }));
+
+    accessState.isTabOffered = false;
+    rerender(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByText('access-tab')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(TabsI18nKey.Properties);
+  });
+
+  test('reads the access data only for a viewer who can manage it on an active table with analytics on', () => {
+    renderView();
+    expect(useTableAccessSpy).toHaveBeenLastCalledWith('dial_usage_log', true);
+  });
+
+  test('requests nothing for a viewer who cannot manage access', () => {
+    setPerms({ canWrite: true });
+    renderView();
+    expect(useTableAccessSpy).toHaveBeenLastCalledWith('dial_usage_log', false);
+  });
+
+  test('requests nothing for a table that is not active', () => {
+    renderView(table({ status: TableStatus.Pending }));
+    expect(useTableAccessSpy).toHaveBeenLastCalledWith('dial_usage_log', false);
+  });
+
+  test('requests nothing while analytics is off', () => {
+    featureFlags.analyticsEnabled = false;
+    renderView();
+    expect(useTableAccessSpy).toHaveBeenLastCalledWith('dial_usage_log', false);
+  });
+
+  test('is still offered on a system table, whose read-side access stays manageable', () => {
+    renderView(table({ system: true }));
+    expect(screen.getByRole('tab', { name: new RegExp(TabsI18nKey.Access) })).toBeInTheDocument();
+  });
+});
+
+describe('TableDetailView Rows restricted badge', () => {
+  test('is shown in the header when the service reports the viewer confined', () => {
+    permissions.isRowsRestricted = true;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeInTheDocument();
+  });
+
+  test('is absent when the viewer is not confined', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).not.toBeInTheDocument();
   });
 });

@@ -5,7 +5,7 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
-import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { useFilterTree } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
 import {
   argumentFunctionOptions,
   emptyArgs,
@@ -57,11 +57,8 @@ const ExpressionArgEditor: FC<ExpressionArgProps> = ({
   isNestingOffered = true,
   onChange,
 }) => {
-  const { state } = useQueryBuilder();
-  const functions = useMemo(
-    () => (isNestingOffered ? state.functions : EMPTY_CATALOG),
-    [isNestingOffered, state.functions],
-  );
+  const { functions: catalog } = useFilterTree();
+  const functions = useMemo(() => (isNestingOffered ? catalog : EMPTY_CATALOG), [isNestingOffered, catalog]);
   const functionOptions = useMemo(
     () => (functions.length ? argumentFunctionOptions(functions) : undefined),
     [functions],
