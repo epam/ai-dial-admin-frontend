@@ -39,7 +39,7 @@ const RunStatusComponent: FC<Props> = ({ status, isLabelHidden }) => {
 
   if (isLabelHidden) {
     return (
-      <div className="flex size-full items-center">
+      <div className="flex size-full items-center justify-center">
         <DialTooltip tooltip={statusLabel}>
           <span className="flex items-center">
             {indicator}
