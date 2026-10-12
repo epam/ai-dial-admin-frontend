@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import TablesView from '@/src/components/Analytics/Tables/TablesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
@@ -27,10 +27,22 @@ interface MockActionItem {
 interface MockColDef {
   colId?: string;
   field?: string;
+  cellRenderer?: (params: { data: AnalyticsTable }) => React.ReactNode;
   cellRendererParams?: { items?: MockActionItem[] };
 }
 
-const permissions = { canCreate: true, canDelete: true, canManageRoles: true, canWrite: true, canModify: true };
+const permissions = {
+  canCreate: true,
+  canDelete: true,
+  canManageRoles: true,
+  canWrite: true,
+  canModify: true,
+  canChangeSensitive: true,
+  isRowsRestricted: false,
+};
+
+// The grid is a stand-in, so a cell renderer is reached through the column defs it was handed.
+let lastColumnDefs: MockColDef[] = [];
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
   useAnalyticsTablePermissions: () => permissions,
 }));
@@ -38,6 +50,7 @@ vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
 // Row actions are rendered as buttons per row so tests can trigger Delete/Edit for a specific table.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData, columnDefs }: { rowData?: AnalyticsTable[]; columnDefs?: MockColDef[] }) => {
+    lastColumnDefs = columnDefs ?? [];
     const items = columnDefs?.find((c) => c.field === ACTIONS_COLUMN_CEL_ID)?.cellRendererParams?.items ?? [];
     return (
       <div>
@@ -71,6 +84,34 @@ beforeEach(() => {
     canManageRoles: true,
     canWrite: true,
     canModify: true,
+  });
+});
+
+describe('TablesView — Rows restricted badge', () => {
+  const renderNameCell = (data: AnalyticsTable) => {
+    render(<TablesView initialTables={TABLES} />);
+    const nameColumn = lastColumnDefs.find((c) => c.field === 'name');
+
+    return render(<>{nameColumn?.cellRenderer?.({ data })}</>);
+  };
+
+  test('shows the badge beside the name of a table that confines the viewer', () => {
+    renderNameCell({ ...TABLES[0], permissions: { rows_restricted: true } as AnalyticsTable['permissions'] });
+
+    expect(screen.getAllByText('dial_usage_log').length).toBeGreaterThan(0);
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeInTheDocument();
+  });
+
+  test('shows no badge for a table that does not confine the viewer', () => {
+    renderNameCell({ ...TABLES[0], permissions: { rows_restricted: false } as AnalyticsTable['permissions'] });
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
+  });
+
+  test('shows no badge for a table that reports no permissions', () => {
+    renderNameCell(TABLES[0]);
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
   });
 });
 

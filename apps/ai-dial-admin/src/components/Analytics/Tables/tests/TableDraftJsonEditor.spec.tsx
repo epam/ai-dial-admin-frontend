@@ -57,6 +57,11 @@ vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
 
 // The column form's own behavior is covered in DraftSchemaEditor.spec.tsx; here it stands in for "the
 // column-by-column surface is on screen".
+// The Access tab is not what this file proves; its data hook is covered in use-table-access.spec.
+vi.mock('@/src/components/Analytics/Tables/access/use-table-access', () => ({
+  useTableAccess: () => ({ isTabOffered: false }),
+}));
+
 vi.mock('@/src/components/Analytics/Tables/DraftSchemaEditor', () => ({
   default: () => <div>draft-schema-editor</div>,
 }));
@@ -114,7 +119,7 @@ const area = () => screen.getByLabelText('json document') as HTMLTextAreaElement
 const queryArea = () => screen.queryByLabelText('json document');
 const documentOf = () => JSON.parse(area().value);
 const saveButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Save });
-const toggle = () => within(screen.getByRole('switch')).getByRole('checkbox');
+const toggle = () => screen.getByRole('switch');
 
 const openEditor = async (user: ReturnType<typeof userEvent.setup>) => user.click(toggle());
 

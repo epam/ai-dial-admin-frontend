@@ -14,7 +14,15 @@ const table = (over: Partial<AnalyticsTable> = {}): AnalyticsTable => ({
   ...over,
 });
 
-const perms = (write: boolean, modify: boolean): TablePermissions => ({ write, modify });
+const perms = (write: boolean, modify: boolean, over: Partial<TablePermissions> = {}): TablePermissions => ({
+  get: true,
+  read: true,
+  sensitive: false,
+  write,
+  modify,
+  rows_restricted: false,
+  ...over,
+});
 
 beforeEach(() => {
   ctx.isFullAdmin = false;
@@ -24,13 +32,17 @@ beforeEach(() => {
 describe('useAnalyticsTablePermissions', () => {
   test('full admin on a fully-permitted table can do everything', () => {
     ctx.isFullAdmin = true;
-    const { result } = renderHook(() => useAnalyticsTablePermissions(table({ permissions: perms(true, true) })));
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(true, true, { sensitive: true }) })),
+    );
     expect(result.current).toEqual({
       canCreate: true,
       canDelete: true,
       canManageRoles: true,
       canWrite: true,
       canModify: true,
+      canChangeSensitive: true,
+      isRowsRestricted: false,
     });
   });
 
@@ -42,6 +54,8 @@ describe('useAnalyticsTablePermissions', () => {
       canManageRoles: false,
       canWrite: false,
       canModify: false,
+      canChangeSensitive: false,
+      isRowsRestricted: false,
     });
   });
 
@@ -57,7 +71,7 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.canModify).toBe(false);
   });
 
-  test('system table: delete and manage roles are false even for a full admin', () => {
+  test('system table: delete is false but access stays manageable for a full admin', () => {
     ctx.isFullAdmin = true;
     const { result } = renderHook(() =>
       useAnalyticsTablePermissions(table({ system: true, permissions: perms(false, false) })),
@@ -65,13 +79,37 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.canDelete).toBe(false);
     expect(result.current.canWrite).toBe(false);
     expect(result.current.canModify).toBe(false);
-    expect(result.current.canManageRoles).toBe(false);
+    expect(result.current.canManageRoles).toBe(true);
+  });
+
+  test('modify without the sensitive clearance cannot change sensitivity', () => {
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(false, true, { sensitive: false }) })),
+    );
+    expect(result.current.canModify).toBe(true);
+    expect(result.current.canChangeSensitive).toBe(false);
+  });
+
+  test('the sensitive clearance without modify cannot change sensitivity', () => {
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(false, false, { sensitive: true }) })),
+    );
+    expect(result.current.canChangeSensitive).toBe(false);
+  });
+
+  test('a confining row policy is reported as rows restricted', () => {
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(false, false, { rows_restricted: true }) })),
+    );
+    expect(result.current.isRowsRestricted).toBe(true);
   });
 
   test('missing permissions default to read-only when auth is enabled', () => {
     const { result } = renderHook(() => useAnalyticsTablePermissions(table()));
     expect(result.current.canWrite).toBe(false);
     expect(result.current.canModify).toBe(false);
+    expect(result.current.canChangeSensitive).toBe(false);
+    expect(result.current.isRowsRestricted).toBe(false);
   });
 
   test('auth disabled opens everything even without permissions', () => {
@@ -84,6 +122,8 @@ describe('useAnalyticsTablePermissions', () => {
       canManageRoles: true,
       canWrite: true,
       canModify: true,
+      canChangeSensitive: true,
+      isRowsRestricted: false,
     });
   });
 

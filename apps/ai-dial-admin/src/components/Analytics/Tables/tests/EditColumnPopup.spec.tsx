@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import {
+  AnalyticsTableAccessI18nKey,
+  AnalyticsTablesI18nKey,
+  ButtonsI18nKey,
+  ErrorI18nKey,
+} from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
@@ -159,11 +164,37 @@ describe('EditColumnPopup', () => {
     });
   });
 
+  test('isSensitiveLocked locks the switch, keeps its value and gives the reason', () => {
+    renderPopup({ isSensitiveLocked: true, column: { ...COLUMN, sensitive: true } });
+
+    expect(sensitiveSwitch()).toBeDisabled();
+    expect(sensitiveSwitch()).toBeChecked();
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).toBeInTheDocument();
+  });
+
+  test('isSensitiveLocked leaves every other field editable and submits without a sensitivity change', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup({ isSensitiveLocked: true });
+
+    setInput(AnalyticsTablesI18nKey.Description, 'Row identity');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', description: 'Row identity' }] });
+  });
+
+  test('a scan-metadata column keeps its own reason when the clearance is also missing', () => {
+    renderPopup({ sensitiveDisabled: true, isSensitiveLocked: true });
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).toBeNull();
+  });
+
   test('the switch is enabled and unexplained by default', () => {
     renderPopup();
 
     expect(sensitiveSwitch()).toBeEnabled();
     expect(screen.queryByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.SensitiveLocked)).not.toBeInTheDocument();
   });
 
   test("shows a nullable column's flag on and a non-nullable one's off, read-only and explained", () => {
