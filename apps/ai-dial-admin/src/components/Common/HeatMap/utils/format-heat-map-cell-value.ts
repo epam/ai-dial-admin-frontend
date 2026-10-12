@@ -1,4 +1,5 @@
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
+import { HEAT_MAP_VALUE_TIERS } from '@/src/components/Common/HeatMap/constants';
+import { HeatMapValueTier } from '@/src/components/Common/HeatMap/models';
 
 export const formatHeatMapCellValue = (value: number | null | undefined): string => {
   if (value == null) {
@@ -24,5 +25,8 @@ export const formatHeatMapCellValueForMode = (value: number | null | undefined, 
   return isDeltaMode ? formatHeatMapDeltaCellValue(value) : formatHeatMapCellValue(value);
 };
 
-export const shouldShowHeatMapCellValue = (columnWidth: number): boolean =>
-  columnWidth >= HEAT_MAP_VALUE_TEXT_MIN_WIDTH;
+/** The largest tier whose text fits `columnWidth` without cropping, or `null` when even the smallest does not. */
+export const resolveHeatMapValueTier = (columnWidth: number, isDeltaMode: boolean): HeatMapValueTier | null =>
+  HEAT_MAP_VALUE_TIERS.find(
+    ({ minWidthAbsolute, minWidthDelta }) => columnWidth >= (isDeltaMode ? minWidthDelta : minWidthAbsolute),
+  ) ?? null;

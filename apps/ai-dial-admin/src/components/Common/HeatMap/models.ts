@@ -19,3 +19,10 @@ export interface HeatMapCellTooltipContent {
   valueRow?: HeatMapCellTooltipSwatch;
   valueText?: string;
 }
+
+export interface HeatMapValueTier {
+  textClassName: string;
+  paddingClassName: string;
+  minWidthAbsolute: number;
+  minWidthDelta: number;
+}

@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 
 import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
+import { HEAT_MAP_VALUE_TIERS } from '@/src/components/Common/HeatMap/constants';
 
 import ScoreCellRenderer from '../ScoreCellRenderer';
 
@@ -16,7 +16,8 @@ interface RenderParamsOverrides {
   columnWidth?: number;
 }
 
-const NARROW_COLUMN_WIDTH = HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1;
+const [DEFAULT_TIER, MEDIUM_TIER, SMALL_TIER] = HEAT_MAP_VALUE_TIERS;
+const NARROW_COLUMN_WIDTH = SMALL_TIER.minWidthAbsolute - 1;
 
 const renderCell = ({ columnWidth, ...params }: RenderParamsOverrides) => {
   const column = columnWidth != null ? ({ getActualWidth: () => columnWidth } as never) : undefined;
@@ -112,17 +113,50 @@ describe('ScoreCellRenderer', () => {
   });
 
   test('still shows the dash for a missing value when the column is wide enough', () => {
-    renderCell({ value: null, columnWidth: HEAT_MAP_VALUE_TEXT_MIN_WIDTH });
+    renderCell({ value: null, columnWidth: SMALL_TIER.minWidthAbsolute });
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
-  test('hides the value when the column is narrower than the automatic width threshold', () => {
-    renderCell({ value: 0.5, columnWidth: NARROW_COLUMN_WIDTH });
+  test.each([
+    { tier: DEFAULT_TIER, name: 'default' },
+    { tier: MEDIUM_TIER, name: 'medium' },
+    { tier: SMALL_TIER, name: 'small' },
+  ])('renders the $name tier text size and padding at its minimum width', ({ tier }) => {
+    const { container } = renderCell({ value: 0.5, columnWidth: tier.minWidthAbsolute });
+
+    expect(screen.getByText('0.500')).toHaveClass(tier.textClassName);
+    expect(container.firstChild).toHaveClass(tier.paddingClassName);
+    expect(container.firstChild).not.toHaveClass('border-r');
+  });
+
+  test('steps down to the next tier one pixel below a tier minimum width', () => {
+    renderCell({ value: 0.5, columnWidth: DEFAULT_TIER.minWidthAbsolute - 1 });
+    expect(screen.getByText('0.500')).toHaveClass(MEDIUM_TIER.textClassName);
+  });
+
+  test('hides the value one pixel below the smallest tier', () => {
+    renderCell({ value: 0.5, columnWidth: SMALL_TIER.minWidthAbsolute - 1 });
     expect(screen.queryByText('0.500')).not.toBeInTheDocument();
   });
 
-  test('shows the value when the column is wide enough under the automatic threshold', () => {
-    renderCell({ value: 0.5, columnWidth: HEAT_MAP_VALUE_TEXT_MIN_WIDTH });
-    expect(screen.getByText('0.500')).toBeInTheDocument();
+  test('delta mode needs a wider column than absolute mode for the same tier', () => {
+    renderCell({ value: 0.5, mode: ScoreColorMode.Delta, columnWidth: DEFAULT_TIER.minWidthDelta - 1 });
+    expect(screen.getByText('+0.500')).toHaveClass(MEDIUM_TIER.textClassName);
+  });
+
+  test('hides a delta value below the smallest delta tier even where an absolute value would still show', () => {
+    renderCell({ value: 0.5, mode: ScoreColorMode.Delta, columnWidth: SMALL_TIER.minWidthDelta - 1 });
+    expect(screen.queryByText('+0.500')).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: '+0.500' })).toBeInTheDocument();
+  });
+
+  test('renders the default tier when the column width is unknown', () => {
+    renderCell({ value: 0.5 });
+    expect(screen.getByText('0.500')).toHaveClass(DEFAULT_TIER.textClassName);
+  });
+
+  test('applies the tier text size to the missing-value dash', () => {
+    renderCell({ value: null, columnWidth: MEDIUM_TIER.minWidthAbsolute });
+    expect(screen.getByText('—')).toHaveClass(MEDIUM_TIER.textClassName);
   });
 });

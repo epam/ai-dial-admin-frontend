@@ -6,7 +6,7 @@ import { describe, expect, test, vi } from 'vitest';
 import HeatMapAxisHeader from '@/src/components/Common/HeatMap/HeatMapAxisHeader';
 import {
   HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING,
-  HEAT_MAP_VALUE_TEXT_MIN_WIDTH,
+  HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH,
 } from '@/src/components/Common/HeatMap/constants';
 import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 
@@ -57,7 +57,7 @@ const createHeaderParams = (width: number, overrides: HeaderParamOverrides = {})
 
 describe('HeatMapAxisHeader', () => {
   test('renders horizontal header label via DialEllipsisTooltip when column is wide enough', () => {
-    const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)} />);
+    const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH)} />);
 
     expect(screen.getByTestId('ellipsis-tooltip')).toHaveTextContent('Row 001');
     expect(screen.queryByTestId('dial-tooltip')).not.toBeInTheDocument();
@@ -65,7 +65,9 @@ describe('HeatMapAxisHeader', () => {
   });
 
   test('renders vertical header label wrapped in DialTooltip when column is too narrow', () => {
-    const { container } = render(<HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)} />);
+    const { container } = render(
+      <HeatMapAxisHeader {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1)} />,
+    );
 
     const tooltip = screen.getByTestId('dial-tooltip');
     expect(tooltip).toBeInTheDocument();
@@ -84,7 +86,7 @@ describe('HeatMapAxisHeader', () => {
 
     render(
       <HeatMapAxisHeader
-        {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1, {
+        {...createHeaderParams(HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH - 1, {
           label,
           displayName: label,
           api: { getGridOption: () => headerHeight },

@@ -84,9 +84,32 @@ A zero delta (no bucket) SHALL draw a neutral right border on a neutral backgrou
 - **WHEN** a consumer renders a delta cell whose value is exactly `0`
 - **THEN** the cell shows a neutral background with a neutral right border and no bucket accent
 
+### Requirement: Value text adapts to the column width
+A cell rendering under this contract SHALL size its value text to the width of its column so the text
+is never cropped: 14px when the widest score string fits at that size, otherwise 12px, otherwise
+10px, and otherwise hidden (see the hidden-value requirement below). Horizontal padding SHALL shrink
+with the text size. Delta cells SHALL need more width than absolute cells for the same size, because
+a signed value is wider. A cell whose column width is unknown SHALL render at 14px.
+
+#### Scenario: Wide column keeps the full-size text
+- **WHEN** a score cell's column is wide enough for the widest score string at 14px
+- **THEN** the value renders at 14px
+
+#### Scenario: Narrowing column steps the text down
+- **WHEN** a score cell's column is too narrow for 14px text but wide enough for 12px
+- **THEN** the value renders at 12px, and at 10px once the column is too narrow for 12px
+
+#### Scenario: Column too narrow for the smallest size hides the text
+- **WHEN** a score cell's column is too narrow for 10px text
+- **THEN** the value text is hidden and the hidden-value border and accessible name apply
+
+#### Scenario: Delta needs more width than absolute
+- **WHEN** an absolute score and a delta score are rendered in columns of the same width
+- **THEN** the delta value steps down or hides at a wider column than the absolute value does
+
 ### Requirement: Value text can be hidden while remaining accessible
-A consumer SHALL be able to hide a cell's numeric text while keeping its background/border color, for
-use when a heatmap has many columns. This applies equally to a cell showing a resolved score and to
+A cell's numeric text SHALL be hidden while keeping its background/border color when its column is too
+narrow for the smallest text size (see above), as happens when a heatmap has many columns. This applies equally to a cell showing a resolved score and to
 one showing a missing-value placeholder (the em dash) — hiding a missing-value cell leaves it
 visually empty, not showing the dash. When the value text is hidden, the score (or, for a
 missing-value cell, the fact that it's not applicable) SHALL remain available to assistive technology

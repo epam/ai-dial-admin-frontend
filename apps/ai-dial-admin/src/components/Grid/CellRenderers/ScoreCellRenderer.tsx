@@ -3,14 +3,16 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
+import { HEAT_MAP_VALUE_TIERS } from '@/src/components/Common/HeatMap/constants';
 import {
   formatHeatMapCellValueForMode,
-  shouldShowHeatMapCellValue,
+  resolveHeatMapValueTier,
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 import { ScoreColorMode } from '@/src/components/Common/ScoreCell/models';
 import { getScoreCellBucketClasses, getScoreCellBucketKey } from '@/src/components/Common/ScoreCell/utils';
 
 const MISSING_DISPLAY = '—';
+const DEFAULT_VALUE_TIER = HEAT_MAP_VALUE_TIERS[0];
 
 interface ScoreCellRendererParams extends ICellRendererParams {
   mode?: ScoreColorMode;
@@ -30,6 +32,9 @@ const isScoreValue = (value: unknown, mode: ScoreColorMode): value is number =>
  * the color. Colors are Tailwind `score-*` tokens (`tailwind.config.js`), not computed here — see
  * `Common/ScoreCell/utils.ts`.
  *
+ * Text size: steps down 14px → 12px → 10px as the column narrows (`HEAT_MAP_VALUE_TIERS`), and is hidden
+ * once even 10px would crop.
+ *
  * Border behavior:
  * - Value visible: no border, so neighboring score cells read as one continuous field rather than a
  *   grid of divided boxes.
@@ -38,7 +43,9 @@ const isScoreValue = (value: unknown, mode: ScoreColorMode): value is number =>
  */
 const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: ScoreCellRendererParams) => {
   const columnWidth = column?.getActualWidth();
-  const isHidden = columnWidth != null && !shouldShowHeatMapCellValue(columnWidth);
+  const tier =
+    columnWidth == null ? DEFAULT_VALUE_TIER : resolveHeatMapValueTier(columnWidth, mode === ScoreColorMode.Delta);
+  const isHidden = tier == null;
 
   if (!isScoreValue(value, mode)) {
     const text = value == null || value === MISSING_DISPLAY ? MISSING_DISPLAY : String(value);
@@ -49,13 +56,19 @@ const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: Sc
       <div
         className={classNames(
           'flex items-center justify-end size-full overflow-hidden',
-          isHidden ? 'border-r border-tertiary' : 'px-3',
+          tier ? tier.paddingClassName : 'border-r border-tertiary',
         )}
         role={isTextHidden ? 'group' : undefined}
         aria-label={isTextHidden ? MISSING_DISPLAY : undefined}
       >
         {!isTextHidden && (
-          <span className={classNames('dial-small-text truncate', isMissing ? 'text-secondary' : 'text-primary')}>
+          <span
+            className={classNames(
+              (tier ?? DEFAULT_VALUE_TIER).textClassName,
+              'truncate',
+              isMissing ? 'text-secondary' : 'text-primary',
+            )}
+          >
             {text}
           </span>
         )}
@@ -80,13 +93,13 @@ const ScoreCellRenderer = ({ value, column, mode = ScoreColorMode.Absolute }: Sc
         isBorderless && 'border-none',
         borderClasses,
         zeroDeltaClasses,
-        !isHidden && 'px-3',
+        tier?.paddingClassName,
       )}
       role={isHidden ? 'group' : undefined}
       aria-label={isHidden ? displayText : undefined}
     >
-      {!isHidden && (
-        <span className={classNames('dial-small-text truncate font-semibold', classes?.text ?? 'text-secondary')}>
+      {tier && (
+        <span className={classNames(tier.textClassName, 'truncate font-semibold', classes?.text ?? 'text-secondary')}>
           {displayText}
         </span>
       )}

@@ -1,10 +1,13 @@
+import { HeatMapValueTier } from '@/src/components/Common/HeatMap/models';
+
 /** Default AG Grid colId prefix for heatmap value columns (Compare test-case cols). */
 export const HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE = 'tc_';
 
 /** Trends Stability run columns. */
 export const HEAT_MAP_VALUE_COL_PREFIX_RUN = 'run_';
 
-export const HEAT_MAP_VALUE_TEXT_MIN_WIDTH = 48;
+/** Below this value-column width the header turns vertical and rows drop to `HEAT_MAP_ROW_HEIGHT`. */
+export const HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH = 48;
 export const HEAT_MAP_VALUE_COL_MIN_WIDTH = 14;
 export const HEAT_MAP_LABEL_COL_WIDTH = 191;
 export const HEAT_MAP_ROW_HEIGHT = 20;
@@ -21,6 +24,15 @@ export const HEAT_MAP_HEADER_VERTICAL_CHAR_WIDTH = 6;
 export const HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER = 2;
 export const HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT = 28;
 export const HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT = 140;
+/**
+ * Largest first. `minWidth*` = widest score string in Inter semibold at that size (`0.000` / `+0.000`)
+ * + both paddings + 2px (the cell's right border and rounding). Re-measure if the theme font changes.
+ */
+export const HEAT_MAP_VALUE_TIERS: HeatMapValueTier[] = [
+  { textClassName: 'dial-small-text', paddingClassName: 'px-3', minWidthAbsolute: 67, minWidthDelta: 77 },
+  { textClassName: 'dial-tiny-text', paddingClassName: 'px-2', minWidthAbsolute: 53, minWidthDelta: 61 },
+  { textClassName: 'dial-caption-text', paddingClassName: 'px-1', minWidthAbsolute: 40, minWidthDelta: 46 },
+];
 export const HEAT_MAP_LABEL_COL_ID = 'heatMapLabel';
 export const HEAT_MAP_STROKE_TERTIARY = 'var(--stroke-tertiary, #E0E6F0)';
 export const HEAT_MAP_GRID_BORDER = `1px solid ${HEAT_MAP_STROKE_TERTIARY}`;
