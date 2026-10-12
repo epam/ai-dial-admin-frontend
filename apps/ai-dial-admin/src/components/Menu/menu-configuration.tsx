@@ -16,18 +16,23 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 
+export enum MenuBadge {
+  Preview = 'preview',
+  Deprecated = 'deprecated',
+}
+
 export interface MenuGroupConfiguration {
   key: MenuI18nKey;
   descriptionKey: MenuI18nKey;
   icon?: JSX.Element;
   items: MenuItem[];
-  isPreview?: boolean;
+  badge?: MenuBadge;
 }
 
 export interface MenuItem {
   key: MenuI18nKey;
   href: string;
-  isPreview?: boolean;
+  badge?: MenuBadge;
 }
 
 export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
@@ -39,6 +44,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       key: MenuI18nKey.Entities,
       descriptionKey: MenuI18nKey.EntitiesDescription,
       icon: <IconSettings2 width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
         { key: MenuI18nKey.Models, href: ApplicationRoute.Models },
         { key: MenuI18nKey.Applications, href: ApplicationRoute.Applications },
@@ -85,6 +91,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       key: MenuI18nKey.Builders,
       descriptionKey: MenuI18nKey.BuildersDescription,
       icon: <IconHammer width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
         { key: MenuI18nKey.ApplicationRunners, href: ApplicationRoute.ApplicationRunners },
         { key: MenuI18nKey.InterceptorTemplates, href: ApplicationRoute.InterceptorTemplates },
@@ -95,6 +102,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       key: MenuI18nKey.AccessManagement,
       descriptionKey: MenuI18nKey.AccessManagementDescription,
       icon: <IconShieldCog width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
         { key: MenuI18nKey.Roles, href: ApplicationRoute.Roles },
         { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
@@ -131,7 +139,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       key: MenuI18nKey.Analytics,
       descriptionKey: MenuI18nKey.Analytics,
       icon: <IconChartBar width={iconSize} height={iconSize} />,
-      isPreview: true,
+      badge: MenuBadge.Preview,
       items: [
         { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
         { key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries },
@@ -159,6 +167,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       key: MenuI18nKey.Audit,
       descriptionKey: MenuI18nKey.AuditDescription,
       icon: <IconDashboard width={iconSize} height={iconSize} />,
+      badge: MenuBadge.Deprecated,
       items: [
         { key: MenuI18nKey.Dashboard, href: ApplicationRoute.Dashboard },
         { key: MenuI18nKey.ActivityAudit, href: ApplicationRoute.ActivityAudit },

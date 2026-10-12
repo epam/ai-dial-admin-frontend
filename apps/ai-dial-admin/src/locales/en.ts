@@ -58,6 +58,7 @@ export default {
     None: '- None -',
     Loading: 'Loading…',
     Preview: 'Preview',
+    Deprecated: 'Deprecated',
     PreviewPrompt: 'Preview prompt',
     Optional: 'Optional',
     Required: 'Required',

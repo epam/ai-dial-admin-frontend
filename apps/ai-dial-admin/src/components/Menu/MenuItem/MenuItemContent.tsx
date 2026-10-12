@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import Link from 'next/link';
 import { FC, useEffect, useRef } from 'react';
 
-import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
 import { MENU_ITEM_ICONS } from '../menu-item-icons';
+import MenuBadgeTag from './MenuBadgeTag';
 
 const MENU_ITEM_ICON_SIZE = 16;
 
@@ -55,7 +55,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
       >
         {ItemIcon && <ItemIcon className="shrink-0" size={MENU_ITEM_ICON_SIZE} stroke={1.5} aria-hidden />}
         {isSidebarOpen && <DialEllipsisTooltip className="flex-1 min-w-0" text={t(menuItem.key)} />}
-        {menuItem.isPreview && isSidebarOpen ? <PreviewTag /> : null}
+        {menuItem.badge && isSidebarOpen ? <MenuBadgeTag badge={menuItem.badge} /> : null}
       </Link>
     </DialTooltip>
   );
