@@ -12,6 +12,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -39,6 +40,7 @@ interface Props {
   selectedToolset: DialToolsetResource;
   publicationName?: string;
   publicationPath?: string;
+  publicationType?: ResourceType;
   signInToolset: (
     toolset: any,
     type: ToolsetAuthCredentialLevel,
@@ -55,6 +57,7 @@ const ResourceAuthButtons: FC<Props> = ({
   oAuthCode,
   view,
   publicationPath,
+  publicationType,
   signInToolset,
   signOutToolset,
 }) => {
@@ -85,7 +88,12 @@ const ResourceAuthButtons: FC<Props> = ({
       url.searchParams.set('client_id', authSettings.client_id as string);
 
       setLevels(levels);
-      setUrl(view, { ...selectedToolset, requestName: publicationName, path: publicationPath });
+      setUrl(view, {
+        ...selectedToolset,
+        requestName: publicationName,
+        path: publicationPath,
+        resourceType: publicationType,
+      });
 
       url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
       if (authSettings.code_challenge) {
@@ -106,7 +114,7 @@ const ResourceAuthButtons: FC<Props> = ({
 
       window.location.assign(url.toString());
     },
-    [publicationName, publicationPath, selectedToolset, view],
+    [publicationName, publicationPath, publicationType, selectedToolset, view],
   );
 
   const onLogin = useCallback(
@@ -145,7 +153,12 @@ const ResourceAuthButtons: FC<Props> = ({
                   getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
                 );
                 router.push(
-                  getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+                  getUrnForEntity(view, {
+                    ...selectedToolset,
+                    requestName: publicationName,
+                    path: publicationPath,
+                    resourceType: publicationType,
+                  }),
                 );
               }
             });
@@ -155,6 +168,7 @@ const ResourceAuthButtons: FC<Props> = ({
     [
       publicationName,
       publicationPath,
+      publicationType,
       selectedToolset,
       signInToolset,
       showNotification,
@@ -183,7 +197,12 @@ const ResourceAuthButtons: FC<Props> = ({
           if (completedCount === levels.length) {
             if (!hasError) {
               router.push(
-                getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+                getUrnForEntity(view, {
+                  ...selectedToolset,
+                  requestName: publicationName,
+                  path: publicationPath,
+                  resourceType: publicationType,
+                }),
               );
               showNotification(
                 getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
@@ -193,7 +212,17 @@ const ResourceAuthButtons: FC<Props> = ({
         });
       });
     },
-    [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName, publicationPath],
+    [
+      router,
+      selectedToolset,
+      view,
+      showNotification,
+      t,
+      signOutToolset,
+      publicationName,
+      publicationPath,
+      publicationType,
+    ],
   );
 
   const onLogout = useCallback(() => {
@@ -229,7 +258,12 @@ const ResourceAuthButtons: FC<Props> = ({
           if (!res.success) {
             showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
             router.push(
-              getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+              getUrnForEntity(view, {
+                ...selectedToolset,
+                requestName: publicationName,
+                path: publicationPath,
+                resourceType: publicationType,
+              }),
             );
             return;
           }
@@ -242,7 +276,12 @@ const ResourceAuthButtons: FC<Props> = ({
               getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
             );
             router.push(
-              getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+              getUrnForEntity(view, {
+                ...selectedToolset,
+                requestName: publicationName,
+                path: publicationPath,
+                resourceType: publicationType,
+              }),
             );
           }
         });

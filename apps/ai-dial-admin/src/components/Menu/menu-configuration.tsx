@@ -155,12 +155,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           key: MenuI18nKey.PlatformInterceptors,
           href: ApplicationRoute.PlatformInterceptors,
         }),
-        { key: MenuI18nKey.ApplicationPublications, href: ApplicationRoute.ApplicationPublications },
-        { key: MenuI18nKey.ToolsetPublications, href: ApplicationRoute.ToolsetPublications },
-        { key: MenuI18nKey.PromptPublications, href: ApplicationRoute.PromptPublications },
-        { key: MenuI18nKey.ConversationPublications, href: ApplicationRoute.ConversationPublications },
-        { key: MenuI18nKey.FilePublications, href: ApplicationRoute.FilePublications },
-        { key: MenuI18nKey.SkillPublications, href: ApplicationRoute.SkillPublications },
+        { key: MenuI18nKey.Approvals, href: ApplicationRoute.Publications },
       ],
     },
     {

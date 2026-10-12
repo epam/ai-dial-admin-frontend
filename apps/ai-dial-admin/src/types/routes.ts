@@ -35,6 +35,7 @@ export enum ApplicationRoute {
 
   // Publications
   FoldersStorage = '/folders-storage',
+  Publications = '/publications',
   ApplicationPublications = '/application-publications',
   ToolsetPublications = '/toolset-publications',
   PromptPublications = '/prompt-publications',

@@ -114,6 +114,7 @@ export default {
     ArtifactsDescription:
       'Centralized hub for managing reusable resources, ensuring seamless access and efficient utilization across your workflow.',
     Governance: 'Governance',
+    Approvals: 'Approvals',
     GovernanceDescription:
       'Control access, folder permissions, and interceptors, and oversee the approval process to maintain compliance across your organization.',
     Builders: 'Builders',
@@ -157,12 +158,6 @@ export default {
     UsageLog: 'Usage Log',
     ActivityAudit: 'Activities',
 
-    PromptPublications: 'Prompt Publications',
-    ApplicationPublications: 'Application Publications',
-    ToolsetPublications: 'Toolset Publications',
-    FilePublications: 'File Publications',
-    ConversationPublications: 'Conversation Publications',
-    SkillPublications: 'Skill Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
     ReadOnlyAdminImportUnavailable: 'Import is not available for read-only administrators.',
@@ -932,6 +927,14 @@ export default {
       File: 'File Publication',
       Conversation: 'Conversation Publication',
       Skill: 'Skill Publication',
+    },
+    Types: {
+      Application: 'Application',
+      Toolset: 'Toolset',
+      Prompt: 'Prompt',
+      File: 'File',
+      Conversation: 'Conversation',
+      Skill: 'Skill',
     },
     Notification: {
       DeleteTitle: '{entity} was deleted successfully.',

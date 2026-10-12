@@ -153,24 +153,9 @@ Documented per capability under `openspec/specs/analytics/`. Items, in order: Da
   - **Interceptors**
     - **Key**: `PlatformInterceptors`
     - **Description**: Navigate to the interceptors page to manage interceptors and their catalog metadata.
-  - **Application Publications**
-    - **Key**: `ApplicationPublications`
-    - **Description**: Navigate to the application publications page to review and approve application submissions.
-  - **Toolset Publications**
-    - **Key**: `ToolsetPublications`
-    - **Description**: Navigate to the toolset publications page to review and approve toolset submissions.
-  - **Prompt Publications**
-    - **Key**: `PromptPublications`
-    - **Description**: Navigate to the prompt publications page to review and approve prompt submissions.
-  - **Conversation Publications**
-    - **Key**: `ConversationPublications`
-    - **Description**: Navigate to the conversation publications page to review and approve conversation submissions.
-  - **File Publications**
-    - **Key**: `FilePublications`
-    - **Description**: Navigate to the file publications page to review and approve files before they are shared.
-  - **Skill Publications**
-    - **Key**: `SkillPublications`
-    - **Description**: Navigate to the skill publications page to review and approve skill submissions.
+  - **Approvals**
+    - **Key**: `Approvals`
+    - **Description**: Navigate to the approvals page (`/publications`) to review and approve publication requests. One list shows the requests of every resource type (Application, Toolset, Prompt, Conversation, File, Skill), told apart by the Type column; opening a row shows the type's review page.
 
 ### 10. **Audit**
 

@@ -227,25 +227,20 @@ describe('MENU_CONFIGURATION — Governance group', () => {
   const findGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Governance);
 
-  test('lists roles, keys, folder permissions, interceptors, then the six publication types', () => {
+  test('lists roles, keys, folder permissions, interceptors, then Approvals', () => {
     expect(findGroup(baseFlags)?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.PlatformRoles,
       MenuI18nKey.PlatformKeys,
       MenuI18nKey.FoldersStorage,
       MenuI18nKey.PlatformInterceptors,
-      MenuI18nKey.ApplicationPublications,
-      MenuI18nKey.ToolsetPublications,
-      MenuI18nKey.PromptPublications,
-      MenuI18nKey.ConversationPublications,
-      MenuI18nKey.FilePublications,
-      MenuI18nKey.SkillPublications,
+      MenuI18nKey.Approvals,
     ]);
   });
 
-  test('Skill Publications links to the skill-publications route', () => {
-    const skillItem = findGroup(baseFlags)?.items.find((item) => item.key === MenuI18nKey.SkillPublications);
+  test('Approvals links to the merged publications route', () => {
+    const approvals = findGroup(baseFlags)?.items.find((item) => item.key === MenuI18nKey.Approvals);
 
-    expect(skillItem?.href).toBe(ApplicationRoute.SkillPublications);
+    expect(approvals?.href).toBe(ApplicationRoute.Publications);
   });
 });
 
@@ -279,7 +274,7 @@ describe('MENU_CONFIGURATION — catalog token', () => {
     }
     expect(keys).toContain(MenuI18nKey.Skills);
     expect(keys).toContain(MenuI18nKey.FoldersStorage);
-    expect(keys).toContain(MenuI18nKey.ApplicationPublications);
+    expect(keys).toContain(MenuI18nKey.Approvals);
   });
 });
 
