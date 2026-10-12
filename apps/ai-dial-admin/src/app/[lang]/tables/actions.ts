@@ -10,7 +10,10 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
+  RowPoliciesResponse,
+  RowPolicy,
   TableAccess,
+  TableAccessUpdateResult,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -59,8 +62,30 @@ export async function getTableAccess(name: string): Promise<ServerActionResponse
   return analyticsDataApi.getTableAccess(name, await token());
 }
 
-export async function replaceTableAccess(name: string, access: TableAccess): Promise<ServerActionResponse> {
-  return analyticsDataApi.replaceTableAccess(name, access, await token());
+export async function updateTableAccess(
+  name: string,
+  access: Partial<TableAccess>,
+): Promise<ServerActionResponse<TableAccessUpdateResult>> {
+  return analyticsDataApi.updateTableAccess(name, access, await token());
+}
+
+export async function getRowPolicies(name: string): Promise<ServerActionResponse<RowPoliciesResponse>> {
+  return analyticsDataApi.getRowPolicies(name, await token());
+}
+
+export async function putRowPolicy(
+  name: string,
+  role: string,
+  policy: RowPolicy,
+): Promise<ServerActionResponse<RowPolicy>> {
+  return analyticsDataApi.putRowPolicy(name, role, policy, await token());
+}
+
+// A 404 means the role has no policy on the table, which is the state a delete is after — not a failure.
+export async function deleteRowPolicy(name: string, role: string): Promise<ServerActionResponse> {
+  const res = await analyticsDataApi.deleteRowPolicy(name, role, await token());
+
+  return res.status === 404 ? { success: true } : res;
 }
 
 export async function getRoles(): Promise<AnalyticsRoleCatalog> {

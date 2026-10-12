@@ -22,7 +22,7 @@ const systemTable: AnalyticsTable = {
   name: 'dial_usage_log',
   type: AnalyticsTableType.Source,
   columns: [],
-  permissions: { write: false, modify: false },
+  permissions: { get: true, read: true, sensitive: false, write: false, modify: false, rows_restricted: false },
 };
 const allTables = [enrichment, rollupTarget, systemTable];
 const renderForm = (params?: Parameters<typeof useAggregateForm>[0]) => renderHook(() => useAggregateForm(params));

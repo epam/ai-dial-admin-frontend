@@ -8,7 +8,7 @@ import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Common/FnArgEditor';
-import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { useFilterTree } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
 import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   emptyArgs,
@@ -98,13 +98,13 @@ const FilterCondition: FC<Props> = ({
   isFunctionOperandOffered,
 }) => {
   const t = useI18n();
-  const { state, refresh } = useQueryBuilder();
+  const { fields, functions, refresh } = useFilterTree();
 
-  const fn = functionByName(state.functions, node.fn);
-  const rightFn = functionByName(state.functions, node.rightFn);
+  const fn = functionByName(functions, node.fn);
+  const rightFn = functionByName(functions, node.rightFn);
   const functionOptions = useMemo(
-    () => (isFunctionOperandOffered ? operandFunctionOptions(state.functions) : undefined),
-    [isFunctionOperandOffered, state.functions],
+    () => (isFunctionOperandOffered ? operandFunctionOptions(functions) : undefined),
+    [isFunctionOperandOffered, functions],
   );
 
   // `in` compares against a list of literals, which a single call is not, so the kind choice is not
@@ -124,7 +124,7 @@ const FilterCondition: FC<Props> = ({
   // never disagree about what the left operand is.
   const operandType = (): string | undefined => {
     if (!node.fn) return fieldTypeOf(fieldOptions, node.field);
-    return fn ? functionResultType(fn, node.args, state.fields) : undefined;
+    return fn ? functionResultType(fn, node.args, fields) : undefined;
   };
   const isEnumOperand = isEnumType(operandType());
 
@@ -157,12 +157,12 @@ const FilterCondition: FC<Props> = ({
   };
 
   const onSelectFunction = (name: string) => {
-    const picked = functionByName(state.functions, name);
+    const picked = functionByName(functions, name);
     if (!picked) return;
     node.fn = picked.name;
     node.field = '';
     node.args = emptyArgs(picked);
-    const resultType = functionResultType(picked, node.args, state.fields);
+    const resultType = functionResultType(picked, node.args, fields);
     node.valueType = defaultValueType(resultType);
     guardEnumOperator(resultType);
     refresh();
@@ -172,7 +172,7 @@ const FilterCondition: FC<Props> = ({
     node.args[index] = value;
     // A function that returns its argument's own type changes what the operand is as its arguments
     // change; the value type stays as chosen, but a now-invalid operator cannot be left standing.
-    if (fn) guardEnumOperator(functionResultType(fn, node.args, state.fields));
+    if (fn) guardEnumOperator(functionResultType(fn, node.args, fields));
     refresh();
   };
 
@@ -190,7 +190,7 @@ const FilterCondition: FC<Props> = ({
   };
 
   const onSelectRightFunction = (name: string) => {
-    const picked = functionByName(state.functions, name);
+    const picked = functionByName(functions, name);
     if (!picked) return;
     node.rightFn = picked.name;
     node.rightArgs = emptyArgs(picked);

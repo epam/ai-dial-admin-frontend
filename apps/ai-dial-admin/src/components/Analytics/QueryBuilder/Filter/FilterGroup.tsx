@@ -7,7 +7,7 @@ import { IconTrashX } from '@tabler/icons-react';
 import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/FilterCondition';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
-import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { useFilterTree } from '@/src/components/Analytics/QueryBuilder/filter-tree-context';
 import { toCompactSelectOptions } from '@/src/components/Analytics/QueryBuilder/utils/options';
 import { createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { LOGICAL_OPERATOR_OPTIONS, OPERATOR_OPTION_DESCRIPTORS } from '@/src/constants/analytics/query-builder';
@@ -39,7 +39,7 @@ const FilterGroup: FC<Props> = ({
   isFunctionOperandOffered,
 }) => {
   const t = useI18n();
-  const { refresh } = useQueryBuilder();
+  const { refresh } = useFilterTree();
 
   // Resolved once per group rather than per condition — the same nine options for every row.
   const operatorOptions = useMemo(() => toCompactSelectOptions(OPERATOR_OPTION_DESCRIPTORS, t), [t]);

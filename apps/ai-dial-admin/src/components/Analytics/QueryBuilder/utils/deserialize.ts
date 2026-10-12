@@ -209,7 +209,11 @@ const isSelectEntryRepresentable = (
 
 // The visual builder shows at most two filter levels: the root group plus one level of nested groups
 // holding only conditions. `depth` is the group nesting level of `node`'s parent.
-const isFilterRepresentable = (node: QueryFilterNode, depth: number, functions: QueryFunction[] | null): boolean => {
+export const isFilterRepresentable = (
+  node: QueryFilterNode,
+  depth: number,
+  functions: QueryFunction[] | null,
+): boolean => {
   if (!isGroup(node)) return isPredicateRepresentable(node as QueryPredicate, functions);
   if (depth >= 2) return false;
   return (node.args || []).every((child) => isFilterRepresentable(child, depth + 1, functions));
@@ -294,7 +298,7 @@ const renamedFieldRefs = (node: QueryFilterNode, renamed: (name: string) => stri
   };
 };
 
-const parseFilterRoot = (node?: QueryFilterNode, functions: QueryFunction[] = []): FilterGroupNode => {
+export const parseFilterRoot = (node?: QueryFilterNode, functions: QueryFunction[] = []): FilterGroupNode => {
   if (!node) return createGroup();
   const parsed = parseFilterNode(node, functions);
   if (parsed.kind === FilterNodeKind.Group) return parsed;

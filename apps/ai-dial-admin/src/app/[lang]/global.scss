@@ -4,3 +4,8 @@ html,
 body {
   @apply size-full bg-layer-1 text-primary body;
 }
+
+// Marks the JSON line of a row-limit filter that names the field the service refused (Monaco decoration).
+.row-limit-field-error {
+  @apply bg-error;
+}

@@ -33,7 +33,19 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 const permissions = vi.hoisted(() => ({
-  value: { canDelete: true, canWrite: true, canModify: true, canManageRoles: true },
+  value: {
+    canDelete: true,
+    canWrite: true,
+    canModify: true,
+    canManageRoles: true,
+    canChangeSensitive: true,
+    isRowsRestricted: false,
+  },
+}));
+
+// The Access tab is not what this file proves; its data hook is covered in use-table-access.spec.
+vi.mock('@/src/components/Analytics/Tables/access/use-table-access', () => ({
+  useTableAccess: () => ({ isTabOffered: false }),
 }));
 
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
@@ -85,7 +97,7 @@ const renderView = (initialTable: AnalyticsTable = sourceDraft()) =>
   render(<TableDetailView name={initialTable.name} initialTable={initialTable} apiBaseUrl="" flightUri="" />);
 
 const jsonToggle = () => screen.queryByRole('switch');
-const toggle = () => within(screen.getByRole('switch')).getByRole('checkbox');
+const toggle = () => screen.getByRole('switch');
 const openEditor = (user: ReturnType<typeof userEvent.setup>) => user.click(toggle());
 const editColumnForm = (user: ReturnType<typeof userEvent.setup>) =>
   user.click(screen.getByRole('button', { name: 'edit-column-form' }));
@@ -94,7 +106,6 @@ const editDocument = (user: ReturnType<typeof userEvent.setup>) =>
 
 const saveButton = () => screen.queryByRole('button', { name: ButtonsI18nKey.Save });
 const discardButton = () => screen.queryByRole('button', { name: ButtonsI18nKey.Discard });
-const manageAccessButton = () => screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess });
 const deleteButton = () => screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable });
 
 // Discard opens a confirmation whose confirm control carries the same label as the header button, so
@@ -108,7 +119,7 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.jsonErrors = [];
-  permissions.value = { canDelete: true, canWrite: true, canModify: true, canManageRoles: true };
+  permissions.value = { ...permissions.value, canDelete: true, canWrite: true, canModify: true, canManageRoles: true };
 });
 
 describe('TableDetailView — the changed-entity header', () => {
@@ -121,7 +132,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(discardButton()).toBeInTheDocument();
     expect(saveButton()).toBeInTheDocument();
-    expect(manageAccessButton()).not.toBeInTheDocument();
+    expect(deleteButton()).not.toBeInTheDocument();
     expect(deleteButton()).not.toBeInTheDocument();
     expect(jsonToggle()).not.toBeInTheDocument();
   });
@@ -134,7 +145,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(discardButton()).toBeInTheDocument();
     expect(saveButton()).toBeInTheDocument();
-    expect(manageAccessButton()).not.toBeInTheDocument();
+    expect(deleteButton()).not.toBeInTheDocument();
     expect(deleteButton()).not.toBeInTheDocument();
     expect(jsonToggle()).not.toBeInTheDocument();
   });
@@ -142,7 +153,7 @@ describe('TableDetailView — the changed-entity header', () => {
   test('an untouched draft keeps its ordinary header actions and offers neither Save nor Discard', () => {
     renderView();
 
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
     expect(jsonToggle()).toBeInTheDocument();
     expect(saveButton()).not.toBeInTheDocument();
@@ -156,7 +167,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(saveButton()).not.toBeInTheDocument();
     expect(discardButton()).not.toBeInTheDocument();
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
     expect(jsonToggle()).toBeInTheDocument();
   });
@@ -170,7 +181,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(discardButton()).toBeInTheDocument();
     expect(saveButton()).toBeInTheDocument();
-    expect(manageAccessButton()).not.toBeInTheDocument();
+    expect(deleteButton()).not.toBeInTheDocument();
   });
 
   test('confirming Discard restores both surfaces and keeps the editor as the active surface', async () => {
@@ -184,7 +195,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(saveButton()).not.toBeInTheDocument();
     expect(discardButton()).not.toBeInTheDocument();
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
     // Still the active surface: the JSON editor, not the column form.
     expect(screen.getByRole('application', { name: 'JSON editor' })).toBeInTheDocument();
@@ -202,11 +213,17 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(discardButton()).toBeInTheDocument();
     expect(saveButton()).toBeInTheDocument();
-    expect(manageAccessButton()).not.toBeInTheDocument();
+    expect(deleteButton()).not.toBeInTheDocument();
   });
 
   test('the changed header is offered only to a caller who may modify', async () => {
-    permissions.value = { canDelete: true, canWrite: false, canModify: false, canManageRoles: true };
+    permissions.value = {
+      ...permissions.value,
+      canDelete: true,
+      canWrite: false,
+      canModify: false,
+      canManageRoles: true,
+    };
     const user = userEvent.setup();
     renderView();
 
@@ -214,7 +231,7 @@ describe('TableDetailView — the changed-entity header', () => {
 
     expect(saveButton()).not.toBeInTheDocument();
     expect(discardButton()).not.toBeInTheDocument();
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
   });
 
@@ -231,7 +248,7 @@ describe('TableDetailView — the changed-entity header', () => {
     await openEditor(user);
 
     expect(jsonToggle()).toBeInTheDocument();
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
     expect(saveButton()).not.toBeInTheDocument();
     expect(discardButton()).not.toBeInTheDocument();
@@ -254,7 +271,7 @@ describe('TableDetailView — the changed-entity header', () => {
     renderView(sourceDraft({ status: TableStatus.Active }));
 
     expect(discardButton()).not.toBeInTheDocument();
-    expect(manageAccessButton()).toBeInTheDocument();
+    expect(deleteButton()).toBeInTheDocument();
     expect(deleteButton()).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).toBeInTheDocument();
