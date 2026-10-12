@@ -84,7 +84,7 @@ const ListEntities = <T extends object>({
       {listLabel && (
         <div className="flex flex-row justify-between mb-3 items-center h-[40px] min-w-0 gap-4">
           <div className="flex items-center gap-3 shrink-0">
-            <h2>{listLabel}</h2>
+            <h1 className="dial-h1-text">{listLabel}</h1>
             {listLabelAddon}
           </div>
 

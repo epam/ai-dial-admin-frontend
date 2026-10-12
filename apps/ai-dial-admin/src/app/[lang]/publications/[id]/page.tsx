@@ -12,13 +12,27 @@ import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
-import { ApplicationRoute } from '@/src/types/routes';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getPublicationView } from '@/src/utils/publications';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { searchParams: Promise<{ path: string }> }) {
+interface SearchParams {
+  path: string;
+  type?: string;
+  code?: string;
+}
+
+export default async function Page(params: { searchParams: Promise<SearchParams> }) {
+  const { path, type, code } = await params.searchParams;
+  const view = getPublicationView(type);
+
+  if (view == null) {
+    notFound();
+  }
+
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let data: Publication | null = null;
@@ -26,13 +40,16 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   let assetRunners: ResourceInfo[] = [];
 
   try {
-    data = await publicationsApi.getPublication(token, (await params.searchParams).path);
-    assetRunners = await getAllRunners();
-    applicationSchemes = process.env.DIAL_ADMIN_API_URL
-      ? await applicationRunnersApi.getApplicationSchemesList(token)
-      : await readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true);
+    data = await publicationsApi.getPublication(token, path);
+
+    if (type === ResourceType.APPLICATION) {
+      assetRunners = await getAllRunners();
+      applicationSchemes = process.env.DIAL_ADMIN_API_URL
+        ? await applicationRunnersApi.getApplicationSchemesList(token)
+        : await readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, [], true);
+    }
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch application publication view data');
+    errorObjLog(e, `Failed to fetch ${type} publication view data`);
   }
 
   if (data == null) {
@@ -42,9 +59,12 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   return (
     <SaveValidationContextProvider>
       <PublicationView
-        publication={data as Publication}
-        view={ApplicationRoute.ApplicationPublications}
-        applicationSchemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
+        publication={data}
+        view={view}
+        applicationSchemes={
+          type === ResourceType.APPLICATION ? buildAppRunnerOptions(applicationSchemes, assetRunners) : undefined
+        }
+        oAuthCode={type === ResourceType.TOOLSET ? code || null : undefined}
       />
     </SaveValidationContextProvider>
   );

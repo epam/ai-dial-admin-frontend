@@ -1,7 +1,7 @@
 import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import Link from 'next/link';
-import { FC } from 'react';
+import { FC, useEffect, useRef } from 'react';
 
 import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 import { useI18n } from '@/src/locales/client';
@@ -19,6 +19,15 @@ interface Props {
 const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   const t = useI18n();
   const ItemIcon = MENU_ITEM_ICONS[menuItem.key];
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
+  // Menu navigations remount on route change (and the hover-expanded copy is hidden), so each one
+  // must bring its own active item into view.
+  useEffect(() => {
+    if (isActive) {
+      linkRef.current?.scrollIntoView?.({ block: 'center' });
+    }
+  }, [isActive]);
 
   const menuClassName = classNames(
     'group flex flex-row items-center w-full gap-3 px-2 rounded-full cursor-pointer text-sm font-normal leading-5',
@@ -37,6 +46,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
       hideTooltip={isSidebarOpen}
     >
       <Link
+        ref={linkRef}
         prefetch={false}
         aria-label={t(menuItem.key)}
         aria-current={isActive ? 'page' : undefined}

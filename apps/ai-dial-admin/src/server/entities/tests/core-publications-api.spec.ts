@@ -29,41 +29,26 @@ describe('Server :: CorePublicationsApi', () => {
     instance = new CorePublicationsApi({ host: TEST_URL }, clients);
   });
 
-  test('list posts the public path and filters/maps by resource type', async () => {
+  test('getPublicationList posts the public path and tags every publication with its resource type', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
         publications: [
           { url: 'publications/public/p1', name: 'Prompt 1', resourceTypes: ['PROMPT'], status: 'PENDING' },
-          { url: 'publications/public/f1', name: 'File 1', resourceTypes: ['FILE'], status: 'PENDING' },
+          { url: 'publications/public/s1', name: 'Skill 1', resourceTypes: ['SKILL'], status: 'PENDING' },
+          { url: 'publications/public/u1', name: 'Untyped', resourceTypes: [], status: 'PENDING' },
         ],
       }),
       JSON_HEADERS,
     );
 
-    const result = await instance.getPublicationPromptList(TOKEN_MOCK);
+    const result = await instance.getPublicationList(TOKEN_MOCK);
 
     const [url, init] = fetch.mock.calls[0];
     expect(url).toContain('/v1/ops/publication/list');
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ url: 'publications/public/' });
-    expect(result).toHaveLength(1);
-    expect(result?.[0]).toMatchObject({ path: 'public/p1', requestName: 'Prompt 1' });
-  });
-
-  test('getPublicationSkillList posts the public path and filters/maps to SKILL', async () => {
-    fetch.mockResponseOnce(
-      JSON.stringify({
-        publications: [
-          { url: 'publications/public/s1', name: 'Skill 1', resourceTypes: ['SKILL'], status: 'PENDING' },
-          { url: 'publications/public/p1', name: 'Prompt 1', resourceTypes: ['PROMPT'], status: 'PENDING' },
-        ],
-      }),
-      JSON_HEADERS,
-    );
-
-    const result = await instance.getPublicationSkillList(TOKEN_MOCK);
-
-    expect(result).toHaveLength(1);
-    expect(result?.[0]).toMatchObject({ path: 'public/s1', requestName: 'Skill 1' });
+    expect(result).toHaveLength(2);
+    expect(result?.[0]).toMatchObject({ path: 'public/p1', requestName: 'Prompt 1', resourceType: 'PROMPT' });
+    expect(result?.[1]).toMatchObject({ path: 'public/s1', requestName: 'Skill 1', resourceType: 'SKILL' });
   });
 
   test('getPublication returns null for APPROVED publications', async () => {

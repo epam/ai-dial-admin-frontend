@@ -17,6 +17,7 @@ import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DisplayNameCellRenderer from './CellRenderers/DisplayNameCellRenderer';
+import FormattedValueCellRenderer from './CellRenderers/FormattedValueCellRenderer';
 import RadioNameCellRenderer from './CellRenderers/RadioNameCellRenderer';
 import { HEADER_HEIGHT, ICON_ROW_HEIGHT } from './constants';
 import { useCellContextMenu } from './hooks/use-cell-context-menu';
@@ -67,6 +68,15 @@ const suppressArrowKeys = (params: SuppressKeyboardEventParams) => ARROW_KEYS.in
 
 const DEFAULT_COL_DEF: ColDef = { suppressKeyboardEvent: suppressArrowKeys };
 
+const withFormattedValueRenderer = (columnDefs: ColDef[]): ColDef[] =>
+  columnDefs.map((col) => {
+    const children = (col as ColGroupDef).children;
+    if (Array.isArray(children)) {
+      return { ...col, children: withFormattedValueRenderer(children as ColDef[]) } as ColDef;
+    }
+    return col.valueFormatter && !col.cellRenderer ? { ...col, cellRenderer: FormattedValueCellRenderer } : col;
+  });
+
 const ICON_NAME_RENDERERS: ColDef['cellRenderer'][] = [DisplayNameCellRenderer, RadioNameCellRenderer];
 
 const hasIconNameRenderer = (col: ColDef): boolean => ICON_NAME_RENDERERS.includes(col.cellRenderer);
@@ -114,9 +124,11 @@ const AgGridWrapper = <T extends object>({
   );
 
   const gridColumnDefs = useMemo(() => {
-    if (isLiveData || !columnDefs || !storageKey || typeof window === 'undefined') return columnDefs;
+    if (!columnDefs) return columnDefs;
+    const renderable = withFormattedValueRenderer(columnDefs);
+    if (isLiveData || !storageKey || typeof window === 'undefined') return renderable;
     const model = loadPersistedModel(storageKey, getDefaultSorts(columnDefs));
-    return model ? mergeStoredColumnDefs(columnDefs, model.columns) : columnDefs;
+    return model ? mergeStoredColumnDefs(renderable, model.columns) : renderable;
   }, [columnDefs, isLiveData, storageKey]);
 
   useEffect(() => {
