@@ -151,54 +151,9 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
-  [ApplicationRoute.PromptPublications]: {
+  [ApplicationRoute.Publications]: {
     segments: [
-      { name: 'PromptPublications', i18nKey: MenuI18nKey.PromptPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ToolsetPublications]: {
-    segments: [
-      { name: 'ToolsetPublications', i18nKey: MenuI18nKey.ToolsetPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.FilePublications]: {
-    segments: [
-      { name: 'FilePublications', i18nKey: MenuI18nKey.FilePublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ApplicationPublications]: {
-    segments: [
-      { name: 'ApplicationPublications', i18nKey: MenuI18nKey.ApplicationPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.ConversationPublications]: {
-    segments: [
-      { name: 'ConversationPublications', i18nKey: MenuI18nKey.ConversationPublications },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.SkillPublications]: {
-    segments: [
-      { name: 'SkillPublications', i18nKey: MenuI18nKey.SkillPublications },
+      { name: 'Approvals', i18nKey: MenuI18nKey.Approvals },
       {
         name: 'Id',
         href: false,

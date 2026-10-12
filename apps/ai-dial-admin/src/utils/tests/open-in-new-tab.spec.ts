@@ -166,24 +166,18 @@ describe('Entity list view :: getEntityPath', () => {
     expect(getEntityPath(ApplicationRoute.Prompts, { ...data, path: void 0 }, true)).toBeUndefined;
   });
 
-  test('Should return name field for prompt publication', () => {
-    const result = getEntityPath(ApplicationRoute.PromptPublications, { ...data, requestName: 'requestName' }, true);
-    expect(result).toEqual('requestName?path=path');
-  });
-
-  test('Should return name field for toolset publication', () => {
-    const result = getEntityPath(ApplicationRoute.ToolsetPublications, { ...data, requestName: 'requestName' }, true);
-    expect(result).toEqual('requestName?path=path');
+  test('Should return name, path and type for a publication', () => {
+    const result = getEntityPath(ApplicationRoute.Publications, {
+      ...data,
+      requestName: 'request name',
+      resourceType: 'TOOL_SET',
+    });
+    expect(result).toEqual('request%20name?path=path&type=TOOL_SET');
   });
 
   test('Should return name field for McpContainers', () => {
     const result = getEntityPath(ApplicationRoute.McpContainers, { ...data, name: 'test-id' });
     expect(result).toEqual('test-id');
-  });
-
-  test('Should return name field for file publication', () => {
-    const result = getEntityPath(ApplicationRoute.FilePublications, { ...data, requestName: 'requestName' }, true);
-    expect(result).toEqual('requestName?path=path');
   });
 
   test('Should return id field for activity audit', () => {

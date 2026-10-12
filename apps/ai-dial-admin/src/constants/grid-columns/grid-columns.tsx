@@ -91,6 +91,7 @@ import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { Publication } from '@/src/models/dial/publications';
+import { getPublicationTypeLabel } from '@/src/utils/publications';
 import { TestSuiteRequestTemplateParam } from '@/src/models/evaluation/test-suite';
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
 import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
@@ -510,10 +511,19 @@ export const PUBLICATION_COLUMNS: ColDef[] = [
   { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 
-export const getPublicationColumns = (open: (publication?: Publication) => void): ColDef[] => {
+export const getPublicationColumns = (
+  open: (publication?: Publication) => void,
+  t: (key: string) => string,
+): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
+  const [nameColumn, ...restColumns] = PUBLICATION_COLUMNS;
+  const typeColumn: ColDef = {
+    field: 'resourceType',
+    headerName: 'Type',
+    valueFormatter: ({ value }) => getPublicationTypeLabel(value, t),
+  };
 
-  return [...PUBLICATION_COLUMNS, ACTION_COLUMN(actions)];
+  return [nameColumn, typeColumn, ...restColumns, ACTION_COLUMN(actions)];
 };
 
 export const ENTITIES_COLUMNS = <T extends object>(

@@ -50,13 +50,8 @@ export enum MenuI18nKey {
   AuditDescription = 'Menu.AuditDescription',
   MCPDescription = 'Menu.MCPDescription',
   Dashboard = 'Menu.Dashboard',
+  Approvals = 'Menu.Approvals',
   UsageLog = 'Menu.UsageLog',
-  PromptPublications = 'Menu.PromptPublications',
-  ToolsetPublications = 'Menu.ToolsetPublications',
-  ApplicationPublications = 'Menu.ApplicationPublications',
-  FilePublications = 'Menu.FilePublications',
-  ConversationPublications = 'Menu.ConversationPublications',
-  SkillPublications = 'Menu.SkillPublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
   ReadOnlyAdminImportUnavailable = 'Menu.ReadOnlyAdminImportUnavailable',
@@ -902,6 +897,14 @@ export enum PublicationsI18nKey {
   FilePublicationEntity = 'Publications.Entities.File',
   ConversationPublicationEntity = 'Publications.Entities.Conversation',
   SkillPublicationEntity = 'Publications.Entities.Skill',
+
+  // resource types (Type column of the Approvals list)
+  ApplicationType = 'Publications.Types.Application',
+  ToolsetType = 'Publications.Types.Toolset',
+  PromptType = 'Publications.Types.Prompt',
+  FileType = 'Publications.Types.File',
+  ConversationType = 'Publications.Types.Conversation',
+  SkillType = 'Publications.Types.Skill',
 
   // approval action notifications
   NotificationDeleteTitle = 'Publications.Notification.DeleteTitle',

@@ -29,6 +29,23 @@ const nextConfig = {
   distDir: process.env.NX_NEXT_OUTPUT_PATH ? path.join('../../', process.env.NX_NEXT_OUTPUT_PATH, '.next') : '.next',
   async redirects() {
     return [
+      // The per-type publication pages were merged into the single Approvals pages; a detail
+      // redirect carries the type as a query param (the original `?path=` is preserved).
+      ...Object.entries({
+        application: 'APPLICATION',
+        toolset: 'TOOL_SET',
+        prompt: 'PROMPT',
+        file: 'FILE',
+        conversation: 'CONVERSATION',
+        skill: 'SKILL',
+      }).flatMap(([slug, type]) => [
+        { source: `/:prefix/${slug}-publications`, destination: '/publications', permanent: true },
+        {
+          source: `/:prefix/${slug}-publications/:id`,
+          destination: `/publications/:id?type=${type}`,
+          permanent: true,
+        },
+      ]),
       {
         source: '/:prefix/model-deployments/:path',
         destination: '/model-servings/:path',

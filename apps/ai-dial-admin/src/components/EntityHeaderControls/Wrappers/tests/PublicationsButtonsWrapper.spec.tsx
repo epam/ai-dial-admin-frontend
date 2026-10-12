@@ -126,7 +126,7 @@ describe('PublicationsButtonsWrapper :: success notifications', () => {
     expect(notification.title).toContain(PublicationsI18nKey.ApplicationPublicationEntity);
     expect(notification.description).toContain(PublicationsI18nKey.NotificationPublishDescription);
     expect(notification.description).toContain('my-request');
-    expect(push).toHaveBeenCalledWith(ApplicationRoute.ApplicationPublications);
+    expect(push).toHaveBeenCalledWith(ApplicationRoute.Publications);
   });
 
   test('unpublishing a delete-action publication shows an unpublish success notification', async () => {

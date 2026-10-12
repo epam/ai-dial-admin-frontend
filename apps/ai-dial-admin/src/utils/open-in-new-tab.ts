@@ -128,13 +128,10 @@ export const getEntityPath = (
       return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
     }
 
-    case ApplicationRoute.PromptPublications:
-    case ApplicationRoute.FilePublications:
-    case ApplicationRoute.ApplicationPublications:
-    case ApplicationRoute.ToolsetPublications:
-    case ApplicationRoute.ConversationPublications:
-    case ApplicationRoute.SkillPublications:
-      return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as Publication).path}`;
+    case ApplicationRoute.Publications: {
+      const { requestName, path, resourceType } = data as Publication;
+      return `${encodeURIComponent(requestName)}?path=${path}&type=${encodeURIComponent(resourceType ?? '')}`;
+    }
 
     case ApplicationRoute.ActivityAudit:
       return (data as DialActivity).activityId;

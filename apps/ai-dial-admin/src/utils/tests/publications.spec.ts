@@ -1,5 +1,13 @@
 import { ActionType } from '@/src/models/dial/publications';
-import { getActionClassName, getModalsTranslations, getPublicationEntityLabel, isAddAction } from '../publications';
+import {
+  getActionClassName,
+  getModalsTranslations,
+  getPublicationEntityLabel,
+  getPublicationTypeLabel,
+  getPublicationView,
+  isAddAction,
+} from '../publications';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
@@ -137,5 +145,33 @@ describe('getPublicationEntityLabel', () => {
     expect(getPublicationEntityLabel(ApplicationRoute.SkillPublications, t)).toBe(
       PublicationsI18nKey.SkillPublicationEntity,
     );
+  });
+});
+
+describe('getPublicationView', () => {
+  test('maps every publishable resource type to its view', () => {
+    expect(getPublicationView(ResourceType.APPLICATION)).toBe(ApplicationRoute.ApplicationPublications);
+    expect(getPublicationView(ResourceType.TOOLSET)).toBe(ApplicationRoute.ToolsetPublications);
+    expect(getPublicationView(ResourceType.PROMPT)).toBe(ApplicationRoute.PromptPublications);
+    expect(getPublicationView(ResourceType.FILE)).toBe(ApplicationRoute.FilePublications);
+    expect(getPublicationView(ResourceType.CONVERSATION)).toBe(ApplicationRoute.ConversationPublications);
+    expect(getPublicationView(ResourceType.SKILL)).toBe(ApplicationRoute.SkillPublications);
+  });
+
+  test('returns undefined for a missing or non-publishable type', () => {
+    expect(getPublicationView(undefined)).toBeUndefined();
+    expect(getPublicationView('bogus')).toBeUndefined();
+    expect(getPublicationView(ResourceType.MODEL)).toBeUndefined();
+  });
+});
+
+describe('getPublicationTypeLabel', () => {
+  test('returns the translated label of a publishable type', () => {
+    expect(getPublicationTypeLabel(ResourceType.SKILL, t)).toBe(PublicationsI18nKey.SkillType);
+  });
+
+  test('returns an empty string for a missing or non-publishable type', () => {
+    expect(getPublicationTypeLabel(undefined, t)).toBe('');
+    expect(getPublicationTypeLabel(ResourceType.MODEL, t)).toBe('');
   });
 });
