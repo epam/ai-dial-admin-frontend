@@ -64,6 +64,8 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
   const [newTestCases, setNewTestCases] = useState<Record<string, unknown>[]>([]);
+  const newTestCasesRef = useRef(newTestCases);
+  newTestCasesRef.current = newTestCases;
   const [isLoading, setIsLoading] = useState(false);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -125,11 +127,18 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
     setGridApi(api);
   }, []);
 
+  const onGridDirtyChange = useCallback(
+    (hasDirtyRows: boolean) => {
+      onDirtyChange?.(hasDirtyRows || newTestCasesRef.current.length > 0);
+    },
+    [onDirtyChange],
+  );
+
   const turnGrid = useTurnGroupGrid<DatasetTestCase>({
     schema: dataset.testCaseSchema,
     collapseRows: collapseRowsToDatasetTestCases,
     onDeleteCase,
-    onDirtyChange,
+    onDirtyChange: onGridDirtyChange,
     onGridReady: onGridReadyInner,
   });
 
@@ -356,7 +365,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, savedSchema, testCasesAction
   }, [onOpenDeleteModal]);
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="h-full min-h-0">
       {isLoading ? (
         <DialLoader size={40} />
       ) : (

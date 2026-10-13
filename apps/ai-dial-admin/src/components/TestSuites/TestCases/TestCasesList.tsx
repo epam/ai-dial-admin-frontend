@@ -193,11 +193,18 @@ const TestCasesList: FC<Props> = ({
     [applyIncludedInRunSort, setGridApi],
   );
 
+  const onGridDirtyChange = useCallback(
+    (hasDirtyRows: boolean) => {
+      onDirtyChange?.(hasDirtyRows || newTestCasesRef.current.length > 0);
+    },
+    [onDirtyChange],
+  );
+
   const turnGrid = useTurnGroupGrid<TestCase>({
     schema: dataset?.testCaseSchema,
     collapseRows: collapseRowsToTestCases,
     onDeleteCase,
-    onDirtyChange,
+    onDirtyChange: onGridDirtyChange,
     structuralFields: STRUCTURAL_FIELDS,
     onGridReady: onGridReadyInner,
   });
@@ -658,7 +665,7 @@ const TestCasesList: FC<Props> = ({
     ));
 
   return (
-    <div className="flex-1 min-h-0">
+    <div className="h-full min-h-0">
       <ListEntities
         additionalGridOptions={gridOptions}
         listLabel={t(TabsI18nKey.TestCases)}

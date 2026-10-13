@@ -173,6 +173,26 @@ describe('EditableCellRenderer', () => {
     expect(foreignOnChange).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { scrollWidth: 80, clientWidth: 120, state: 'idle' },
+    { scrollWidth: 300, clientWidth: 100, state: 'armed' },
+  ])(
+    'sets the overflow tooltip to $state for scrollWidth $scrollWidth in a $clientWidth field',
+    ({ scrollWidth, clientWidth, state }) => {
+      const scrollSpy = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(scrollWidth);
+      const clientSpy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(clientWidth);
+
+      render(<EditableCellRenderer {...cellParams} value="a test value" colDef={{}} data={{}} />);
+
+      expect(screen.getByRole('textbox').closest('[data-overflow-tooltip]')).toHaveAttribute(
+        'data-overflow-tooltip',
+        state,
+      );
+      scrollSpy.mockRestore();
+      clientSpy.mockRestore();
+    },
+  );
+
   test('falls back to the inputProps placeholder only when it has none of its own', () => {
     const { rerender } = render(
       <EditableCellRenderer {...cellParams} value="" colDef={{}} data={{}} inputProps={{ placeholder: 'fallback' }} />,
