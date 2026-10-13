@@ -126,7 +126,7 @@ pass:
 { type: 'fitCellContents', colIds: [<the nine auto-content colIds>] }
 ```
 
-`colIds` (not the whole grid) is what keeps autosize off `Test case run name`, `Test Suite ID` and
+`colIds` (not the whole grid) is what keeps autosize off `Test suite run name`, `Test Suite ID` and
 `Metrics`, which keep `flex: 1` and split the remainder. `scaleUpToFitGridWidth` is deliberately not
 used — it would grow the measured columns too.
 
@@ -261,7 +261,7 @@ touches those lines; a broader cleanup is a separate change.
 - A suite variant = `RUNS_COLUMN` minus `testSuiteId` (derived by filtering on `colId`, in the spirit
   of the existing `suppressCellTooltips` / `restrictSort` helpers in this file) — the suite tab is
   already scoped to one suite.
-- A compare-picker subset (Status, Test case run name, Runs, Test cases, Start Date, End Date) for
+- A compare-picker subset (Status, Test suite run name, Runs, Test cases, Start Date, End Date) for
   `SelectCompareRunModal`. A picker exists to identify a run; mock-backed columns have no business
   in a modal the operator makes a decision in.
 
@@ -282,7 +282,7 @@ and ctrl / cmd / middle-click still opens a new tab. The Actions column stays ex
   half of Decision 5.
 - **Mock data on a real list.** ~~Four columns will show plausible values that are not the run's.~~
   Resolved: `Runs/mocks/` is deleted (Decision 6), all four columns read the run's own data.
-- **The runs list is filterable on seven columns** — Status, Test case run name, Test Suite ID, Target,
+- **The runs list is filterable on seven columns** — Status, Test suite run name, Test Suite ID, Target,
   Metrics and the two dates. Cost, Overall score and the two counts are values the endpoint does not
   accept as a filter, and a filter it rejects comes back as an empty grid with no message
   (`EvaluationListView` renders a failed page that way). Accepted: an empty list is worse than an
