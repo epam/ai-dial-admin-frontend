@@ -17,7 +17,9 @@ on either surface SHALL be persisted to that surface's backend as `pricing.cache
 `{ test, ifTrue?, ifFalse? }` object, matching DIAL Core's `PricingRate` wire format.
 
 Both fields SHALL be read-only for a read-only administrator, matching the existing prompt and
-completion price fields.
+completion price fields. For every conditional decision tree, every interactive control — including
+the selected test-field remove action — SHALL be disabled or unavailable while the pricing block is
+read-only.
 
 #### Scenario: Cache rate fields are present on the entity surface
 
@@ -55,6 +57,12 @@ completion price fields.
 - **WHEN** a read-only administrator views a model's pricing block
 - **THEN** the cache read and cache write fields are disabled, as the prompt and completion fields
   are — including every control of an open decision tree
+
+#### Scenario: Read-only administrator cannot remove a selected decision-tree field
+
+- **WHEN** a read-only administrator views a conditional prompt, completion, cache read, or cache
+  write rate with a selected test field
+- **THEN** the selected field's remove action is unavailable or disabled and cannot clear the field
 
 ### Requirement: Cache rates are accepted only for the token cost unit
 
@@ -147,11 +155,10 @@ depth, in both directions.
 
 ### Requirement: Cache rates are available as model list columns
 
-The models grid SHALL offer a cache read price column and a cache write price column, hidden by
-default, matching how the prompt price and completion price columns are already offered. A column
-showing a conditional decision tree SHALL render a readable summary of the tree — never a raw object
-dump — with leaf rates displayed per million under the token unit, matching the pricing block's
-scale.
+The models grid SHALL offer prompt price, completion price, cache read price, and cache write price
+columns, hidden by default. A column showing a conditional decision tree SHALL render a readable
+summary of the tree — never a raw object dump — with leaf rates displayed per million under the token
+unit, matching the pricing block's scale. The cell value and its tooltip SHALL use the same summary.
 
 #### Scenario: Cache rate columns can be shown
 
@@ -166,6 +173,13 @@ scale.
   and the cache write price column is shown
 - **THEN** the cell/tooltip presents a conditional summary equivalent to `ttl == 1h ? 6 : 3.75`
   rather than `[object Object]`
+
+#### Scenario: Every pricing column renders a decision tree as a readable summary
+
+- **WHEN** a model has a conditional prompt, completion, cache read, or cache write rate and the
+  corresponding Models grid column is shown
+- **THEN** its cell and tooltip show the same readable conditional summary using the configured
+  pricing unit's display scale
 
 ### Requirement: Cache rate changes appear in the activity audit
 

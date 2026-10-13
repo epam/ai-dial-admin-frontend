@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   getPipelineFailures,
   getPipelineRuntimeView,
+  listPipelineBackfills,
   getTable,
   getTables,
   pausePipeline,
@@ -27,6 +28,7 @@ import { runtimeView } from '@/src/components/Analytics/Pipelines/Common/tests/m
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
@@ -39,13 +41,18 @@ vi.mock('@/src/context/NotificationContext', () => ({
 // Every runtime affordance turns on full-admin rights, so the context is a spy here rather than the
 // shared frozen value.
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: { analyticsEnabled: true }, isFullAdmin: true })),
+  useAppContext: vi.fn(() => ({
+    featureFlags: { analyticsEnabled: true },
+    isFullAdmin: true,
+    sidebar: backfillSidebar,
+  })),
 }));
 
 const asFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({
     featureFlags: { analyticsEnabled: true },
     isFullAdmin,
+    sidebar: backfillSidebar,
   } as never);
 
 const enrichment: AnalyticsTable = {
@@ -113,6 +120,7 @@ const renderView = (override?: Partial<Pipeline>) =>
 describe('PipelineDetailView — runtime and pause', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
     asFullAdmin(true);
     vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable]);
     vi.mocked(getTable).mockImplementation(

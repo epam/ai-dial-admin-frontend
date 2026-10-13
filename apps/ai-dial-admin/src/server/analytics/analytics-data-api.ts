@@ -37,6 +37,13 @@ import {
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
+import {
+  TableBackfillRequest,
+  TableBackfillRun,
+  TableBackfillRunsResponse,
+  TableBackfillStart,
+  TableBackfillState,
+} from '@/src/models/analytics/table-backfill';
 import { DownloadedFile } from '@/src/models/download';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
@@ -112,6 +119,10 @@ export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/ac
 export const TABLE_ROW_POLICIES_URL = (name: string): string => `${TABLE_URL(name)}/row-policies`;
 export const TABLE_ROW_POLICY_URL = (name: string, role: string): string =>
   `${TABLE_ROW_POLICIES_URL(name)}/${encodeURIComponent(role)}`;
+
+export const TABLE_BACKFILL_URL = 'v1/data-sync/backfill';
+export const TABLE_BACKFILL_LIST_URL = (state?: TableBackfillState): string =>
+  state ? `${TABLE_BACKFILL_URL}?state=${encodeURIComponent(state)}` : TABLE_BACKFILL_URL;
 
 export const CATALOG_URL = 'v1/catalog';
 export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
@@ -370,5 +381,22 @@ export class AnalyticsDataApi extends BaseApi {
       file,
       token,
     );
+  }
+
+  startTableBackfill(from: string, to: string, token: Token): Promise<ServerActionResponse<TableBackfillStart>> {
+    return this.postAction<TableBackfillRequest>(TABLE_BACKFILL_URL, { from, to, includeIngested: false }, token);
+  }
+
+  /** At most five, in one instance's memory: an empty list is a run-less instance, not proof that none exists. */
+  async listTableBackfillRuns(
+    token: Token,
+    state?: TableBackfillState,
+  ): Promise<ServerActionResponse<TableBackfillRun[]>> {
+    const res = await this.getAction(TABLE_BACKFILL_LIST_URL(state), token);
+
+    if (!res.success) return res;
+
+    const runs = (res.response as TableBackfillRunsResponse | undefined)?.runs;
+    return Array.isArray(runs) ? { ...res, response: runs } : unreadableBody(res);
   }
 }

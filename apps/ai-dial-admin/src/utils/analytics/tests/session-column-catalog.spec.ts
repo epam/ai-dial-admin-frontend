@@ -136,10 +136,10 @@ describe('SESSIONS_TRACE_COLUMNS', () => {
     expect(fieldsOf(columns(withBuckets))).toContain('conversation_buckets.bucket');
   });
 
-  test('withholds a sensitive field, which the caller would be refused', () => {
-    const withSensitive = [...SCHEMA, sourceField('secret', { sensitive: true })];
+  test('offers a sensitive field, since the service reports it only to a caller who may read it', () => {
+    const withSensitive = [...SCHEMA, sourceField('user_email', { sensitive: true })];
 
-    expect(fieldsOf(columns(withSensitive))).not.toContain('secret');
+    expect(fieldsOf(columns(withSensitive))).toContain('user_email');
   });
 
   // The array test governs derivation into a column, not projection: `deployments` is an array too and is

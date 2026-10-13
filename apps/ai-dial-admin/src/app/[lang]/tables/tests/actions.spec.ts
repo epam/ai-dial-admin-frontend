@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
+import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { ConfigEntityOrigin, ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -17,6 +18,8 @@ import {
   getTable,
   getTableAccess,
   getTables,
+  listTableBackfillRuns,
+  startTableBackfill,
   updateTableAccess,
   getRowPolicies,
   putRowPolicy,
@@ -187,5 +190,43 @@ describe('Tables server actions', () => {
     const catalog = await getRoles();
 
     expect(catalog).toEqual({ roles: [], warnings: [EntitiesI18nKey.OptionListPartial] });
+  });
+
+  describe('table backfill', () => {
+    test('startTableBackfill passes the dates and the token to the client', async () => {
+      (analyticsDataApi.startTableBackfill as any).mockResolvedValue({ success: true });
+
+      await startTableBackfill('2026-09-01', '2026-09-30');
+
+      expect(analyticsDataApi.startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', TOKEN_MOCK);
+    });
+
+    test('startTableBackfill carries a refusal through untouched', async () => {
+      (analyticsDataApi.startTableBackfill as any).mockResolvedValue({
+        success: false,
+        errorHeader: 'backfill_conflict',
+        errorMessage: 'A run is in progress',
+      });
+
+      const res = await startTableBackfill('2026-09-01', '2026-09-30');
+
+      expect(res).toEqual({ success: false, errorHeader: 'backfill_conflict', errorMessage: 'A run is in progress' });
+    });
+
+    test('listTableBackfillRuns reads every retained run when no state is given', async () => {
+      (analyticsDataApi.listTableBackfillRuns as any).mockResolvedValue({ success: true, response: [] });
+
+      await listTableBackfillRuns();
+
+      expect(analyticsDataApi.listTableBackfillRuns).toHaveBeenCalledWith(TOKEN_MOCK, undefined);
+    });
+
+    test('listTableBackfillRuns passes the state filter', async () => {
+      (analyticsDataApi.listTableBackfillRuns as any).mockResolvedValue({ success: true, response: [] });
+
+      await listTableBackfillRuns(TableBackfillState.Running);
+
+      expect(analyticsDataApi.listTableBackfillRuns).toHaveBeenCalledWith(TOKEN_MOCK, TableBackfillState.Running);
+    });
   });
 });

@@ -10,6 +10,11 @@ import {
   PipelineListItem,
   PipelinesListFilters,
 } from '@/src/models/analytics/pipeline';
+import {
+  PipelineBackfillRequest,
+  PipelineBackfillRun,
+  PipelineBackfillState,
+} from '@/src/models/analytics/pipeline-backfill';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
 import {
@@ -166,4 +171,45 @@ export async function getTables(): Promise<AnalyticsTable[] | null> {
 
 export async function getTable(name: string): Promise<AnalyticsTable | null> {
   return (await analyticsDataApi.getTable(name, await token())).response ?? null;
+}
+
+/**
+ * Starts a backfill of one pipeline. Guarded like the rest of the runner
+ * surface, so with no host the console withholds the control instead of failing a request.
+ */
+export async function startPipelineBackfill(
+  name: string,
+  window?: PipelineBackfillRequest,
+): Promise<ServerActionResponse<PipelineBackfillRun>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.startBackfill(name, window, await token());
+}
+
+export async function listPipelineBackfills(
+  name: string,
+  limit: number,
+  state?: PipelineBackfillState,
+): Promise<ServerActionResponse<PipelineBackfillRun[]>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.listBackfills(name, limit, await token(), state);
+}
+
+export async function pausePipelineBackfill(runId: string): Promise<ServerActionResponse<PipelineBackfillRun>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.pauseBackfill(runId, await token());
+}
+
+export async function resumePipelineBackfill(runId: string): Promise<ServerActionResponse<PipelineBackfillRun>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.resumeBackfill(runId, await token());
+}
+
+export async function cancelPipelineBackfill(runId: string): Promise<ServerActionResponse<PipelineBackfillRun>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.cancelBackfill(runId, await token());
 }

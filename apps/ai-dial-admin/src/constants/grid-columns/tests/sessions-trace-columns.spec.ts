@@ -187,10 +187,10 @@ describe('sessions columns :: composition', () => {
     expect(columns().map((col) => col.field)).not.toContain(SessionsField.Traces);
   });
 
-  test('offers no column for a sensitive field, which the caller would be refused', () => {
+  test('offers a column for a sensitive field, since the service reports it only to a caller who may read it', () => {
     const withSensitive = [...ALL_FIELDS, field('secret', AnalyticsFieldType.String, 'response', { sensitive: true })];
 
-    expect(columns(withSensitive).map((col) => col.field)).not.toContain('secret');
+    expect(columns(withSensitive).map((col) => col.field)).toContain('secret');
   });
 
   test('offers no column for a request or response body, the entity reporting none', () => {

@@ -17,6 +17,7 @@ import {
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
+import { TableBackfillRun, TableBackfillStart, TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { ConfigEntityRow } from '@/src/models/dial/config-file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
@@ -86,6 +87,16 @@ export async function deleteRowPolicy(name: string, role: string): Promise<Serve
   const res = await analyticsDataApi.deleteRowPolicy(name, role, await token());
 
   return res.status === 404 ? { success: true } : res;
+}
+
+export async function startTableBackfill(from: string, to: string): Promise<ServerActionResponse<TableBackfillStart>> {
+  return analyticsDataApi.startTableBackfill(from, to, await token());
+}
+
+export async function listTableBackfillRuns(
+  state?: TableBackfillState,
+): Promise<ServerActionResponse<TableBackfillRun[]>> {
+  return analyticsDataApi.listTableBackfillRuns(await token(), state);
 }
 
 export async function getRoles(): Promise<AnalyticsRoleCatalog> {

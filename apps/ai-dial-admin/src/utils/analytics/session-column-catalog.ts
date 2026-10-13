@@ -108,8 +108,12 @@ export const columnProvenance = (fieldName: string): ColumnProvenance => {
 // projected on visibility rather than whether it is offered at all. Withholding the column instead would
 // hide a field the operator can legitimately ask for, at no saving — nothing is transferred for a column
 // nobody reveals.
+//
+// `sensitive` is not a test either: the service filters the schema by the caller's role, so a sensitive field
+// that arrived is one this caller may read, and withholding it again would hide it from exactly the role
+// that holds the right to see it.
 const isOfferable = (field: AnalyticsEntityField, consumed: Set<string>): boolean =>
-  !field.sensitive && !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name);
+  !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name);
 
 export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
   const consumed = consumedFields(curated);

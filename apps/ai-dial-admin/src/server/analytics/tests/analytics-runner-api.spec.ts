@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
+import { PipelineBackfillState } from '@/src/models/analytics/pipeline-backfill';
 import { DlqLane, DlqStage } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder } from '@/src/models/analytics/pipeline-groups';
 import { PauseOrigin, PipelineLane, PipelineRuntimeState } from '@/src/models/analytics/pipeline-runtime';
@@ -357,5 +358,116 @@ describe('Server :: AnalyticsRunnerApi', () => {
       expect.stringContaining('/v1/pipelines/retrieval-quality/groups/sess%20A%2F1/requeue'),
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  describe('pipeline backfill', () => {
+    const run = {
+      id: 'run-1',
+      pipeline_name: 'usage-live',
+      kind: 'backfill',
+      state: PipelineBackfillState.Running,
+      rows_done: 48120,
+      started_at: '2026-09-24T10:00:00Z',
+    };
+
+    test('startBackfill posts the window to the pipeline’s backfill path', async () => {
+      fetch.mockResponseOnce(JSON.stringify(run), { status: 202, ...JSON_HEADERS });
+
+      const res = await instance.startBackfill(
+        'usage live',
+        { from: '2026-09-13T23:59:59.999Z', to: '2026-09-21T23:59:59.999Z' },
+        TOKEN_MOCK,
+      );
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: run }));
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/pipelines/usage%20live/backfill'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ from: '2026-09-13T23:59:59.999Z', to: '2026-09-21T23:59:59.999Z' }),
+        }),
+      );
+    });
+
+    test('startBackfill sends no body for a full replay', async () => {
+      fetch.mockResponseOnce(JSON.stringify(run), { status: 202, ...JSON_HEADERS });
+
+      await instance.startBackfill('usage-live', undefined, TOKEN_MOCK);
+
+      const init = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
+
+      expect(init.method).toBe('POST');
+      expect(init.body).toBeUndefined();
+    });
+
+    test.each([
+      [404, 'not_found'],
+      [409, 'backfill_conflict'],
+      [503, 'pipeline_cache_cold'],
+    ])('startBackfill carries a %i refusal through', async (status, error) => {
+      fetch.mockResponseOnce(JSON.stringify({ status, error, message: 'refused' }), { status, ...JSON_HEADERS });
+
+      const res = await instance.startBackfill('usage-live', undefined, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: error, errorMessage: 'refused' }));
+    });
+
+    test('listBackfills narrows by pipeline and limit and unwraps the envelope', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [run] }), JSON_HEADERS);
+
+      const res = await instance.listBackfills('usage-live', 10, TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: [run] }));
+
+      const url = String(vi.mocked(fetch).mock.calls[0][0]);
+
+      expect(url).toContain('/v1/backfills?');
+      expect(url).toContain('pipeline_name=usage-live');
+      expect(url).toContain('limit=10');
+      expect(url).not.toContain('state=');
+    });
+
+    test('listBackfills can narrow by state', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [] }), JSON_HEADERS);
+
+      await instance.listBackfills('usage-live', 10, TOKEN_MOCK, PipelineBackfillState.Paused);
+
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('state=paused'), expect.anything());
+    });
+
+    test('listBackfills reports a body without the envelope as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+      const res = await instance.listBackfills('usage-live', 10, TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+    });
+
+    test.each([
+      ['pause', (api: AnalyticsRunnerApi) => api.pauseBackfill('run-1', TOKEN_MOCK)],
+      ['resume', (api: AnalyticsRunnerApi) => api.resumeBackfill('run-1', TOKEN_MOCK)],
+      ['cancel', (api: AnalyticsRunnerApi) => api.cancelBackfill('run-1', TOKEN_MOCK)],
+    ])('%s posts to the run’s verb path and returns the run', async (verb, act) => {
+      fetch.mockResponseOnce(JSON.stringify(run), JSON_HEADERS);
+
+      const res = await act(instance);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: run }));
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining(`/v1/backfills/run-1/${verb}`),
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    test('a verb the run’s state does not admit carries the service’s message', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ status: 409, error: 'conflict', message: 'run is done' }), {
+        status: 409,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.pauseBackfill('run-1', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, status: 409, errorMessage: 'run is done' }));
+    });
   });
 });

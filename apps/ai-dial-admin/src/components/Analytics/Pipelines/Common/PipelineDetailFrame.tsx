@@ -15,6 +15,10 @@ import { IconAlertTriangleFilled, IconPlayerPause, IconPlayerPlay } from '@table
 import { useRouter } from 'next/navigation';
 
 import { deletePipeline, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import BackfillDrawer from '@/src/components/Analytics/Common/BackfillSidebar/BackfillDrawer';
+import PipelineBackfillBanner from '@/src/components/Analytics/Pipelines/Backfill/PipelineBackfillBanner';
+import PipelineBackfillSidebar from '@/src/components/Analytics/Pipelines/Backfill/PipelineBackfillSidebar';
+import { usePipelineBackfillEntry } from '@/src/components/Analytics/Pipelines/Backfill/use-pipeline-backfill-entry';
 import PipelineAudit from '@/src/components/Analytics/Pipelines/PipelineAudit';
 import PipelineGroups from '@/src/components/Analytics/Pipelines/Groups/PipelineGroups';
 import PipelineRuntime from '@/src/components/Analytics/Pipelines/PipelineRuntime';
@@ -42,7 +46,7 @@ import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/
 import JsonToggle from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, BackfillI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -51,11 +55,12 @@ import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
-import { PipelineRuntimeStatus } from '@/src/models/analytics/pipeline-runtime';
+import { PipelineRuntimeStatus, RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
 import { ApplicationRoute } from '@/src/types/routes';
 import { auditTab, EntityViewTab, groupsTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { shouldShowPipelineBackfillBanner } from '@/src/utils/analytics/backfill';
 import { buildPipelineDto, toPipelineDraft } from '@/src/utils/analytics/pipeline-dto';
 
 type PipelineFormLike = PipelineFormState & { hasFieldErrors: boolean };
@@ -123,6 +128,16 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
   // reaches for the stop. See `isPauseOfferedFor`.
   const isPauseOffered = isPauseOfferedFor(runtime, pipeline.enabled, pipeline.kind);
   const isBehind = isGenerationBehind(runtime.view, pipeline.generation);
+
+  // A backfill is the runner's, so it is offered where the runtime is: to a full admin, for a pipeline the
+  // runner drives, once the runner has answered and is not absent. `NotHeld` still offers it — the runner's
+  // refusal to start is worth showing, and the history of earlier runs is still there to read.
+  const isBackfillAvailable =
+    isFullAdmin &&
+    isRunnerRead &&
+    runtime.outcome !== RuntimeReadOutcome.Unavailable &&
+    runtime.outcome !== RuntimeReadOutcome.Pending;
+  const backfill = usePipelineBackfillEntry({ pipelineName: pipeline.name, isAvailable: isBackfillAvailable });
 
   // A mark rather than a number. The kit's count badge is drawn in the accent, which reads as a
   // quantity worth noticing rather than as something broken, and it carries no hook to re-colour: its
@@ -353,6 +368,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
               className={classNames('flex flex-row items-center gap-3', isChangeBarShown && 'invisible')}
               inert={isChangeBarShown}
             >
+              {isBackfillAvailable && (
+                <Button variant={ButtonVariant.Neutral} label={t(BackfillI18nKey.Title)} onClick={backfill.open} />
+              )}
               <Button
                 variant={ButtonVariant.Danger}
                 appearance={ButtonAppearance.Outlined}
@@ -385,6 +403,18 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
           onClose={() => setIsDeletePromptOpen(false)}
         />
       )}
+
+      <BackfillDrawer isOpen={backfill.isOpen} onClose={backfill.close} title={t(BackfillI18nKey.Title)}>
+        <PipelineBackfillSidebar
+          pipelineName={pipeline.name}
+          // From the stored declaration, not the draft: a finished run reads Queued by what the pipeline is, and an
+          // unsaved edit does not change what the run did.
+          isGroupTrigger={pipeline.trigger?.kind === TriggerKind.Group}
+          // Read live, so resuming the pipeline offers Resume on a paused run without reopening the drawer.
+          isPipelinePaused={Boolean(pausedEntry)}
+          onRunsChange={backfill.onRunsChange}
+        />
+      </BackfillDrawer>
 
       {pause.isConfirmOpen && (
         <PausePipelinePopup
@@ -420,6 +450,11 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
           with everything else below the identity row while the document is on screen. */}
       {!isEditorEnabled && pausedEntry && (
         <PipelinePauseBanner pause={pausedEntry} isResuming={pause.isBusy} onResume={() => void pause.resume()} />
+      )}
+
+      {/* Beside the pause banner, and quiet where that one already explains: a run paused with its pipeline. */}
+      {!isEditorEnabled && backfill.activeRun && shouldShowPipelineBackfillBanner(backfill.activeRun) && (
+        <PipelineBackfillBanner run={backfill.activeRun} onOpen={backfill.open} />
       )}
 
       {!isEditorEnabled && <PipelineRuntimeAlerts pipeline={pipeline} />}
