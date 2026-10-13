@@ -17,17 +17,15 @@ import {
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
-import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
+import { CompareRun, HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, isMatchedCompareRow, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
@@ -40,8 +38,7 @@ interface Props {
 const HeatMapTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   colorDisplayMode,
   onColorDisplayModeChange: _onColorDisplayModeChange,
@@ -51,7 +48,6 @@ const HeatMapTab: FC<Props> = ({
   setHeatMapState,
 }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
 
   const [hasLoadError, setHasLoadError] = useState(false);
   const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
@@ -125,8 +121,8 @@ const HeatMapTab: FC<Props> = ({
 
   const allHeatMapRows = useMemo(() => {
     if (mergedRowData === null) return [];
-    return buildHeatMapRowsForMode(mergedRowData, colorDisplayMode);
-  }, [mergedRowData, colorDisplayMode]);
+    return buildHeatMapRowsForMode(mergedRowData, colorDisplayMode, runs);
+  }, [mergedRowData, colorDisplayMode, runs]);
 
   useLayoutEffect(() => {
     onAvailableMetricGroupsChange(getHeatMapGroupKeys(allHeatMapRows));
@@ -172,11 +168,9 @@ const HeatMapTab: FC<Props> = ({
       colorDisplayMode,
       expandedGroups,
       onToggleGroup,
-      primaryRunName,
-      comparedRunName,
-      theme: currentTheme,
+      runs,
     });
-  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName, currentTheme]);
+  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, runs]);
 
   const headerLabels = useMemo(
     () => (mergedRowData ? getHeatMapTestCaseHeaderLabels(mergedRowData) : []),

@@ -148,7 +148,7 @@ describe('CompareView', () => {
     renderCompareView();
 
     expect(screen.getByText('Runs.RunComparison')).toBeInTheDocument();
-    expect(screen.getByText('Runs.RunCompareVs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Runs.RunCompareFlip' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Runs.RunCompareAddRun' })).not.toBeInTheDocument();
 
     await waitFor(() => {
@@ -157,6 +157,25 @@ describe('CompareView', () => {
     });
 
     expect(getRunMock).toHaveBeenCalledWith('run-1');
+  });
+
+  test('flip button swaps tag order without changing the baseline or the url', async () => {
+    const user = userEvent.setup();
+    renderCompareView();
+
+    const primaryTag = await screen.findByRole('button', { name: 'Runs.RunComparePrimaryTagAria' });
+    const comparedTag = screen.getByRole('button', { name: 'Runs.RunCompareTagAria' });
+    expect(primaryTag.compareDocumentPosition(comparedTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+
+    expect(comparedTag.compareDocumentPosition(primaryTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Runs.RunComparePrimaryTagAria' })).toBeInTheDocument();
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareFlip' }));
+
+    expect(primaryTag.compareDocumentPosition(comparedTag) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('opens modal from secondary run tag click and updates url on confirm', async () => {

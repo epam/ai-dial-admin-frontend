@@ -24,6 +24,7 @@ import {
   buildRowDetailDisplayTree,
 } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
@@ -33,8 +34,7 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   row: CompareAnalyticsRow;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onClose: () => void;
   position: SidebarPosition;
   onSwitchDisplayMode: () => void;
@@ -53,8 +53,7 @@ interface Props {
 
 const CompareRowDetailPanel: FC<Props> = ({
   row,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onClose,
   position,
   onSwitchDisplayMode,
@@ -204,8 +203,7 @@ const CompareRowDetailPanel: FC<Props> = ({
               <CompareRowDetailPivotTable
                 key={rowSelectionId}
                 sections={displaySections}
-                primaryRunName={primaryRunName}
-                comparedRunName={comparedRunName}
+                runs={runs}
                 hasComparedMatch={hasComparedMatch}
                 showDiffsOnly={viewDifferencesOnly}
                 hideHighlights={hideHighlights}
@@ -216,8 +214,7 @@ const CompareRowDetailPanel: FC<Props> = ({
               <CompareRowDetailTable
                 key={rowSelectionId}
                 sections={displaySections}
-                primaryRunName={primaryRunName}
-                comparedRunName={comparedRunName}
+                runs={runs}
                 hasComparedMatch={hasComparedMatch}
                 showDiffsOnly={viewDifferencesOnly}
                 hideHighlights={hideHighlights}

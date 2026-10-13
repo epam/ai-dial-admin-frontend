@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { ComponentProps } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import Analytics from '../Analytics';
 
 const executeStructuredQueryMock = vi.fn();
@@ -84,13 +85,15 @@ const mockQueries = () => {
   });
 };
 
+const RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' });
+const FLIPPED_RUNS = getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-2', name: 'Run #315' }, true);
+
 const renderAnalytics = (overrides: Partial<ComponentProps<typeof Analytics>> = {}) =>
   render(
     <Analytics
       primaryRunId="run-1"
       comparedRunId="run-2"
-      primaryRunName="Run #316"
-      comparedRunName="Run #315"
+      runs={RUNS}
       onlyMatchingTestCases={false}
       primaryMatchedAnalytics={null}
       comparedMatchedAnalytics={null}
@@ -176,5 +179,16 @@ describe('Compare Summary :: Analytics', () => {
     expect(passedCard).toHaveTextContent('48');
     expect(passedCard).toHaveTextContent('—');
     expect(passedCard).not.toHaveTextContent('delta:-3');
+  });
+
+  test('lists the compared run first when flipped, keeping the delta measured against the baseline', async () => {
+    mockQueries();
+    renderAnalytics({ runs: FLIPPED_RUNS, primaryOverallScore: 0.812, comparedOverallScore: 0.265 });
+
+    const overallCard = await screen.findByRole('region', { name: 'Runs.OverallScore' });
+    const text = overallCard.textContent ?? '';
+    expect(text.indexOf('Run #315')).toBeLessThan(text.indexOf('Run #316'));
+    expect(text.indexOf('0.265')).toBeLessThan(text.indexOf('0.812'));
+    expect(within(overallCard).getByText('delta:-0.547')).toBeInTheDocument();
   });
 });

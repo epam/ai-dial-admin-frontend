@@ -7,6 +7,7 @@ import {
   FilterChangedEvent,
   GridApi,
   GridReadyEvent,
+  RowClassParams,
   RowClassRules,
   RowClickedEvent,
 } from 'ag-grid-community';
@@ -20,7 +21,11 @@ import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } fro
 import GridView from '@/src/components/Grid/GridView/GridView';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
 import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegend';
-import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
+import {
+  COMPARE_ROW_DIFF_CLASS,
+  COMPARE_ROW_DIFF_KIND_CLASS,
+  compareGridOptions,
+} from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
   buildComparePanelColumnTree,
   collectHiddenColIds,
@@ -29,11 +34,12 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import {
   countCompareDiffs,
+  getCompareRowFullDiffKind,
   hasCompareRowDiff,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
-import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
+import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import {
@@ -43,15 +49,13 @@ import {
   RESULT_FILTERS,
 } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
@@ -67,8 +71,7 @@ const DISPLAY_PANEL_CLASS_NAME =
 const ExecutionResultsTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   showDisplayPanel,
   onToggleDisplayPanel,
@@ -78,7 +81,6 @@ const ExecutionResultsTab: FC<Props> = ({
   setExecutionResultsState,
 }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const cellClickHandledRef = useRef(false);
@@ -102,10 +104,6 @@ const ExecutionResultsTab: FC<Props> = ({
   gridColDefsRef.current = gridColDefs;
 
   const errorText = t(RunsI18nKey.MetricFailedText);
-  const runNames = useMemo(
-    () => ({ primary: primaryRunName, secondary: comparedRunName }),
-    [primaryRunName, comparedRunName],
-  );
 
   useEffect(() => {
     if (results !== null) {
@@ -186,9 +184,9 @@ const ExecutionResultsTab: FC<Props> = ({
     return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), {
       hideHighlights,
       metricsSchema,
-      theme: currentTheme,
+      runs,
     });
-  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, currentTheme]);
+  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, runs]);
 
   const onCellClicked = useCallback(
     (event: CellClickedEvent<CompareAnalyticsRow>) => {
@@ -237,10 +235,10 @@ const ExecutionResultsTab: FC<Props> = ({
 
     const flatDefs = computedColDefs as ColDef[];
     setExecutionResultsState({
-      panelColDefs: buildComparePanelColumnTree(flatDefs, runNames, panelColDefsRef.current),
+      panelColDefs: buildComparePanelColumnTree(flatDefs, runs, panelColDefsRef.current),
       gridColDefs: preserveFlatColDefHideState(flatDefs, gridColDefsRef.current),
     });
-  }, [computedColDefs, runNames, setExecutionResultsState]);
+  }, [computedColDefs, runs, setExecutionResultsState]);
 
   const hiddenColIds = useMemo(() => collectHiddenColIds(gridColDefs), [gridColDefs]);
 
@@ -257,15 +255,24 @@ const ExecutionResultsTab: FC<Props> = ({
     [mergedRowData, hiddenColIds],
   );
 
-  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
-    () => ({
+  const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(() => {
+    const getFullDiffKind = (row?: CompareAnalyticsRow) =>
+      row && !hideHighlights ? getCompareRowFullDiffKind(row, { hiddenColIds }) : null;
+
+    return {
       'ag-active-detail-row': (params) => {
         if (!params.data || !selectedRow) return false;
         return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
       },
-    }),
-    [selectedRow],
-  );
+      [COMPARE_ROW_DIFF_CLASS]: (params) => getFullDiffKind(params.data) != null,
+      ...Object.fromEntries(
+        Object.entries(COMPARE_ROW_DIFF_KIND_CLASS).map(([kind, className]) => [
+          className,
+          (params: RowClassParams<CompareAnalyticsRow>) => getFullDiffKind(params.data) === kind,
+        ]),
+      ),
+    };
+  }, [selectedRow, hideHighlights, hiddenColIds]);
 
   const syncGridUiState = useCallback(
     (api: GridApi) => {

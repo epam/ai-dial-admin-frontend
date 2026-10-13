@@ -12,8 +12,10 @@ import {
   HEAT_MAP_HEADER_VERTICAL_FONT_SIZE,
   HEAT_MAP_HEADER_VERTICAL_LINE_HEIGHT,
 } from '@/src/components/Common/HeatMap/constants';
-import { shouldShowHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
-import { measureVerticalHeatMapHeaderLabelHeight } from '@/src/components/Common/HeatMap/utils/heat-map-layout';
+import {
+  measureVerticalHeatMapHeaderLabelHeight,
+  shouldUseHeatMapHorizontalLayout,
+} from '@/src/components/Common/HeatMap/utils/heat-map-layout';
 
 interface Props extends IHeaderParams {
   label?: string;
@@ -22,7 +24,7 @@ interface Props extends IHeaderParams {
 const HeatMapAxisHeader: FC<Props> = ({ displayName, label, column, api }) => {
   const headerLabel = label ?? displayName;
   const columnWidth = column?.getActualWidth() ?? 0;
-  const isHorizontal = shouldShowHeatMapCellValue(columnWidth);
+  const isHorizontal = shouldUseHeatMapHorizontalLayout(columnWidth);
 
   if (isHorizontal) {
     return (

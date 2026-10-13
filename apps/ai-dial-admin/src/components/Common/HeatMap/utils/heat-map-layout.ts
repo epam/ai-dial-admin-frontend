@@ -8,11 +8,14 @@ import {
   HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER,
   HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT,
   HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT,
+  HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH,
   HEAT_MAP_ROW_HEIGHT,
   HEAT_MAP_VALUE_COL_MIN_WIDTH,
   HEAT_MAP_VALUE_COL_PREFIX_TEST_CASE,
 } from '@/src/components/Common/HeatMap/constants';
-import { shouldShowHeatMapCellValue } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
+
+export const shouldUseHeatMapHorizontalLayout = (columnWidth: number): boolean =>
+  columnWidth >= HEAT_MAP_HORIZONTAL_LAYOUT_MIN_WIDTH;
 
 export const measureVerticalHeatMapHeaderLabelHeight = (label: string): number =>
   label.length * HEAT_MAP_HEADER_VERTICAL_CHAR_WIDTH + HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER;
@@ -78,10 +81,10 @@ export const applyHeatMapColumnWidths = (
 };
 
 export const resolveHeatMapRowHeight = (valueColumnWidth: number): number =>
-  shouldShowHeatMapCellValue(valueColumnWidth) ? HEAT_MAP_GROUP_ROW_HEIGHT : HEAT_MAP_ROW_HEIGHT;
+  shouldUseHeatMapHorizontalLayout(valueColumnWidth) ? HEAT_MAP_GROUP_ROW_HEIGHT : HEAT_MAP_ROW_HEIGHT;
 
 export const resolveHeatMapHeaderHeight = (valueColumnWidth: number, headerLabels: string[] = []): number => {
-  if (shouldShowHeatMapCellValue(valueColumnWidth)) {
+  if (shouldUseHeatMapHorizontalLayout(valueColumnWidth)) {
     return HEAT_MAP_HEADER_HEIGHT_HORIZONTAL;
   }
 

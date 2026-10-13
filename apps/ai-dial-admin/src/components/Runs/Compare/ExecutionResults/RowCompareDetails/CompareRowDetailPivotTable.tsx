@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { FC, Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
@@ -22,9 +22,12 @@ import { scrollPivotToField } from '@/src/components/Runs/Details/RowDetails/uti
 import {
   CompareDiffPivotPosition,
   getCompareDiffPivotCellProps,
+  getCompareDiffPivotPosition,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
-import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 import { SECTION_I18N } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import FullscreenDiffViewer from '@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer';
 import { DiffViewState } from '@/src/components/Runs/Details/BottomDrawer/models';
@@ -35,8 +38,7 @@ import { mergeClasses } from '@/src/utils/merge-classes';
 
 interface Props {
   sections: RowDetailSection[];
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   hasComparedMatch: boolean;
   showDiffsOnly: boolean;
   hideHighlights: boolean;
@@ -51,8 +53,7 @@ const VALUE_CELL_BASE =
 
 const CompareRowDetailPivotTable: FC<Props> = ({
   sections,
-  primaryRunName,
-  comparedRunName,
+  runs,
   hasComparedMatch,
   showDiffsOnly,
   hideHighlights,
@@ -63,9 +64,15 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
-  const onOpenDiff = useCallback((field: RowDetailField) => {
-    setDiffView({ fieldLabel: field.label, original: field.primaryRaw ?? '', modified: field.secondaryRaw ?? '' });
-  }, []);
+  const onOpenDiff = useCallback(
+    (field: RowDetailField) => {
+      const [original, modified] = [runs[0], runs[runs.length - 1]].map(
+        (run) => getRowDetailRunValue(field, run.slot).raw ?? '',
+      );
+      setDiffView({ fieldLabel: field.label, original, modified });
+    },
+    [runs],
+  );
 
   const onCloseDiff = useCallback(() => setDiffView(null), []);
 
@@ -78,12 +85,17 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
   const gridMinWidth = useMemo(() => getPivotGridMinWidth(columns), [columns]);
-  // minmax(0, 1fr), not bare 1fr, on the primary/secondary value rows: a bare fr track can't
+  // minmax(0, 1fr), not bare 1fr, on the run value rows: a bare fr track can't
   // shrink below its content's min-content height, so a long cell value would blow out the row
   // instead of scrolling inside PivotValueCell.
-  const gridTemplateRows = hasComparedMatch
-    ? 'auto auto minmax(0, 1fr) minmax(0, 1fr) auto'
-    : 'auto auto minmax(0, 1fr) minmax(0, 1fr)';
+  const gridTemplateRows = [
+    'auto',
+    'auto',
+    ...runs.map(() => 'minmax(0, 1fr)'),
+    ...(hasComparedMatch ? ['auto'] : []),
+  ].join(' ');
+  const getRunLabel = (run: CompareRun) =>
+    run.slot === CompareRunSlot.Secondary && !hasComparedMatch ? t(RunsI18nKey.RunCompareNoMatch) : run.name;
 
   useLayoutEffect(() => {
     scrollPivotToField(scrollContainerRef.current, focusFieldKey);
@@ -110,6 +122,32 @@ const CompareRowDetailPivotTable: FC<Props> = ({
         data-compare-diff={props['data-compare-diff']}
         onOpenFullscreen={() => onOpenDiff(field)}
       />
+    );
+  };
+
+  const renderRunRow = (run: CompareRun, position: CompareDiffPivotPosition) => {
+    const isMissing = run.slot === CompareRunSlot.Secondary && !hasComparedMatch;
+
+    return (
+      <Fragment key={run.slot}>
+        <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
+          <CompareRunIndexBadge runIndex={run.index} />
+          <DialEllipsisTooltip text={getRunLabel(run)} className="text-primary" />
+        </div>
+        {columns.map((column) => {
+          const key = `${run.slot}-${column.sectionKey}-${column.field.fieldKey}`;
+          if (isMissing) {
+            return (
+              <div key={key} className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}>
+                <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareNoMatch)}</span>
+              </div>
+            );
+          }
+
+          const { raw, isFailed } = getRowDetailRunValue(column.field, run.slot);
+          return renderValueCell(key, column.field, raw, isFailed, 'bg-layer-3', position);
+        })}
+      </Fragment>
     );
   };
 
@@ -153,49 +191,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
             </div>
           ))}
 
-          {/* Primary run row */}
-          <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
-            <CompareRunIndexBadge runIndex={RUN_COMPARE_PRIMARY_INDEX} />
-            <DialEllipsisTooltip text={primaryRunName} className="text-primary" />
-          </div>
-          {columns.map((column) =>
-            renderValueCell(
-              `primary-${column.sectionKey}-${column.field.fieldKey}`,
-              column.field,
-              column.field.primaryRaw,
-              column.field.primaryFailed ?? false,
-              'bg-layer-3',
-              'top',
-            ),
-          )}
-
-          {/* Secondary run row */}
-          <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
-            <CompareRunIndexBadge runIndex={RUN_COMPARE_SECONDARY_INDEX} />
-            <DialEllipsisTooltip
-              text={hasComparedMatch ? comparedRunName : t(RunsI18nKey.RunCompareNoMatch)}
-              className="text-primary"
-            />
-          </div>
-          {columns.map((column) =>
-            hasComparedMatch ? (
-              renderValueCell(
-                `secondary-${column.sectionKey}-${column.field.fieldKey}`,
-                column.field,
-                column.field.secondaryRaw,
-                column.field.secondaryFailed ?? false,
-                'bg-layer-3',
-                'bottom',
-              )
-            ) : (
-              <div
-                key={`secondary-${column.sectionKey}-${column.field.fieldKey}`}
-                className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}
-              >
-                <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareNoMatch)}</span>
-              </div>
-            ),
-          )}
+          {runs.map((run, index) => renderRunRow(run, getCompareDiffPivotPosition(index, runs.length)))}
 
           {/* Delta row */}
           {hasComparedMatch && (
@@ -229,8 +225,8 @@ const CompareRowDetailPivotTable: FC<Props> = ({
           fieldLabel={diffView.fieldLabel}
           original={diffView.original}
           modified={diffView.modified}
-          originalLabel={primaryRunName}
-          modifiedLabel={hasComparedMatch ? comparedRunName : t(RunsI18nKey.RunCompareNoMatch)}
+          originalLabel={getRunLabel(runs[0])}
+          modifiedLabel={getRunLabel(runs[runs.length - 1])}
           onClose={onCloseDiff}
         />
       )}

@@ -17,6 +17,9 @@ import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowD
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
+import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 import { mergeClasses } from '@/src/utils/merge-classes';
 import { IconMaximize } from '@tabler/icons-react';
 
@@ -28,6 +31,7 @@ interface Props {
   onOpenDiff: (row: RowDetailField) => void;
   openDiffLabel: string;
   hideHighlights: boolean;
+  runs: CompareRun[];
 }
 
 const diffCellDataAttr = (props: ReturnType<typeof getCompareDiffCellProps>) =>
@@ -41,18 +45,49 @@ const DetailRow: FC<Props> = ({
   onOpenDiff,
   openDiffLabel,
   hideHighlights,
+  runs,
 }) => {
-  const [primaryOverflow, setPrimaryOverflow] = useState(false);
-  const [secondaryOverflow, setSecondaryOverflow] = useState(false);
+  const [overflowBySlot, setOverflowBySlot] = useState<Record<CompareRunSlot, boolean>>({
+    [CompareRunSlot.Primary]: false,
+    [CompareRunSlot.Secondary]: false,
+  });
+  const onRunOverflowChange = (slot: CompareRunSlot, isOverflowing: boolean) =>
+    setOverflowBySlot((prev) => (prev[slot] === isOverflowing ? prev : { ...prev, [slot]: isOverflowing }));
 
   const diffKind = hideHighlights ? MetricDeltaKind.Empty : row.diffKind;
   const fieldProps = getCompareDiffCellProps(diffKind, 'field');
   const valueProps = getCompareDiffCellProps(diffKind, 'value');
   const deltaProps = getCompareDiffCellProps(diffKind, 'delta');
   const actionProps = getCompareDiffCellProps(diffKind, 'action');
-  const showOpenDiff = primaryOverflow || secondaryOverflow;
+  const showOpenDiff = Object.values(overflowBySlot).some(Boolean);
   const isStatusRow = row.fieldKey === EXECUTION_STATUS_FIELD_KEY && !row.isMetric;
   const isRightAligned = isRightAlignedRowDetailField(row);
+
+  const renderRunCell = (run: CompareRun) => {
+    const { raw, isFailed } = getRowDetailRunValue(row, run.slot);
+    const isMissing = run.slot === CompareRunSlot.Secondary && !hasComparedMatch;
+
+    return (
+      <div
+        key={run.slot}
+        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
+        {...diffCellDataAttr(valueProps)}
+      >
+        {isMissing && <span className="text-secondary dial-small-text">{noMatchLabel}</span>}
+        {!isMissing && isStatusRow && <StatusValue raw={raw} />}
+        {!isMissing && !isStatusRow && (
+          <FieldValue
+            raw={raw}
+            isFailed={isFailed}
+            isScoreIndicator={row.isScoreIndicator}
+            failedLabel={failedLabel}
+            isRightAligned={isRightAligned}
+            onOverflowChange={(isOverflowing) => onRunOverflowChange(run.slot, isOverflowing)}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="contents group">
@@ -69,44 +104,7 @@ const DetailRow: FC<Props> = ({
       >
         <DialEllipsisTooltip text={row.label} className="dial-small-text text-primary min-w-0" />
       </div>
-      <div
-        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
-        {...diffCellDataAttr(valueProps)}
-      >
-        {isStatusRow ? (
-          <StatusValue raw={row.primaryRaw} />
-        ) : (
-          <FieldValue
-            raw={row.primaryRaw}
-            isFailed={row.primaryFailed}
-            isScoreIndicator={row.isScoreIndicator}
-            failedLabel={failedLabel}
-            isRightAligned={isRightAligned}
-            onOverflowChange={setPrimaryOverflow}
-          />
-        )}
-      </div>
-      <div
-        className={mergeClasses(ROW_DETAIL_CELL_BASE, isRightAligned && 'text-right', valueProps.className)}
-        {...diffCellDataAttr(valueProps)}
-      >
-        {hasComparedMatch ? (
-          isStatusRow ? (
-            <StatusValue raw={row.secondaryRaw} />
-          ) : (
-            <FieldValue
-              raw={row.secondaryRaw}
-              isFailed={row.secondaryFailed}
-              isScoreIndicator={row.isScoreIndicator}
-              failedLabel={failedLabel}
-              isRightAligned={isRightAligned}
-              onOverflowChange={setSecondaryOverflow}
-            />
-          )
-        ) : (
-          <span className="text-secondary dial-small-text">{noMatchLabel}</span>
-        )}
-      </div>
+      {runs.map(renderRunCell)}
       <div
         className={mergeClasses(
           ROW_DETAIL_CELL_BASE,

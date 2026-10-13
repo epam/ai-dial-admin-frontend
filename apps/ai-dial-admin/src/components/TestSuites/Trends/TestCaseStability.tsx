@@ -13,7 +13,6 @@ import { useTestCaseStabilityData } from '@/src/components/TestSuites/Trends/use
 import { buildStabilityColumns } from '@/src/components/TestSuites/Trends/utils/build-stability-columns';
 import { formatTrendsRunsCountLabel } from '@/src/components/TestSuites/Trends/utils/trends-runs-count-label';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -23,7 +22,6 @@ interface Props {
 
 const TestCaseStability: FC<Props> = ({ runOrder, runCount }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
   const { matrix, isLoading } = useTestCaseStabilityData(runOrder);
 
   const labels = useMemo(
@@ -47,10 +45,9 @@ const TestCaseStability: FC<Props> = ({ runOrder, runCount }) => {
       testCaseColIds: matrix.testCaseColIds,
       headerLabels: matrix.headerLabels,
       cellMeta: matrix.cellMeta,
-      theme: currentTheme,
       labels,
     });
-  }, [matrix, currentTheme, labels]);
+  }, [matrix, labels]);
 
   const hasData = (matrix?.rows.length ?? 0) > 0 && (matrix?.testCaseColIds.length ?? 0) > 0;
 

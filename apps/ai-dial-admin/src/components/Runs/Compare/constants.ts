@@ -16,3 +16,8 @@ export const RUN_COMPARE_PRIMARY_INDEX = '1';
 export const RUN_COMPARE_SECONDARY_INDEX = '2';
 
 export const formatCompareRunIndexHeader = (runIndex: string) => `[${runIndex}]`;
+
+export enum CompareRunEdge {
+  Start = 'start',
+  End = 'end',
+}

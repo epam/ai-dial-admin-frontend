@@ -13,8 +13,7 @@ const absoluteTooltip = {
   runLabel: '[2] Run#315',
   valueRow: {
     value: '8.120',
-    backgroundColor: '#32640b',
-    borderColor: '#30e070',
+    className: 'bg-score-abs-11 border-score-abs-11',
   },
   valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
 };
@@ -25,8 +24,7 @@ const deltaTooltip = {
   input: 'Equality check',
   valueRow: {
     value: '+0.950',
-    backgroundColor: '#32640b',
-    borderColor: '#30e070',
+    className: 'bg-score-delta-p4 border-score-delta-p4',
   },
   valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
 };
@@ -90,8 +88,7 @@ describe('HeatMapCellTooltip', () => {
           valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
           valueRow: {
             value: '0',
-            backgroundColor: '#32640b',
-            borderColor: '#30e070',
+            className: 'bg-score-delta-p4 border-score-delta-p4',
           },
         }}
         {...tooltipParams}

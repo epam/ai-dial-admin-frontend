@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import { Run } from '@/src/models/evaluation/run';
 import SummaryOverviewTab from '../SummaryOverviewTab';
@@ -52,8 +53,7 @@ const renderTab = (onlyMatchingTestCases = true) =>
     <SummaryOverviewTab
       primaryRunId="run-1"
       comparedRunId="run-2"
-      primaryRunName="Run #850"
-      comparedRunName="Run #851"
+      runs={getCompareRuns({ id: 'run-1', name: 'Run #850' }, { id: 'run-2', name: 'Run #851' })}
       onlyMatchingTestCases={onlyMatchingTestCases}
       summaryState={{ selectedStatistic: null, selectedDistributionMetricName: null }}
       setSummaryState={vi.fn()}

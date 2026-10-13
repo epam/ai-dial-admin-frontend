@@ -7,6 +7,7 @@ import ExecutionResultsTab from '@/src/components/Runs/Compare/ExecutionResults/
 import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import {
+  CompareRun,
   ExecutionResultsTabUiState,
   HeatMapTabUiState,
   SummaryOverviewTabUiState,
@@ -18,8 +19,7 @@ interface Props {
   activeTab: CompareViewTab;
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
@@ -42,8 +42,7 @@ const CompareTabsContent: FC<Props> = ({
   activeTab,
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   colorDisplayMode,
   onColorDisplayModeChange,
@@ -66,8 +65,7 @@ const CompareTabsContent: FC<Props> = ({
         <SummaryOverviewTab
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onlyMatchingTestCases={onlyMatchingTestCases}
           summaryState={summaryState}
           setSummaryState={setSummaryState}
@@ -77,8 +75,7 @@ const CompareTabsContent: FC<Props> = ({
         <HeatMapTab
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onlyMatchingTestCases={onlyMatchingTestCases}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
@@ -92,8 +89,7 @@ const CompareTabsContent: FC<Props> = ({
         <ExecutionResultsTab
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
+          runs={runs}
           onlyMatchingTestCases={onlyMatchingTestCases}
           showDisplayPanel={showDisplayPanel}
           onToggleDisplayPanel={onToggleDisplayPanel}

@@ -195,20 +195,112 @@ const textColorsToRemove = {
   'controls-disable': 'var(--controls-text-disable, #ACB3C3)',
 };
 
+/**
+ * Score-cell palette (`Common/ScoreCell`) — one swatch per bucket of the "absolute" 0.00-1.00 score
+ * scale (`abs-00`…`abs-11`, red to green, `abs-00`/`abs-11` the exact-0/exact-1 edge buckets) and the
+ * "delta" -1.00..+1.00 scale (`delta-n4`…`delta-n1` negative, `delta-p1`…`delta-p4` positive).
+ * Source: Figma "DIAL Data Visualization" file, "UI Colors: Heat Map - Absolute values" /
+ * "- Delta" frames (node 62:572 / 72:409), pulled via the Figma MCP's variable defs — not
+ * hand-transcribed. Dark Mode values are the fallback here, matching every other token in this file.
+ * Per-theme values come from the themes service (`ai-dial-chat-themes` config.json) like every other
+ * token: `bg-score-*` / `text-score-*` / `stroke-score-*`, applied as `--<key>` by `applyThemeColors`.
+ */
+const scoreCellBackgroundColors = {
+  'score-abs-00': 'var(--bg-score-abs-00, #75010180)',
+  'score-abs-01': 'var(--bg-score-abs-01, #69100b80)',
+  'score-abs-02': 'var(--bg-score-abs-02, #6c210d80)',
+  'score-abs-03': 'var(--bg-score-abs-03, #59210a80)',
+  'score-abs-04': 'var(--bg-score-abs-04, #5f2b1880)',
+  'score-abs-05': 'var(--bg-score-abs-05, #53320e80)',
+  'score-abs-06': 'var(--bg-score-abs-06, #362a0e80)',
+  'score-abs-07': 'var(--bg-score-abs-07, #403d1280)',
+  'score-abs-08': 'var(--bg-score-abs-08, #22351380)',
+  'score-abs-09': 'var(--bg-score-abs-09, #0d372680)',
+  'score-abs-10': 'var(--bg-score-abs-10, #022d1c80)',
+  'score-abs-11': 'var(--bg-score-abs-11, #01361180)',
+  'score-delta-n4': 'var(--bg-score-delta-n4, #75010180)',
+  'score-delta-n3': 'var(--bg-score-delta-n3, #6c210d80)',
+  'score-delta-n2': 'var(--bg-score-delta-n2, #48171980)',
+  'score-delta-n1': 'var(--bg-score-delta-n1, #2b0f0480)',
+  'score-delta-p1': 'var(--bg-score-delta-p1, #1e2a1680)',
+  'score-delta-p2': 'var(--bg-score-delta-p2, #283f1680)',
+  'score-delta-p3': 'var(--bg-score-delta-p3, #30511b80)',
+  'score-delta-p4': 'var(--bg-score-delta-p4, #32640b80)',
+};
+
+const scoreCellTextColors = {
+  'score-abs-00': 'var(--text-score-abs-00, #ff4e50)',
+  'score-abs-01': 'var(--text-score-abs-01, #f26b5b)',
+  'score-abs-02': 'var(--text-score-abs-02, #e5764a)',
+  'score-abs-03': 'var(--text-score-abs-03, #e08c3f)',
+  'score-abs-04': 'var(--text-score-abs-04, #d9a638)',
+  'score-abs-05': 'var(--text-score-abs-05, #d4be3a)',
+  'score-abs-06': 'var(--text-score-abs-06, #b8c94a)',
+  'score-abs-07': 'var(--text-score-abs-07, #7ec96b)',
+  'score-abs-08': 'var(--text-score-abs-08, #4ecba8)',
+  'score-abs-09': 'var(--text-score-abs-09, #4ec5c5)',
+  'score-abs-10': 'var(--text-score-abs-10, #4dc87a)',
+  'score-abs-11': 'var(--text-score-abs-11, #30e070)',
+  'score-delta-n4': 'var(--text-score-delta-n4, #ff4e50)',
+  'score-delta-n3': 'var(--text-score-delta-n3, #f26b5b)',
+  'score-delta-n2': 'var(--text-score-delta-n2, #e5764a)',
+  'score-delta-n1': 'var(--text-score-delta-n1, #a57a1d)',
+  'score-delta-p1': 'var(--text-score-delta-p1, #9aa63c)',
+  'score-delta-p2': 'var(--text-score-delta-p2, #67a455)',
+  'score-delta-p3': 'var(--text-score-delta-p3, #4dc87a)',
+  'score-delta-p4': 'var(--text-score-delta-p4, #30e070)',
+};
+
+const scoreCellBorderColors = {
+  'score-abs-00': 'var(--stroke-score-abs-00, #ff4e50)',
+  'score-abs-01': 'var(--stroke-score-abs-01, #f26b5b)',
+  'score-abs-02': 'var(--stroke-score-abs-02, #e5764a)',
+  'score-abs-03': 'var(--stroke-score-abs-03, #e08c3f)',
+  'score-abs-04': 'var(--stroke-score-abs-04, #d9a638)',
+  'score-abs-05': 'var(--stroke-score-abs-05, #d4be3a)',
+  'score-abs-06': 'var(--stroke-score-abs-06, #b8c94a)',
+  'score-abs-07': 'var(--stroke-score-abs-07, #7ec96b)',
+  'score-abs-08': 'var(--stroke-score-abs-08, #4ecba8)',
+  'score-abs-09': 'var(--stroke-score-abs-09, #4ec5c5)',
+  'score-abs-10': 'var(--stroke-score-abs-10, #4dc87a)',
+  'score-abs-11': 'var(--stroke-score-abs-11, #30e070)',
+  // Delta's most-negative bucket is the one case where border and text diverge in Dark Mode
+  // (border uses Red/800, text uses the brighter Red/600) — every other bucket matches its text color.
+  'score-delta-n4': 'var(--stroke-score-delta-n4, #eb503e)',
+  'score-delta-n3': 'var(--stroke-score-delta-n3, #f26b5b)',
+  'score-delta-n2': 'var(--stroke-score-delta-n2, #e5764a)',
+  'score-delta-n1': 'var(--stroke-score-delta-n1, #a57a1d)',
+  'score-delta-p1': 'var(--stroke-score-delta-p1, #9aa63c)',
+  'score-delta-p2': 'var(--stroke-score-delta-p2, #67a455)',
+  'score-delta-p3': 'var(--stroke-score-delta-p3, #4dc87a)',
+  'score-delta-p4': 'var(--stroke-score-delta-p4, #30e070)',
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
+  safelist: [{ pattern: /^(bg|text|border)-score-(abs-(0[0-9]|1[01])|delta-[np][1-4])$/ }],
   theme: {
-    backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove },
-    borderColor: { ...borderColors, ...borderColorsToRemove },
-    stroke: { ...borderColors, ...borderColorsToRemove },
+    backgroundColor: { ...backgroundsColors, ...backgroundsColorsToRemove, ...scoreCellBackgroundColors },
+    borderColor: {
+      ...borderColors,
+      ...borderColorsToRemove,
+      ...scoreCellBorderColors,
+    },
+    stroke: { ...borderColors, ...borderColorsToRemove, ...scoreCellBorderColors },
     // SVG fills paint surfaces (a tooltip arrow, a chart area), so the fill scale
     // follows the background tokens the way `stroke` follows the border ones.
-    fill: { none: 'none', current: 'currentColor', ...backgroundsColors, ...backgroundsColorsToRemove },
+    fill: {
+      none: 'none',
+      current: 'currentColor',
+      ...backgroundsColors,
+      ...backgroundsColorsToRemove,
+      ...scoreCellBackgroundColors,
+    },
     divideColor: { ...borderColors, ...borderColorsToRemove },
     placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...textColorsToRemove },
+    textColor: { ...textColors, ...textColorsToRemove, ...scoreCellTextColors },
     gradientColorStops: { ...backgroundsColors, ...backgroundsColorsToRemove },
 
     extend: {
@@ -219,7 +311,11 @@ module.exports = {
         desktop: { min: '1280px', max: '2559px' },
         large_desktop: { min: '2560px' },
       },
-      outlineColor: { ...borderColors, ...borderColorsToRemove },
+      outlineColor: {
+        ...borderColors,
+        ...borderColorsToRemove,
+        ...scoreCellBorderColors,
+      },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #161B2D4D)',
         xs: `0 1px 4px 0 ${shadowColors['xs-1']}, 0 1px 2px 0 ${shadowColors['xs-2']}`,

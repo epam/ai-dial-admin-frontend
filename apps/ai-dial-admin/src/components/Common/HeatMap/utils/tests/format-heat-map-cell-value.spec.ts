@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Common/HeatMap/constants';
+import { HEAT_MAP_VALUE_TIERS } from '@/src/components/Common/HeatMap/constants';
 import {
   formatHeatMapCellValue,
   formatHeatMapCellValueForMode,
   formatHeatMapDeltaCellValue,
-  shouldShowHeatMapCellValue,
+  resolveHeatMapValueTier,
 } from '@/src/components/Common/HeatMap/utils/format-heat-map-cell-value';
 
 describe('formatHeatMapCellValue', () => {
@@ -36,14 +36,38 @@ describe('formatHeatMapCellValueForMode', () => {
   });
 });
 
-describe('shouldShowHeatMapCellValue', () => {
-  test('shows value text when column is wide enough', () => {
-    expect(shouldShowHeatMapCellValue(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)).toBe(true);
-    expect(shouldShowHeatMapCellValue(HEAT_MAP_VALUE_TEXT_MIN_WIDTH + 1)).toBe(true);
+describe('resolveHeatMapValueTier', () => {
+  const [defaultTier, mediumTier, smallTier] = HEAT_MAP_VALUE_TIERS;
+
+  test.each([
+    { isDeltaMode: false, minWidth: (t: typeof defaultTier) => t.minWidthAbsolute },
+    { isDeltaMode: true, minWidth: (t: typeof defaultTier) => t.minWidthDelta },
+  ])('steps down at each tier boundary (isDeltaMode: $isDeltaMode)', ({ isDeltaMode, minWidth }) => {
+    expect(resolveHeatMapValueTier(minWidth(defaultTier), isDeltaMode)).toBe(defaultTier);
+    expect(resolveHeatMapValueTier(minWidth(defaultTier) - 1, isDeltaMode)).toBe(mediumTier);
+    expect(resolveHeatMapValueTier(minWidth(mediumTier), isDeltaMode)).toBe(mediumTier);
+    expect(resolveHeatMapValueTier(minWidth(mediumTier) - 1, isDeltaMode)).toBe(smallTier);
+    expect(resolveHeatMapValueTier(minWidth(smallTier), isDeltaMode)).toBe(smallTier);
+    expect(resolveHeatMapValueTier(minWidth(smallTier) - 1, isDeltaMode)).toBeNull();
   });
 
-  test('hides value text when column is too narrow', () => {
-    expect(shouldShowHeatMapCellValue(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)).toBe(false);
-    expect(shouldShowHeatMapCellValue(20)).toBe(false);
+  test('returns the default tier for any wider column', () => {
+    expect(resolveHeatMapValueTier(500, false)).toBe(defaultTier);
+  });
+
+  test('returns null for the minimum column width', () => {
+    expect(resolveHeatMapValueTier(14, false)).toBeNull();
+  });
+
+  test('delta mode needs more width than absolute mode for the same tier', () => {
+    expect(resolveHeatMapValueTier(defaultTier.minWidthAbsolute, false)).toBe(defaultTier);
+    expect(resolveHeatMapValueTier(defaultTier.minWidthAbsolute, true)).toBe(mediumTier);
+  });
+
+  test('tiers are ordered from the largest text to the smallest', () => {
+    HEAT_MAP_VALUE_TIERS.slice(1).forEach((tier, index) => {
+      expect(tier.minWidthAbsolute).toBeLessThan(HEAT_MAP_VALUE_TIERS[index].minWidthAbsolute);
+      expect(tier.minWidthDelta).toBeLessThan(HEAT_MAP_VALUE_TIERS[index].minWidthDelta);
+    });
   });
 });

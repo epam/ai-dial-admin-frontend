@@ -18,7 +18,9 @@ const CompareRunIndexHeader: FC<Props> = ({ runIndex, label, isRightAligned }) =
   <div
     className={classNames(
       'flex items-center size-full',
-      label ? classNames('gap-1 min-w-0', isRightAligned && 'justify-end') : 'justify-center',
+      label && 'gap-1 min-w-0',
+      isRightAligned && 'justify-end',
+      !label && !isRightAligned && 'justify-center',
     )}
   >
     <CompareRunIndexBadge runIndex={runIndex} />

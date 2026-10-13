@@ -15,7 +15,9 @@ import {
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import { getCompareMetricStatCards } from '@/src/components/Runs/Compare/Summary/utils';
+import { getCompareMetricStatCards, toCompareCardItems } from '@/src/components/Runs/Compare/Summary/utils';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
+import { CompareRun } from '@/src/components/Runs/Compare/models';
 import {
   DISTRIBUTION_STAT_CARD_CLASS,
   DISTRIBUTION_STAT_CARDS_GRID_CLASS,
@@ -29,8 +31,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   metricOptions: MetricOption[];
   primaryMetricScores: MetricScoresData | null;
   comparedMetricScores: MetricScoresData | null;
@@ -47,8 +48,7 @@ const EMPTY_EXCLUDE_EVAL_SUMMARY_IDS: string[] = [];
 const DistributionSection: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   metricOptions,
   primaryMetricScores,
   comparedMetricScores,
@@ -127,14 +127,21 @@ const DistributionSection: FC<Props> = ({
     if (!selectedMetricName) {
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.SelectMetricToSeeDistribution)}</p>;
     }
+    const valuesBySlot = {
+      [CompareRunSlot.Primary]: primaryValues ?? [],
+      [CompareRunSlot.Secondary]: comparedValues ?? [],
+    };
+    const [histogramValues, histogramCompareValues] = runs.map((run) => valuesBySlot[run.slot]);
+    const [valueSetLabel, compareValueSetLabel] = runs.map((run) => run.name);
+
     return (
       <div className="flex flex-col gap-4 [&_[data-histogram-y-axis]]:min-w-4">
         <DialAnalyticsHistogram
           title=""
-          values={primaryValues ?? []}
-          compareValues={comparedValues ?? []}
-          valueSetLabel={primaryRunName}
-          compareValueSetLabel={comparedRunName}
+          values={histogramValues}
+          compareValues={histogramCompareValues}
+          valueSetLabel={valueSetLabel}
+          compareValueSetLabel={compareValueSetLabel}
           valueTitle={t(RunsI18nKey.DistributionValueTitle)}
           isLoading={isLoading || primaryValues === null || comparedValues === null}
         />
@@ -148,10 +155,9 @@ const DistributionSection: FC<Props> = ({
                   variant={AnalyticsCardVariant.Compact}
                   title={card.name}
                   delta={delta.kind === MetricDeltaKind.Changed ? delta.value : undefined}
-                  compareValues={[
-                    { title: primaryRunName, value: formatValue(card.primaryValue) },
-                    { title: comparedRunName, value: formatValue(card.comparedValue) },
-                  ]}
+                  compareValues={toCompareCardItems(runs, (run) =>
+                    formatValue(run.slot === CompareRunSlot.Primary ? card.primaryValue : card.comparedValue),
+                  )}
                   className={DISTRIBUTION_STAT_CARD_CLASS}
                 />
               );

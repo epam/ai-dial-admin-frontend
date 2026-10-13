@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
+import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
 
 import ExecutionResultsTab from '../ExecutionResultsTab';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
@@ -26,8 +27,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 const defaultRunProps = {
-  primaryRunName: 'Run #316',
-  comparedRunName: 'Run #317',
+  runs: getCompareRuns({ id: 'run-1', name: 'Run #316' }, { id: 'run-sibling', name: 'Run #317' }),
   onlyMatchingTestCases: false,
 };
 

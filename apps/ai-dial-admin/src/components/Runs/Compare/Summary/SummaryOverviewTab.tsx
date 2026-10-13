@@ -9,7 +9,7 @@ import DistributionSection from '@/src/components/Runs/Compare/Summary/Distribut
 import Header from '@/src/components/Runs/Compare/Summary/Header';
 import MetricScoresSection from '@/src/components/Runs/Compare/Summary/MetricScoresSection';
 import { useSummaryOverviewData } from '@/src/components/Runs/Compare/Summary/use-summary-overview-data';
-import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
+import { CompareRun, SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
 import { SUMMARY_PANELS_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { hasOverallScoreThreshold } from '@/src/components/Runs/Summary/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -18,8 +18,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  primaryRunName: string;
-  comparedRunName: string;
+  runs: CompareRun[];
   onlyMatchingTestCases: boolean;
   summaryState: SummaryOverviewTabUiState;
   setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
@@ -28,8 +27,7 @@ interface Props {
 const SummaryOverviewTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  primaryRunName,
-  comparedRunName,
+  runs,
   onlyMatchingTestCases,
   summaryState,
   setSummaryState,
@@ -76,19 +74,12 @@ const SummaryOverviewTab: FC<Props> = ({
   return (
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
       <div className="flex shrink-0 flex-col gap-8">
-        <Header
-          primaryRun={primaryRun}
-          comparedRun={comparedRun}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          testSuite={testSuite}
-        />
+        <Header primaryRun={primaryRun} comparedRun={comparedRun} runs={runs} testSuite={testSuite} />
         {!hasNoMatchingTestCases && (
           <Analytics
             primaryRunId={primaryRunId}
             comparedRunId={comparedRunId}
-            primaryRunName={primaryRunName}
-            comparedRunName={comparedRunName}
+            runs={runs}
             onlyMatchingTestCases={onlyMatchingTestCases}
             primaryMatchedAnalytics={primaryMatchedAnalytics}
             comparedMatchedAnalytics={comparedMatchedAnalytics}
@@ -108,8 +99,7 @@ const SummaryOverviewTab: FC<Props> = ({
           <MetricScoresSection
             primaryData={enrichedPrimaryScores}
             comparedData={enrichedComparedScores}
-            primaryRunName={primaryRunName}
-            comparedRunName={comparedRunName}
+            runs={runs}
             selectedStatistic={summaryState.selectedStatistic}
             onSelectStatistic={onSelectStatistic}
             onSelectMetric={onSelectDistributionMetric}
@@ -117,8 +107,7 @@ const SummaryOverviewTab: FC<Props> = ({
           <DistributionSection
             primaryRunId={primaryRunId}
             comparedRunId={comparedRunId}
-            primaryRunName={primaryRunName}
-            comparedRunName={comparedRunName}
+            runs={runs}
             metricOptions={metricOptions}
             primaryMetricScores={enrichedPrimaryScores}
             comparedMetricScores={enrichedComparedScores}

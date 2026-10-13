@@ -5,19 +5,9 @@ import { FC } from 'react';
 import classNames from 'classnames';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
-import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
-import {
-  ACCURACY_THRESHOLDS,
-  DELTA_SCALE_THRESHOLDS,
-  getDeltaNegativeColorMap,
-  getDeltaPositiveColorMap,
-} from './constants';
-import {
-  getAccuracyHeatCellStyleFromColors,
-  getAccuracyHeatCellStyleFromThreshold,
-  getDeltaNeutralHeatCellStyle,
-} from './utils';
+import { ABSOLUTE_SCORE_BUCKET_KEYS, DELTA_SCORE_BUCKET_KEYS } from '@/src/components/Common/ScoreCell/constants';
+import { getScoreCellBucketClasses } from '@/src/components/Common/ScoreCell/utils';
 
 export enum ColorScaleVariant {
   Default = 'default',
@@ -30,24 +20,13 @@ interface Props {
 }
 
 const COMPACT_SEGMENT_WIDTH = 52;
-const COMPACT_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * ACCURACY_THRESHOLDS.length;
-const DELTA_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * DELTA_SCALE_THRESHOLDS.length;
-
-const getDeltaSegmentStyle = (threshold: number, theme: string) => {
-  if (threshold === 0) {
-    return getDeltaNeutralHeatCellStyle();
-  }
-
-  if (threshold < 0) {
-    return getAccuracyHeatCellStyleFromColors(getDeltaNegativeColorMap(theme)[threshold]);
-  }
-
-  return getAccuracyHeatCellStyleFromColors(getDeltaPositiveColorMap(theme)[threshold]);
-};
+const DEFAULT_SEGMENT_WIDTH = 70;
+const COMPACT_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * ABSOLUTE_SCORE_BUCKET_KEYS.length;
+const DELTA_SEGMENT_COUNT = DELTA_SCORE_BUCKET_KEYS.length + 1; // +1 for the neutral gap at 0
+const DELTA_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * DELTA_SEGMENT_COUNT;
 
 const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
   const t = useI18n();
-  const { currentTheme } = useTheme();
   const isCompact = variant === ColorScaleVariant.Compact;
   const isDelta = variant === ColorScaleVariant.Delta;
 
@@ -55,22 +34,38 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
     return (
       <div className="inline-flex flex-col gap-0.5 w-[468px]" data-variant={variant}>
         <div className="flex">
-          {DELTA_SCALE_THRESHOLDS.map((threshold) => (
-            <div
-              key={threshold}
-              className="h-2"
-              style={{
-                width: COMPACT_SEGMENT_WIDTH,
-                ...getDeltaSegmentStyle(threshold, currentTheme),
-              }}
-            />
-          ))}
+          {DELTA_SCORE_BUCKET_KEYS.slice(0, DELTA_SCORE_BUCKET_KEYS.length / 2).map((bucketKey) => {
+            const classes = getScoreCellBucketClasses(bucketKey);
+            return (
+              <div
+                key={bucketKey}
+                className={classNames('h-2 border-r border-b', classes?.background, classes?.border)}
+                style={{ width: COMPACT_SEGMENT_WIDTH }}
+              />
+            );
+          })}
+          <div
+            key="neutral"
+            className="h-2 bg-layer-2 border-r border-b border-tertiary"
+            style={{ width: COMPACT_SEGMENT_WIDTH }}
+          />
+          {DELTA_SCORE_BUCKET_KEYS.slice(DELTA_SCORE_BUCKET_KEYS.length / 2).map((bucketKey) => {
+            const classes = getScoreCellBucketClasses(bucketKey);
+
+            return (
+              <div
+                key={bucketKey}
+                className={classNames('h-2 border-r border-b', classes?.background, classes?.border)}
+                style={{ width: COMPACT_SEGMENT_WIDTH }}
+              />
+            );
+          })}
         </div>
 
         <div className="flex dial-tiny-text" style={{ width: DELTA_BAR_WIDTH }}>
-          <span className="text-primary flex-1">-1</span>
+          <span className="text-score-delta-n4 flex-1">-1</span>
           <span className="text-secondary flex-1 text-center">0</span>
-          <span className="text-primary flex-1 text-right">+1</span>
+          <span className="text-score-delta-p4 flex-1 text-right">+1</span>
         </div>
       </div>
     );
@@ -78,7 +73,7 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
 
   return (
     <div
-      className={classNames('inline-flex flex-col gap-0.5', isCompact ? 'w-[520px]' : 'w-[700px]')}
+      className={classNames('inline-flex flex-col gap-0.5', isCompact ? 'w-[624px]' : 'w-[840px]')}
       data-variant={variant}
     >
       {!isCompact && (
@@ -89,44 +84,23 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
       )}
 
       <div className="flex">
-        {ACCURACY_THRESHOLDS.map((threshold) => (
-          <div
-            key={threshold}
-            className={classNames(isCompact ? 'h-2' : 'h-2', isCompact ? `w-[${COMPACT_SEGMENT_WIDTH}px]` : 'w-[70px]')}
-            style={{
-              width: isCompact ? COMPACT_SEGMENT_WIDTH : 70,
-              ...getAccuracyHeatCellStyleFromThreshold(threshold, currentTheme),
-            }}
-          />
-        ))}
+        {ABSOLUTE_SCORE_BUCKET_KEYS.map((bucketKey) => {
+          const classes = getScoreCellBucketClasses(bucketKey);
+
+          return (
+            <div
+              key={bucketKey}
+              className={classNames('h-2 border-r border-b', classes?.background, classes?.border)}
+              style={{ width: isCompact ? COMPACT_SEGMENT_WIDTH : DEFAULT_SEGMENT_WIDTH }}
+            />
+          );
+        })}
       </div>
 
-      <div className="flex" style={isCompact ? { width: COMPACT_BAR_WIDTH } : undefined}>
-        {ACCURACY_THRESHOLDS.map((threshold, index) =>
-          index === 0 ? (
-            <span
-              key={threshold}
-              className={classNames(
-                'text-secondary flex justify-between',
-                isCompact ? 'dial-tiny-text flex-1' : 'w-[70px] text-sm',
-              )}
-            >
-              <span className={isCompact ? 'text-primary' : undefined}>0</span>
-              <span>{threshold.toFixed(1)}</span>
-            </span>
-          ) : (
-            <span
-              key={threshold}
-              className={classNames(
-                'text-right text-secondary',
-                isCompact ? 'dial-tiny-text flex-1' : 'w-[70px] text-sm',
-                index === ACCURACY_THRESHOLDS.length - 1 && isCompact ? 'text-primary' : undefined,
-              )}
-            >
-              {index === ACCURACY_THRESHOLDS.length - 1 ? '1' : threshold.toFixed(1)}
-            </span>
-          ),
-        )}
+      <div className="flex dial-tiny-text" style={isCompact ? { width: COMPACT_BAR_WIDTH } : undefined}>
+        <span className="text-score-abs-00 flex-1 pl-2">0</span>
+        <span className="text-score-abs-06 flex-1 text-center">0.5</span>
+        <span className="text-score-abs-11 flex-1 text-right pr-2">1</span>
       </div>
     </div>
   );
