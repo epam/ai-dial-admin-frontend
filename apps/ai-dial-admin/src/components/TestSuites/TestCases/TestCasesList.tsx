@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialEllipsisTooltip, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
+import { DialConfirmationPopup, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -61,6 +60,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import DatasetBanner from './DatasetBanner';
 import HeaderButtons from './Header';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
@@ -632,30 +632,16 @@ const TestCasesList: FC<Props> = ({
       ? includedIds.size
       : lastIncludedCountRef.current;
 
-  const publicTag = !isPrivate && dataset?.visibility && (
-    <button
-      type="button"
-      className="flex items-center gap-1 bg-accent-secondary-alpha border border-accent-secondary px-1.5 py-1 rounded-sm shrink-0 cursor-pointer"
-      onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
-    >
-      <IconDatabaseExport size={16} className="text-accent-secondary" />
-      <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
-      <IconExternalLink size={16} />
-    </button>
+  const datasetTag = isPrivate && (
+    <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
+      <DialTag
+        label={t(DatasetsI18nKey.VisibilityPrivate)}
+        className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+      />
+    </DialTooltip>
   );
 
-  const datasetTag =
-    dataset?.visibility &&
-    (isPrivate ? (
-      <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
-        <DialTag
-          label={t(DatasetsI18nKey.VisibilityPrivate)}
-          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
-        />
-      </DialTooltip>
-    ) : (
-      publicTag
-    ));
+  const isPublicDatasetAttached = !isPrivate && !!dataset?.visibility;
 
   return (
     <div className="flex-1 min-h-0">
@@ -672,11 +658,22 @@ const TestCasesList: FC<Props> = ({
         }
         isGridLoading={isLoading}
         toolbar={
-          <RunCondition
-            testCaseFilter={selectedTestSuite.testCaseFilter}
-            schema={dataset?.testCaseSchema}
-            onChange={onRunConditionChange}
-          />
+          <div className="flex flex-col gap-4">
+            {isPublicDatasetAttached && (
+              <DatasetBanner
+                datasetName={dataset?.name || ''}
+                onOpenDataset={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
+                onDetachDataset={onDetachDatasetCallback}
+                onAttachDataset={onAttachDataset}
+                onBeforeAttach={onBeforeAttach}
+              />
+            )}
+            <RunCondition
+              testCaseFilter={selectedTestSuite.testCaseFilter}
+              schema={dataset?.testCaseSchema}
+              onChange={onRunConditionChange}
+            />
+          </div>
         }
         emptyDataProps={{
           title: t(TestSuitesI18nKey.NoTestCases),
@@ -699,7 +696,6 @@ const TestCasesList: FC<Props> = ({
           onPublish={onPublish}
           onAttachDataset={onAttachDataset}
           onBeforeAttach={onBeforeAttach}
-          onDetachDataset={onDetachDatasetCallback}
           datasetTag={datasetTag}
         />
       </ListEntities>
