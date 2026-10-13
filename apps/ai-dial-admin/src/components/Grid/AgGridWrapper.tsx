@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import DisplayNameCellRenderer from './CellRenderers/DisplayNameCellRenderer';
 import FormattedValueCellRenderer from './CellRenderers/FormattedValueCellRenderer';
 import RadioNameCellRenderer from './CellRenderers/RadioNameCellRenderer';
+import FloatingFilter from './FloatingFilter/FloatingFilter';
 import { HEADER_HEIGHT, ICON_ROW_HEIGHT } from './constants';
 import { useCellContextMenu } from './hooks/use-cell-context-menu';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage, toColumnLeaves } from './utils';
@@ -66,7 +67,11 @@ const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[]): Col
 
 const suppressArrowKeys = (params: SuppressKeyboardEventParams) => ARROW_KEYS.includes(params.event.key);
 
-const DEFAULT_COL_DEF: ColDef = { suppressKeyboardEvent: suppressArrowKeys };
+// The built-in floating filter waits for Enter when a filter includes an Apply button.
+const DEFAULT_COL_DEF: ColDef = {
+  floatingFilterComponent: FloatingFilter,
+  suppressKeyboardEvent: suppressArrowKeys,
+};
 
 const withFormattedValueRenderer = (columnDefs: ColDef[]): ColDef[] =>
   columnDefs.map((col) => {
@@ -165,11 +170,11 @@ const AgGridWrapper = <T extends object>({
     : {};
 
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
+  const { defaultColDef: additionalDefaultColDef, ...gridOptionOverrides } = additionalGridOptions ?? {};
 
   const gridOptions: GridOptions = {
     headerHeight: HEADER_HEIGHT,
     ...(hasIconName ? { rowHeight: ICON_ROW_HEIGHT } : {}),
-    defaultColDef: DEFAULT_COL_DEF,
     onFilterChanged: onStateChanged,
     onSortChanged: onStateChanged,
     onColumnMoved: handleStateUpdated,
@@ -179,7 +184,8 @@ const AgGridWrapper = <T extends object>({
     preventDefaultOnContextMenu: true,
     ...(isLiveData ? { animateRows: false } : {}),
     ...persistedWidthOptions,
-    ...additionalGridOptions,
+    ...gridOptionOverrides,
+    defaultColDef: { ...DEFAULT_COL_DEF, ...additionalDefaultColDef },
   };
 
   return (
