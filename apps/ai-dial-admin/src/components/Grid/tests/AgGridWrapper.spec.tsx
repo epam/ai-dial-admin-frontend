@@ -1,3 +1,4 @@
+import { GridColorScheme } from '@epam/ai-dial-ui-kit';
 import { act, render } from '@testing-library/react';
 import type { ColDef } from 'ag-grid-community';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -19,6 +20,7 @@ vi.mock('@/src/components/Grid/utils', async (importOriginal) => ({
   saveColumnsStateToStorage: vi.fn(),
 }));
 
+import { useTheme } from '@/src/context/ThemeContext';
 import { saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 import AgGridWrapper from '../AgGridWrapper';
 import DisplayNameCellRenderer from '../CellRenderers/DisplayNameCellRenderer';
@@ -55,6 +57,20 @@ describe('AgGridWrapper', () => {
 
     expect(mockState.lastProps?.rowData).toEqual(rowData);
     expect(mockState.lastProps?.columnDefs).toEqual(columnDefs);
+  });
+
+  test('passes the dark grid color scheme when the app theme is dark', () => {
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+    expect(mockState.lastProps?.colorScheme).toBe(GridColorScheme.Dark);
+  });
+
+  test('passes the light grid color scheme when the app theme is light', () => {
+    vi.mocked(useTheme).mockReturnValueOnce({ currentTheme: 'light' } as ReturnType<typeof useTheme>);
+
+    render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} />);
+
+    expect(mockState.lastProps?.colorScheme).toBe(GridColorScheme.Light);
   });
 
   test('forwards the grid-ready callback with the api once the kit grid exposes it', () => {

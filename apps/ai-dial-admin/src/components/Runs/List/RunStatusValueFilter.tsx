@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { ButtonAppearance, DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { CustomFilterProps, useGridFilter } from 'ag-grid-react';
@@ -30,28 +30,7 @@ const toModel = (selected: RunStatus[]): GridFilter | null =>
  * returning `true`: AG Grid only calls it for the client-side row model, so it's redundant — but
  * harmless — on the two infinite-row-model grids, where the server already returned matching rows.
  */
-type StatusFilterColumn = Props['column'] & { filterActive: boolean };
-
-const statusFilterParts = () => {
-  const header = document.querySelector('.ag-header-cell[col-id="status"]');
-  const colIndex = header?.getAttribute('aria-colindex');
-  const floating = colIndex ? document.querySelector(`.ag-floating-filter[aria-colindex="${colIndex}"]`) : null;
-  return { header, floating };
-};
-
-// AG Grid copies isFilterActive() onto the column only inside filterChangedCallback, and for this
-// custom filter that copy lands on the previous model. The popup already shows the new model, so
-// the header dot has to be brought in line with it once the new model has committed.
-const syncStatusFilterIndicator = (column: StatusFilterColumn, active: boolean) => {
-  if (column.filterActive !== active) {
-    column.filterActive = active;
-  }
-  const { header, floating } = statusFilterParts();
-  header?.classList.toggle('ag-header-cell-filtered', active);
-  floating?.querySelector('.ag-floating-filter-button-button')?.classList.toggle('ag-filter-active', active);
-};
-
-const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, column }) => {
+const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, api }) => {
   const t = useI18n();
 
   const selected = useMemo(() => toSelected(model), [model]);
@@ -63,12 +42,26 @@ const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, column }) => {
 
   useGridFilter({ doesFilterPass });
 
+  // The React filter wrapper refreshes rows from the previous model. Once this render has
+  // committed, the grid model already matches the selection, so re-read it. The first run is
+  // the popup opening, and those rows already match.
+  const appliedFilterRef = useRef<string | null | undefined>(undefined);
+
   useEffect(() => {
-    if (!column) {
+    if (!api) {
       return;
     }
-    syncStatusFilterIndicator(column as StatusFilterColumn, model != null);
-  }, [column, model]);
+    const nextFilter = model?.filter ?? null;
+    if (appliedFilterRef.current === undefined) {
+      appliedFilterRef.current = nextFilter;
+      return;
+    }
+    if (appliedFilterRef.current === nextFilter) {
+      return;
+    }
+    appliedFilterRef.current = nextFilter;
+    api.onFilterChanged();
+  }, [api, model]);
 
   const onToggle = (status: RunStatus, isSelected?: boolean) => {
     const next = isSelected ? [...selected, status] : selected.filter((value) => value !== status);
