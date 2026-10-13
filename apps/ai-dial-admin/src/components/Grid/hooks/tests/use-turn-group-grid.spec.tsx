@@ -286,6 +286,23 @@ describe('useTurnGroupGrid', () => {
     expect(result.current.getDirtyRows()).toEqual([]);
   });
 
+  test('should drop a case from the dirty set when its cells match the server snapshot again', () => {
+    const { result, onDirtyChange } = setup();
+
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'a' }), row('case-2', { shared: 'z' })]);
+    });
+    act(() => {
+      result.current.onCellChange({ id: 'case-1' }, 'shared', 'edited');
+    });
+    act(() => {
+      result.current.onCellChange({ id: 'case-1' }, 'shared', 'a');
+    });
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+    expect(result.current.getDirtyRows()).toEqual([]);
+  });
+
   test('should keep the platform id when a payload field named id is edited', () => {
     const { result } = setup();
     const platformId = '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d';
