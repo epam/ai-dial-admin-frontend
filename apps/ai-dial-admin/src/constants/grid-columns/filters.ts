@@ -57,6 +57,7 @@ export const exactMatchFilter: Partial<ColDef> = {
 };
 
 export const baseNumberFilter: Partial<ColDef> = {
+  ...textFloatingFilter,
   filter: 'agNumberColumnFilter',
   filterParams: {
     ...baseFilterParams.filterParams,
