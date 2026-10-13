@@ -22,9 +22,9 @@ sizing, truncation and tests production code.
 
 ## What Changes
 
-- Rework the shared runs column set to 12 columns in this order: Status, Test case run name, Runs,
+- Rework the shared runs column set to 12 columns in this order: Status, Test suite run name, Runs,
   Test cases, Test Suite ID, Target, Metrics, Start Date, End Date, Duration, Cost, Overall score.
-- Combine `ID` + `Test run name` into one `Test case run name` column rendered as title (run name,
+- Combine `ID` + `Test run name` into one `Test suite run name` column rendered as title (run name,
   `text-primary`, 14px) over subtitle (run id, `text-secondary`, 12px), each line truncating
   independently with the full value on hover.
 - Resize Status to a dot-only column shown first; the status label moves into a tooltip. Requires a
@@ -35,7 +35,7 @@ sizing, truncation and tests production code.
 - Add `Target` (evaluated Application / Model / MCP entity, name over type, same two-line
   treatment), `Metrics` (test suite metric names as tags with a measured `+N` overflow badge),
   `Duration` (derived from `startedAt`/`completedAt`), `Cost`, and `Overall score`.
-- Size columns to their content: `Test case run name`, `Test Suite ID` and `Metrics` stay flexible
+- Size columns to their content: `Test suite run name`, `Test Suite ID` and `Metrics` stay flexible
   (`flex: 1`); the rest are auto-sized to the wider of header and cell via AG Grid's
   `autoSizeStrategy: { type: 'fitCellContents' }`, never wrapping. This needs a new opt-in prop on
   `AgGridWrapper`, per-column `minWidth` overrides, and a fix so autosize-sourced `columnResized`

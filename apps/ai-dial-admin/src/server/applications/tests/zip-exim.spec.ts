@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test } from 'vitest';
+import { ZipFixture, readZipEntries } from '@/src/server/zip/tests/zip-fixtures';
 
 import {
   APPLICATIONS_ZIP_ENTRY,
@@ -14,13 +14,11 @@ describe('Server :: Applications :: zip-exim :: buildApplicationsZip', () => {
     const document = { applications: [{ id: 'applications/public/name__1.0', name: 'name' } as any] };
 
     const blob = await buildApplicationsZip(document);
-    const zip = await JSZip.loadAsync(blob);
-    const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+    const entries = await readZipEntries(blob);
 
-    expect(entries).toHaveLength(1);
-    expect(entries[0].name).toBe(APPLICATIONS_ZIP_ENTRY);
-    const content = await zip.file(APPLICATIONS_ZIP_ENTRY)?.async('string');
-    expect(JSON.parse(content as string)).toEqual(document);
+    expect(Object.keys(entries)).toHaveLength(1);
+    expect(Object.keys(entries)[0]).toBe(APPLICATIONS_ZIP_ENTRY);
+    expect(JSON.parse(entries[APPLICATIONS_ZIP_ENTRY])).toEqual(document);
   });
 });
 
@@ -42,7 +40,7 @@ describe('Server :: Applications :: zip-exim :: mergeApplicationsExports', () =>
 
 describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () => {
   test('extracts and merges every applications/*.json entry', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file(
       'applications/a.json',
       JSON.stringify({ applications: [{ id: 'applications/public/a__1.0', name: 'a' }] }),
@@ -51,7 +49,7 @@ describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () 
       'applications/b.json',
       JSON.stringify({ applications: [{ id: 'applications/public/b__1.0', name: 'b' }] }),
     );
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = await extractApplicationsFromZip(buffer);
 
@@ -62,13 +60,13 @@ describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () 
   });
 
   test('ignores an entry outside the applications/ prefix', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file(
       'applications/a.json',
       JSON.stringify({ applications: [{ id: 'applications/public/a__1.0', name: 'a' }] }),
     );
     zip.file('other/b.json', JSON.stringify({ applications: [{ id: 'applications/public/b__1.0', name: 'b' }] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = await extractApplicationsFromZip(buffer);
 
@@ -76,9 +74,9 @@ describe('Server :: Applications :: zip-exim :: extractApplicationsFromZip', () 
   });
 
   test('rejects an archive with no valid applications entries', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('other/b.json', JSON.stringify({ applications: [] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     await expect(extractApplicationsFromZip(buffer)).rejects.toThrow(InvalidApplicationsZipError);
   });
