@@ -2075,7 +2075,7 @@ export default {
     Inputs: 'Inputs',
     Outputs: 'Outputs',
     Results: 'Results',
-    TestCaseSchema: 'Test Case Schema',
+    TestCaseSchema: 'Configure schema',
     SchemaField: 'Schema field',
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
