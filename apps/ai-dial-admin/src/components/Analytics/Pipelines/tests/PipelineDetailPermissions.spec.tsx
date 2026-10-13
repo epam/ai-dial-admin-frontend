@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import { getTable, getTables, listPipelineBackfills, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -10,12 +10,18 @@ import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
 // test-setup.tsx pins isFullAdmin true for the whole suite, so the non-admin case needs its own file.
 const isFullAdmin = { value: false };
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ isFullAdmin: isFullAdmin.value, isEnableAuth: true, featureFlags: {} }),
+  useAppContext: () => ({
+    isFullAdmin: isFullAdmin.value,
+    isEnableAuth: true,
+    featureFlags: {},
+    sidebar: backfillSidebar,
+  }),
 }));
 
 const enrichment: AnalyticsTable = {
@@ -46,6 +52,7 @@ const renderView = () => render(<PipelineDetailView pipeline={rule} takenTargets
 describe('PipelineDetailView — without full-admin rights', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
     isFullAdmin.value = false;
     vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable]);
     vi.mocked(getTable).mockImplementation(
