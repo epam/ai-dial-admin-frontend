@@ -743,6 +743,14 @@ describe('getTargetUrl', () => {
     expect(result?.searchParams.get('theme')).toBe('dark');
   });
 
+  test('should return URL with application name for a platform application', () => {
+    const application = { _metadata: { path: 'platform/my-app' }, name: 'my-app' } as any;
+    const result = getTargetUrl(ApplicationRoute.AssetsApplications, application, frameConfig);
+
+    expect(result).toBeInstanceOf(URL);
+    expect(result?.searchParams.get('id')).toBe('my-app');
+  });
+
   test('should return URL with application name for non-asset routes', () => {
     const application = { name: 'my-app' } as any;
     const result = getTargetUrl(ApplicationRoute.Applications, application, frameConfig);

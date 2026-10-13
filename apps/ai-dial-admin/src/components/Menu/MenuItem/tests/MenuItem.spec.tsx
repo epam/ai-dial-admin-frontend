@@ -3,36 +3,59 @@ import { describe, expect, test } from 'vitest';
 
 import { BasicI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { MenuGroupConfiguration } from '../../menu-configuration';
+import { MenuBadge, MenuGroupConfiguration } from '../../menu-configuration';
 import MenuItem from '../MenuItem';
 
-const PREVIEW_LABEL = BasicI18nKey.Preview; // mocked t() returns the key as-is
+// mocked t() returns the key as-is
+const PREVIEW_LABEL = BasicI18nKey.Preview;
+const DEPRECATED_LABEL = BasicI18nKey.Deprecated;
 
 const analyticsGroup = (overrides: Partial<MenuGroupConfiguration> = {}): MenuGroupConfiguration => ({
   key: MenuI18nKey.Analytics,
   descriptionKey: MenuI18nKey.Analytics,
-  isPreview: true,
+  badge: MenuBadge.Preview,
   items: [{ key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries }],
   ...overrides,
 });
 
-describe('MenuItem — Preview tag on group header', () => {
-  test('renders the Preview tag when the group is preview and the sidebar is expanded', () => {
+describe('MenuItem — badge on group header', () => {
+  test('renders the Preview badge when the group is Preview and the sidebar is expanded', () => {
     render(<MenuItem config={analyticsGroup()} activeMenuItem="" isSidebarOpen={true} />);
 
     expect(screen.getByText(PREVIEW_LABEL)).toBeInTheDocument();
+    expect(screen.queryByText(DEPRECATED_LABEL)).not.toBeInTheDocument();
   });
 
-  test('does not render the Preview tag when the sidebar is collapsed', () => {
+  test('renders the Deprecated badge when the group is Deprecated and the sidebar is expanded', () => {
+    render(
+      <MenuItem config={analyticsGroup({ badge: MenuBadge.Deprecated })} activeMenuItem="" isSidebarOpen={true} />,
+    );
+
+    expect(screen.getByText(DEPRECATED_LABEL)).toBeInTheDocument();
+    expect(screen.queryByText(PREVIEW_LABEL)).not.toBeInTheDocument();
+  });
+
+  test('does not render a badge when the sidebar is collapsed', () => {
     render(<MenuItem config={analyticsGroup()} activeMenuItem="" isSidebarOpen={false} />);
 
     expect(screen.queryByText(PREVIEW_LABEL)).not.toBeInTheDocument();
   });
 
-  test('does not render the Preview tag for a non-preview group', () => {
-    render(<MenuItem config={analyticsGroup({ isPreview: false })} activeMenuItem="" isSidebarOpen={true} />);
+  test('does not render a badge for a group without one', () => {
+    render(<MenuItem config={analyticsGroup({ badge: undefined })} activeMenuItem="" isSidebarOpen={true} />);
 
     expect(screen.queryByText(PREVIEW_LABEL)).not.toBeInTheDocument();
+    expect(screen.queryByText(DEPRECATED_LABEL)).not.toBeInTheDocument();
+  });
+
+  test('renders a badge on a sub-item that declares one', () => {
+    const config = analyticsGroup({
+      badge: undefined,
+      items: [{ key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries, badge: MenuBadge.Deprecated }],
+    });
+    render(<MenuItem config={config} activeMenuItem="" isSidebarOpen={true} />);
+
+    expect(screen.getByText(DEPRECATED_LABEL)).toBeInTheDocument();
   });
 });
 

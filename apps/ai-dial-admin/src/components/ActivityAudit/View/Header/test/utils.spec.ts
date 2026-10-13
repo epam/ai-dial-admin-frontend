@@ -100,7 +100,7 @@ describe('getAuditResourceHref', () => {
 
   test('resolves a non-analytics type through the shared auditResourceRoute map', () => {
     expect(getAuditResourceHref(ActivityAuditResourceType.MODEL, 'gpt-4')).toBe('/models/gpt-4');
-    expect(getAuditResourceHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'mcp-1')).toBe('/mcp-containers/mcp-1');
+    expect(getAuditResourceHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'mcp-1')).toBe('/containers/mcp-1');
   });
 
   test('encodes the resource identifier in both the analytics and the shared branch', () => {

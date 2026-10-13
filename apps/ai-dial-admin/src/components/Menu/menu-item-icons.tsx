@@ -52,6 +52,7 @@ export const MENU_ITEM_ICONS: Partial<Record<MenuI18nKey, Icon>> = {
   [MenuI18nKey.Prompts]: IconPrompt,
   [MenuI18nKey.Approvals]: IconCircleCheck,
   [MenuI18nKey.ModelServings]: IconServer,
+  [MenuI18nKey.Containers]: IconBox,
   [MenuI18nKey.McpContainers]: IconBox,
   [MenuI18nKey.InterceptorContainers]: IconBox,
   [MenuI18nKey.AdapterContainers]: IconBox,

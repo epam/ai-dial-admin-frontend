@@ -4,11 +4,13 @@ This documentation describes the structure and contents of the menu items array 
 
 Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits. The `catalog` token is the exception that hides all Core-direct items — the ones keyed `Platform*` — wherever they are grouped.
 
+A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge.
+
 ---
 
 ## Menu Sections
 
-### 1. **Entities**
+### 1. **Entities** [Deprecated]
 
 - **Description**: A section that manages entities like models, applications, and routes.
 - **Items**:
@@ -71,7 +73,7 @@ Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment
     - **Key**: `Prompts`
     - **Description**: Navigate to the prompts page to manage and create prompts used in various workflows.
 
-### 4. **Builders**
+### 4. **Builders** [Deprecated]
 
 - **Description**: A section that provides access to tools for building applications.
 - **Items**:
@@ -85,7 +87,7 @@ Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment
     - **Key**: `Adapters`
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
 
-### 5. **Access Management**
+### 5. **Access Management** [Deprecated]
 
 - **Description**: A section for managing roles and keys.
 - **Items**:
@@ -98,23 +100,14 @@ Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment
 
 ### 6. **Deployments**
 
-- **Description**: A section for managing deployments and containers (MCP, interceptors, adapters).
+- **Description**: A section for managing deployments and containers (MCP, interceptors, adapters, applications).
 - **Items**:
   - **Model Servings**
     - **Key**: `ModelServings`
     - **Description**: Navigate to the model servings page to manage deployed model instances.
-  - **MCP Containers**
-    - **Key**: `McpContainers`
-    - **Description**: Navigate to the MCP containers page to manage Model Context Protocol containers.
-  - **Interceptor Containers**
-    - **Key**: `InterceptorContainers`
-    - **Description**: Navigate to the interceptor containers page to manage deployed interceptor containers.
-  - **Adapter Containers**
-    - **Key**: `AdapterContainers`
-    - **Description**: Navigate to the adapter containers page to manage deployed adapter containers.
-  - **Application Containers**
-    - **Key**: `ApplicationContainers`
-    - **Description**: Navigate to the application containers page to manage deployed application containers.
+  - **Containers**
+    - **Key**: `Containers`
+    - **Description**: Navigate to the containers page to manage MCP, interceptor, adapter and application containers; the Type column tells them apart and the create dialog asks for the type.
   - **Images**
     - **Key**: `Images`
     - **Description**: Navigate to the images page to manage container images.
@@ -157,7 +150,7 @@ Documented per capability under `openspec/specs/analytics/`. Items, in order: Da
     - **Key**: `Approvals`
     - **Description**: Navigate to the approvals page (`/publications`) to review and approve publication requests. One list shows the requests of every resource type (Application, Toolset, Prompt, Conversation, File, Skill), told apart by the Type column; opening a row shows the type's review page.
 
-### 10. **Audit**
+### 10. **Audit** [Deprecated]
 
 - **Description**: A section for accessing telemetry data, logs, and audit information.
 - **Items**:

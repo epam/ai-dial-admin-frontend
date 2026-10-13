@@ -5,8 +5,8 @@ import classNames from 'classnames';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
 import { useI18n } from '@/src/locales/client';
-import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 
+import MenuBadgeTag from './MenuBadgeTag';
 import MenuItemContent from './MenuItemContent';
 
 interface Props {
@@ -24,9 +24,9 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isSidebarOpen, hasDivider
       {isSidebarOpen ? (
         <div className="flex flex-row items-center justify-between px-4 py-1 text-[11px] text-tertiary uppercase tracking-[0.06em] whitespace-nowrap select-none cursor-default leading-4 font-semibold">
           <span className="truncate">{t(config.key) ?? ''}</span>
-          {config.isPreview && (
+          {config.badge && (
             <div className="ml-2 shrink-0 normal-case tracking-normal">
-              <PreviewTag />
+              <MenuBadgeTag badge={config.badge} />
             </div>
           )}
         </div>

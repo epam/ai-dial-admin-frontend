@@ -6,6 +6,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { isContainerKind } from '@/src/constants/deployments/container-types';
 import { isPlatformBucketRow, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 export const escapePercentSign = (str: string): string => {
@@ -28,7 +29,7 @@ export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, urlSu
 
 export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown) => {
   const path = getEntityPath(route, entity, false);
-  const originalRoute = route?.split('/')?.[1];
+  const originalRoute = isContainerKind(route) ? ApplicationRoute.Containers.slice(1) : route?.split('/')?.[1];
   return `/${originalRoute}/${path}`;
 };
 

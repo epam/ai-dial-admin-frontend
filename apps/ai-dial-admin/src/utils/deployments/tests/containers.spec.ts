@@ -4,6 +4,7 @@ import {
   convertMilliCoresToCores,
   getContainerRedeploySnapshot,
   getContainerSourceTypeLabel,
+  getContainerKind,
   getContainersByView,
   getContainerTemplate,
   getContainerScaling,
@@ -770,5 +771,16 @@ describe('containers utils', () => {
       };
       expect(sanitizeContainerProbe(container)).toBe(container);
     });
+  });
+});
+
+describe('getContainerKind', () => {
+  test('maps a container type to its kind', () => {
+    expect(getContainerKind(CONTAINER_TYPE.MCP)).toBe(ApplicationRoute.McpContainers);
+  });
+
+  test('returns undefined for NIM and a missing type', () => {
+    expect(getContainerKind(CONTAINER_TYPE.NIM)).toBeUndefined();
+    expect(getContainerKind(undefined)).toBeUndefined();
   });
 });

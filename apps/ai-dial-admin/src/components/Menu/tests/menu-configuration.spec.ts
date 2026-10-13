@@ -5,7 +5,7 @@ import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 
-import { MENU_CONFIGURATION } from '../menu-configuration';
+import { MENU_CONFIGURATION, MenuBadge } from '../menu-configuration';
 
 const ICON_SIZE = 16;
 
@@ -62,15 +62,7 @@ describe('MENU_CONFIGURATION — Model Servings entry gating', () => {
     const group = findDeploymentsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key);
 
-    expect(keys).toEqual(
-      expect.arrayContaining([
-        MenuI18nKey.McpContainers,
-        MenuI18nKey.InterceptorContainers,
-        MenuI18nKey.AdapterContainers,
-        MenuI18nKey.ApplicationContainers,
-        MenuI18nKey.Images,
-      ]),
-    );
+    expect(keys).toEqual(expect.arrayContaining([MenuI18nKey.Containers, MenuI18nKey.Images]));
   });
 });
 
@@ -203,10 +195,48 @@ describe('MENU_CONFIGURATION — AI Gateway group', () => {
     expect(items.find((item) => item.key === MenuI18nKey.Applications)?.href).toBe(ApplicationRoute.AssetsApplications);
   });
 
-  test('carries no preview tag on any item', () => {
+  test('carries no badge on any item', () => {
     const items = findGroup(baseFlags)?.items ?? [];
 
-    expect(items.every((item) => item.isPreview === undefined)).toBe(true);
+    expect(items.every((item) => item.badge === undefined)).toBe(true);
+  });
+});
+
+describe('MENU_CONFIGURATION — group badges', () => {
+  const DEPRECATED_GROUPS = [
+    MenuI18nKey.Entities,
+    MenuI18nKey.Builders,
+    MenuI18nKey.AccessManagement,
+    MenuI18nKey.Audit,
+  ];
+  const allFlags: FeatureFlags = {
+    ...baseFlags,
+    analyticsEnabled: true,
+    analyticsSessionsEnabled: true,
+    analyticsUsageEnabled: true,
+  };
+
+  test('marks the legacy admin groups as Deprecated without tagging their items', () => {
+    const groups = MENU_CONFIGURATION(ICON_SIZE, allFlags).filter((group) => DEPRECATED_GROUPS.includes(group.key));
+
+    expect(groups.map((group) => group.key)).toEqual(DEPRECATED_GROUPS);
+    expect(groups.every((group) => group.badge === MenuBadge.Deprecated)).toBe(true);
+    expect(groups.every((group) => group.items.every((item) => item.badge === undefined))).toBe(true);
+  });
+
+  test('carries no badge on any other group except Analytics', () => {
+    const others = MENU_CONFIGURATION(ICON_SIZE, allFlags).filter(
+      (group) => !DEPRECATED_GROUPS.includes(group.key) && group.key !== MenuI18nKey.Analytics,
+    );
+
+    expect(others.length).toBeGreaterThan(0);
+    expect(others.every((group) => group.badge === undefined)).toBe(true);
+  });
+
+  test('shows no Deprecated group when the admin API is disabled', () => {
+    const groups = MENU_CONFIGURATION(ICON_SIZE, { ...allFlags, adminApiEnabled: false });
+
+    expect(groups.some((group) => group.badge === MenuBadge.Deprecated)).toBe(false);
   });
 });
 
@@ -286,7 +316,7 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true, analyticsSessionsEnabled: true });
 
     expect(group).toBeDefined();
-    expect(group?.isPreview).toBe(true);
+    expect(group?.badge).toBe(MenuBadge.Preview);
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsSessions,

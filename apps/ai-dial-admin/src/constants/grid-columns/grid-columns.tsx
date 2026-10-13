@@ -125,6 +125,8 @@ import {
   VALIDITY_STATUS_COLUMN,
   VERSION_COLUMN,
 } from './base-columns';
+import { CONTAINER_TYPE_LABELS } from '@/src/constants/deployments/container-types';
+import { Container } from '@/src/models/deployments/containers';
 import { dateTimeColumn, numericColumn, priceColumn, rightAlignedColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter, exactMatchFilter } from './filters';
 import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/SessionCellRenderer';
@@ -990,108 +992,130 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   },
 ];
 
-export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
-  DISPLAY_NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  ...(route === ApplicationRoute.ModelServings
-    ? [
-        {
-          field: '$type',
-          headerName: 'Source type',
-          hide: false,
-          valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
-          tooltipValueGetter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
-          filterValueGetter: (params) => t(MODEL_TYPES[params.data[params.colDef.field || ''] as MODEL_TYPE]),
-        } as ColDef,
-      ]
-    : [
-        {
-          headerName: 'Source type',
-          field: 'source.$type',
-          hide: false,
-          valueFormatter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
-          tooltipValueGetter: ({ data }) => containerSourceTypeLabel(data?.source, t, type),
-          filterValueGetter: (params) => containerSourceTypeLabel(params.data?.source, t, type),
-        } as ColDef,
-        {
-          headerName: 'Source Name',
-          field: 'source',
-          hide: false,
-          valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
-          tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
-          filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
-        } as ColDef,
-      ]),
-  {
-    ...BASE_STATUS_COLUMN,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
-    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
-    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
-  },
-  { field: 'url', headerName: 'Container URL', hide: true },
-  {
-    field: 'resources.requests.cpu',
-    headerName: t(EntityFieldsI18nKey.CPURequest),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
-    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
-    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
-  },
-  {
-    field: 'resources.limits.cpu',
-    headerName: t(EntityFieldsI18nKey.CPULimit),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
-    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
-    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
-  },
-  {
-    field: 'resources.requests.memory',
-    headerName: t(EntityFieldsI18nKey.MemoryRequest),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
-    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
-    filterValueGetter: (params) =>
-      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
-  },
-  {
-    field: 'resources.limits.memory',
-    headerName: t(EntityFieldsI18nKey.MemoryLimit),
-    hide: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
-    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
-    filterValueGetter: (params) =>
-      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
-  },
-  ...(route === ApplicationRoute.ModelServings
-    ? [
-        {
-          field: 'resources.gpu',
-          headerName: t(EntityFieldsI18nKey.GPURequest),
-          hide: true,
-          sortable: true,
-          filter: 'agTextColumnFilter',
-          valueGetter: (params: ValueGetterParams) =>
-            getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
-          valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
-          filterValueGetter: (params) =>
-            formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
-        } as ColDef,
-      ]
-    : []),
-  AUTHOR_COLUMN,
-  TOPICS_COLUMN,
-  { ...CREATED_AT_COLUMN, filter: false },
-  { ...UPDATED_AT_COLUMN, filter: false },
-];
+export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => {
+  const isUnified = route === ApplicationRoute.Containers;
+  const getTypeLabel = (container?: Container): string => {
+    const labelKey = container && CONTAINER_TYPE_LABELS[container.$type];
+    return labelKey ? t(labelKey) : '';
+  };
+  // The unified list mixes types, so the "{type}" in "Internal {type} Image" comes from the row.
+  const getRowType = (container?: Container): string => (isUnified ? getTypeLabel(container) : type);
+
+  return [
+    DISPLAY_NAME_COLUMN,
+    DESCRIPTION_COLUMN,
+    ...(isUnified
+      ? [
+          {
+            field: '$type',
+            headerName: 'Type',
+            hide: false,
+            valueFormatter: ({ data }) => getTypeLabel(data),
+            tooltipValueGetter: ({ data }) => getTypeLabel(data),
+            filterValueGetter: (params) => getTypeLabel(params.data),
+          } as ColDef,
+        ]
+      : []),
+    ...(route === ApplicationRoute.ModelServings
+      ? [
+          {
+            field: '$type',
+            headerName: 'Source type',
+            hide: false,
+            valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+            tooltipValueGetter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+            filterValueGetter: (params) => t(MODEL_TYPES[params.data[params.colDef.field || ''] as MODEL_TYPE]),
+          } as ColDef,
+        ]
+      : [
+          {
+            headerName: 'Source type',
+            field: 'source.$type',
+            hide: false,
+            valueFormatter: ({ data }) => containerSourceTypeLabel(data?.source, t, getRowType(data)),
+            tooltipValueGetter: ({ data }) => containerSourceTypeLabel(data?.source, t, getRowType(data)),
+            filterValueGetter: (params) => containerSourceTypeLabel(params.data?.source, t, getRowType(params.data)),
+          } as ColDef,
+          {
+            headerName: 'Source Name',
+            field: 'source',
+            hide: false,
+            valueFormatter: ({ data }) => containerSourceNameLabel(data?.source),
+            tooltipValueGetter: ({ data }) => containerSourceNameLabel(data?.source),
+            filterValueGetter: (params) => containerSourceNameLabel(params.data?.source),
+          } as ColDef,
+        ]),
+    {
+      ...BASE_STATUS_COLUMN,
+      cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
+      tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
+      filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
+    },
+    { field: 'url', headerName: 'Container URL', hide: true },
+    {
+      field: 'resources.requests.cpu',
+      headerName: t(EntityFieldsI18nKey.CPURequest),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
+      valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+      filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
+    },
+    {
+      field: 'resources.limits.cpu',
+      headerName: t(EntityFieldsI18nKey.CPULimit),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
+      valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+      filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
+    },
+    {
+      field: 'resources.requests.memory',
+      headerName: t(EntityFieldsI18nKey.MemoryRequest),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
+      valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+      filterValueGetter: (params) =>
+        formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
+    },
+    {
+      field: 'resources.limits.memory',
+      headerName: t(EntityFieldsI18nKey.MemoryLimit),
+      hide: true,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
+      valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+      filterValueGetter: (params) =>
+        formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
+    },
+    ...(route === ApplicationRoute.ModelServings
+      ? [
+          {
+            field: 'resources.gpu',
+            headerName: t(EntityFieldsI18nKey.GPURequest),
+            hide: true,
+            sortable: true,
+            filter: 'agTextColumnFilter',
+            valueGetter: (params: ValueGetterParams) =>
+              getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
+            valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
+            filterValueGetter: (params) =>
+              formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
+          } as ColDef,
+        ]
+      : []),
+    AUTHOR_COLUMN,
+    TOPICS_COLUMN,
+    { ...CREATED_AT_COLUMN, filter: false },
+    { ...UPDATED_AT_COLUMN, filter: false },
+  ];
+};
 
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
   {

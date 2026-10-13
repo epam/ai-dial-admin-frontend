@@ -62,10 +62,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
 | `Deployments/ModelServings` | `model-servings` | `Deployments`, `Containers` |
-| `Deployments/McpContainers` | `mcp-containers` | `Deployments`, `Containers` |
-| `Deployments/InterceptorContainers` | `interceptor-containers` | `Deployments`, `Containers` |
-| `Deployments/AdapterContainers` | `adapter-containers` | `Deployments`, `Containers` |
-| `Deployments/ApplicationContainers` | `application-containers` | `Deployments`, `Containers` |
+| `Deployments/Containers` | `containers` | `Deployments`, `Containers` |
 | `Deployments/Images` | `deployment-images` | `Images` |
 
 ### `AccessManagement`

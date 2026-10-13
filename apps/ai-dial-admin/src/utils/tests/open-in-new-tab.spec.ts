@@ -24,6 +24,15 @@ describe('escapePercentSign', () => {
 });
 
 describe('getUrnForEntity', () => {
+  test.each([
+    ApplicationRoute.McpContainers,
+    ApplicationRoute.AdapterContainers,
+    ApplicationRoute.ApplicationContainers,
+    ApplicationRoute.InterceptorContainers,
+  ])('builds a unified /containers URL for the %s kind', (route) => {
+    expect(getUrnForEntity(route, { name: 'my box' })).toBe('/containers/my%20box');
+  });
+
   test('returns correct URN for Prompts', () => {
     const entity = { path: 'folder/PromptName__v1', name: 'PromptName', folderId: 'folder', version: 'v1' };
     const urn = getUrnForEntity(ApplicationRoute.Prompts, entity);
