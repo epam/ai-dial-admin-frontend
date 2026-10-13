@@ -2,7 +2,13 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getPipelineRuntimeView, getTable, getTables, updatePipeline } from '@/src/app/[lang]/pipelines/actions';
+import {
+  getPipelineRuntimeView,
+  getTable,
+  getTables,
+  listPipelineBackfills,
+  updatePipeline,
+} from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -10,6 +16,7 @@ import { Pipeline, PipelineKind, TriggerKind, TransformType } from '@/src/models
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
+const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -25,6 +32,7 @@ vi.mock('@/src/context/AppContext', () => ({
     isReadOnlyAdmin: !context.isFullAdmin,
     isEnableAuth: true,
     featureFlags: { analyticsEnabled: context.analyticsEnabled },
+    sidebar: backfillSidebar,
   }),
 }));
 
@@ -94,6 +102,7 @@ const editFilter = async (user: ReturnType<typeof userEvent.setup>, value: strin
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
   context.analyticsEnabled = true;
   context.isFullAdmin = true;
   vi.mocked(getTables).mockResolvedValue([enrichment, sourceTable]);

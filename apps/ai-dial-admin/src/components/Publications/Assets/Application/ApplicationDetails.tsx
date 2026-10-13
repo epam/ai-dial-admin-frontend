@@ -4,7 +4,6 @@ import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties'
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationPublication } from '@/src/models/dial/publications';
-import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
 
 interface Props {
   publication: ApplicationPublication;
@@ -15,19 +14,8 @@ interface Props {
 const ApplicationDetails: FC<Props> = ({ publication, applicationSchemes, onChange }) => {
   const onChangeApplication = useCallback(
     (updatedApplication: DialApplicationResource) => {
-      // A publication review copy attaches its storage path flat — it is a stored payload copy,
-      // not a merged Core read, so the path never lives in `_metadata`.
-      const { path } = updatedApplication as DialApplicationResource & { path?: string };
-      const updatedPath = updatePathWithNameAndVersion(
-        path ?? '',
-        updatedApplication.name || '',
-        updatedApplication.version ?? '',
-      );
       const updatedApplications = [...(publication.applicationResources || [])];
-      updatedApplications[0] = {
-        ...updatedApplications[0],
-        applicationResource: { ...updatedApplication, path: updatedPath } as unknown as DialApplicationResource,
-      };
+      updatedApplications[0] = { ...updatedApplications[0], applicationResource: updatedApplication };
       onChange?.({ ...publication, applicationResources: updatedApplications });
     },
     [publication, onChange],

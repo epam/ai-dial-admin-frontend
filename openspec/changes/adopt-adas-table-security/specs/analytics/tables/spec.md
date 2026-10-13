@@ -179,7 +179,7 @@ When the user chooses **Only some rows**, the drawer SHALL show a row-limit edit
 
 The editor SHALL also offer a **JSON** view of the same predicate in the service's stable filter serialization — the one the Query Builder's JSON view uses — and a predicate that nests deeper than the visual editor can hold SHALL open in the JSON view with a note saying why, without changing it. Editing the predicate in either view SHALL keep the other in step when the predicate is representable visually.
 
-Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
+Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
 
 The two requests of **Save role** are independent. When the grants save succeeds and the row-policy request fails, the drawer SHALL stay open, the roles table SHALL show the saved grants, an error notification SHALL carry the service's message — which names the offending field for a `422` — and the footer's action SHALL become **Save row limit**, which repeats only the row-policy request. The note on screen SHALL state exactly what was saved. A predicate the service rejects for a field the user can see in JSON SHALL have that field highlighted there when the service names it.
 
@@ -229,6 +229,11 @@ The two requests of **Save role** are independent. When the grants save succeeds
 
 - **GIVEN** one condition on `project_id` is filled and a second condition has no column chosen
 - **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+
+#### Scenario: An empty JSON document returns to the visual view
+
+- **WHEN** no condition was added, the user switches to the JSON view, and then back to the visual view
+- **THEN** the visual view returns with no conditions and no message, and the empty document is not treated as invalid JSON
 
 #### Scenario: Text that is not a filter keeps the JSON view with its own message
 

@@ -8,6 +8,13 @@ import {
   RunnerPipelineCacheResponse,
   RunnerPipelineEntry,
 } from '@/src/models/analytics/pipeline-runtime';
+import {
+  PipelineBackfillRequest,
+  PipelineBackfillRun,
+  PipelineBackfillRunsResponse,
+  PipelineBackfillState,
+  PipelineBackfillVerb,
+} from '@/src/models/analytics/pipeline-backfill';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
 
@@ -30,6 +37,26 @@ export const RUNNER_GROUPS_URL = (name: string, limit: number, order?: GroupList
 };
 export const RUNNER_GROUP_REQUEUE_URL = (name: string, groupKey: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/groups/${encodeURIComponent(groupKey)}/requeue`;
+
+export const RUNNER_BACKFILLS_URL = 'v1/backfills';
+export const RUNNER_PIPELINE_BACKFILL_URL = (name: string): string =>
+  `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/backfill`;
+export const RUNNER_BACKFILL_URL = (runId: string): string => `${RUNNER_BACKFILLS_URL}/${encodeURIComponent(runId)}`;
+export const RUNNER_BACKFILL_VERB_URL = (runId: string, verb: PipelineBackfillVerb): string =>
+  `${RUNNER_BACKFILL_URL(runId)}/${verb}`;
+
+/** The runs of one pipeline, newest first. The listing has no cursor: a larger `limit` is the only way to more. */
+export const RUNNER_BACKFILL_LIST_URL = (
+  pipelineName: string,
+  limit: number,
+  state?: PipelineBackfillState,
+): string => {
+  const params = new URLSearchParams({ pipeline_name: pipelineName, limit: String(limit) });
+
+  if (state) params.set('state', state);
+
+  return `${RUNNER_BACKFILLS_URL}?${params.toString()}`;
+};
 
 export const RUNNER_DLQ_URL = 'v1/dlq';
 
@@ -224,6 +251,43 @@ export class AnalyticsRunnerApi extends BaseApi {
         total: typeof page.total === 'number' ? page.total : page.groups.length,
       },
     };
+  }
+
+  /** With no window it replays the whole history and sends no body. Answers 202 with the run. */
+  startBackfill(
+    pipelineName: string,
+    window: PipelineBackfillRequest | undefined,
+    token: Token,
+  ): Promise<ServerActionResponse<PipelineBackfillRun>> {
+    return this.sendActionRequest(RUNNER_PIPELINE_BACKFILL_URL(pipelineName), 'POST', token, window);
+  }
+
+  /** No total and no next page: a list as long as `limit` may be a prefix of a longer one. */
+  async listBackfills(
+    pipelineName: string,
+    limit: number,
+    token: Token,
+    state?: PipelineBackfillState,
+  ): Promise<ServerActionResponse<PipelineBackfillRun[]>> {
+    const res = await this.getAction(RUNNER_BACKFILL_LIST_URL(pipelineName, limit, state), token);
+
+    if (!res.success) return res;
+
+    const runs = (res.response as PipelineBackfillRunsResponse | null)?.runs;
+    return Array.isArray(runs) ? { ...res, response: runs } : { ...res, success: false };
+  }
+
+  // Each verb answers the run as it stands afterwards; one the run's state does not admit is a 409 naming the state.
+  pauseBackfill(runId: string, token: Token): Promise<ServerActionResponse<PipelineBackfillRun>> {
+    return this.sendActionRequest(RUNNER_BACKFILL_VERB_URL(runId, PipelineBackfillVerb.Pause), 'POST', token);
+  }
+
+  resumeBackfill(runId: string, token: Token): Promise<ServerActionResponse<PipelineBackfillRun>> {
+    return this.sendActionRequest(RUNNER_BACKFILL_VERB_URL(runId, PipelineBackfillVerb.Resume), 'POST', token);
+  }
+
+  cancelBackfill(runId: string, token: Token): Promise<ServerActionResponse<PipelineBackfillRun>> {
+    return this.sendActionRequest(RUNNER_BACKFILL_VERB_URL(runId, PipelineBackfillVerb.Cancel), 'POST', token);
   }
 
   // Answers 202 with no body: the evaluation is queued, and its result is never reported here.

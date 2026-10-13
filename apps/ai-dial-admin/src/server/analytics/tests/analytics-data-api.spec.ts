@@ -12,6 +12,7 @@ import {
   TransformType,
 } from '@/src/models/analytics/pipeline';
 import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -872,5 +873,112 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       expect.stringMatching(/\/v1\/catalog\/import\?resolution_policy=FAIL_IF_EXISTS&acknowledge_reused_names=true$/),
       expect.anything(),
     );
+  });
+
+  describe('table backfill', () => {
+    const run = {
+      runId: 'run-1',
+      from: '2026-09-01',
+      to: '2026-09-30',
+      daysTotal: 30,
+      state: 'running',
+      daysCompleted: 11,
+      daysFailed: 0,
+      filesProcessed: 120,
+      rowsInserted: 5000,
+      rowsSkipped: 0,
+      rowsDropped: 0,
+      startedAt: '2026-09-24T10:00:00Z',
+    };
+
+    test('startTableBackfill posts the dates and always turns re-ingest off', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runId: 'run-1', from: '2026-09-01', to: '2026-09-30', days: 30 }), {
+        status: 202,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: true, response: expect.objectContaining({ runId: 'run-1' }) }),
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/data-sync\/backfill$/),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ from: '2026-09-01', to: '2026-09-30', includeIngested: false }),
+        }),
+      );
+    });
+
+    test('startTableBackfill carries the service refusal through', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({ status: 409, error: 'backfill_conflict', message: 'A run is in progress' }),
+        {
+          status: 409,
+          ...JSON_HEADERS,
+        },
+      );
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          success: false,
+          errorHeader: 'backfill_conflict',
+          errorMessage: 'A run is in progress',
+        }),
+      );
+    });
+
+    test('startTableBackfill carries the refusal of a backfill that is switched off', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({ status: 503, error: 'backfill_disabled', message: 'Backfill is disabled' }),
+        {
+          status: 503,
+          ...JSON_HEADERS,
+        },
+      );
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'backfill_disabled' }));
+    });
+
+    test('listTableBackfillRuns unwraps the envelope and sends no filter by default', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [run] }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: [run] }));
+      expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/v1\/data-sync\/backfill$/), expect.anything());
+    });
+
+    test('listTableBackfillRuns filters by state', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [] }), JSON_HEADERS);
+
+      await instance.listTableBackfillRuns(TOKEN_MOCK, TableBackfillState.Running);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/data-sync/backfill?state=running'),
+        expect.anything(),
+      );
+    });
+
+    test('listTableBackfillRuns reads an empty list as no runs, not as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runs: [] }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: [] }));
+    });
+
+    test('listTableBackfillRuns reports a body without the envelope as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ unexpected: true }), JSON_HEADERS);
+
+      const res = await instance.listTableBackfillRuns(TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+    });
   });
 });

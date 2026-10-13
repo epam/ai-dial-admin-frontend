@@ -2,15 +2,20 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsRunnerApi } from '@/src/app/api/api';
 import {
+  cancelPipelineBackfill,
   getPausedPipelines,
   getPipelineFailures,
   getPipelineGroups,
   getRunnerPipelines,
+  listPipelineBackfills,
   pausePipeline,
+  pausePipelineBackfill,
   queueGroupEvaluation,
   requeueFailure,
   requeueFailures,
   resumePipeline,
+  resumePipelineBackfill,
+  startPipelineBackfill,
 } from '@/src/app/[lang]/pipelines/actions';
 import { DlqLane } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder } from '@/src/models/analytics/pipeline-groups';
@@ -206,5 +211,72 @@ describe('Pipeline runtime server actions', () => {
     });
     expect(runner.getGroups).not.toHaveBeenCalled();
     expect(runner.requeueGroup).not.toHaveBeenCalled();
+  });
+
+  describe('backfill', () => {
+    const window = { from: '2026-09-13T23:59:59.999Z', to: '2026-09-21T23:59:59.999Z' };
+
+    test('startPipelineBackfill passes the pipeline, the window and the caller token', async () => {
+      runner.startBackfill.mockResolvedValue({ success: true });
+
+      await startPipelineBackfill('usage-live', window);
+
+      expect(runner.startBackfill).toHaveBeenCalledWith('usage-live', window, TOKEN_MOCK);
+    });
+
+    test('startPipelineBackfill passes no window for a full replay', async () => {
+      runner.startBackfill.mockResolvedValue({ success: true });
+
+      await startPipelineBackfill('usage-live');
+
+      expect(runner.startBackfill).toHaveBeenCalledWith('usage-live', undefined, TOKEN_MOCK);
+    });
+
+    test('listPipelineBackfills narrows by pipeline and passes the limit', async () => {
+      runner.listBackfills.mockResolvedValue({ success: true, response: [] });
+
+      await listPipelineBackfills('usage-live', 10);
+
+      expect(runner.listBackfills).toHaveBeenCalledWith('usage-live', 10, TOKEN_MOCK, undefined);
+    });
+
+    test.each([
+      ['pause', pausePipelineBackfill, 'pauseBackfill'],
+      ['resume', resumePipelineBackfill, 'resumeBackfill'],
+      ['cancel', cancelPipelineBackfill, 'cancelBackfill'],
+    ] as const)('%s sends its verb for the run with the caller token', async (_verb, action, method) => {
+      runner[method].mockResolvedValue({ success: true });
+
+      await action('run-1');
+
+      expect(runner[method]).toHaveBeenCalledWith('run-1', TOKEN_MOCK);
+    });
+
+    test('a refusal is carried through untouched', async () => {
+      runner.pauseBackfill.mockResolvedValue({ success: false, status: 409, errorMessage: 'run is done' });
+
+      const res = await pausePipelineBackfill('run-1');
+
+      expect(res).toEqual({ success: false, status: 409, errorMessage: 'run is done' });
+    });
+
+    test('issues no request when no runner host is configured', async () => {
+      asConfigured(false);
+
+      const results = await Promise.all([
+        startPipelineBackfill('usage-live'),
+        listPipelineBackfills('usage-live', 10),
+        pausePipelineBackfill('run-1'),
+        resumePipelineBackfill('run-1'),
+        cancelPipelineBackfill('run-1'),
+      ]);
+
+      results.forEach((res) => expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED }));
+      expect(runner.startBackfill).not.toHaveBeenCalled();
+      expect(runner.listBackfills).not.toHaveBeenCalled();
+      expect(runner.pauseBackfill).not.toHaveBeenCalled();
+      expect(runner.resumeBackfill).not.toHaveBeenCalled();
+      expect(runner.cancelBackfill).not.toHaveBeenCalled();
+    });
   });
 });

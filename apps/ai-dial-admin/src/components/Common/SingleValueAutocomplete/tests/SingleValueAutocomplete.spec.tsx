@@ -95,6 +95,17 @@ describe('SingleValueAutocomplete', () => {
     expect(screen.queryByText('Ttl')).toBeNull();
   });
 
+  test('does not allow a disabled selected value to be removed', async () => {
+    const onChange = vi.fn();
+    renderAutocomplete({ value: 'ttl', disabled: true, onChange });
+
+    const removeButton = screen.getByRole('button', { name: 'Buttons.Remove' });
+    expect(removeButton).toBeDisabled();
+
+    await userEvent.click(removeButton);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   test('disables the input when disabled', () => {
     renderAutocomplete({ disabled: true });
 
