@@ -3,7 +3,6 @@ import { FC, useCallback } from 'react';
 import ToolsetAssetProperties from '@/src/components/Assets/Toolsets/View/Properties';
 import { ToolsetPublication } from '@/src/models/dial/publications';
 import { DialToolsetResource } from '@/src/models/dial/resource';
-import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
 
 interface Props {
   publication: ToolsetPublication;
@@ -13,19 +12,8 @@ interface Props {
 const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
   const onChangeToolset = useCallback(
     (updatedToolset: DialToolsetResource) => {
-      // Same as `ApplicationDetails`: a publication review copy attaches its path flat — it is not
-      // a merged Core read, so the path never lives in `_metadata`.
-      const { path } = updatedToolset as DialToolsetResource & { path?: string };
-      const updatedPath = updatePathWithNameAndVersion(
-        path ?? '',
-        updatedToolset.name || '',
-        updatedToolset.version ?? '',
-      );
       const updatedToolsets = [...(publication.toolSetResources || [])];
-      updatedToolsets[0] = {
-        ...updatedToolsets[0],
-        toolSetResource: { ...updatedToolset, path: updatedPath } as unknown as DialToolsetResource,
-      };
+      updatedToolsets[0] = { ...updatedToolsets[0], toolSetResource: updatedToolset };
       onChange?.({ ...publication, toolSetResources: updatedToolsets });
     },
     [publication, onChange],

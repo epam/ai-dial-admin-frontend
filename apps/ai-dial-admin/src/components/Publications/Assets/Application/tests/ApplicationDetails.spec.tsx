@@ -15,15 +15,6 @@ vi.mock('@/src/components/Assets/Apps/Properties', () => ({
   },
 }));
 
-vi.mock('@/src/utils/files/path', () => ({
-  updatePathWithNameAndVersion: (oldPath: string, newName: string, newVersion: string) => {
-    const parts = oldPath.split('/').filter(Boolean);
-    parts.pop();
-    parts.push(`${newName}__${newVersion}`);
-    return parts.join('/');
-  },
-}));
-
 const mockApplicationResource = {
   name: 'Test App',
   description: 'A test application',
@@ -145,21 +136,20 @@ describe('Publications :: ApplicationDetails', () => {
     expect(updatedPublication.applicationResources[0].applicationResource.version).toBe('2.0.0');
   });
 
-  test('onChangeApplication updates path with name and version', () => {
+  test('onChangeApplication passes the edited resource through without rebuilding its path', () => {
     const onChange = vi.fn();
     setup({ onChange });
 
-    const updatedAsset = {
+    const updated = {
       ...mockApplicationResource,
-      name: 'NewApp',
-      version: '3.0.0',
-      path: 'apps/folder/TestApp__1.0.0',
+      _metadata: { name: 'Test', path: 'apps/folder/TestApp__1.0.0', folderId: 'apps/folder', version: '3.0.0' },
     } as any;
 
-    capturedAssetProps.onChange(updatedAsset);
+    capturedAssetProps.onChange(updated);
 
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.applicationResources[0].applicationResource.path).toBe('apps/folder/NewApp__3.0.0');
+    const resource = onChange.mock.calls[0][0].applicationResources[0].applicationResource;
+    expect(resource).toBe(updated);
+    expect(resource.path).toBe('apps/folder/TestApp__1.0.0');
   });
 
   test('onChangeApplication preserves other publication properties', () => {
@@ -227,22 +217,6 @@ describe('Publications :: ApplicationDetails', () => {
     render(<ApplicationDetails publication={createMockPublication()} />);
 
     expect(capturedAssetProps.runners).toBeUndefined();
-  });
-
-  test('onChangeApplication handles empty name gracefully', () => {
-    const onChange = vi.fn();
-    setup({ onChange });
-
-    capturedAssetProps.onChange({
-      ...mockApplicationResource,
-      name: '',
-      version: '1.0.0',
-      path: 'apps/folder/TestApp__1.0.0',
-    } as any);
-
-    expect(onChange).toHaveBeenCalledTimes(1);
-    const updatedResource = onChange.mock.calls[0][0].applicationResources[0].applicationResource;
-    expect(updatedResource.path).toBe('apps/folder/__1.0.0');
   });
 
   test('onChangeApplication only updates first application resource', () => {
