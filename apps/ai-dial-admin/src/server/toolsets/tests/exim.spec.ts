@@ -19,7 +19,7 @@ describe('Server :: Toolsets :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
-  test('fetches each selected toolset, sets a prefixed id, keeps authSettings unredacted', async () => {
+  test('fetches each selected toolset, omits `_metadata`, and keeps authSettings unredacted', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'toolsets/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({
@@ -33,12 +33,10 @@ describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
     const result = await buildToolsetsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.TOOLSET, 'public/folder/name__1.0');
-    // The export document carries the merged entity's `_metadata` verbatim — import strips it.
     expect((result.toolSets ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
       authSettings: { authenticationType: 'oauth', clientSecret: 'super-secret' },
-      _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', version: '1.0' },
       id: 'toolsets/public/folder/name__1.0',
     });
   });

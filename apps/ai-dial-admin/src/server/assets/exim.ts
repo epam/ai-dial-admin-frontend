@@ -86,7 +86,7 @@ export const buildAssetsExport = async <T extends { id?: string; _metadata?: unk
     for (const leafPath of leafPaths) {
       const entity = await assetApi.getMerged<T>(token, config.resourceType, leafPath);
       if (entity) {
-        entities.push({ ...entity, id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${leafPath}` });
+        entities.push({ ...stripMetadata(entity), id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${leafPath}` } as T);
       }
     }
   }
@@ -96,8 +96,9 @@ export const buildAssetsExport = async <T extends { id?: string; _metadata?: unk
 /**
  * Strips flat admin-format identity fields (`folderId`/`path`/`version`/`id`) off an entity before
  * any write to Core. The merge layer no longer grafts these flat — they nest under `_metadata`,
- * which `stripMetadata` drops — but `buildAssetsExport` stamps `id` on every entry, and an older
- * or hand-edited export document may still carry the flat spellings. Core's content DTOs have no
+ * which `stripMetadata` drops — and `buildAssetsExport` now also excludes `_metadata` while
+ * stamping `id` on every entry — but an older or hand-edited export document may still carry the
+ * flat spellings. Core's content DTOs have no
  * such fields and reject them outright (`FAIL_ON_UNKNOWN_PROPERTIES`, the Jackson default). Use as
  * a type's `transformForPut` (or compose into one) whenever the entity carries no other
  * admin-only fields needing to be stripped before `put`.
@@ -198,9 +199,10 @@ export const importAssetsExport = async <T extends { id?: string; _metadata?: un
       continue;
     }
 
-    // Export documents carry `_metadata` as provenance, but no written body may: the config
-    // resource DTOs 400 on it, and the resource DTOs would store it verbatim. Stripped here so
-    // every type's import is covered, with or without its own `transformForPut`.
+    // New exports omit `_metadata`, but legacy or hand-edited documents may contain it. No written
+    // body may: config resource DTOs 400 on it, and resource DTOs would store it verbatim. Stripped
+    // here so every type's import remains backward compatible, with or without its own
+    // `transformForPut`.
     const transformed = config.transformForPut ? config.transformForPut(entity) : entity;
     const body = stripMetadata(transformed);
     const result = await assetApi.put(token, config.resourceType, targetPath, body, { allowOverride: true });

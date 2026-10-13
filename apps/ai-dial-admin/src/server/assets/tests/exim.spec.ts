@@ -40,7 +40,7 @@ const itemNode = (url: string) => ({ url, nodeType: 'ITEM' });
 const folderNode = (url: string, items: unknown[] = []) => ({ url, nodeType: 'FOLDER', items });
 
 describe('Server :: Assets :: exim :: buildAssetsExport', () => {
-  test('fetches each selected entity and sets a prefixed id, keeping its `_metadata` as exported', async () => {
+  test('fetches each selected entity, omits `_metadata`, and sets a prefixed id', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue(itemNode('prompts/public/folder/name__1.0')),
       getMerged: vi.fn().mockResolvedValue({
@@ -52,11 +52,8 @@ describe('Server :: Assets :: exim :: buildAssetsExport', () => {
     const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.PROMPT, 'public/folder/name__1.0');
-    // The export document carries the merged entity's `_metadata` verbatim — provenance for
-    // consumers of the export; only the import side strips it.
     expect((result as any).widgets[0]).toEqual({
       name: 'name',
-      _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', author: 'me' },
       id: 'prompts/public/folder/name__1.0',
     });
   });
