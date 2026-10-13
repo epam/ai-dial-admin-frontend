@@ -19,7 +19,7 @@ describe('Server :: Applications :: exim :: resolveImportDestination', () => {
 });
 
 describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
-  test('fetches each selected application and sets a prefixed id', async () => {
+  test('fetches each selected application, omits `_metadata`, and sets a prefixed id', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue({ url: 'applications/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({
@@ -32,11 +32,9 @@ describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
     const result = await buildApplicationsExport(assetApi, {} as any, ['public/folder/name__1.0']);
 
     expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.APPLICATION, 'public/folder/name__1.0');
-    // The export document carries the merged entity's `_metadata` verbatim — import strips it.
     expect((result.applications ?? [])[0]).toEqual({
       name: 'name',
       version: '1.0',
-      _metadata: { name: 'name', folderId: 'public/folder/', path: 'public/folder/name__1.0', version: '1.0' },
       id: 'applications/public/folder/name__1.0',
     });
   });
