@@ -105,14 +105,7 @@ export const getPathSegments = (fullPath: string): string[] => {
   return paths;
 };
 
-export const updatePathWithNameAndVersion = (oldPath: string, newName: string, newVersion: string): string => {
-  const parts = oldPath.split('/').filter(Boolean);
-  parts.pop();
-  parts.push(`${newName}__${newVersion}`);
-  return parts.join('/');
-};
-
-/** Versionless counterpart (prompts/conversations): the new name replaces the last segment verbatim. */
+/** Versionless rename (prompts/conversations): the new name replaces the last segment verbatim. */
 export const updatePathWithName = (oldPath: string, newName: string): string => {
   const parts = oldPath.split('/').filter(Boolean);
   parts.pop();

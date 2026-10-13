@@ -14,15 +14,6 @@ vi.mock('@/src/components/Assets/Toolsets/View/Properties', () => ({
   },
 }));
 
-vi.mock('@/src/utils/files/path', () => ({
-  updatePathWithNameAndVersion: (oldPath: string, newName: string, newVersion: string) => {
-    const parts = oldPath.split('/').filter(Boolean);
-    parts.pop();
-    parts.push(`${newName}__${newVersion}`);
-    return parts.join('/');
-  },
-}));
-
 const mockToolsetResource = {
   name: 'Test Toolset',
   description: 'A test toolset',
@@ -118,21 +109,25 @@ describe('Publications :: ToolsetDetails', () => {
     expect(updatedPublication.toolSetResources[0].toolSetResource.version).toBe('2.0.0');
   });
 
-  test('onChangeToolset updates path with name and version', () => {
+  test('onChangeToolset passes the edited resource through without rebuilding its path', () => {
     const onChange = vi.fn();
     setup({ onChange });
 
-    const updatedToolset = {
+    const updated = {
       ...mockToolsetResource,
-      name: 'NewToolset',
-      version: '3.0.0',
-      path: 'toolsets/folder/TestToolset__1.0.0',
+      _metadata: {
+        name: 'Test',
+        path: 'toolsets/folder/TestToolset__1.0.0',
+        folderId: 'toolsets/folder',
+        version: '3.0.0',
+      },
     } as any;
 
-    capturedPropertiesProps.onChange(updatedToolset);
+    capturedPropertiesProps.onChange(updated);
 
-    const updatedPublication = onChange.mock.calls[0][0];
-    expect(updatedPublication.toolSetResources[0].toolSetResource.path).toBe('toolsets/folder/NewToolset__3.0.0');
+    const resource = onChange.mock.calls[0][0].toolSetResources[0].toolSetResource;
+    expect(resource).toBe(updated);
+    expect(resource.path).toBe('toolsets/folder/TestToolset__1.0.0');
   });
 
   test('onChangeToolset preserves all publication properties', () => {
@@ -194,22 +189,6 @@ describe('Publications :: ToolsetDetails', () => {
     setup({ publication });
 
     expect(capturedPropertiesProps.selectedToolset).toBeUndefined();
-  });
-
-  test('onChangeToolset handles empty name gracefully', () => {
-    const onChange = vi.fn();
-    setup({ onChange });
-
-    capturedPropertiesProps.onChange({
-      ...mockToolsetResource,
-      name: '',
-      version: '1.0.0',
-      path: 'toolsets/folder/TestToolset__1.0.0',
-    } as any);
-
-    expect(onChange).toHaveBeenCalledTimes(1);
-    const updatedResource = onChange.mock.calls[0][0].toolSetResources[0].toolSetResource;
-    expect(updatedResource.path).toBe('toolsets/folder/__1.0.0');
   });
 
   test('onChangeToolset only updates first toolset resource', () => {
