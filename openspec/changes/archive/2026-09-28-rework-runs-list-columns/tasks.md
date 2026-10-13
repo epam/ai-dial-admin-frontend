@@ -18,9 +18,9 @@
 
 ## 4. Reworked column set
 
-- [x] 4.1 Rework `RUNS_COLUMN` in `apps/ai-dial-admin/src/constants/grid-columns/grid-columns.tsx` to the 12 columns in spec order — Status first (fixed width, `minWidth` below the global 150), combined `Test case run name`, renamed `Runs` / `Test cases`, `Created date` removed, `Test Suite ID` visible, and the new Target / Metrics / Duration / Cost / Overall score columns reading their mocks through `valueGetter` with `sortable: false, filter: false` and a `field` each (the two count columns keep the same pair they already carried)
-- [x] 4.2 Set sizing per column over the grid's global `flex: 1` / `minWidth: 150`: a `maxWidth` ceiling on the two counts, Duration, Cost and Overall score so flex cannot pad them out; a `minWidth` floor on Target and the two dates; `width` / `minWidth` / `maxWidth` all equal on Status; `Test case run name`, `Test Suite ID` and `Metrics` left to divide the remainder
-- [x] 4.3 Add the suite variant (`RUNS_COLUMN` minus `testSuiteId`, derived by `colId` in the spirit of the existing `suppressCellTooltips` / `restrictSort` helpers) and the compare-picker subset (Status, Test case run name, Runs, Test cases, Start Date, End Date)
+- [x] 4.1 Rework `RUNS_COLUMN` in `apps/ai-dial-admin/src/constants/grid-columns/grid-columns.tsx` to the 12 columns in spec order — Status first (fixed width, `minWidth` below the global 150), combined `Test suite run name`, renamed `Runs` / `Test cases`, `Created date` removed, `Test Suite ID` visible, and the new Target / Metrics / Duration / Cost / Overall score columns reading their mocks through `valueGetter` with `sortable: false, filter: false` and a `field` each (the two count columns keep the same pair they already carried)
+- [x] 4.2 Set sizing per column over the grid's global `flex: 1` / `minWidth: 150`: a `maxWidth` ceiling on the two counts, Duration, Cost and Overall score so flex cannot pad them out; a `minWidth` floor on Target and the two dates; `width` / `minWidth` / `maxWidth` all equal on Status; `Test suite run name`, `Test Suite ID` and `Metrics` left to divide the remainder
+- [x] 4.3 Add the suite variant (`RUNS_COLUMN` minus `testSuiteId`, derived by `colId` in the spirit of the existing `suppressCellTooltips` / `restrictSort` helpers) and the compare-picker subset (Status, Test suite run name, Runs, Test cases, Start Date, End Date)
 
 ## 5. Surface wiring
 

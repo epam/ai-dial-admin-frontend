@@ -274,13 +274,49 @@ describe('AgGridWrapper — column state persistence', () => {
     expect(saveColumnsStateToStorage).not.toHaveBeenCalled();
   });
 
-  test('writes column state for a resize the operator performed', () => {
+  test('keeps the width of a column the operator resized and drops widths they did not drag', () => {
     renderWithStorage();
     vi.mocked(saveColumnsStateToStorage).mockClear();
+    const colDef = {};
 
-    fireColumnResized('uiColumnResized');
+    act(() => {
+      const onColumnResized = gridOptions().onColumnResized as (event: unknown) => void;
+      onColumnResized({
+        source: 'uiColumnResized',
+        columns: [{ getColId: () => 'id', getColDef: () => colDef }],
+        api: { ...makeFakeApi(), getColumnState: () => [{ colId: 'id', width: 240 }] },
+      });
+      vi.advanceTimersByTime(DEBOUNCE_MS);
+    });
 
-    expect(saveColumnsStateToStorage).toHaveBeenCalledWith(STORAGE_KEY, expect.anything());
+    expect(saveColumnsStateToStorage).toHaveBeenCalledWith(STORAGE_KEY, {
+      columns: [{ colId: 'id', width: 240 }],
+      filters: {},
+      sizedColIds: ['id'],
+    });
+
+    vi.mocked(saveColumnsStateToStorage).mockClear();
+    act(() => {
+      const onSortChanged = gridOptions().onSortChanged as (event: unknown) => void;
+      onSortChanged({
+        api: {
+          ...makeFakeApi(),
+          getColumnState: () => [
+            { colId: 'id', width: 240 },
+            { colId: 'name', width: 180, sort: 'asc' },
+          ],
+        },
+      });
+    });
+
+    expect(saveColumnsStateToStorage).toHaveBeenCalledWith(STORAGE_KEY, {
+      columns: [
+        { colId: 'id', width: 240 },
+        { colId: 'name', sort: 'asc' },
+      ],
+      filters: {},
+      sizedColIds: ['id'],
+    });
   });
 });
 
@@ -296,11 +332,35 @@ describe('AgGridWrapper — sizing strategy', () => {
     expect('onGridSizeChanged' in gridOptions()).toBe(false);
   });
 
-  test('disables fit-to-width sizing for a grid with persisted state', () => {
+  test('refits a persisted grid when its size changes and skips the kit autosize strategy', () => {
     render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[]} storageKey="runs-v2" />);
+    const sizeColumnsToFit = vi.fn();
+
+    act(() => {
+      const onGridSizeChanged = gridOptions().onGridSizeChanged as (event: {
+        api: { sizeColumnsToFit: () => void };
+      }) => void;
+      onGridSizeChanged({ api: { sizeColumnsToFit } });
+    });
 
     expect(gridOptions().autoSizeStrategy).toBeUndefined();
-    expect(gridOptions().onGridSizeChanged).toBeUndefined();
     expect('autoSizeStrategy' in gridOptions()).toBe(true);
+    expect(sizeColumnsToFit).toHaveBeenCalledOnce();
+    expect(sizeColumnsToFit).toHaveBeenCalledWith();
+  });
+
+  test('keeps a caller size-change handler on a persisted grid', () => {
+    const onGridSizeChanged = vi.fn();
+
+    render(
+      <AgGridWrapper
+        columnDefs={[{ field: 'id' }]}
+        rowData={[]}
+        storageKey="runs-v2"
+        additionalGridOptions={{ onGridSizeChanged }}
+      />,
+    );
+
+    expect(gridOptions().onGridSizeChanged).toBe(onGridSizeChanged);
   });
 });

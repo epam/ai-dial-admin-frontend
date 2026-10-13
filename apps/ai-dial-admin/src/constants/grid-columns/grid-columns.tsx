@@ -1349,7 +1349,7 @@ export const RUNS_COLUMN: ColDef[] = [
   {
     field: 'testRunName',
     colId: 'testRunName',
-    headerName: 'Test case run name',
+    headerName: 'Test suite run name',
     cellRenderer: TitleSubtitleCellRenderer,
     cellRendererParams: { getSubtitle: (data?: Run) => data?.id },
     tooltipValueGetter: () => undefined,

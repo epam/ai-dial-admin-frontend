@@ -11,10 +11,11 @@ import {
   GridApi,
   GridOptions,
   GridReadyEvent,
+  GridSizeChangedEvent,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
 import { debounce } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { EDITOR_THEMES } from '@/src/types/editor';
@@ -53,20 +54,40 @@ const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
 const loadPersistedModel = (storageKey: string | undefined, defaultSorts: ColumnState[]): GridModel | null =>
   storageKey ? getColumnsStateFromStorage(storageKey, defaultSorts) : null;
 
+const withoutStoredWidth = ({ width: __width, ...column }: ColumnState): ColumnState => column;
+
+const columnStateToStore = (columns: ColumnState[], sizedColIds: ReadonlySet<string>): ColumnState[] =>
+  columns.map((column) => (column.colId && sizedColIds.has(column.colId) ? column : withoutStoredWidth(column)));
+
+const columnStateToApply = (model: GridModel): ColumnState[] => {
+  const sized = new Set(model.sizedColIds ?? []);
+  return model.columns.map((column) => (column.colId && sized.has(column.colId) ? column : withoutStoredWidth(column)));
+};
+
 const applyGridState = (gridApi: GridApi, model: GridModel | null, defaultSorts: ColumnState[]) => {
   if (model) {
     gridApi.setFilterModel(model.filters);
-    gridApi.applyColumnState({ state: model.columns });
+    gridApi.applyColumnState({ state: columnStateToApply(model) });
   } else {
     gridApi.applyColumnState({ state: defaultSorts });
   }
 };
 
-const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[]): ColDef[] =>
-  columnDefs.map((col) => {
-    const fromStorage = stored?.find((s) => s.colId === col.colId) ?? {};
-    return { ...fromStorage, ...col, sort: undefined };
+const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[], sizedColIds: string[]): ColDef[] => {
+  const sized = new Set(sizedColIds);
+  return columnDefs.map((col) => {
+    const fromStorage = stored?.find((s) => s.colId === col.colId);
+    if (!fromStorage) return { ...col, sort: undefined };
+    const { width, ...stateWithoutWidth } = fromStorage;
+    const keepWidth = typeof width === 'number' && sized.has(fromStorage.colId);
+    return {
+      ...stateWithoutWidth,
+      ...col,
+      sort: undefined,
+      ...(keepWidth ? { suppressSizeToFit: true, width } : {}),
+    };
   });
+};
 
 const suppressArrowKeys = (params: SuppressKeyboardEventParams) => ARROW_KEYS.includes(params.event.key);
 
@@ -106,6 +127,7 @@ const AgGridWrapper = <T extends object>({
   getHref,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
+  const sizedColIdsRef = useRef<Set<string>>(new Set());
   const { currentTheme } = useTheme();
   const { onCellContextMenu, getContextMenuItems } = useCellContextMenu<T>(getHref);
   const colorScheme = currentTheme === EDITOR_THEMES.dark ? GridColorScheme.Dark : GridColorScheme.Light;
@@ -113,11 +135,12 @@ const AgGridWrapper = <T extends object>({
   const onStateChanged = useCallback(
     (e: AgGridEvent) => {
       if (storageKey) {
-        const columns = e.api.getColumnState();
-        const filters = e.api.getFilterModel();
+        const sizedColIds = [...sizedColIdsRef.current];
+        const columns = columnStateToStore(e.api.getColumnState(), sizedColIdsRef.current);
         const model: GridModel = {
           columns,
-          filters,
+          filters: e.api.getFilterModel(),
+          sizedColIds,
         };
         saveColumnsStateToStorage(storageKey, model);
       }
@@ -138,8 +161,12 @@ const AgGridWrapper = <T extends object>({
     const renderable = withFormattedValueRenderer(columnDefs);
     if (isLiveData || !storageKey || typeof window === 'undefined') return renderable;
     const model = loadPersistedModel(storageKey, getDefaultSorts(columnDefs));
-    return model ? mergeStoredColumnDefs(renderable, model.columns) : renderable;
+    return model ? mergeStoredColumnDefs(renderable, model.columns, model.sizedColIds ?? []) : renderable;
   }, [columnDefs, isLiveData, storageKey]);
+
+  useEffect(() => {
+    sizedColIdsRef.current = new Set(storageKey ? (loadPersistedModel(storageKey, [])?.sizedColIds ?? []) : []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!columnDefs || !gridApi) return;
@@ -162,6 +189,11 @@ const AgGridWrapper = <T extends object>({
       if (GRID_SIZED_RESIZE_SOURCES.includes(e.source)) {
         return;
       }
+      e.columns?.forEach((column) => {
+        column.getColDef().suppressSizeToFit = true;
+        const id = column.getColId();
+        if (id) sizedColIdsRef.current.add(id);
+      });
       handleStateUpdated(e);
     },
     [handleStateUpdated],
@@ -169,9 +201,15 @@ const AgGridWrapper = <T extends object>({
 
   const getRowIdFromRow = useCallback((row: T) => getRowId!({ data: row } as GetRowIdParams<T>), [getRowId]);
 
-  // The kit grid fits columns to the viewport on every resize, which would discard persisted widths.
+  // Drop the kit's fitGridWidth strategy so that automatic fit is not stored as an operator width.
+  // Refit on size change the same way the kit does; a column the operator dragged stays put.
   const persistedWidthOptions: GridOptions = storageKey
-    ? { autoSizeStrategy: undefined, onGridSizeChanged: undefined }
+    ? {
+        autoSizeStrategy: undefined,
+        onGridSizeChanged: (event: GridSizeChangedEvent) => {
+          event.api.sizeColumnsToFit();
+        },
+      }
     : {};
 
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
