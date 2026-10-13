@@ -4,19 +4,20 @@ import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
+import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import ResourceAuthentication from '@/src/components/Assets/Resources/Auth/ResourceAuthentication';
 import ResourceAuthHeader from '@/src/components/Assets/Resources/Auth/ResourceAuthHeader';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
-import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
-import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
+import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
@@ -26,8 +27,7 @@ import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
-import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
+import { CoreResourceEntityMetadata, DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { Toolset } from '@/src/models/dial/toolset';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -73,9 +73,16 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, catalogSchemas, on
         {isPublication && (
           <VersionControl
             containerClassName="w-[175px]"
-            version={selectedToolset.version}
+            version={selectedToolset._metadata?.version}
             onChange={(version?: string) =>
-              onChange?.({ ...selectedToolset, version: version || '', display_version: version || '' })
+              onChange?.({
+                ...selectedToolset,
+                display_version: version || '',
+                _metadata: {
+                  ...selectedToolset._metadata,
+                  version: version || '',
+                } as CoreResourceEntityMetadata,
+              })
             }
           />
         )}

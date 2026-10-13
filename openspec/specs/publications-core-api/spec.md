@@ -87,7 +87,7 @@ The system SHALL approve via `POST /v1/ops/publication/approve`, reject via `POS
 - **THEN** the matching Core endpoint is called with the `publications/`-prefixed path
 
 ### Requirement: Update with file staging and target recalculation
-The system SHALL update a publication via `POST /v1/ops/publication/update`. When new files are attached it SHALL fetch the user bucket (`GET /v1/bucket`), upload each file to `{bucket}/publications_updates/` (`PUT /v1/files/{path}`, OVERRIDE), and add them as resources with action ADD_IF_ABSENT and recalculated source/target URLs. It SHALL recalculate every resource's target URL from the publication's folder id (per-segment URL-encoded — additionally `__`-versioned for application and toolset resources, plain for prompt and conversation resources), send the rebuilt publication to Core, and then persist each content-addressed resource body **directly to DIAL Core** (`PUT /v1/{type}/{path}`, via the shared `core-asset-client`). For Application and Toolset resources, the content-write path SHALL be resolved from the enriched resource's `_metadata.path` identity field. Prompt and conversation bodies SHALL be persisted with their FE-identity fields `path` and `version` stripped (Core's DTOs are `id/folderId/name/content` and ignore unknown fields). The per-resource persist SHALL NOT call the admin BE.
+The system SHALL update a publication via `POST /v1/ops/publication/update`. When new files are attached it SHALL fetch the user bucket (`GET /v1/bucket`), upload each file to `{bucket}/publications_updates/` (`PUT /v1/files/{path}`, OVERRIDE), and add them as resources with action ADD_IF_ABSENT and recalculated source/target URLs. It SHALL recalculate every resource's target URL from the publication's folder id (per-segment URL-encoded — additionally `__`-versioned for application and toolset resources, plain for prompt and conversation resources), send the rebuilt publication to Core, and then persist each content-addressed resource body **directly to DIAL Core** (`PUT /v1/{type}/{path}`, via the shared `core-asset-client`). For application and toolset resources, the version in the target URL SHALL come from the enriched resource's `_metadata.version`, and the content-write path SHALL be the resource's `_metadata.path` with its last segment replaced by `{name}__{version}` (the review copy's location after Core moves it). Prompt and conversation bodies SHALL be persisted with their FE-identity fields `path` and `version` stripped (Core's DTOs are `id/folderId/name/content` and ignore unknown fields). The per-resource persist SHALL NOT call the admin BE.
 
 #### Scenario: Update uploads added files to the staging folder
 - **WHEN** a publication is updated with newly attached files
@@ -97,9 +97,17 @@ The system SHALL update a publication via `POST /v1/ops/publication/update`. Whe
 - **WHEN** a publication is updated after its folder id changed
 - **THEN** every resource's target URL is rebuilt from the folder id with per-segment encoding before the Core update call — with a `__`-versioned name for application and toolset resources and a plain name for prompt and conversation resources
 
-#### Scenario: Application and Toolset bodies use metadata resource paths
+#### Scenario: Version edit changes the target URL
+- **WHEN** an admin changes the Version of a pending Application or Toolset publication and saves
+- **THEN** the resource's target URL sent to Core ends with `{name}__{newVersion}`
+
+#### Scenario: Version field shows the published version
+- **WHEN** an admin opens the Properties tab of a pending Application or Toolset publication
+- **THEN** the Version field shows the version from the resource's `_metadata.version`
+
+#### Scenario: Application and Toolset bodies use the post-move review path
 - **WHEN** an edited pending Application or Toolset publication resource is persisted after its publication update succeeds
-- **THEN** its content is written to the Core resource URL derived from the enriched resource's `_metadata.path`, and the update succeeds without an internal server error
+- **THEN** its content is written to the Core resource URL derived from `_metadata.path` with the last segment replaced by `{name}__{version}`, and the update succeeds without an internal server error
 
 #### Scenario: Resource bodies persisted to Core
 - **WHEN** a publication update persists a content-addressed resource body

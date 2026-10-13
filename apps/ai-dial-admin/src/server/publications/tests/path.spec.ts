@@ -10,6 +10,7 @@ import {
   parseEncodedVersionedPath,
   parsePath,
   parseVersionedPath,
+  replaceVersionedName,
   stripPrefix,
   stripTrailingSlash,
 } from '../path';
@@ -88,5 +89,18 @@ describe('Server :: Publications :: path', () => {
     expect(encodeFolderPath('my folder/sub')).toBe('my%20folder/sub/');
     expect(encodeFolderPath('folder/')).toBe('folder/');
     expect(encodeFolderPath('')).toBe('');
+  });
+
+  test('replaceVersionedName swaps the last segment for name__version', () => {
+    expect(replaceVersionedName('bucket/sub/app__1.0.0', 'app', '2.0.0')).toBe('bucket/sub/app__2.0.0');
+  });
+
+  test('replaceVersionedName drops the suffix for an empty version', () => {
+    expect(replaceVersionedName('bucket/app__1.0.0', 'app', '')).toBe('bucket/app');
+    expect(replaceVersionedName('bucket/app__1.0.0', 'app')).toBe('bucket/app');
+  });
+
+  test('replaceVersionedName handles a path with no folder', () => {
+    expect(replaceVersionedName('app__1.0.0', 'app', '2.0.0')).toBe('app__2.0.0');
   });
 });
