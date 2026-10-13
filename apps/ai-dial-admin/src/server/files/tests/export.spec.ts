@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test, vi } from 'vitest';
+import { readZipEntries } from '@/src/server/zip/tests/zip-fixtures';
 
 import { buildFilesExportZip, resolveExportEntries, toExportArchivePath } from '../export';
 
@@ -154,11 +154,7 @@ describe('Server :: Files :: export :: buildFilesExportZip', () => {
     expect(filesCoreApi.downloadFile).toHaveBeenCalledTimes(3);
     expect(result.fileName).toBe('files-export-2.zip');
 
-    const zip = await JSZip.loadAsync(result.blob);
-    const filePaths = Object.values(zip.files)
-      .filter((entry) => !entry.dir)
-      .map((entry) => entry.name)
-      .sort();
+    const filePaths = Object.keys(await readZipEntries(result.blob)).sort();
     expect(filePaths).toEqual(['files/folder/a.txt', 'files/folder/sub/b.txt', 'files/single.txt']);
   });
 
