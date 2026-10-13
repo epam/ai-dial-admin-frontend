@@ -1,6 +1,6 @@
 'use client';
 
-import { Grid } from '@epam/ai-dial-ui-kit';
+import { Grid, GridColorScheme } from '@epam/ai-dial-ui-kit';
 import {
   AgGridEvent,
   ColDef,
@@ -15,6 +15,9 @@ import {
 } from 'ag-grid-community';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useTheme } from '@/src/context/ThemeContext';
+import { EDITOR_THEMES } from '@/src/types/editor';
 
 import DisplayNameCellRenderer from './CellRenderers/DisplayNameCellRenderer';
 import FormattedValueCellRenderer from './CellRenderers/FormattedValueCellRenderer';
@@ -103,7 +106,9 @@ const AgGridWrapper = <T extends object>({
   getHref,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
+  const { currentTheme } = useTheme();
   const { onCellContextMenu, getContextMenuItems } = useCellContextMenu<T>(getHref);
+  const colorScheme = currentTheme === EDITOR_THEMES.dark ? GridColorScheme.Dark : GridColorScheme.Light;
 
   const onStateChanged = useCallback(
     (e: AgGridEvent) => {
@@ -196,6 +201,7 @@ const AgGridWrapper = <T extends object>({
       getContextMenuItems={getContextMenuItems}
       onGridApiChange={onGridApiChange}
       additionalGridOptions={gridOptions}
+      colorScheme={colorScheme}
     />
   );
 };
