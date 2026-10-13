@@ -136,12 +136,12 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
               return;
             }
-            testCasesActionsRef.current?.clearDirtyAndRefresh();
+            testCasesActionsRef.current?.clearDirtyAndRefresh(selectedDataset.testCaseSchema);
             setHasTestCaseChanges(false);
             showSuccessAndRefresh();
           });
         } else {
-          testCasesActionsRef.current?.clearDirtyAndRefresh();
+          testCasesActionsRef.current?.clearDirtyAndRefresh(selectedDataset.testCaseSchema);
           setHasTestCaseChanges(false);
           showSuccessAndRefresh();
         }
@@ -223,6 +223,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               isSkipRefresh={isSkipRefresh}
               activeTab={activeTab}
               selectedDataset={selectedDataset}
+              savedSchema={originalDataset.testCaseSchema}
               onChange={onChangeDataset}
               nameExistsError={nameExistsError}
             />

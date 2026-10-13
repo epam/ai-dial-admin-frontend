@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
@@ -15,6 +15,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { getDuplicateFieldNames } from '@/src/utils/evaluation/schema-fields';
 
 interface Props {
   testCaseSchema: TestCaseSchema[];
@@ -99,6 +100,11 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const rowData = useMemo(() => testCaseSchema, [testCaseSchema]);
 
+  const duplicateName = useMemo(() => {
+    const duplicates = getDuplicateFieldNames(testCaseSchema);
+    return testCaseSchema.find(({ name }) => duplicates.has(name?.trim().toLowerCase()))?.name;
+  }, [testCaseSchema]);
+
   const onGridReady = useCallback(
     (event: GridReadyEvent) => {
       setGridApi(event.api);
@@ -124,6 +130,12 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
+      {duplicateName && (
+        <DialNotification
+          variant={NotificationVariant.Error}
+          message={t(TestSuitesI18nKey.DuplicateSchemaFieldName, { name: duplicateName })}
+        />
+      )}
       <div className="flex flex-row justify-between items-center shrink-0">
         <span className="dial-small-text">{t(TestSuitesI18nKey.SchemaDescription)}</span>
         <DialNeutralButton

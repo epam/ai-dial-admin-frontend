@@ -36,7 +36,7 @@ const FileSelectCellRenderer: FC<FileSelectCellRendererParams> = ({
     setValue?.(value);
   };
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <FileSelectInput
         view={view}
         id={id}

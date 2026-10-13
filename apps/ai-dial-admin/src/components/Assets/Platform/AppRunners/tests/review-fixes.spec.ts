@@ -79,7 +79,7 @@ describe('App runner asset :: post-create navigation', () => {
 
 describe('App runner asset :: labels', () => {
   test('Should not reuse the Builders menu label', () => {
-    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Catalog);
+    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.AiGateway);
     const builders = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Builders);
 
     const assetKey = assets?.items?.find((item) => item.href === VIEW)?.key;

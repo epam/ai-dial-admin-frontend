@@ -40,6 +40,15 @@ export const baseStringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
+// For a column the backend accepts only exact comparison on (an enum or a UUID).
+export const exactMatchFilter: Partial<ColDef> = {
+  filterParams: {
+    ...baseFilterParams.filterParams,
+    filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
+    defaultOption: GridFilterType.EQUALS,
+  } as ITextFilterParams,
+};
+
 export const baseNumberFilter: Partial<ColDef> = {
   filter: 'agNumberColumnFilter',
   filterParams: {

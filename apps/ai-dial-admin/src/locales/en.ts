@@ -107,15 +107,18 @@ export default {
   Menu: {
     Entities: 'Entities',
     AccessManagement: 'Access Management',
-    Assets: 'Assets',
-    AssetsDescription:
+    AiGateway: 'AI Gateway',
+    AiGatewayDescription:
+      'Models, toolsets, translators, routes, and applications served by DIAL Core, managed in one place.',
+    Artifacts: 'Artifacts',
+    ArtifactsDescription:
       'Centralized hub for managing reusable resources, ensuring seamless access and efficient utilization across your workflow.',
+    Governance: 'Governance',
+    GovernanceDescription:
+      'Control access, folder permissions, and interceptors, and oversee the approval process to maintain compliance across your organization.',
     Builders: 'Builders',
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
-    Catalog: 'Catalog',
-    CatalogDescription: 'Catalog section',
-    Approvals: 'Approvals',
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
     Datasets: 'Datasets',
@@ -148,7 +151,7 @@ export default {
     Files: 'Files',
     Skills: 'Skills',
     Credentials: 'Credentials',
-    FoldersStorage: 'Folders Storage',
+    FoldersStorage: 'Folder Permissions',
 
     Dashboard: 'Dashboards',
     UsageLog: 'Usage Log',
@@ -184,7 +187,6 @@ export default {
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
       'Control who can access and modify AI resources, ensuring security and efficiency across your organization.',
-    ApprovalsDescription: 'Oversee the approval process to maintain control and compliance across deployments.',
     AuditDescription:
       'Track key metrics on the Dashboard and review detailed Usage Logs to ensure optimal performance, reliability, and efficiency.',
     MCPDescription: 'MCP plugin',
@@ -2069,6 +2071,7 @@ export default {
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',
+    DuplicateSchemaFieldName: "Field name '{name}' is already used. Names must be unique, ignoring case.",
     DuplicateResponseColumnName: "Column name '{name}' is already used.",
     DuplicateResponseColumnNameInPreviousRequest: "Column name '{name}' is already used in a previous request.",
     MetricNameInvalidChars: 'Name must not contain "::" symbols',

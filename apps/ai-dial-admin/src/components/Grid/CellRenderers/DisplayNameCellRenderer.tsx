@@ -1,8 +1,7 @@
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { Avatar, AvatarShape, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import { DisplayNameCellRendererParams } from '@/src/components/Grid/CellRenderers/models';
-import { FallbackIcon } from '@/src/components/Header/User/UserMenu/UserIcon';
 
 const noop = () => undefined;
 
@@ -22,9 +21,9 @@ const DisplayNameCellRenderer = (params: DisplayNameCellRendererParams) => {
       );
     }
     if (iconUrl) {
-      return <FilledIcon fileUrl={iconUrl} onChange={noop} disabled size={28} />;
+      return <FilledIcon fileUrl={iconUrl} onChange={noop} disabled size={40} />;
     }
-    return <FallbackIcon name={displayName} seed={id ?? displayName} />;
+    return <Avatar name={displayName ?? ''} shape={AvatarShape.Square} size={40} textClassName="dial-h3-text" />;
   };
 
   return (

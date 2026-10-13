@@ -11,6 +11,7 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
+import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
   onTestCaseDirtyChange: (hasDirty: boolean) => void;
   activeTab: EntityViewTab;
   selectedDataset: Dataset;
+  savedSchema?: TestCaseSchema[];
   isSkipRefresh?: boolean;
   onChange: (dataset: Dataset, isSkipRefresh?: boolean) => void;
   nameExistsError?: string;
@@ -28,6 +30,7 @@ const DatasetTabsContent: FC<Props> = ({
   onTestCaseDirtyChange,
   activeTab,
   selectedDataset,
+  savedSchema,
   isSkipRefresh,
   onChange,
   nameExistsError,
@@ -60,6 +63,7 @@ const DatasetTabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.TestCases && (
         <DatasetTestCases
           dataset={selectedDataset}
+          savedSchema={savedSchema}
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
         />

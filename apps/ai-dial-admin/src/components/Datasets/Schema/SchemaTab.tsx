@@ -6,6 +6,7 @@ import SchemaManager from '@/src/components/TestSuites/TestCaseSchema/SchemaMana
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getDuplicateFieldNames } from '@/src/utils/evaluation/schema-fields';
 
 interface Props {
   dataset: Dataset;
@@ -24,7 +25,9 @@ const DatasetSchemaTab: FC<Props> = ({ dataset, isSkipRefresh, onChange }) => {
     dispatch({
       type: ValidationActionType.SetField,
       field: 'testCaseSchema',
-      isValid: !dataset.testCaseSchema?.some((item) => !item.name || !item.type),
+      isValid:
+        !dataset.testCaseSchema?.some((item) => !item.name || !item.type) &&
+        getDuplicateFieldNames(dataset.testCaseSchema).size === 0,
     });
   }, [dataset.testCaseSchema, dispatch]);
 

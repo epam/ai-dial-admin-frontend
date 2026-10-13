@@ -9,7 +9,7 @@ describe('KeysList', () => {
 
     render(<KeysList data={data} />);
     expect(screen.getByText(MenuI18nKey.Keys)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Data grid' })).toBeInTheDocument();
   });
 
   test('renders with empty data', () => {

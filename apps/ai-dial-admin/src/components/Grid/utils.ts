@@ -5,6 +5,8 @@ import { GRID_COLUMNS_KEY } from './constants';
 export interface GridModel {
   columns: ColumnState[];
   filters: FilterModel;
+  // Columns the operator dragged. Other stored widths are an automatic fit saved with a sort or filter.
+  sizedColIds?: string[];
 }
 
 export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;

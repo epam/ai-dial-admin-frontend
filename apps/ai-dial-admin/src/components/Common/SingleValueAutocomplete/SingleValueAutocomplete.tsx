@@ -80,7 +80,11 @@ const SingleValueAutocomplete: FC<Props> = ({
     setShowSuggestions(true);
   }, []);
 
-  const handleRemoveValue = useCallback(() => onChange(''), [onChange]);
+  const handleRemoveValue = useCallback(() => {
+    if (!disabled) {
+      onChange('');
+    }
+  }, [disabled, onChange]);
 
   const handleInputBlur = useCallback(() => setShowSuggestions(false), []);
 
@@ -132,6 +136,7 @@ const SingleValueAutocomplete: FC<Props> = ({
                 aria-label={t(ButtonsI18nKey.Remove)}
                 icon={<IconX size={16} aria-hidden />}
                 onClick={handleRemoveValue}
+                disabled={disabled}
               />
             </div>
           )}

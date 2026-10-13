@@ -52,25 +52,46 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
   });
 
-  test('MODELS_COLUMNS pricing rate tooltips keep flat values and format trees', () => {
+  test('MODELS_COLUMNS format pricing rate cells and tooltips consistently', () => {
     const t = (s: string) => s;
     const cols = MODELS_COLUMNS(t);
     const promptColumn = cols.find((c) => c.field === 'pricing.prompt')!;
     const completionColumn = cols.find((c) => c.field === 'pricing.completion')!;
     const cacheReadColumn = cols.find((c) => c.field === 'pricing.cacheRead')!;
+    const cacheWriteColumn = cols.find((c) => c.field === 'pricing.cacheWrite')!;
+    const value = (column: ColDef, pricing: Record<string, unknown>) => {
+      const valueFormatter = column.valueFormatter;
+      if (typeof valueFormatter !== 'function') {
+        throw new Error('Expected a value formatter');
+      }
+      return valueFormatter({ data: { pricing } } as never);
+    };
     const tooltip = (column: ColDef, pricing: Record<string, unknown>) =>
       column.tooltipValueGetter!({ data: { pricing } } as never);
 
-    expect(tooltip(cacheReadColumn, { unit: 'token', cacheRead: '0.0000002' })).toBe('0.0000002');
+    const flatCacheRead = { unit: 'token', cacheRead: '0.0000002' };
+    expect(value(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
+    expect(tooltip(cacheReadColumn, flatCacheRead)).toBe('0.0000002');
 
     const tree = {
       test: { field: 'ttl', operator: '==', value: '1h' },
       ifTrue: '0.000006',
       ifFalse: '0.00000375',
     };
-    expect(tooltip(promptColumn, { unit: 'token', prompt: tree })).toBe('ttl == 1h ? 6 : 3.75');
-    expect(tooltip(completionColumn, { unit: undefined, completion: tree })).toBe('ttl == 1h ? 0.000006 : 0.00000375');
-    expect(tooltip(cacheReadColumn, { unit: 'token', cacheRead: tree })).toBe('ttl == 1h ? 6 : 3.75');
+    const promptPricing = { unit: 'token', prompt: tree };
+    const completionPricing = { unit: undefined, completion: tree };
+    const cacheReadPricing = { unit: 'token', cacheRead: tree };
+    const cacheWritePricing = { unit: 'token', cacheWrite: tree };
+
+    expect(value(promptColumn, promptPricing)).toBe('ttl == 1h ? 6 : 3.75');
+    expect(value(completionColumn, completionPricing)).toBe('ttl == 1h ? 0.000006 : 0.00000375');
+    expect(value(cacheReadColumn, cacheReadPricing)).toBe('ttl == 1h ? 6 : 3.75');
+    expect(value(cacheWriteColumn, cacheWritePricing)).toBe('ttl == 1h ? 6 : 3.75');
+
+    expect(tooltip(promptColumn, promptPricing)).toBe(value(promptColumn, promptPricing));
+    expect(tooltip(completionColumn, completionPricing)).toBe(value(completionColumn, completionPricing));
+    expect(tooltip(cacheReadColumn, cacheReadPricing)).toBe(value(cacheReadColumn, cacheReadPricing));
+    expect(tooltip(cacheWriteColumn, cacheWritePricing)).toBe(value(cacheWriteColumn, cacheWritePricing));
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {

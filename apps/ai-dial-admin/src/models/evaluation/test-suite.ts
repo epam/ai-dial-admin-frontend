@@ -187,6 +187,11 @@ export type TemplateVariablesByRequest = Record<string, TemplateVariable[]>;
 export type TryOutVariablesByRequest = Record<string, Record<string, unknown>>;
 
 export interface TestCaseSchema {
+  /**
+   * Server-assigned and stable across renames; absent on a field added but not yet saved. Dataset
+   * update matches fields by it, so the same `id` with a new `name` moves the test case values.
+   */
+  id?: string;
   name: string;
   type: TestCaseItemType;
   required: boolean;

@@ -264,4 +264,48 @@ describe('DatasetTestCasesList', () => {
     expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toEqual([{ value: 'a' }, { value: 'edited-b' }, { value: 'c' }]);
   });
+
+  describe('DatasetTestCasesList — unsaved rename', () => {
+    const field = (id: string, name: string) => ({
+      id,
+      name,
+      type: TestCaseItemType.STRING,
+      required: false,
+      description: '',
+    });
+    const savedSchema = [field('f-1', 'question'), field('f-2', 'answer')];
+    const renamedDataset: Dataset = { id: 'ds-1', testCaseSchema: [field('f-1', 'prompt'), field('f-2', 'answer')] };
+
+    test('shows the existing value under the renamed field', async () => {
+      vi.mocked(actions.getTestCases).mockResolvedValue(
+        createPageData([{ id: 'case-1', data: { question: 'q', answer: 'a' } }]),
+      );
+
+      render(<DatasetTestCasesList dataset={renamedDataset} savedSchema={savedSchema} />);
+
+      await waitFor(() => expect(capturedRowData).toHaveLength(1));
+      expect(capturedRowData![0]).toMatchObject({ prompt: 'q', answer: 'a' });
+      expect(capturedRowData![0]).not.toHaveProperty('question');
+    });
+
+    test('does not remap the refetch after the rename is saved', async () => {
+      const actionsRef = createRef<DatasetTestCasesActions | null>();
+      vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([{ id: 'case-1', data: { question: 'q' } }]));
+
+      render(
+        <DatasetTestCasesList dataset={renamedDataset} savedSchema={savedSchema} testCasesActionsRef={actionsRef} />,
+      );
+      await waitFor(() => expect(capturedRowData).toHaveLength(1));
+
+      // Server data now carries the new key; the old name is reused by an unrelated value.
+      vi.mocked(actions.getTestCases).mockResolvedValue(
+        createPageData([{ id: 'case-1', data: { prompt: 'q', question: 'other' } }]),
+      );
+      act(() => {
+        actionsRef.current!.clearDirtyAndRefresh(renamedDataset.testCaseSchema);
+      });
+
+      await waitFor(() => expect(capturedRowData![0]).toMatchObject({ prompt: 'q', question: 'other' }));
+    });
+  });
 });

@@ -103,6 +103,8 @@ const HeatMapGrid = <T extends HeatMapGridRow>({
         resizable: false,
         sortable: false,
       },
+      tooltipShowDelay: 0,
+      tooltipSwitchShowDelay: 0,
       onFirstDataRendered: (event: FirstDataRenderedEvent) => {
         fitHeatMapColumns(event.api);
       },
