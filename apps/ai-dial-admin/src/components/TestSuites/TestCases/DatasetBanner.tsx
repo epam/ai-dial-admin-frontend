@@ -1,26 +1,21 @@
 'use client';
 
 import { FC, useCallback, useState } from 'react';
-import { createPortal } from 'react-dom';
 
-import {
-  DialConfirmationPopup,
-  DialEllipsisTooltip,
-  DialGhostButton,
-  DialGhostIconButton,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialGhostButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink, IconPencilMinus, IconUnlink } from '@tabler/icons-react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { DatasetDetachMode } from '@/src/types/evaluation';
+import DetachDatasetModal from './DetachDatasetModal';
 import PickPublicDataset from './PickPublicDataset';
 
 interface Props {
   datasetName: string;
   onOpenDataset: () => void;
-  onDetachDataset: () => void;
+  onDetachDataset: (mode: DatasetDetachMode) => void;
   onAttachDataset: (datasetId: string) => void;
   onBeforeAttach?: () => boolean;
 }
@@ -42,9 +37,9 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
     onAttachDataset(selectedDatasetId);
   };
 
-  const onDetachConfirm = () => {
+  const onDetachConfirm = (mode: DatasetDetachMode) => {
     setIsDetachConfirmOpen(false);
-    onDetachDataset();
+    onDetachDataset(mode);
   };
 
   return (
@@ -84,18 +79,13 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
         />
       )}
 
-      {isDetachConfirmOpen &&
-        createPortal(
-          <DialConfirmationPopup
-            open={isDetachConfirmOpen}
-            header={t(TestSuitesI18nKey.DetachConfirmTitle)}
-            description={t(TestSuitesI18nKey.DetachConfirmDescription)}
-            confirmLabel={t(TestSuitesI18nKey.DetachFromDataset)}
-            onConfirm={onDetachConfirm}
-            onClose={() => setIsDetachConfirmOpen(false)}
-          />,
-          document.body,
-        )}
+      {isDetachConfirmOpen && (
+        <DetachDatasetModal
+          isOpen={isDetachConfirmOpen}
+          onClose={() => setIsDetachConfirmOpen(false)}
+          onConfirm={onDetachConfirm}
+        />
+      )}
     </div>
   );
 };

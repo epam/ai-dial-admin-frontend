@@ -28,7 +28,7 @@ import {
   removeMultipleTestCases,
   removeTestCase,
 } from '@/src/app/[lang]/datasets/actions';
-import { detachDataset, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { detachDataset, getTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns';
 import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
@@ -55,8 +55,9 @@ import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { FilterNode } from '@/src/models/evaluation/structured-query';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { DatasetDetachMode, TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { clearDatasetTestCases } from '@/src/utils/evaluation/clear-dataset-test-cases';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -606,17 +607,34 @@ const TestCasesList: FC<Props> = ({
     [selectedTestSuite, suiteEtag, dataset, showNotification, router, notifyIncompleteBindings],
   );
 
-  const onDetachDatasetCallback = useCallback(async () => {
-    const suiteId = selectedTestSuite.id;
-    if (!suiteId) return;
-    const res = await detachDataset(suiteId);
-    if (res.success) {
+  const onDetachDatasetCallback = useCallback(
+    async (mode: DatasetDetachMode) => {
+      const suiteId = selectedTestSuite.id;
+      if (!suiteId) return;
+
+      const detachRes = await detachDataset(suiteId);
+      if (!detachRes.success) {
+        showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), detachRes.errorMessage));
+        return;
+      }
+
+      if (mode === DatasetDetachMode.START_EMPTY) {
+        // Detach always copies the cases into a new private dataset, so the suite's datasetId changes.
+        const suiteRes = await getTestSuite(suiteId, DEFAULT_ETAG);
+        const privateDatasetId = (suiteRes?.response as TestSuite | undefined)?.datasetId;
+        const clearRes = privateDatasetId ? await clearDatasetTestCases(privateDatasetId) : null;
+        if (!clearRes?.success) {
+          showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), clearRes?.errorMessage));
+          router.refresh();
+          return;
+        }
+      }
+
       showNotification(getSuccessNotification(t(TestSuitesI18nKey.DetachSuccess)));
       router.refresh();
-    } else {
-      showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), res.errorMessage));
-    }
-  }, [selectedTestSuite.id, showNotification, t, router]);
+    },
+    [selectedTestSuite.id, showNotification, t, router],
+  );
 
   const totalCount = turnGrid.groups.length + newTestCases.length;
   const isPrivate = dataset?.visibility === DatasetVisibility.PRIVATE;
