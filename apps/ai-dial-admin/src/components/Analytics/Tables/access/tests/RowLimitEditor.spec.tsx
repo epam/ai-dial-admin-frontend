@@ -226,6 +226,30 @@ describe('RowLimitEditor — JSON view', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
+  test('returns to the visual view from an empty document, as an empty predicate', async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderEditor();
+
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsJson }));
+    expect(screen.getByRole('textbox', { name: 'row-limit-json' })).toHaveValue('');
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsVisual }));
+
+    expect(screen.getByText('children: 0')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(lastValue(onChange)).toEqual({ filter: null, isComplete: true });
+  });
+
+  test('returns to the visual view after the JSON text is cleared', async () => {
+    const user = userEvent.setup();
+    renderEditor({ initialFilter: tooDeep });
+    fireEvent.change(screen.getByRole('textbox', { name: 'row-limit-json' }), { target: { value: '  ' } });
+
+    await user.click(screen.getByRole('radio', { name: AnalyticsTableAccessI18nKey.RowsVisual }));
+
+    expect(screen.getByText('children: 0')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
   test('stays in JSON with the reason for a predicate the visual view cannot hold', async () => {
     const user = userEvent.setup();
     renderEditor({ initialFilter: tooDeep });

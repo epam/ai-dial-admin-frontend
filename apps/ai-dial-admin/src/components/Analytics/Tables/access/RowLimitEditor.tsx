@@ -110,6 +110,15 @@ const RowLimitEditor: FC<Props> = ({ tableName, columns, initialFilter, highligh
       return;
     }
 
+    if (!jsonText.trim()) {
+      const empty = createGroup();
+      setTree(empty);
+      setNote(null);
+      setView(RowLimitView.Visual);
+      emitTree(empty);
+      return;
+    }
+
     const parsed = parseFilterJson(jsonText);
     if (!parsed || !isFilterRepresentable(parsed, 0, NO_FUNCTIONS)) {
       setNote(parsed ? RowLimitNote.TooDeep : RowLimitNote.InvalidJson);
