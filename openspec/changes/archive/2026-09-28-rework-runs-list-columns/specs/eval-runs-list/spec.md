@@ -10,7 +10,7 @@ the compare picker still read it via `GET /api/v1/test-suite-runs`.
 
 ### Requirement: Runs list column set and order
 
-The runs list SHALL present these columns, in this order: Status, Test case run name, Runs, Test
+The runs list SHALL present these columns, in this order: Status, Test suite run name, Runs, Test
 cases, Test Suite ID, Target, Metrics, Start Date, End Date, Duration, Cost, Overall score.
 
 The count columns SHALL be labelled `Runs` and `Test cases`. The list SHALL NOT offer a `Created date`
@@ -42,7 +42,7 @@ carries no information.
 
 ### Requirement: Run name and run id share one column
 
-The list SHALL present a run's name and its id as one column, `Test case run name`, rendered as two
+The list SHALL present a run's name and its id as one column, `Test suite run name`, rendered as two
 lines within the row: the run name as the primary line and the run id as the secondary line, visually
 subordinate to it. The list SHALL NOT present a separate id column.
 
@@ -71,7 +71,7 @@ value on hover and on keyboard focus. Neither line SHALL wrap.
 
 The list SHALL present a Target column identifying what the run evaluated, as two lines: the entity
 name as the primary line and its kind — Application, Model, or MCP — as the secondary line. Truncation
-and the hover / focus affordance SHALL behave as for `Test case run name`.
+and the hover / focus affordance SHALL behave as for `Test suite run name`.
 
 #### Scenario: Target shows name over kind
 
@@ -152,7 +152,7 @@ Overall score as its numeric value.
 
 ### Requirement: Columns keep a configured width and never wrap
 
-`Test case run name`, `Test Suite ID`, and `Metrics` SHALL be flexible: after every other column has
+`Test suite run name`, `Test Suite ID`, and `Metrics` SHALL be flexible: after every other column has
 taken the width it needs, these SHALL divide the remaining width between them.
 
 The narrow columns — the two counts, Duration, Cost, and Overall score — SHALL each carry a width
@@ -168,7 +168,7 @@ fit its header label, which truncates instead; the full label SHALL stay reachab
 
 - **WHEN** the runs list renders in a viewport wider than the sum of its column widths
 - **THEN** the count, duration, cost, and score columns stay within their width ceilings
-- **AND** the remaining width is divided between `Test case run name`, `Test Suite ID`, and `Metrics`
+- **AND** the remaining width is divided between `Test suite run name`, `Test Suite ID`, and `Metrics`
 
 #### Scenario: Nothing wraps in a narrow viewport
 
@@ -282,5 +282,5 @@ Target, Metrics, Duration, Cost, or Overall score columns.
 #### Scenario: Picking a run to compare
 
 - **WHEN** the operator opens the compare-run selection modal
-- **THEN** the grid shows status, `Test case run name`, `Runs`, `Test cases`, Start Date, and End Date
+- **THEN** the grid shows status, `Test suite run name`, `Runs`, `Test cases`, Start Date, and End Date
 - **AND** it shows no Target, Metrics, Duration, Cost, or Overall score column

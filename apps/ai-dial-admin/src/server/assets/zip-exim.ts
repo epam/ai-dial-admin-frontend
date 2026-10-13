@@ -5,10 +5,11 @@
  * same `{ <field>: T[] }` document JSON export/import use.
  */
 
-import JSZip from 'jszip';
+import { BlobReader, BlobWriter, TextReader, ZipReader, ZipWriter } from '@zip.js/zip.js';
 
 import { ParsedAssets } from '@/src/models/import-asset';
 import { isValidZipEntryPathWithPrefix } from '@/src/server/files/zip-import';
+import { listSafeFileEntries, readEntryBounded, ZIP_READER_OPTIONS } from '@/src/server/zip/zip-safety';
 
 export class InvalidAssetZipError extends Error {}
 
@@ -24,9 +25,9 @@ export const buildAssetZip = async <T extends { id?: string }>(
   config: ZipEximConfig<T>,
   document: ParsedAssets,
 ): Promise<Blob> => {
-  const zip = new JSZip();
-  zip.file(config.entryFileName, JSON.stringify(document));
-  return zip.generateAsync({ type: 'blob' });
+  const zipWriter = new ZipWriter(new BlobWriter('application/zip'));
+  await zipWriter.add(config.entryFileName, new TextReader(JSON.stringify(document)));
+  return zipWriter.close();
 };
 
 /**
@@ -59,18 +60,19 @@ export const extractAssetsFromZip = async <T extends { id?: string }>(
   config: ZipEximConfig<T>,
   zipBuffer: ArrayBuffer,
 ): Promise<ParsedAssets> => {
-  const zip = await JSZip.loadAsync(zipBuffer);
+  const reader = new ZipReader(new BlobReader(new Blob([zipBuffer])), ZIP_READER_OPTIONS);
   const documents: ParsedAssets[] = [];
 
-  for (const entry of Object.values(zip.files)) {
-    if (entry.dir) {
-      continue;
+  try {
+    for (const entry of await listSafeFileEntries(reader)) {
+      if (!isValidZipEntryPathWithPrefix(entry.filename, config.entryPrefix) || !entry.filename.endsWith('.json')) {
+        continue;
+      }
+      const content = await (await readEntryBounded(entry)).text();
+      documents.push(JSON.parse(content) as ParsedAssets);
     }
-    if (!isValidZipEntryPathWithPrefix(entry.name, config.entryPrefix) || !entry.name.endsWith('.json')) {
-      continue;
-    }
-    const content = await entry.async('string');
-    documents.push(JSON.parse(content) as ParsedAssets);
+  } finally {
+    await reader.close();
   }
 
   if (documents.length === 0) {
