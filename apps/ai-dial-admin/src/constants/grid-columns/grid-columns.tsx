@@ -204,12 +204,16 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'pricing.prompt',
     headerName: 'Prompt price',
     hide: true,
+    valueFormatter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t) ?? '',
     tooltipValueGetter: (params) => getPricingRateTooltip(params.data?.pricing?.prompt, params.data?.pricing?.unit, t),
   },
   {
     field: 'pricing.completion',
     headerName: 'Completion price',
     hide: true,
+    valueFormatter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t) ?? '',
     tooltipValueGetter: (params) =>
       getPricingRateTooltip(params.data?.pricing?.completion, params.data?.pricing?.unit, t),
   },
@@ -217,6 +221,8 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'pricing.cacheRead',
     headerName: 'Cache read price',
     hide: true,
+    valueFormatter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t) ?? '',
     tooltipValueGetter: (params) =>
       getPricingRateTooltip(params.data?.pricing?.cacheRead, params.data?.pricing?.unit, t),
   },
@@ -224,6 +230,8 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     field: 'pricing.cacheWrite',
     headerName: 'Cache write price',
     hide: true,
+    valueFormatter: (params) =>
+      getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t) ?? '',
     tooltipValueGetter: (params) =>
       getPricingRateTooltip(params.data?.pricing?.cacheWrite, params.data?.pricing?.unit, t),
   },
