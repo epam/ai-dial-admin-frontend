@@ -23,6 +23,7 @@ import { saveColumnsStateToStorage } from '@/src/components/Grid/utils';
 import AgGridWrapper from '../AgGridWrapper';
 import DisplayNameCellRenderer from '../CellRenderers/DisplayNameCellRenderer';
 import RadioNameCellRenderer from '../CellRenderers/RadioNameCellRenderer';
+import FloatingFilter from '../FloatingFilter/FloatingFilter';
 
 const makeFakeApi = () => ({
   applyColumnState: vi.fn(),
@@ -64,6 +65,21 @@ describe('AgGridWrapper', () => {
     fireGridApiChange(api);
 
     expect(onGridReady).toHaveBeenCalledWith(expect.objectContaining({ api }));
+  });
+
+  test('uses the custom floating filter by default and retains caller column defaults', () => {
+    render(
+      <AgGridWrapper
+        columnDefs={[{ field: 'id', floatingFilter: true }]}
+        rowData={[]}
+        additionalGridOptions={{ defaultColDef: { resizable: true } }}
+      />,
+    );
+
+    expect(gridOptions().defaultColDef).toMatchObject({
+      floatingFilterComponent: FloatingFilter,
+      resizable: true,
+    });
   });
 
   test('lets caller grid options override the wrapper defaults', () => {
