@@ -129,6 +129,7 @@ export enum BasicI18nKey {
   None = 'Basic.None',
   Loading = 'Basic.Loading',
   Preview = 'Basic.Preview',
+  Deprecated = 'Basic.Deprecated',
   PreviewPrompt = 'Basic.PreviewPrompt',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
