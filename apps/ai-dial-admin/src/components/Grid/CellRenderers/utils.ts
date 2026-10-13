@@ -18,3 +18,13 @@ export const formatEditableValue = (
 ) => {
   return valueFormatter ? valueFormatter(value) : (value ?? '') !== '' ? value : translatedPlaceholder;
 };
+
+/**
+ * The kit derives avatar initials from letters only, so a numeric name would show "?".
+ * Returns initials from the name's digits in that case, and `undefined` to let the kit derive them.
+ */
+export const getAvatarInitials = (name?: string): string | undefined => {
+  if (!name || /\p{L}/u.test(name)) return undefined;
+
+  return name.replace(/[^\p{N}]/gu, '').slice(0, 2) || undefined;
+};
