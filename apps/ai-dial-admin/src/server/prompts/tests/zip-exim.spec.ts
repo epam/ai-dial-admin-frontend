@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test } from 'vitest';
+import { ZipFixture, readZipEntries } from '@/src/server/zip/tests/zip-fixtures';
 
 import {
   InvalidPromptsZipError,
@@ -14,13 +14,11 @@ describe('Server :: Prompts :: zip-exim :: buildPromptsZip', () => {
     const document = { prompts: [{ id: 'prompts/public/name__1.0', name: 'name' } as any] };
 
     const blob = await buildPromptsZip(document);
-    const zip = await JSZip.loadAsync(blob);
-    const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+    const entries = await readZipEntries(blob);
 
-    expect(entries).toHaveLength(1);
-    expect(entries[0].name).toBe(PROMPTS_ZIP_ENTRY);
-    const content = await zip.file(PROMPTS_ZIP_ENTRY)?.async('string');
-    expect(JSON.parse(content as string)).toEqual(document);
+    expect(Object.keys(entries)).toHaveLength(1);
+    expect(Object.keys(entries)[0]).toBe(PROMPTS_ZIP_ENTRY);
+    expect(JSON.parse(entries[PROMPTS_ZIP_ENTRY])).toEqual(document);
   });
 });
 
@@ -42,10 +40,10 @@ describe('Server :: Prompts :: zip-exim :: mergePromptsExports', () => {
 
 describe('Server :: Prompts :: zip-exim :: extractPromptsFromZip', () => {
   test('extracts and merges every prompts/*.json entry', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('prompts/a.json', JSON.stringify({ prompts: [{ id: 'prompts/public/a__1.0', name: 'a' }] }));
     zip.file('prompts/b.json', JSON.stringify({ prompts: [{ id: 'prompts/public/b__1.0', name: 'b' }] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = await extractPromptsFromZip(buffer);
 
@@ -53,10 +51,10 @@ describe('Server :: Prompts :: zip-exim :: extractPromptsFromZip', () => {
   });
 
   test('ignores an entry outside the prompts/ prefix', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('prompts/a.json', JSON.stringify({ prompts: [{ id: 'prompts/public/a__1.0', name: 'a' }] }));
     zip.file('other/b.json', JSON.stringify({ prompts: [{ id: 'prompts/public/b__1.0', name: 'b' }] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = await extractPromptsFromZip(buffer);
 
@@ -64,9 +62,9 @@ describe('Server :: Prompts :: zip-exim :: extractPromptsFromZip', () => {
   });
 
   test('rejects an archive with no valid prompts entries', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('other/b.json', JSON.stringify({ prompts: [] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     await expect(extractPromptsFromZip(buffer)).rejects.toThrow(InvalidPromptsZipError);
   });

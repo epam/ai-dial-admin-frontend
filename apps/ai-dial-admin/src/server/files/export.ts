@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { BlobWriter, Uint8ArrayReader, ZipWriter } from '@zip.js/zip.js';
 
 import { Token } from '@/src/models/auth';
 import { getFolderNameAndPath, getPathFromUrl } from '@/src/utils/files/path';
@@ -99,15 +99,15 @@ export const buildFilesExportZip = async (
     );
 
   const entries = await resolveExportEntries(paths, getNode, gatherDescendantUrls);
-  const zip = new JSZip();
+  const zipWriter = new ZipWriter(new BlobWriter('application/zip'));
   for (const entry of entries) {
     const fileName = getFolderNameAndPath(entry.storagePath).name;
     const response = await filesCoreApi.downloadFile(token, entry.storagePath, fileName);
-    const buffer = await response.arrayBuffer();
+    const buffer = new Uint8Array(await response.arrayBuffer());
     const archivePath = toExportArchivePath(entry.storagePath, entry.exportFolderPath);
-    zip.file(`files/${archivePath}`, buffer);
+    await zipWriter.add(`files/${archivePath}`, new Uint8ArrayReader(buffer));
   }
 
-  const blob = await zip.generateAsync({ type: 'blob' });
+  const blob = await zipWriter.close();
   return { blob, fileName: generateExportFileName(paths) };
 };

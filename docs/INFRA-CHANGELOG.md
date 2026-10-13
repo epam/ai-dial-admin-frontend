@@ -10,6 +10,10 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 - `ANALYTICS_USAGE_ENABLED` [Preview] — serves the analytics Dashboards page, over the usage log, at `/dashboards`, and moves the `Dashboards` menu item from the `Audit` group to the top of the `Analytics` group. Takes effect only when `ANALYTICS_ENABLED` is `true`; otherwise `/dashboards` serves the telemetry dashboard, as `/dashboard` did, while `DIAL_ADMIN_API_URL` is set (default: `false`)
 
+#### Files import
+
+- `ZIP_IMPORT_MAX_ENTRIES`, `ZIP_IMPORT_MAX_ENTRY_SIZE_MB`, `ZIP_IMPORT_MAX_TOTAL_SIZE_MB` — limits applied to uploaded zip archives (entry count, inflated size of one entry, inflated size of the whole archive); an archive over a limit is rejected with a 400. Invalid or non-positive values fall back to the defaults (default: `500`, `100`, `1024`)
+
 ### Changed
 
 #### Navigation
