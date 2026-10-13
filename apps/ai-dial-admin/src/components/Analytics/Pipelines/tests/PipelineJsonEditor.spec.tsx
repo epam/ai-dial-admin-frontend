@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { listPipelineBackfills } from '@/src/app/[lang]/pipelines/actions';
 import PipelineDetailView from '@/src/components/Analytics/Pipelines/PipelineDetailView';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
@@ -16,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   showNotification: vi.fn(() => 'notification-id'),
   isFullAdmin: { value: true },
+  sidebar: { showSidebar: vi.fn(), closeSidebar: vi.fn() },
   editorProps: { current: {} as Record<string, unknown> },
 }));
 
@@ -41,6 +43,7 @@ vi.mock('@/src/context/AppContext', () => ({
     isReadOnlyAdmin: !mocks.isFullAdmin.value,
     isEnableAuth: true,
     featureFlags: {},
+    sidebar: mocks.sidebar,
   }),
 }));
 
@@ -89,6 +92,7 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
   mocks.jsonErrors = [];
   mocks.isFullAdmin.value = true;
   mocks.editorProps.current = {};
