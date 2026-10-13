@@ -1,6 +1,5 @@
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
-import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const dateFilter: Partial<ColDef> = {
@@ -21,10 +20,6 @@ export const dateFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-// The default floating filter waits for Enter when `apply` is present; this one applies as you type,
-// while the filter menu keeps its Apply button.
-const textFloatingFilter: Partial<ColDef> = { floatingFilterComponent: FloatingFilter };
-
 const baseFilterParams: Partial<ColDef> = {
   filterParams: {
     maxNumConditions: 1,
@@ -34,7 +29,6 @@ const baseFilterParams: Partial<ColDef> = {
 };
 
 export const baseStringFilter: Partial<ColDef> = {
-  ...textFloatingFilter,
   filterParams: {
     ...baseFilterParams.filterParams,
     filterOptions: [
@@ -48,7 +42,6 @@ export const baseStringFilter: Partial<ColDef> = {
 
 // For a column the backend accepts only exact comparison on (an enum or a UUID).
 export const exactMatchFilter: Partial<ColDef> = {
-  ...textFloatingFilter,
   filterParams: {
     ...baseFilterParams.filterParams,
     filterOptions: [GridFilterType.EQUALS, GridFilterType.NOT_EQUAL],
@@ -57,7 +50,6 @@ export const exactMatchFilter: Partial<ColDef> = {
 };
 
 export const baseNumberFilter: Partial<ColDef> = {
-  ...textFloatingFilter,
   filter: 'agNumberColumnFilter',
   filterParams: {
     ...baseFilterParams.filterParams,
@@ -73,7 +65,6 @@ export const baseNumberFilter: Partial<ColDef> = {
 };
 
 export const evalStringFilter = (options: GridFilterType[]): Partial<ColDef> => ({
-  ...textFloatingFilter,
   filterParams: {
     ...baseFilterParams.filterParams,
     filterOptions: options,
