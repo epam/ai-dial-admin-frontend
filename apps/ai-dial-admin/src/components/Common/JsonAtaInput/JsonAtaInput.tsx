@@ -102,7 +102,8 @@ const JsonAtaInput: FC<Props> = ({
 
   const onApply = useCallback(() => {
     onChangeValue(expression, type);
-  }, [expression, type, onChangeValue]);
+    onCloseModal();
+  }, [expression, type, onChangeValue, onCloseModal]);
 
   const onPickFromSchema = useCallback((result: { expression: string; type: string }) => {
     setExpression(result.expression);

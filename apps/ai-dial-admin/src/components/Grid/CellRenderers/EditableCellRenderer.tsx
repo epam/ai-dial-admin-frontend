@@ -4,6 +4,7 @@ import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import Triangle from '@/public/images/icons/cell-triangle.svg';
+import OverflowValueTooltip from '@/src/components/Common/OverflowValueTooltip/OverflowValueTooltip';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE } from '@/src/constants/role';
 import { useI18n } from '@/src/locales/client';
@@ -118,26 +119,28 @@ const EditableCellRenderer = ({
 
   return (
     <>
-      <input
-        {...inputProps}
-        id="editable-cell-renderer"
-        type={inputType}
-        inputMode={inputMode ?? inputProps?.inputMode}
-        value={correctValue}
-        placeholder={correctPlaceholder || inputProps?.placeholder}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        step={step ?? inputProps?.step}
-        min={min ?? inputProps?.min}
-        max={max ?? inputProps?.max}
-        className={classNames(
-          'leading-[18px] h-[32px] dial-input px-2 py-1',
-          !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
-          required && (correctValue == null || correctValue === '') && 'dial-input-error',
-          isMaxValue && 'placeholder-primary',
-          isRightAligned && 'text-right',
-        )}
-      />
+      <OverflowValueTooltip text={String(correctValue ?? '')}>
+        <input
+          {...inputProps}
+          id="editable-cell-renderer"
+          type={inputType}
+          inputMode={inputMode ?? inputProps?.inputMode}
+          value={correctValue}
+          placeholder={correctPlaceholder || inputProps?.placeholder}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          step={step ?? inputProps?.step}
+          min={min ?? inputProps?.min}
+          max={max ?? inputProps?.max}
+          className={classNames(
+            'leading-[18px] h-[32px] dial-input px-2 py-1',
+            !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
+            required && (correctValue == null || correctValue === '') && 'dial-input-error',
+            isMaxValue && 'placeholder-primary',
+            isRightAligned && 'text-right',
+          )}
+        />
+      </OverflowValueTooltip>
       {showTriangle && !hideTriangle && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
           <Triangle />
