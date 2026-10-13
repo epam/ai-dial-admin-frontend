@@ -1297,8 +1297,6 @@ A derived column SHALL take:
 
 A field SHALL NOT be offered as a derived column when:
 
-- the service marks it `sensitive` — selecting it would be rejected for a caller without the required role,
-  so the column could never be shown;
 - its type is the non-scalar `object` or `array` — a grid cell is not a structured-value viewer, and
   rendering one as text would assert a shape the view does not know;
 - a curated column already reads it, including a field a curated column composes without having a column of
@@ -1456,10 +1454,17 @@ stored choice.
 - **AND** the duration column's tooltip states that nested hops are counted more than once
 - **AND** the chain-cost column's tooltip states that its NULL is a coverage gap, not an accounting difference
 
-#### Scenario: Sensitive and non-scalar fields are not offered
+#### Scenario: Non-scalar fields are not offered
 
-- **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
-- **THEN** neither is offered as a column
+- **WHEN** the schema reports a field of an object or array type
+- **THEN** it is not offered as a column
+
+#### Scenario: A sensitive field is offered like any other
+
+- **WHEN** the schema reports a field marked `sensitive`
+- **THEN** it is offered as a column, hidden by default
+- **AND** no frontend list or role check decides whether it is offered, because the service has already filtered
+  the schema by the caller's role
 
 #### Scenario: A heavy field is not excluded for being heavy
 
