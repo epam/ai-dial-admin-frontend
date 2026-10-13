@@ -163,6 +163,7 @@ const HeaderButtons: FC<Props> = ({
         label: t(ButtonsI18nKey.Add),
         icon: <IconPlus {...BASE_BUTTON_ICON_PROPS} />,
         onClick: () => onAdd?.(),
+        appearance: 'primary',
       },
     ];
     const trailing: AdaptiveHeaderAction[] = showBatchDelete
