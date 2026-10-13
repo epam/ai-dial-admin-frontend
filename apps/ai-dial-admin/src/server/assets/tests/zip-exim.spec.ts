@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test } from 'vitest';
+import { ZipFixture, readZipEntries } from '@/src/server/zip/tests/zip-fixtures';
 
 import {
   InvalidAssetZipError,
@@ -26,13 +26,11 @@ describe('Server :: Assets :: zip-exim :: buildAssetZip', () => {
     const document = { widgets: [{ id: 'widgets/public/name', name: 'name' }] } as any;
 
     const blob = await buildAssetZip(CONFIG, document);
-    const zip = await JSZip.loadAsync(blob);
-    const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+    const entries = await readZipEntries(blob);
 
-    expect(entries).toHaveLength(1);
-    expect(entries[0].name).toBe('widgets/widgets.json');
-    const content = await zip.file('widgets/widgets.json')?.async('string');
-    expect(JSON.parse(content as string)).toEqual(document);
+    expect(Object.keys(entries)).toHaveLength(1);
+    expect(Object.keys(entries)[0]).toBe('widgets/widgets.json');
+    expect(JSON.parse(entries['widgets/widgets.json'])).toEqual(document);
   });
 });
 
@@ -54,10 +52,10 @@ describe('Server :: Assets :: zip-exim :: mergeAssetExports', () => {
 
 describe('Server :: Assets :: zip-exim :: extractAssetsFromZip', () => {
   test('extracts and merges every matching-prefix json entry', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('widgets/a.json', JSON.stringify({ widgets: [{ id: 'widgets/a', name: 'a' }] }));
     zip.file('widgets/b.json', JSON.stringify({ widgets: [{ id: 'widgets/b', name: 'b' }] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = (await extractAssetsFromZip(CONFIG, buffer)) as any;
 
@@ -65,10 +63,10 @@ describe('Server :: Assets :: zip-exim :: extractAssetsFromZip', () => {
   });
 
   test('ignores an entry outside the configured prefix', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('widgets/a.json', JSON.stringify({ widgets: [{ id: 'widgets/a', name: 'a' }] }));
     zip.file('other/b.json', JSON.stringify({ widgets: [{ id: 'widgets/b', name: 'b' }] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     const result = (await extractAssetsFromZip(CONFIG, buffer)) as any;
 
@@ -76,9 +74,9 @@ describe('Server :: Assets :: zip-exim :: extractAssetsFromZip', () => {
   });
 
   test('rejects an archive with no valid entries', async () => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     zip.file('other/b.json', JSON.stringify({ widgets: [] }));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
 
     await expect(extractAssetsFromZip(CONFIG, buffer)).rejects.toThrow(InvalidAssetZipError);
   });

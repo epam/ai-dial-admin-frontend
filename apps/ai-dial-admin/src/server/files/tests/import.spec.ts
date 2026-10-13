@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { describe, expect, test, vi } from 'vitest';
+import { ZipFixture } from '@/src/server/zip/tests/zip-fixtures';
 
 import { ServerActionResponse } from '@/src/models/server-action';
 import { importPlainFiles, importZipFile, InvalidImportZipError } from '../import';
@@ -67,9 +67,9 @@ describe('Server :: Files :: import :: importPlainFiles', () => {
 
 describe('Server :: Files :: import :: importZipFile', () => {
   const buildZip = async (entries: Record<string, string>) => {
-    const zip = new JSZip();
+    const zip = new ZipFixture();
     Object.entries(entries).forEach(([path, content]) => zip.file(path, content));
-    const buffer = await zip.generateAsync({ type: 'arraybuffer' });
+    const buffer = await zip.toArrayBuffer();
     return new File([buffer], 'archive.zip', { type: 'application/zip' });
   };
 
@@ -89,6 +89,16 @@ describe('Server :: Files :: import :: importZipFile', () => {
     const uploadedFiles = upload.mock.calls.map((call) => call[1] as File);
     expect(uploadedFiles.find((f) => f.name === 'report.pdf')?.type).toBe('application/pdf');
     expect(result.importResults).toHaveLength(2);
+  });
+
+  test('reports a later entry mapping to an already-seen target path as a failure', async () => {
+    const upload = vi.fn().mockResolvedValue({ success: true } as ServerActionResponse);
+    const zipFile = await buildZip({ 'files/a/doc.txt': 'one', 'files/b/doc.txt': 'two' });
+
+    const result = await importZipFile(zipFile, 'folder/', upload, 5, true);
+
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(result.importResults.map((r) => r.status)).toEqual(['success', 'failure']);
   });
 
   test('rejects an archive with no valid entries', async () => {
