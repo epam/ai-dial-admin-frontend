@@ -6,14 +6,14 @@ import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { COMPARE_RUN_PICKER_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
 import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import { ButtonsI18nKey, EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
 
 interface Props {
   isModalOpen: boolean;
-  runs: Run[];
+  runs: CompareCandidateRun[];
   selectedRunId?: string;
   onClose: () => void;
   onApply: (runId: string) => void;

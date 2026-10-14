@@ -709,6 +709,7 @@ describe('SUITE_RUNS_COLUMN', () => {
 describe('COMPARE_RUN_PICKER_COLUMN', () => {
   test('carries only the columns that identify a run, leaving out the mock-backed ones', () => {
     expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
+      'testSuiteName',
       'status',
       'testRunName',
       'runConfig.numberOfRuns',
@@ -716,5 +717,13 @@ describe('COMPARE_RUN_PICKER_COLUMN', () => {
       'startedAt',
       'completedAt',
     ]);
+  });
+
+  test('names the suite of each run, falling back to its id', () => {
+    const column = COMPARE_RUN_PICKER_COLUMN.find((col) => col.colId === 'testSuiteName');
+    const getValue = (data: object) => (column?.valueGetter as (params: { data: object }) => unknown)({ data });
+
+    expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
+    expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
   });
 });
