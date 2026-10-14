@@ -16,7 +16,6 @@ const baseFlags: FeatureFlags = {
   deploymentsEnabled: true,
   evaluationEnabled: true,
   mcpRegistryEnabled: false,
-  nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
   analyticsSessionsEnabled: false,
@@ -37,21 +36,7 @@ describe('MENU_CONFIGURATION — Model Servings entry gating', () => {
     expect(keys).toContain(MenuI18nKey.ModelServings);
   });
 
-  test('includes Model Servings when nimEnabled is true', () => {
-    const group = findDeploymentsGroup({ ...baseFlags, nimEnabled: true });
-    const keys = group?.items.map((item) => item.key);
-
-    expect(keys).toContain(MenuI18nKey.ModelServings);
-  });
-
-  test('includes Model Servings when both flags are true', () => {
-    const group = findDeploymentsGroup({ ...baseFlags, hfEnabled: true, nimEnabled: true });
-    const keys = group?.items.map((item) => item.key);
-
-    expect(keys).toContain(MenuI18nKey.ModelServings);
-  });
-
-  test('omits Model Servings when both flags are false', () => {
+  test('omits Model Servings when hfEnabled is false', () => {
     const group = findDeploymentsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key);
 

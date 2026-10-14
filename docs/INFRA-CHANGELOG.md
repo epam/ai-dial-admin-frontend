@@ -24,6 +24,12 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 - The themes config served at `THEMES_CONFIG_URL` must define the ui-kit 2.0 color tokens (`bg-layer-base`, `bg-layer-raised`, `bg-layer-sunken`, the `bg-control-*`, `text-control-*` and `stroke-*` families, `bg-gradient-*`, `shadow-*`) in every theme. The app no longer ships dark defaults for them, so a config that carries only the legacy set (`bg-layer-0`…`bg-layer-4`, `controls-*`) renders ui-kit controls with ui-kit's own light fallbacks. The current [default themes config](https://github.com/epam/ai-dial-chat-themes/blob/development/static/config.json) already defines them; a custom config derived from an older copy must be updated
 
+### Removed
+
+#### Providers
+
+- `NIM_ENABLED` — NIM Model Serving is no longer supported. The variable is ignored and can be removed from the deployment configuration; the Model Servings tab now depends on `HF_ENABLED` alone. Existing NIM deployments are no longer listed, `NimDeployment` rows are hidden from audit lists, and NIM entries in the import/export format are not recognized
+
 ## 0.21.0
 
 ### Added

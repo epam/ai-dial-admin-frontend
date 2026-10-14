@@ -56,7 +56,6 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     source: container.source,
     containerPorts: normalizeContainerPorts(container.containerPorts),
     containerPort: container.containerPort,
-    containerGrpcPort: container.containerGrpcPort,
     envs: normalizeEnvironmentVariables(container.metadata?.envs),
     resources: normalizeResources(container.resources),
     command: container.command,
@@ -87,7 +86,7 @@ export interface ContainerTemplateOptions {
 }
 
 export const getContainerScaling = (type: CONTAINER_TYPE): Autoscaling => {
-  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
+  if (type === CONTAINER_TYPE.HF) {
     return SERVING_SCALING;
   }
   return DEFAULT_SCALING;
@@ -105,7 +104,7 @@ export const getContainerResources = (type: CONTAINER_TYPE, defaults?: Resources
     },
   };
 
-  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
+  if (type === CONTAINER_TYPE.HF) {
     return {
       requests: {
         ...base.requests,
@@ -126,10 +125,6 @@ export const getContainerSource = (
   sourceType?: CONTAINER_SOURCE_TYPE,
   options?: ContainerTemplateOptions,
 ): ContainerSource => {
-  if (type === CONTAINER_TYPE.NIM) {
-    return { $type: CONTAINER_SOURCE_TYPE.NGC_REGISTRY };
-  }
-
   if (type === CONTAINER_TYPE.HF) {
     return { $type: CONTAINER_SOURCE_TYPE.HUGGINGFACE };
   }
@@ -180,8 +175,6 @@ export const getContainerSourceTypeLabel = (
       return t(SourceI18nKey.InternalImage, { type: getTranslatedType(route, t) });
     case CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE:
       return t(SourceI18nKey.DockerImage);
-    case CONTAINER_SOURCE_TYPE.NGC_REGISTRY:
-      return t(SourceI18nKey.NgcRegistry);
     case CONTAINER_SOURCE_TYPE.HUGGINGFACE:
       return t(SourceI18nKey.HuggingFace);
     default:

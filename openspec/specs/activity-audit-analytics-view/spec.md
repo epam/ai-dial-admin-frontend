@@ -274,7 +274,7 @@ resolves to, and SHALL NOT introduce a label that collides with an existing one.
 - **THEN** the label `global firewall` still resolves to exactly `ImageBuildDomainWhitelist`
 - **AND** the image label resolves to exactly the set `AdapterImageDefinition`,
   `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition`
-- **AND** the model-serving label resolves to exactly the set `NimDeployment`, `InferenceDeployment`
+- **AND** the model-serving label resolves to exactly `InferenceDeployment`
 - **AND** each of the four container labels resolves to exactly one member — respectively
   `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`
 - **AND** no analytics label is equal to any pre-existing label
