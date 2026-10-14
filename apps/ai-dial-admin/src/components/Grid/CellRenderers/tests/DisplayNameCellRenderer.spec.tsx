@@ -58,6 +58,13 @@ describe('DisplayNameCellRenderer', () => {
     expect(screen.queryByText('CH')).not.toBeInTheDocument();
   });
 
+  test('shows the digits of a numeric name instead of a placeholder', () => {
+    render(<DisplayNameCellRenderer {...params({ displayName: '567393', name: '567393' })} />);
+
+    expect(screen.getByText('56')).toBeInTheDocument();
+    expect(screen.queryByText('?')).not.toBeInTheDocument();
+  });
+
   test('renders without crashing when neither displayName nor name is set', () => {
     const { container } = render(<DisplayNameCellRenderer {...params({})} />);
 
