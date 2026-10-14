@@ -61,6 +61,26 @@ describe('Server :: AnalyticsAuditApi', () => {
     );
   });
 
+  test('getActivitiesListAction returns the page under response on success', async () => {
+    fetch.mockResponseOnce(JSON.stringify(page), JSON_HEADERS);
+
+    const res = await instance.getActivitiesListAction(25, 0, TOKEN_MOCK, sorts, filters);
+
+    expect(res).toMatchObject({ success: true, response: page });
+  });
+
+  test('getActivitiesListAction carries the error the service gave', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ code: 'invalid_filter_value', message: 'expects one of [Table]' }), {
+      status: 400,
+      ...JSON_HEADERS,
+    });
+
+    const res = await instance.getActivitiesListAction(25, 0, TOKEN_MOCK, sorts, filters);
+
+    expect(res.success).toBe(false);
+    expect(res.status).toBe(400);
+  });
+
   test('getActivitiesList returns null when the backend fails', async () => {
     fetch.mockResponseOnce('', { status: 500 });
 
