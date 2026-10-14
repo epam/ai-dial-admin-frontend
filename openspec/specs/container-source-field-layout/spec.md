@@ -14,11 +14,6 @@ The container Properties tab info header SHALL display the container's source ty
 - **WHEN** the container has `source.$type === 'image_reference'`
 - **THEN** the Properties info header SHALL display a labelled text `"Source type: Docker Image"`
 
-#### Scenario: NGC_REGISTRY container shows "NGC Registry"
-
-- **WHEN** the container has `source.$type === 'ngc_registry'`
-- **THEN** the Properties info header SHALL display a labelled text `"Source type: NGC Registry"`
-
 #### Scenario: HUGGINGFACE container shows "Hugging Face"
 
 - **WHEN** the container has `source.$type === 'huggingface'`
@@ -55,11 +50,6 @@ The `<ContainerSource>` component inside `ContainerFields.tsx` SHALL render unco
 
 - **WHEN** a container has `source.$type === 'image_reference'`
 - **THEN** `ContainerSource` SHALL render either `McpServerNameField` (when `externalRegistryRef` is present) or the `imageReference` `DialInput` (otherwise)
-
-#### Scenario: NGC_REGISTRY still renders the imageRef input
-
-- **WHEN** a container has `source.$type === 'ngc_registry'`
-- **THEN** `ContainerSource` SHALL render the `imageRef` `DialInput`
 
 #### Scenario: HUGGINGFACE still renders HFModelNameField
 
@@ -127,11 +117,6 @@ A pure utility `getContainerSourceTypeLabel(source: ContainerSource | undefined,
 
 - **WHEN** called with `{ $type: 'image_reference' }`
 - **THEN** the utility SHALL return `"Docker Image"`
-
-#### Scenario: Returns NGC Registry for NGC source
-
-- **WHEN** called with `{ $type: 'ngc_registry' }`
-- **THEN** the utility SHALL return `"NGC Registry"`
 
 #### Scenario: Returns Hugging Face for HF source
 

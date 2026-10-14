@@ -134,7 +134,7 @@ describe('ContainersApi', () => {
     fetch.mockResponseOnce(JSON.stringify(['container2']));
     await instance.getModelContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=NIM`),
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=INFERENCE`),
       expect.objectContaining({ method: 'GET' }),
     );
   });

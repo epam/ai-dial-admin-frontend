@@ -66,7 +66,7 @@ import type { Container } from '@/src/models/deployments/containers';
 
 const container: Container = {
   name: 'gpt-4-turbo',
-  $type: CONTAINER_TYPE.NIM,
+  $type: CONTAINER_TYPE.HF,
   source: { $type: 'image' } as never,
   status: CONTAINER_STATUS.RUNNING,
   metadata: {},

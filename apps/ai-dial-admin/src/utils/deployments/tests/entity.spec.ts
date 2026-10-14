@@ -141,22 +141,9 @@ describe('entity utils', () => {
       expect(template.source?.containerId).toBe('123');
     });
 
-    test('uses v1 prefix for NIM ModelServings container', () => {
-      (getEndpointPostfix as any).mockReturnValue('/chat');
-      (getEndpointPrefix as any).mockImplementation((type: CONTAINER_TYPE | undefined) =>
-        type === CONTAINER_TYPE.NIM ? 'v1' : 'openai/v1',
-      );
-      const container = { displayName: 'MyContainer', name: '123', $type: CONTAINER_TYPE.NIM } as any;
-      const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
-      expect(template.type).toBe(DialModelType.Chat);
-      expect(template.source.completionEndpointPath).toBe('v1/chat');
-    });
-
     test('uses openai/v1 prefix for HF (inference) ModelServings container', () => {
       (getEndpointPostfix as any).mockReturnValue('/chat');
-      (getEndpointPrefix as any).mockImplementation((type: CONTAINER_TYPE | undefined) =>
-        type === CONTAINER_TYPE.NIM ? 'v1' : 'openai/v1',
-      );
+      (getEndpointPrefix as any).mockReturnValue('openai/v1');
       const container = { displayName: 'MyContainer', name: '123', $type: CONTAINER_TYPE.HF } as any;
       const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);

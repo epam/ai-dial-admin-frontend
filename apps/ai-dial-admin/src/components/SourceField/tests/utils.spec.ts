@@ -31,7 +31,7 @@ describe('isModelCapableContainer', () => {
     expect(isModelCapableContainer(container(INFERENCE_TASK.TEXT_GENERATION))).toBe(true);
   });
 
-  test('allows containers without an inferenceTask (e.g. NIM)', () => {
+  test('allows containers without an inferenceTask', () => {
     expect(isModelCapableContainer(container(undefined))).toBe(true);
   });
 
@@ -179,7 +179,7 @@ describe('buildContainerSelection', () => {
     } as unknown as DialApplication;
     const container = makeContainer();
 
-    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'app-container', container);
+    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'app-container');
 
     expect(result.source?.containerId).toBe('app-container');
     expect('endpoint' in result).toBe(false);
@@ -193,7 +193,7 @@ describe('buildContainerSelection', () => {
       source: { $type: SOURCE_TYPE.CONTAINER },
     } as unknown as DialApplication;
 
-    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'missing', undefined);
+    const result = buildContainerSelection(ApplicationRoute.Applications, entity, 'missing');
 
     expect(result.source?.containerId).toBe('missing');
   });
@@ -205,9 +205,9 @@ describe('buildContainerSelection', () => {
       endpoint: 'https://old.example.com',
       source: { $type: SOURCE_TYPE.CONTAINER },
     } as unknown as DialModel;
-    const container = makeContainer({ $type: CONTAINER_TYPE.NIM });
+    const container = makeContainer({ $type: CONTAINER_TYPE.HF });
 
-    const result = buildContainerSelection(ApplicationRoute.Models, entity, 'app-container', container) as DialModel;
+    const result = buildContainerSelection(ApplicationRoute.Models, entity, 'app-container') as DialModel;
 
     expect(result.source?.containerId).toBe('app-container');
     expect(result.source?.completionEndpointPath).toBeTruthy();
@@ -225,7 +225,7 @@ describe('buildContainerSelection', () => {
     } as unknown as DialInterceptor;
     const container = makeContainer();
 
-    const result = buildContainerSelection(ApplicationRoute.Interceptors, entity, 'app-container', container);
+    const result = buildContainerSelection(ApplicationRoute.Interceptors, entity, 'app-container');
 
     expect(result.source?.containerId).toBe('app-container');
     expect(result.source?.completionEndpointPath).toBeUndefined();

@@ -381,6 +381,36 @@ describe('ActivityAuditList :: per-view fetcher', () => {
   });
 });
 
+describe('ActivityAuditList :: hidden resource types', () => {
+  const nim = (activityId: string) => activity({ activityId, resourceType: 'NimDeployment' as never });
+  const shown = (activityId: string) =>
+    activity({ activityId, resourceType: ActivityAuditResourceType.MCP_DEPLOYMENT });
+  const listedIds = (successCallback: ReturnType<typeof vi.fn>) =>
+    (successCallback.mock.calls[0][0] as DialActivity[]).map((row) => row.activityId);
+
+  test('does not list NimDeployment rows', async () => {
+    getDeploymentActivitiesMock.mockResolvedValue(onePage([shown('a'), nim('n1'), shown('b')]));
+    render(<ActivityAuditList viewMode={ActivityAuditView.Deployments} />);
+    const { successCallback } = await requestRows();
+
+    expect(listedIds(successCallback)).toEqual(['a', 'b']);
+  });
+
+  test('keeps fetching past a page made only of hidden rows', async () => {
+    getDeploymentActivitiesMock.mockImplementation((...args: unknown[]) =>
+      Promise.resolve(
+        args[1] === 0
+          ? { data: [nim('n1'), nim('n2')], total: 3, totalPages: 2 }
+          : { data: [shown('a')], total: 3, totalPages: 2 },
+      ),
+    );
+    render(<ActivityAuditList viewMode={ActivityAuditView.Deployments} />);
+    const { successCallback } = await requestRows();
+
+    expect(listedIds(successCallback)).toEqual(['a']);
+  });
+});
+
 describe('ActivityAuditList :: Analytics view rows', () => {
   test('renders a row for every resource type the analytics feed returns', async () => {
     getAnalyticsActivitiesMock.mockResolvedValue(

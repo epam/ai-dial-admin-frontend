@@ -52,6 +52,7 @@ import { isResourceIdInTableScope } from '@/src/utils/audit/analytics-resource-i
 import { filterOutDeletedTableChildren, getUnresolvedParentIds } from '@/src/utils/audit/deleted-parent-suppression';
 import { getUngroupedImportIds, groupImportActivities } from '@/src/utils/audit/import-grouping';
 import { getEntityAuditFilters } from '@/src/utils/audit/entity-audit-filters';
+import { isHiddenResourceType } from '@/src/utils/audit/hidden-resource-types';
 import {
   needsDeploymentLifecycleCheck,
   resolveDeploymentRollbackBlockReason,
@@ -339,9 +340,10 @@ const ActivityAuditList: FC<Props> = ({
               break;
             }
 
+            const shownRows = res.data.filter((activity) => !isHiddenResourceType(activity.resourceType));
             const scopedRows = analyticsTableScope
-              ? res.data.filter((activity) => isResourceIdInTableScope(activity.resourceId, analyticsTableScope))
-              : res.data;
+              ? shownRows.filter((activity) => isResourceIdInTableScope(activity.resourceId, analyticsTableScope))
+              : shownRows;
 
             // Suppression happens here, at the same point the table-scope narrowing already
             // drops rows: before the row buffer, so the buffer, the page boundaries and the

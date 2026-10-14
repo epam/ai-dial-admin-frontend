@@ -89,7 +89,6 @@ const CONTAINER_PRIMITIVE_SECTION_ROUTING: Record<string, EntityParameterKeys> =
   transport: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   mcpEndpointPath: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   containerPort: EntityParameterKeys.ENDPOINT_CONFIGURATION,
-  containerGrpcPort: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   command: EntityParameterKeys.CONFIGURATION,
   args: EntityParameterKeys.CONFIGURATION,
   nodePoolId: EntityParameterKeys.RESOURCES,

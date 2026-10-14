@@ -7,7 +7,6 @@ const CONTAINER_TYPE_TO_EXPORT: Record<string, DeploymentExportComponentType> = 
   [CONTAINER_TYPE.INTERCEPTOR]: DeploymentExportComponentType.INTERCEPTOR_DEPLOYMENT,
   [CONTAINER_TYPE.ADAPTER]: DeploymentExportComponentType.ADAPTER_DEPLOYMENT,
   [CONTAINER_TYPE.APPLICATION]: DeploymentExportComponentType.APPLICATION_DEPLOYMENT,
-  [CONTAINER_TYPE.NIM]: DeploymentExportComponentType.NIM_DEPLOYMENT,
   [CONTAINER_TYPE.HF]: DeploymentExportComponentType.INFERENCE_DEPLOYMENT,
 };
 

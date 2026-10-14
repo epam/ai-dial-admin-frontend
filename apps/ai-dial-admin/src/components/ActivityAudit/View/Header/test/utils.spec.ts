@@ -11,13 +11,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getAuditResourceHref, resolveEntityAuditType } from '../utils';
 
 describe('resolveEntityAuditType', () => {
-  test('resolves NIM container to NimDeployment', () => {
-    const container = { $type: CONTAINER_TYPE.NIM, name: 'gpt-4' } as Container;
-    expect(resolveEntityAuditType(container, ApplicationRoute.ModelServings)).toBe(
-      ActivityAuditResourceType.NIM_DEPLOYMENT,
-    );
-  });
-
   test('resolves Inference (HF) container to InferenceDeployment', () => {
     const container = { $type: CONTAINER_TYPE.HF, name: 'llama-3' } as Container;
     expect(resolveEntityAuditType(container, ApplicationRoute.ModelServings)).toBe(

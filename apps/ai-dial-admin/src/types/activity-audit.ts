@@ -50,7 +50,6 @@ export enum ActivityAuditResourceType {
   APPLICATION_DEPLOYMENT = 'ApplicationDeployment',
   INTERCEPTOR_DEPLOYMENT = 'InterceptorDeployment',
   MCP_DEPLOYMENT = 'McpDeployment',
-  NIM_DEPLOYMENT = 'NimDeployment',
   INFERENCE_DEPLOYMENT = 'InferenceDeployment',
   ADAPTER_IMAGE_DEFINITION = 'AdapterImageDefinition',
   APPLICATION_IMAGE_DEFINITION = 'ApplicationImageDefinition',
@@ -75,7 +74,6 @@ const CONTAINER_DEPLOYMENT_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
   ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
   ActivityAuditResourceType.MCP_DEPLOYMENT,
-  ActivityAuditResourceType.NIM_DEPLOYMENT,
   ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
 ]);
 

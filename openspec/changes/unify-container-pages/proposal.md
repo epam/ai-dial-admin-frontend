@@ -30,7 +30,7 @@ The admin console has four near-identical page pairs for deployment containers â
 
 ## Non-goals
 
-- `/model-servings` (NIM / HF) and `/deployment-images` stay as they are.
+- `/model-servings` (HF) and `/deployment-images` stay as they are.
 - No backend change; the containers API and its `?type=` filter are used as-is.
 - No new container capabilities; behavior inside a type is unchanged.
 

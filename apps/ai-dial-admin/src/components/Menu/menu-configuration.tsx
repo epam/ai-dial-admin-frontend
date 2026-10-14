@@ -113,7 +113,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.MCPDescription,
       icon: <IconRocket width={iconSize} height={iconSize} />,
       items: [
-        ...(featureFlags.nimEnabled || featureFlags.hfEnabled
+        ...(featureFlags.hfEnabled
           ? [
               {
                 key: MenuI18nKey.ModelServings,
