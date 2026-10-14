@@ -15,6 +15,11 @@ export enum TestCaseImportMode {
   MERGE = 'MERGE',
 }
 
+export enum DatasetDetachMode {
+  KEEP_TEST_CASES = 'KEEP_TEST_CASES',
+  START_EMPTY = 'START_EMPTY',
+}
+
 export enum TestCaseConflictStrategy {
   FAIL = 'FAIL',
   SKIP = 'SKIP',

@@ -16,7 +16,6 @@ const rollbackEntityMap: Record<string, RollbackI18nKey> = {
   [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: RollbackI18nKey.Deployment,
   [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: RollbackI18nKey.Deployment,
   [ActivityAuditResourceType.MCP_DEPLOYMENT]: RollbackI18nKey.Deployment,
-  [ActivityAuditResourceType.NIM_DEPLOYMENT]: RollbackI18nKey.Deployment,
   [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: RollbackI18nKey.Deployment,
   [ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,
   [ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,

@@ -34,7 +34,6 @@ export enum ModalType {
   createContainer = 'createContainer',
   createContainerType = 'createContainerType',
   createServingHF = 'createServingHF',
-  createServingNIM = 'createServingNIM',
   createMcpDockerImage = 'createMcpDockerImage',
   createAdapterDockerImage = 'createAdapterDockerImage',
   createApplicationDockerImage = 'createApplicationDockerImage',

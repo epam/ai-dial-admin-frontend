@@ -17,7 +17,6 @@ export interface Container extends BaseEntity {
   source: ContainerSource;
   containerPorts?: number[];
   containerPort?: number;
-  containerGrpcPort?: number;
   resources?: ContainerResources;
   status: CONTAINER_STATUS;
   url?: string;
@@ -121,7 +120,6 @@ export interface ContainerRedeploySnapshot {
   source: ContainerSource;
   containerPorts: number[];
   containerPort?: number;
-  containerGrpcPort?: number;
   envs: EnvironmentVariable[];
   resources?: ContainerResources;
   allowedDomains?: string[];

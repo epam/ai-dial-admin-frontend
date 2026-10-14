@@ -3,23 +3,15 @@
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  DialButtonDropdown,
-  DialConfirmationPopup,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import {
   IconDatabaseExport,
   IconDatabaseImport,
   IconFileArrowLeft,
   IconFileArrowRight,
-  IconPencilMinus,
   IconPlus,
   IconSettings,
   IconTrashX,
-  IconUnlink,
 } from '@tabler/icons-react';
 
 import AdaptiveHeaderActions from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/AdaptiveHeaderActions';
@@ -48,7 +40,6 @@ interface Props {
   onPublish?: (displayName: string, description?: string) => void;
   onAttachDataset?: (datasetId: string) => void;
   onBeforeAttach?: () => boolean;
-  onDetachDataset?: () => void;
   datasetTag?: ReactNode;
 }
 
@@ -65,14 +56,12 @@ const HeaderButtons: FC<Props> = ({
   onPublish,
   onAttachDataset,
   onBeforeAttach,
-  onDetachDataset,
   datasetTag,
 }) => {
   const t = useI18n();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [isDetachConfirmOpen, setIsDetachConfirmOpen] = useState(false);
 
   const moreItems: DropdownItem[] = useMemo(() => {
     return [
@@ -116,31 +105,7 @@ const HeaderButtons: FC<Props> = ({
 
   const adaptiveActions = useMemo((): AdaptiveHeaderActionsConfig => {
     if (isReadOnly) {
-      const leading: AdaptiveHeaderAction[] = [
-        {
-          id: 'export',
-          label: t(ButtonsI18nKey.ExportCsv),
-          icon: <IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />,
-          onClick: () => onExport?.(),
-          appearance: 'ghost',
-          dividerAfter: true,
-        },
-        {
-          id: 'detach',
-          label: t(TestSuitesI18nKey.DetachFromDataset),
-          icon: <IconUnlink {...BASE_BUTTON_ICON_PROPS} />,
-          onClick: () => setIsDetachConfirmOpen(true),
-          appearance: 'ghost',
-        },
-        {
-          id: 'change',
-          label: t(TestSuitesI18nKey.ChangeDataset),
-          icon: <IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />,
-          onClick: tryOpenAttachModal,
-          appearance: 'ghost',
-        },
-      ];
-      return { leading };
+      return {};
     }
 
     const leading: AdaptiveHeaderAction[] = [
@@ -163,6 +128,7 @@ const HeaderButtons: FC<Props> = ({
         label: t(ButtonsI18nKey.Add),
         icon: <IconPlus {...BASE_BUTTON_ICON_PROPS} />,
         onClick: () => onAdd?.(),
+        appearance: 'primary',
       },
     ];
     const trailing: AdaptiveHeaderAction[] = showBatchDelete
@@ -177,14 +143,14 @@ const HeaderButtons: FC<Props> = ({
         ]
       : [];
     return { leading, trailing };
-  }, [isReadOnly, t, onExport, onOpenSchemaModal, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
+  }, [isReadOnly, t, onOpenSchemaModal, tryOpenAttachModal, onAdd, showBatchDelete, onBatchDelete]);
 
   return (
     <div className="flex gap-4 items-center min-w-0 flex-1 justify-end">
-      <AdaptiveHeaderActions
-        actions={adaptiveActions}
-        prefix={
-          !isReadOnly ? (
+      {!isReadOnly && (
+        <AdaptiveHeaderActions
+          actions={adaptiveActions}
+          prefix={
             <DialButtonDropdown
               label={t(TestSuitesI18nKey.More)}
               items={moreItems}
@@ -192,9 +158,9 @@ const HeaderButtons: FC<Props> = ({
               appearance={ButtonAppearance.Ghost}
               className="shrink-0"
             />
-          ) : undefined
-        }
-      />
+          }
+        />
+      )}
 
       {datasetTag ? <div className="shrink-0">{datasetTag}</div> : null}
 
@@ -215,7 +181,7 @@ const HeaderButtons: FC<Props> = ({
           isOpen={isAttachModalOpen}
           onClose={() => setIsAttachModalOpen(false)}
           onConfirm={onChangeDatasetConfirm}
-          showWarning={!isReadOnly}
+          showWarning
         />
       )}
 
@@ -227,22 +193,6 @@ const HeaderButtons: FC<Props> = ({
           onConfirm={onPublishConfirm}
         />
       )}
-
-      {isDetachConfirmOpen &&
-        createPortal(
-          <DialConfirmationPopup
-            open={isDetachConfirmOpen}
-            header={t(TestSuitesI18nKey.DetachConfirmTitle)}
-            description={t(TestSuitesI18nKey.DetachConfirmDescription)}
-            confirmLabel={t(TestSuitesI18nKey.DetachFromDataset)}
-            onConfirm={() => {
-              setIsDetachConfirmOpen(false);
-              onDetachDataset?.();
-            }}
-            onClose={() => setIsDetachConfirmOpen(false)}
-          />,
-          document.body,
-        )}
     </div>
   );
 };

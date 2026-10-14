@@ -20,7 +20,7 @@ The `Scaling` object contains: `minReplicas`, `maxReplicas`, `scaleToZeroDelaySe
 ### REQ-2: "Save & redeploy" shown on scaling changes
 
 - When a running container's `scaling` fields differ from the saved state, the header must show "Save & redeploy" instead of "Save"
-- This applies to all container types (`MCP`, `NIM`, `HF`, `INTERCEPTOR`, `ADAPTER`)
+- This applies to all container types (`MCP`, `HF`, `INTERCEPTOR`, `ADAPTER`)
 
 ### REQ-3: Tests
 

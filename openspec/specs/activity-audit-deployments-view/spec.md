@@ -43,6 +43,18 @@ When the selected view is `Deployments`, the grid datasource SHALL call the `get
 - **WHEN** AG Grid requests the next page
 - **THEN** `getDeploymentActivities` is called with the incremented `pageNumber` and the same sort/filter state
 
+### Requirement: Activity lists hide rows of unsupported resource types
+
+The activity list SHALL NOT display rows whose `resourceType` is `NimDeployment`, the removed NIM Model Serving. The rows are still requested; the list drops them before its row buffer, so page boundaries and the end-of-list signal count only displayed rows.
+
+#### Scenario: NimDeployment rows are not displayed
+- **WHEN** a fetched page contains activities with `resourceType: "NimDeployment"` and others
+- **THEN** only the others are listed
+
+#### Scenario: A page of hidden rows does not end the list
+- **WHEN** a fetched page contains only `NimDeployment` activities and further pages exist
+- **THEN** the list keeps fetching until it has enough displayed rows or the pages run out
+
 ### Requirement: Deployments view uses a dedicated column set
 
 When the selected view is `Deployments`, the grid SHALL display the columns `Activity type`, `Resource type`, `Resource identifier`, `Version`, `Time`, `Initiated`, `Activity ID`, `Parent ID` in that order. The row-expander column from the Config view SHALL NOT be rendered. The `Parent ID` column is included for visual consistency with the Config view but is always rendered empty in this change — the deployment-manager backend emits flat activities and does not populate `parentActivityId`. The `Time` column SHALL retain its default `desc` sort and the same datetime formatter used by the Config view.
@@ -58,7 +70,7 @@ When the selected view is `Deployments`, the grid SHALL display the columns `Act
 
 ### Requirement: Resource type column shows localized singular labels
 
-The `Resource type` column SHALL display flattened, localized singular labels for the deployment-manager resource types. The mapping SHALL be: `AdapterDeployment` → `Adapter container`; `ApplicationDeployment` → `Application container`; `InterceptorDeployment` → `Interceptor container`; `McpDeployment` → `MCP container`; `NimDeployment` and `InferenceDeployment` → `Model serving`; `AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition` → `Image`; `ImageBuildDomainWhitelist` → `Global firewall`. The Config view's existing labels SHALL remain unchanged.
+The `Resource type` column SHALL display flattened, localized singular labels for the deployment-manager resource types. The mapping SHALL be: `AdapterDeployment` → `Adapter container`; `ApplicationDeployment` → `Application container`; `InterceptorDeployment` → `Interceptor container`; `McpDeployment` → `MCP container`; `InferenceDeployment` → `Model serving`; `AdapterImageDefinition`, `ApplicationImageDefinition`, `InterceptorImageDefinition`, `McpImageDefinition` → `Image`; `ImageBuildDomainWhitelist` → `Global firewall`. The Config view's existing labels SHALL remain unchanged.
 
 #### Scenario: Adapter deployment row displays singular label
 - **WHEN** the grid receives an activity with `resourceType: "AdapterDeployment"`
@@ -68,8 +80,8 @@ The `Resource type` column SHALL display flattened, localized singular labels fo
 - **WHEN** the grid receives activities with `resourceType` values of `AdapterImageDefinition`, `McpImageDefinition`, `ApplicationImageDefinition`, or `InterceptorImageDefinition`
 - **THEN** each row's `Resource type` cell renders `Image`
 
-#### Scenario: NIM and Inference deployments both flatten to "Model serving"
-- **WHEN** the grid receives activities with `resourceType` of `NimDeployment` or `InferenceDeployment`
+#### Scenario: Inference deployments flatten to "Model serving"
+- **WHEN** the grid receives activities with `resourceType` of `InferenceDeployment`
 - **THEN** each row's `Resource type` cell renders `Model serving`
 
 #### Scenario: Image-build domain whitelist row displays "Global firewall"
@@ -110,7 +122,7 @@ The system-level `Rollback` button in the page header SHALL NOT render when the 
 
 ### Requirement: Deployments view row action menu shows Open-in-new-tab and Rollback; click behavior depends on resource type
 
-The per-row action menu in the Deployments view SHALL render `Open in new tab` and, for deployment-manager resource types, `Rollback`. For every deployment-manager resource type (the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, and the six `*Deployment` container subtypes), clicking `Open in new tab` SHALL open `/activity-audit/{activityId}` in a new browser tab, and a row-body click anywhere outside the action menu SHALL navigate to the same URL in the current tab. No deployment-manager resource type remains as a no-op. The `Rollback` action SHALL open the rollback confirmation flow defined by the `deployment-entity-rollback` capability; for parent/aggregate rows (no single resolvable entity) the `Rollback` action SHALL be suppressed, matching the Config view's handling of grouped rows.
+The per-row action menu in the Deployments view SHALL render `Open in new tab` and, for deployment-manager resource types, `Rollback`. For every deployment-manager resource type (the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, and the five `*Deployment` container subtypes), clicking `Open in new tab` SHALL open `/activity-audit/{activityId}` in a new browser tab, and a row-body click anywhere outside the action menu SHALL navigate to the same URL in the current tab. No deployment-manager resource type remains as a no-op. The `Rollback` action SHALL open the rollback confirmation flow defined by the `deployment-entity-rollback` capability; for parent/aggregate rows (no single resolvable entity) the `Rollback` action SHALL be suppressed, matching the Config view's handling of grouped rows.
 
 #### Scenario: Open-in-new-tab and Rollback are present in the menu
 - **WHEN** the user opens the action menu on a deployment-manager Deployments view row
@@ -137,7 +149,7 @@ The per-row action menu in the Deployments view SHALL render `Open in new tab` a
 - **THEN** a new browser tab opens at `/activity-audit/{activityId}`
 
 #### Scenario: Container row Open-in-new-tab opens the detail page in a new tab
-- **WHEN** the user clicks `Open in new tab` on a row whose `resourceType` is one of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, `NimDeployment`, or `InferenceDeployment`
+- **WHEN** the user clicks `Open in new tab` on a row whose `resourceType` is one of `AdapterDeployment`, `ApplicationDeployment`, `InterceptorDeployment`, `McpDeployment`, or `InferenceDeployment`
 - **THEN** a new browser tab opens at `/activity-audit/{activityId}`
 
 #### Scenario: Container row body click navigates in the current tab
@@ -145,7 +157,7 @@ The per-row action menu in the Deployments view SHALL render `Open in new tab` a
 - **THEN** the current tab navigates to `/activity-audit/{activityId}`
 
 #### Scenario: Audit detail route resolves deployment-manager activities for every supported resource type
-- **WHEN** the user opens `/activity-audit/{activityId}` for an activity whose `resourceType` is any of the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, or any of the six `*Deployment` container subtypes
+- **WHEN** the user opens `/activity-audit/{activityId}` for an activity whose `resourceType` is any of the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, or any of the five `*Deployment` container subtypes
 - **THEN** the detail page resolves the activity from the deployment-manager backend (falling back from the admin-backend lookup)
 - **AND** renders the full diff view through `AuditView`
 

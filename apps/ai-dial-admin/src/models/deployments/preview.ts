@@ -20,7 +20,6 @@ export interface DeploymentImportPreviewResponse {
   adapterDeployments: FileComponentItem[];
   applicationDeployments: FileComponentItem[];
   interceptorDeployments: FileComponentItem[];
-  nimDeployments: FileComponentItem[];
   inferenceDeployments: FileComponentItem[];
   mcpImageDefinitions: FileComponentItem[];
   adapterImageDefinitions: FileComponentItem[];

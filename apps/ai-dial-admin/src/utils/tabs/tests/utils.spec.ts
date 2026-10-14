@@ -96,7 +96,6 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   deploymentsEnabled: false,
   evaluationEnabled: false,
   mcpRegistryEnabled: false,
-  nimEnabled: false,
   hfEnabled: false,
   analyticsEnabled: false,
   analyticsSessionsEnabled: false,

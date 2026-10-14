@@ -140,11 +140,11 @@ The `Configuration` step in the import wizard (`DialSteps`) SHALL be marked with
 ---
 
 ### Requirement: Component-type to tab-id mapping
-The frontend SHALL define `COMPONENT_TYPE_TO_TAB_ID` (located at `src/constants/deployments/import.ts`) covering: `MCP_DEPLOYMENT → MCP_CONTAINER`, `ADAPTER_DEPLOYMENT → ADAPTER_CONTAINER`, `APPLICATION_DEPLOYMENT → APPLICATION_CONTAINER`, `INTERCEPTOR_DEPLOYMENT → INTERCEPTOR_CONTAINER`, `NIM_DEPLOYMENT → MODEL_SERVING`, `INFERENCE_DEPLOYMENT → MODEL_SERVING`, `MCP_IMAGE_DEFINITION → IMAGE`, `ADAPTER_IMAGE_DEFINITION → IMAGE`, `APPLICATION_IMAGE_DEFINITION → IMAGE`, `INTERCEPTOR_IMAGE_DEFINITION → IMAGE`. `GLOBAL_DOMAIN_WHITELIST` MUST NOT appear in this map.
+The frontend SHALL define `COMPONENT_TYPE_TO_TAB_ID` (located at `src/constants/deployments/import.ts`) covering: `MCP_DEPLOYMENT → MCP_CONTAINER`, `ADAPTER_DEPLOYMENT → ADAPTER_CONTAINER`, `APPLICATION_DEPLOYMENT → APPLICATION_CONTAINER`, `INTERCEPTOR_DEPLOYMENT → INTERCEPTOR_CONTAINER`, `INFERENCE_DEPLOYMENT → MODEL_SERVING`, `MCP_IMAGE_DEFINITION → IMAGE`, `ADAPTER_IMAGE_DEFINITION → IMAGE`, `APPLICATION_IMAGE_DEFINITION → IMAGE`, `INTERCEPTOR_IMAGE_DEFINITION → IMAGE`. `GLOBAL_DOMAIN_WHITELIST` MUST NOT appear in this map.
 
-#### Scenario: NIM and Inference both map to MODEL_SERVING
-- **WHEN** errors arrive with `entityType: 'NIM_DEPLOYMENT'` and `entityType: 'INFERENCE_DEPLOYMENT'`
-- **THEN** both contribute to `errorsByTab.MODEL_SERVING`
+#### Scenario: Inference maps to MODEL_SERVING
+- **WHEN** errors arrive with `entityType: 'INFERENCE_DEPLOYMENT'`
+- **THEN** they contribute to `errorsByTab.MODEL_SERVING`
 
 #### Scenario: All image-definition variants map to IMAGE
 - **WHEN** errors arrive with `entityType` of any `*_IMAGE_DEFINITION` value

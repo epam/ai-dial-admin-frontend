@@ -121,11 +121,14 @@ Format:
 |------|-------------|
 | `feat` | New feature or capability |
 | `fix` | Bug fix |
-| `chore` | Maintenance, deps, config, tooling |
-| `refactor` | Restructuring without behavior change |
+| `chore` | Maintenance, deps, config, tooling, refactoring, formatting, removing a feature |
 | `docs` | Documentation only |
 | `test` | Tests only |
-| `style` | Formatting, no logic change |
+| `ci` | CI workflows and pipelines |
+
+These six are the only types the `pr-title-check` CI job accepts (`epam/ai-dial-ci`). Never use
+`refactor`, `style`, `perf` or any other type: the PR title fails validation. A refactor or a feature
+removal that changes no intended behavior is `chore`; one that corrects unwanted behavior is `fix`.
 
 **Message rules:**
 - Analyze the diff to understand *what* changed and *why*
