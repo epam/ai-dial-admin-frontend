@@ -22,6 +22,8 @@ import FileManager from '@/src/components/Common/FileManager/FileManager';
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { getFolderName } from '@/src/utils/files/folder';
+import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -100,6 +102,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const runImport = useImportProgress();
   const pointerClickModifierRef = usePointerClickModifier();
 
   const getContext = useCallback(() => {
@@ -483,7 +486,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       const importAssetAction = ImportAssetActionMap[view as CrudAssetRoute];
 
-      importAssetAction(body, fileType).then((res) => {
+      runImport(getFolderName(importFolder) || '', () => importAssetAction(body, fileType)).then((res) => {
         setFolderToRefetch(null);
         const importResults = res.success ? res.response?.importResults : undefined;
 
@@ -507,7 +510,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
       handleModalClose();
     },
-    [destinationFolder, handleModalClose, fetchFiles, showNotification, view, t],
+    [destinationFolder, handleModalClose, fetchFiles, runImport, showNotification, view, t],
   );
 
   const processAssetsData = useCallback(

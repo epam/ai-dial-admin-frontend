@@ -11,11 +11,13 @@ import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButt
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { useImportProgress } from '@/src/hooks/use-import-progress';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { FILES_GRID_COLUMNS } from './constants';
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
@@ -40,6 +42,7 @@ const FilesList = () => {
   const [deletedItems, setDeletedItems] = useState<DialFile[] | null>(null);
 
   const { fetchFiles } = useFileFolder();
+  const runImport = useImportProgress();
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -85,7 +88,7 @@ const FilesList = () => {
         ApplicationRoute.Files,
       );
 
-      importFiles(body, fileType).then((res) => {
+      runImport(getFolderName(destinationFolder) || '', () => importFiles(body, fileType)).then((res) => {
         setFolderToRefetch(null);
         const importResults = res.success ? res.response?.importResults : undefined;
 
@@ -109,7 +112,7 @@ const FilesList = () => {
 
       handleModalClose();
     },
-    [importFolder?.path, handleModalClose, fetchFiles, showNotification, t],
+    [importFolder?.path, handleModalClose, fetchFiles, runImport, showNotification, t],
   );
 
   const handleCreateFolder = useCallback(async (_: DialUploadFileItem | undefined, folderPath: string) => {
