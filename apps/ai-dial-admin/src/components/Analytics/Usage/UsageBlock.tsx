@@ -3,7 +3,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import BreakdownTable from '@/src/components/Analytics/Usage/Breakdown/BreakdownTable';
-import RowDetailPanel from '@/src/components/Analytics/Usage/Breakdown/RowDetailPanel';
 import ActivityHeatmap from '@/src/components/Analytics/Usage/Charts/ActivityHeatmap';
 import ShareBreakdown from '@/src/components/Analytics/Usage/Charts/ShareBreakdown';
 import TimeSeries from '@/src/components/Analytics/Usage/Charts/TimeSeries';
@@ -17,7 +16,6 @@ import {
 } from '@/src/components/Analytics/Usage/constants';
 import {
   BlockReads,
-  BreakdownRowModel,
   BreakdownTab,
   ComparePeriod,
   DonutMetric,
@@ -76,7 +74,6 @@ const UsageBlock: FC<Props> = ({
   // is scrolled; the card never reads more than its five slices.
   const [donutBlocks, setDonutBlocks] = useState(1);
   const [timeSeriesView, setTimeSeriesView] = useState<TimeSeriesView>(TimeSeriesView.Requests);
-  const [selectedRow, setSelectedRow] = useState<BreakdownRowModel | null>(null);
 
   // A new view is a new set of tabs and figures. Reset while rendering rather than in an effect, so
   // the first requests of the new view are not issued with the old view's tab.
@@ -90,7 +87,6 @@ const UsageBlock: FC<Props> = ({
       VIEW_TIME_SERIES_VIEWS[view].includes(current) ? current : VIEW_TIME_SERIES_VIEWS[view][0],
     );
     setIsShowingAll(false);
-    setSelectedRow(null);
   }
 
   const rowLimit = BREAKDOWN_PAGE_SIZE;
@@ -152,7 +148,6 @@ const UsageBlock: FC<Props> = ({
   const onTabChange = useCallback((next: BreakdownTab) => {
     setTab(next);
     setIsShowingAll(false);
-    setSelectedRow(null);
   }, []);
 
   const onShowDonutAll = useCallback(() => {
@@ -227,14 +222,11 @@ const UsageBlock: FC<Props> = ({
         isShowingAll={isShowingAll}
         onShowAll={() => setIsShowingAll(true)}
         onHideAll={onHideAll}
-        onOpenRow={setSelectedRow}
         notice={notice}
         // An application's own calls carry no price of their own, so where its money is read from its
         // call tree, a tab ranking its own calls has no cost to state.
         isCostOffered={isPricedView(view) && (!isMoneyFromMade || isMadeTab(tab))}
       />
-
-      <RowDetailPanel row={selectedRow} onClose={() => setSelectedRow(null)} />
     </>
   );
 };

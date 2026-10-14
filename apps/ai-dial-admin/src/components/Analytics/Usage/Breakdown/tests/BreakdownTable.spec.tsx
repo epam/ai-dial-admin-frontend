@@ -91,7 +91,6 @@ const renderTable = (props: Partial<Props> = {}) =>
       isShowingAll={false}
       onShowAll={vi.fn()}
       onHideAll={vi.fn()}
-      onOpenRow={vi.fn()}
       notice={NOTICE}
       {...props}
     />,
@@ -291,7 +290,6 @@ describe('BreakdownTable cost column and tab description', () => {
         isShowingAll={false}
         onShowAll={vi.fn()}
         onHideAll={vi.fn()}
-        onOpenRow={vi.fn()}
         notice={NOTICE}
       />,
     );

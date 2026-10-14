@@ -5,8 +5,7 @@
 The Dashboards page of the Analytics group, read from the usage log through the structured-query
 endpoint: how the page is reached at runtime and what it shares with the existing telemetry
 dashboard, how many requests it issues and what each one answers, the page-wide `Compare` control,
-the KPI row, the activity heatmap, the share donut, and the tabbed breakdown table with its dialog
-and row panel.
+the KPI row, the activity heatmap, the share donut, and the tabbed breakdown table with its dialog.
 
 ## Requirements
 
@@ -764,7 +763,7 @@ for.
 
 Every figure read as part of a set SHALL be stated in full instead, with its thousands grouped —
 `1,000,000`, not `1000000` and not `1.0M` — in one locale for the whole page. That covers the
-breakdown's columns, the donut's legend and centre, the row panel, every plot's tooltip and its
+breakdown's columns, the donut's legend and centre, every plot's tooltip and its
 axes. An abbreviation compares badly where the comparison is the point: `1.0M` against `1.2M` hides
 the difference a reader came for. One locale, rather than the reader's own, keeps two widgets from
 separating thousands differently side by side.
@@ -1599,47 +1598,8 @@ interactions on this table that issue a request.
 #### Scenario: Reading the table issues nothing beyond its blocks
 
 - **GIVEN** the dialog is closed
-- **WHEN** the reader opens a row detail panel and dismisses it
+- **WHEN** the reader switches a tab or reads the rows of the table
 - **THEN** no request is issued
-
-### Requirement: A row opens a side panel detailing that row
-
-Activating a row SHALL open a side panel for it, stating the dimension value as its title and
-carrying: the row's calls, its share of the window, the request method where the dimension has a
-single one, a requests-over-time chart for that row over the current window, and a list of the
-row's child entities with their calls and share — routes for a deployment, tools for an MCP server,
-models for a project.
-
-The panel's share SHALL use the same normalization as the table's column, so the two never disagree
-about one row's share.
-
-Where the row's child dimension carries more than one method, the panel SHALL state the methods
-rather than a single one, because a row with both a read and a write method has no single method to
-name. The panel SHALL be dismissible, and dismissing it SHALL leave the table's tab and scroll
-position unchanged.
-
-#### Scenario: Panel opens with the row's figures
-
-- **WHEN** the user activates a row
-- **THEN** a side panel opens titled with the row's dimension value
-- **AND** states its calls, its share, a requests-over-time chart and its child entities
-
-#### Scenario: Panel share matches the table
-
-- **WHEN** the panel is open
-- **THEN** the share it states equals the share the row states in the table
-
-#### Scenario: Multiple methods are stated as multiple
-
-- **GIVEN** a row's calls span more than one request method
-- **WHEN** the panel renders
-- **THEN** it states the methods rather than naming one
-
-#### Scenario: Dismissing preserves table state
-
-- **GIVEN** the user has switched tab before opening a row
-- **WHEN** the panel is dismissed
-- **THEN** the tab is unchanged
 
 ### Requirement: The split plot draws each series from zero
 
@@ -2030,7 +1990,7 @@ ones; every fallback row keeps its ranked place.
 
 Both labels SHALL be localized, SHALL be presentational — the underlying value is unchanged — and
 SHALL be what a copied cell carries. The literal text `undefined` SHALL never be rendered, on any
-tab, in the side panel, or in a copied cell.
+tab or in a copied cell.
 
 #### Scenario: Missing project renders No Project
 
@@ -2054,9 +2014,3 @@ tab, in the side panel, or in a copied cell.
 - **GIVEN** the `Applications` tab, whose fallback bucket outranks every named row
 - **WHEN** the table renders
 - **THEN** `Direct call` sits in its ranked place
-
-#### Scenario: Side panel uses the same fallback
-
-- **WHEN** a row carrying a fallback label is opened
-- **THEN** the panel's title carries the same label
-- **AND** the literal text `undefined` is not shown
