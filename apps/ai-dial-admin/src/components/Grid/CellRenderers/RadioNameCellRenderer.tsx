@@ -2,6 +2,8 @@ import { ICellRendererParams } from 'ag-grid-community';
 
 import { Avatar, DialEllipsisTooltip, DialRadioButton } from '@epam/ai-dial-ui-kit';
 
+import { getAvatarInitials } from '@/src/components/Grid/CellRenderers/utils';
+
 export interface RadioNameCellRendererParams extends ICellRendererParams {
   /** Radio group name shared by every row, so the browser treats the column as one radio group. */
   groupName: string;
@@ -29,7 +31,15 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
           checked={isSelected}
           onChange={onSelect}
         />
-        {!isSelected && <Avatar name={name} size={40} className={iconClassName} textClassName="dial-h3-text" />}
+        {!isSelected && (
+          <Avatar
+            name={name}
+            initials={getAvatarInitials(name)}
+            size={40}
+            className={iconClassName}
+            textClassName="dial-h3-text"
+          />
+        )}
       </span>
 
       <label htmlFor={inputId} className="min-w-0 cursor-pointer">

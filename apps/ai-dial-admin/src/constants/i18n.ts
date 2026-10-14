@@ -107,6 +107,12 @@ export enum CoreSyncI18nKey {
   Admin = 'CoreSync.Admin',
 }
 
+export enum StatusBadgeI18nKey {
+  Valid = 'StatusBadge.Valid',
+  Invalid = 'StatusBadge.Invalid',
+  Details = 'StatusBadge.Details',
+}
+
 export enum CoreVersionModalI18nKey {
   Title = 'CoreVersionModal.Title',
   DefinitionType = 'CoreVersionModal.DefinitionType',

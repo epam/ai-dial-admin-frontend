@@ -36,6 +36,11 @@ export default {
     Core: 'Core',
     Admin: 'Admin',
   },
+  StatusBadge: {
+    Valid: 'Valid',
+    Invalid: 'Invalid',
+    Details: 'Status details',
+  },
   CoreVersionModal: {
     Title: 'Target Core Version',
     DefinitionType: 'Definition type',
