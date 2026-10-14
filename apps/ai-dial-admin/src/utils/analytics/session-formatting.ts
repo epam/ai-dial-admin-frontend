@@ -1,6 +1,7 @@
 import {
   SESSION_DAY_PAD_MS,
   COST_COMPACT_THRESHOLD,
+  COST_FIXED_DECIMALS,
   COST_SIGNIFICANT_DIGITS,
   UNAVAILABLE_VALUE,
 } from '@/src/constants/analytics/sessions-trace';
@@ -122,6 +123,20 @@ export const formatSignificantCost = (value: number | string | null): string => 
   // switching to exponential notation below 1e-7.
   const decimals = -amount.e + COST_SIGNIFICANT_DIGITS - 1;
   return `$${stripTrailingZeros(amount.toFixed(decimals))}`;
+};
+
+const THOUSANDS_BOUNDARY = /\B(?=(\d{3})+(?!\d))/g;
+
+// A column of costs is scanned vertically, so every row carries the same number of decimals.
+export const formatFixedCost = (value: number | string | null): string => {
+  const amount = toBig(value);
+  if (amount === null) {
+    return '';
+  }
+  const [integer, decimals] = amount.abs().toFixed(COST_FIXED_DECIMALS).split('.');
+  const sign = amount.lt(0) ? '-' : '';
+
+  return `${sign}$${integer.replace(THOUSANDS_BOUNDARY, ',')}.${decimals}`;
 };
 
 // Sizes are the inspector's primary scale — a recorded request runs from 49 B to 4 194 306 B — so they read
