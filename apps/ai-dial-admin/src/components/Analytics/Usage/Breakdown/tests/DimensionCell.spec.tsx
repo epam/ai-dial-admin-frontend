@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ICellRendererParams } from 'ag-grid-community';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import DimensionCell from '@/src/components/Analytics/Usage/Breakdown/cells/DimensionCell';
 import { BreakdownRowModel } from '@/src/components/Analytics/Usage/models';
@@ -18,7 +18,7 @@ const renderCell = () => {
   } as BreakdownRowModel;
   const params = { data } as ICellRendererParams<BreakdownRowModel>;
 
-  return render(<DimensionCell {...params} onOpenRow={vi.fn()} />);
+  return render(<DimensionCell {...params} />);
 };
 
 describe('DimensionCell', () => {
@@ -36,7 +36,7 @@ describe('DimensionCell', () => {
     const user = userEvent.setup();
     renderCell();
 
-    await user.hover(screen.getByRole('button', { name: LABEL }));
+    await user.hover(screen.getByText(LABEL));
 
     await waitFor(() => expect(screen.getAllByText(LABEL)).toHaveLength(2));
     expect(screen.queryByText(EXPLANATION)).toBeNull();
