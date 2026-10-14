@@ -33,7 +33,6 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
       return t(EntitiesI18nKey.InterceptorContainer);
     case ActivityAuditResourceType.MCP_DEPLOYMENT:
       return t(EntitiesI18nKey.McpContainer);
-    case ActivityAuditResourceType.NIM_DEPLOYMENT:
     case ActivityAuditResourceType.INFERENCE_DEPLOYMENT:
       return t(EntitiesI18nKey.ModelServingLabel);
     case ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION:

@@ -59,7 +59,6 @@ The Activities list rendered inside the Audit tab SHALL filter activities by `(r
 The mapping SHALL contain at minimum:
 
 - `CONTAINER_TYPE.MCP` → `ActivityAuditResourceType.MCP_DEPLOYMENT`
-- `CONTAINER_TYPE.NIM` → `ActivityAuditResourceType.NIM_DEPLOYMENT`
 - `CONTAINER_TYPE.HF` → `ActivityAuditResourceType.INFERENCE_DEPLOYMENT`
 - `CONTAINER_TYPE.ADAPTER` → `ActivityAuditResourceType.ADAPTER_DEPLOYMENT`
 - `CONTAINER_TYPE.APPLICATION` → `ActivityAuditResourceType.APPLICATION_DEPLOYMENT`
@@ -67,18 +66,11 @@ The mapping SHALL contain at minimum:
 
 For the Deployment Images route, the per-instance resolution SHALL map the image entity's `$type` discriminator to the corresponding `*_IMAGE_DEFINITION` audit resource type.
 
-#### Scenario: NIM Model Serving filters by NIM_DEPLOYMENT
-
-- **GIVEN** a Model Serving with `container.$type === CONTAINER_TYPE.NIM` and `container.name === "gpt-4-turbo"`
-- **WHEN** the Audit tab is opened
-- **THEN** the Activities list datasource request includes filters `{ column: "resourceType", value: "NimDeployment", operator: "eq" }` and `{ column: "resourceId", value: "gpt-4-turbo", operator: "eq" }`
-
 #### Scenario: Inference Model Serving filters by INFERENCE_DEPLOYMENT
 
 - **GIVEN** a Model Serving with `container.$type === CONTAINER_TYPE.HF` and `container.name === "llama-3"`
 - **WHEN** the Audit tab is opened
-- **THEN** the Activities list datasource request includes a filter `{ column: "resourceType", value: "InferenceDeployment", operator: "eq" }`
-- **AND** the list does NOT include activities whose `resourceType` is `NimDeployment`
+- **THEN** the Activities list datasource request includes filters `{ column: "resourceType", value: "InferenceDeployment", operator: "eq" }` and `{ column: "resourceId", value: "llama-3", operator: "eq" }`
 
 #### Scenario: MCP Container filters by MCP_DEPLOYMENT
 

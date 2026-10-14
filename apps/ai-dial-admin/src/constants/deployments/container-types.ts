@@ -2,7 +2,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
-/** Container types served by the unified Containers pages (NIM and inference live in Model Servings). */
+/** Container types served by the unified Containers pages (inference lives in Model Servings). */
 export const UNIFIED_CONTAINER_TYPES: CONTAINER_TYPE[] = [
   CONTAINER_TYPE.ADAPTER,
   CONTAINER_TYPE.APPLICATION,

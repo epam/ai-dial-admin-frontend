@@ -1,84 +1,71 @@
 ## Purpose
-Define the Model Servings visibility capability: two feature flags (`NIM_ENABLED`, `HF_ENABLED`) that gate the "NIM Model Serving" and "HF Model Serving" rows of the Model Servings Create dropdown, the presence of the Model Servings navigation entry, and direct-URL access to the Model Servings route.
+Define the Model Servings visibility capability: a single feature flag (`HF_ENABLED`) that gates the "HF Model Serving" row of the Model Servings Create dropdown, the presence of the Model Servings navigation entry, and direct-URL access to the Model Servings route.
 
 ## Requirements
 
-### Requirement: Feature flags expose NIM and HF Model Servings visibility
+### Requirement: Feature flag exposes HF Model Servings visibility
 
-The system SHALL expose two environment variables, `NIM_ENABLED` and `HF_ENABLED`, whose values are surfaced at runtime on the `FeatureFlags` object as `nimEnabled: boolean` and `hfEnabled: boolean`. A flag MUST be `true` only when the corresponding environment variable is present and resolves truthy per the existing `isValueTruthy` helper; otherwise it MUST be `false`.
+The system SHALL expose an environment variable `HF_ENABLED`, whose value is surfaced at runtime on the `FeatureFlags` object as `hfEnabled: boolean`. The flag MUST be `true` only when the environment variable is present and resolves truthy per the existing `isValueTruthy` helper; otherwise it MUST be `false`.
 
 #### Scenario: Flag is true when env var is explicitly truthy
 
-- **WHEN** `process.env.NIM_ENABLED` is set to `'true'` and the root layout initializes `FeatureFlags`
-- **THEN** `featureFlags.nimEnabled` is `true`
-- **AND** the same semantics apply to `HF_ENABLED` → `hfEnabled`
+- **WHEN** `process.env.HF_ENABLED` is set to `'true'` and the root layout initializes `FeatureFlags`
+- **THEN** `featureFlags.hfEnabled` is `true`
 
 #### Scenario: Flag defaults to false when env var is unset
 
-- **WHEN** neither `process.env.NIM_ENABLED` nor `process.env.HF_ENABLED` is set
-- **THEN** `featureFlags.nimEnabled` is `false`
-- **AND** `featureFlags.hfEnabled` is `false`
+- **WHEN** `process.env.HF_ENABLED` is not set
+- **THEN** `featureFlags.hfEnabled` is `false`
 
 #### Scenario: Flag is false when env var is falsy
 
-- **WHEN** `process.env.NIM_ENABLED` is set to `'false'`, `''`, `'0'`, or any value that `isValueTruthy` treats as falsy
-- **THEN** `featureFlags.nimEnabled` is `false`
+- **WHEN** `process.env.HF_ENABLED` is set to `'false'`, `''`, `'0'`, or any value that `isValueTruthy` treats as falsy
+- **THEN** `featureFlags.hfEnabled` is `false`
 
 ### Requirement: Model Servings Create dropdown filters rows by flag
 
-The "Create" dropdown rendered on the Model Servings list page SHALL include the "HF Model Serving" row only when `featureFlags.hfEnabled` is `true`, and the "NIM Model Serving" row only when `featureFlags.nimEnabled` is `true`. Rows for other Deployments sections (MCP, Adapter, Application, Interceptor) MUST NOT be affected by these flags.
+The "Create" dropdown rendered on the Model Servings list page SHALL include the "HF Model Serving" row only when `featureFlags.hfEnabled` is `true`. Rows for other Deployments sections (MCP, Adapter, Application, Interceptor) MUST NOT be affected by this flag.
 
-#### Scenario: Both flags enabled shows both rows
+#### Scenario: Flag enabled shows the HF row
 
-- **WHEN** both `featureFlags.hfEnabled` and `featureFlags.nimEnabled` are `true`
+- **WHEN** `featureFlags.hfEnabled` is `true`
 - **AND** the user opens the Create dropdown on the Model Servings list
-- **THEN** both "HF Model Serving" and "NIM Model Serving" rows are present
+- **THEN** the "HF Model Serving" row is present
 
-#### Scenario: Only HF enabled shows only HF row
+#### Scenario: Flag disabled produces an empty dropdown
 
-- **WHEN** `featureFlags.hfEnabled` is `true` and `featureFlags.nimEnabled` is `false`
-- **AND** the user opens the Create dropdown on the Model Servings list
-- **THEN** only the "HF Model Serving" row is present
-
-#### Scenario: Only NIM enabled shows only NIM row
-
-- **WHEN** `featureFlags.nimEnabled` is `true` and `featureFlags.hfEnabled` is `false`
-- **AND** the user opens the Create dropdown on the Model Servings list
-- **THEN** only the "NIM Model Serving" row is present
-
-#### Scenario: Both flags disabled produces an empty dropdown
-
-- **WHEN** both flags are `false`
+- **WHEN** `featureFlags.hfEnabled` is `false`
 - **AND** the user opens the Create dropdown on the Model Servings list (if it is rendered at all)
-- **THEN** no rows for HF or NIM are present
+- **THEN** no "HF Model Serving" row is present
 
-### Requirement: Model Servings navigation entry is hidden when neither flag is enabled
+### Requirement: Model Servings navigation entry is hidden when the flag is disabled
 
-The left-navigation menu configuration SHALL include the "Model Servings" entry within the Deployments group only when at least one of `featureFlags.nimEnabled` or `featureFlags.hfEnabled` is `true`. Other Deployments group entries (MCP, Adapter, Application, Interceptor, Images) MUST NOT be affected by these flags.
+The left-navigation menu configuration SHALL include the "Model Servings" entry within the Deployments group only when `featureFlags.hfEnabled` is `true`. Other Deployments group entries (MCP, Adapter, Application, Interceptor, Images) MUST NOT be affected by this flag.
 
-#### Scenario: At least one flag enabled shows the nav entry
+#### Scenario: Flag enabled shows the nav entry
 
-- **WHEN** `featureFlags.nimEnabled` is `true` or `featureFlags.hfEnabled` is `true`
+- **WHEN** `featureFlags.hfEnabled` is `true`
 - **AND** the Deployments menu group is rendered
 - **THEN** the "Model Servings" menu item is present
 
-#### Scenario: Both flags disabled hides the nav entry
+#### Scenario: Flag disabled hides the nav entry
 
-- **WHEN** both `featureFlags.nimEnabled` and `featureFlags.hfEnabled` are `false`
+- **WHEN** `featureFlags.hfEnabled` is `false`
 - **AND** the Deployments menu group is rendered
 - **THEN** the "Model Servings" menu item is absent from that group
 
-### Requirement: Direct navigation to Model Servings route redirects home when neither flag is enabled
+### Requirement: Direct navigation to Model Servings route redirects home when the flag is disabled
 
-The server component that renders `/[lang]/model-servings` SHALL, when both `NIM_ENABLED` and `HF_ENABLED` evaluate falsy at request time, redirect the user to the application home route (`ApplicationRoute.Home`) before issuing any backend request for containers.
+The server component that renders `/[lang]/model-servings` SHALL, when `HF_ENABLED` evaluates falsy at request time, redirect the user to the application home route (`ApplicationRoute.Home`) before issuing any backend request for containers.
 
-#### Scenario: Bookmarked URL redirects when both flags disabled
+#### Scenario: Bookmarked URL redirects when the flag is disabled
 
-- **WHEN** a user navigates to `/<lang>/model-servings` and both flags are disabled
+- **WHEN** a user navigates to `/<lang>/model-servings` and `HF_ENABLED` is disabled
 - **THEN** the server issues an HTTP redirect to `ApplicationRoute.Home`
 - **AND** no call is made to the containers API
 
-#### Scenario: Route renders normally when at least one flag is enabled
+#### Scenario: Route renders normally when the flag is enabled
 
-- **WHEN** a user navigates to `/<lang>/model-servings` and at least one of `NIM_ENABLED` or `HF_ENABLED` is truthy
+- **WHEN** a user navigates to `/<lang>/model-servings` and `HF_ENABLED` is truthy
 - **THEN** the page renders the Model Servings list as it does today
+- **AND** the containers list request uses `?type=INFERENCE`

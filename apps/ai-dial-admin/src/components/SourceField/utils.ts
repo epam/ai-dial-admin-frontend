@@ -15,7 +15,7 @@ import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-
  * A container can back a chat-completion Model only when its backend-detected capability allows it.
  * Inference containers carry an explicit `inferenceTask`; an explicit NONE (incapable) or
  * TEXT_CLASSIFICATION (an MCP toolset, not a model) is excluded. Containers without the field
- * (e.g. NIM) are unaffected and remain selectable.
+ * are unaffected and remain selectable.
  */
 export const isModelCapableContainer = (container: Container): boolean => {
   return (
@@ -27,7 +27,7 @@ export const isMcpContainer = (container: Container): boolean => container.$type
 
 /**
  * A Model Serving container can back a toolset only when its backend-detected capability is
- * text-classification (an MCP toolset); text-generation / none inference and NIM are excluded.
+ * text-classification (an MCP toolset); text-generation / none inference is excluded.
  */
 export const isTextClassificationInferenceContainer = (container: Container): boolean =>
   container.$type === CONTAINER_TYPE.HF && container.inferenceTask === INFERENCE_TASK.TEXT_CLASSIFICATION;
@@ -91,7 +91,6 @@ export const buildContainerSelection = <T extends DialInterceptor | DialModel | 
   view: ApplicationRoute,
   entity: T,
   id: string | undefined,
-  container: Container | undefined,
 ): T => {
   switch (view) {
     case ApplicationRoute.Applications:
@@ -110,7 +109,7 @@ export const buildContainerSelection = <T extends DialInterceptor | DialModel | 
         containerId: id,
       };
       if (view === ApplicationRoute.Models) {
-        source.completionEndpointPath = `${getEndpointPrefix(container?.$type)}${getEndpointPostfix((entity as DialModel).type)}`;
+        source.completionEndpointPath = `${getEndpointPrefix()}${getEndpointPostfix((entity as DialModel).type)}`;
       }
       return {
         ...entity,
@@ -152,7 +151,6 @@ export const getRouteForContainer = (
     case CONTAINER_TYPE.MCP:
       return ApplicationRoute.McpContainers;
     case CONTAINER_TYPE.HF:
-    case CONTAINER_TYPE.NIM:
       return ApplicationRoute.ModelServings;
     case CONTAINER_TYPE.INTERCEPTOR:
       return ApplicationRoute.InterceptorContainers;
