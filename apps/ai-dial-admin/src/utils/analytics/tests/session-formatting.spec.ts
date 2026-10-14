@@ -9,6 +9,7 @@ import {
   formatSessionSpan,
   formatRelativeTime,
   formatSignificantCost,
+  formatFixedCost,
 } from '@/src/utils/analytics/session-formatting';
 
 const NOW = Date.parse('2026-07-28T12:00:00.000Z');
@@ -258,5 +259,25 @@ describe('sessionTopics', () => {
   // would put a number or a boolean on screen as though it were a topic.
   test.each([[42], [true]])('returns no terms for the non-string value %s', (raw) => {
     expect(sessionTopics(raw as unknown as string)).toEqual([]);
+  });
+});
+
+describe('formatFixedCost', () => {
+  test.each([
+    ['13.3', '$13.30'],
+    ['0.17', '$0.17'],
+    ['0.5', '$0.50'],
+    ['732.954', '$732.95'],
+    ['1200', '$1,200.00'],
+    ['1234567.891', '$1,234,567.89'],
+    ['-1234.5', '-$1,234.50'],
+    ['0', '$0.00'],
+    ['0.003612544180', '$0.00'],
+  ])('renders %s as %s', (value, expected) => {
+    expect(formatFixedCost(value)).toBe(expected);
+  });
+
+  test('renders an empty cell for a missing value', () => {
+    expect(formatFixedCost(null)).toBe('');
   });
 });

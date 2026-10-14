@@ -232,6 +232,8 @@ export const COST_COMPACT_THRESHOLD = 1;
 
 export const COST_SIGNIFICANT_DIGITS = 2;
 
+export const COST_FIXED_DECIMALS = 2;
+
 export const REQUIRED_DETAIL_SELECT_FIELDS: SessionsField[] = [
   SessionsField.ChatId,
   SessionsField.ProjectId,
