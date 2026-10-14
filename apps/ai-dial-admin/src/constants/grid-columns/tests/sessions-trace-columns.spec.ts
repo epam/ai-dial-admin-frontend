@@ -551,11 +551,11 @@ describe('sessions columns :: value formatting', () => {
     expect(format(SessionsField.TotalPrice, '0.09')).toBe('$0.09');
   });
 
-  // The shared currency formatter renders every digit of a Decimal(38,12) sum; this column rounds instead, so a
-  // real sum stays readable. The rounding is local to this page and leaves other price columns unchanged.
-  test('a full-scale decimal cost is rounded to significant digits', () => {
-    expect(format(SessionsField.TotalPrice, '0.090000000001')).toBe('$0.09');
-    expect(format(SessionsField.TotalPrice, '0.003612544180')).toBe('$0.0036');
+  // The shared currency formatter renders every digit of a Decimal(38,12) sum; this column rounds to cents so the
+  // rows of one column line up.
+  test('a full-scale decimal cost is rounded to cents', () => {
+    expect(format(SessionsField.TotalPrice, '0.003612544180')).toBe('$0.00');
+    expect(format(SessionsField.TotalPrice, '13.3')).toBe('$13.30');
   });
 
   test.each([[SessionsField.TotalTokens], [SessionsField.TotalPrice], [SessionsField.TurnCount]])(
