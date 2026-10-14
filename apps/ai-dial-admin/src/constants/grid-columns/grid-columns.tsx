@@ -1348,6 +1348,13 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   },
 ];
 
+const DATASET_TEST_SUITES_HIDDEN_COL_IDS = ['method', 'url'];
+
+/** The test suites list's columns minus the two it hides by default; the dataset's tab shows only the rest. */
+export const DATASET_TEST_SUITES_COLUMN: ColDef[] = TEST_SUITES_COLUMN.filter(
+  (col) => !DATASET_TEST_SUITES_HIDDEN_COL_IDS.includes(col.field ?? ''),
+);
+
 export const DATASETS_COLUMN: ColDef[] = [
   {
     field: 'name',

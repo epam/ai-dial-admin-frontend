@@ -748,6 +748,7 @@ export enum TabsI18nKey {
   Events = 'Tabs.Events',
   Firewall = 'Tabs.Firewall',
   TestCases = 'Tabs.TestCases',
+  TestSuites = 'Tabs.TestSuites',
   Runs = 'Tabs.Runs',
   Summary = 'Tabs.Summary',
   ExtractionResult = 'Tabs.ExtractionResult',
@@ -2195,6 +2196,9 @@ export enum DatasetsI18nKey {
   VisibilityPrivate = 'Datasets.VisibilityPrivate',
   VisibilityPublic = 'Datasets.VisibilityPublic',
   RevalidatingTestCases = 'Datasets.RevalidatingTestCases',
+  SchemaReadOnlyTitle = 'Datasets.SchemaReadOnlyTitle',
+  SchemaReadOnlyMessage = 'Datasets.SchemaReadOnlyMessage',
+  TestSuitesDescription = 'Datasets.TestSuitesDescription',
 }
 
 export enum GridI18nKey {
