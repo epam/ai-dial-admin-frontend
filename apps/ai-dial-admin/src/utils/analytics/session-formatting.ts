@@ -18,9 +18,15 @@ interface Unit {
   suffix: string;
 }
 
-const ELAPSED_UNITS: Unit[] = [
-  { limit: DAY_MS, suffix: 'd' },
-  { limit: HOUR_MS, suffix: 'h' },
+interface ElapsedUnit extends Unit {
+  next?: Unit;
+}
+
+// Each unit pairs with the next smaller one, so the label never rounds a value down by a whole unit:
+// "1h ago" next to a "Last 1h" filter would otherwise cover anything from 1h to 1h 59m.
+const ELAPSED_UNITS: ElapsedUnit[] = [
+  { limit: DAY_MS, suffix: 'd', next: { limit: HOUR_MS, suffix: 'h' } },
+  { limit: HOUR_MS, suffix: 'h', next: { limit: MINUTE_MS, suffix: 'm' } },
   { limit: MINUTE_MS, suffix: 'm' },
 ];
 
@@ -30,7 +36,7 @@ const SPAN_UNITS: Unit[] = [
   { limit: MINUTE_MS, suffix: ' min' },
 ];
 
-const pickUnit = (amount: number, units: Unit[]): Unit | undefined =>
+const pickUnit = <T extends Unit>(amount: number, units: T[]): T | undefined =>
   units.find(({ limit }) => Math.abs(amount) >= limit);
 
 // Only meaningful after a decimal point: on an integer it would turn 20 into 2.
@@ -208,7 +214,14 @@ export const formatRelativeTime = (value: number | string | null, nowMs: number)
   const elapsed = Math.max(nowMs - millis, 0);
   const unit = pickUnit(elapsed, ELAPSED_UNITS);
 
-  return unit ? `${Math.floor(elapsed / unit.limit)}${unit.suffix} ago` : 'just now';
+  if (!unit) {
+    return 'just now';
+  }
+
+  const main = `${Math.floor(elapsed / unit.limit)}${unit.suffix}`;
+  const remainder = unit.next ? Math.floor((elapsed % unit.limit) / unit.next.limit) : 0;
+
+  return `${remainder > 0 ? `${main} ${remainder}${unit.next?.suffix}` : main} ago`;
 };
 
 export const formatSessionSpan = (
