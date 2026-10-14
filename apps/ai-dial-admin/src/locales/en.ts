@@ -3550,7 +3550,7 @@ export default {
       'Grouped by the application that called. Calls made straight to a model: Direct call.',
     BreakdownDescriptionProjects: 'Grouped by the project of the calling key. Calls with no project: No Project.',
     BreakdownDescriptionMcpServers: 'Grouped by the MCP server that answered.',
-    BreakdownDescriptionTools: 'Grouped by the tool called. Calls that name no tool: Other methods.',
+    BreakdownDescriptionTools: 'Grouped by the tool called, on the server that served it.',
     BreakdownDescriptionOwners:
       'Grouped by the deployment that declares the route. A global route is grouped by the first segment of its path, so global routes sharing one are one row.',
     BreakdownDescriptionPaths: 'Grouped by route path and method, under the owner that serves it.',
