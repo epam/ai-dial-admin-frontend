@@ -62,4 +62,7 @@ export interface DialResourceInterface {
   default_headers?: Record<string, string>;
   defaults?: Record<string, unknown>;
   features?: Record<string, unknown>;
+  // camelCase on every surface: Core's DeploymentInterface carries no naming strategy, so even the
+  // snake_case Application resource reads and writes `overridePaths`.
+  overridePaths?: Record<string, string>;
 }

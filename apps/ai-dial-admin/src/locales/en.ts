@@ -521,6 +521,7 @@ export default {
     Add: 'Add',
     AddDefault: 'Add default',
     AddInterface: 'Add interface',
+    AddOverridePath: 'Add override path',
     Defaults: 'Defaults',
     Features: 'Features',
     Columns: 'Columns',
@@ -759,9 +760,10 @@ export default {
     truncatePromptEndpoint: 'Truncate prompt endpoint',
     AppRunnerInherited: 'This value is inherited from Application Runner features',
     reasoningEfforts: 'Reasoning Efforts',
+    skillsSupported: 'Skills',
     Groups: {
       SamplingOutputControl: 'Sampling & Output Control',
-      ToolsFunctionCalling: 'Tools / Function Calling',
+      ToolsFunctionCalling: 'Tools, Functions & Skills',
       PromptMessageComposition: 'Prompt & Message Composition',
       Attachments: 'Attachments',
       Caching: 'Caching',
@@ -1761,6 +1763,11 @@ export default {
     Translator: 'Translator',
     SelectTranslator: 'Select translator',
     Custom: 'Custom',
+    OverridePaths: 'Override paths',
+    SelectOverridePath: 'Select operation',
+    OverridePathsInfo:
+      'Upstream path used instead of the default path appended to the base URL. Supports the {id} and {overrideName} tokens.',
+    OverridePathIdNotSupported: 'This operation has no id, so the {id} token is not supported',
   },
   Images: {
     ImagesListTitle: 'Images',
