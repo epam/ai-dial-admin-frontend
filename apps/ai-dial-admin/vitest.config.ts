@@ -12,6 +12,14 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // @ts-expect-error -- unresolvable under node resolution only
 import react from '@vitejs/plugin-react';
 
+// A run that dies without reaching the end (the CI failures behind `scripts/run-tests.mjs`) leaves
+// the console reporter with nothing to print, so on GitHub Actions also write annotations and a
+// results file, and log each file's heap, so the log says which test was running and how big it got.
+const isCi = !!process.env.GITHUB_ACTIONS;
+const ciReporters = isCi
+  ? ['github-actions', ['json', { outputFile: '../../coverage/apps/ai-dial-admin/test-results.json' }]]
+  : [];
+
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/ai-dial-admin',
@@ -38,10 +46,14 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: './test-setup.tsx',
-    threads: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
-    reporters: [new InlineReporter()],
+    reporters: [new InlineReporter(), ...ciReporters],
+    logHeapUsage: isCi,
+    // The slowest component tests take 2.7–3.4 s on an idle machine against the 5 s default; CI runs them
+    // with less CPU than that. 15 s leaves ~4x headroom and a real hang still fails.
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
       // 'text-summary' is six lines; 'text' is one row per source file (2 950 of them here).

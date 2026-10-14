@@ -4,10 +4,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { ReactNode, useId } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+
+// `findBy*` / `waitFor` default to 1 s, which a loaded runner misses on tests that mount a grid.
+configure({ asyncUtilTimeout: 4_000 });
 
 // ------------------ Fetch Mock ------------------
 const fetchMocker = createFetchMock(vi);
