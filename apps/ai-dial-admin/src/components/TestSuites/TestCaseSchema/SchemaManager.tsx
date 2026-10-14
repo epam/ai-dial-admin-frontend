@@ -189,6 +189,7 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
         <GridView<TestCaseSchema>
           getIsEmptyData={() => testCaseSchema.length === 0}
           emptyDataProps={{ title: t(TestSuitesI18nKey.NoSchemaFields) }}
+          isLiveData
           getRowId={getSchemaRowId}
           onGridReady={onGridReady}
         />

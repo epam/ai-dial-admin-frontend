@@ -83,20 +83,6 @@ describe('AgGridWrapper', () => {
     expect(onGridReady).toHaveBeenCalledWith(expect.objectContaining({ api }));
   });
 
-  test('adapts getRowId to the kit signature when provided, omits it otherwise', () => {
-    const getRowId = ({ data }: { data: { id: string } }) => data.id;
-    const { rerender } = render(
-      <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} getRowId={getRowId} />,
-    );
-    const kitGetRowId = mockState.lastProps?.getRowId as (row: { id: string }) => string;
-
-    expect(kitGetRowId({ id: 'row-1' })).toBe('row-1');
-
-    rerender(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} />);
-
-    expect(mockState.lastProps?.getRowId).toBeUndefined();
-  });
-
   test('uses the custom floating filter by default and retains caller column defaults', () => {
     render(
       <AgGridWrapper
@@ -231,6 +217,20 @@ describe('AgGridWrapper', () => {
       render(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData />);
 
       expect(gridOptions().animateRows).toBe(false);
+    });
+
+    test('adapts getRowId to the kit signature when provided, omits it otherwise', () => {
+      const getRowId = ({ data }: { data: { id: string } }) => data.id;
+      const { rerender } = render(
+        <AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData getRowId={getRowId} />,
+      );
+      const kitGetRowId = mockState.lastProps?.getRowId as (row: { id: string }) => string;
+
+      expect(kitGetRowId({ id: 'row-1' })).toBe('row-1');
+
+      rerender(<AgGridWrapper columnDefs={[{ field: 'id' }]} rowData={[{ id: '1' }]} isLiveData />);
+
+      expect(mockState.lastProps?.getRowId).toBeUndefined();
     });
   });
 });

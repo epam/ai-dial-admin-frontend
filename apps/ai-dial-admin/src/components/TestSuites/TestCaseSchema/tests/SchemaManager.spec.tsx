@@ -11,6 +11,7 @@ import SchemaManager from '../SchemaManager';
 const gridOptions = vi.hoisted(() => ({
   columnDefs: [] as ColDef[],
   getRowId: undefined as ((params: GetRowIdParams<TestCaseSchema>) => string) | undefined,
+  isLiveData: false,
 }));
 
 // Mock GridView since ag-grid doesn't render in jsdom; a stable fake api hands back the column defs so a
@@ -24,8 +25,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', async () => {
     isDestroyed: () => false,
   };
   return {
-    default: ({ getIsEmptyData, emptyDataProps, getRowId, onGridReady }: any) => {
+    default: ({ getIsEmptyData, emptyDataProps, getRowId, isLiveData, onGridReady }: any) => {
       gridOptions.getRowId = getRowId;
+      gridOptions.isLiveData = isLiveData;
       useEffect(() => {
         onGridReady?.({ api });
       }, []);
@@ -53,6 +55,7 @@ describe('SchemaManager', () => {
     vi.clearAllMocks();
     gridOptions.columnDefs = [];
     gridOptions.getRowId = undefined;
+    gridOptions.isLiveData = false;
   });
 
   test('renders schema manager with title and description', () => {
@@ -84,6 +87,7 @@ describe('SchemaManager', () => {
 
     const schema = onChangeTestCaseSchema.mock.lastCall?.[0] as TestCaseSchema[];
     expect(schema.every((field) => field.id == null)).toBe(true);
+    expect(gridOptions.isLiveData).toBe(true);
     const rowIds = schema.map((field) => gridOptions.getRowId?.({ data: field } as GetRowIdParams<TestCaseSchema>));
     expect(new Set(rowIds).size).toBe(3);
   });

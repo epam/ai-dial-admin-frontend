@@ -235,7 +235,7 @@ const AgGridWrapper = <T extends object>({
     <Grid<T>
       columnDefs={gridColumnDefs}
       rowData={rowData ?? undefined}
-      getRowId={getRowId ? getRowIdFromRow : undefined}
+      getRowId={isLiveData && getRowId ? getRowIdFromRow : undefined}
       getContextMenuItems={getContextMenuItems}
       onGridApiChange={onGridApiChange}
       additionalGridOptions={gridOptions}
