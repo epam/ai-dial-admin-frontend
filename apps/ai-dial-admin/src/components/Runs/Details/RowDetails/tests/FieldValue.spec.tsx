@@ -3,18 +3,20 @@ import { describe, expect, test } from 'vitest';
 
 import FieldValue from '../FieldValue';
 
-describe('FieldValue score indicator alignment', () => {
-  test('right-aligns the score bar and value when isRightAligned is set', () => {
-    const { container } = render(<FieldValue raw="0.8" isScoreIndicator failedLabel="Failed" isRightAligned />);
+describe('FieldValue score indicator', () => {
+  test('renders the score on its bucket color instead of a progress bar', () => {
+    render(<FieldValue raw="0.8" isScoreIndicator failedLabel="Failed" />);
 
-    expect(screen.getByText('0.800')).toBeInTheDocument();
-    expect(container.querySelector('.justify-end')).toBeTruthy();
+    expect(screen.getByText('0.800')).toHaveClass('bg-score-abs-09');
+    expect(screen.queryByRole('progressbar')).toBeNull();
   });
+});
 
-  test('does not right-align the score bar by default', () => {
-    const { container } = render(<FieldValue raw="0.8" isScoreIndicator failedLabel="Failed" />);
+describe('FieldValue score fallbacks', () => {
+  test('renders a non-numeric value of a score field as text', () => {
+    render(<FieldValue raw="n/a" isScoreIndicator failedLabel="Failed" />);
 
-    expect(container.querySelector('.justify-end')).toBeNull();
+    expect(screen.getByText('n/a').className).not.toMatch(/bg-score/);
   });
 });
 
