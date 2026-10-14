@@ -8,6 +8,8 @@
 //     `signal=SIGKILL` is how an out-of-memory kill shows up
 //   - memory figures at start and end, and, under GitHub Actions, the child tree's RSS every 30 s, so
 //     a memory ramp is visible in the log of a run that then dies silently
+//   - under GitHub Actions, `--output-style=static`: Nx otherwise hides the output of a task that
+//     succeeded, so a green CI log had no dots, no `Tests N passed` line and no coverage summary
 //
 // stdio is forwarded untouched and the child's exit status is propagated, so nothing downstream
 // (husky, CI) sees a different result than before.
@@ -21,6 +23,8 @@ import { constants, cpus, freemem, totalmem } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 const HEAP_FLAG = '--max-old-space-size=4096';
+const STATIC_OUTPUT_FLAG = '--output-style=static';
+const BASE_NX_ARGS = ['run-many', '-t', 'test', '--runInBand', '--coverage'];
 const SAMPLE_INTERVAL_MS = 30_000;
 const BYTES_PER_MB = 1024 * 1024;
 const KB_PER_MB = 1024;
@@ -29,6 +33,14 @@ const toMb = (bytes) => Math.round(bytes / BYTES_PER_MB);
 
 export const withHeapLimit = (nodeOptions = '') =>
   nodeOptions.includes('--max-old-space-size') ? nodeOptions : `${nodeOptions} ${HEAP_FLAG}`.trim();
+
+// Nx prints a succeeded task's output only with an explicit output style, so CI asks for one. A caller who
+// passes their own (`--output-style=...`, `--outputStyle`, `--verbose`) keeps it.
+export const buildNxArgs = (extraArgs = [], env = {}) => {
+  const hasOutputChoice = extraArgs.some((arg) => /^--(output-?style|verbose)/i.test(arg));
+  const outputArgs = env.GITHUB_ACTIONS && !hasOutputChoice ? [STATIC_OUTPUT_FLAG] : [];
+  return [...BASE_NX_ARGS, ...outputArgs, ...extraArgs];
+};
 
 export const describeExit = ({ code, signal }) => `exit code=${code ?? 'none'} signal=${signal ?? 'none'}`;
 
@@ -111,7 +123,7 @@ const main = async () => {
   const nxBin = resolveNxBin();
   const result = await run({
     command: process.execPath,
-    args: [nxBin, 'run-many', '-t', 'test', '--runInBand', '--coverage', ...process.argv.slice(2)],
+    args: [nxBin, ...buildNxArgs(process.argv.slice(2), process.env)],
     env: { ...process.env, NODE_OPTIONS: withHeapLimit(process.env.NODE_OPTIONS) },
     sampleIntervalMs: process.env.GITHUB_ACTIONS ? SAMPLE_INTERVAL_MS : 0,
   });

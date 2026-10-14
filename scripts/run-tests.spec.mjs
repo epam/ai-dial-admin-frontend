@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { describeExit, run, sumTreeRss, toExitStatus, withHeapLimit } from './run-tests.mjs';
+import { buildNxArgs, describeExit, run, sumTreeRss, toExitStatus, withHeapLimit } from './run-tests.mjs';
 
 const runNode = (source, options = {}) => {
   const lines = [];
@@ -99,3 +99,31 @@ test('sumTreeRss adds up the root and every descendant but nothing else', () => 
 test('sumTreeRss counts only the root when it has no children', () => {
   assert.deepEqual(sumTreeRss('  200     1  2048\n', 200), { processes: 1, rssMb: 2 });
 });
+
+test('buildNxArgs asks Nx to show the output of a succeeded task under GitHub Actions', () => {
+  assert.deepEqual(buildNxArgs([], { GITHUB_ACTIONS: 'true' }), [
+    'run-many',
+    '-t',
+    'test',
+    '--runInBand',
+    '--coverage',
+    '--output-style=static',
+  ]);
+});
+
+test('buildNxArgs leaves local runs alone', () => {
+  assert.deepEqual(buildNxArgs([], {}), ['run-many', '-t', 'test', '--runInBand', '--coverage']);
+});
+
+test('buildNxArgs keeps extra arguments after the defaults', () => {
+  assert.deepEqual(buildNxArgs(['--testFiles=a.spec.ts'], {}).slice(-1), ['--testFiles=a.spec.ts']);
+});
+
+for (const own of ['--output-style=stream', '--outputStyle=stream', '--verbose']) {
+  test(`buildNxArgs does not add an output style when the caller passed ${own}`, () => {
+    const args = buildNxArgs([own], { GITHUB_ACTIONS: 'true' });
+
+    assert.ok(!args.includes('--output-style=static'));
+    assert.ok(args.includes(own));
+  });
+}
