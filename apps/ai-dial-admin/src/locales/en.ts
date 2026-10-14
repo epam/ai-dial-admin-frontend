@@ -3494,6 +3494,8 @@ export default {
     HeatmapEmptySubtitle: 'No activity · {timezone}',
     BreakdownFullListHeader: 'Breakdown — {dimension}',
     BreakdownEmptyTitle: 'Nothing to break down yet',
+    EntityUnmatchedTitle: 'Usage cannot be shown for this entity',
+    EntityUnmatchedHint: 'Its calls are not recorded under a name this dashboard can match.',
     BreakdownEmptyBody: 'No entities produced traffic in the selected period.',
     TimeSeriesTabRequests: 'Requests',
     TimeSeriesTabSplit: 'By {dimension}',

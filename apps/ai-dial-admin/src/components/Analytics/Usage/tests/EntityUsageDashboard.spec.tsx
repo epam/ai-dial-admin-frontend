@@ -212,3 +212,23 @@ describe('EntityUsageDashboard on an application', () => {
     expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
 });
+
+describe('EntityUsageDashboard — an entity the log cannot name', () => {
+  test('states why it is empty instead of rendering nothing at all', async () => {
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={{ name: 'a toolset' }} />);
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.EntityUnmatchedHint)).toBeTruthy();
+    expect(queriesSent()).toEqual([]);
+  });
+
+  test('reads an asset toolset whose identity sits in the merge metadata', async () => {
+    const entity = { name: 'ignored', _metadata: { path: 'bucket/QA editor__0.0.1' } };
+
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={entity as never} />);
+
+    await waitFor(() => expect(runQueryMock).toHaveBeenCalled());
+    expect(screen.queryByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeNull();
+    expect(JSON.stringify(queriesSent())).toContain('toolsets/bucket/QA%20editor__0.0.1');
+  });
+});

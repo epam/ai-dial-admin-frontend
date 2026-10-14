@@ -3587,6 +3587,8 @@ export enum AnalyticsUsageI18nKey {
   HeatmapEmptySubtitle = 'AnalyticsUsage.HeatmapEmptySubtitle',
   BreakdownFullListHeader = 'AnalyticsUsage.BreakdownFullListHeader',
   BreakdownEmptyTitle = 'AnalyticsUsage.BreakdownEmptyTitle',
+  EntityUnmatchedTitle = 'AnalyticsUsage.EntityUnmatchedTitle',
+  EntityUnmatchedHint = 'AnalyticsUsage.EntityUnmatchedHint',
   BreakdownEmptyBody = 'AnalyticsUsage.BreakdownEmptyBody',
   TimeSeriesTabRequests = 'AnalyticsUsage.TimeSeriesTabRequests',
   TimeSeriesTabSplit = 'AnalyticsUsage.TimeSeriesTabSplit',

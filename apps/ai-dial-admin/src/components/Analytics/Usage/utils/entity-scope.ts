@@ -16,12 +16,21 @@ const ASSET_DEPLOYMENT_PREFIX: Partial<Record<ApplicationRoute, string>> = {
 
 const APPLICATION_ROUTES: ApplicationRoute[] = [ApplicationRoute.Applications, ApplicationRoute.AssetsApplications];
 
-/** The name the usage log records an entity's calls under, or null where it has none to match. */
+/**
+ * The name the usage log records an entity's calls under, or null where it has none to match.
+ *
+ * An asset's path is read the way every other write path reads it — `entity.path`, then
+ * `_metadata.path`. A merged Core-resource detail entity carries its identity only in `_metadata`
+ * (see `CoreResourceEntityMetadata`), so reading the flat field alone left the dashboard with no
+ * name to filter by on exactly the view that opens it.
+ */
 export const getEntityDeploymentName = (route: ApplicationRoute, entity?: BaseEntity): string | null => {
   const prefix = ASSET_DEPLOYMENT_PREFIX[route];
 
   if (prefix) {
-    const path = (entity as { path?: string } | undefined)?.path;
+    const asset = entity as { path?: string; _metadata?: { path?: string } } | undefined;
+    const path = asset?.path || asset?._metadata?.path;
+
     return path ? `${prefix}${encodeCorePath(path)}` : null;
   }
 
