@@ -413,6 +413,7 @@ export enum ButtonsI18nKey {
   Add = 'Buttons.Add',
   AddDefault = 'Buttons.AddDefault',
   AddInterface = 'Buttons.AddInterface',
+  AddOverridePath = 'Buttons.AddOverridePath',
   Defaults = 'Buttons.Defaults',
   Features = 'Buttons.Features',
   Columns = 'Buttons.Columns',
@@ -683,6 +684,7 @@ export enum FeaturesI18nKey {
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
   reasoningEfforts = 'Features.reasoningEfforts',
+  skillsSupported = 'Features.skillsSupported',
   GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
   GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
   GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
@@ -1715,6 +1717,10 @@ export enum InterfacesI18nKey {
   Translator = 'Interfaces.Translator',
   SelectTranslator = 'Interfaces.SelectTranslator',
   Custom = 'Interfaces.Custom',
+  OverridePaths = 'Interfaces.OverridePaths',
+  OverridePathsInfo = 'Interfaces.OverridePathsInfo',
+  SelectOverridePath = 'Interfaces.SelectOverridePath',
+  OverridePathIdNotSupported = 'Interfaces.OverridePathIdNotSupported',
 }
 
 export enum ImagesI18nKey {

@@ -327,6 +327,67 @@ describe('InterfacesField — asset surfaces: mode & translator', () => {
     expect(getBaseUrlInput()).toHaveValue('https://x');
   });
 
+  test('shows the override paths of the row type on asset surfaces only', () => {
+    const interfaces = { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } };
+    const { unmount } = render(<ControlledAssetInterfacesField initialInterfaces={interfaces} />);
+
+    expect(screen.getByText(InterfacesI18nKey.OverridePaths)).toBeInTheDocument();
+    unmount();
+
+    render(<ControlledInterfacesField initialInterfaces={interfaces} />);
+
+    expect(screen.queryByText(InterfacesI18nKey.OverridePaths)).not.toBeInTheDocument();
+  });
+
+  test('switching to translator mode drops overridePaths and hides the editor', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [DeploymentInterfaceType.OpenAIChatCompletions]: {
+            base_url: 'https://x',
+            overridePaths: { postAzureOpenaiChatCompletions: '/v1/chat/completions' },
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        translators={[{ name: 'my-translator' }] as any}
+        isAsset
+      />,
+    );
+
+    await user.selectOptions(modeSelect(), InterfaceMode.Translator);
+
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [DeploymentInterfaceType.OpenAIChatCompletions]: {
+        base_url: undefined,
+        mode: InterfaceMode.Translator,
+        overridePaths: undefined,
+      },
+    });
+  });
+
+  test('adding and editing an override path keeps the rest of the interface entry', async () => {
+    const user = userEvent.setup();
+    render(
+      <ControlledAssetInterfacesField
+        initialInterfaces={{ [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'https://x' } }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddOverridePath' }));
+    await user.type(
+      document.getElementById('interface-openaiChatCompletions-override-postAzureOpenaiChatCompletions')!,
+      '/p',
+    );
+
+    expect(getBaseUrlInput()).toHaveValue('https://x');
+    expect(
+      document.getElementById('interface-openaiChatCompletions-override-postAzureOpenaiChatCompletions'),
+    ).toHaveValue('/p');
+  });
+
   test('switching modes validates only the active source until a translator is selected', async () => {
     const user = userEvent.setup();
     render(
