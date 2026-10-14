@@ -49,7 +49,7 @@ describe('resolveRunTarget', () => {
     const run: Run = {
       suiteSnapshot: {
         suiteType: SuiteType.Route,
-        routesRef: { name: 'search-route' },
+        routesRef: { name: 'routes/platform/search-route' },
       },
     };
     expect(resolveRunTarget(run)).toEqual({ name: 'search-route', kind: RunTargetKind.Route });

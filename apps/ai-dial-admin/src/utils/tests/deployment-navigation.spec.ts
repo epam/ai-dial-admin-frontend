@@ -227,7 +227,7 @@ describe('resolveMcpDeploymentNavigationTarget', () => {
 
 describe('resolveRouteNavigationTarget', () => {
   test('routes a route reference to Platform Routes', () => {
-    expect(resolveRouteNavigationTarget({ name: 'search-route' })).toEqual({
+    expect(resolveRouteNavigationTarget({ name: 'routes/platform/search-route' })).toEqual({
       route: ApplicationRoute.PlatformRoutes,
       entity: { name: 'search-route' },
     });

@@ -200,11 +200,13 @@ describe('runs-query', () => {
   });
 
   test('mapRunRow maps a route reference into the suite snapshot', () => {
-    expect(mapRunRow({ suite_type: 'ROUTE', 'routes_ref::name': 'search-route' }).suiteSnapshot).toEqual({
+    expect(
+      mapRunRow({ suite_type: 'ROUTE', 'routes_ref::name': 'routes/platform/search-route' }).suiteSnapshot,
+    ).toEqual({
       suiteType: SuiteType.Route,
       deploymentRef: undefined,
       mcpDeploymentRef: undefined,
-      routesRef: { name: 'search-route' },
+      routesRef: { name: 'routes/platform/search-route' },
     });
   });
 

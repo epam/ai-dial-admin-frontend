@@ -7,6 +7,7 @@ import {
   resolveMcpDeploymentNavigationTarget,
   resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 export type SuiteContext = SuiteSnapshot | TestSuite | null | undefined;
 
@@ -43,7 +44,7 @@ export const getSuiteApplicationName = (suiteContext: SuiteContext): string =>
   suiteContext?.deploymentRef?.name ||
   (suiteContext?.suiteType === SuiteType.McpTool ? (suiteContext?.mcpDeploymentRef?.name ?? '') : '') ||
   suiteContext?.mcpDeploymentRef?.name ||
-  suiteContext?.routesRef?.name ||
+  fromCanonicalRouteName(suiteContext?.routesRef?.name) ||
   '';
 
 /** Resolves the external-link target for a run's suite deployment (application, model, or MCP). */
@@ -77,7 +78,7 @@ export const resolveRunDeployment = (
       return null;
     }
     return {
-      name: suiteContext.routesRef.name,
+      name: fromCanonicalRouteName(suiteContext.routesRef.name),
       route: navigationTarget.route,
       entity: navigationTarget.entity,
     };

@@ -3,6 +3,7 @@ import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/re
 import { reseedRequestModels } from '@/src/components/TestSuites/utils/model-reseeding';
 import { Deployment, RouteTarget } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { toCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import { TargetTab } from './types';
 
 const MODEL_TARGET_ENDPOINTS = [CREATE_MESSAGE_METHOD, CREATE_RESPONSE_METHOD];
@@ -42,7 +43,7 @@ export function buildMcpDeploymentUpdate(deployment: Deployment): Partial<TestSu
 export function buildRouteUpdate(route: RouteTarget): Partial<TestSuite> {
   return {
     suiteType: SuiteType.Route,
-    routesRef: { name: route.name },
+    routesRef: { name: toCanonicalRouteName(route.name) },
     deploymentRef: void 0,
     mcpDeploymentRef: void 0,
     toolRef: void 0,

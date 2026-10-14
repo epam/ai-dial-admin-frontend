@@ -22,6 +22,7 @@ import { Dataset } from '@/src/models/evaluation/dataset';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import {
   addRequest,
   fromRequestView,
@@ -71,7 +72,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
   const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
   const deploymentId = testSuite.deploymentRef?.id;
   const deploymentType = testSuite.deploymentRef?.type;
-  const routeName = testSuite.routesRef?.name;
+  const routeName = fromCanonicalRouteName(testSuite.routesRef?.name);
   const isRoute = testSuite.suiteType === SuiteType.Route;
 
   useEffect(() => {

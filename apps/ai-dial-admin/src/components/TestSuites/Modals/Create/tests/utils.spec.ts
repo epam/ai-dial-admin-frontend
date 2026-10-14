@@ -173,7 +173,7 @@ describe('Target utils', () => {
     test('builds a Route suite target and clears incompatible target fields', () => {
       expect(buildRouteUpdate({ name: 'search-route' })).toEqual({
         suiteType: SuiteType.Route,
-        routesRef: { name: 'search-route' },
+        routesRef: { name: 'routes/platform/search-route' },
         deploymentRef: undefined,
         mcpDeploymentRef: undefined,
         toolRef: undefined,

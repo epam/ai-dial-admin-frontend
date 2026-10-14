@@ -20,6 +20,7 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { OverallScoreType, SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import Target from './Target';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
@@ -142,7 +143,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   } else if (isRoute && testSuite.routesRef?.name) {
     methodsContent = (
       <RouteMethods
-        routeName={testSuite.routesRef.name}
+        routeName={fromCanonicalRouteName(testSuite.routesRef.name)}
         testSuite={testSuite}
         onChange={setTestSuite}
         isCreate={!currentEntity}
@@ -184,7 +185,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
                 selectedTarget?.deploymentId ??
                 testSuite.deploymentRef?.id ??
                 testSuite.mcpDeploymentRef?.id ??
-                testSuite.routesRef?.name
+                fromCanonicalRouteName(testSuite.routesRef?.name)
               }
               suiteType={testSuite.suiteType}
               onChangeTarget={setSelectedTarget}

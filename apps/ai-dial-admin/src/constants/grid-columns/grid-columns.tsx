@@ -103,6 +103,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import { isAssetWithVersion } from '@/src/utils/is-view';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import {
   ASSET_NAME_COLUMN,
@@ -1337,7 +1338,9 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     sortable: false,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     valueGetter: (params) =>
-      params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || params.data?.routesRef?.name || '',
+      params.data?.deploymentRef?.name ||
+      params.data?.mcpDeploymentRef?.name ||
+      fromCanonicalRouteName(params.data?.routesRef?.name),
   },
   { ...CREATED_AT_COLUMN, ...dateFilter, sort: 'desc' },
   { ...UPDATED_AT_COLUMN, ...dateFilter },

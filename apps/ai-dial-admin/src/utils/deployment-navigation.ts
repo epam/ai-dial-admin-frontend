@@ -3,6 +3,7 @@ import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { McpDeploymentRef, RoutesRef, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelNavigationName } from '@/src/utils/resolve-model-deployment-route';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 export interface CatalogDeploymentRecord {
   model?: string;
@@ -85,7 +86,7 @@ export function resolveRouteNavigationTarget(
 
   return {
     route: ApplicationRoute.PlatformRoutes,
-    entity: { name: routesRef.name },
+    entity: { name: fromCanonicalRouteName(routesRef.name) },
   };
 }
 

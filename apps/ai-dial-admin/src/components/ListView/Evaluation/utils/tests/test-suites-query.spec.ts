@@ -182,7 +182,7 @@ describe('test-suites-query', () => {
         dataset_id: 'ds-1',
         deployment_ref: { id: 'dep', name: 'App', version: '1' },
         mcp_deployment_ref: null,
-        routes_ref: { name: 'route-1' },
+        routes_ref: { name: 'routes/platform/route-1' },
         endpoint_ref: { method: 'POST', relativeUrlPattern: '/v1' },
         test_case_filter: { op: 'eq', args: [] },
       }),
@@ -197,7 +197,7 @@ describe('test-suites-query', () => {
       datasetId: 'ds-1',
       deploymentRef: { id: 'dep', name: 'App', version: '1' },
       mcpDeploymentRef: undefined,
-      routesRef: { name: 'route-1' },
+      routesRef: { name: 'routes/platform/route-1' },
       endpointRef: { method: 'POST', relativeUrlPattern: '/v1' },
       testCaseFilter: { op: 'eq', args: [] },
     });

@@ -1,5 +1,6 @@
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run, RunTarget, RunTargetKind } from '@/src/models/evaluation/run';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 const MS_IN_SECOND = 1000;
 const SECONDS_IN_MINUTE = 60;
@@ -73,7 +74,7 @@ export const resolveRunTarget = (run?: Run | null): RunTarget | null => {
 
   const routeName = snapshot?.routesRef?.name;
   if (routeName) {
-    return { name: routeName, kind: RunTargetKind.Route };
+    return { name: fromCanonicalRouteName(routeName), kind: RunTargetKind.Route };
   }
 
   const deploymentName = snapshot?.deploymentRef?.name;

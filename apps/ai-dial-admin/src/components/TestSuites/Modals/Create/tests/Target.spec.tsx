@@ -75,6 +75,9 @@ describe('Target', () => {
     expect(getRoutesMock).toHaveBeenCalledOnce();
     expect(onChangeTarget).toHaveBeenCalledWith(null);
     const update = onChange.mock.calls[0][0] as (previous: TestSuite) => TestSuite;
-    expect(update({})).toMatchObject({ suiteType: SuiteType.Route, routesRef: { name: 'search-route' } });
+    expect(update({})).toMatchObject({
+      suiteType: SuiteType.Route,
+      routesRef: { name: 'routes/platform/search-route' },
+    });
   });
 });

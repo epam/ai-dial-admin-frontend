@@ -29,9 +29,9 @@ describe('getSuiteApplicationName', () => {
   });
 
   test('returns route name for Route suites', () => {
-    expect(getSuiteApplicationName({ suiteType: SuiteType.Route, routesRef: { name: 'search-route' } })).toBe(
-      'search-route',
-    );
+    expect(
+      getSuiteApplicationName({ suiteType: SuiteType.Route, routesRef: { name: 'routes/platform/search-route' } }),
+    ).toBe('search-route');
   });
 
   test('returns empty string when no deployment', () => {
@@ -43,7 +43,10 @@ describe('getSuiteApplicationName', () => {
 describe('resolveRunDeployment', () => {
   test('resolves a platform route link for Route suites', () => {
     expect(
-      resolveRunDeployment({ suiteType: SuiteType.Route, routesRef: { name: 'search-route' } }, undefined),
+      resolveRunDeployment(
+        { suiteType: SuiteType.Route, routesRef: { name: 'routes/platform/search-route' } },
+        undefined,
+      ),
     ).toEqual({
       name: 'search-route',
       route: ApplicationRoute.PlatformRoutes,

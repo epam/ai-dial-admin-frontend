@@ -22,6 +22,7 @@ import {
   resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { fromCanonicalRouteName } from '@/src/utils/evaluation/route-reference';
 
 interface Props {
   isModal?: boolean;
@@ -84,7 +85,9 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   );
 
   const applicationName =
-    testSuite.deploymentRef?.name || testSuite.mcpDeploymentRef?.name || testSuite.routesRef?.name || '';
+    testSuite.deploymentRef?.name ||
+    testSuite.mcpDeploymentRef?.name ||
+    fromCanonicalRouteName(testSuite.routesRef?.name);
   const versionSuffix = testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : '';
   const selectedApplicationValue = `${applicationName}${versionSuffix}`;
   const isResolvingLink = !isModal && (isTypeLoading || isModelRouteLoading);
