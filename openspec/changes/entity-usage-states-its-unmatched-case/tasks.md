@@ -6,3 +6,6 @@
       for it.
 - [x] 1.3 Unit tests: the metadata path, the flat field winning over it, the empty state, and the
       request that is not sent.
+- [x] 1.4 Size the breakdown card to its rows below the scroll threshold, keeping the fixed box at
+      or above it and for an empty card.
+- [x] 1.5 Drop the Tools tab's description of a fallback bucket the narrowed view cannot produce.

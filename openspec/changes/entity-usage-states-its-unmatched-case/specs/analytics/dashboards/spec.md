@@ -59,3 +59,35 @@ nothing that reads as a state — which is indistinguishable from a wiring fault
 - **THEN** the panel states that the entity cannot be matched to the usage log
 - **AND** no request is issued
 
+## ADDED Requirements
+
+### Requirement: The breakdown card is as tall as it needs to be
+
+While the card holds fewer rows than it scrolls at, it SHALL take the height of the rows it holds.
+A single row in a box built for a full page is mostly empty space, and empty space under a header
+reads as rows that failed to load rather than as rows that do not exist.
+
+At or above that count the card SHALL keep its fixed height and scroll, as before. The threshold
+SHALL be low enough that the content height never exceeds the fixed one, so the card only ever
+shrinks at the boundary and never grows.
+
+A card with no rows SHALL keep the full height: its empty state is a message that needs somewhere
+to sit, not a row.
+
+#### Scenario: One row takes one row's height
+
+- **GIVEN** the active tab holds a single row
+- **WHEN** the card renders
+- **THEN** the table is as tall as that row and its header
+
+#### Scenario: A full page keeps the fixed box
+
+- **GIVEN** the active tab holds more rows than the card scrolls at
+- **WHEN** the card renders
+- **THEN** the table keeps its fixed height and scrolls
+
+#### Scenario: An empty card keeps its height
+
+- **GIVEN** the window holds no rows for the active tab
+- **WHEN** the card renders
+- **THEN** the table keeps its full height and states the empty window
