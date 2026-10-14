@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import CompareRowDetailTable from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailTable';
@@ -46,9 +46,7 @@ describe('CompareRowDetailTable', () => {
     );
 
     expect(document.querySelector('[data-field-key="answer"]')).toBeTruthy();
-    await waitFor(() => {
-      expect(scrollPivotToField).toHaveBeenCalledWith(expect.any(HTMLElement), 'answer');
-    });
+    await vi.waitFor(() => expect(scrollPivotToField).toHaveBeenCalledWith(expect.any(HTMLElement), 'answer'));
   });
 
   test('re-scrolls when focusRequestId changes for the same field', async () => {
@@ -66,9 +64,7 @@ describe('CompareRowDetailTable', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(scrollPivotToField).toHaveBeenCalledTimes(1);
-    });
+    await vi.waitFor(() => expect(scrollPivotToField).toHaveBeenCalledOnce());
 
     rerender(
       <CompareRowDetailTable
@@ -82,9 +78,7 @@ describe('CompareRowDetailTable', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(scrollPivotToField).toHaveBeenCalledTimes(2);
-    });
+    await vi.waitFor(() => expect(scrollPivotToField).toHaveBeenCalledTimes(2));
   });
 
   describe('run order', () => {

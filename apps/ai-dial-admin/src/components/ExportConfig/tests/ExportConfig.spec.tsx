@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -113,7 +113,7 @@ describe('ExportConfig — Analytics scope', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
     await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
 
-    await waitFor(() => expect(exportAnalyticsConfig).toHaveBeenCalledWith({ components: [] }));
+    await vi.waitFor(() => expect(exportAnalyticsConfig).toHaveBeenCalledWith({ components: [] }));
   });
 
   test('hides the admin format controls and disables a Custom export on an empty selection', async () => {
@@ -135,7 +135,7 @@ describe('ExportConfig — Analytics scope', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
     await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
 
-    await waitFor(() => expect(downloadFile).toHaveBeenCalledWith(blob, 'adas-catalog.json'));
+    await vi.waitFor(() => expect(downloadFile).toHaveBeenCalledWith(blob, 'adas-catalog.json'));
     expect(exportAnalyticsConfig).toHaveBeenCalledWith({
       components: [{ type: 'table', name: 'usage_sentiment' }],
     });
@@ -155,7 +155,7 @@ describe('ExportConfig — Analytics scope', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
     await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith(
         ExportI18nKey.ErrorTitle,
         'sensitive_column_not_entitled',

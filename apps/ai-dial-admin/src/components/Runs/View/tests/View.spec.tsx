@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
@@ -203,7 +203,7 @@ describe('Runs View :: View', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Buttons.Stop' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Cancel' }));
 
-    await waitFor(() => expect(screen.getByText(`entity-status:${RunStatus.CANCELLING}`)).toBeInTheDocument());
+    expect(await screen.findByText(`entity-status:${RunStatus.CANCELLING}`)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Buttons.Stop' })).not.toBeInTheDocument();
     expect(getRun).not.toHaveBeenCalled();
   });

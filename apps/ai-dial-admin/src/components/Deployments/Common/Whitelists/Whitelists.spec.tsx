@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { IMAGE_TEMPLATE } from '@/src/constants/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,8 +24,6 @@ describe('Common Whitelists component', () => {
 
     expect(screen.getByRole('textbox')).toHaveValue('test.com');
 
-    await waitFor(() => {
-      expect(screen.getByText('asd.com')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('asd.com')).toBeInTheDocument();
   });
 });

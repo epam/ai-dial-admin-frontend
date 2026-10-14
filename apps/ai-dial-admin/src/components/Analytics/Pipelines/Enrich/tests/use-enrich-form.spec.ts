@@ -191,8 +191,10 @@ describe('useEnrichForm — the read source leg', () => {
 
     act(() => result.current.onChange({ target: 'turn_feedback' }));
 
-    await waitFor(() => expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log'));
-    expect(result.current.sourceFields.map((field) => field.name)).toContain('dial_usage_log_payload.request_body');
+    await waitFor(() =>
+      expect(result.current.sourceFields.map((field) => field.name)).toContain('dial_usage_log_payload.request_body'),
+    );
+    expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log');
   });
 
   test('caches the entity so re-selecting the same source issues no second read', async () => {

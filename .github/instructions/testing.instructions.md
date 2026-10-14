@@ -247,9 +247,10 @@ expect(updatePipeline).toHaveBeenCalledOnce();
 
 - Whatever the next statement needs, wait for **that**: `await screen.findBy*(...)` for something that
   will appear, then assert the mock afterwards (it has necessarily been called by then).
-- `await waitFor(() => expect(mock).toHaveBeenCalled…)` is allowed only as the **last** statement of a
-  test, when there is no UI outcome to wait on (a fire-and-forget call). Nothing may depend on the
-  render after it.
+- Waiting on a mock call is allowed only as the **last** statement of a test, when there is no UI outcome
+  to wait on (a fire-and-forget call), and then with Vitest's `await vi.waitFor(() => expect(mock)…)`, not
+  RTL's `waitFor`. Nothing may depend on the render after it. (`vi.waitFor` is also what the spec lint
+  leaves alone, so the exception is visible in the code.)
 - After `await user.click(...)` / `user.type(...)` the event has been dispatched and wrapped in `act`;
   a **synchronous** handler's effects are already visible — assert straight away with no wait. Only
   work that crosses a promise (a server action, `fetch`, a debounced effect) needs a wait.
@@ -263,10 +264,25 @@ expect(updatePipeline).toHaveBeenCalledOnce();
 - Absence → `await waitForElementToBeRemoved(...)` when it is present first, otherwise assert
   `queryBy*` is `null` **after** awaiting whatever should have removed it. Don't poll for absence on
   its own: it passes at once, before the thing you meant to wait for has happened.
-- Use `waitFor` only for a **non-DOM or computed condition** that has no element to find (a mock's
-  call count, a value read off a ref). Keep the callback to **one condition**, side-effect free — a
+- **Anchor every absence or "not called" assertion on something positive.** Awaiting a mock call and
+  flushing is not enough: the check passes just as well if the component never got to its final state,
+  or if the behavior it guards is broken. Wait for something that only exists once the result has been
+  taken in — another element the same response renders, a loading indicator that was present and has
+  gone, the control that comes back enabled, the element that replaces the absent one — then assert
+  the absence. When the UI shows nothing at all (a refused read leaves the state unchanged), await the
+  mock's own returned promise inside `act` so the component's continuation has run. To check the anchor
+  works, break the production behavior for a moment and confirm the test fails. For a count ("reads
+  each window exactly once"), settle on a positive signal first, then assert the exact number, so a
+  late duplicate fails it.
+- Use RTL's `waitFor` only for a **DOM-derived condition** with no single element to find (for example a
+  computed attribute across several elements); use `vi.waitFor` for a **non-DOM condition** (a mock's call
+  count, a value read off a ref). Keep the callback to **one condition**, side-effect free — a
   `waitFor` callback is retried until it stops throwing, so a click or a state change inside it runs
   repeatedly.
+- State read from `renderHook` (`result.current…`) is waited on with **RTL's** `waitFor`, not
+  `vi.waitFor`: RTL's wraps the wait in `act`, and a hook update outside `act` is not flushed. The same
+  goes for conditions on an element you already hold, such as `toBeEnabled()` on a button, where
+  `findBy*` cannot express "has become enabled".
 - Never put a user action (`click`, `type`) or a second unrelated `expect` inside `waitFor`. Do the
   action outside, then wait for its result; assert each independent fact on its own line afterwards.
 - Never hide a slow test by passing `{ timeout: 5000 }` to one call, or a third argument to `test(...)`.
@@ -317,8 +333,13 @@ closest to the timeout, and it is what turns a 1 s `waitFor` into a coin flip un
   `Analytics/Pipelines/Failures/tests/FailuresGrid.spec.tsx` (captures props). About 40 specs already
   do this; don't re-invent a different shape — copy the closest one.
 - The **exception**: a spec whose subject is the grid itself (cell rendering, sorting, selection,
-  `BaseEntityList` wiring). Keep **one** such spec per grid, give it `findBy*` waits only, and keep
-  views that merely *contain* that grid on the stubbed path.
+  `BaseEntityList` wiring, the empty-data state a real grid renders). Keep **one** such spec per grid,
+  give it `findBy*` waits only, and keep views that merely *contain* that grid on the stubbed path. A
+  stub that cannot reproduce what the assertions read (the entity list specs assert the real `Data grid`
+  region and the empty state) is the signal the spec belongs on the exception side; don't force it.
+  When a stub replaces a grid whose row click or cell click the test relies on, have the stub fire the
+  same callback the real grid would (for example `additionalGridOptions.onRowClicked({ data })`), so
+  that wiring is still exercised.
 - Don't mount a whole `View` to test a field or a hook. Render the field, or use `renderHook`. A test
   that needs six providers and a grid to check one callback is testing at the wrong level.
 - Mock Monaco, ECharts, and other heavy descendants the same way (§4.5).
@@ -341,6 +362,14 @@ and with how much of the tree re-renders per keystroke.
 - A test must pass **alone**, in **any order**, and **twice in a row**. Reset every shared mock in
   `beforeEach` (`vi.clearAllMocks()`; re-arm `mockResolvedValue`s there, not at module scope), and never
   rely on state a previous test left in a module-level variable, `localStorage`, or a mock.
+  `vi.clearAllMocks()` clears calls but **keeps implementations**: a `mockResolvedValue` or
+  `mockImplementation` set by an earlier test survives it and answers the next test's call. Re-arm every
+  mock whose default matters in `beforeEach` (or use `mockReset`); this is what made one audit spec fail
+  on 11 of 25 shuffle seeds.
+- Don't create fresh functions per render in a shared mock. The global `useNotification` mock in
+  `test-setup.tsx` returns one stable `showNotification`, like the real provider; a mock that returns a
+  new `vi.fn()` each render re-runs every effect that lists it as a dependency, so a component refetches
+  in a loop and the outcome depends on speed.
 - **Time budget:** a component test that takes **over ~1 s** on your machine (the `vitest run` output
   prints each test's duration) is a smell and **over ~2 s** needs a reason — you are mounting too much
   (§9.4) or waiting on the wrong thing (§9.1). Measure with `npx vitest run <file> --reporter=verbose`.
@@ -354,8 +383,9 @@ wrote or edited:
 
 1. Run the file **twice**; once with `--sequence.shuffle` (`npx vitest run <file> --sequence.shuffle`)
    to flush order dependence.
-2. Grep your diff for the banned shapes: `waitFor(() => expect(` followed by `getBy`, `setTimeout`,
-   `{ timeout:`, `waitFor(() => {` containing a `click`/`type`, a real `GridView` import in a spec
-   that isn't about the grid.
+2. Run `npm run lint:specs` (it runs on staged specs at commit time too). It rejects the two shapes it
+   can see — `waitFor(() => expect(mock).toHaveBeenCalled…)` and any `setTimeout`. The rest it cannot
+   see, so grep your diff for them: `{ timeout:`, `waitFor(() => {` containing a `click`/`type`, a
+   real `GridView` in a spec that isn't about the grid, an absence assertion with no positive anchor.
 3. Check the slowest test's duration in the verbose output against the §9.6 budget.
 4. If it is slow, fix the cause (smaller render, stubbed grid, `findBy*`) — do not raise a timeout.

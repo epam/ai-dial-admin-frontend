@@ -51,9 +51,7 @@ describe('TimeFilter', () => {
     expect(customButtons.length).toBeGreaterThan(0);
     await user.click(customButtons[0]);
 
-    await waitFor(() => {
-      expect(screen.getByRole('status')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('status')).toBeInTheDocument();
   });
 
   test('Apply is disabled when no date selected in custom mode', async () => {
@@ -119,9 +117,7 @@ describe('TimeFilter', () => {
       .filter((b) => b.textContent?.trim().startsWith('Telemetry.Custom'));
     await user.click(customButtons[0]);
 
-    await waitFor(() => {
-      expect(screen.getByRole('status')).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('status')).toBeInTheDocument();
   });
 
   test('renders an anchored option in the preset list and shows its label in the trigger when selected', async () => {

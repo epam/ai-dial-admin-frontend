@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
@@ -93,9 +93,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Stopped Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Stopped Container')).toBeInTheDocument();
   });
 
   test('displays running container name in edit view', async () => {
@@ -110,9 +108,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Running Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Running Container')).toBeInTheDocument();
   });
 
   test('shows empty state when container is not returned by API', async () => {
@@ -127,9 +123,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Entities.NoContainers')).toBeInTheDocument();
   });
 
   test('applies openai/v1 prefix when a container is selected', async () => {
@@ -165,9 +159,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Stopped Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Stopped Container')).toBeInTheDocument();
     const visibleWarningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled.text-warning-icon');
     expect(visibleWarningIcon).not.toBeNull();
     expect(visibleWarningIcon?.getAttribute('class') ?? '').not.toContain('hidden');
@@ -185,9 +177,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Running Container')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Running Container')).toBeInTheDocument();
     const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
     // Icon node may exist but is hidden via the `hidden` class when warningText is undefined
     expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
@@ -205,9 +195,7 @@ describe('Containers component', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Entities.NoContainers')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Entities.NoContainers')).toBeInTheDocument();
     const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
     expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
   });

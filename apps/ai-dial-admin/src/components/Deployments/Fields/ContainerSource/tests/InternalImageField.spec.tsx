@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import InternalImageField from '@/src/components/Deployments/Fields/ContainerSource/InternalImageField';
@@ -109,14 +109,14 @@ describe('InternalImageField', () => {
     fireEvent.click(getPopupTrigger());
     fireEvent.click(screen.getByText('Apply'));
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(updateContainerMock).toHaveBeenCalledWith(
         expect.objectContaining({
           source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: 'new-image-id' },
         }),
       );
     });
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(refreshMock).toHaveBeenCalled();
     });
   });
@@ -134,7 +134,7 @@ describe('InternalImageField', () => {
     fireEvent.click(getPopupTrigger());
     fireEvent.click(screen.getByText('Apply'));
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(showNotificationMock).toHaveBeenCalled();
     });
     expect(refreshMock).not.toHaveBeenCalled();

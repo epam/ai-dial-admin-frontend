@@ -53,7 +53,7 @@ The CI cause is unknown, so no fix is chosen from guesswork. The first PR change
 | H3 | A real test failure whose output nx loses when the child is torn down | nx shows captured output only | `github-actions` annotations or the JSON file name a test |
 | H4 | Runner infrastructure | would have shown as a cancelled/lost job, not a `Test` step failure | rejected by the step conclusion |
 
-**Experiment** (a throwaway branch with a throwaway workflow, never merged; pushing it and the repeated runs need the user's go-ahead): run the test command as a matrix of {current config, `--maxWorkers=2`, `--maxWorkers=1`, coverage off} × 10 repeats with the D1 instrumentation, and compare failure counts and peak RSS. The matrix is cheap compared with another week of unexplained red runs.
+**Experiment — not runnable from this PR.** The planned matrix of {current config, `--maxWorkers=2`, `--maxWorkers=1`, coverage off} × 10 repeats needs a workflow file, and the author of this change has no rights to create or update workflows. A throwaway copy is kept outside the repo (scratchpad `diagnose-tests.yml`) for anyone with `workflow` rights to run from a fork or branch; its results would go into "Findings". Without it the cause is established the cheaper way: the D1 instrumentation is on `development` after this PR merges, and the **next real CI failure** names itself (exit signal, RSS ramp, JSON/annotations). Until then the worker/heap/coverage settings (task 3.2) are not changed — only the timeout headroom is.
 
 **Decision rule:** pick the smallest change that gives zero failures across the repeats, preferring fewer workers over a larger heap, and a lighter coverage reporter set in CI (drop `html`, which writes a page per source file) over fewer workers. Record the result in this document's "Findings" before changing defaults.
 
@@ -87,9 +87,8 @@ Each area commit must show: every touched file green alone, green twice, green w
 Decided by the user. Consequences, and how they are handled:
 
 - **Review size.** ~100–150 spec files. Commits are ordered and self-contained, each area commit is reviewable alone, and the diff to review is assertions, not waits (D5). Diagnostics and config come first and touch no tests, so they can be read first.
-- **The CI experiment (D2) runs on this PR's branch.** The matrix workflow is committed to the branch triggered by `push` (a `workflow_dispatch`-only file would not be runnable from a branch because it is not on the default branch), and a later commit deletes it. Findings are recorded in this document before the config commit.
-- **The decision in D2 can change the config commit**, so config comes after the experiment, not before.
-- **Squash-merge loses commit granularity.** After merge a partial revert is not possible; reverting means the whole PR. Mitigation: the PR is only merged with the full suite green on the CI command at least three times in a row.
+- **No CI experiment in this PR** (no rights to push workflow files): diagnostics ship first, worker/heap/coverage tuning waits for a real failure or for someone with rights to run the matrix (D2).
+- **Squash-merge loses commit granularity.** After merge a partial revert is not possible; reverting means the whole PR. Mitigation: every touched spec passes alone, twice and shuffled; the full local run matches the known baseline; and the first post-merge CI run carries the new diagnostics. (A pre-merge CI gate is not possible: `pr.yml` does not run tests.)
 - **PR title** follows the repo's conventional-commit title check, e.g. `test: stabilize the test suite (...)`.
 
 *Alternatives:* a single repo-wide codemod (the replacement cannot be inferred); migrating only the files that flaked (the set shifts every run); one PR per area (rejected by the user for this change).
@@ -103,22 +102,21 @@ Decided by the user. Consequences, and how they are handled:
 - **The CI cause is not a test at all** → D1/D2 find it before any migration is justified by it; migration is still justified by the local flakiness evidence, and the proposal says so.
 - **Longer timeouts hide a hang** → a hang still fails, just at 15 s; per-test budget in §9.6 and the verbose duration check catch creep.
 - **A migrated test passes for the wrong reason** (the barrier it removed was covering a real wait, or the new `findBy` asserts less) → D5's verification step and review-by-assertions.
-- **One big PR is hard to review and all-or-nothing** → ordered commits, per-area verification, diagnostics/config first, and a three-green-runs merge gate (D5a).
+- **One big PR is hard to review and all-or-nothing** → ordered commits, per-area verification, diagnostics/config first, and a full-run-matches-baseline check before merge (D5a).
 - **The wrapper script hides nx output or changes exit codes** → it forwards stdio unchanged and exits with the child's code; it has its own spec.
-- **Experiment runs cost CI minutes** → ~40 runs × ~15 min on the free tier for a public repo; scoped to a throwaway branch, started only with the user's approval.
 
 ## Migration Plan
 
 One branch, one PR, these commits in order:
 
 1. Diagnostics (`run-tests.mjs`, CI reporters, `logHeapUsage`) and the Windows fix. No test changes.
-2. The throwaway D2 workflow; run the experiment; write "Findings" below.
-3. Delete the throwaway workflow; config headroom and the worker/heap/coverage settings the findings chose.
+2. Config headroom (timeouts). Worker/heap/coverage tuning is deferred until the cause is known (D2).
+3. (Reserved — was the CI experiment.)
 4. Migration by area, one commit each: `Analytics` (sub-folders), `Assets`, `TestSuites` + `Datasets`, `Runs`, the rest.
 5. Turn on `lint:specs` (zero errors by construction).
 6. Close-out: `testing.md` re-read, mirrors, notes.
 
-Before merge: the full suite is green on the CI command three times in a row. Rollback after squash-merge is the whole PR; config changes are values in two files and the lint is a script plus a lint-staged entry, so a forward fix of any one of them is small.
+Before merge: the full local run matches the known baseline and every migrated spec passes alone, twice and shuffled. Rollback after squash-merge is the whole PR; config changes are values in two files and the lint is a script plus a lint-staged entry, so a forward fix of any one of them is small.
 
 ## Findings
 
