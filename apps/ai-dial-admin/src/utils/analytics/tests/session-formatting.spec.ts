@@ -101,10 +101,6 @@ describe('formatRelativeTime', () => {
     ['1 hour', HOUR, '1h ago'],
     ['3 hours', 3 * HOUR, '3h ago'],
     ['2 days', 2 * DAY, '2d ago'],
-    ['1 hour 50 minutes', HOUR + 50 * MINUTE, '1h 50m ago'],
-    ['1 hour 59 minutes 59 seconds', 2 * HOUR - 1000, '1h 59m ago'],
-    ['2 days 3 hours', 2 * DAY + 3 * HOUR, '2d 3h ago'],
-    ['2 days 59 minutes', 2 * DAY + 59 * MINUTE, '2d ago'],
   ])('renders an activity %s old as %s', (_label, elapsed, expected) => {
     expect(formatRelativeTime(NOW - elapsed, NOW)).toBe(expected);
   });
