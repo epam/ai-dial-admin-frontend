@@ -26,7 +26,7 @@ export const resourceSwitchGroups: ResourceSwitchFeatureGroup[] = [
   },
   {
     title: FeaturesI18nKey.GroupToolsFunctionCalling,
-    keys: ['tools_supported', 'parallel_tool_calls_supported'],
+    keys: ['tools_supported', 'parallel_tool_calls_supported', 'skills_supported'],
   },
   {
     title: FeaturesI18nKey.GroupPromptMessageComposition,
@@ -67,6 +67,7 @@ export const resourceFeatureLabelMap: Record<keyof DialApplicationResourceFeatur
   max_tokens_supported: FeaturesI18nKey.maxTokensSupported,
   max_completion_tokens_supported: FeaturesI18nKey.maxCompletionTokensSupported,
   custom_temperature_supported: FeaturesI18nKey.customTemperatureSupported,
+  skills_supported: FeaturesI18nKey.skillsSupported,
   reasoning_efforts: FeaturesI18nKey.reasoningEfforts,
 };
 

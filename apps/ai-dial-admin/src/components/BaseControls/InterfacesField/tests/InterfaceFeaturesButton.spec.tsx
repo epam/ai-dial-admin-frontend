@@ -63,6 +63,25 @@ describe('InterfaceFeaturesButton', () => {
     expect(screen.queryByRole('switch', { name: resourceFeatureLabelMap.consent_required })).toBeNull();
   });
 
+  test('shows the skills switch for platform models and for applications', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <InterfaceFeaturesButton
+        fieldId="row-1"
+        features={{}}
+        view={ApplicationRoute.PlatformModels}
+        onChange={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Features }));
+    expect(screen.getByRole('switch', { name: modelResourceFeatureLabelMap.skills_supported })).toBeInTheDocument();
+    unmount();
+
+    render(<InterfaceFeaturesButton fieldId="row-2" features={{}} onChange={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Features }));
+    expect(screen.getByRole('switch', { name: resourceFeatureLabelMap.skills_supported })).toBeInTheDocument();
+  });
+
   test('reflects the current feature values as switch state', async () => {
     const user = userEvent.setup();
     render(<InterfaceFeaturesButton fieldId="row-1" features={{ tools_supported: true }} onChange={vi.fn()} />);

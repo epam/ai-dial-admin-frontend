@@ -135,6 +135,7 @@ export interface DialResourceFeatures {
   max_tokens_supported: boolean;
   max_completion_tokens_supported: boolean;
   custom_temperature_supported: boolean;
+  skills_supported: boolean;
   reasoning_efforts?: string[];
 }
 

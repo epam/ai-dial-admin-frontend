@@ -11,6 +11,7 @@ import {
   BaseUrlKey,
   DefaultHeadersKey,
 } from '@/src/components/BaseControls/InterfacesField/models';
+import OverridePathsField from '@/src/components/BaseControls/InterfacesField/OverridePathsField';
 import TranslatorField from '@/src/components/BaseControls/InterfacesField/TranslatorField';
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
 import { ButtonsI18nKey, EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
@@ -126,13 +127,14 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
 
   // base_url and translator are mutually exclusive on the wire (Core's DeploymentInterface carries
   // one or the other), so switching mode drops whichever field the new mode doesn't use and clears
-  // validation for that inactive field.
+  // validation for that inactive field. overridePaths is dropped with base_url: Core rejects it on a
+  // translated interface.
   const onChangeMode = useCallback(
     (mode: InterfaceMode) => {
       if (mode === InterfaceMode.Translator) {
         dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: false });
-        onChange({ ...value, mode, [baseUrlKey]: undefined });
+        onChange({ ...value, mode, [baseUrlKey]: undefined, overridePaths: undefined });
       } else {
         validate(baseUrl);
         dispatch({ type: ValidationActionType.SetField, field: translatorValidationField, isValid: true });
@@ -153,6 +155,11 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   const onChangeDefaultHeaders = useCallback(
     (headers: Record<string, string>) => onChange({ ...value, [defaultHeadersKey]: headers }),
     [value, defaultHeadersKey, onChange],
+  );
+
+  const onChangeOverridePaths = useCallback(
+    (overridePaths?: Record<string, string>) => onChange({ ...value, overridePaths }),
+    [value, onChange],
   );
 
   const onChangeDefaults = useCallback(
@@ -230,6 +237,16 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
           />
         )}
       </div>
+
+      {isAsset && isPassthrough && (
+        <OverridePathsField
+          fieldId={fieldId}
+          type={type}
+          value={value.overridePaths}
+          disabled={disabled}
+          onChange={onChangeOverridePaths}
+        />
+      )}
 
       {isAsset && (
         <>
