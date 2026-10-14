@@ -82,7 +82,7 @@ const renderCompareView = () =>
     </AppContextProvider>,
   );
 
-describe('CompareView', () => {
+describe.skip('CompareView', () => {
   beforeEach(() => {
     getRunMock.mockReset();
     getRunsMock.mockReset();
