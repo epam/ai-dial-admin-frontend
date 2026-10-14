@@ -71,6 +71,11 @@ export const resolveRunTarget = (run?: Run | null): RunTarget | null => {
     return { name: mcpName, kind: RunTargetKind.Mcp };
   }
 
+  const routeName = snapshot?.routesRef?.name;
+  if (routeName) {
+    return { name: routeName, kind: RunTargetKind.Route };
+  }
+
   const deploymentName = snapshot?.deploymentRef?.name;
   if (!deploymentName) {
     return null;

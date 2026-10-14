@@ -103,7 +103,7 @@ describe('test-suites-query', () => {
     expect(node && 'args' in node ? node.args : []).toHaveLength(2);
   });
 
-  test('buildTestSuitesFilter ORs application against both deployment name fields', () => {
+  test('buildTestSuitesFilter ORs application against all target name fields', () => {
     expect(
       buildTestSuitesFilter([{ column: 'application', value: 'google', operator: FilterOperatorDto.CONTAINS }]),
     ).toEqual({
@@ -120,6 +120,13 @@ describe('test-suites-query', () => {
           op: ComparisonOp.Co,
           args: [
             { type: ExprType.Field, name: 'mcp_deployment_ref::name' },
+            { type: ExprType.Value, value_type: ValueType.String, value: 'google' },
+          ],
+        },
+        {
+          op: ComparisonOp.Co,
+          args: [
+            { type: ExprType.Field, name: 'routes_ref::name' },
             { type: ExprType.Value, value_type: ValueType.String, value: 'google' },
           ],
         },
@@ -175,6 +182,7 @@ describe('test-suites-query', () => {
         dataset_id: 'ds-1',
         deployment_ref: { id: 'dep', name: 'App', version: '1' },
         mcp_deployment_ref: null,
+        routes_ref: { name: 'route-1' },
         endpoint_ref: { method: 'POST', relativeUrlPattern: '/v1' },
         test_case_filter: { op: 'eq', args: [] },
       }),
@@ -189,6 +197,7 @@ describe('test-suites-query', () => {
       datasetId: 'ds-1',
       deploymentRef: { id: 'dep', name: 'App', version: '1' },
       mcpDeploymentRef: undefined,
+      routesRef: { name: 'route-1' },
       endpointRef: { method: 'POST', relativeUrlPattern: '/v1' },
       testCaseFilter: { op: 'eq', args: [] },
     });

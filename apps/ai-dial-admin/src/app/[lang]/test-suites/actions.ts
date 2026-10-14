@@ -2,17 +2,19 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
 import {
   buildTestSuitesQuery,
   mapTestSuitesQueryResult,
 } from '@/src/components/ListView/Evaluation/utils/test-suites-query';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { Metric } from '@/src/models/evaluation/metric';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -106,6 +108,16 @@ export async function getDeployment(id: string, type: string) {
 export async function getDeploymentById(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getDeploymentById(id, token);
+}
+
+export async function getRoutes() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.list(token, ResourceType.ROUTE, 'platform/');
+}
+
+export async function getRoute(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.getMerged<DialRouteResource>(token, ResourceType.ROUTE, name);
 }
 
 export async function getTestSuiteTemplateVariables(id: string) {

@@ -5,7 +5,13 @@ import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/re
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from '../types';
-import { applyTargetSelection, buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from '../utils';
+import {
+  applyTargetSelection,
+  buildDeploymentUpdate,
+  buildMcpDeploymentUpdate,
+  buildRouteUpdate,
+  getInitialTab,
+} from '../utils';
 
 describe('Target utils', () => {
   describe('buildDeploymentUpdate', () => {
@@ -163,6 +169,21 @@ describe('Target utils', () => {
     });
   });
 
+  describe('buildRouteUpdate', () => {
+    test('builds a Route suite target and clears incompatible target fields', () => {
+      expect(buildRouteUpdate({ name: 'search-route' })).toEqual({
+        suiteType: SuiteType.Route,
+        routesRef: { name: 'search-route' },
+        deploymentRef: undefined,
+        mcpDeploymentRef: undefined,
+        toolRef: undefined,
+        argumentTemplate: undefined,
+        endpointRef: undefined,
+        requestTemplate: undefined,
+      });
+    });
+  });
+
   describe('getInitialTab', () => {
     test('should return Mcp tab for MCP_TOOL suite type', () => {
       expect(getInitialTab(SuiteType.McpTool)).toBe(TargetTab.Mcp);
@@ -174,6 +195,10 @@ describe('Target utils', () => {
 
     test('should return Applications tab when suite type is undefined', () => {
       expect(getInitialTab(undefined)).toBe(TargetTab.Applications);
+    });
+
+    test('should return Routes tab for ROUTE suite type', () => {
+      expect(getInitialTab(SuiteType.Route)).toBe(TargetTab.Routes);
     });
   });
 });

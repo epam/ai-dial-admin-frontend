@@ -1,7 +1,7 @@
 import { CREATE_MESSAGE_METHOD } from '@/src/components/TestSuites/constants/anthropic-messages-method';
 import { CREATE_RESPONSE_METHOD } from '@/src/components/TestSuites/constants/responses-method';
 import { reseedRequestModels } from '@/src/components/TestSuites/utils/model-reseeding';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { Deployment, RouteTarget } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TargetTab } from './types';
 
@@ -17,6 +17,7 @@ export function buildDeploymentUpdate(data: Deployment): Partial<TestSuite> {
       type: data.$type,
     },
     mcpDeploymentRef: void 0,
+    routesRef: void 0,
     toolRef: void 0,
     argumentTemplate: void 0,
   };
@@ -31,9 +32,23 @@ export function buildMcpDeploymentUpdate(deployment: Deployment): Partial<TestSu
       name: deployment.displayName || deployment.deploymentId,
     },
     deploymentRef: void 0,
+    routesRef: void 0,
     endpointRef: void 0,
     requestTemplate: void 0,
     toolRef: void 0,
+  };
+}
+
+export function buildRouteUpdate(route: RouteTarget): Partial<TestSuite> {
+  return {
+    suiteType: SuiteType.Route,
+    routesRef: { name: route.name },
+    deploymentRef: void 0,
+    mcpDeploymentRef: void 0,
+    toolRef: void 0,
+    argumentTemplate: void 0,
+    endpointRef: void 0,
+    requestTemplate: void 0,
   };
 }
 
@@ -50,5 +65,6 @@ export function applyTargetSelection(suite: TestSuite, deployment: Deployment, t
 
 export function getInitialTab(suiteType?: SuiteType): TargetTab {
   if (suiteType === SuiteType.McpTool) return TargetTab.Mcp;
+  if (suiteType === SuiteType.Route) return TargetTab.Routes;
   return TargetTab.Applications;
 }

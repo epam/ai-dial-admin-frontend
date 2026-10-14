@@ -298,6 +298,8 @@ export const MCP_DEPLOYMENTS_COLUMNS: ColDef[] = [
   { field: 'transport', headerName: 'Transport', hide: false },
 ];
 
+export const EVALUATION_ROUTES_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN];
+
 export const MCP_TOOLS_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Tool Name', hide: false },
   DESCRIPTION_COLUMN,
@@ -1334,7 +1336,8 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     hide: false,
     sortable: false,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
-    valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
+    valueGetter: (params) =>
+      params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || params.data?.routesRef?.name || '',
   },
   { ...CREATED_AT_COLUMN, ...dateFilter, sort: 'desc' },
   { ...UPDATED_AT_COLUMN, ...dateFilter },

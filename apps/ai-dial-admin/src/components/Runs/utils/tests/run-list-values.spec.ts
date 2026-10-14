@@ -45,6 +45,16 @@ describe('resolveRunTarget', () => {
     expect(resolveRunTarget(run)).toEqual({ name: 'calculator', kind: RunTargetKind.Mcp });
   });
 
+  test('resolves a route ref to the Route kind', () => {
+    const run: Run = {
+      suiteSnapshot: {
+        suiteType: SuiteType.Route,
+        routesRef: { name: 'search-route' },
+      },
+    };
+    expect(resolveRunTarget(run)).toEqual({ name: 'search-route', kind: RunTargetKind.Route });
+  });
+
   test('leaves the kind unset rather than guessing when the deployment type is unrecognized', () => {
     const run: Run = {
       suiteSnapshot: { deploymentRef: { id: 'dep-1', name: 'gpt-4o', type: 'some-future-type' } },

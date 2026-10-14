@@ -100,6 +100,7 @@ export enum RunTargetKind {
   Application = 'Application',
   Model = 'Model',
   Mcp = 'MCP',
+  Route = 'Route',
 }
 
 /**

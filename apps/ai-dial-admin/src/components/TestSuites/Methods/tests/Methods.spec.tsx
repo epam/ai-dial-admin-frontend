@@ -135,6 +135,18 @@ describe('Methods component', () => {
     expect(mockGetDeploymentById).toHaveBeenCalledOnce();
   });
 
+  test('renders only route endpoints for a selected platform route', async () => {
+    const selectedRoute: any = { name: 'search-route', methods: ['GET'], paths: ['/search'] };
+    mockGenerateMethodPathCombinations.mockReturnValue([{ method: 'GET', relativeUrlPattern: '/search' }]);
+
+    render(<Methods testSuite={{}} selectedRoute={selectedRoute} onChange={onChange} />);
+
+    expect(await screen.findByRole('button', { name: 'GET /search' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'POST /chat/completions' })).not.toBeInTheDocument();
+    expect(mockGetDeploymentById).not.toHaveBeenCalled();
+    expect(mockGenerateMethodPathCombinations).toHaveBeenCalledWith({ route: selectedRoute });
+  });
+
   test('keeps the default chat-completion column name when it is not taken', async () => {
     const user = userEvent.setup();
     const testSuite: any = { endpointRef: {} };

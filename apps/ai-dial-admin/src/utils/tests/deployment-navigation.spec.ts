@@ -4,6 +4,7 @@ import {
   resolveCatalogDeploymentNavigation,
   resolveDeploymentNavigationTarget,
   resolveMcpDeploymentNavigationTarget,
+  resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { describe, expect, test } from 'vitest';
 
@@ -221,5 +222,18 @@ describe('resolveMcpDeploymentNavigationTarget', () => {
       route: ApplicationRoute.McpContainers,
       entity: { name: 'mcp-container-1' },
     });
+  });
+});
+
+describe('resolveRouteNavigationTarget', () => {
+  test('routes a route reference to Platform Routes', () => {
+    expect(resolveRouteNavigationTarget({ name: 'search-route' })).toEqual({
+      route: ApplicationRoute.PlatformRoutes,
+      entity: { name: 'search-route' },
+    });
+  });
+
+  test('returns null when the route reference is missing', () => {
+    expect(resolveRouteNavigationTarget(undefined)).toBeNull();
   });
 });

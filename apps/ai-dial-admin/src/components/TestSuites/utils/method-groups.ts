@@ -24,6 +24,7 @@ import { generateMethodPathCombinations } from '@/src/components/TestSuites/util
 import { BuildMethodGroupsParams, MethodGroup, MethodOption } from '@/src/components/TestSuites/utils/models';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
+import { DialRoute } from '@/src/models/dial/route';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuiteEndpointRef, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
 import { uniquifyResponseColumns } from '@/src/utils/evaluation/request-chain';
@@ -131,6 +132,17 @@ const buildRoutesGroup = (deployment?: Deployment | null): MethodGroup => ({
   })),
 });
 
+export const buildRouteMethodGroups = (route?: DialRoute | null): MethodGroup[] => [
+  {
+    titleKey: TestSuitesI18nKey.Other,
+    options: generateMethodPathCombinations(route ? { route } : undefined).map((endpoint) => ({
+      ref: endpoint,
+      displayUrl: endpoint.relativeUrlPattern ?? '',
+      seed: DEFAULT_SUITE(endpoint),
+    })),
+  },
+];
+
 /**
  * Method options offered for a deployment target, grouped for the method sidebar. Groups are
  * returned in display order; a group with no options is still returned so callers decide whether to
@@ -175,6 +187,21 @@ export const getDefaultRequestTemplateFor = (
   }
 
   const option = flattenMethodGroups(buildMethodGroups({ deployment, endpointRef })).find(
+    ({ ref }) => ref.method === endpointRef.method && ref.relativeUrlPattern === endpointRef.relativeUrlPattern,
+  );
+
+  return option?.seed.requestTemplate ?? DEFAULT_SUITE(endpointRef).requestTemplate;
+};
+
+export const getDefaultRouteRequestTemplateFor = (
+  route: DialRoute | null | undefined,
+  endpointRef?: TestSuiteEndpointRef,
+): TestSuiteRequestTemplate | undefined => {
+  if (!endpointRef?.method || !endpointRef.relativeUrlPattern) {
+    return undefined;
+  }
+
+  const option = flattenMethodGroups(buildRouteMethodGroups(route)).find(
     ({ ref }) => ref.method === endpointRef.method && ref.relativeUrlPattern === endpointRef.relativeUrlPattern,
   );
 

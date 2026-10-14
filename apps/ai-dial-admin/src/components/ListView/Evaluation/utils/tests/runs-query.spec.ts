@@ -45,7 +45,7 @@ describe('runs-query', () => {
     ).toEqual({ type: ExprType.Value, value_type: ValueType.Integer, value: '10' });
   });
 
-  test('buildRunsFilter ORs Target against both deployment name fields', () => {
+  test('buildRunsFilter ORs Target against all target name fields', () => {
     expect(buildRunsFilter([{ column: 'target', value: 'gpt-4o', operator: FilterOperatorDto.CONTAINS }])).toEqual({
       op: LogicalOp.Or,
       args: [
@@ -60,6 +60,13 @@ describe('runs-query', () => {
           op: ComparisonOp.Co,
           args: [
             { type: ExprType.Field, name: 'mcp_deployment_ref::name' },
+            { type: ExprType.Value, value_type: ValueType.String, value: 'gpt-4o' },
+          ],
+        },
+        {
+          op: ComparisonOp.Co,
+          args: [
+            { type: ExprType.Field, name: 'routes_ref::name' },
             { type: ExprType.Value, value_type: ValueType.String, value: 'gpt-4o' },
           ],
         },
@@ -183,12 +190,22 @@ describe('runs-query', () => {
         suiteType: SuiteType.Deployment,
         deploymentRef: { id: 'msh-anthropic', name: 'msh-anthropic', version: undefined, type: 'dial-model' },
         mcpDeploymentRef: undefined,
+        routesRef: undefined,
       },
     });
   });
 
   test('mapRunRow nests number_of_runs under runConfig, matching the legacy REST shape the Runs column reads', () => {
     expect(mapRunRow({ id: 'run-1', number_of_runs: 3 }).runConfig).toEqual({ numberOfRuns: 3 });
+  });
+
+  test('mapRunRow maps a route reference into the suite snapshot', () => {
+    expect(mapRunRow({ suite_type: 'ROUTE', 'routes_ref::name': 'search-route' }).suiteSnapshot).toEqual({
+      suiteType: SuiteType.Route,
+      deploymentRef: undefined,
+      mcpDeploymentRef: undefined,
+      routesRef: { name: 'search-route' },
+    });
   });
 
   test('mapRunRow keeps a zero run count as a value, not as a missing one', () => {

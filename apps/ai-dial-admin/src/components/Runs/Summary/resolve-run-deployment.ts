@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import {
   resolveDeploymentNavigationTarget,
   resolveMcpDeploymentNavigationTarget,
+  resolveRouteNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 
 export type SuiteContext = SuiteSnapshot | TestSuite | null | undefined;
@@ -42,6 +43,7 @@ export const getSuiteApplicationName = (suiteContext: SuiteContext): string =>
   suiteContext?.deploymentRef?.name ||
   (suiteContext?.suiteType === SuiteType.McpTool ? (suiteContext?.mcpDeploymentRef?.name ?? '') : '') ||
   suiteContext?.mcpDeploymentRef?.name ||
+  suiteContext?.routesRef?.name ||
   '';
 
 /** Resolves the external-link target for a run's suite deployment (application, model, or MCP). */
@@ -65,6 +67,17 @@ export const resolveRunDeployment = (
     }
     return {
       name: suiteContext.mcpDeploymentRef.name,
+      route: navigationTarget.route,
+      entity: navigationTarget.entity,
+    };
+  }
+  if (suiteContext.routesRef?.name) {
+    const navigationTarget = resolveRouteNavigationTarget(suiteContext.routesRef);
+    if (!navigationTarget) {
+      return null;
+    }
+    return {
+      name: suiteContext.routesRef.name,
       route: navigationTarget.route,
       entity: navigationTarget.entity,
     };

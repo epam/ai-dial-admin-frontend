@@ -3,8 +3,10 @@ import { describe, expect, test } from 'vitest';
 import { CHAT_COMPLETION_SUITE } from '@/src/components/TestSuites/constants/methods';
 import {
   buildMethodGroups,
+  buildRouteMethodGroups,
   flattenMethodGroups,
   getDefaultRequestTemplateFor,
+  getDefaultRouteRequestTemplateFor,
 } from '@/src/components/TestSuites/utils/method-groups';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { DeploymentApiInterface } from '@/src/models/dial/interfaces';
@@ -351,6 +353,18 @@ describe('flattenMethodGroups', () => {
   });
 });
 
+describe('buildRouteMethodGroups', () => {
+  test('offers only the selected route method and path combinations', () => {
+    const groups = buildRouteMethodGroups({ name: 'search', methods: ['GET', 'POST'], paths: ['/search'] });
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].options.map(({ ref }) => ref)).toEqual([
+      { method: 'GET', relativeUrlPattern: '/search' },
+      { method: 'POST', relativeUrlPattern: '/search' },
+    ]);
+  });
+});
+
 describe('getDefaultRequestTemplateFor', () => {
   test('returns the chat completion default template for the chat completion endpoint', () => {
     const result = getDefaultRequestTemplateFor(undefined, { method: 'POST', relativeUrlPattern: '/chat/completions' });
@@ -421,5 +435,23 @@ describe('getDefaultRequestTemplateFor', () => {
     expect(getDefaultRequestTemplateFor(undefined, undefined)).toBeUndefined();
     expect(getDefaultRequestTemplateFor(undefined, { method: 'GET' })).toBeUndefined();
     expect(getDefaultRequestTemplateFor(undefined, { relativeUrlPattern: '/search' })).toBeUndefined();
+  });
+});
+
+describe('getDefaultRouteRequestTemplateFor', () => {
+  test('returns the ordinary HTTP request template for a route endpoint', () => {
+    const result = getDefaultRouteRequestTemplateFor(
+      { name: 'search', methods: ['POST'], paths: ['/search'] },
+      { method: 'POST', relativeUrlPattern: '/search' },
+    );
+
+    expect(result).toEqual({
+      urlTemplate: '/search',
+      body: { contentType: 'application/json', content: {} },
+    });
+  });
+
+  test('returns undefined for an incomplete route endpoint', () => {
+    expect(getDefaultRouteRequestTemplateFor({ name: 'search' }, undefined)).toBeUndefined();
   });
 });
