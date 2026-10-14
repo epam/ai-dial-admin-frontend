@@ -93,6 +93,7 @@ const renderView = (props: Partial<ComponentProps<typeof SessionDetailView>> = {
     <SessionDetailView
       session={SESSION}
       insightColumns={[]}
+      metadataGroups={[]}
       feedback={null}
       bodyGrants={{ isRequestReadable: true, isResponseReadable: true }}
       nowMs={1000}

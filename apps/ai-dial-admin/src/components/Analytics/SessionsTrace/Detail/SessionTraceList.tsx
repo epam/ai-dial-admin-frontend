@@ -29,7 +29,7 @@ import {
   toMillis,
 } from '@/src/utils/analytics/session-formatting';
 import { sessionCardId, traceCardTitle } from '@/src/utils/analytics/session-trace-groups';
-import { formatTimeToLocalString } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 const ICON_SIZE = 14;
 const NOTIFICATION_ICON_SIZE = 16;
@@ -147,7 +147,7 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
       {/* Middle tier: this call's own facts, each labelled so none can be read as a trace figure. */}
       <span className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-6">
         <Fact label={t(SessionsTraceI18nKey.TraceCardStarted)}>
-          {startedAtMs === null ? UNAVAILABLE_VALUE : formatTimeToLocalString(startedAtMs)}
+          {startedAtMs === null ? UNAVAILABLE_VALUE : formatDateTimeToLocalString(startedAtMs)}
         </Fact>
         <Fact label={t(SessionsTraceI18nKey.TraceCardMessages)}>
           {formatCompactNumber(card.requestMessages) || UNAVAILABLE_VALUE}
