@@ -85,12 +85,12 @@ describe('HeaderButtons', () => {
     expect(screen.getByText(ButtonsI18nKey.ExportCsv)).toBeInTheDocument();
   });
 
-  test('renders read-only actions when isReadOnly is true', () => {
+  test('renders no actions in read-only mode (detach/change live in the dataset banner)', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} isReadOnly />);
 
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.ExportCsv })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ExportCsv })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeNull();
+    expect(screen.queryByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
     expect(screen.queryByRole('button', { name: TestSuitesI18nKey.TestCaseSchema })).toBeNull();
     expect(screen.queryByText(TestSuitesI18nKey.More)).toBeNull();

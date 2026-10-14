@@ -10,6 +10,7 @@ import {
   DialIconButton,
   DialLinkButton,
   DialNeutralButton,
+  DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconDotsVertical } from '@tabler/icons-react';
@@ -50,6 +51,8 @@ const renderExpandedAction = (action: AdaptiveHeaderAction, buttonsClassName?: s
     button = <DialDangerButton key={key} {...common} appearance={ButtonAppearance.Outlined} />;
   } else if (action.appearance === 'ghost') {
     button = <DialGhostButton key={key} {...common} />;
+  } else if (action.appearance === 'primary') {
+    button = <DialPrimaryButton key={key} {...common} />;
   } else {
     button = <DialNeutralButton key={key} {...common} />;
   }

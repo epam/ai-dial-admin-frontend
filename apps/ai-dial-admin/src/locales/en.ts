@@ -2072,7 +2072,7 @@ export default {
     Inputs: 'Inputs',
     Outputs: 'Outputs',
     Results: 'Results',
-    TestCaseSchema: 'Test Case Schema',
+    TestCaseSchema: 'Configure schema',
     SchemaField: 'Schema field',
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
@@ -2142,9 +2142,11 @@ export default {
     PublishSuccess: 'Dataset published successfully',
     PublishFailed: 'Failed to publish dataset',
     DetachFromDataset: 'Detach from dataset',
-    DetachConfirmTitle: 'Detach from Dataset',
-    DetachConfirmDescription:
-      "When you detach test cases from the dataset, they become private to the current test suite. This lets you add, edit, or delete test cases without restrictions. The original dataset stays unchanged, so other suites using it won't be impacted.",
+    DetachKeepTestCases: 'Keep current test cases',
+    DetachKeepTestCasesDescription:
+      'Switches to manual mode and keeps current test cases allowing edits without affecting the original dataset or other suites.',
+    DetachStartEmpty: 'Start with empty table',
+    DetachStartEmptyDescription: 'Switches to manual mode and clears the test cases, giving a blank slate.',
     DetachSuccess: 'Dataset detached successfully',
     DetachFailed: 'Failed to detach dataset',
     AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
