@@ -7,6 +7,7 @@ import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
@@ -44,6 +45,7 @@ const PivotValueCell: FC<Props> = ({
   const isFailed = isFailedProp !== undefined ? isFailedProp : (field.primaryFailed ?? false);
   const isStatusRow = field.fieldKey === EXECUTION_STATUS_FIELD_KEY && !field.isMetric;
   const isRightAligned = isRightAlignedRowDetailField(field);
+  const hasScore = !isStatusRow && getScoreFieldValue(raw, field.isScoreIndicator, isFailed) != null;
 
   const onOpen = useCallback(() => {
     if (onOpenFullscreen) {
@@ -65,6 +67,7 @@ const PivotValueCell: FC<Props> = ({
           VALUE_CELL_BASE,
           'relative group hover:bg-layer-4 bg-layer-3',
           isRightAligned ? 'justify-end text-right' : 'text-left',
+          hasScore && 'p-0 border-r-0 border-b-0',
           className,
         )}
       >
@@ -76,7 +79,6 @@ const PivotValueCell: FC<Props> = ({
             isFailed={isFailed}
             isScoreIndicator={field.isScoreIndicator}
             failedLabel={failedLabel}
-            isRightAligned={isRightAligned}
             fill
           />
         )}

@@ -4,7 +4,8 @@
 Defines the shared contract for rendering a 0.00–1.00 score or a −1.00–+1.00 score delta as a
 colored grid cell — bucket boundaries, per-bucket background/text/border colors, border behavior,
 and value-text visibility — used by Extraction Result's metric columns and by the Heat Map tab's and
-Test Case Stability's value cells.
+Test Case Stability's value cells. Extraction Result's row detail panels (side panel and bottom
+pivot, single-run and compare) show the same buckets and number format outside the grid.
 
 ## Requirements
 ### Requirement: Absolute score buckets
@@ -63,6 +64,13 @@ Extraction Result's metric columns, which previously rendered a bar alongside th
 #### Scenario: Extraction Result metric cell has no bar
 - **WHEN** a user views a metric column in the Extraction Result tab
 - **THEN** the cell shows only the right-aligned, colored number — no progress bar is rendered
+
+#### Scenario: Row detail panel metric value has no bar
+- **WHEN** a user opens a row's detail in the Extraction Result tab (side panel or bottom pivot,
+  single run or compare) and a metric field holds a score in `[0.00, 1.00]`
+- **THEN** the whole value cell is filled with the bucket's background and shows the number right-aligned
+  with three decimals in the bucket's text color, matching the grid cell for the same score — no
+  progress bar is rendered
 
 ### Requirement: Visible-value cells draw no border
 A cell rendering under this contract SHALL draw no border while its value text is visible, so

@@ -4,10 +4,10 @@ import { FC, useEffect, useRef } from 'react';
 
 import classNames from 'classnames';
 
-import ScoreBar from '@/src/components/Common/ScoreBar/ScoreBar';
-import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/constants';
+import ScoreCellValue from '@/src/components/Common/ScoreCell/ScoreCellValue';
 import { TRUNCATE_THRESHOLD } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
+import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 
 interface Props {
   raw: string | null;
@@ -18,17 +18,7 @@ interface Props {
   singleLine?: boolean;
   /** Wrap within the cell without line-clamp (e.g. stretched pivot value cells). */
   fill?: boolean;
-  /** Pushes a score indicator's bar+value pair to the cell's right edge. Text branches are aligned by
-   * the caller's own layout instead — this prop only matters for the score-indicator flex row, which
-   * would otherwise fill its container left-aligned regardless of the caller's alignment. */
-  isRightAligned?: boolean;
 }
-
-const parseNumericRaw = (raw: string | null): number | null => {
-  if (raw === null) return null;
-  const value = Number(raw);
-  return Number.isNaN(value) ? null : value;
-};
 
 const FieldValue: FC<Props> = ({
   raw,
@@ -38,7 +28,6 @@ const FieldValue: FC<Props> = ({
   onOverflowChange,
   singleLine,
   fill,
-  isRightAligned,
 }) => {
   const textRef = useRef<HTMLSpanElement>(null);
 
@@ -61,15 +50,10 @@ const FieldValue: FC<Props> = ({
     return <span className="text-error dial-small-text">{failedLabel}</span>;
   }
 
-  const numericValue = parseNumericRaw(raw);
+  const scoreValue = getScoreFieldValue(raw, isScoreIndicator);
 
-  if (isScoreIndicator && numericValue != null) {
-    return (
-      <div className={classNames('flex items-center gap-2', isRightAligned && 'justify-end')}>
-        <ScoreBar value={numericValue} width={SCORE_INDICATOR_COMPARE_WIDTH} />
-        <span className="text-primary dial-small-text shrink-0">{numericValue.toFixed(3)}</span>
-      </div>
-    );
+  if (scoreValue != null) {
+    return <ScoreCellValue value={scoreValue} />;
   }
 
   const displayText = formatFieldValue(raw);

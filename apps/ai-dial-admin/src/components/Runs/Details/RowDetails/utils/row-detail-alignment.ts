@@ -18,8 +18,8 @@ const RIGHT_ALIGNED_FIELD_KEYS = new Set<string>([
  * tiers, and disagrees with alignment here (`runNumber` is `isNumeric: false`, an index rather than a
  * value to diff numerically).
  *
- * A metric field rendered as a `ScoreBar` (`isScoreIndicator`) is right-aligned too, matching its grid
- * counterpart (`MetricScoreCellRenderer`'s columns).
+ * A metric field rendered as a score value (`isScoreIndicator`) is right-aligned too, matching its grid
+ * counterpart (`ScoreCellRenderer`'s columns).
  */
 export const isRightAlignedRowDetailField = (field: Pick<RowDetailField, 'fieldKey' | 'isScoreIndicator'>): boolean =>
   RIGHT_ALIGNED_FIELD_KEYS.has(field.fieldKey) || field.isScoreIndicator;
