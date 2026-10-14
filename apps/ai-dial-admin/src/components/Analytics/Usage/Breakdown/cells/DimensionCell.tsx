@@ -9,15 +9,8 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { BreakdownRowModel } from '@/src/components/Analytics/Usage/models';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
-interface Props extends ICellRendererParams<BreakdownRowModel> {
-  onOpenRow: (row: BreakdownRowModel) => void;
-}
-
-/**
- * The row's own name, and the control that opens its detail panel. It is a real button rather than a
- * clickable cell so the panel is reachable by keyboard.
- */
-const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
+/** The row's own name, with the explanation of a fallback label and the row's sub-label. */
+const DimensionCell: FC<ICellRendererParams<BreakdownRowModel>> = ({ data }) => {
   if (!data) {
     return null;
   }
@@ -30,13 +23,7 @@ const DimensionCell: FC<Props> = ({ data, onOpenRow }) => {
          * only its explanation and anywhere else on the cell shows only the name.
          */}
         <DialTooltip triggerClassName="flex min-w-0 grow" tooltip={data.displayLabel}>
-          <button
-            type="button"
-            className="flex min-w-0 flex-1 text-left text-primary hover:text-accent-primary focus-visible:text-accent-primary"
-            onClick={() => onOpenRow(data)}
-          >
-            <span className="truncate">{data.displayLabel}</span>
-          </button>
+          <span className="truncate text-primary">{data.displayLabel}</span>
         </DialTooltip>
         {data.isFallbackLabel && data.fallbackTooltip && (
           <DialTooltip tooltip={data.fallbackTooltip}>

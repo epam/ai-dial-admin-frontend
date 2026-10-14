@@ -78,7 +78,7 @@ import {
   PROVENANCE_LABEL_KEY,
   SORTABLE_SESSION_FIELDS,
 } from '@/src/constants/analytics/sessions-trace';
-import { sessionTopics, formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/session-formatting';
+import { sessionTopics, formatCompactNumber, formatFixedCost } from '@/src/utils/analytics/session-formatting';
 import { buildSessionColumnCatalog, sessionColumnGroups } from '@/src/utils/analytics/session-column-catalog';
 import {
   ColumnProvenance,
@@ -796,7 +796,7 @@ const BASE_SESSIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
     field: SessionsField.TotalPrice,
     headerName: t(SessionsTraceI18nKey.Cost),
     ...numericColumn,
-    valueFormatter: ({ value }) => formatSignificantCost(value),
+    valueFormatter: ({ value }) => formatFixedCost(value),
     cellClass: 'align-right text-accent-secondary',
     flex: 0.8,
     minWidth: 100,

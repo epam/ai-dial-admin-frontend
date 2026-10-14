@@ -3558,9 +3558,6 @@ export default {
     SearchPlaceholder: 'Search {dimension}',
     RowIsNew: 'New',
 
-    PanelCalls: 'Calls',
-    PanelShareOfCalls: 'Share of calls',
-
     NoProject: 'No Project',
     NoProjectTooltip: 'Called outside of any project',
     DirectCall: 'Direct call',

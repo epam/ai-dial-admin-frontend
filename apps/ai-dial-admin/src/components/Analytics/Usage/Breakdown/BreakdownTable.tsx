@@ -99,7 +99,6 @@ interface Props {
   isShowingAll: boolean;
   onShowAll: () => void;
   onHideAll: () => void;
-  onOpenRow: (row: BreakdownRowModel) => void;
   /** The dialog reads its own blocks, so it reports its own failures. */
   notice: LoadFailureNotice;
   /** Overrides the view's own answer; absent, a priced view states cost. */
@@ -120,7 +119,6 @@ const BreakdownTable: FC<Props> = ({
   isShowingAll,
   onShowAll,
   onHideAll,
-  onOpenRow,
   notice,
   isCostOffered: isCostOfferedOverride,
 }) => {
@@ -237,7 +235,6 @@ const BreakdownTable: FC<Props> = ({
         cellClass: void 0,
         headerClass: void 0,
         cellRenderer: DimensionCell,
-        cellRendererParams: { onOpenRow },
         // The grid's tooltip covers the whole cell, info icon included; the cell shows the name itself.
         tooltipValueGetter: () => null,
       },
@@ -336,7 +333,7 @@ const BreakdownTable: FC<Props> = ({
     }
 
     return columns;
-  }, [tab, isCostOffered, onOpenRow, t]);
+  }, [tab, isCostOffered, t]);
 
   const columnLabel = t(BREAKDOWN_TAB_COLUMN_LABEL_KEY[tab]);
   const searchPlaceholder = t(AnalyticsUsageI18nKey.SearchPlaceholder, { dimension: columnLabel });

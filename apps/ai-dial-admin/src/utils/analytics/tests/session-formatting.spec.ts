@@ -9,6 +9,7 @@ import {
   formatSessionSpan,
   formatRelativeTime,
   formatSignificantCost,
+  formatFixedCost,
 } from '@/src/utils/analytics/session-formatting';
 
 const NOW = Date.parse('2026-07-28T12:00:00.000Z');
@@ -101,6 +102,10 @@ describe('formatRelativeTime', () => {
     ['1 hour', HOUR, '1h ago'],
     ['3 hours', 3 * HOUR, '3h ago'],
     ['2 days', 2 * DAY, '2d ago'],
+    ['1 hour 50 minutes', HOUR + 50 * MINUTE, '1h 50m ago'],
+    ['1 hour 59 minutes 59 seconds', 2 * HOUR - 1000, '1h 59m ago'],
+    ['2 days 3 hours', 2 * DAY + 3 * HOUR, '2d 3h ago'],
+    ['2 days 59 minutes', 2 * DAY + 59 * MINUTE, '2d ago'],
   ])('renders an activity %s old as %s', (_label, elapsed, expected) => {
     expect(formatRelativeTime(NOW - elapsed, NOW)).toBe(expected);
   });
@@ -254,5 +259,25 @@ describe('sessionTopics', () => {
   // would put a number or a boolean on screen as though it were a topic.
   test.each([[42], [true]])('returns no terms for the non-string value %s', (raw) => {
     expect(sessionTopics(raw as unknown as string)).toEqual([]);
+  });
+});
+
+describe('formatFixedCost', () => {
+  test.each([
+    ['13.3', '$13.30'],
+    ['0.17', '$0.17'],
+    ['0.5', '$0.50'],
+    ['732.954', '$732.95'],
+    ['1200', '$1,200.00'],
+    ['1234567.891', '$1,234,567.89'],
+    ['-1234.5', '-$1,234.50'],
+    ['0', '$0.00'],
+    ['0.003612544180', '$0.00'],
+  ])('renders %s as %s', (value, expected) => {
+    expect(formatFixedCost(value)).toBe(expected);
+  });
+
+  test('renders an empty cell for a missing value', () => {
+    expect(formatFixedCost(null)).toBe('');
   });
 });

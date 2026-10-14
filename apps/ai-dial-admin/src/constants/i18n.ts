@@ -3648,9 +3648,6 @@ export enum AnalyticsUsageI18nKey {
   SearchPlaceholder = 'AnalyticsUsage.SearchPlaceholder',
   RowIsNew = 'AnalyticsUsage.RowIsNew',
 
-  PanelCalls = 'AnalyticsUsage.PanelCalls',
-  PanelShareOfCalls = 'AnalyticsUsage.PanelShareOfCalls',
-
   NoProject = 'AnalyticsUsage.NoProject',
   NoProjectTooltip = 'AnalyticsUsage.NoProjectTooltip',
   DirectCall = 'AnalyticsUsage.DirectCall',
