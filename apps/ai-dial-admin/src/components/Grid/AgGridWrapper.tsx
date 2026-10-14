@@ -8,7 +8,9 @@ import {
   ColumnResizedEvent,
   ColumnState,
   GetRowIdParams,
+  DisplayedColumnsChangedEvent,
   GridApi,
+  GridColumnsChangedEvent,
   GridOptions,
   GridReadyEvent,
   GridSizeChangedEvent,
@@ -195,6 +197,9 @@ const AgGridWrapper = <T extends object>({
         if (id) sizedColIdsRef.current.add(id);
       });
       handleStateUpdated(e);
+      if (e.finished && e.source === 'uiColumnResized') {
+        e.api.sizeColumnsToFit();
+      }
     },
     [handleStateUpdated],
   );
@@ -226,6 +231,12 @@ const AgGridWrapper = <T extends object>({
     onCellContextMenu,
     preventDefaultOnContextMenu: true,
     ...(isLiveData ? { animateRows: false } : {}),
+    onGridColumnsChanged: (event: GridColumnsChangedEvent) => {
+      event.api.sizeColumnsToFit();
+    },
+    onDisplayedColumnsChanged: (event: DisplayedColumnsChangedEvent) => {
+      event.api.sizeColumnsToFit();
+    },
     ...persistedWidthOptions,
     ...gridOptionOverrides,
     defaultColDef: { ...DEFAULT_COL_DEF, ...additionalDefaultColDef },
