@@ -4,6 +4,7 @@ import EntityBanner from '@/src/components/Deployments/Common/EntityBanner/Entit
 import { ModelAssetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceStatus } from '@/src/models/dial/resource';
+import { formatValidationWarnings } from '@/src/utils/entities/overall-status';
 
 interface Props {
   asset: DialModelResource;
@@ -21,19 +22,13 @@ const InvalidModelBanner: FC<Props> = ({ asset }) => {
     return null;
   }
 
-  const reasons = (asset._metadata?.validationWarnings ?? [])
-    .map((warning) => [warning.field, warning.message].filter(Boolean).join(': '))
-    .filter(Boolean);
+  const reasons = formatValidationWarnings(asset._metadata?.validationWarnings);
 
   return (
     <EntityBanner
       className="mb-4"
       title={t(ModelAssetI18nKey.InvalidTitle)}
-      message={
-        reasons.length
-          ? `${t(ModelAssetI18nKey.InvalidMessage)} ${reasons.join('; ')}`
-          : t(ModelAssetI18nKey.InvalidMessage)
-      }
+      message={reasons ? `${t(ModelAssetI18nKey.InvalidMessage)} ${reasons}` : t(ModelAssetI18nKey.InvalidMessage)}
     />
   );
 };

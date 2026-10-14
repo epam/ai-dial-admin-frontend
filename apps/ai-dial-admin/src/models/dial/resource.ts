@@ -35,6 +35,8 @@ export interface CoreResourceEntityMetadata {
   validationWarnings?: CoreValidationWarning[];
 }
 
+export type CoreResourceValidity = Pick<CoreResourceEntityMetadata, 'status' | 'validationWarnings'>;
+
 export interface DialResource extends BaseEntity {
   display_name?: string;
   display_version?: string;
