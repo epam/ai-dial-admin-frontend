@@ -77,7 +77,6 @@ The system SHALL call the deployment manager backend export API at `POST {DIAL_D
 - `MCP_DEPLOYMENT` — MCP containers
 - `ADAPTER_DEPLOYMENT` — Adapter containers
 - `INTERCEPTOR_DEPLOYMENT` — Interceptor containers
-- `NIM_DEPLOYMENT` — NIM model servings
 - `INFERENCE_DEPLOYMENT` — Inference/HF model servings
 
 #### Scenario: Export with selected entities
@@ -90,7 +89,6 @@ The system SHALL call the deployment manager backend export API at `POST {DIAL_D
 - **THEN** MCP containers SHALL map to `MCP_DEPLOYMENT`
 - **AND** Interceptor containers SHALL map to `INTERCEPTOR_DEPLOYMENT`
 - **AND** Adapter containers SHALL map to `ADAPTER_DEPLOYMENT`
-- **AND** NIM model servings SHALL map to `NIM_DEPLOYMENT`
 - **AND** Inference/HF model servings SHALL map to `INFERENCE_DEPLOYMENT`
 
 #### Scenario: Mapping image types to API component types

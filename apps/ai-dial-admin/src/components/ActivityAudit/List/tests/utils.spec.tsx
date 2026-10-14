@@ -239,7 +239,8 @@ describe('Activity Audit List utils :: getGridFilters', () => {
       'application container': [ActivityAuditResourceType.APPLICATION_DEPLOYMENT],
       'interceptor container': [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT],
       'mcp container': [ActivityAuditResourceType.MCP_DEPLOYMENT],
-      'model serving': [ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+      'model serving': [ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+      image: [ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION, ActivityAuditResourceType.MCP_IMAGE_DEFINITION],
     };
 
     test('single-match contains substring expands to eq with the matching enum', () => {
@@ -372,7 +373,7 @@ describe('Activity Audit List utils :: getGridFilters', () => {
     });
 
     test.each([
-      ['a label shared by several types', 'model serving'],
+      ['a label shared by several types', 'image'],
       ['a partial label', 'global'],
       ['a typed enum name', 'ImageBuildDomainWhitelist'],
       ['a name inherited from Object', 'constructor'],
@@ -465,9 +466,6 @@ describe('getAuditActivityHref', () => {
   test('returns entity-namespaced href for container deployment types', () => {
     const mockEntity = { name: 'gpt-4-turbo' };
 
-    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.NIM_DEPLOYMENT, 'abc-123')).toBe(
-      '/model-servings/gpt-4-turbo/abc-123',
-    );
     expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, 'abc-123')).toBe(
       '/model-servings/gpt-4-turbo/abc-123',
     );

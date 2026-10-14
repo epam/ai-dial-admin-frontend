@@ -218,7 +218,7 @@ describe('images utils', () => {
       expect(result).toEqual([]);
     });
 
-    test('should return unique names for NIM type images', () => {
+    test('should return unique names for ADAPTER type images', () => {
       const images: Image[] = [
         createMockImage('adapter-image-1', IMAGE_TYPE.ADAPTER),
         createMockImage('adapter-image-2', IMAGE_TYPE.ADAPTER),

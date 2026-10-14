@@ -211,7 +211,6 @@ describe('ConfigurationPreview.utils', () => {
       adapterDeployments: [],
       applicationDeployments: [],
       interceptorDeployments: [],
-      nimDeployments: [],
       inferenceDeployments: [],
       mcpImageDefinitions: [],
       adapterImageDefinitions: [],
@@ -251,16 +250,15 @@ describe('ConfigurationPreview.utils', () => {
       expect(previewData[DeploymentExportEntityType.IMAGE]).toHaveLength(2);
     });
 
-    test('groups nim and inference deployments into MODEL_SERVING tab', () => {
+    test('groups inference deployments into MODEL_SERVING tab', () => {
       const response: DeploymentImportPreviewResponse = {
         ...emptyResponse,
-        nimDeployments: [makeItem('CREATE', { name: 'nim-1' })],
         inferenceDeployments: [makeItem('CREATE', { name: 'inf-1' })],
       };
       const { tabs, previewData } = getDeploymentConfigurationPreview(response, t);
 
       expect(tabs.some((tab) => tab.id === DeploymentExportEntityType.MODEL_SERVING)).toBe(true);
-      expect(previewData[DeploymentExportEntityType.MODEL_SERVING]).toHaveLength(2);
+      expect(previewData[DeploymentExportEntityType.MODEL_SERVING]).toHaveLength(1);
     });
 
     test('includes Global Firewall tab when whitelist present', () => {
@@ -373,10 +371,7 @@ describe('ConfigurationPreview.utils', () => {
       expect(result[DeploymentExportEntityType.IMAGE]).toBe(1);
     });
 
-    test('NIM and Inference both map to MODEL_SERVING tab', () => {
-      expect(COMPONENT_TYPE_TO_TAB_ID[ExportConfigComponentType.NIM_DEPLOYMENT]).toBe(
-        DeploymentExportEntityType.MODEL_SERVING,
-      );
+    test('Inference maps to MODEL_SERVING tab', () => {
       expect(COMPONENT_TYPE_TO_TAB_ID[ExportConfigComponentType.INFERENCE_DEPLOYMENT]).toBe(
         DeploymentExportEntityType.MODEL_SERVING,
       );
@@ -399,7 +394,6 @@ describe('ConfigurationPreview.utils', () => {
       adapterDeployments: [],
       applicationDeployments: [],
       interceptorDeployments: [],
-      nimDeployments: [],
       inferenceDeployments: [],
       mcpImageDefinitions: [],
       adapterImageDefinitions: [],

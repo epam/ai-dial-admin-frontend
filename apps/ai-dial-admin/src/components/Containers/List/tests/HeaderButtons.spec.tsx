@@ -27,7 +27,6 @@ vi.mock('@/src/components/Deployments/Modals/ContainerCreate', () => ({
 const { mockFeatureFlags } = vi.hoisted(() => ({
   mockFeatureFlags: {
     mcpRegistryEnabled: true,
-    nimEnabled: true,
     hfEnabled: true,
   },
 }));
@@ -49,7 +48,6 @@ describe('HeaderButtons', () => {
 
   test('renders create button', () => {
     mockFeatureFlags.hfEnabled = true;
-    mockFeatureFlags.nimEnabled = true;
     render(<HeaderButtons {...defaultProps} />);
 
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
@@ -82,20 +80,8 @@ describe('HeaderButtons', () => {
   describe('Model Servings dropdown — feature flag gating', () => {
     const modelServingLabel = 'Entities.ModelServing';
 
-    test('shows both rows when both flags enabled', async () => {
+    test('shows the row when HF is enabled', async () => {
       mockFeatureFlags.hfEnabled = true;
-      mockFeatureFlags.nimEnabled = true;
-      const user = userEvent.setup();
-      render(<HeaderButtons {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: /create/i }));
-
-      expect(screen.getAllByText(modelServingLabel)).toHaveLength(2);
-    });
-
-    test('shows only one row when only HF is enabled', async () => {
-      mockFeatureFlags.hfEnabled = true;
-      mockFeatureFlags.nimEnabled = false;
       const user = userEvent.setup();
       render(<HeaderButtons {...defaultProps} />);
 
@@ -104,20 +90,8 @@ describe('HeaderButtons', () => {
       expect(screen.getAllByText(modelServingLabel)).toHaveLength(1);
     });
 
-    test('shows only one row when only NIM is enabled', async () => {
+    test('shows no rows when HF is disabled', async () => {
       mockFeatureFlags.hfEnabled = false;
-      mockFeatureFlags.nimEnabled = true;
-      const user = userEvent.setup();
-      render(<HeaderButtons {...defaultProps} />);
-
-      await user.click(screen.getByRole('button', { name: /create/i }));
-
-      expect(screen.getAllByText(modelServingLabel)).toHaveLength(1);
-    });
-
-    test('shows no rows when both flags disabled', async () => {
-      mockFeatureFlags.hfEnabled = false;
-      mockFeatureFlags.nimEnabled = false;
       const user = userEvent.setup();
       render(<HeaderButtons {...defaultProps} />);
 

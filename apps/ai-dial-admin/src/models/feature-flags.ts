@@ -5,7 +5,6 @@ export interface FeatureFlags {
   deploymentsEnabled: boolean;
   evaluationEnabled: boolean;
   mcpRegistryEnabled: boolean;
-  nimEnabled: boolean;
   hfEnabled: boolean;
   analyticsEnabled: boolean;
   analyticsSessionsEnabled: boolean;

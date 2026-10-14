@@ -63,7 +63,6 @@ describe('activity-audit predicates :: isDeploymentManagerResource', () => {
     ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
     ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
     ActivityAuditResourceType.MCP_DEPLOYMENT,
-    ActivityAuditResourceType.NIM_DEPLOYMENT,
     ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
   ];
 
@@ -71,8 +70,8 @@ describe('activity-audit predicates :: isDeploymentManagerResource', () => {
     expect(isDeploymentManagerResource(type)).toBe(true);
   });
 
-  test('covers all eleven deployment-manager resource types', () => {
-    expect(deploymentManagerTypes).toHaveLength(11);
+  test('covers all ten deployment-manager resource types', () => {
+    expect(deploymentManagerTypes).toHaveLength(10);
   });
 
   test.each([
@@ -98,7 +97,6 @@ describe('activity-audit predicates :: isContainerDeploymentResource', () => {
     ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
     ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
     ActivityAuditResourceType.MCP_DEPLOYMENT,
-    ActivityAuditResourceType.NIM_DEPLOYMENT,
     ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
   ])('returns true for %s', (type) => {
     expect(isContainerDeploymentResource(type)).toBe(true);
@@ -155,7 +153,7 @@ describe('activity-audit predicates :: isAnalyticsResource', () => {
 
   test.each([
     ActivityAuditResourceType.MCP_DEPLOYMENT,
-    ActivityAuditResourceType.NIM_DEPLOYMENT,
+    ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
     ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
     ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
   ])('returns false for deployment-manager %s', (type) => {

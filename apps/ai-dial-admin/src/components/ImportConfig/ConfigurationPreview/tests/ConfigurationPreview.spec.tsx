@@ -63,7 +63,6 @@ const baseResponse = (): DeploymentImportPreviewResponse => ({
   adapterDeployments: [],
   applicationDeployments: [],
   interceptorDeployments: [],
-  nimDeployments: [],
   inferenceDeployments: [],
   mcpImageDefinitions: [],
   adapterImageDefinitions: [],

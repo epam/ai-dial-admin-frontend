@@ -43,7 +43,7 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
 const runningContainer: Container = {
   name: 'container-running',
   displayName: 'Running Container',
-  $type: CONTAINER_TYPE.NIM,
+  $type: CONTAINER_TYPE.HF,
   source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
   status: CONTAINER_STATUS.RUNNING,
   url: 'http://running.local',
@@ -53,7 +53,7 @@ const runningContainer: Container = {
 const stoppedContainer: Container = {
   name: 'container-stopped',
   displayName: 'Stopped Container',
-  $type: CONTAINER_TYPE.NIM,
+  $type: CONTAINER_TYPE.HF,
   source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE },
   status: CONTAINER_STATUS.STOPPED,
   url: '',
@@ -132,29 +132,7 @@ describe('Containers component', () => {
     });
   });
 
-  test('applies v1 prefix when a NIM container is selected', async () => {
-    const onChange = vi.fn();
-    const entity = createEntity('');
-
-    render(
-      <Containers
-        entity={entity}
-        onChange={onChange}
-        getContainers={mockGetContainers([runningContainer, hfContainer])}
-        view={ApplicationRoute.Models}
-        isModal
-      />,
-    );
-
-    const select = await screen.findByRole('combobox');
-    fireEvent.change(select, { target: { value: 'container-running' } });
-
-    const lastCall = onChange.mock.calls.at(-1)?.[0] as DialModel;
-    expect(lastCall.source?.completionEndpointPath?.startsWith('v1/')).toBe(true);
-    expect(lastCall.source?.completionEndpointPath?.startsWith('openai/')).toBe(false);
-  });
-
-  test('applies openai/v1 prefix when a non-NIM container is selected', async () => {
+  test('applies openai/v1 prefix when a container is selected', async () => {
     const onChange = vi.fn();
     const entity = createEntity('');
 
@@ -265,7 +243,7 @@ describe('Containers component', () => {
         />,
       );
 
-    test('keeps TEXT_GENERATION and field-less (NIM) containers', async () => {
+    test('keeps TEXT_GENERATION and field-less containers', async () => {
       renderModelsPicker([textGeneration, runningContainer]);
       await screen.findByRole('combobox');
       expect(screen.getByRole('option', { name: 'Text Generation' })).toBeInTheDocument();

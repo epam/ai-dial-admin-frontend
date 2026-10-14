@@ -22,7 +22,7 @@ When the import scope is Deployments, `ConfigurationPreview` SHALL call `POST /c
   - `mcpDeployments` → MCP Containers
   - `adapterDeployments` → Adapter Containers
   - `interceptorDeployments` → Interceptor Containers
-  - `nimDeployments` + `inferenceDeployments` → Model Servings
+  - `inferenceDeployments` → Model Servings
   - `mcpImageDefinitions` + `adapterImageDefinitions` + `interceptorImageDefinitions` → Images
   - `globalImageBuildDomainWhitelist` → Global Firewall (see separate spec)
 - **AND** each tab label SHALL include the entity count (e.g., "MCP Containers: 5")

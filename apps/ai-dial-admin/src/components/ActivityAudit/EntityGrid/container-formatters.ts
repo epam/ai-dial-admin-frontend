@@ -46,9 +46,7 @@ export const CONTAINER_ROW_LABEL_KEYS: Record<
   command: EntityFieldsI18nKey.Command,
   args: EntityFieldsI18nKey.Arguments,
   containerPort: EntityFieldsI18nKey.Port,
-  containerGrpcPort: EntityFieldsI18nKey.GRPCPort,
   mcpEndpointPath: EntityFieldsI18nKey.ContainerEndpointPath,
-  imageRef: EntityFieldsI18nKey.ImageURI,
   imageReference: EntityFieldsI18nKey.DockerImageReference,
   modelName: EntityFieldsI18nKey.HFModelName,
   url: BasicI18nKey.URL,
@@ -88,7 +86,6 @@ const SCALE_TO_ZERO_LABEL_KEYS: Record<string, ContainersI18nKey> = {
 const CONTAINER_SOURCE_TYPE_LABEL_KEYS: Record<string, SourceI18nKey> = {
   [CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE]: SourceI18nKey.InternalImage,
   [CONTAINER_SOURCE_TYPE.IMAGE_REFERENCE]: SourceI18nKey.DockerImageReference,
-  [CONTAINER_SOURCE_TYPE.NGC_REGISTRY]: SourceI18nKey.NgcRegistry,
   [CONTAINER_SOURCE_TYPE.HUGGINGFACE]: SourceI18nKey.HuggingFace,
   'mcp-registry': SourceI18nKey.McpRegistry,
 };
@@ -98,7 +95,6 @@ const CONTAINER_SUBTYPE_LABEL_KEYS: Partial<Record<ActivityAuditResourceType, En
   [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: EntitiesI18nKey.Adapter,
   [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: EntitiesI18nKey.Interceptor,
   [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: EntitiesI18nKey.Application,
-  [ActivityAuditResourceType.NIM_DEPLOYMENT]: EntitiesI18nKey.Model,
   [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: EntitiesI18nKey.Model,
 };
 

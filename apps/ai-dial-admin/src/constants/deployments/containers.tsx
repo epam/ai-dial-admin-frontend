@@ -26,7 +26,6 @@ export const EVENT_TYPES: Record<KubEventType, string> = {
 };
 
 export const MODEL_TYPES: Record<MODEL_TYPE, ContainersI18nKey> = {
-  [MODEL_TYPE.NIM]: ContainersI18nKey.ModelTypeNIM,
   [MODEL_TYPE.HF]: ContainersI18nKey.ModelTypeHF,
 };
 

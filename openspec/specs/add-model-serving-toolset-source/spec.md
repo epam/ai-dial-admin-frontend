@@ -22,7 +22,7 @@ The system SHALL fetch both MCP and inference containers for the toolset flow vi
 
 #### Scenario: Model Serving option lists only text-classification inference containers
 - **WHEN** the user has the Model Serving option selected
-- **THEN** only inference containers with `inferenceTask = text_classification` appear — text-generation, none, and NIM containers are excluded
+- **THEN** only inference containers with `inferenceTask = text_classification` appear — text-generation and none containers are excluded
 
 #### Scenario: MCP-only call sites unaffected
 - **WHEN** the export-config flow or the mcp-containers page fetches containers

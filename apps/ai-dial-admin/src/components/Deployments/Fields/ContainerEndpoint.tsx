@@ -27,9 +27,7 @@ const ContainerEndpoint: FC<Props> = ({ container, setContainer, route, disabled
 
   useEffect(() => {
     if (!isValid) {
-      setSectionInvalid(
-        isErrorPresent(errorFields, ['transport', 'mcpEndpointPath', 'containerGrpcPort', 'containerPort']),
-      );
+      setSectionInvalid(isErrorPresent(errorFields, ['transport', 'mcpEndpointPath', 'containerPort']));
     } else {
       setSectionInvalid(false);
     }

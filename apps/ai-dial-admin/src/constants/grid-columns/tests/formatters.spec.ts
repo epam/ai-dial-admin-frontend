@@ -67,11 +67,6 @@ describe('Formatters :: getFormattedResourceType', () => {
     expect(res).toBe(EntitiesI18nKey.McpContainer);
   });
 
-  test('Should flatten NimDeployment to Model serving label', () => {
-    const res = getFormattedResourceType(ActivityAuditResourceType.NIM_DEPLOYMENT, t);
-    expect(res).toBe(EntitiesI18nKey.ModelServingLabel);
-  });
-
   test('Should flatten InferenceDeployment to Model serving label', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.INFERENCE_DEPLOYMENT, t);
     expect(res).toBe(EntitiesI18nKey.ModelServingLabel);
@@ -138,7 +133,7 @@ describe('Formatters :: buildResourceTypeLabelMap', () => {
     const map = buildResourceTypeLabelMap(t);
 
     expect(new Set(map[EntitiesI18nKey.ModelServingLabel.toLowerCase()])).toEqual(
-      new Set([ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
+      new Set([ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
     );
     expect(new Set(map[EntitiesI18nKey.Image.toLowerCase()])).toEqual(
       new Set([
@@ -239,9 +234,9 @@ describe('Formatters :: buildResourceTypeLabelMap — analytics additions guard'
     );
   });
 
-  test('still resolves the model serving label to exactly NimDeployment and InferenceDeployment', () => {
+  test('still resolves the model serving label to exactly InferenceDeployment', () => {
     expect(new Set(buildMap()[labelOf(EntitiesI18nKey.ModelServingLabel)])).toEqual(
-      new Set([ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
+      new Set([ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
     );
   });
 

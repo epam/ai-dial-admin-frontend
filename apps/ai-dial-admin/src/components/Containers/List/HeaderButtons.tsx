@@ -70,11 +70,6 @@ const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) 
     setModalType(ModalType.createServingHF);
   }, []);
 
-  const openNIMServingModal = useCallback(() => {
-    setIsModalOpen(true);
-    setModalType(ModalType.createServingNIM);
-  }, []);
-
   const servingsDropdownItems: DropdownItem[] = useMemo(
     () => [
       ...(featureFlags.hfEnabled
@@ -86,17 +81,8 @@ const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) 
             },
           ]
         : []),
-      ...(featureFlags.nimEnabled
-        ? [
-            {
-              key: CONTAINER_TYPE.NIM,
-              label: t(EntitiesI18nKey.ModelServing, { type: t(ContainersI18nKey.ModelTypeNIM) }),
-              onClick: () => openNIMServingModal(),
-            },
-          ]
-        : []),
     ],
-    [t, openHFServingModal, openNIMServingModal, featureFlags.hfEnabled, featureFlags.nimEnabled],
+    [t, openHFServingModal, featureFlags.hfEnabled],
   );
 
   const openMcpRegistryModal = useCallback(() => {
@@ -265,20 +251,6 @@ const HeaderButtons: FC<Props> = ({ route: listRoute, names, isReadOnlyAdmin }) 
             route={route}
             names={names}
             type={CONTAINER_TYPE.HF}
-          />,
-          document.body,
-        )}
-      {isModalOpen &&
-        modalType === ModalType.createServingNIM &&
-        createPortal(
-          <ServingCreate
-            header={t(CreateI18nKey.CreateServing, { type: t(ContainersI18nKey.ModelTypeNIM) })}
-            isModalOpen={isModalOpen}
-            onClose={handleModalClose}
-            onApply={onCreateContainer}
-            route={route}
-            names={names}
-            type={CONTAINER_TYPE.NIM}
           />,
           document.body,
         )}
