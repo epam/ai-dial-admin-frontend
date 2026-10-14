@@ -176,7 +176,9 @@ Overall score as its numeric value.
 ### Requirement: Columns keep a configured width and never wrap
 
 `Test suite run name`, `Test Suite ID`, and `Metrics` SHALL be flexible: after every other column has
-taken the width it needs, these SHALL divide the remaining width between them.
+taken the width it needs, these SHALL divide the remaining width between them. Each SHALL carry its own
+width floor, below the grid's global minimum, so a suite Runs row with every column visible fits the
+page instead of scrolling sideways.
 
 The narrow columns — the two counts, Duration, Cost, and Overall score — SHALL each carry a width
 ceiling, so the grid's shared flex cannot pad a two-digit count out to the width of a wide one. Target
