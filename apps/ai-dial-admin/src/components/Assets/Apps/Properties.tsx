@@ -31,7 +31,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/resource';
+import { CoreResourceEntityMetadata, DialApplicationResource } from '@/src/models/dial/resource';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -95,9 +95,16 @@ const ApplicationAssetProperties: FC<Props> = ({
         {isPublication && (
           <VersionControl
             containerClassName="w-[175px]"
-            version={asset.version}
+            version={asset._metadata?.version}
             onChange={(version?: string) =>
-              onChange?.({ ...asset, version: version || '', display_version: version || '' })
+              onChange?.({
+                ...asset,
+                display_version: version || '',
+                _metadata: {
+                  ...asset._metadata,
+                  version: version || '',
+                } as CoreResourceEntityMetadata,
+              })
             }
           />
         )}

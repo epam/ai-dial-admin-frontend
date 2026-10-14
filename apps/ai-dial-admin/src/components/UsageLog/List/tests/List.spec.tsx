@@ -13,6 +13,20 @@ vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: showNotificationSpy }),
 }));
 
+const setGridOptionSpy = vi.fn();
+vi.mock('@/src/components/ListView/List', () => ({
+  default: ({
+    listLabel,
+    onGridReady,
+  }: {
+    listLabel?: string;
+    onGridReady?: (event: { api: { setGridOption: typeof setGridOptionSpy } }) => void;
+  }) => {
+    onGridReady?.({ api: { setGridOption: setGridOptionSpy } });
+    return <h1>{listLabel}</h1>;
+  },
+}));
+
 describe('List', () => {
   const timeRange = {
     startDate: new Date('2026-04-01T00:00:00.000Z'),
@@ -41,25 +55,25 @@ describe('List', () => {
     expect(screen.getByRole('heading', { name: TabsI18nKey.Traces })).toBeInTheDocument();
   });
 
-  test('accepts an onGridReady prop without errors', () => {
+  test('forwards the grid-ready event to onGridReady', () => {
     const getData = vi.fn().mockResolvedValue({ success: true, response: { data: [], headers: [] } });
     const onGridReady = vi.fn();
 
-    expect(() =>
-      render(
-        <List
-          route={ApplicationRoute.UsageLog}
-          getData={getData}
-          query={TRACES_QUERY}
-          columnDefs={USAGE_LOG_TRACES_COLUMNS}
-          listLabel={TabsI18nKey.Traces}
-          emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
-          timeRange={timeRange}
-          entityName={null}
-          onGridReady={onGridReady}
-        />,
-      ),
-    ).not.toThrow();
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        listLabel={TabsI18nKey.Traces}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+        timeRange={timeRange}
+        entityName={null}
+        onGridReady={onGridReady}
+      />,
+    );
+
+    expect(onGridReady).toHaveBeenCalledOnce();
   });
 
   test('initial fetch sends no limit, no offset, and the user time range in where.$and', async () => {

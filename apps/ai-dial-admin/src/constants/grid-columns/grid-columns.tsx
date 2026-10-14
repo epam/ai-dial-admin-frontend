@@ -1325,6 +1325,7 @@ export const DATASETS_COLUMN: ColDef[] = [
 const RUN_STATUS_COLUMN_WIDTH = 65;
 
 const RUN_TARGET_COLUMN_MIN_WIDTH = 100;
+const RUN_FLEXIBLE_COLUMN_MIN_WIDTH = 100;
 const RUN_DATE_COLUMN_MIN_WIDTH = 166;
 
 const derivedRunColDef: Partial<ColDef> = { sortable: false, filter: false, hide: false };
@@ -1355,6 +1356,7 @@ export const RUNS_COLUMN: ColDef[] = [
     tooltipValueGetter: () => undefined,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
   {
     field: 'runConfig.numberOfRuns',
@@ -1381,6 +1383,7 @@ export const RUNS_COLUMN: ColDef[] = [
     headerName: 'Test Suite ID',
     ...evalStringFilter([GridFilterType.EQUALS]),
     hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
   {
     field: 'target',
@@ -1407,6 +1410,7 @@ export const RUNS_COLUMN: ColDef[] = [
     tooltipValueGetter: () => null,
     ...evalStringFilter([GridFilterType.CONTAINS]),
     hide: false,
+    minWidth: RUN_FLEXIBLE_COLUMN_MIN_WIDTH,
   },
   {
     field: 'startedAt',

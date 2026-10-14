@@ -4,13 +4,14 @@ import { Publication, PublicationFile } from '@/src/models/dial/publications';
 import { ResourceType } from '@/src/types/resource-type';
 import { actionTypeToCore, mapRulesToCore, resourceTypeToCore } from './mappers';
 import { CorePublicationResource, CorePublicationUpdateDto, CoreResourceType } from './models';
-import { buildEncodedPath, encodeCorePath, encodeFolderPath, ensureTrailingSlash } from './path';
+import { buildEncodedPath, encodeCorePath, encodeFolderPath, ensureTrailingSlash, replaceVersionedName } from './path';
 import { PUBLICATION_TYPE_REGISTRY } from './resolver/registry';
 import { PublishableResourceType } from './resolver/types';
 
 interface AssetLike {
   name?: string;
   version?: string;
+  _metadata?: { version?: string; path?: string };
 }
 
 interface ResourceWrapper {
@@ -63,6 +64,21 @@ const getPrimaryType = (publication: UpdatablePublication): PublishableResourceT
   return ResourceType.FILE;
 };
 
+/**
+ * Core moves a versioned review copy to the path implied by the new target URL during the update
+ * call, so the content PUT that follows must address that new path, not the one that was read.
+ */
+const withMovedReviewPath = (asset: AssetLike, version?: string): object => {
+  const reviewPath = asset._metadata?.path;
+  if (!reviewPath) {
+    return asset;
+  }
+  return {
+    ...asset,
+    _metadata: { ...asset._metadata, path: replaceVersionedName(reviewPath, asset.name ?? '', version) },
+  };
+};
+
 const buildFileResource = (wrapper: FileResource, folderId: string): CorePublicationResource => ({
   action: actionTypeToCore(wrapper.action),
   sourceUrl: wrapper.sourceUrl,
@@ -91,9 +107,11 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
     const asset = wrapper[config.assetKey] as AssetLike;
     // Folder-nested versionless types (prompt/conversation) target the plain name — no
     // `__version` suffix; versioned types (application/toolset) keep the versioned-name build.
-    const targetUrl = FOLDER_NESTED_VERSIONLESS_TYPES.has(type)
+    const isVersionless = FOLDER_NESTED_VERSIONLESS_TYPES.has(type);
+    const version = asset?._metadata?.version ?? asset?.version;
+    const targetUrl = isVersionless
       ? encodeCorePath(`${config.prefix}${ensureTrailingSlash(folderId)}${asset?.name ?? ''}`)
-      : buildEncodedPath(config.prefix + ensureTrailingSlash(folderId), asset?.name ?? '', asset?.version);
+      : buildEncodedPath(config.prefix + ensureTrailingSlash(folderId), asset?.name ?? '', version);
     resources.push({
       action: actionTypeToCore(wrapper.action),
       sourceUrl: wrapper.sourceUrl,
@@ -102,7 +120,7 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
     // Skill has no writable JSON asset (its real write path is Core's /v2/skills multipart API,
     // not /v1/{type}/...) — only recalculate its target URL above, never queue an asset PUT.
     if (type !== ResourceType.SKILL) {
-      resourcePuts.push({ asset: asset as object, type });
+      resourcePuts.push({ asset: isVersionless ? (asset as object) : withMovedReviewPath(asset, version), type });
     }
   }
 

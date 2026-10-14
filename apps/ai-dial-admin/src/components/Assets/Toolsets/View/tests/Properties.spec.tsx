@@ -13,6 +13,13 @@ vi.mock('@/src/components/Assets/Resources/ResourceInfoHeader', () => ({
   default: () => <div>resource-info-header</div>,
 }));
 vi.mock('@/src/components/BaseControls/Icon', () => ({ default: () => <div>icon-control</div> }));
+const mockVersionControl = vi.fn();
+vi.mock('@/src/components/BaseControls/Version', () => ({
+  default: (props: { version?: string; onChange: (version?: string) => void }) => {
+    mockVersionControl(props);
+    return <div>version-control</div>;
+  },
+}));
 vi.mock('@/src/components/BaseControls/Topics', () => ({ default: () => <div>topics-control</div> }));
 vi.mock('@/src/components/Common/FilePath/FilePath', () => ({ default: () => <div>file-path</div> }));
 vi.mock('@/src/components/SourceField/Endpoints/ToolsetEndpoint', () => ({
@@ -62,5 +69,33 @@ describe('ToolsetAssetProperties', () => {
     render(<ToolsetAssetProperties selectedToolset={{ ...baseToolset, folderId: 'platform/' }} onChange={vi.fn()} />);
 
     expect(screen.queryByText('file-path')).not.toBeInTheDocument();
+  });
+
+  test('shows the publication version from _metadata.version', () => {
+    const toolset = { ...baseToolset, _metadata: { version: '1.0.0' } } as DialToolsetResource;
+    render(<ToolsetAssetProperties selectedToolset={toolset} onChange={vi.fn()} isPublication />);
+
+    expect(mockVersionControl).toHaveBeenLastCalledWith(expect.objectContaining({ version: '1.0.0' }));
+  });
+
+  test('writes an edited publication version to _metadata.version and display_version', () => {
+    const onChange = vi.fn();
+    const toolset = { ...baseToolset, _metadata: { name: 'toolset-1', version: '1.0.0' } } as DialToolsetResource;
+    render(<ToolsetAssetProperties selectedToolset={toolset} onChange={onChange} isPublication />);
+
+    mockVersionControl.mock.lastCall?.[0].onChange('2.0.0');
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        display_version: '2.0.0',
+        _metadata: expect.objectContaining({ name: 'toolset-1', version: '2.0.0' }),
+      }),
+    );
+  });
+
+  test('does not render the version control outside a publication', () => {
+    render(<ToolsetAssetProperties selectedToolset={baseToolset} onChange={vi.fn()} />);
+
+    expect(screen.queryByText('version-control')).not.toBeInTheDocument();
   });
 });

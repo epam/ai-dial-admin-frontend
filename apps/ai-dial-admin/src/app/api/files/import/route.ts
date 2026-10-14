@@ -7,6 +7,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType, ConflictResolutionPolicy } from '@/src/types/import';
 import { FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD } from '@/src/server/files/circuit-breaker';
 import { importPlainFiles, importZipFile, InvalidImportZipError } from '@/src/server/files/import';
+import { UnsafeZipError } from '@/src/server/zip/zip-safety';
 
 interface ImportConfig {
   path: string;
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, response: outcome });
   } catch (error) {
-    if (error instanceof InvalidImportZipError) {
+    if (error instanceof InvalidImportZipError || error instanceof UnsafeZipError) {
       return NextResponse.json(
         { success: false, errorHeader: 'Bad Request', errorMessage: error.message },
         { status: 400 },
