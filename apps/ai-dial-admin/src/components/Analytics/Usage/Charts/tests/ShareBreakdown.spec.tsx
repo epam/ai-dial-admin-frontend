@@ -138,10 +138,13 @@ describe('ShareBreakdown', () => {
 });
 
 describe('ShareBreakdown metric', () => {
-  test('offers the cost split in the LLM view', () => {
+  test('offers the cost split in the LLM view, before calls', () => {
     renderCard();
 
-    expect(screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost)).toBeInTheDocument();
+    const costTab = screen.getByText(AnalyticsUsageI18nKey.DonutMetricCost);
+    const callsTab = screen.getByText(AnalyticsUsageI18nKey.DonutMetricCalls);
+
+    expect(costTab.compareDocumentPosition(callsTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('offers no cost split in the Routes view, where a row carries no price', () => {

@@ -18,7 +18,7 @@ vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({
 const loaded = <T,>(data: T): RequestState<T> => ({ data, isLoading: false, hasFailed: false });
 
 const busyWeek: BucketPoint[] = [
-  { bucketMs: new Date(2026, 8, 16, 10).getTime(), measures: { ...EMPTY_MEASURES, calls: 12 } },
+  { bucketMs: new Date(2026, 8, 16, 10).getTime(), measures: { ...EMPTY_MEASURES, calls: 12, spend: 0.5 } },
 ];
 
 const week = (offset: number): HeatmapWeek => ({
@@ -95,11 +95,13 @@ describe('ActivityHeatmap', () => {
     expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapEmptySubtitle)).toBeTruthy();
   });
 
-  test('offers the figure the grid paints, calls or cost', () => {
+  test('offers the figure the grid paints, cost first', () => {
     renderHeatmap({ buckets: loaded(busyWeek) });
 
-    expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCalls)).toBeTruthy();
-    expect(screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeTruthy();
+    const costTab = screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCost);
+    const callsTab = screen.getByText(AnalyticsUsageI18nKey.HeatmapMetricCalls);
+
+    expect(costTab.compareDocumentPosition(callsTab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('offers no cost in the Routes view, whose rows carry no price', () => {
