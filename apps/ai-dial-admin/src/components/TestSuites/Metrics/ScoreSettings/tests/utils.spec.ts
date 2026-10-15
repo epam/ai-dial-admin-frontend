@@ -3,20 +3,30 @@ import { describe, expect, test, vi } from 'vitest';
 import { ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import { ComparisonOp, ExprType, QueryMode, StructuredQuery } from '@/src/models/evaluation/structured-query';
-import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
+import { OverallScoreType, OverallScoreWeight, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ErrorType } from '@/src/types/error-type';
 import { FunctionParameterSource, FunctionParameterSourceType, OverallScoreFunctionName } from '../models';
 import {
   buildFunctionParameterFieldName,
   buildOverallScoreFunctionExpression,
+  createDefaultWeightedMeanWeights,
+  createNextWeightedMeanWeight,
+  DEFAULT_WEIGHTED_MEAN_WEIGHT,
+  formatWeightedMeanWeightInputValue,
   getAvailableOptionsForRow,
   getFunctionName,
   getFunctionParameterSources,
   getMetricOutputOptions,
   getMetricSelectionError,
+  getOverallScoreCardMethodLabelKey,
+  getOverallScoreFormulaLabelKey,
+  getOverallScoreMethodLabelKey,
   getOverallScoreThresholdError,
   getWeightError,
+  isOverallScoreDraftValid,
+  normalizeOverallScoreApplyPayload,
   parseFunctionParameterFieldName,
+  stripMetricFromScoreWeights,
 } from '../utils';
 
 describe('getOverallScoreThresholdError', () => {
@@ -71,6 +81,57 @@ describe('getMetricOutputOptions', () => {
 
   test('returns an empty array for undefined metrics', () => {
     expect(getMetricOutputOptions(undefined)).toEqual([]);
+  });
+});
+
+describe('formatWeightedMeanWeightInputValue', () => {
+  test('formats whole numbers with one decimal place', () => {
+    expect(formatWeightedMeanWeightInputValue(1)).toBe('1.0');
+    expect(formatWeightedMeanWeightInputValue(2)).toBe('2.0');
+  });
+
+  test('keeps fractional weights as-is', () => {
+    expect(formatWeightedMeanWeightInputValue(1.5)).toBe('1.5');
+    expect(formatWeightedMeanWeightInputValue(0.25)).toBe('0.25');
+  });
+
+  test('passes through undefined', () => {
+    expect(formatWeightedMeanWeightInputValue(undefined)).toBeUndefined();
+  });
+});
+
+describe('createDefaultWeightedMeanWeights', () => {
+  test('seeds the first metric output with weight 1', () => {
+    const metrics: Metric[] = [{ name: 'A' }, { name: 'B' }];
+
+    expect(createDefaultWeightedMeanWeights(metrics)).toEqual([
+      { metricName: 'A', outputField: 'score', weight: DEFAULT_WEIGHTED_MEAN_WEIGHT },
+    ]);
+  });
+
+  test('returns an empty array when there are no metrics', () => {
+    expect(createDefaultWeightedMeanWeights(undefined)).toEqual([]);
+    expect(createDefaultWeightedMeanWeights([])).toEqual([]);
+  });
+});
+
+describe('createNextWeightedMeanWeight', () => {
+  test('returns the next unused metric output with weight 1', () => {
+    const metrics: Metric[] = [{ name: 'A' }, { name: 'B' }];
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
+
+    expect(createNextWeightedMeanWeight(metrics, weights)).toEqual({
+      metricName: 'B',
+      outputField: 'score',
+      weight: DEFAULT_WEIGHTED_MEAN_WEIGHT,
+    });
+  });
+
+  test('returns null when every option is already used', () => {
+    const metrics: Metric[] = [{ name: 'A' }];
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
+
+    expect(createNextWeightedMeanWeight(metrics, weights)).toBeNull();
   });
 });
 
@@ -333,5 +394,102 @@ describe('buildOverallScoreFunctionExpression', () => {
     ]);
 
     expect(expression.page).toBeUndefined();
+  });
+});
+
+describe('normalizeOverallScoreApplyPayload', () => {
+  test('clears testCaseOverallScore for mean', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+      testCaseOverallScore: { type: OverallScoreType.Mean },
+    };
+
+    expect(normalizeOverallScoreApplyPayload(suite)).toEqual({
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Mean },
+    });
+  });
+
+  test('defaults testCaseOverallScore for custom_function', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: { type: OverallScoreType.Function, expression: { entity: 'eval_summaries' } as any },
+    };
+
+    expect(normalizeOverallScoreApplyPayload(suite).testCaseOverallScore).toEqual({ type: OverallScoreType.Mean });
+  });
+});
+
+describe('isOverallScoreDraftValid', () => {
+  test('rejects weighted mean with empty weights', () => {
+    expect(
+      isOverallScoreDraftValid({
+        overallScore: { type: OverallScoreType.WeightedMean, weights: [] },
+      }),
+    ).toBe(false);
+  });
+
+  test('rejects custom_function without nested test case score', () => {
+    expect(
+      isOverallScoreDraftValid({
+        overallScore: { type: OverallScoreType.Function, expression: { entity: 'eval_summaries' } as any },
+      }),
+    ).toBe(false);
+  });
+
+  test('accepts custom_function with mean test case score', () => {
+    expect(
+      isOverallScoreDraftValid({
+        overallScore: { type: OverallScoreType.Function, expression: { entity: 'eval_summaries' } as any },
+        testCaseOverallScore: { type: OverallScoreType.Mean },
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('stripMetricFromScoreWeights', () => {
+  test('strips metric from overall and test-case weighted means', () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [
+          { metricName: 'A', outputField: 'score', weight: 1 },
+          { metricName: 'B', outputField: 'score', weight: 1 },
+        ],
+      },
+      testCaseOverallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'A', outputField: 'score', weight: 1 }],
+      },
+    };
+
+    expect(stripMetricFromScoreWeights(suite, 'A')).toEqual({
+      id: 'suite-1',
+      overallScore: {
+        type: OverallScoreType.WeightedMean,
+        weights: [{ metricName: 'B', outputField: 'score', weight: 1 }],
+      },
+      testCaseOverallScore: { type: OverallScoreType.WeightedMean, weights: [] },
+    });
+  });
+});
+
+describe('getOverallScoreMethodLabelKey', () => {
+  test('returns mean by default', () => {
+    expect(getOverallScoreMethodLabelKey({})).toBe(TestSuitesI18nKey.OverallScoreMean);
+  });
+});
+
+describe('getOverallScoreCardMethodLabelKey', () => {
+  test('returns short mean label for the card', () => {
+    expect(getOverallScoreCardMethodLabelKey({})).toBe(TestSuitesI18nKey.OverallScoreMeanCard);
+  });
+});
+
+describe('getOverallScoreFormulaLabelKey', () => {
+  test('returns mean formula by default', () => {
+    expect(getOverallScoreFormulaLabelKey({})).toBe(TestSuitesI18nKey.OverallScoreMeanFormula);
   });
 });

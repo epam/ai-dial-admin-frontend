@@ -87,6 +87,11 @@ export interface DialUpstreamInterface {
   secretExtraData?: DialEndpointExtraData | null;
 }
 
+export enum UpstreamAuthType {
+  API_KEY = 'API_KEY',
+  BEARER = 'BEARER',
+}
+
 export interface DialModelEndpoint {
   id?: string;
   endpoint?: string;
@@ -94,6 +99,7 @@ export interface DialModelEndpoint {
   // of its own falls back to. The ingress path plays no part in it, unlike a deployment's own base_url.
   baseUrl?: string;
   key?: string;
+  authType?: UpstreamAuthType;
   weight?: number | string;
   tier?: number | string;
   extraData?: DialEndpointExtraData | null;

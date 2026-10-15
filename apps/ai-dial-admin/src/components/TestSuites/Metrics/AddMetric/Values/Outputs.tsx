@@ -1,7 +1,8 @@
 import { FC } from 'react';
 
-import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import { DialTag } from '@epam/ai-dial-ui-kit';
+
+import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 
 interface Props {
   fields: SchemaFieldRow[];
@@ -10,18 +11,20 @@ interface Props {
 
 const MetricOutputs: FC<Props> = ({ fields, title }) => {
   return fields.length ? (
-    <div className="flex flex-col">
-      <p className="dial-small-semi mb-4">{title}</p>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
+      <p className="text-base font-semibold text-primary leading-6">{title}</p>
+      <div className="flex flex-col gap-3">
         {fields.map((field) => (
-          <div key={field.id} className="flex flex-col gap-2">
-            <div className="flex flex-row gap-3 items-center">
-              <div className="dial-small-text text-primary">{field.name}</div>
-              <DialTag label={field.type} />
-            </div>
-            <span className="dial-tiny-text text-secondary line-clamp-2" title={field.description}>
-              {field.description}
-            </span>
+          <div key={field.id} className="flex flex-col gap-1">
+            <DialTag
+              label={field.name}
+              className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0 w-fit"
+            />
+            {field.description ? (
+              <span className="dial-tiny-text text-secondary" title={field.description}>
+                {field.description}
+              </span>
+            ) : null}
           </div>
         ))}
       </div>
