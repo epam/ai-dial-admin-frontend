@@ -36,6 +36,9 @@ export interface OverallScoreFunction {
 
 export type OverallScoreConfig = OverallScoreMean | OverallScoreWeightedMean | OverallScoreFunction;
 
+/** Per-test-case score definition — Mean / WeightedMean only (BE rejects custom_function). */
+export type TestCaseOverallScoreConfig = OverallScoreMean | OverallScoreWeightedMean;
+
 export interface TestSuite {
   id?: string;
   name?: string;
@@ -52,6 +55,11 @@ export interface TestSuite {
   testCaseFilter?: FilterNode | null;
   overallScoreThreshold?: number;
   overallScore?: OverallScoreConfig;
+  /**
+   * Per-test-case score when `overallScore` is a suite-level `custom_function` (e.g. ROC AUC).
+   * Cleared when overall is Mean / Weighted mean so per-row scoring falls back to `overallScore`.
+   */
+  testCaseOverallScore?: TestCaseOverallScoreConfig;
 
   deploymentRef?: TestSuiteDeploymentRef;
   /**
@@ -88,6 +96,8 @@ export interface SuiteSnapshot {
   additionalRequests?: TestSuiteAdditionalRequest[];
   /** Score threshold captured at run start; used for per-row `passed` on eval summaries. */
   overallScoreThreshold?: number;
+  /** Per-test-case score definition captured at run start (Mean / WeightedMean only). */
+  testCaseOverallScore?: TestCaseOverallScoreConfig;
 }
 
 export interface McpDeploymentRef {

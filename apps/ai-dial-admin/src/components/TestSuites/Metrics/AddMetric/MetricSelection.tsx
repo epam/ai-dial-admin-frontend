@@ -9,7 +9,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { applyColumnStateOrderToColDefs } from '@/src/components/Grid/utils';
 import { SINGLE_ROW_SELECTION_NO_CHECKBOX } from '@/src/constants/ag-grid';
 import { METRIC_SELECTION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 
@@ -92,8 +92,6 @@ const MetricSelection: FC<Props> = ({
 
   return (
     <div className="h-full flex flex-col gap-3">
-      <p className="dial-body-semi">{t(TabsI18nKey.Metrics)}</p>
-
       <div className="flex-1 min-h-0">
         <GridView
           columnDefs={columnDefs}

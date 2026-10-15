@@ -89,6 +89,23 @@ describe('WeightRow', () => {
     expect(onRemove).toHaveBeenCalledWith(2);
   });
 
+  test('disables the remove button when disableRemove is set', () => {
+    const row: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 0.5 };
+
+    render(
+      <WeightRow
+        index={0}
+        row={row}
+        availableOptions={availableOptions}
+        disableRemove
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Remove })).toBeDisabled();
+  });
+
   test('changing the weight calls onUpdate with the parsed numeric value', async () => {
     const onUpdate = vi.fn();
     const initialRow: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 0.5 };
