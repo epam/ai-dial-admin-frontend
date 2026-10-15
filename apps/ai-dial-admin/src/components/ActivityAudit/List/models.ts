@@ -18,6 +18,11 @@ export type ActivityAuditFetcher = (
   filters: FilterDto[],
 ) => Promise<AuditPageData<DialActivity> | null>;
 
+export interface EnumFilterValue {
+  value: string;
+  label: string;
+}
+
 export type ActivityAuditRowAction = (activity?: DialActivity) => void;
 
 export interface ActivityAuditColumnsParams {
