@@ -103,7 +103,8 @@ until someone acts on it, and the drawer reads on open.
 The ingest service starts one range per request. The re-run range is the earliest failed day through the last
 day of the original range: for a Done run with failed days the last failed day would do, but for a Failed run
 the days after the stop are unattempted and are named nowhere, so only the original end covers them. Because
-every start asks the service to skip what it has ingested, the extra days cost a listing and nothing else.
+a start skips what the service has ingested unless re-ingest is chosen (D17), the extra days cost a listing
+and nothing else; with re-ingest chosen they are written again, which the checkbox's caption states.
 The computation is a pure utility with the two cases as tests.
 
 ### D7. A pipeline run is repeated by requeue, never by a new run
@@ -181,6 +182,17 @@ through, a failure where something did not, nothing for a zero — which replace
 beside the status and said again what the row already showed. What skipped and dropped mean sits behind an info icon
 beside those labels; the sentence about the service keeping five runs in memory is gone, because the console cannot
 act on it.
+
+### D17. Re-ingest is a per-start choice, off by default, never inferred
+
+The service's `includeIngested` re-ingests every log in the range, recorded or not; the overlap collapses in
+the target tables' `ReplacingMergeTree`, but the re-written rows re-trigger what reads those tables. It was a
+non-goal, then requested: restoring lost rows and applying a changed mapping both need it, and so does
+finishing such a repair when it stopped early — a re-run with it off skips the failed day's logs the service
+had already recorded, so the repair never reaches that day. The choice is therefore offered on the start form
+and beside **Rerun failed**, off in both, and made anew each time: the run's own body does not say which way
+it was started, so a re-run cannot inherit it. A caption states the cost; no confirmation is asked, since the
+caption sits beside the only control that turns it on.
 
 ### D15. Accessibility
 

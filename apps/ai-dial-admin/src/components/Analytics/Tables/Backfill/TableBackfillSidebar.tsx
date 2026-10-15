@@ -15,7 +15,10 @@ interface Props {
 /** The drawer content over the ingest service: reads its runs, polls the one in progress, starts new ones. */
 const TableBackfillSidebar: FC<Props> = ({ onRunsChange }) => {
   const { runs, isStarting, start } = useTableBackfillRuns(onRunsChange);
-  const onStart = useCallback((range: BackfillRange) => start(range.from, range.to), [start]);
+  const onStart = useCallback(
+    (range: BackfillRange, shouldIncludeIngested: boolean) => start(range.from, range.to, shouldIncludeIngested),
+    [start],
+  );
 
   return <TableBackfillSidebarView runs={runs} isStarting={isStarting} onStart={onStart} />;
 };

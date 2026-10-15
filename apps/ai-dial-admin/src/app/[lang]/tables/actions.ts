@@ -89,8 +89,12 @@ export async function deleteRowPolicy(name: string, role: string): Promise<Serve
   return res.status === 404 ? { success: true } : res;
 }
 
-export async function startTableBackfill(from: string, to: string): Promise<ServerActionResponse<TableBackfillStart>> {
-  return analyticsDataApi.startTableBackfill(from, to, await token());
+export async function startTableBackfill(
+  from: string,
+  to: string,
+  includeIngested: boolean,
+): Promise<ServerActionResponse<TableBackfillStart>> {
+  return analyticsDataApi.startTableBackfill(from, to, includeIngested, await token());
 }
 
 export async function listTableBackfillRuns(

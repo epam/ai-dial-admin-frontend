@@ -958,13 +958,13 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       startedAt: '2026-09-24T10:00:00Z',
     };
 
-    test('startTableBackfill posts the dates and always turns re-ingest off', async () => {
+    test('startTableBackfill posts the dates with re-ingest off unless asked for', async () => {
       fetch.mockResponseOnce(JSON.stringify({ runId: 'run-1', from: '2026-09-01', to: '2026-09-30', days: 30 }), {
         status: 202,
         ...JSON_HEADERS,
       });
 
-      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
 
       expect(res).toEqual(
         expect.objectContaining({ success: true, response: expect.objectContaining({ runId: 'run-1' }) }),
@@ -978,6 +978,26 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       );
     });
 
+    test('startTableBackfill posts re-ingest on when asked for', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ runId: 'run-1', from: '2026-09-01', to: '2026-09-30', days: 30 }), {
+        status: 202,
+        ...JSON_HEADERS,
+      });
+
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', true, TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: true, response: expect.objectContaining({ runId: 'run-1' }) }),
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/data-sync\/backfill$/),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ from: '2026-09-01', to: '2026-09-30', includeIngested: true }),
+        }),
+      );
+    });
+
     test('startTableBackfill carries the service refusal through', async () => {
       fetch.mockResponseOnce(
         JSON.stringify({ status: 409, error: 'backfill_conflict', message: 'A run is in progress' }),
@@ -987,7 +1007,7 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
         },
       );
 
-      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -1007,7 +1027,7 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
         },
       );
 
-      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', TOKEN_MOCK);
+      const res = await instance.startTableBackfill('2026-09-01', '2026-09-30', false, TOKEN_MOCK);
 
       expect(res).toEqual(expect.objectContaining({ success: false, errorHeader: 'backfill_disabled' }));
     });
