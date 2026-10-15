@@ -231,6 +231,24 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.AnalyticsTables]: {
+    segments: [
+      {
+        name: 'Tables',
+        i18nKey: MenuI18nKey.Tables,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.SessionsTrace]: {
+    segments: [
+      {
+        name: 'Sessions',
+        i18nKey: MenuI18nKey.AnalyticsSessions,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.TestSuites]: {
     segments: [
       {
