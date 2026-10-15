@@ -54,7 +54,7 @@ const PipelineRuntimeBadge: FC<Props> = ({ status, className }) => {
   return (
     <div
       className={classNames(
-        'flex items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
+        'flex w-fit items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
         TONE[status],
         className,
       )}
