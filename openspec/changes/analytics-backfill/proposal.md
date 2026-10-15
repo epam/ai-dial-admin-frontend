@@ -24,9 +24,11 @@ the first, a bare row count for the second.
   drawer. It is shown for a running run only; a finished run is reached through the button.
 - A finished ingest run that left failed days offers **Re-run from the first failed day**, which starts a run
   from the earliest failed day to the end of the original range. It is shown for a `completed` run that
-  carries failed days and for a `failed` one, and only when no run is in progress. The console always asks
-  the service to skip what it already ingested, so the re-run does only what is missing; there is no option
-  to re-ingest.
+  carries failed days and for a `failed` one, and only when no run is in progress. By default the console asks
+  the service to skip what it already ingested, so the re-run does only what is missing.
+- **Re-ingest already ingested data**, a checkbox on the start form and beside the re-run, off by default in
+  both: it re-ingests every log in the range, to restore lost rows or apply a changed mapping, and says beside
+  it that the re-written rows re-trigger the pipelines reading the source tables.
 - **Backfill** on the pipeline detail page: a button in the header row, present on every tab, that opens the
   same drawer for a pipeline's backfill, in the same three blocks: the run that is running or paused (or the
   latest, or the one chosen), the start form (two inclusive UTC dates; there is no replay of the whole history),
@@ -43,7 +45,7 @@ the first, a bare row count for the second.
 - One status vocabulary across both: the ingest service's `completed` is presented as **Done**.
 
 Non-goals: pausing or cancelling an ingest run (the service has no such verb); a page listing every
-pipeline's runs; an option to re-ingest already-ingested data; a per-table backfill (the ingest run writes
+pipeline's runs; a per-table backfill (the ingest run writes
 every ingest target and takes no table); a progress percentage (neither service reports a total); a run
 history beyond what the services retain; a link from a run to `Failed rows`; a replay of a pipeline's whole
 history from the console (a run started that way elsewhere is still shown, as Everything).

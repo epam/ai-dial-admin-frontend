@@ -1,12 +1,13 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import { Button, ButtonVariant, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import BackfillRunFacts from '@/src/components/Analytics/Common/BackfillSidebar/BackfillRunFacts';
 import BackfillStatusBadge from '@/src/components/Analytics/Common/BackfillSidebar/BackfillStatusBadge';
 import { BackfillMetric } from '@/src/components/Analytics/Common/BackfillSidebar/models';
+import TableBackfillReingestField from '@/src/components/Analytics/Tables/Backfill/TableBackfillReingestField';
 import { BackfillI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BackfillRerunRange, BackfillTone } from '@/src/models/analytics/backfill-ui';
@@ -17,7 +18,7 @@ interface Props {
   run: TableBackfillRun;
   isAnyRunInProgress: boolean;
   isStarting: boolean;
-  onRerun: (range: BackfillRerunRange) => void;
+  onRerun: (range: BackfillRerunRange, shouldIncludeIngested: boolean) => void;
 }
 
 /**
@@ -26,6 +27,7 @@ interface Props {
  */
 const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, onRerun }) => {
   const t = useI18n();
+  const [shouldIncludeIngested, setShouldIncludeIngested] = useState(false);
 
   const isRunning = run.state === TableBackfillState.Running;
   const isAlreadyIngested =
@@ -83,13 +85,21 @@ const TableBackfillRunView: FC<Props> = ({ run, isAnyRunInProgress, isStarting, 
       {isAlreadyIngested && <p className="m-0 text-secondary dial-small">{t(BackfillI18nKey.AlreadyIngested)}</p>}
 
       {rerunRange && (
-        <Button
-          variant={ButtonVariant.Secondary}
-          size={ElementSize.Small}
-          label={t(BackfillI18nKey.Rerun)}
-          disabled={isStarting}
-          onClick={() => onRerun(rerunRange)}
-        />
+        <div className="flex flex-col gap-y-3">
+          <TableBackfillReingestField
+            caption={t(BackfillI18nKey.RerunReingestCaption)}
+            isSelected={shouldIncludeIngested}
+            isDisabled={isStarting}
+            onChange={setShouldIncludeIngested}
+          />
+          <Button
+            variant={ButtonVariant.Secondary}
+            size={ElementSize.Small}
+            label={t(BackfillI18nKey.Rerun)}
+            disabled={isStarting}
+            onClick={() => onRerun(rerunRange, shouldIncludeIngested)}
+          />
+        </div>
       )}
     </div>
   );

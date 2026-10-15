@@ -20,7 +20,7 @@ export const findRunningTableBackfill = (runs: TableBackfillRun[]): TableBackfil
 interface Result {
   runs: TableBackfillRun[];
   isStarting: boolean;
-  start: (from: string, to: string) => Promise<boolean>;
+  start: (from: string, to: string, shouldIncludeIngested: boolean) => Promise<boolean>;
 }
 
 /**
@@ -79,11 +79,11 @@ export const useTableBackfillRuns = (onRunsChange: (runs: TableBackfillRun[]) =>
   });
 
   const start = useCallback(
-    async (from: string, to: string): Promise<boolean> => {
+    async (from: string, to: string, shouldIncludeIngested: boolean): Promise<boolean> => {
       setIsStarting(true);
 
       try {
-        const res = await startTableBackfill(from, to);
+        const res = await startTableBackfill(from, to, shouldIncludeIngested);
 
         if (!res.success) {
           showNotification(

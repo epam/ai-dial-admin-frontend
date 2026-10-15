@@ -398,8 +398,13 @@ export class AnalyticsDataApi extends BaseApi {
     );
   }
 
-  startTableBackfill(from: string, to: string, token: Token): Promise<ServerActionResponse<TableBackfillStart>> {
-    return this.postAction<TableBackfillRequest>(TABLE_BACKFILL_URL, { from, to, includeIngested: false }, token);
+  startTableBackfill(
+    from: string,
+    to: string,
+    includeIngested: boolean,
+    token: Token,
+  ): Promise<ServerActionResponse<TableBackfillStart>> {
+    return this.postAction<TableBackfillRequest>(TABLE_BACKFILL_URL, { from, to, includeIngested }, token);
   }
 
   /** At most five, in one instance's memory: an empty list is a run-less instance, not proof that none exists. */

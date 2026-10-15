@@ -3922,6 +3922,11 @@ export default {
     DroppedHint: 'Rows with no deduplication key. Not a failure.',
     AlreadyIngested: 'Nothing new was written: the range was already ingested, or it holds no logs.',
     Rerun: 'Rerun failed',
+    Reingest: 'Re-ingest already ingested data',
+    ReingestCaption:
+      'Writes every log in the range again, not only what is missing. Use it to restore lost rows or apply a changed mapping; the re-written rows re-trigger the pipelines that read these tables.',
+    RerunReingestCaption:
+      'Writes every log from the first failed day to the end of the original range again, the days that succeeded included. The re-written rows re-trigger the pipelines that read these tables.',
     RecentRuns: 'Recent runs',
     RunsLatestOnly: 'Only the latest runs are shown.',
     BannerTable: 'Backfilling data — day {day} of {total}',

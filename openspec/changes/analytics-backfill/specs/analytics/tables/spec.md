@@ -209,18 +209,40 @@ refuses a range the console SHALL show the service's own message.
 - **GIVEN** the service answers 400 to a range the form accepted
 - **THEN** the console shows the service's message
 
-### Requirement: A backfill never re-ingests what is already ingested
+### Requirement: A backfill skips what is already ingested unless asked to re-ingest
 
-Every backfill the console starts SHALL ask the service to skip what it has already ingested, and the
-interface SHALL offer no option to re-ingest. A run over a range that is already ingested therefore finishes
-with zero files and zero rows. The service reports the same zero for a range that holds no logs at all, so the
+Every backfill the console starts SHALL ask the service to skip what it has already ingested, unless the
+admin chooses **Re-ingest already ingested data**. The choice SHALL be offered on the start form and beside
+**Rerun failed**, SHALL be off by default in both, and SHALL NOT be carried over from the run being re-run,
+which does not report how it was started. Beside it the console SHALL state that re-ingesting writes every log
+in the range again and that the re-written rows re-trigger the pipelines reading the source tables. A run that
+skips ingested data over a range that is already ingested finishes with zero files and zero rows. The service reports the same zero for a range that holds no logs at all, so the
 drawer SHALL say, for a Done run with zero files processed, that nothing new was written because the range was
 already ingested or holds no logs — and SHALL NOT say which of the two it was, which the service does not report.
 
 #### Scenario: The request skips ingested data
 
-- **WHEN** the console starts a backfill
+- **WHEN** the console starts a backfill or a re-run without choosing to re-ingest
 - **THEN** it sends the range with re-ingest off
+
+#### Scenario: Re-ingest is chosen on the start form
+
+- **WHEN** an admin chooses re-ingest on the start form and starts a backfill
+- **THEN** the console sends the range with re-ingest on
+
+#### Scenario: A re-run re-ingests only when chosen
+
+- **GIVEN** a finished run that offers **Rerun failed**
+- **WHEN** an admin chooses re-ingest beside it and re-runs
+- **THEN** the console sends the re-run range with re-ingest on
+- **AND** the choice starts off for every run presented, whichever way that run was started
+
+#### Scenario: The cost is stated beside the choice
+
+- **WHEN** the re-ingest choice is offered
+- **THEN** it says that every log in the range is written again and that the re-written rows re-trigger the
+  pipelines reading the source tables
+- **AND** beside **Rerun failed** it says that the days of the re-run range that succeeded are written again too
 
 #### Scenario: A run that wrote nothing says why it may have
 

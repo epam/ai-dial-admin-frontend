@@ -455,7 +455,7 @@ describe('TableBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Rerun }));
 
-      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-04', '2026-09-30');
+      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-04', '2026-09-30', false);
     });
 
     test('covers the days a stopped run never reached', async () => {
@@ -472,7 +472,7 @@ describe('TableBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Rerun }));
 
-      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-04', '2026-09-30');
+      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-04', '2026-09-30', false);
     });
 
     test('offers no re-run for a clean Done run', async () => {
@@ -564,7 +564,7 @@ describe('TableBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Start }));
 
-      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30');
+      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', false);
       await vi.waitFor(() => expect(listTableBackfillRuns).toHaveBeenCalled());
     });
 
@@ -605,6 +605,85 @@ describe('TableBackfillSidebar', () => {
       await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ description: 'Backfill is disabled' })),
       );
+    });
+  });
+
+  describe('re-ingesting what is already ingested', () => {
+    const failedRun = () => makeRun({ daysFailed: 1, daysCompleted: 29, failedDates: ['2026-09-04'] });
+    const reingestIn = (section: BackfillI18nKey) =>
+      within(screen.getByRole('region', { name: section })).getByRole('checkbox', {
+        name: BackfillI18nKey.Reingest,
+      });
+
+    test('is off by default on both the start form and the re-run', async () => {
+      await renderSidebar([failedRun()]);
+
+      expect(reingestIn(BackfillI18nKey.SectionStart)).not.toBeChecked();
+      expect(reingestIn(BackfillI18nKey.SectionRun)).not.toBeChecked();
+    });
+
+    test('says what re-ingesting costs beside the choice', async () => {
+      await renderSidebar([]);
+
+      expect(
+        within(screen.getByRole('region', { name: BackfillI18nKey.SectionStart })).getByText(
+          BackfillI18nKey.ReingestCaption,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    test('starts a run that re-ingests once chosen on the form', async () => {
+      const user = userEvent.setup();
+      vi.mocked(startTableBackfill).mockResolvedValue({ success: true });
+      await renderSidebar([]);
+      setRange('2026-09-01', '2026-09-30');
+
+      await user.click(reingestIn(BackfillI18nKey.SectionStart));
+      await user.click(screen.getByRole('button', { name: BackfillI18nKey.Start }));
+
+      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-01', '2026-09-30', true);
+    });
+
+    test('re-runs the failed days with re-ingest once chosen beside Rerun failed', async () => {
+      const user = userEvent.setup();
+      vi.mocked(startTableBackfill).mockResolvedValue({ success: true });
+      await renderSidebar([failedRun()]);
+
+      await user.click(reingestIn(BackfillI18nKey.SectionRun));
+      await user.click(screen.getByRole('button', { name: BackfillI18nKey.Rerun }));
+
+      expect(startTableBackfill).toHaveBeenCalledWith('2026-09-04', '2026-09-30', true);
+    });
+
+    test('says beside the re-run that the days that succeeded are written again too', async () => {
+      await renderSidebar([failedRun()]);
+
+      expect(
+        within(screen.getByRole('region', { name: BackfillI18nKey.SectionRun })).getByText(
+          BackfillI18nKey.RerunReingestCaption,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    test('starts off again for the next run presented, whatever was chosen for the last', async () => {
+      const user = userEvent.setup();
+      await renderSidebar([
+        failedRun(),
+        makeRun({ runId: 'run-2', from: '2026-08-01', to: '2026-08-30', daysFailed: 1, failedDates: ['2026-08-10'] }),
+      ]);
+
+      await user.click(reingestIn(BackfillI18nKey.SectionRun));
+      await user.click(screen.getByRole('button', { name: /2026-08-01 → 2026-08-30/ }));
+
+      expect(reingestIn(BackfillI18nKey.SectionRun)).not.toBeChecked();
+    });
+
+    test('offers no re-ingest choice on a run that has nothing to re-run', async () => {
+      await renderSidebar([makeRun()]);
+
+      expect(
+        within(screen.getByRole('region', { name: BackfillI18nKey.SectionRun })).queryByRole('checkbox'),
+      ).toBeNull();
     });
   });
 

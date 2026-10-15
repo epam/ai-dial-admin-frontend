@@ -6,6 +6,7 @@ import { Button, ButtonVariant } from '@epam/ai-dial-ui-kit';
 
 import BackfillRangeField from '@/src/components/Analytics/Common/BackfillSidebar/BackfillRangeField';
 import { BackfillRange } from '@/src/components/Analytics/Common/BackfillSidebar/models';
+import TableBackfillReingestField from '@/src/components/Analytics/Tables/Backfill/TableBackfillReingestField';
 import { TABLE_BACKFILL_MAX_DAYS } from '@/src/constants/analytics/backfill';
 import { BackfillI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -14,7 +15,7 @@ import { getBackfillRangeIssue, getTodayUtc } from '@/src/utils/analytics/backfi
 
 interface Props {
   isStarting: boolean;
-  onStart: (range: BackfillRange) => void;
+  onStart: (range: BackfillRange, shouldIncludeIngested: boolean) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ interface Props {
 const TableBackfillStartForm: FC<Props> = ({ isStarting, onStart }) => {
   const t = useI18n();
   const [range, setRange] = useState<BackfillRange>({ from: '', to: '' });
+  const [shouldIncludeIngested, setShouldIncludeIngested] = useState(false);
 
   const issue = getBackfillRangeIssue(range.from, range.to, getTodayUtc(new Date()), TABLE_BACKFILL_MAX_DAYS);
   // An empty form is not an error to show, only a Start to withhold.
@@ -35,7 +37,7 @@ const TableBackfillStartForm: FC<Props> = ({ isStarting, onStart }) => {
       className="flex flex-col gap-y-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (issue === null) onStart(range);
+        if (issue === null) onStart(range, shouldIncludeIngested);
       }}
     >
       <BackfillRangeField
@@ -45,6 +47,12 @@ const TableBackfillStartForm: FC<Props> = ({ isStarting, onStart }) => {
         issue={shownIssue}
         isDisabled={isStarting}
         maxDays={TABLE_BACKFILL_MAX_DAYS}
+      />
+      <TableBackfillReingestField
+        caption={t(BackfillI18nKey.ReingestCaption)}
+        isSelected={shouldIncludeIngested}
+        isDisabled={isStarting}
+        onChange={setShouldIncludeIngested}
       />
       <Button
         type="submit"
