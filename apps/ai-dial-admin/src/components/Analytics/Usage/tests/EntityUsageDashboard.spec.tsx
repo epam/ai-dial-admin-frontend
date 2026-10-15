@@ -129,11 +129,9 @@ describe('EntityUsageDashboard', () => {
   });
 
   test('reads nothing for an entity it cannot name', async () => {
-    const { container } = render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{}} />);
+    render(<EntityUsageDashboard route={ApplicationRoute.Models} entity={{}} />);
 
-    // The access loader is the only thing on screen until the check answers; the page then draws nothing.
-    await waitFor(() => expect(container).toBeEmptyDOMElement());
-
+    expect(await screen.findByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeTruthy();
     expect(runQueryMock).not.toHaveBeenCalled();
   });
 });
@@ -220,5 +218,27 @@ describe('EntityUsageDashboard on an application', () => {
     await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
+  });
+});
+
+describe('EntityUsageDashboard — an entity the log cannot name', () => {
+  test('states why it is empty instead of rendering nothing at all', async () => {
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={{ name: 'a toolset' }} />);
+
+    expect(await screen.findByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeTruthy();
+    expect(screen.getByText(AnalyticsUsageI18nKey.EntityUnmatchedHint)).toBeTruthy();
+    expect(queriesSent()).toEqual([]);
+  });
+
+  test('reads an asset toolset whose identity sits in the merge metadata', async () => {
+    const entity = { name: 'ignored', _metadata: { path: 'bucket/QA editor__0.0.1' } };
+
+    render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={entity as never} />);
+
+    expect(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeTruthy();
+    await settled();
+
+    expect(screen.queryByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeNull();
+    expect(JSON.stringify(queriesSent())).toContain('toolsets/bucket/QA%20editor__0.0.1');
   });
 });

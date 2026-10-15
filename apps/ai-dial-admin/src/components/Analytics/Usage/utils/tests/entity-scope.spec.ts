@@ -35,6 +35,18 @@ describe('getEntityDeploymentName', () => {
     );
   });
 
+  test('reads an asset path from the merge metadata, where a Core detail entity keeps its identity', () => {
+    const merged = { name: 'ignored', _metadata: { path: 'bucket/QA editor__0.0.1' } } as unknown as BaseEntity;
+
+    expect(getEntityDeploymentName(ApplicationRoute.AssetsToolsets, merged)).toBe('toolsets/bucket/QA%20editor__0.0.1');
+  });
+
+  test('prefers the flat path over the metadata one, since a seeded flow sets only the former', () => {
+    const both = { path: 'flat/A__1.0.0', _metadata: { path: 'meta/B__1.0.0' } } as unknown as BaseEntity;
+
+    expect(getEntityDeploymentName(ApplicationRoute.AssetsToolsets, both)).toBe('toolsets/flat/A__1.0.0');
+  });
+
   test('names nothing for an entity with no name, or an asset with no path', () => {
     expect(getEntityDeploymentName(ApplicationRoute.Models, {})).toBeNull();
     expect(getEntityDeploymentName(ApplicationRoute.AssetsToolsets, { name: 'x' })).toBeNull();
