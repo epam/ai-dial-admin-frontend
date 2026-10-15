@@ -9,7 +9,7 @@ import {
 } from '@/src/constants/analytics/sessions-trace';
 import { SpanFieldTag, UsageLogField } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { spanFields } from '@/src/utils/analytics/session-column-catalog';
+import { sessionFields, spanFields } from '@/src/utils/analytics/session-column-catalog';
 
 const schemaField = (overrides: Partial<AnalyticsEntityField> & { name: string }): AnalyticsEntityField => ({
   type: AnalyticsFieldType.String,
@@ -178,5 +178,68 @@ describe('spanFields — the base projection against a narrower schema', () => {
       expect(names).not.toContain(unreadable);
       expect(groups.flatMap(({ fields }) => fields.map(({ name }) => name))).not.toContain(unreadable);
     }
+  });
+});
+
+describe('sessionFields', () => {
+  const SCHEMA: AnalyticsEntityField[] = [
+    schemaField({ name: 'client_session_id', tag: 'identity' }),
+    schemaField({ name: 'client_type', tag: 'client' }),
+    schemaField({ name: 'traces', tag: 'identity', heavy: true }),
+    schemaField({ name: 'user_email', tag: 'principal', sensitive: true }),
+    schemaField({ name: 'session_insights.title', tag: 'insight' }),
+    schemaField({ name: 'reasoning_tokens', tag: 'token-usage', type: AnalyticsFieldType.Long }),
+  ];
+
+  test('reads every field the record carries except heavy and insight columns', () => {
+    expect(sessionFields(SCHEMA).names).toEqual([
+      'client_session_id',
+      'client_type',
+      'traces',
+      'user_email',
+      'reasoning_tokens',
+    ]);
+  });
+
+  // The service removes a sensitive column from the schema for a caller without the role, so one that arrived
+  // is one this caller may read.
+  test('presents a sensitive column the schema reports', () => {
+    expect(sessionFields(SCHEMA).groups.flatMap(({ fields }) => fields.map(({ name }) => name))).toContain(
+      'user_email',
+    );
+  });
+
+  test('reads the trace ids although the schema marks them heavy, and no other heavy column', () => {
+    const { names } = sessionFields([...SCHEMA, schemaField({ name: 'raw_blob', heavy: true })]);
+
+    expect(names).toContain('traces');
+    expect(names).not.toContain('raw_blob');
+  });
+
+  test('groups by the schema tags in the order the schema reports them', () => {
+    expect(sessionFields(SCHEMA).groups.map(({ tag }) => tag)).toEqual([
+      'identity',
+      'client',
+      'principal',
+      'token-usage',
+    ]);
+  });
+
+  // The usage panel states a column in headline form, which rounds it, so the group states it in full.
+  test('keeps a column another panel states in headline form', () => {
+    const { names, groups } = sessionFields(SCHEMA);
+
+    expect(names).toContain('reasoning_tokens');
+    expect(groups.flatMap(({ fields }) => fields.map(({ name }) => name))).toContain('reasoning_tokens');
+  });
+
+  test('presents a tag the schema leaves off under the untagged group', () => {
+    const { groups } = sessionFields([schemaField({ name: 'client_type' })]);
+
+    expect(groups.map(({ tag }) => tag)).toEqual([UNTAGGED_SPAN_FIELD_TAG]);
+  });
+
+  test('reads and groups nothing when no schema is available', () => {
+    expect(sessionFields()).toEqual({ names: [], groups: [] });
   });
 });

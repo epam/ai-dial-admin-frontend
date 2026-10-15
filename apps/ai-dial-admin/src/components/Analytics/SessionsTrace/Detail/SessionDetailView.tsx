@@ -16,6 +16,7 @@ import {
   SessionInsightField,
   HopBodyGrants,
   SessionScope,
+  SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
 
 interface Props {
@@ -23,12 +24,15 @@ interface Props {
   // Which insight columns this instance's enrichment exposes, resolved on the server from the entity schema.
   // Built there and only passed through here, so its identity is stable and the rail's memo keeps holding.
   insightColumns: SessionInsightField[];
+  // The record's remaining fields grouped by the schema's tags, resolved on the server beside the insight
+  // columns for the same reason: the client has no schema of its own.
+  metadataGroups: SpanFieldGroup[];
   feedback: SessionFeedbackPage | null;
   bodyGrants: HopBodyGrants;
   nowMs: number;
 }
 
-const SessionDetailView: FC<Props> = ({ session, insightColumns, feedback, bodyGrants, nowMs }) => {
+const SessionDetailView: FC<Props> = ({ session, insightColumns, metadataGroups, feedback, bodyGrants, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
@@ -66,6 +70,7 @@ const SessionDetailView: FC<Props> = ({ session, insightColumns, feedback, bodyG
         <SessionDetailBody
           session={session}
           insightColumns={insightColumns}
+          metadataGroups={metadataGroups}
           scope={scope}
           feedbackRows={rows}
           feedbackTotal={feedback?.total ?? null}

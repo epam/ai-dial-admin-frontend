@@ -16,6 +16,7 @@ import {
   NUMERIC_FIELD_TYPES,
   HOP_REQUEST_BODY_FIELD,
   HOP_RESPONSE_BODY_FIELDS,
+  INSIGHTS_ENRICHMENT,
   SPAN_BASE_FIELDS,
   SPAN_UNREADABLE_FIELDS,
   UNTAGGED_SPAN_FIELD_TAG,
@@ -26,7 +27,9 @@ import {
   SessionProjectableFields,
   ProvenanceEntity,
   HopBodyFields,
+  SessionsField,
   SpanFieldDescriptor,
+  SpanFieldGroup,
   SpanFieldSet,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -300,33 +303,16 @@ export const hopBodyFields = (schemaFieldNames: string[] = []): HopBodyFields =>
   };
 };
 
-// `heavy` columns are left out: they are the recorded bodies, which the bodies section reads in tiers and a
-// 360px rail cannot hold.
-//
-// Group order is the order the schema reports the fields in: the service returns them grouped by the entity's
-// own tag ordering, so honouring arrival order keeps no second copy of that ordering here.
-export const spanFields = (schemaFields: AnalyticsEntityField[] = []): SpanFieldSet => {
-  const omitted = new Set<string>(SPAN_UNREADABLE_FIELDS);
-  const reported = new Set(schemaFields.map(({ name }) => name));
-  // The base list is the fallback for a failed schema read, not an addition to a successful one: an instance
-  // whose hop log predates a column in it would have that column named and reject the whole query, costing
-  // the reader the tree.
-  const names = new Set<string>(
-    reported.size ? SPAN_BASE_FIELDS.filter((name) => reported.has(name)) : SPAN_BASE_FIELDS,
-  );
+// One group per tag the schema reports, over the fields `isIncluded` admits. Group order is the order the
+// schema reports the fields in: the service returns them grouped by the entity's own tag ordering, so
+// honouring arrival order keeps no second copy of that ordering here.
+const groupSchemaFields = (
+  schemaFields: AnalyticsEntityField[],
+  isIncluded: (field: AnalyticsEntityField) => boolean,
+): SpanFieldGroup[] => {
   const byTag = new Map<string, SpanFieldDescriptor[]>();
 
-  for (const field of schemaFields) {
-    if (field.heavy) {
-      continue;
-    }
-
-    if (omitted.has(field.name)) {
-      continue;
-    }
-
-    names.add(field.name);
-
+  for (const field of schemaFields.filter(isIncluded)) {
     const tag = field.tag || UNTAGGED_SPAN_FIELD_TAG;
     const descriptor: SpanFieldDescriptor = {
       name: field.name,
@@ -338,8 +324,40 @@ export const spanFields = (schemaFields: AnalyticsEntityField[] = []): SpanField
     byTag.set(tag, [...(byTag.get(tag) ?? []), descriptor]);
   }
 
+  return [...byTag].map(([tag, fields]) => ({ tag, fields }));
+};
+
+// `heavy` columns are left out: they are the recorded bodies, which the bodies section reads in tiers and a
+// 360px rail cannot hold.
+export const spanFields = (schemaFields: AnalyticsEntityField[] = []): SpanFieldSet => {
+  const omitted = new Set<string>(SPAN_UNREADABLE_FIELDS);
+  const reported = new Set(schemaFields.map(({ name }) => name));
+  // The base list is the fallback for a failed schema read, not an addition to a successful one: an instance
+  // whose hop log predates a column in it would have that column named and reject the whole query, costing
+  // the reader the tree.
+  const base = reported.size ? SPAN_BASE_FIELDS.filter((name) => reported.has(name)) : SPAN_BASE_FIELDS;
+  const groups = groupSchemaFields(schemaFields, ({ heavy, name }) => !heavy && !omitted.has(name));
+
   return {
-    names: [...names],
-    groups: [...byTag].map(([tag, fields]) => ({ tag, fields })),
+    names: [...new Set<string>([...base, ...groups.flatMap(({ fields }) => fields.map(({ name }) => name))])],
+    groups,
+  };
+};
+
+// The session record's own fields, for the detail view's metadata groups and the projection that feeds them.
+// A column is read when it is not `heavy` and not an insight column, which the insights panel and its own
+// query rule already own. `sensitive` is not a test: the service filters the schema by the caller's role, so a
+// sensitive column that arrived is one this caller may read, and one they may not is never in the schema to be
+// named. `traces` is the one heavy column read regardless: the metadata states it.
+//
+// `names` is everything read and `groups` is how the record presents it. The two are the same fields: a column
+// the usage panel states in headline form is still stated in full here, because the headline rounds it.
+export const sessionFields = (schemaFields: AnalyticsEntityField[] = []): SpanFieldSet => {
+  const isRead = ({ name, heavy }: AnalyticsEntityField): boolean =>
+    (!heavy || name === SessionsField.Traces) && enrichmentOf(name) !== INSIGHTS_ENRICHMENT;
+
+  return {
+    names: schemaFields.filter(isRead).map(({ name }) => name),
+    groups: groupSchemaFields(schemaFields, isRead),
   };
 };
