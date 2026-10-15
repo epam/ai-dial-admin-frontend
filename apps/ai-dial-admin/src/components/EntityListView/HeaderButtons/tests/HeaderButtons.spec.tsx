@@ -1,22 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-// Override the global NotificationContext mock, whose spies are fresh per call and so cannot be asserted against.
-const showNotification = vi.fn((_notification: Notification) => 'notification-id');
-const removeNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification }),
-}));
 
 const protectedRequest = vi.fn();
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () => protectedRequest,
 }));
 
-const formData = { body: new FormData(), fileSize: 0 };
 vi.mock('@/src/components/EntityListView/HeaderButtons/utils', () => ({
-  getFormDataForImport: vi.fn(() => formData),
+  getFormDataForImport: vi.fn(),
   getImportFunction: vi.fn(() => vi.fn()),
   getImportTitle: vi.fn(() => 'Menu.Prompts'),
 }));
@@ -32,83 +24,91 @@ vi.mock('@/src/components/EntityListView/Components/Modals', () => ({
 }));
 
 import EntityListHeaderButtons from '@/src/components/EntityListView/HeaderButtons/HeaderButtons';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ImportI18nKey } from '@/src/constants/i18n';
-import { Notification, NotificationType } from '@/src/models/notification';
+import { useNotification } from '@/src/context/NotificationContext';
+import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
+
+const { showNotification, removeNotification } = useNotification();
 
 const MAX_FILE_SIZE_EXCEEDED = 10 * 1024 * 1024 * 1024;
 
-const startImport = async () => {
-  const user = userEvent.setup();
-  render(<EntityListHeaderButtons route={ApplicationRoute.Prompts} toggleColumnsPanel={vi.fn()} />);
-  await user.click(screen.getByRole('button', { name: 'confirm-import' }));
-};
+describe('EntityListHeaderButtons', () => {
+  // The order notifications are shown and removed in, as `show:<type>` / `remove` entries.
+  let events: string[];
 
-describe('EntityListHeaderButtons import', () => {
+  const startImport = async () => {
+    const user = userEvent.setup();
+    render(<EntityListHeaderButtons route={ApplicationRoute.Prompts} toggleColumnsPanel={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'confirm-import' }));
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    formData.fileSize = 0;
+    events = [];
+    vi.mocked(getFormDataForImport).mockReturnValue({ body: new FormData(), fileSize: 0 });
+    vi.mocked(showNotification).mockImplementation((notification) => {
+      events.push(`show:${notification.type}`);
+      return 'notification-id';
+    });
+    vi.mocked(removeNotification).mockImplementation(() => {
+      events.push('remove');
+    });
   });
 
-  test('shows a persistent in-progress notification for the destination folder while the request is pending', async () => {
-    protectedRequest.mockReturnValue(new Promise(() => {}));
+  describe('import', () => {
+    test('shows a persistent in-progress notification while the request is pending', async () => {
+      protectedRequest.mockReturnValue(new Promise(() => {}));
 
-    await startImport();
+      await startImport();
 
-    expect(protectedRequest).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: NotificationType.prepare,
-        title: ImportI18nKey.InProgressTitle,
-        duration: null,
-      }),
-    );
-    expect(removeNotification).not.toHaveBeenCalled();
-  });
-
-  test('removes the in-progress notification before showing the import result', async () => {
-    protectedRequest.mockResolvedValue({
-      success: true,
-      response: { importResults: [{ targetPath: 'prompts/docs/a', status: 'success' }] },
+      expect(protectedRequest).toHaveBeenCalledOnce();
+      expect(showNotification).toHaveBeenCalledOnce();
+      expect(showNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: NotificationType.prepare,
+          title: ImportI18nKey.InProgressTitle,
+          duration: null,
+        }),
+      );
+      expect(removeNotification).not.toHaveBeenCalled();
     });
 
-    await startImport();
+    test('removes the in-progress notification before showing the import result', async () => {
+      protectedRequest.mockResolvedValue({
+        success: true,
+        response: { importResults: [{ targetPath: 'prompts/docs/a', status: 'success' }] },
+      });
 
-    await waitFor(() =>
-      expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ type: NotificationType.success })),
-    );
-    expect(removeNotification).toHaveBeenCalledWith('notification-id');
-    const resultCallIndex = showNotification.mock.calls.findIndex(
-      ([config]) => config.type === NotificationType.success,
-    );
-    expect(removeNotification.mock.invocationCallOrder[0]).toBeLessThan(
-      showNotification.mock.invocationCallOrder[resultCallIndex],
-    );
-  });
+      await startImport();
 
-  test('removes the in-progress notification and shows an error when the request throws', async () => {
-    protectedRequest.mockRejectedValue(new Error('network down'));
+      await vi.waitFor(() => expect(events).toEqual(['show:prepare', 'remove', 'show:success']));
+    });
 
-    await startImport();
+    test('removes the in-progress notification and shows a persistent general error when the request throws', async () => {
+      protectedRequest.mockRejectedValue(new Error('network down'));
 
-    await waitFor(() =>
+      await startImport();
+
+      await vi.waitFor(() => {
+        expect(events).toEqual(['show:prepare', 'remove', 'show:error']);
+        expect(showNotification).toHaveBeenLastCalledWith(
+          expect.objectContaining({ type: NotificationType.error, title: ImportI18nKey.ImportFailed, duration: null }),
+        );
+      });
+    });
+
+    test('shows only the size error and sends no request when the file exceeds the size limit', async () => {
+      vi.mocked(getFormDataForImport).mockReturnValue({ body: new FormData(), fileSize: MAX_FILE_SIZE_EXCEEDED });
+
+      await startImport();
+
+      expect(protectedRequest).not.toHaveBeenCalled();
+      expect(showNotification).toHaveBeenCalledOnce();
       expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ type: NotificationType.error, title: ImportI18nKey.ImportFailed, duration: null }),
-      ),
-    );
-    expect(removeNotification).toHaveBeenCalledWith('notification-id');
-  });
-
-  test('shows only the size error and sends no request when the file exceeds the size limit', async () => {
-    formData.fileSize = MAX_FILE_SIZE_EXCEEDED;
-
-    await startImport();
-
-    expect(protectedRequest).not.toHaveBeenCalled();
-    expect(showNotification).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ type: NotificationType.error, title: ImportI18nKey.FileSizeErrorHeader }),
-    );
+        expect.objectContaining({ type: NotificationType.error, title: ImportI18nKey.FileSizeErrorHeader }),
+      );
+    });
   });
 });
