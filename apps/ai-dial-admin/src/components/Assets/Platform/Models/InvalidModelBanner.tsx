@@ -4,7 +4,7 @@ import EntityBanner from '@/src/components/Deployments/Common/EntityBanner/Entit
 import { ModelAssetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceStatus } from '@/src/models/dial/resource';
-import { formatValidationWarnings } from '@/src/utils/entities/overall-status';
+import { formatValidationWarnings } from '@/src/utils/entities/validation-warnings';
 
 interface Props {
   asset: DialModelResource;

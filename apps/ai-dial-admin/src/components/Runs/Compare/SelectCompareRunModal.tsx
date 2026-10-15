@@ -7,7 +7,6 @@ import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { COMPARE_RUN_PICKER_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { CompareCandidateRun } from '@/src/components/Runs/Compare/models';
-import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import { ButtonsI18nKey, EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -57,7 +56,6 @@ const SelectCompareRunModal: FC<Props> = ({ isModalOpen, runs, selectedRunId, on
           selectedId={selectedRunIdState}
           onSelect={(run) => setSelectedRunIdState(run.id)}
           emptyTitle={t(EntitiesI18nKey.NoRuns)}
-          components={RUN_STATUS_FILTER_COMPONENTS}
         />
       </div>
     </DialFormPopup>

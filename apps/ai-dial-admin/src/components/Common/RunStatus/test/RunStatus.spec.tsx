@@ -9,7 +9,7 @@ describe('RunStatusComponent', () => {
     const { container } = render(<RunStatusComponent status={RunStatus.PENDING} />);
 
     expect(screen.getByText('Runs.Status.Pending')).toBeInTheDocument();
-    expect(container.querySelector('.bg-secondary')).toBeInTheDocument();
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
   });
 
   test('renders the label for a completed run', () => {
@@ -34,7 +34,7 @@ describe('RunStatusComponent', () => {
     const { container } = render(<RunStatusComponent status={RunStatus.CANCELLED} />);
 
     expect(screen.getByText('Runs.Status.Cancelled')).toBeInTheDocument();
-    expect(container.querySelector('.bg-secondary')).toBeInTheDocument();
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
   });
 
   test.each([RunStatus.RUNNING, RunStatus.CANCELLING])('indicates %s as in progress', (status) => {
@@ -95,7 +95,7 @@ describe('RunStatusComponent — indicator only', () => {
   test('keeps the coloured dot for a settled status', () => {
     const { container } = renderIndicator(RunStatus.FAILED);
 
-    expect(container.querySelector('.bg-error')).toBeInTheDocument();
+    expect(container.querySelector('.text-error')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();
   });
 

@@ -736,15 +736,17 @@ describe('SUITE_RUNS_COLUMN', () => {
 });
 
 describe('COMPARE_RUN_PICKER_COLUMN', () => {
-  test('carries only the columns that identify a run, leaving out the mock-backed ones', () => {
+  test('carries exactly the requested columns, in the requested order', () => {
     expect(colIdsOf(COMPARE_RUN_PICKER_COLUMN)).toEqual([
       'testSuiteName',
-      'status',
       'testRunName',
-      'runConfig.numberOfRuns',
       'numberOfTestCases',
+      'testSuiteId',
+      'metrics',
       'startedAt',
       'completedAt',
+      'duration',
+      'cost',
     ]);
   });
 

@@ -2556,6 +2556,11 @@ export enum JsonAtaI18nKey {
   UseCase = 'JsonAta.UseCase',
   Expression = 'JsonAta.Expression',
   ResultType = 'JsonAta.ResultType',
+  ReferenceFields = 'JsonAta.ReferenceFields',
+  CollapseReferenceFields = 'JsonAta.CollapseReferenceFields',
+  ExpandReferenceFields = 'JsonAta.ExpandReferenceFields',
+  ExpandField = 'JsonAta.ExpandField',
+  CollapseField = 'JsonAta.CollapseField',
   ToggleLabel = 'JsonAta.ToggleLabel',
 }
 

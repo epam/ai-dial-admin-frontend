@@ -5,7 +5,6 @@ import { FC, useCallback, useMemo } from 'react';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -51,10 +50,9 @@ const TabsContent: FC<Props> = ({
       <>
         <LabelledText label={t(EntityFieldsI18nKey.keyGeneratedAt)} text={keyGeneratedAt} />
         <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={expiresAt} />
-        <ValidityStatusLabel {...selectedKey.validityState} />
       </>
     );
-  }, [expiresAt, keyGeneratedAt, selectedKey.validityState, t]);
+  }, [expiresAt, keyGeneratedAt, t]);
 
   const onAddRoles = useCallback(
     (rows: EntitiesGridData[]) => {

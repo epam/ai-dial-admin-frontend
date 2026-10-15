@@ -14,12 +14,12 @@ import {
 } from '../utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
-const getRunsMock = vi.fn();
+const getRunsQueryMock = vi.fn();
 const getTestSuiteMock = vi.fn();
 const getDatasetTestSuitesMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
-  getRuns: (...args: unknown[]) => getRunsMock(...args),
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -116,10 +116,10 @@ describe('Runs Compare :: getCompareRowResult / getCompareRunColId / getCompareR
 
 describe('Runs Compare :: fetchCompareCandidateRuns', () => {
   beforeEach(() => {
-    getRunsMock.mockReset();
+    getRunsQueryMock.mockReset();
     getTestSuiteMock.mockReset();
     getDatasetTestSuitesMock.mockReset();
-    getRunsMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
+    getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
       const suiteId = filters.find((filter) => filter.column === 'testSuiteId')?.value;
       return Promise.resolve({ content: [{ id: `run-of-${suiteId}`, testSuiteId: suiteId }] });
     });
@@ -144,7 +144,7 @@ describe('Runs Compare :: fetchCompareCandidateRuns', () => {
 
     await fetchCompareCandidateRuns('suite-1');
 
-    expect(getRunsMock).toHaveBeenCalledWith(
+    expect(getRunsQueryMock).toHaveBeenCalledWith(
       0,
       100,
       [],

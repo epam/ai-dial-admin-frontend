@@ -1,7 +1,7 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
-import { getRuns } from '@/src/app/[lang]/runs/actions';
+import { getRunsQuery } from '@/src/app/[lang]/runs/actions';
 import { getTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -72,7 +72,7 @@ export const getCompareRunsUrn = (primaryRunId: string, secondaryRunId: string):
 };
 
 export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[]> => {
-  const res = await getRuns(
+  const res = await getRunsQuery(
     0,
     100,
     [],

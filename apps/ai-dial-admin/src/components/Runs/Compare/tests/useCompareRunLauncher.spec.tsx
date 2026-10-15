@@ -4,12 +4,12 @@ import { FC } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCompareRunLauncher } from '../useCompareRunLauncher';
 
-const getRunsMock = vi.fn();
+const getRunsQueryMock = vi.fn();
 const getTestSuiteMock = vi.fn();
 const getDatasetTestSuitesMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
-  getRuns: (...args: unknown[]) => getRunsMock(...args),
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -70,12 +70,12 @@ const TestHarness: FC = () => {
 
 describe('useCompareRunLauncher', () => {
   beforeEach(() => {
-    getRunsMock.mockReset();
+    getRunsQueryMock.mockReset();
     getTestSuiteMock.mockReset();
     getDatasetTestSuitesMock.mockReset();
     getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'Suite One' } });
     vi.spyOn(window, 'open').mockImplementation(() => null);
-    getRunsMock.mockResolvedValue({
+    getRunsQueryMock.mockResolvedValue({
       content: [
         { id: 'run-1', testSuiteId: 'suite-1', status: 'COMPLETED' },
         { id: 'run-sibling', testSuiteId: 'suite-1', testRunName: 'Run #317', status: 'COMPLETED' },
@@ -116,7 +116,7 @@ describe('useCompareRunLauncher', () => {
         { id: 'suite-2', name: 'Suite Two' },
       ],
     });
-    getRunsMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
+    getRunsQueryMock.mockImplementation((_page, _size, _sorts, filters: { column: string; value: string }[]) => {
       const suiteId = filters.find((filter) => filter.column === 'testSuiteId')?.value;
       return Promise.resolve({
         content:
@@ -146,6 +146,6 @@ describe('useCompareRunLauncher', () => {
 
     expect(await screen.findByText('run-sibling:Suite One')).toBeTruthy();
     expect(getDatasetTestSuitesMock).not.toHaveBeenCalled();
-    expect(getRunsMock).toHaveBeenCalledOnce();
+    expect(getRunsQueryMock).toHaveBeenCalledOnce();
   });
 });
