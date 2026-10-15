@@ -548,6 +548,16 @@ describe('Constants :: grid columns', () => {
     expect(TEST_SUITES_COLUMN.filter((c) => c.sort).map((c) => c.field)).toEqual(['createdAt']);
   });
 
+  test('Created By offers Equals, Does not equal, and Contains', () => {
+    const createdBy = TEST_SUITES_COLUMN.find((c) => c.field === 'createdBy');
+
+    expect((createdBy?.filterParams as { filterOptions: GridFilterType[] }).filterOptions).toEqual([
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+      GridFilterType.CONTAINS,
+    ]);
+  });
+
   test('HF_REGISTRY_COLUMNS returns expected columns', () => {
     expect(Array.isArray(HF_REGISTRY_COLUMNS)).toBe(true);
     expect(HF_REGISTRY_COLUMNS.some((c) => c.field === 'id')).toBe(true);

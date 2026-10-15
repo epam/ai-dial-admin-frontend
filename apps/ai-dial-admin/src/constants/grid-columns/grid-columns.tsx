@@ -1341,7 +1341,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     field: 'createdBy',
     headerName: 'Created By',
     hide: false,
-    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
   },
   {
     field: 'method',
