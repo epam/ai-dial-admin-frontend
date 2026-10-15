@@ -47,7 +47,8 @@ describe('useAggregateForm — candidate targets', () => {
       initialDraft: { kind: PipelineKind.Aggregate },
       takenTargets: ['sessions'],
     });
-    await waitFor(() => expect(getTables).toHaveBeenCalled());
+    await waitFor(() => expect(result.current.isTablesLoading).toBe(false));
+    expect(getTables).toHaveBeenCalled();
     expect(result.current.availableTargets).toEqual([]);
   });
 });

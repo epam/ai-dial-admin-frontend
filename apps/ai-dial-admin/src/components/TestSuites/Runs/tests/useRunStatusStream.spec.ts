@@ -115,12 +115,13 @@ describe('useRunStatusStream', () => {
 
     renderHook(() => useRunStatusStream('suite-1', gridApi));
     dispatchStatusUpdate({ runId: 'run-1', status: RunStatus.COMPLETED, timestamp: 456 });
-    await vi.waitFor(() => expect(getRunsQueryMock).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(nodes[0].setData).toHaveBeenCalledWith(
+        expect.objectContaining({ status: RunStatus.COMPLETED, metricNames: ['accuracy'], overallScoreValue: 0.87 }),
+      ),
+    );
 
     expect(getRunsQueryMock).toHaveBeenCalledWith(0, 1, [], [{ column: 'id', operator: 'eq', value: 'run-1' }]);
-    expect(nodes[0].setData).toHaveBeenCalledWith(
-      expect.objectContaining({ status: RunStatus.COMPLETED, metricNames: ['accuracy'], overallScoreValue: 0.87 }),
-    );
   });
 
   test.each([RunStatus.FAILED, RunStatus.CANCELLED])('also refetches on a terminal %s status', async (status) => {

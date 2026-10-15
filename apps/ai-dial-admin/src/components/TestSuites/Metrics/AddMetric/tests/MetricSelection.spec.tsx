@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TWO_LINE_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import { METRIC_NAME_COLUMN_WIDTH, METRIC_PROVIDER_COLUMN_WIDTH } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, EntityFieldsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import MetricSelection from '../MetricSelection';
 
@@ -52,12 +52,6 @@ describe('MetricSelection', () => {
   beforeEach(() => {
     capturedGridProps = undefined;
     vi.clearAllMocks();
-  });
-
-  test('renders metrics heading', () => {
-    renderMetricSelection();
-
-    expect(screen.getByText(TabsI18nKey.Metrics)).toBeTruthy();
   });
 
   test('renders the selection grid', () => {

@@ -26,6 +26,7 @@ import {
   processActivitiesData,
 } from '@/src/components/ActivityAudit/List/utils';
 import { ACTIVITY_AUDIT_VIEW_CONFIG } from '@/src/components/ActivityAudit/List/view-config';
+import { AUDIT_FILTER_COMPONENTS } from '@/src/components/ActivityAudit/List/audit-filter-components';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -68,6 +69,8 @@ import {
 } from '@/src/utils/entities/rollback-entity';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getAuditRequestFailure } from '@/src/utils/audit/audit-request-error';
+import { applyAnalyticsIdentifierFilters } from '@/src/utils/audit/analytics-identifier-filters';
 import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -102,6 +105,8 @@ const ActivityAuditList: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const showNotificationRef = useRef(showNotification);
+  showNotificationRef.current = showNotification;
   const { featureFlags } = useAppContext();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
@@ -221,6 +226,15 @@ const ActivityAuditList: FC<Props> = ({
           failedImportsRef.current = new Set();
         }
 
+        const { filterModel, isEmpty } =
+          effectiveViewType === ActivityAuditView.Analytics
+            ? applyAnalyticsIdentifierFilters(params.filterModel)
+            : { filterModel: params.filterModel, isEmpty: false };
+        if (isEmpty) {
+          params.successCallback([], 0);
+          return;
+        }
+
         // Resolved per request, not per memo: a preset's window — and an anchored option's end date —
         // is relative to "now", and `onRefresh` re-runs this closure without recreating the memo.
         const actualTimeRange = isCustom
@@ -230,7 +244,7 @@ const ActivityAuditList: FC<Props> = ({
         const sorts = getRequestSorts(params.sortModel);
         const filters = [
           ...getEntityAuditFilters(entity, entityType, effectiveViewType),
-          ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
+          ...getGridFilters(filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
         const { fetchActivities, hasParentChildAggregation, hasDeletedParentSuppression, hasImportGrouping } =
@@ -400,7 +414,11 @@ const ActivityAuditList: FC<Props> = ({
           const slice = rowBufferRef.current.slice(startRow, endRow);
           const lastRow = apiExhaustedRef.current ? rowBufferRef.current.length : undefined;
           params.successCallback(slice, lastRow);
-        } catch {
+        } catch (error) {
+          if (effectiveViewType === ActivityAuditView.Analytics) {
+            const { errorHeader, errorMessage, requestId } = getAuditRequestFailure(error);
+            showNotificationRef.current(getErrorNotification(errorHeader, errorMessage, requestId));
+          }
           params.failCallback();
         } finally {
           gridApi?.setGridOption('loading', false);
@@ -467,6 +485,7 @@ const ActivityAuditList: FC<Props> = ({
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    components: AUDIT_FILTER_COMPONENTS,
     rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
     rowClassRules: {
       'ag-activity-row-clickable': (params) => {

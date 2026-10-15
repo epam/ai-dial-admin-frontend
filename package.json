@@ -4,15 +4,17 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "nx serve ai-dial-admin",
-    "test": "NODE_OPTIONS=--max-old-space-size=4096 nx run-many -t test --runInBand --coverage",
+    "test": "node scripts/run-tests.mjs",
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
+    "lint:specs": "eslint -c eslint.specs.config.mjs \"apps/**/*.spec.{ts,tsx}\"",
     "typecheck": "nx run ai-dial-admin:typecheck",
     "typecheck:specs": "nx run ai-dial-admin:typecheck-specs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "validate:agent-docs": "node scripts/validate-agent-docs.mjs",
     "validate:agent-docs:test": "node --test scripts/validate-agent-docs.spec.mjs",
+    "test:scripts": "node --test scripts/run-tests.spec.mjs scripts/eslint-specs-config.spec.mjs",
     "sync:agent-mirrors": "node scripts/sync-agent-mirrors.mjs",
     "prepare": "husky"
   },
@@ -21,6 +23,9 @@
     "*.{js,ts,tsx}": [
       "prettier --write",
       "npm run lint"
+    ],
+    "*.spec.{ts,tsx}": [
+      "eslint -c eslint.specs.config.mjs"
     ],
     "*.{json,md,css,scss,html,yml,yaml}": [
       "prettier --write"

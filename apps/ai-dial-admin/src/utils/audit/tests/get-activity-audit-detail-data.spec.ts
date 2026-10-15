@@ -88,9 +88,6 @@ const deferred = <T>() => {
   return { promise, resolve };
 };
 
-/** Lets every already-issued request settle, so a still-pending one is a real finding. */
-const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 const resolveAdminActivity = (activity: DialActivity = ADMIN_ACTIVITY) =>
   vi.mocked(activityAuditApi.getActivityById).mockResolvedValue({ success: true, response: activity });
 
@@ -105,6 +102,11 @@ const resolveDeploymentActivity = (activity: DialActivity) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // clearAllMocks keeps implementations, so a lookup one test resolved or rejected would answer the next test's
+  // probe too. Re-arm every backend as "does not own the activity"; a test overrides the one it is about.
+  missAdminActivity();
+  missDeploymentActivity();
+  vi.mocked(analyticsAuditApi.getActivityById).mockResolvedValue({ success: false, response: void 0 });
   vi.mocked(activityAuditApi.getActivitiesList).mockResolvedValue(EMPTY_PAGE);
   vi.mocked(deploymentAuditApi.getActivitiesList).mockResolvedValue(EMPTY_PAGE);
   vi.mocked(analyticsAuditApi.getActivitiesList).mockResolvedValue(EMPTY_PAGE);
@@ -146,12 +148,11 @@ describe('getActivityAuditDetailData :: admin activities', () => {
     vi.mocked(activityAuditApi.getActivitiesList).mockReturnValue(pendingList.promise);
 
     const pending = getActivityAuditDetailData('activity-admin', TOKEN_MOCK);
-    await tick();
 
     // Both snapshots are in flight while the list request has not settled: serializing the chain
     // would leave these at 0 until the list resolved.
+    await vi.waitFor(() => expect(activityAuditApi.getRevisionDetails).toHaveBeenCalledTimes(2));
     expect(activityAuditApi.getActivitiesList).toHaveBeenCalledOnce();
-    expect(activityAuditApi.getRevisionDetails).toHaveBeenCalledTimes(2);
 
     pendingList.resolve(EMPTY_PAGE);
     await pending;
@@ -285,10 +286,9 @@ describe('getActivityAuditDetailData :: analytics activities', () => {
     vi.mocked(analyticsAuditApi.getActivitiesList).mockReturnValue(pendingList.promise);
 
     const pending = getActivityAuditDetailData('activity-analytics', TOKEN_MOCK);
-    await tick();
 
+    await vi.waitFor(() => expect(analyticsAuditApi.getRevisionDetails).toHaveBeenCalledTimes(2));
     expect(analyticsAuditApi.getActivitiesList).toHaveBeenCalledOnce();
-    expect(analyticsAuditApi.getRevisionDetails).toHaveBeenCalledTimes(2);
 
     pendingList.resolve(pageOf([{ ...ANALYTICS_ACTIVITY, revision: 11 }]));
     await pending;

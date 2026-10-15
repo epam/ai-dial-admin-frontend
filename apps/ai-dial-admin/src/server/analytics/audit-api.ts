@@ -30,6 +30,17 @@ export class AnalyticsAuditApi extends BaseApi {
     );
   }
 
+  // Answers with the error the service gave, which `getActivitiesList` drops.
+  getActivitiesListAction(
+    pageSize: number,
+    pageNumber: number,
+    token: Token,
+    sorts: SortDto[],
+    filters: FilterDto[],
+  ): Promise<ServerActionResponse<AuditPageData<DialActivity>>> {
+    return this.postAction(ANALYTICS_ACTIVITIES_URL, { pageSize, pageNumber, sorts, filters }, token);
+  }
+
   getActivityById(id: string, token: Token): Promise<ServerActionResponse<DialActivity>> {
     return this.getAction(`${ANALYTICS_ACTIVITIES_URL}/${id}`, token);
   }

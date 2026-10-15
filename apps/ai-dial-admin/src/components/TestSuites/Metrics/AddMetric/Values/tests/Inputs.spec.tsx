@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { AttributeSamples } from '@/src/models/evaluation/attribute-samples';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
@@ -11,23 +12,40 @@ import MetricInputs from '../Inputs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   DialLabel: ({ label }: any) => <span>{label}</span>,
-  DialSelect: ({ options, value, onChange }: any) => (
-    <select role="combobox" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+  DialTag: ({ label }: any) => <span data-testid="type-tag">{label}</span>,
+  Select: ({ id, options, value, onChange, placeholder, fieldClassName }: any) => (
+    <select
+      id={id}
+      role="combobox"
+      value={value ?? ''}
+      data-placeholder={placeholder}
+      data-field-class={fieldClassName}
+      onChange={(e) => onChange(e.target.value)}
+    >
       {options.map((option: any) => (
-        <option key={option.value} value={option.value}>
+        <option
+          key={option.value}
+          value={option.value}
+          data-has-tag={Boolean(option.rightControl)}
+          data-has-tooltip={Boolean(option.interactiveTooltip)}
+        >
           {option.label}
+          {option.rightControl}
         </option>
       ))}
     </select>
   ),
-}));
-
-vi.mock('@/src/components/Common/TabSelector/TabSelector', () => ({
-  default: ({ tabs, activeTab, onChange }: any) => (
-    <div>
-      {tabs.map((tab: any) => (
-        <button key={tab.id} type="button" data-active={String(activeTab === tab.id)} onClick={() => onChange(tab.id)}>
-          {tab.label}
+  DialSegmentedControl: ({ options, value, onChange, ariaLabel }: any) => (
+    <div role="tablist" aria-label={ariaLabel}>
+      {options.map((option: any) => (
+        <button
+          key={option.value}
+          type="button"
+          role="tab"
+          aria-selected={value === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
         </button>
       ))}
     </div>
@@ -165,7 +183,75 @@ describe('MetricInputs (Values)', () => {
       />,
     );
 
-    const options = screen.getAllByRole('option').map((option) => option.textContent);
-    expect(options).toEqual(['Answer', 'Follow up']);
+    const options = screen.getAllByRole('option');
+    expect(options.map((option) => option.getAttribute('value'))).toEqual(['answer', 'follow_up']);
+    expect(options.every((option) => option.getAttribute('data-has-tag') === 'true')).toBe(true);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'String']);
+    expect(screen.getByRole('combobox')).toHaveAttribute('data-placeholder', EntityPlaceholdersI18nKey.Select);
+  });
+
+  test('test case options include all schema columns with type tags', () => {
+    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt', type: 'array' })];
+    const bindings: MetricBinding[] = [
+      { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'question' } },
+    ];
+
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={fields}
+        bindings={bindings}
+        testCaseSchema={[
+          {
+            name: 'question',
+            type: TestCaseItemType.STRING,
+            required: true,
+            description: '',
+          },
+          {
+            name: 'score',
+            type: TestCaseItemType.NUMBER,
+            required: false,
+            description: '',
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const options = screen.getAllByRole('option');
+    expect(options.map((option) => option.getAttribute('value'))).toEqual(['question', 'score']);
+    expect(screen.getAllByTestId('type-tag').map((tag) => tag.textContent)).toEqual(['String', 'Number']);
+  });
+
+  test('test case options include sample tooltip when samples are provided', () => {
+    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt', type: 'string' })];
+    const bindings: MetricBinding[] = [
+      { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'question' } },
+    ];
+    const samples: AttributeSamples = {
+      valuesByField: { question: ['hello', 'world'] },
+      totalCount: 10,
+    };
+
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={fields}
+        bindings={bindings}
+        samples={samples}
+        testCaseSchema={[
+          {
+            name: 'question',
+            type: TestCaseItemType.STRING,
+            required: true,
+            description: '',
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('option')).toHaveAttribute('data-has-tooltip', 'true');
   });
 });

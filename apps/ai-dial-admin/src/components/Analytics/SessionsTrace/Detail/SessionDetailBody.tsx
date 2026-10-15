@@ -14,12 +14,14 @@ import {
   SessionTraceFigures,
   SessionRatingCounts,
   SessionScope,
+  SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
 import { attributeRatingsToTraces, traceCardTitle } from '@/src/utils/analytics/session-trace-groups';
 
 interface Props {
   session: SessionDetailRow;
   insightColumns: SessionInsightField[];
+  metadataGroups: SpanFieldGroup[];
   scope: SessionScope;
   feedbackRows: SessionFeedbackRow[];
   feedbackTotal: number | null;
@@ -53,6 +55,7 @@ const asTraceFigures = (group: SessionTraceGroup, card?: SessionTraceCard): Sess
 const SessionDetailBody: FC<Props> = ({
   session,
   insightColumns,
+  metadataGroups,
   feedbackRows,
   feedbackTotal,
   ratings,
@@ -93,6 +96,7 @@ const SessionDetailBody: FC<Props> = ({
       <SessionDetailRail
         session={session}
         insightColumns={insightColumns}
+        metadataGroups={metadataGroups}
         feedback={feedbackRows}
         feedbackTotal={feedbackTotal}
         ratings={ratings}

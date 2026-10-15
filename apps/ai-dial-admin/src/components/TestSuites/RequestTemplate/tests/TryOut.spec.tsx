@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -177,33 +177,25 @@ describe('TryOut MCP branch', () => {
   test('shows Tool Arguments Preview label for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.ToolArgumentsPreview)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.ToolArgumentsPreview)).toBeInTheDocument();
   });
 
   test('shows TOOL CALL line for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('TOOL CALL My Toolset:search')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('TOOL CALL My Toolset:search')).toBeInTheDocument();
   });
 
   test('shows Request Body Preview label for DEPLOYMENT suite', async () => {
     render(<TryOut testSuite={deploymentSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.RequestBodyPreview)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.RequestBodyPreview)).toBeInTheDocument();
   });
 
   test('shows method/URL line for DEPLOYMENT suite', async () => {
     render(<TryOut testSuite={deploymentSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('POST /api/search')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('POST /api/search')).toBeInTheDocument();
   });
 
   test('wraps the bare request body into a request envelope on a failed send', async () => {
@@ -216,9 +208,7 @@ describe('TryOut MCP branch', () => {
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('JsonEditor:{"0":{"foo":"bar"}}')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('JsonEditor:{"0":{"foo":"bar"}}')).toBeInTheDocument();
   });
 });
 
@@ -250,9 +240,7 @@ describe('TryOut Columns tab request binding', () => {
     const columnsTab = await screen.findByRole('tab', { name: TabsI18nKey.Columns });
     await user.click(columnsTab);
 
-    await waitFor(() => {
-      expect(screen.getByText('bar')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('bar')).toBeInTheDocument();
   });
 
   test("renders the backend's reported extraction for a deployment suite", async () => {
@@ -272,9 +260,7 @@ describe('TryOut Columns tab request binding', () => {
     await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
     await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Hi there, friend!')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Hi there, friend!')).toBeInTheDocument();
     expect(screen.getByText(ValidityStatusI18nKey.Valid)).toBeInTheDocument();
   });
 
@@ -293,9 +279,7 @@ describe('TryOut Columns tab request binding', () => {
     await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
     await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtracted)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.ColumnNotExtracted)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtractedRequestFailed)).toBeInTheDocument();
     expect(screen.queryByText(ValidityStatusI18nKey.Invalid)).not.toBeInTheDocument();
   });
@@ -313,9 +297,7 @@ describe('TryOut Columns tab request binding', () => {
 
     await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Hi there, friend!')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Hi there, friend!')).toBeInTheDocument();
   });
 
   test('a restored result recorded before extraction was captured reports not extracted', async () => {
@@ -329,9 +311,7 @@ describe('TryOut Columns tab request binding', () => {
 
     await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
 
-    await waitFor(() => {
-      expect(screen.getByText(TestSuitesI18nKey.ColumnNotExtractedNoneReported)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(TestSuitesI18nKey.ColumnNotExtractedNoneReported)).toBeInTheDocument();
   });
 });
 
@@ -357,9 +337,7 @@ describe('TryOut request tabs', () => {
     expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
 
     resolveVariables({});
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
   });
 
   test('shows request tabs for multi-request test case preview', async () => {
@@ -372,9 +350,7 @@ describe('TryOut request tabs', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
   });
 
@@ -406,9 +382,7 @@ describe('TryOut request tabs', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
 
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
@@ -427,9 +401,7 @@ describe('TryOut request tabs', () => {
       },
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
   });
 
   test('switches response content when selecting another request tab', async () => {
@@ -458,16 +430,12 @@ describe('TryOut request tabs', () => {
     const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
     await user.click(sendButton);
 
-    await waitFor(() => {
-      expect(screen.getByText('JsonEditor:{"req":1}')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('JsonEditor:{"req":1}')).toBeInTheDocument();
     expect(screen.queryByText('JsonEditor:{"req":2}')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: '2. TestSuites.Request' }));
 
-    await waitFor(() => {
-      expect(screen.getByText('JsonEditor:{"req":2}')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('JsonEditor:{"req":2}')).toBeInTheDocument();
     expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
   });
 });
@@ -476,9 +444,7 @@ describe('TryOut suite-level request chain', () => {
   test('shows request tabs for a chained suite with no test case selected', async () => {
     render(<TryOut testSuite={multiRequestSuite} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
 
     expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
   });
@@ -502,11 +468,11 @@ describe('TryOut suite-level request chain', () => {
 
     await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
 
-    await waitFor(() => {
+    await vi.waitFor(() =>
       expect(tryOutTestSuite).toHaveBeenCalledWith('suite-mr', {
         '0': { shared: 'for-zero' },
         '1': { shared: 'for-one' },
-      });
-    });
+      }),
+    );
   });
 });

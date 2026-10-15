@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DeploymentType } from '@/src/models/evaluation/deployment';
@@ -75,9 +75,7 @@ describe('DeploymentExternalLink', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
 
     expect(getDeploymentByIdMock).toHaveBeenCalledTimes(1);
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
@@ -94,9 +92,8 @@ describe('DeploymentExternalLink', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(getDeploymentByIdMock).toHaveBeenCalled();
-    });
+    await waitForElementToBeRemoved(() => screen.queryByRole('status', { name: 'loading' }));
+    expect(getDeploymentByIdMock).toHaveBeenCalled();
 
     expect(screen.queryByRole('button', { name: 'Open deployment' })).not.toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'loading' })).not.toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { previewAnalyticsExportConfig } from '@/src/app/[lang]/export-config/actions';
@@ -51,7 +51,7 @@ describe('AnalyticsExportPreview', () => {
 
     render(<AnalyticsExportPreview request={REQUEST} onPreviewResult={onPreviewResult} />);
 
-    await waitFor(() => expect(onPreviewResult).toHaveBeenCalledWith(false));
+    await vi.waitFor(() => expect(onPreviewResult).toHaveBeenCalledWith(false));
     expect(getErrorNotification).toHaveBeenCalledWith(
       'catalog_export_invalid',
       'otel_logs is an OTLP landing table',
@@ -65,7 +65,7 @@ describe('AnalyticsExportPreview', () => {
 
     render(<AnalyticsExportPreview request={REQUEST} onPreviewResult={onPreviewResult} />);
 
-    await waitFor(() => expect(onPreviewResult).toHaveBeenCalledWith(false));
+    await vi.waitFor(() => expect(onPreviewResult).toHaveBeenCalledWith(false));
     expect(getErrorNotification).toHaveBeenCalledOnce();
   });
 });

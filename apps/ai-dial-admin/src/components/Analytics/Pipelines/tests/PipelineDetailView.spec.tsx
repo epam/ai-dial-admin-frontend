@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -49,6 +49,23 @@ const rule: Pipeline = {
 const renderView = (override?: Partial<Pipeline>) =>
   render(<PipelineDetailView pipeline={{ ...rule, ...override }} takenTargets={['turn_feedback']} />);
 
+// The source's bound field renders only once the target and then the source table have both resolved.
+const renderLoaded = async (override?: Partial<Pipeline>) => {
+  const view = renderView(override);
+  await screen.findByRole('group', { name: 'dial_usage_log' });
+  return view;
+};
+
+// Nothing renders from a table that does not resolve, so there is no output to await. Awaiting the very promises
+// the component awaits settles it instead: the component's continuation was queued on each of them first, so
+// it has run (and committed its state) by the time this resumes.
+const settleUnresolved = async () => {
+  await vi.waitFor(() => expect(getTable).toHaveBeenCalled());
+  await act(async () => {
+    await Promise.all(vi.mocked(getTable).mock.results.map((result) => result.value));
+  });
+};
+
 // Looked up by label, not by current value, so the same helper works when an edit restores the original.
 const editSampleFraction = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
   const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.SampleFraction, { exact: false });
@@ -87,13 +104,12 @@ describe('PipelineDetailView', () => {
 
   test('keeps a service-defaulted cron through an unrelated save, sending no scan cadence', async () => {
     const user = userEvent.setup();
-    renderView({ trigger: { kind: TriggerKind.Schedule, cron: '37 * * * * *' } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ trigger: { kind: TriggerKind.Schedule, cron: '37 * * * * *' } });
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto.trigger).toEqual({ kind: TriggerKind.Schedule, cron: '37 * * * * *' });
     expect(dto.advanced).not.toHaveProperty('scan_every');
@@ -120,8 +136,7 @@ describe('PipelineDetailView', () => {
   test('opens each bound table from the control that names it', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await user.click(within(boundField('turn_feedback')).getByRole('button', { name: ButtonsI18nKey.Open }));
     expect(open).toHaveBeenCalledWith('/en/tables/turn_feedback', '_blank');
@@ -168,16 +183,14 @@ describe('PipelineDetailView', () => {
   // The grain key is stated once, among the values the caller cannot change, and its provenance hangs on
   // the label rather than on a caption under a second copy in the trigger.
   test('presents the grain key among the facts, with its provenance on the label', async () => {
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     expect(within(facts()).getByText('response_id')).toBeTruthy();
     expect(screen.getByRole('img', { name: AnalyticsPipelinesI18nKey.GrainKeyHint })).toBeTruthy();
   });
 
   test('states no grouping key of its own inside a group trigger', async () => {
-    renderView({ trigger: { kind: TriggerKind.Group } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ trigger: { kind: TriggerKind.Group } });
 
     expect(screen.getAllByText('response_id')).toHaveLength(1);
     expect(within(facts()).getByText('response_id')).toBeTruthy();
@@ -198,22 +211,21 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockImplementation(async (name) => tables.find((table) => table.name === name) ?? null);
 
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     // The ui-kit select is a custom listbox, not a native one: its options exist only while it is open,
     // and the 2.0 field exposes the trigger as a combobox carrying the chosen value.
     await user.click(within(boundField('turn_feedback')).getByRole('combobox'));
     await user.click(await screen.findByRole('option', { name: 'session_summary' }));
 
-    await waitFor(() => expect(within(facts()).getByText('chat_id')).toBeTruthy());
+    expect(await within(facts()).findByText('chat_id')).toBeTruthy();
     expect(updatePipeline).not.toHaveBeenCalled();
   });
 
   test('falls back to the stored grain key while the target is unresolved', async () => {
     vi.mocked(getTable).mockResolvedValue(null);
     renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await settleUnresolved();
 
     expect(within(facts()).getByText('response_id')).toBeTruthy();
   });
@@ -221,7 +233,7 @@ describe('PipelineDetailView', () => {
   test('renders an em dash for a grain key that is neither resolved nor stored', async () => {
     vi.mocked(getTable).mockResolvedValue(null);
     renderView({ grain_key: undefined });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await settleUnresolved();
 
     expect(within(facts()).queryByText('response_id')).toBeNull();
     expect(within(facts()).getAllByText(AnalyticsPipelinesI18nKey.NotSet).length).toBeGreaterThan(0);
@@ -240,7 +252,7 @@ describe('PipelineDetailView', () => {
         ready_when: { idle: '5m' },
       },
     });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await settleUnresolved();
 
     await editRowsPerScan(user, '200');
 
@@ -251,7 +263,7 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockResolvedValue(null);
     const user = userEvent.setup();
     renderView({ grain_key: undefined, trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await settleUnresolved();
 
     await editRowsPerScan(user, '200');
 
@@ -269,14 +281,14 @@ describe('PipelineDetailView', () => {
     vi.mocked(getTable).mockResolvedValue(null);
     renderView();
 
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await settleUnresolved();
     expect(screen.queryByRole('group', { name: 'dial_usage_log' })).toBeNull();
   });
 
   test('opens the pinned read source rather than the target’s own', async () => {
     renderView({ inputs: ['otel_claude_code_logs'] });
 
-    await waitFor(() => expect(boundField('otel_claude_code_logs')).toBeTruthy());
+    expect(await screen.findByRole('group', { name: 'otel_claude_code_logs' })).toBeTruthy();
   });
 
   test('offers a control that copies the name', () => {
@@ -330,9 +342,7 @@ describe('PipelineDetailView', () => {
   });
 
   test('offers nothing to save until something is edited', async () => {
-    renderView();
-
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();
@@ -340,8 +350,7 @@ describe('PipelineDetailView', () => {
 
   test('offers save and discard once a value changes', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
 
@@ -351,8 +360,7 @@ describe('PipelineDetailView', () => {
 
   test('withdraws save when the value is edited back to what it was', async () => {
     const user = userEvent.setup();
-    renderView({ advanced: { rows_per_scan: 100 } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ advanced: { rows_per_scan: 100 } });
 
     await editRowsPerScan(user, '200');
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
@@ -364,8 +372,7 @@ describe('PipelineDetailView', () => {
 
   test('discard restores the loaded value after confirmation', async () => {
     const user = userEvent.setup();
-    renderView({ advanced: { rows_per_scan: 100 } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ advanced: { rows_per_scan: 100 } });
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
@@ -376,30 +383,28 @@ describe('PipelineDetailView', () => {
 
   test('saves the whole rule and re-reads it', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [name, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(name).toBe('feedback-live');
     expect(dto.advanced?.rows_per_scan).toBe(200);
-    expect(refresh).toHaveBeenCalled();
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
   // The service gates the declaration when the pipeline is armed, so what is merely unwritten reaches
   // the save; only a value that was authored and cannot be stored as authored holds it back.
   test('saves a declaration carrying neither trigger nor transform', async () => {
     const user = userEvent.setup();
-    renderView({ trigger: undefined, transform: undefined });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ trigger: undefined, transform: undefined });
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto).not.toHaveProperty('trigger');
     expect(dto).not.toHaveProperty('transform');
@@ -407,13 +412,12 @@ describe('PipelineDetailView', () => {
 
   test('saves an llm transform carrying neither model nor request template', async () => {
     const user = userEvent.setup();
-    renderView({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ transform: { type: TransformType.Llm, outputs: { rate_event_count: null } } });
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto.transform?.type).toBe(TransformType.Llm);
   });
@@ -422,27 +426,24 @@ describe('PipelineDetailView', () => {
   // operator has to navigate back to.
   test('deletes the pipeline from its own header and returns to the listing', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }));
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DeletePipeline }));
 
-    await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith('feedback-live'));
-    expect(push).toHaveBeenCalledWith(ApplicationRoute.AnalyticsPipelines);
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith(ApplicationRoute.AnalyticsPipelines));
+    expect(deletePipeline).toHaveBeenCalledWith('feedback-live');
   });
 
   test('the enable control is offered whatever the declaration holds', async () => {
-    renderView({ trigger: undefined, transform: undefined, enabled: false });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ trigger: undefined, transform: undefined, enabled: false });
 
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.EnablePipeline })).toBeEnabled();
   });
 
   test('a sample fraction of zero still holds the save back', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editSampleFraction(user, '0');
 
@@ -451,13 +452,12 @@ describe('PipelineDetailView', () => {
 
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
-    renderView({ filter: 'score > 0.5', advanced: { rows_per_scan: 100, rate_rpm: 60 } });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ filter: 'score > 0.5', advanced: { rows_per_scan: 100, rate_rpm: 60 } });
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     expect(dto.filter).toBe('score > 0.5');
     expect(dto.advanced?.rows_per_scan).toBe(200);
@@ -466,13 +466,12 @@ describe('PipelineDetailView', () => {
 
   test('never sends a member the API refuses', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as unknown as [string, Record<string, unknown>];
     ['evaluator', 'grain_key', 'version_column', 'generation', 'created_at', 'updated_at', 'state'].forEach((key) =>
       expect(dto).not.toHaveProperty(key),
@@ -482,13 +481,12 @@ describe('PipelineDetailView', () => {
   test('reports a refused sensitive column as an entitlement failure, not as a rejected expression', async () => {
     vi.mocked(updatePipeline).mockResolvedValue({ success: false, status: 403, errorMessage: 'not entitled' });
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: AnalyticsPipelinesI18nKey.SaveForbidden }),
     );
@@ -501,13 +499,12 @@ describe('PipelineDetailView', () => {
       errorMessage: 'target already bound',
     });
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(screen.getByDisplayValue('200')).toBeTruthy();
     expect(refresh).not.toHaveBeenCalled();
@@ -541,8 +538,7 @@ describe('PipelineDetailView', () => {
   // The two controls are inline at the top of the form rather than inside a section, so the order is
   // read from the controls themselves.
   test('presents the source control before the target control', async () => {
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     const source = boundField('dial_usage_log');
     const target = boundField('turn_feedback');
@@ -565,7 +561,7 @@ describe('PipelineDetailView', () => {
       measures: [{ name: 'requests', fn: 'count' }],
     });
 
-    await waitFor(() => expect(getTables).toHaveBeenCalled());
+    await screen.findByRole('group', { name: 'dial_usage_log' });
 
     const input = boundField('dial_usage_log');
     const target = boundField('usage_rollup');
@@ -620,8 +616,7 @@ describe('PipelineDetailView', () => {
 
   test('confirms before disabling a rule', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
 
@@ -631,27 +626,25 @@ describe('PipelineDetailView', () => {
 
   test('flips enabled on its own rather than re-declaring the pipeline', async () => {
     const user = userEvent.setup();
-    renderView({ filter: 'score > 0.5' });
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded({ filter: 'score > 0.5' });
 
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
     // The popup takes over the query scope, so this now uniquely matches its confirm button.
     await user.click(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.DisablePipeline }));
 
-    await waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
     const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
     // A body carrying any declaration member re-declares the pipeline, which a running aggregate one
     // answers 409 for.
     expect(dto).toEqual({ enabled: false });
-    expect(refresh).toHaveBeenCalled();
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
   // The standing actions step aside for the change bar rather than sitting beside it disabled: a toggle
   // re-reads the pipeline, which would discard the edits.
   test('withholds the toggle and delete while edits are pending', async () => {
     const user = userEvent.setup();
-    renderView();
-    await waitFor(() => expect(getTable).toHaveBeenCalled());
+    await renderLoaded();
 
     await editRowsPerScan(user, '200');
 
@@ -677,6 +670,6 @@ describe('PipelineDetailView', () => {
     renderView();
 
     // The 2.0 select carries the chosen option as the value of its readonly combobox, not as text.
-    await waitFor(() => expect(screen.getByDisplayValue('turn_feedback')).toBeTruthy());
+    expect(await screen.findByDisplayValue('turn_feedback')).toBeTruthy();
   });
 });

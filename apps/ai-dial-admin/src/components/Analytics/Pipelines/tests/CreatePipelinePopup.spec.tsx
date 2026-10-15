@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -62,11 +62,7 @@ describe('CreatePipelinePopup', () => {
   const typeName = (name: string) => fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: name } });
 
   const selectTarget = async (user: ReturnType<typeof userEvent.setup>, name = enrichment.name) => {
-    await waitFor(() =>
-      expect(
-        screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelector(`option[value="${name}"]`),
-      ).toBeTruthy(),
-    );
+    await within(screen.getByLabelText(AnalyticsPipelinesI18nKey.Target)).findByRole('option', { name });
     return user.selectOptions(screen.getByLabelText(AnalyticsPipelinesI18nKey.Target), name);
   };
 
@@ -108,12 +104,12 @@ describe('CreatePipelinePopup', () => {
     renderPopup();
 
     const targetSelect = () => screen.getByLabelText(AnalyticsPipelinesI18nKey.Target);
-    await waitFor(() => expect(targetSelect().querySelector(`option[value="${enrichment.name}"]`)).toBeTruthy());
+    await within(targetSelect()).findByRole('option', { name: enrichment.name });
     expect(targetSelect().querySelector(`option[value="${source.name}"]`)).toBeNull();
 
     await user.click(screen.getByText(AnalyticsPipelinesI18nKey.KindAggregate));
 
-    await waitFor(() => expect(targetSelect().querySelector(`option[value="${source.name}"]`)).toBeTruthy());
+    await within(targetSelect()).findByRole('option', { name: source.name });
     expect(targetSelect().querySelector(`option[value="${enrichment.name}"]`)).toBeNull();
   });
 
@@ -142,12 +138,14 @@ describe('CreatePipelinePopup', () => {
   });
 
   test('does not offer a target another pipeline already writes', async () => {
+    // A second, free enrichment: its option appears only once the listing has been filtered and rendered.
+    const free: AnalyticsTable = { ...enrichment, name: 'session_summary' };
+    vi.mocked(getTables).mockResolvedValue([enrichment, free, source]);
     renderPopup([enrichment.name]);
 
-    await waitFor(() => expect(getTables).toHaveBeenCalled());
-    expect(
-      screen.getByLabelText(AnalyticsPipelinesI18nKey.Target).querySelector(`option[value="${enrichment.name}"]`),
-    ).toBeNull();
+    const targetSelect = screen.getByLabelText(AnalyticsPipelinesI18nKey.Target);
+    await within(targetSelect).findByRole('option', { name: free.name });
+    expect(targetSelect.querySelector(`option[value="${enrichment.name}"]`)).toBeNull();
   });
 
   test('registers either kind not running, sending no enabled member', async () => {
@@ -158,7 +156,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(createPipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createPipeline).toHaveBeenCalled());
     const dto = vi.mocked(createPipeline).mock.calls[0][0];
     expect(dto).toEqual({
       name: 'my-pipeline',
@@ -179,7 +177,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(createPipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createPipeline).toHaveBeenCalled());
     expect(vi.mocked(createPipeline).mock.calls[0][0].trigger).toEqual({ kind: TriggerKind.Schedule });
   });
 
@@ -192,7 +190,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user, source.name);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(createPipeline).toHaveBeenCalled());
+    await vi.waitFor(() => expect(createPipeline).toHaveBeenCalled());
     expect(vi.mocked(createPipeline).mock.calls[0][0].trigger).toEqual({ kind: TriggerKind.Schedule });
   });
 
@@ -206,7 +204,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/pipelines/my-pipeline'));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/pipelines/my-pipeline'));
   });
 
   test('closes, notifies and refreshes the listing on success', async () => {
@@ -217,7 +215,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(onClose).toHaveBeenCalled();
     expect(showNotification).toHaveBeenCalled();
   });
@@ -231,7 +229,7 @@ describe('CreatePipelinePopup', () => {
     await selectTarget(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification.mock.calls[0][0]).toMatchObject({ description: 'target already bound' });
     expect(onClose).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();

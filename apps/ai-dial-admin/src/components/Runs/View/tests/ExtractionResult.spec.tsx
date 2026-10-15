@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -133,18 +133,14 @@ describe('ExtractionResultTab', () => {
 
   test('renders grid after loading without Columns button in tab body', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => {
-      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Columns panel' })).not.toBeInTheDocument();
   });
 
   test('shows Columns panel when showTreePanel is true', async () => {
     render(<ControlledExtractionResultTab initialState={{ showTreePanel: true }} />);
-    await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: 'Columns panel' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('dialog', { name: 'Columns panel' })).toBeInTheDocument();
   });
 
   test('does not refetch results when cached state is provided', async () => {
@@ -164,27 +160,23 @@ describe('ExtractionResultTab', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
 
     expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
   });
 
   test('opens bottom panel on row click by default', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Row 1' }));
 
     expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });
 
   test('opens bottom panel with focus field on cell click', async () => {
     render(<ControlledExtractionResultTab />);
-    await waitFor(() => screen.getByRole('button', { name: 'Cell HTTP' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cell HTTP' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Cell HTTP' }));
 
     expect(mockShowSidebar).toHaveBeenCalledWith(expect.anything(), expect.any(String), SidebarPosition.Bottom);
   });

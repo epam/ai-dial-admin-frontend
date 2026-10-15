@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -58,7 +58,7 @@ describe('AnalyticsImportPreview', () => {
       CatalogResolutionPolicy.FAIL_IF_EXISTS,
       false,
     );
-    await waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(false));
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(false));
   });
 
   test('lists validation errors and environment-specific values, and blocks the import', async () => {
@@ -75,7 +75,7 @@ describe('AnalyticsImportPreview', () => {
     expect(await screen.findByText('source table json_source is missing')).toBeInTheDocument();
     expect(screen.getByText(ImportI18nKey.AnalyticsEnvSpecificHeading)).toBeInTheDocument();
     expect(screen.getByText('pipeline p · transform.model: gpt-4o')).toBeInTheDocument();
-    await waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
   });
 
   test('suggests Skip if exists when a row fails', async () => {
@@ -86,7 +86,7 @@ describe('AnalyticsImportPreview', () => {
     renderPreview();
 
     expect(await screen.findByText(ImportI18nKey.AnalyticsSkipHint)).toBeInTheDocument();
-    await waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
   });
 
   test('asks to confirm re-used pipeline names', async () => {
@@ -101,7 +101,7 @@ describe('AnalyticsImportPreview', () => {
     renderPreview();
 
     const checkbox = await screen.findByText(ImportI18nKey.AnalyticsReusedNamesConfirm);
-    await waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
     await user.click(checkbox);
 
     expect(onChangeReusedNamesAcknowledged).toHaveBeenCalledWith(true);
@@ -117,21 +117,21 @@ describe('AnalyticsImportPreview', () => {
     });
     renderPreview();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith(
         'catalog_bundle_version_unsupported',
         'format_version 2 is not supported',
         'r-3',
       ),
     );
-    expect(onBlockedChange).toHaveBeenLastCalledWith(true);
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
   });
 
   test('reports an unreachable service with its own message', async () => {
     vi.mocked(previewAnalyticsImportConfig).mockRejectedValue(new Error('fetch failed'));
     renderPreview();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith(undefined, ImportI18nKey.AnalyticsPreviewFailed, undefined),
     );
   });
@@ -147,6 +147,6 @@ describe('AnalyticsImportPreview', () => {
     });
 
     expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(onBlockedChange).toHaveBeenLastCalledWith(true);
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
   });
 });

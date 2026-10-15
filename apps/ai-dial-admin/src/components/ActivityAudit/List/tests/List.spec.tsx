@@ -94,7 +94,12 @@ const getAnalyticsActivitiesMock = vi.fn().mockResolvedValue(emptyPage);
 vi.mock('@/src/app/[lang]/activity-audit/actions', () => ({
   getActivities: (...args: unknown[]) => getActivitiesMock(...args),
   getDeploymentActivities: (...args: unknown[]) => getDeploymentActivitiesMock(...args),
-  getAnalyticsActivities: (...args: unknown[]) => getAnalyticsActivitiesMock(...args),
+  // The fetcher gets the server action's result; the tests above and below stage plain pages, and a staged
+  // `{ errorHeader }` stands for a refused request.
+  getAnalyticsActivities: async (...args: unknown[]) => {
+    const page = await getAnalyticsActivitiesMock(...args);
+    return page && 'errorHeader' in page ? { success: false, ...page } : { success: true, response: page };
+  },
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -166,7 +171,7 @@ const lastDatasource = (): IDatasource => {
   return call?.[1] as IDatasource;
 };
 
-const requestRows = async (startRow = 0, endRow = PAGE_SIZE) => {
+const requestRows = async (startRow = 0, endRow = PAGE_SIZE, filterModel: Record<string, unknown> = {}) => {
   const successCallback = vi.fn();
   const failCallback = vi.fn();
   const params = {
@@ -175,7 +180,7 @@ const requestRows = async (startRow = 0, endRow = PAGE_SIZE) => {
     successCallback,
     failCallback,
     sortModel: [],
-    filterModel: {},
+    filterModel,
     context: void 0,
   } as unknown as IGetRowsParams;
 
@@ -791,14 +796,71 @@ describe('ActivityAuditList :: Analytics entity audit tab', () => {
     expect(showNotificationMock).not.toHaveBeenCalled();
   });
 
-  test('leaves the grid in its failure state without a notification when the feed request fails', async () => {
+  test('shows the error the service gave when it refuses the feed request, and lists no rows', async () => {
+    getAnalyticsActivitiesMock.mockResolvedValue({
+      errorHeader: 'invalid_filter_value',
+      errorMessage: "filter on column 'resourceType' expects one of [Table]",
+      requestId: 'req-1',
+    });
+    renderAnalyticsTab();
+    const { successCallback, failCallback } = await requestRows();
+
+    expect(failCallback).toHaveBeenCalled();
+    expect(successCallback).not.toHaveBeenCalled();
+    expect(showNotificationMock).toHaveBeenCalledOnce();
+    expect(JSON.stringify(showNotificationMock.mock.calls[0][0])).toContain('invalid_filter_value');
+  });
+
+  test('shows the failure message when the feed request is rejected', async () => {
     getAnalyticsActivitiesMock.mockRejectedValue(new Error('feed unavailable'));
     renderAnalyticsTab();
     const { successCallback, failCallback } = await requestRows();
 
     expect(failCallback).toHaveBeenCalled();
     expect(successCallback).not.toHaveBeenCalled();
+    expect(JSON.stringify(showNotificationMock.mock.calls[0][0])).toContain('feed unavailable');
+  });
+
+  test('does not notify when a Config feed request fails', async () => {
+    getActivitiesMock.mockRejectedValue(new Error('feed unavailable'));
+    render(<ActivityAuditList entity={{ name: 'gpt-4' } as BaseEntity} entityType={ActivityAuditResourceType.MODEL} />);
+    const { failCallback } = await requestRows();
+
+    expect(failCallback).toHaveBeenCalled();
     expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('sends a picked Resource type list as it is, with the in operator', async () => {
+    renderAnalyticsTab();
+    await requestRows(0, PAGE_SIZE, {
+      resourceType: { filter: 'Table,TableColumn', type: 'in', filterType: 'in' },
+    });
+
+    expect(getAnalyticsActivitiesMock.mock.calls[0][3]).toEqual(
+      expect.arrayContaining([
+        { column: 'resourceType', operator: FilterOperatorDto.INCLUDES, value: 'Table,TableColumn' },
+      ]),
+    );
+  });
+
+  test('lists no rows and sends no request for an Activity ID that is not a UUID', async () => {
+    renderAnalyticsTab();
+    const { successCallback } = await requestRows(0, PAGE_SIZE, {
+      activityId: { filter: 'abc', type: 'equals', filterType: 'text' },
+    });
+
+    expect(successCallback).toHaveBeenCalledWith([], 0);
+    expect(getAnalyticsActivitiesMock).not.toHaveBeenCalled();
+  });
+
+  test('sends an Activity ID that is a UUID with the equals operator', async () => {
+    const id = '0190a0b0-1c2d-7e3f-8a4b-5c6d7e8f9a0b';
+    renderAnalyticsTab();
+    await requestRows(0, PAGE_SIZE, { activityId: { filter: id, type: 'equals', filterType: 'text' } });
+
+    expect(getAnalyticsActivitiesMock.mock.calls[0][3]).toEqual(
+      expect.arrayContaining([{ column: 'activityId', operator: FilterOperatorDto.EQUALS, value: id }]),
+    );
   });
 
   test('re-requests the list with the time-range filters when the time period changes', async () => {

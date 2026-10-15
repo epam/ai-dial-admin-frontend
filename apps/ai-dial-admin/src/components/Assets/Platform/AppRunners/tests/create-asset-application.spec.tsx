@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -75,7 +75,8 @@ const openCreateModal = async (entity: DialAppRunnerResource = runner()) => {
   // The seeded defaults are resolved on mount, so let that settle before opening the modal — otherwise
   // the captured props read a value the user would never see. An id-less runner resolves nothing.
   if (entity.$id) {
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalled());
+    await act(async () => {});
   }
   await user.click(screen.getByRole('button', { name: CREATE_ACTION_NAME }));
 };

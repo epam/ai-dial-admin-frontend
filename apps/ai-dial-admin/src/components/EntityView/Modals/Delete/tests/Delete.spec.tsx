@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -43,8 +43,8 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
 
       confirmDelete();
 
-      await waitFor(() => expect(onRemoveEntity).toHaveBeenCalledWith('platform/pl_Ts', undefined));
-      await waitFor(() => expect(showNotification).toHaveBeenCalled());
+      await vi.waitFor(() => expect(onRemoveEntity).toHaveBeenCalledWith('platform/pl_Ts', undefined));
+      await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
       const notification = showNotification.mock.calls[0][0];
       expect(notification.description).not.toContain('platform/pl_Ts');
       expect(notification.description).toContain('pl_Ts');
@@ -66,7 +66,7 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
 
     confirmDelete();
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     const notification = showNotification.mock.calls[0][0];
     expect(notification.description).toContain('public/MyApp__1.0');
   });
@@ -108,7 +108,7 @@ describe('DeleteConfirmationModal :: in-flight confirm', () => {
 
     resolveRemove({ success: true });
 
-    await waitFor(() => expect(onCloseModal).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(onCloseModal).toHaveBeenCalledTimes(1));
     expect(onRemoveEntity).toHaveBeenCalledTimes(1);
   });
 });

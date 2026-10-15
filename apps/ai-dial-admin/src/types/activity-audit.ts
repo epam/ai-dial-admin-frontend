@@ -77,12 +77,14 @@ const CONTAINER_DEPLOYMENT_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
 ]);
 
-const ANALYTICS_RESOURCE_TYPES = new Set<string>([
+export const ANALYTICS_AUDIT_RESOURCE_TYPES = [
   ActivityAuditResourceType.TABLE,
   ActivityAuditResourceType.TABLE_COLUMN,
   ActivityAuditResourceType.PIPELINE,
   ActivityAuditResourceType.SAVED_QUERY,
-]);
+];
+
+const ANALYTICS_RESOURCE_TYPES = new Set<string>(ANALYTICS_AUDIT_RESOURCE_TYPES);
 
 const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
   ...IMAGE_DEFINITION_RESOURCE_TYPES,
