@@ -12,13 +12,14 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   isEditorEnabled?: boolean;
+  isEditorDisabled?: boolean;
   children?: ReactNode;
   onToggleEditor?: () => void;
   /** Draws the 2.0 switch instead of the 1.0 one. Off by default; a page opts in with its own migration. */
   isDesignSystem2?: boolean;
 }
 
-const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor, isDesignSystem2 }) => {
+const JsonToggles: FC<Props> = ({ children, isEditorEnabled, isEditorDisabled, onToggleEditor, isDesignSystem2 }) => {
   const t = useI18n();
   const staticEditorClassName = 'flex flex-row gap-x-4';
   const isTablet = useIsOnlyTabletScreen();
@@ -45,6 +46,7 @@ const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor, isD
             id="jsonEditor"
             isOn={isEditorEnabled}
             labelProps={{ label: t(EntitiesI18nKey.JSONEditor) }}
+            disabled={isEditorDisabled}
             onChange={onToggleEditor}
           />
         ) : (
@@ -52,6 +54,7 @@ const JsonToggles: FC<Props> = ({ children, isEditorEnabled, onToggleEditor, isD
             isOn={isEditorEnabled}
             label={t(EntitiesI18nKey.JSONEditor)}
             switchId="jsonEditor"
+            disabled={isEditorDisabled}
             onChange={onToggleEditor}
           />
         )}

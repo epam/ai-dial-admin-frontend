@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { getIsSchemaReadOnly } from '@/src/components/Datasets/utils/schema-lock';
 import DatasetView from '@/src/components/Datasets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -27,10 +28,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     notFound();
   }
 
+  const isSchemaReadOnly = await getIsSchemaReadOnly(dataset);
+
   return (
     <SaveValidationContextProvider>
       <FileFolderProvider>
-        <DatasetView originalDataset={dataset} etag={etag} />
+        <DatasetView originalDataset={dataset} etag={etag} isSchemaReadOnly={isSchemaReadOnly} />
       </FileFolderProvider>
     </SaveValidationContextProvider>
   );

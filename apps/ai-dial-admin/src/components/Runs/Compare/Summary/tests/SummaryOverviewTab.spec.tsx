@@ -37,7 +37,8 @@ const EMPTY_SCORES = { overallScore: null, statistics: [], byStatistic: {} };
 const defaultHookValue = {
   primaryRun: RUN,
   comparedRun: { id: 'run-2' } as Run,
-  testSuite: null,
+  primaryTestSuite: null,
+  comparedTestSuite: null,
   enrichedPrimaryScores: EMPTY_SCORES,
   enrichedComparedScores: EMPTY_SCORES,
   metricOptions: [],

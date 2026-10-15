@@ -27,24 +27,35 @@ interface Props {
   primaryRun: Run;
   comparedRun: Run;
   runs: CompareRun[];
-  testSuite: TestSuite | null;
+  primaryTestSuite: TestSuite | null;
+  comparedTestSuite: TestSuite | null;
 }
 
-const Header: FC<Props> = ({ primaryRun, comparedRun, runs, testSuite }) => {
+const Header: FC<Props> = ({ primaryRun, comparedRun, runs, primaryTestSuite, comparedTestSuite }) => {
   const t = useI18n();
   const primaryStartedAt = useLocalDateTimeString(primaryRun?.startedAt);
   const primaryCompletedAt = useLocalDateTimeString(primaryRun?.completedAt);
   const comparedStartedAt = useLocalDateTimeString(comparedRun?.startedAt);
   const comparedCompletedAt = useLocalDateTimeString(comparedRun?.completedAt);
 
-  const primarySuiteContext = primaryRun.suiteSnapshot ?? testSuite;
-  const comparedSuiteContext = comparedRun.suiteSnapshot ?? testSuite;
-  const primaryDeploymentLinkContext = resolveSuiteContextForDeploymentLink(primaryRun.suiteSnapshot, testSuite);
-  const comparedDeploymentLinkContext = resolveSuiteContextForDeploymentLink(comparedRun.suiteSnapshot, testSuite);
+  const primarySuiteContext = primaryRun.suiteSnapshot ?? primaryTestSuite;
+  const comparedSuiteContext = comparedRun.suiteSnapshot ?? comparedTestSuite;
+  const primaryDeploymentLinkContext = resolveSuiteContextForDeploymentLink(primaryRun.suiteSnapshot, primaryTestSuite);
+  const comparedDeploymentLinkContext = resolveSuiteContextForDeploymentLink(
+    comparedRun.suiteSnapshot,
+    comparedTestSuite,
+  );
   const primaryApplicationName = getSuiteApplicationName(primarySuiteContext);
   const comparedApplicationName = getSuiteApplicationName(comparedSuiteContext);
-  const suiteId = primaryRun.testSuiteId ?? comparedRun.testSuiteId;
-  const suiteName = testSuite?.name || suiteId;
+  const primarySuiteId = primaryRun.testSuiteId;
+  const comparedSuiteId = comparedRun.testSuiteId;
+  const suiteId = primarySuiteId ?? comparedSuiteId;
+  const suiteName = (primaryTestSuite ?? comparedTestSuite)?.name || suiteId;
+  const hasDifferentSuites = !!primarySuiteId && !!comparedSuiteId && primarySuiteId !== comparedSuiteId;
+  const suiteBySlot = {
+    [CompareRunSlot.Primary]: { id: primarySuiteId, name: primaryTestSuite?.name || primarySuiteId },
+    [CompareRunSlot.Secondary]: { id: comparedSuiteId, name: comparedTestSuite?.name || comparedSuiteId },
+  };
 
   const valueBySlot = {
     application: {
@@ -75,7 +86,25 @@ const Header: FC<Props> = ({ primaryRun, comparedRun, runs, testSuite }) => {
 
   return (
     <div className="flex flex-col gap-8 pb-8 sm:flex-row">
-      {!!suiteId && (
+      {hasDifferentSuites && (
+        <DualRunField
+          label={t(RunsI18nKey.TestSuite)}
+          entries={runs.map(({ slot, name }) => ({
+            key: slot,
+            runName: name,
+            value: suiteBySlot[slot].name ?? '—',
+            postfix: (
+              <DialIconButton
+                className="text-secondary size-[20px]"
+                onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: suiteBySlot[slot].id })}
+                icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+              />
+            ),
+          }))}
+        />
+      )}
+
+      {!hasDifferentSuites && !!suiteId && (
         <DialLabelledText
           label={t(RunsI18nKey.TestSuite)}
           text={suiteName}

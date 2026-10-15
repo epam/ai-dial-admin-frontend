@@ -712,6 +712,7 @@ export default {
     Events: 'Events',
     Firewall: 'Firewall settings',
     TestCases: 'Test Cases',
+    TestSuites: 'Test Suites',
     Runs: 'Runs',
     Trends: 'Trends',
     Permissions: 'Permissions',
@@ -2410,6 +2411,10 @@ export default {
     VisibilityPrivate: 'Private',
     VisibilityPublic: 'Public',
     RevalidatingTestCases: 'Schema updated. Test cases are being revalidated, please refresh shortly.',
+    SchemaReadOnlyTitle: 'Schema is read-only',
+    SchemaReadOnlyMessage:
+      'This schema cannot be modified because test suites use this dataset. Changing fields could break test cases in those suites.',
+    TestSuitesDescription: 'Test suites that use this dataset',
   },
   Grid: {
     Filter: 'Filter',
