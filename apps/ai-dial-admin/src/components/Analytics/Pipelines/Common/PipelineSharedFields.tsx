@@ -18,9 +18,11 @@ import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
   form: PipelineFormState;
+  /** A SQL declaration carries its own WHERE, and the service refuses a `filter` beside it. */
+  isFilterHidden?: boolean;
 }
 
-const PipelineSharedFields: FC<Props> = ({ form }) => {
+const PipelineSharedFields: FC<Props> = ({ form, isFilterHidden }) => {
   const t = useI18n();
   const { draft, onChange, availableTargets, sourceName, target } = form;
 
@@ -76,15 +78,17 @@ const PipelineSharedFields: FC<Props> = ({ form }) => {
         />
       </BoundTableField>
 
-      <SqlPredicateField
-        id="pipeline-filter"
-        className={getControlClassName()}
-        label={t(AnalyticsPipelinesI18nKey.Filter)}
-        description={t(AnalyticsPipelinesI18nKey.FilterCaption)}
-        value={draft.filter}
-        sourceName={sourceName}
-        onChange={(value) => onChange({ filter: value })}
-      />
+      {!isFilterHidden && (
+        <SqlPredicateField
+          id="pipeline-filter"
+          className={getControlClassName()}
+          label={t(AnalyticsPipelinesI18nKey.Filter)}
+          description={t(AnalyticsPipelinesI18nKey.FilterCaption)}
+          value={draft.filter}
+          sourceName={sourceName}
+          onChange={(value) => onChange({ filter: value })}
+        />
+      )}
     </div>
   );
 };

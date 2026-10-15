@@ -3053,6 +3053,18 @@ export default {
     SectionOutputs: 'Outputs',
     OutputsEmpty: 'The service reports no output mapping for this pipeline.',
     GroupKeysDerived: 'Leave empty to derive the keys from the target table’s ordering key.',
+    AggregateMode: 'Declaration mode',
+    AggregateModeForm: 'Form',
+    AggregateModeSql: 'SQL',
+    AggregateModeSwitchTitle: 'Switch declaration mode?',
+    AggregateModeSwitchBody:
+      'The declaration written in the current mode is discarded. The other mode starts empty: nothing is converted.',
+    AggregateModeSwitchConfirm: 'Switch mode',
+    SqlDeclaration: 'SQL declaration',
+    SqlDeclarationCaption:
+      'One INSERT INTO <target> (<columns>) SELECT … statement into this pipeline’s target. The service checks it when the pipeline is enabled or previewed.',
+    SqlDeclarationPlaceholder:
+      "INSERT INTO target (day, total)\nSELECT date_trunc('day', timestamp), count(*)\nFROM source\nGROUP BY 1",
     MeasureColumnDefault: '= measure name',
     SectionTransform: 'Transform',
     TransformType: 'Type',
