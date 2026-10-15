@@ -20,7 +20,7 @@ const PipelineEnabledBadge: FC<Props> = ({ enabled, className }) => {
   return (
     <div
       className={classNames(
-        'flex items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
+        'flex w-fit items-center gap-x-1 py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
         enabled ? 'text-success bg-success' : 'text-secondary bg-layer-4',
         className,
       )}
