@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, test, expect, vi, beforeAll, afterAll } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
@@ -27,9 +27,7 @@ describe('Common ItemsList component', () => {
 
     await user.click(button);
 
-    await waitFor(() => {
-      expect(setItems).toHaveBeenCalledWith(['item-2']);
-    });
+    expect(setItems).toHaveBeenCalledWith(['item-2']);
   });
 
   test('add correctly', async () => {
@@ -42,9 +40,7 @@ describe('Common ItemsList component', () => {
 
     await user.click(button);
 
-    await waitFor(() => {
-      expect(setItems).toHaveBeenCalledWith(['item', 'item-2', '']);
-      expect(scrollSpy).toHaveBeenCalled();
-    });
+    expect(setItems).toHaveBeenCalledWith(['item', 'item-2', '']);
+    expect(scrollSpy).toHaveBeenCalled();
   });
 });

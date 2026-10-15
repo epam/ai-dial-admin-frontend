@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getPausedPipelines, getRunnerPipelines } from '@/src/app/[lang]/pipelines/actions';
@@ -53,7 +53,8 @@ describe('usePausedPipelines', () => {
 
     const { result } = renderHook(() => usePausedPipelines());
 
-    await waitFor(() => expect(read).not.toHaveBeenCalled());
+    await act(async () => {});
+    expect(read).not.toHaveBeenCalled();
     expect(result.current.isRead).toBe(false);
   });
 
@@ -83,7 +84,12 @@ describe('usePausedPipelines', () => {
 
     const { result } = renderHook(() => usePausedPipelines());
 
-    await waitFor(() => expect(read).toHaveBeenCalled());
+    // A refusal leaves the state as it started, so nothing observable marks the mount read as processed.
+    // The explicit read's own completion does: it resolves only after the hook has taken the answer in.
+    await act(async () => {
+      await result.current.reload();
+    });
+    expect(read).toHaveBeenCalled();
     expect(result.current.isRead).toBe(false);
     expect(result.current.paused).toEqual({});
   });

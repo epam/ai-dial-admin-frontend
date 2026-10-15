@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
@@ -54,9 +54,7 @@ describe('AppRunnerAssetParameters', () => {
 
     render(<AppRunnerAssetParameters runner={runner({ [ENDPOINT]: 'http://remote/schema' })} onChange={vi.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(EntitiesI18nKey.ResolvedSchemaFailed)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(EntitiesI18nKey.ResolvedSchemaFailed)).toBeInTheDocument();
     expect(screen.getByText('Failed to download application schema')).toBeInTheDocument();
     expect(screen.queryByText(EntitiesI18nKey.NoConfigurationSchema)).not.toBeInTheDocument();
   });

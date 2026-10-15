@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { FC } from 'react';
 import userEvent from '@testing-library/user-event';
 import { CellClickedEvent, ColDef, GridOptions, ICellRendererParams } from 'ag-grid-community';
@@ -255,6 +255,6 @@ describe('FailuresGrid', () => {
 
     clickCell('error');
 
-    await waitFor(() => expect(failures.readRunRetryable).toHaveBeenCalledWith('run-7'));
+    await vi.waitFor(() => expect(failures.readRunRetryable).toHaveBeenCalledWith('run-7'));
   });
 });

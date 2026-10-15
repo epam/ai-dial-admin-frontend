@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -55,13 +55,9 @@ describe('Assets Conversations :: Properties', () => {
 
     render(<Properties selectedConversation={conversation({ id: 'gpt-4' })} />);
 
-    await waitFor(() => {
-      expect(getDeploymentMock).toHaveBeenCalledWith('gpt-4');
-    });
-
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
-
     const openButton = await screen.findByRole('button');
+    expect(getDeploymentMock).toHaveBeenCalledWith('gpt-4');
+    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
     await user.click(openButton);
 
     expect(windowOpenMock).toHaveBeenCalledWith(
@@ -96,9 +92,8 @@ describe('Assets Conversations :: Properties', () => {
 
     render(<Properties selectedConversation={conversation({ id: 'missing' })} />);
 
-    await waitFor(() => {
-      expect(getDeploymentMock).toHaveBeenCalledWith('missing');
-    });
+    await vi.waitFor(() => expect(getDeploymentMock).toHaveBeenCalledWith('missing'));
+    await act(async () => {});
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();

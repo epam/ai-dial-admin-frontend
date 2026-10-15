@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -96,7 +96,13 @@ const renderSidebar = async (
     />,
   );
 
-  await waitFor(() => expect(props.onRunsChange).toHaveBeenCalled());
+  // A run section renders once the runs arrive; an empty answer renders nothing new, so it is flushed instead.
+  if (runs.length > 0) {
+    await screen.findByRole('region', { name: BackfillI18nKey.SectionRun });
+  } else {
+    await vi.waitFor(() => expect(props.onRunsChange).toHaveBeenCalled());
+    await act(async () => {});
+  }
 
   return { ...view, ...props };
 };
@@ -325,7 +331,7 @@ describe('PipelineBackfillSidebar', () => {
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Pause }));
 
       expect(pausePipelineBackfill).toHaveBeenCalledWith('run-1');
-      await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
+      await vi.waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
     });
 
     test('resumes a paused run without asking for confirmation', async () => {
@@ -415,7 +421,7 @@ describe('PipelineBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Resume }));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(
           expect.objectContaining({ description: 'Pipeline is over its daily spend budget' }),
         ),
@@ -454,11 +460,11 @@ describe('PipelineBackfillSidebar', () => {
           .getAllByRole('term')
           .map((term) => term.textContent),
       ).toEqual([BackfillI18nKey.RowsDone, BackfillI18nKey.DeadLetters]);
-      await waitFor(() =>
-        expect(
-          (within(row).getByText(BackfillI18nKey.DeadLetters).closest('div') as HTMLElement).querySelector('dd'),
-        ).toHaveClass('text-error'),
-      );
+      const deadLetters = (
+        within(row).getByText(BackfillI18nKey.DeadLetters).closest('div') as HTMLElement
+      ).querySelector('dd') as HTMLElement;
+      expect(await within(deadLetters).findByText('3')).toBeInTheDocument();
+      expect(deadLetters).toHaveClass('text-error');
     });
 
     test('puts the run’s controls first in its block', async () => {
@@ -517,10 +523,10 @@ describe('PipelineBackfillSidebar', () => {
 
       await user.click(screen.getByRole('button', { name: BackfillI18nKey.Pause }));
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ description: 'run is already done' })),
       );
-      await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
+      await vi.waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
     });
   });
 
@@ -587,7 +593,7 @@ describe('PipelineBackfillSidebar', () => {
 
       await user.click(startButton());
 
-      await waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
+      await vi.waitFor(() => expect(listPipelineBackfills).toHaveBeenCalled());
     });
 
     test.each([
@@ -606,9 +612,10 @@ describe('PipelineBackfillSidebar', () => {
 
       await user.click(startButton());
 
-      await waitFor(() =>
+      await vi.waitFor(() =>
         expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ description: message })),
       );
+      await waitFor(() => expect(startButton()).toBeEnabled());
       expect(screen.getByLabelText(BackfillI18nKey.FieldFrom)).toHaveValue('2026-09-14');
       expect(startButton()).toBeEnabled();
     });
@@ -625,7 +632,7 @@ describe('PipelineBackfillSidebar', () => {
 
       await user.click(startButton());
 
-      await waitFor(() => expect(showNotification).toHaveBeenCalled());
+      await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
       expect(showNotification).not.toHaveBeenCalledWith(expect.objectContaining({ title: BackfillI18nKey.Started }));
     });
   });
@@ -641,8 +648,8 @@ describe('PipelineBackfillSidebar', () => {
       withDeadLetters(12, 10);
       await renderSidebar([makeRun()]);
 
-      await waitFor(() => expect(getPipelineFailures).toHaveBeenCalledWith(NAME, { runId: 'run-1' }, 1));
       expect(await screen.findByText('12')).toBeInTheDocument();
+      expect(getPipelineFailures).toHaveBeenCalledWith(NAME, { runId: 'run-1' }, 1);
     });
 
     test('offers to requeue the run’s failed rows with their count', async () => {
@@ -683,7 +690,8 @@ describe('PipelineBackfillSidebar', () => {
       withDeadLetters(0, 0);
       await renderSidebar([makeRun()]);
 
-      await waitFor(() => expect(getPipelineFailures).toHaveBeenCalled());
+      // The count replaces the '—' placeholder only once the listing has been processed.
+      expect(await screen.findByText('0')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: BackfillI18nKey.Requeue })).toBeNull();
     });
 
@@ -691,7 +699,8 @@ describe('PipelineBackfillSidebar', () => {
       withDeadLetters(5, 0);
       await renderSidebar([makeRun()]);
 
-      await waitFor(() => expect(getPipelineFailures).toHaveBeenCalled());
+      // The count replaces the '—' placeholder only once the listing has been processed.
+      expect(await screen.findByText('5')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: BackfillI18nKey.Requeue })).toBeNull();
     });
 

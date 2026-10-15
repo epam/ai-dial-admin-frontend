@@ -4,7 +4,7 @@ import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderCont
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { FILE_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import FolderList from './FolderList';
@@ -36,21 +36,21 @@ describe('FolderList', () => {
     const context = fakeContext();
     render(<FolderList context={() => context} />);
 
-    await waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(`${ROOT_FOLDER}/`));
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(`${ROOT_FOLDER}/`));
   });
 
   test('auto-fetches both roots as an array when rootPaths has more than one entry', async () => {
     const context = fakeContext();
     render(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
 
-    await waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']));
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']));
   });
 
   test('auto-fetches the single rootPaths entry unwrapped when it is the only one', async () => {
     const context = fakeContext();
     render(<FolderList context={() => context} rootPaths={['platform/']} />);
 
-    await waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith('platform/'));
+    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith('platform/'));
   });
 
   test('does not auto-fetch when files are already loaded', () => {
