@@ -1,6 +1,5 @@
 import { ColDef } from 'ag-grid-community';
 
-import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -14,7 +13,6 @@ export interface ExtractionResultTabUiState {
   colDefs: ColDef[];
   panelColDefs: ColDef[];
   results: AnalyticsResult[] | null;
-  snapshots: MetricSnapshot[];
 }
 
 export interface RunViewTabUiState {
@@ -26,20 +24,6 @@ export interface RunDeployment {
   name: string;
   route: ApplicationRoute;
   entity: { name: string; path?: string };
-}
-
-export interface MetricEntry {
-  key: string;
-  value: number | null;
-  isError: boolean;
-}
-
-export interface MetricGroup {
-  title: string;
-  metrics: MetricEntry[];
-  info?: Record<string, unknown>;
-  hasError: boolean;
-  errorMessage?: string;
 }
 
 export interface CompareAnalyticsRow extends AnalyticsResult {

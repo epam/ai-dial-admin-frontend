@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
@@ -15,14 +15,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { useDetailMode } from './use-detail-mode';
-import {
-  getAnalyticsColumns,
-  getMetricGroupOrder,
-  getRowDetailFieldSchema,
-  RESULT_FILTERS,
-  RUN_FILTER,
-  snapshotsToBindingsMap,
-} from './utils';
+import { getAnalyticsColumns, getMetricGroupOrder, getRowDetailFieldSchema, RESULT_FILTERS } from './utils';
 
 interface Props {
   run: Run;
@@ -32,11 +25,10 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
-  const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
+  const { showTreePanel, colDefs, panelColDefs, results } = extractionResultState;
   const metricGroupOrder = useMemo(() => getMetricGroupOrder(colDefs ?? []), [colDefs]);
   const fieldSchema = useMemo(() => getRowDetailFieldSchema(results ?? []), [results]);
-  const detailMode = useDetailMode(metricBindings, metricGroupOrder, fieldSchema);
+  const detailMode = useDetailMode(metricGroupOrder, fieldSchema);
   const { openDetail } = detailMode;
 
   const gridApiRef = useRef<GridApi | null>(null);
@@ -59,16 +51,6 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       });
     });
   }, [run, results, setExtractionResultState]);
-
-  useEffect(() => {
-    if (!run?.id || snapshots.length > 0) {
-      return;
-    }
-
-    getMetricSnapshots(RUN_FILTER(run.id)).then((data) => {
-      setExtractionResultState({ snapshots: data || [] });
-    });
-  }, [run?.id, snapshots.length, setExtractionResultState]);
 
   const panelColDefsRef = useRef(panelColDefs);
   panelColDefsRef.current = panelColDefs;
