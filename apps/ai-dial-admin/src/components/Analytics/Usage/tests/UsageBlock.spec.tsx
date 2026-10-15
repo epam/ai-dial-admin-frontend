@@ -1,7 +1,8 @@
 import { act, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { BreakdownTab, ComparePeriod, UsageView } from '@/src/components/Analytics/Usage/models';
+import { VIEW_BREAKDOWN_TABS } from '@/src/components/Analytics/Usage/constants';
+import { BreakdownTab, ComparePeriod, DonutMetric, UsageView } from '@/src/components/Analytics/Usage/models';
 import { CALLS_ALIAS } from '@/src/components/Analytics/Usage/queries';
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
 import { getBlockTabs, getEntityBlocks } from '@/src/components/Analytics/Usage/utils/entity-blocks';
@@ -111,5 +112,33 @@ describe("UsageBlock on an application's LLM view", () => {
 
     await waitFor(() => expectBreakdownTotal(BreakdownTab.Projects, OWN_CALLS));
     expect(breakdownPropsSpy).toHaveBeenLastCalledWith(expect.objectContaining({ isCostOffered: false }));
+  });
+});
+
+describe('UsageBlock share chart measure', () => {
+  const renderPage = (view: UsageView) => (
+    <UsageBlock
+      view={view}
+      scope={{ own: [] }}
+      tabs={VIEW_BREAKDOWN_TABS[view]}
+      windows={WINDOWS}
+      resolution={{ value: 1, unit: 'h' }}
+      compare={ComparePeriod.Off}
+      refreshToken={0}
+      notice={NOTICE}
+      onRefreshingChange={vi.fn()}
+    />
+  );
+  const lastMetric = () => (sharePropsSpy.mock.lastCall?.[0] as { metric: DonutMetric }).metric;
+
+  test('opens on cost in the LLM view, takes calls where no cost is offered, and returns to cost', () => {
+    const { rerender } = render(renderPage(UsageView.Llm));
+    expect(lastMetric()).toBe(DonutMetric.Cost);
+
+    rerender(renderPage(UsageView.Mcp));
+    expect(lastMetric()).toBe(DonutMetric.Calls);
+
+    rerender(renderPage(UsageView.Llm));
+    expect(lastMetric()).toBe(DonutMetric.Cost);
   });
 });
