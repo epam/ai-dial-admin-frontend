@@ -142,6 +142,54 @@ describe('Assets Toolset :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('updateToolset sends no client_secret_hint or empty client_secret, so Core keeps the stored secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    const body = (assetApi.put as any).mock.calls[0][3];
+    expect(body.auth_settings).toEqual({ client_id: 'id' });
+    expect('client_secret_hint' in body.auth_settings).toBe(false);
+    expect('client_secret' in body.auth_settings).toBe(false);
+  });
+
+  test('updateToolset keeps a client secret the user typed', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateToolset(
+      {
+        name: 'my-toolset',
+        folderId: 'public',
+        version: '1.0',
+        auth_settings: { client_id: 'id', client_secret: 'typed-secret', client_secret_hint: 'cret' },
+      } as unknown as AssetToolset,
+      'etag',
+    );
+
+    expect((assetApi.put as any).mock.calls[0][3].auth_settings).toEqual({
+      client_id: 'id',
+      client_secret: 'typed-secret',
+    });
+  });
+
+  test('createToolset sends no client_secret_hint or empty client_secret', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createToolset(
+      toolsetResource({ auth_settings: { client_id: 'id', client_secret: '', client_secret_hint: 'cret' } }),
+    );
+
+    expect((assetApi.put as any).mock.calls[0][3].auth_settings).toEqual({ client_id: 'id' });
+  });
+
   test('updateToolset resolves identity from _metadata when the flat fields are absent', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 

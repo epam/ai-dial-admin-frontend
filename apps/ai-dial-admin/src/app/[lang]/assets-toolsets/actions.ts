@@ -10,6 +10,7 @@ import {
   CoreResourceEntityMetadata,
   DialPlatformToolsetResource,
   DialToolsetResource,
+  DialToolsetResourceAuthSettings,
   ToolsetAuthCredentialLevel,
 } from '@/src/models/dial/resource';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -17,7 +18,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
+import { getToolsetBasicBody, getToolsetSignInBody, stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { ImportFileType } from '@/src/types/import';
 import { getVersionedName } from '@/src/server/publications/path';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
@@ -42,6 +43,7 @@ export async function createToolset(toolset: DialToolsetResource) {
   const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
   return assetApi.put(token, ResourceType.TOOLSET, path, {
     ...stripMetadata(toolset),
+    auth_settings: toolset.auth_settings && stripClientSecretHint(toolset.auth_settings),
     allowedTools: getAllowTools(toolset),
     transport: getTransport(toolset),
     displayVersion: version,
@@ -72,7 +74,10 @@ export async function updateToolset(toolset: AssetToolset, etag: string) {
   // The View hands this action a merged detail entity cast to the row shape — its identity grafts
   // nest under `_metadata`, absent from `AssetToolset`'s type — while create/duplicate flows seed
   // flat `folderId`/`version`, so both spellings are resolved here (same as `updateApp`).
-  const castToolset = toolset as AssetToolset & { _metadata?: CoreResourceEntityMetadata };
+  const castToolset = toolset as AssetToolset & {
+    _metadata?: CoreResourceEntityMetadata;
+    auth_settings?: DialToolsetResourceAuthSettings;
+  };
   const folderId = castToolset.folderId || castToolset._metadata?.folderId || ROOT_FOLDER;
   const version = castToolset.version ?? castToolset._metadata?.version;
   const path = `${folderId}${getVersionedName(toolset.name || '', version)}`;
@@ -82,6 +87,7 @@ export async function updateToolset(toolset: AssetToolset, etag: string) {
     path,
     {
       ...stripMetadata(castToolset),
+      auth_settings: castToolset.auth_settings && stripClientSecretHint(castToolset.auth_settings),
       displayVersion: version,
       folderId: undefined,
       version: undefined,

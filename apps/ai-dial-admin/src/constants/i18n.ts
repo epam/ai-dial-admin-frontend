@@ -1195,6 +1195,7 @@ export enum RollbackI18nKey {
 export enum ErrorI18nKey {
   EmptyField = 'Error.EmptyField',
   RequiredField = 'Error.RequiredField',
+  ClientSecretMinLength = 'Error.ClientSecretMinLength',
   PageNotFound = 'Error.PageNotFound',
   ResourceNotFound = 'Error.ResourceNotFound',
   CheckUrl = 'Error.CheckUrl',
@@ -1327,6 +1328,7 @@ export enum EntityPlaceholdersI18nKey {
   CatalogDefaultLocale = 'EntityPlaceholders.CatalogDefaultLocale',
   ClientId = 'EntityPlaceholders.ClientId',
   ClientSecret = 'EntityPlaceholders.ClientSecret',
+  ClientSecretMasked = 'EntityPlaceholders.ClientSecretMasked',
   TokenEndpoint = 'EntityPlaceholders.TokenEndpoint',
   AuthorizationEndpoint = 'EntityPlaceholders.AuthorizationEndpoint',
   Maintainer = 'EntityPlaceholders.Maintainer',

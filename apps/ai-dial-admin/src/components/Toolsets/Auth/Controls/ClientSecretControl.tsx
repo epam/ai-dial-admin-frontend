@@ -11,17 +11,21 @@ interface Props {
   clientSecret?: string;
   disabled?: boolean;
   isLoggedIn?: boolean;
+  hasSecretHint?: boolean;
+  minLength?: number;
   onChange?: (clientSecret: string) => void;
 }
 
-const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, onChange }) => {
+const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, hasSecretHint, minLength, onChange }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [error, setError] = useState<FieldError | null>(null);
 
   const validate = useCallback(
     (value?: string) => {
-      const validationError = getErrorForClientSecret(value, t);
+      // An empty field next to a stored secret means "unchanged"; Core keeps the stored one.
+      const isUnchanged = hasSecretHint && !value?.trim();
+      const validationError = isUnchanged ? null : getErrorForClientSecret(value, t, minLength);
       setError(validationError);
 
       if (!isLoggedIn) {
@@ -32,13 +36,13 @@ const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, on
         });
       }
     },
-    [dispatch, t, isLoggedIn],
+    [dispatch, t, isLoggedIn, hasSecretHint, minLength],
   );
 
   useEffect(() => {
     validate(clientSecret);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientSecret]);
+  }, [clientSecret, hasSecretHint, minLength]);
 
   const onChangeClientSecret = useCallback(
     (value?: string) => {
@@ -53,7 +57,9 @@ const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, on
     <DialPasswordInput
       id="clientSecret"
       labelProps={{ label: t(EntityFieldsI18nKey.clientSecret), required: true }}
-      placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
+      placeholder={t(
+        hasSecretHint ? EntityPlaceholdersI18nKey.ClientSecretMasked : EntityPlaceholdersI18nKey.ClientSecret,
+      )}
       value={clientSecret || ''}
       onChange={onChangeClientSecret}
       error={error?.text}

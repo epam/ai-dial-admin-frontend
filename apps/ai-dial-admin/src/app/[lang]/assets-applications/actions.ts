@@ -32,6 +32,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { stripClientSecretHint } from '@/src/utils/toolset/toolset-auth';
 import { DialApplication } from '@/src/models/dial/application';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
@@ -42,6 +43,7 @@ function validationFailure(errors: Record<string, string | undefined>): ServerAc
   };
 }
 
+// Besides the computed statuses, drops the read-only `client_secret_hint` and an untouched (empty) secret.
 function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
   if (!app.external_services) return app;
   const external_services = Object.fromEntries(
@@ -50,7 +52,7 @@ function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApp
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { app_level_auth_status, user_level_auth_status, global_auth_status, ...cleanSettings } =
         service.auth_settings as DialExternalServiceAuthSettings;
-      return [id, { ...service, auth_settings: cleanSettings }];
+      return [id, { ...service, auth_settings: stripClientSecretHint(cleanSettings) }];
     }),
   );
   return { ...app, external_services };
