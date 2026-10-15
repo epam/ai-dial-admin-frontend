@@ -10,9 +10,7 @@ import { TestCaseItemType } from '@/src/types/evaluation';
 
 vi.mock('@/src/components/TestSuites/TestCaseSchema/SchemaManager', () => ({
   default: ({ isReadOnly }: { isReadOnly?: boolean }) => (
-    <div data-testid="schema-manager" data-read-only={String(!!isReadOnly)}>
-      schema manager
-    </div>
+    <div>{isReadOnly ? 'schema manager read-only' : 'schema manager editable'}</div>
   ),
 }));
 
@@ -65,15 +63,15 @@ describe('DatasetSchemaTab', () => {
   test('shows no warning and an editable schema by default', () => {
     renderTab({ testCaseSchema: [field('prompt')] });
 
-    expect(screen.queryByText(DatasetsI18nKey.SchemaReadOnlyTitle)).not.toBeInTheDocument();
-    expect(screen.getByTestId('schema-manager')).toHaveAttribute('data-read-only', 'false');
+    expect(screen.getByText('schema manager editable')).toBeTruthy();
+    expect(screen.queryByText(DatasetsI18nKey.SchemaReadOnlyTitle)).toBeNull();
   });
 
   test('shows the read-only warning and locks the schema when read-only', () => {
     render(<DatasetSchemaTab dataset={{ testCaseSchema: [field('prompt')] }} onChange={vi.fn()} isReadOnly />);
 
-    expect(screen.getByText(DatasetsI18nKey.SchemaReadOnlyTitle)).toBeInTheDocument();
-    expect(screen.getByText(DatasetsI18nKey.SchemaReadOnlyMessage)).toBeInTheDocument();
-    expect(screen.getByTestId('schema-manager')).toHaveAttribute('data-read-only', 'true');
+    expect(screen.getByText(DatasetsI18nKey.SchemaReadOnlyTitle)).toBeTruthy();
+    expect(screen.getByText(DatasetsI18nKey.SchemaReadOnlyMessage)).toBeTruthy();
+    expect(screen.getByText('schema manager read-only')).toBeTruthy();
   });
 });

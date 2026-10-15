@@ -26,7 +26,7 @@ const renderHeader = (primary: Partial<Run>, compared: Partial<Run>, suites: [Te
     />,
   );
 
-describe('Compare Summary :: Header test suite', () => {
+describe('Header — test suite', () => {
   test('shows a single test suite when both runs belong to it', () => {
     renderHeader({ testSuiteId: 'suite-1' }, { testSuiteId: 'suite-1' }, [
       { id: 'suite-1', name: 'Suite One' },
@@ -34,7 +34,7 @@ describe('Compare Summary :: Header test suite', () => {
     ]);
 
     expect(screen.getAllByText('Suite One')).toHaveLength(1);
-    expect(screen.getByText(RunsI18nKey.TestSuite)).toBeInTheDocument();
+    expect(screen.getByText(RunsI18nKey.TestSuite)).toBeTruthy();
   });
 
   test('shows the test suite of each run when the runs belong to different suites', () => {
@@ -43,16 +43,16 @@ describe('Compare Summary :: Header test suite', () => {
       { id: 'suite-2', name: 'Suite Two' },
     ]);
 
-    expect(screen.getByText('Suite One')).toBeInTheDocument();
-    expect(screen.getByText('Suite Two')).toBeInTheDocument();
-    expect(screen.getByText('Run #1')).toBeInTheDocument();
-    expect(screen.getByText('Run #2')).toBeInTheDocument();
+    expect(screen.getByText('Suite One')).toBeTruthy();
+    expect(screen.getByText('Suite Two')).toBeTruthy();
+    expect(screen.getByText('Run #1')).toBeTruthy();
+    expect(screen.getByText('Run #2')).toBeTruthy();
   });
 
   test('falls back to the suite id while the suite is not loaded', () => {
     renderHeader({ testSuiteId: 'suite-1' }, { testSuiteId: 'suite-2' }, [null, null]);
 
-    expect(screen.getByText('suite-1')).toBeInTheDocument();
-    expect(screen.getByText('suite-2')).toBeInTheDocument();
+    expect(screen.getByText('suite-1')).toBeTruthy();
+    expect(screen.getByText('suite-2')).toBeTruthy();
   });
 });

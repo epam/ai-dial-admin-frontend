@@ -25,7 +25,7 @@ describe('getIsSchemaReadOnly', () => {
 
     await getIsSchemaReadOnly(publicDataset);
 
-    expect(getDatasetTestSuitesPage).toHaveBeenCalledTimes(1);
+    expect(getDatasetTestSuitesPage).toHaveBeenCalledOnce();
     expect(getDatasetTestSuitesPage).toHaveBeenCalledWith('ds-1', 0, 1, [], []);
   });
 

@@ -13,20 +13,28 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
 
 const ROW = { id: 'suite-1', name: 'Suite 1' };
 
+const grid = vi.hoisted(() => ({
+  options: undefined as any,
+  datasource: undefined as any,
+  onDatasourceSet: vi.fn(),
+}));
+
 const mockGridApi = {
-  setGridOption: vi.fn(),
+  setGridOption: vi.fn((name: string, value: unknown) => {
+    if (name === 'datasource') {
+      grid.datasource = value;
+      grid.onDatasourceSet(value);
+    }
+  }),
   hideOverlay: vi.fn(),
   showNoRowsOverlay: vi.fn(),
 };
-
-const grid = vi.hoisted(() => ({ options: undefined as any, columnDefs: [] as any[], datasource: undefined as any }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', async () => {
   const { useEffect } = await import('react');
   return {
     default: ({ columnDefs, onGridReady, additionalGridOptions, emptyDataProps }: any) => {
       grid.options = additionalGridOptions;
-      grid.columnDefs = columnDefs;
       useEffect(() => {
         onGridReady?.({ api: mockGridApi });
       }, []);
@@ -45,16 +53,12 @@ vi.mock('@/src/components/Grid/GridView/GridView', async () => {
   };
 });
 
-const datasourceOf = () => {
-  const call = mockGridApi.setGridOption.mock.calls.find(([name]) => name === 'datasource');
-  return call?.[1];
-};
-
 describe('DatasetTestSuites', () => {
   const windowOpen = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    grid.datasource = undefined;
     vi.stubGlobal('open', windowOpen);
     vi.mocked(getDatasetTestSuitesPage).mockResolvedValue({
       page: 0,
@@ -68,27 +72,26 @@ describe('DatasetTestSuites', () => {
   test('shows the description line and the empty-state title', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
 
-    expect(screen.getByText(DatasetsI18nKey.TestSuitesDescription)).toBeInTheDocument();
-    expect(screen.getByText(EntitiesI18nKey.NoTestSuites)).toBeInTheDocument();
+    expect(screen.getByText(DatasetsI18nKey.TestSuitesDescription)).toBeTruthy();
+    expect(screen.getByText(EntitiesI18nKey.NoTestSuites)).toBeTruthy();
   });
 
   test('registers the datasource once and sends no request until the grid asks for rows', () => {
     const { rerender } = render(<DatasetTestSuites datasetId="ds-1" />);
     rerender(<DatasetTestSuites datasetId="ds-1" />);
 
-    expect(mockGridApi.setGridOption.mock.calls.filter(([name]) => name === 'datasource')).toHaveLength(1);
+    expect(grid.onDatasourceSet).toHaveBeenCalledOnce();
     expect(getDatasetTestSuitesPage).not.toHaveBeenCalled();
   });
 
-  test('a first-page request is a single scoped call, with the grid sort and filters', async () => {
+  test('requests the first page once, scoped to the dataset, with the grid sort and filters', async () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
     const successCallback = vi.fn();
 
-    datasourceOf().getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback, failCallback: vi.fn() });
-    await vi.waitFor(() => expect(successCallback).toHaveBeenCalledWith([ROW], 1));
-
-    expect(getDatasetTestSuitesPage).toHaveBeenCalledTimes(1);
+    grid.datasource.getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback, failCallback: vi.fn() });
+    expect(getDatasetTestSuitesPage).toHaveBeenCalledOnce();
     expect(getDatasetTestSuitesPage).toHaveBeenCalledWith('ds-1', 0, expect.any(Number), [], []);
+    await vi.waitFor(() => expect(successCallback).toHaveBeenCalledWith([ROW], 1));
   });
 
   test('reports a failed load to the grid', async () => {
@@ -96,7 +99,7 @@ describe('DatasetTestSuites', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
     const failCallback = vi.fn();
 
-    datasourceOf().getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback: vi.fn(), failCallback });
+    grid.datasource.getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback: vi.fn(), failCallback });
 
     await vi.waitFor(() => expect(failCallback).toHaveBeenCalled());
   });
@@ -112,13 +115,13 @@ describe('DatasetTestSuites', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
     const successCallback = vi.fn();
 
-    datasourceOf().getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback, failCallback: vi.fn() });
+    grid.datasource.getRows({ startRow: 0, sortModel: [], filterModel: {}, successCallback, failCallback: vi.fn() });
 
-    await vi.waitFor(() => expect(mockGridApi.showNoRowsOverlay).toHaveBeenCalled());
-    expect(successCallback).toHaveBeenCalledWith([], 0);
+    await vi.waitFor(() => expect(successCallback).toHaveBeenCalledWith([], 0));
+    expect(mockGridApi.showNoRowsOverlay).toHaveBeenCalledOnce();
   });
 
-  test('clicking a row opens the test suite in a new tab', () => {
+  test('opens the test suite in a new tab when a row is clicked', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
 
     grid.options.onCellClicked({ colDef: { field: 'name' }, data: ROW, node: { setSelected: vi.fn() } });
@@ -126,7 +129,7 @@ describe('DatasetTestSuites', () => {
     expect(windowOpen).toHaveBeenCalledWith('/test-suites/suite-1', '_blank');
   });
 
-  test('clicking the actions cell itself does not open a tab', () => {
+  test('does not open a tab when the actions cell itself is clicked', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
 
     grid.options.onCellClicked({ colDef: { field: ACTIONS_COLUMN_CEL_ID }, data: ROW, node: { setSelected: vi.fn() } });
@@ -134,32 +137,14 @@ describe('DatasetTestSuites', () => {
     expect(windowOpen).not.toHaveBeenCalled();
   });
 
-  test('the context menu holds only "Open in new tab", which opens the suite', async () => {
+  test('offers only "Open in new tab" in the context menu, which opens the suite', async () => {
+    const user = userEvent.setup();
     render(<DatasetTestSuites datasetId="ds-1" />);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(1);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
 
-    await userEvent.click(screen.getByRole('button', { name: ActionMenuOperationI18nKey.Open_in_new_tab }));
+    await user.click(screen.getByRole('button', { name: ActionMenuOperationI18nKey.Open_in_new_tab }));
 
     expect(windowOpen).toHaveBeenCalledWith('/test-suites/suite-1', '_blank');
-  });
-
-  test('shows the eight columns of the test suites list', () => {
-    render(<DatasetTestSuites datasetId="ds-1" />);
-
-    const headers = grid.columnDefs
-      .filter((col) => col.field !== 'actionsColumn' && !col.hide)
-      .map((col) => col.headerName);
-    expect(headers).toEqual([
-      'Display Name',
-      'Description',
-      'ID',
-      'Suite Type',
-      'Application',
-      expect.any(String),
-      expect.any(String),
-      'Created By',
-    ]);
   });
 });

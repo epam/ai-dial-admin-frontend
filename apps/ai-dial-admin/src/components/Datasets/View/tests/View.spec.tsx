@@ -11,19 +11,19 @@ const tabsContent = vi.hoisted(() => ({ props: undefined as any }));
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: (props: any) => {
     header.props = props;
-    return <div data-testid="header" />;
+    return <div>header</div>;
   },
 }));
 
 vi.mock('../TabsContent', () => ({
   default: (props: any) => {
     tabsContent.props = props;
-    return <div data-testid="tabs-content" />;
+    return <div>tabs content</div>;
   },
 }));
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: () => <div data-testid="json-editor" />,
+  default: () => <div>json editor</div>,
 }));
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
@@ -79,8 +79,8 @@ describe('DatasetView', () => {
   test('shows the tabs, not the JSON editor, while the toggle is locked', () => {
     render(<DatasetView originalDataset={dataset(DatasetVisibility.PUBLIC)} etag="e" isSchemaReadOnly />);
 
-    expect(screen.getByTestId('tabs-content')).toBeInTheDocument();
-    expect(screen.queryByTestId('json-editor')).not.toBeInTheDocument();
+    expect(screen.getByText('tabs content')).toBeTruthy();
+    expect(screen.queryByText('json editor')).toBeNull();
   });
 
   test('visiting the Test Suites tab does not mark the dataset changed', () => {

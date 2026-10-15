@@ -132,11 +132,9 @@ describe('useCompareRunLauncher', () => {
     render(<TestHarness />);
     await user.click(screen.getByRole('button', { name: 'Compare' }));
 
-    await waitFor(() => {
-      expect(screen.getByText('run-other:Suite Two')).toBeInTheDocument();
-    });
-    expect(screen.getByText('run-sibling:Suite One')).toBeInTheDocument();
-    expect(screen.queryByText('run-1:Suite One')).not.toBeInTheDocument();
+    expect(await screen.findByText('run-other:Suite Two')).toBeTruthy();
+    expect(screen.getByText('run-sibling:Suite One')).toBeTruthy();
+    expect(screen.queryByText('run-1:Suite One')).toBeNull();
     expect(getDatasetTestSuitesMock).toHaveBeenCalledWith('dataset-1');
   });
 
@@ -146,10 +144,8 @@ describe('useCompareRunLauncher', () => {
     render(<TestHarness />);
     await user.click(screen.getByRole('button', { name: 'Compare' }));
 
-    await waitFor(() => {
-      expect(screen.getByText('run-sibling:Suite One')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('run-sibling:Suite One')).toBeTruthy();
     expect(getDatasetTestSuitesMock).not.toHaveBeenCalled();
-    expect(getRunsMock).toHaveBeenCalledTimes(1);
+    expect(getRunsMock).toHaveBeenCalledOnce();
   });
 });

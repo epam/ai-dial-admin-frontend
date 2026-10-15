@@ -73,10 +73,8 @@ describe('useSummaryOverviewData', () => {
 
     const { result } = renderOverviewData();
 
-    await waitFor(() => {
-      expect(result.current.primaryTestSuite?.name).toBe('Name suite-1');
-      expect(result.current.comparedTestSuite?.name).toBe('Name suite-2');
-    });
+    await waitFor(() => expect(result.current.comparedTestSuite?.name).toBe('Name suite-2'));
+    expect(result.current.primaryTestSuite?.name).toBe('Name suite-1');
   });
 
   test('treats an empty comparison payload as no matching test cases without toasting', async () => {

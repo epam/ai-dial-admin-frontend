@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { datasetsApi, structuredQueryApi } from '@/src/app/api/api';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { ComparisonOp, ExprType, LogicalOp, ValueType } from '@/src/models/evaluation/structured-query';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -142,13 +143,32 @@ describe('Datasets :: server actions', () => {
       [{ column: 'name', value: 'x', operator: FilterOperatorDto.CONTAINS }],
     );
 
-    expect(structuredQueryApi.execute).toHaveBeenCalledTimes(1);
-    const [query, token] = (structuredQueryApi.execute as any).mock.calls[0];
-    expect(token).toBe(TOKEN_MOCK);
-    expect(query.entity).toBe('test_suites');
-    expect(JSON.stringify(query.filter)).toContain('dataset_id');
-    expect(JSON.stringify(query.filter)).toContain('dataset-1');
-    expect(JSON.stringify(query.filter)).toContain('"name"');
+    expect(structuredQueryApi.execute).toHaveBeenCalledOnce();
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity: 'test_suites',
+        filter: {
+          op: LogicalOp.And,
+          args: [
+            {
+              op: ComparisonOp.Eq,
+              args: [
+                { type: ExprType.Field, name: 'dataset_id' },
+                { type: ExprType.Value, value_type: ValueType.String, value: 'dataset-1' },
+              ],
+            },
+            {
+              op: ComparisonOp.Co,
+              args: [
+                { type: ExprType.Field, name: 'name' },
+                { type: ExprType.Value, value_type: ValueType.String, value: 'x' },
+              ],
+            },
+          ],
+        },
+      }),
+      TOKEN_MOCK,
+    );
     expect(result?.content).toEqual([expect.objectContaining({ id: 's1' })]);
     expect(result?.totalElements).toBe(1);
   });
