@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsRunnerApi } from '@/src/app/api/api';
+import { analyticsDataApi, analyticsRunnerApi } from '@/src/app/api/api';
 import {
   cancelPipelineBackfill,
   getPausedPipelines,
@@ -10,6 +10,7 @@ import {
   listPipelineBackfills,
   pausePipeline,
   pausePipelineBackfill,
+  previewPipeline,
   queueGroupEvaluation,
   requeueFailure,
   requeueFailures,
@@ -278,5 +279,35 @@ describe('Pipeline runtime server actions', () => {
       expect(runner.resumeBackfill).not.toHaveBeenCalled();
       expect(runner.cancelBackfill).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('previewPipeline server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getUserToken).mockResolvedValue(TOKEN_MOCK);
+    vi.mocked(getIsEnableAuthToggle).mockReturnValue(true);
+  });
+
+  test('asks the data API for the named pipeline with the caller token', async () => {
+    const preview = { columns: [], rows: [], notes: [] };
+    vi.mocked(analyticsDataApi.previewPipeline).mockResolvedValue({ success: true, response: preview });
+
+    const res = await previewPipeline('retrieval-quality');
+
+    expect(analyticsDataApi.previewPipeline).toHaveBeenCalledWith('retrieval-quality', TOKEN_MOCK);
+    expect(res).toEqual({ success: true, response: preview });
+  });
+
+  test("returns the service's failure untouched, code included", async () => {
+    const failure = {
+      success: false,
+      status: 422,
+      errorHeader: 'pipeline_preview_budget_exceeded',
+      errorMessage: 'too heavy',
+    };
+    vi.mocked(analyticsDataApi.previewPipeline).mockResolvedValue(failure);
+
+    expect(await previewPipeline('retrieval-quality')).toEqual(failure);
   });
 });

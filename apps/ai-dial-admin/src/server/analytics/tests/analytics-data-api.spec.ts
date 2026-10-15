@@ -772,6 +772,73 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
         expect.objectContaining({ method: 'DELETE' }),
       );
     });
+
+    describe('previewPipeline', () => {
+      const preview = { columns: [], rows: [], notes: [] };
+
+      test('POSTs the name-addressed preview endpoint and returns the parsed sample', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/v1/pipelines/turn_feedback_live/preview'),
+          expect.objectContaining({ method: 'POST' }),
+        );
+        expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
+      });
+
+      // The body only narrows an enrich sample, and an aggregate refuses any, so none is ever sent.
+      test('sends no body', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.not.objectContaining({ body: expect.anything() }),
+        );
+      });
+
+      test('encodes a name that is not a path segment', async () => {
+        fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
+
+        await instance.previewPipeline('retrieval/quality', TOKEN_MOCK);
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/v1/pipelines/retrieval%2Fquality/preview'),
+          expect.anything(),
+        );
+      });
+
+      // The caller tells a refused declaration from a budget refusal and from no access by this code.
+      test("returns the service's code, message and status when the preview is refused", async () => {
+        fetch.mockResponseOnce(
+          JSON.stringify({ status: 422, error: 'pipeline_validation_failed', message: 'transform.outputs is empty' }),
+          { status: 422, headers: { 'content-type': 'application/json' } },
+        );
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(res).toEqual(
+          expect.objectContaining({
+            success: false,
+            status: 422,
+            errorHeader: 'pipeline_validation_failed',
+            errorMessage: 'transform.outputs is empty',
+          }),
+        );
+      });
+
+      test('reports a success with no readable body as a failure', async () => {
+        fetch.mockResponseOnce('');
+
+        const res = await instance.previewPipeline('turn_feedback_live', TOKEN_MOCK);
+
+        expect(res.success).toBe(false);
+        expect(res.response).toBeUndefined();
+      });
+    });
   });
 
   // No evaluator call is exposed at all: the transform travels on the pipeline request, and a client
