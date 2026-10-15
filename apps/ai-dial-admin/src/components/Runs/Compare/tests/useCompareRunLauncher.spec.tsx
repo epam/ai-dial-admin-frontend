@@ -4,10 +4,10 @@ import { FC } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCompareRunLauncher } from '../useCompareRunLauncher';
 
-const getRunsMock = vi.fn();
+const getRunsQueryMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
-  getRuns: (...args: unknown[]) => getRunsMock(...args),
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
 }));
 
 vi.mock('../SelectCompareRunModal', () => ({
@@ -47,9 +47,9 @@ const TestHarness: FC = () => {
 
 describe('useCompareRunLauncher', () => {
   beforeEach(() => {
-    getRunsMock.mockReset();
+    getRunsQueryMock.mockReset();
     vi.spyOn(window, 'open').mockImplementation(() => null);
-    getRunsMock.mockResolvedValue({
+    getRunsQueryMock.mockResolvedValue({
       content: [
         { id: 'run-1', testSuiteId: 'suite-1', status: 'COMPLETED' },
         { id: 'run-sibling', testSuiteId: 'suite-1', testRunName: 'Run #317', status: 'COMPLETED' },

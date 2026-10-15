@@ -1512,17 +1512,18 @@ export const SUITE_RUNS_COLUMN: ColDef[] = RUNS_COLUMN.filter(
 ).map((col) => (SUITE_RUNS_HIDDEN_BY_DEFAULT_COL_IDS.includes(col.colId ?? '') ? { ...col, hide: true } : col));
 
 const COMPARE_RUN_PICKER_COL_IDS = [
-  'status',
   'testRunName',
-  'runConfig.numberOfRuns',
   'numberOfTestCases',
+  'testSuiteId',
+  'metrics',
   'startedAt',
   'completedAt',
+  'duration',
+  'cost',
 ];
 
-/** The compare picker exists to identify a run, so it carries only the identifying columns. */
-export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = RUNS_COLUMN.filter((col) =>
-  COMPARE_RUN_PICKER_COL_IDS.includes(col.colId ?? ''),
+export const COMPARE_RUN_PICKER_COLUMN: ColDef[] = COMPARE_RUN_PICKER_COL_IDS.flatMap((colId) =>
+  RUNS_COLUMN.filter((col) => col.colId === colId),
 );
 
 export const METRICS_COLUMN: ColDef[] = [

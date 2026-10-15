@@ -8,7 +8,7 @@ import { AppContextProvider } from '@/src/context/AppContext';
 import { FeatureFlags } from '@/src/models/feature-flags';
 
 const getRunMock = vi.fn();
-const getRunsMock = vi.fn();
+const getRunsQueryMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
 const getTestCaseRunResultDetailsMock = vi.fn();
 const executeStructuredQueryMock = vi.fn();
@@ -28,7 +28,7 @@ vi.mock('@/src/context/AppContext', async (importOriginal) => {
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (...args: unknown[]) => getRunMock(...args),
-  getRuns: (...args: unknown[]) => getRunsMock(...args),
+  getRunsQuery: (...args: unknown[]) => getRunsQueryMock(...args),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
   getTestCaseRunResultDetails: (...args: unknown[]) => getTestCaseRunResultDetailsMock(...args),
   executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
@@ -84,7 +84,7 @@ const renderCompareView = () =>
 describe('CompareView', () => {
   beforeEach(() => {
     getRunMock.mockReset();
-    getRunsMock.mockReset();
+    getRunsQueryMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
     getTestCaseRunResultDetailsMock.mockReset();
     executeStructuredQueryMock.mockReset();
@@ -103,7 +103,7 @@ describe('CompareView', () => {
         testRunName: id === 'run-1' ? 'Run #316' : 'Run #317',
       }),
     );
-    getRunsMock.mockResolvedValue({
+    getRunsQueryMock.mockResolvedValue({
       content: [
         { id: 'run-1', testSuiteId: 'suite-1', status: 'COMPLETED' },
         { id: 'run-sibling', testSuiteId: 'suite-1', testRunName: 'Run #317', status: 'COMPLETED' },
@@ -179,7 +179,7 @@ describe('CompareView', () => {
 
   test('opens modal from secondary run tag click and updates url on confirm', async () => {
     const user = userEvent.setup();
-    getRunsMock.mockResolvedValue({
+    getRunsQueryMock.mockResolvedValue({
       content: [
         { id: 'run-1', testSuiteId: 'suite-1', status: 'COMPLETED' },
         { id: 'run-sibling', testSuiteId: 'suite-1', testRunName: 'Run #317', status: 'COMPLETED' },
