@@ -20,10 +20,6 @@ vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
-
 const context = { analyticsEnabled: true, isFullAdmin: true };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
@@ -145,10 +141,10 @@ describe('PipelineDetailFrame — the Preview tab', () => {
 
     await user.click(screen.getByRole('button', { name: PipelinePreviewI18nKey.RunPreview }));
 
-    expect(previewPipeline).toHaveBeenCalledOnce();
-    expect(previewPipeline).toHaveBeenCalledWith('feedback-live');
     expect(await screen.findByRole('grid', { name: 'sample' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: PipelinePreviewI18nKey.RunAgain })).toBeInTheDocument();
+    expect(previewPipeline).toHaveBeenCalledOnce();
+    expect(previewPipeline).toHaveBeenCalledWith('feedback-live');
   });
 
   test('holds the result across a switch to Properties and back, with no second request', async () => {
