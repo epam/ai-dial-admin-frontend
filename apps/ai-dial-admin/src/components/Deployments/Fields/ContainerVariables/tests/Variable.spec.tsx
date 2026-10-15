@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import Variable from '@/src/components/Deployments/Fields/ContainerVariables/Variable';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
@@ -178,7 +178,7 @@ describe('EnvVariable', () => {
 
     fireEvent.change(hiddenInput);
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(updateVariable).toHaveBeenCalled();
     });
     const lastCall = updateVariable.mock.calls.at(-1)?.[0] as EnvironmentVariable;

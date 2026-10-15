@@ -113,7 +113,7 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument());
+    expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
   });
 
   test('renders read-only overall score card when overall data is present', async () => {
@@ -334,13 +334,13 @@ describe('Runs Summary :: Analytics', () => {
       render(<Analytics run={RUN_WITH_THRESHOLD as any} />);
 
       expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-      await waitFor(() => expect(getRunCostsMock).toHaveBeenCalledTimes(1));
-      expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2);
+      await waitFor(() => expect(screen.getAllByText('Runs.Calculating')).toHaveLength(2));
+      expect(getRunCostsMock).toHaveBeenCalledOnce();
       expect(screen.queryByText('—')).not.toBeInTheDocument();
 
       await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS);
 
-      await waitFor(() => expect(screen.getByText('$0.5')).toBeInTheDocument());
+      expect(await screen.findByText('$0.5')).toBeInTheDocument();
       expect(screen.getByText('$0.25')).toBeInTheDocument();
       expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
     },
@@ -375,15 +375,13 @@ describe('Runs Summary :: Analytics', () => {
 
     await vi.advanceTimersByTimeAsync(COST_FETCH_POLL_INTERVAL_MS);
 
-    await waitFor(() => {
-      const costRegions = [
-        screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' }),
-        screen.getByRole('region', { name: 'Runs.MetricEvalCost' }),
-      ];
-      for (const region of costRegions) {
-        expect(region).toHaveTextContent('error-tag');
-      }
-    });
+    const costRegions = [
+      await screen.findByRole('region', { name: 'Runs.TestCaseLlmCost' }),
+      await screen.findByRole('region', { name: 'Runs.MetricEvalCost' }),
+    ];
+    for (const region of costRegions) {
+      expect(await within(region).findByText('error-tag')).toBeInTheDocument();
+    }
     expect(screen.queryByText('Runs.Calculating')).not.toBeInTheDocument();
     expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument();
   });
@@ -420,7 +418,7 @@ describe('Runs Summary :: Analytics', () => {
       render(<Analytics run={{ ...RUN_WITH_THRESHOLD, status } as any} overallScore={null} />);
 
       expect(await screen.findByText('$0.097')).toBeInTheDocument();
-      await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
+      expect(getRunCostsMock).toHaveBeenCalled();
       expect(screen.queryByText('error-tag')).not.toBeInTheDocument();
       const testCaseCost = screen.getByRole('region', { name: 'Runs.TestCaseLlmCost' });
       expect(testCaseCost).toHaveTextContent('$0.097');
@@ -469,7 +467,7 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={PRICED_MODEL_RUN as any} />);
 
     expect(await screen.findByText('$0.5')).toBeInTheDocument();
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
+    expect(getRunCostsMock).toHaveBeenCalled();
   });
 
   test('does not block the cost fetch while the pricing check is still pending', async () => {
@@ -479,7 +477,7 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={UNPRICED_MODEL_RUN as any} />);
 
     expect(await screen.findByText('Runs.TestCasesPassed')).toBeInTheDocument();
-    await waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getRunCostsMock).toHaveBeenCalled());
   });
 
   test('still marks cards as error for a stopped run once data is present', async () => {

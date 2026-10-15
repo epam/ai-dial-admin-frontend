@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -179,7 +179,7 @@ describe('ThemeProvider', () => {
     await screen.findByText('dark');
     await user.click(screen.getByRole('button', { name: 'Switch theme' }));
 
-    await waitFor(() => expect(screen.getByText('light')).toBeTruthy());
+    expect(await screen.findByText('light')).toBeTruthy();
     expect(mountCount).toBe(1);
     expect(applyThemeColors).toHaveBeenLastCalledWith(document.documentElement, themesConfiguration.themes[1]);
   });

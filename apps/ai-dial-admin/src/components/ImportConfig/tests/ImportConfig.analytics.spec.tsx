@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -103,7 +103,7 @@ describe('ImportConfig — Analytics import', () => {
     await user.click(screen.getByRole('button', { name: 'acknowledge' }));
     await user.click(screen.getByRole('button', { name: 'import' }));
 
-    await waitFor(() => expect(screen.getByText('result-completed')).toBeInTheDocument());
+    expect(await screen.findByText('result-completed')).toBeInTheDocument();
     expect(importAnalyticsConfig).toHaveBeenCalledWith(
       expect.any(FormData),
       CatalogResolutionPolicy.SKIP_IF_EXISTS,
@@ -117,7 +117,7 @@ describe('ImportConfig — Analytics import', () => {
 
     await user.click(screen.getByRole('button', { name: 'acknowledge' }));
     await user.click(screen.getByRole('button', { name: 'import' }));
-    await waitFor(() => expect(screen.getByText('result-completed')).toBeInTheDocument());
+    expect(await screen.findByText('result-completed')).toBeInTheDocument();
 
     await user.click(screen.getByText(ImportI18nKey.Files));
     await user.click(screen.getByRole('button', { name: 'pick-file' }));
@@ -125,7 +125,7 @@ describe('ImportConfig — Analytics import', () => {
     expect(screen.getByText('no-result')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'import' }));
-    await waitFor(() => expect(importAnalyticsConfig).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(importAnalyticsConfig).toHaveBeenCalledTimes(2));
     expect(importAnalyticsConfig).toHaveBeenLastCalledWith(
       expect.any(FormData),
       CatalogResolutionPolicy.SKIP_IF_EXISTS,
@@ -145,7 +145,7 @@ describe('ImportConfig — Analytics import', () => {
 
     await user.click(screen.getByRole('button', { name: 'import' }));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith('catalog_import_conflict', 'usage_sentiment exists', 'r-1'),
     );
     expect(screen.getByText('no-result')).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('ImportConfig — Analytics import', () => {
 
     await user.click(screen.getByRole('button', { name: 'import' }));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith(undefined, ImportI18nKey.AnalyticsImportFailed, undefined),
     );
   });

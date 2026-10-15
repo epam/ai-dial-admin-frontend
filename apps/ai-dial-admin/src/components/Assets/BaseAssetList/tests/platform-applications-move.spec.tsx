@@ -1,6 +1,6 @@
 import { DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { moveApps } from '@/src/app/[lang]/assets-applications/actions';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,6 +32,7 @@ vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
   __esModule: true,
   default: (props: any) => (
     <>
+      <output>moving:{props.movingItems}</output>
       <button
         onClick={() =>
           props.onMoveItems(
@@ -76,13 +77,18 @@ vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
  * issue a bogus `moveApps` call. Public-bucket rows in the same dual-bucket view stay movable.
  */
 describe('BaseAssetList :: handleMoveItems skips platform-bucket rows', () => {
-  test('moving a platform-bucket row does not call moveApps', async () => {
+  beforeEach(() => {
+    vi.mocked(moveApps).mockClear();
+  });
+
+  test('moving a platform-bucket row does not call moveApps', () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
     fireEvent.click(screen.getByText('move-platform-row'));
 
-    // No promise is queued for a platform-bucket row, so there is nothing to await beyond this tick.
-    await vi.waitFor(() => expect(moveApps).not.toHaveBeenCalled());
+    // The handler ran and counted the row as being moved, and still queued no move for it.
+    expect(screen.getByText('moving:1')).toBeInTheDocument();
+    expect(moveApps).not.toHaveBeenCalled();
   });
 
   test('moving a public-bucket row calls moveApps', async () => {

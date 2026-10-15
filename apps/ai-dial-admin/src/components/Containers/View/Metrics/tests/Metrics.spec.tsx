@@ -110,7 +110,7 @@ describe('Metrics', () => {
 
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionScaleHealth)).toBeInTheDocument();
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
-    await waitFor(() => expect(getContainerMetricsMock).toHaveBeenCalled());
+    expect(getContainerMetricsMock).toHaveBeenCalled();
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLatency)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionThroughput)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLoad)).not.toBeInTheDocument();
@@ -207,11 +207,11 @@ describe('Metrics', () => {
     getContainerMetricsMock.mockRejectedValue(new Error('network down'));
     render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} />);
 
-    await waitFor(() => expect(getContainerMetricsMock).toHaveBeenCalled());
     // Loading reset → Refresh button is not stuck disabled, and cards fall back to No Data.
+    expect((await screen.findAllByText(BasicI18nKey.NoData)).length).toBeGreaterThan(0);
     const refresh = await screen.findByRole('button', { name: ButtonsI18nKey.Refresh });
     await waitFor(() => expect(refresh).not.toBeDisabled());
-    expect((await screen.findAllByText(BasicI18nKey.NoData)).length).toBeGreaterThan(0);
+    expect(getContainerMetricsMock).toHaveBeenCalled();
   });
 
   test('Refresh re-fetches the snapshot', async () => {
@@ -219,8 +219,9 @@ describe('Metrics', () => {
     getContainerMetricsMock.mockResolvedValue(nonInferenceSnapshot());
     render(<Metrics containerId="c1" route={ApplicationRoute.McpContainers} />);
 
-    await waitFor(() => expect(getContainerMetricsMock).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionScaleHealth)).toBeInTheDocument();
+    expect(getContainerMetricsMock).toHaveBeenCalledOnce();
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Refresh }));
-    await waitFor(() => expect(getContainerMetricsMock).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(getContainerMetricsMock).toHaveBeenCalledTimes(2));
   });
 });

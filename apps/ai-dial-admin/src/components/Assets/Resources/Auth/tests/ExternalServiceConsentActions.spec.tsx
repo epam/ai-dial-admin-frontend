@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -85,8 +85,8 @@ describe('ExternalServiceConsentActions', () => {
     await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.GrantConsent }));
     await confirmDialog(ExternalServiceI18nKey.GrantConsent);
 
-    await waitFor(() => expect(grantConsent).toHaveBeenCalledWith(APP_PATH, SERVICE_ID));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(grantConsent).toHaveBeenCalledWith(APP_PATH, SERVICE_ID);
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: ExternalServiceI18nKey.SuccessGrantConsent }),
     );
@@ -98,9 +98,9 @@ describe('ExternalServiceConsentActions', () => {
     await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.WithdrawConsent }));
     await confirmDialog(ExternalServiceI18nKey.WithdrawConsent);
 
-    await waitFor(() => expect(withdrawConsent).toHaveBeenCalledWith(APP_PATH, SERVICE_ID));
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(withdrawConsent).toHaveBeenCalledWith(APP_PATH, SERVICE_ID);
     expect(grantConsent).not.toHaveBeenCalled();
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
   test('a withdrawal that removed nothing surfaces no error', async () => {
@@ -110,7 +110,7 @@ describe('ExternalServiceConsentActions', () => {
     await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.WithdrawConsent }));
     await confirmDialog(ExternalServiceI18nKey.WithdrawConsent);
 
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: ExternalServiceI18nKey.SuccessWithdrawConsent }),
     );
@@ -123,7 +123,7 @@ describe('ExternalServiceConsentActions', () => {
     await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.GrantConsent }));
     await confirmDialog(ExternalServiceI18nKey.GrantConsent);
 
-    await waitFor(() => expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'Boom' })));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'Boom' })));
     expect(refresh).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: ExternalServiceI18nKey.GrantConsent })).toBeInTheDocument();
   });
@@ -135,7 +135,7 @@ describe('ExternalServiceConsentActions', () => {
     await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.GrantConsent }));
     await confirmDialog(ExternalServiceI18nKey.GrantConsent);
 
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'Not found' }));
   });
 });

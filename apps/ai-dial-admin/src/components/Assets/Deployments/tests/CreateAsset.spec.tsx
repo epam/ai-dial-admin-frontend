@@ -5,7 +5,7 @@ import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderCont
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, Mock, describe, expect, test, vi } from 'vitest';
@@ -133,7 +133,7 @@ describe('CreateAsset', () => {
     setFilePath('platform/');
     renderCreateAsset(ctx);
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
     expect(lastAssetProperties().hideVersionField).toBe(true);
 
     // The hidden field must be removed from validation, not marked invalid — an invalid entry would
@@ -156,7 +156,7 @@ describe('CreateAsset', () => {
     setFilePath('platform/');
     const view = renderCreateAsset(ctx, { name: 'app' });
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
 
     setFilePath('public/');
     view.rerender(
@@ -169,7 +169,7 @@ describe('CreateAsset', () => {
       />,
     );
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBe(DEFAULT_NEW_ENTITY_VERSION));
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBe(DEFAULT_NEW_ENTITY_VERSION));
     expect(lastAssetProperties().hideVersionField).toBe(false);
 
     const { dispatch } = useSaveValidationContext();
@@ -192,16 +192,17 @@ describe('CreateAsset', () => {
     setFilePath('platform/');
     renderCreateAsset(ctx, { name: 'app' });
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+    const user = userEvent.setup();
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await user.click(screen.getByRole('button', { name: 'Buttons.Create' }));
 
-    await waitFor(() => expect(createPlatformApplication).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createPlatformApplication).toHaveBeenCalledOnce());
     expect(createApp).not.toHaveBeenCalled();
     expect(createPlatformApplication).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'app', folderId: 'platform/' }),
     );
 
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(push).toHaveBeenCalledWith('/assets-applications/app');
   });
 
@@ -217,10 +218,11 @@ describe('CreateAsset', () => {
     setFilePath('platform/');
     renderCreateAsset(ctx, { name: 'app:platform' });
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+    const user = userEvent.setup();
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await user.click(screen.getByRole('button', { name: 'Buttons.Create' }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/assets-applications/app%3Aplatform'));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-applications/app%3Aplatform'));
   });
 
   test('creates a colon-named platform toolset and redirects through the encoded flat route', async () => {
@@ -235,10 +237,11 @@ describe('CreateAsset', () => {
     setFilePath('platform/');
     renderCreateAsset(ctx, { name: 'toolset:platform' }, ApplicationRoute.AssetsToolsets);
 
-    await waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+    const user = userEvent.setup();
+    await vi.waitFor(() => expect(lastAssetProperties().entity.version).toBeUndefined());
+    await user.click(screen.getByRole('button', { name: 'Buttons.Create' }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/toolset%3Aplatform'));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/toolset%3Aplatform'));
   });
 
   test('creates through the public action and redirects through the selected folder and version', async () => {
@@ -253,14 +256,15 @@ describe('CreateAsset', () => {
     setFilePath('public/');
     renderCreateAsset(ctx, { name: 't' });
 
-    await waitFor(() => expect(lastAssetProperties().hideVersionField).toBe(false));
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+    const user = userEvent.setup();
+    await vi.waitFor(() => expect(lastAssetProperties().hideVersionField).toBe(false));
+    await user.click(screen.getByRole('button', { name: 'Buttons.Create' }));
 
-    await waitFor(() => expect(createApp).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(createApp).toHaveBeenCalledOnce());
     expect(createPlatformApplication).not.toHaveBeenCalled();
     expect(createApp).toHaveBeenCalledWith(expect.objectContaining({ name: 't', folderId: 'public/' }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledOnce());
     expect(push).toHaveBeenCalledWith('/assets-applications/t?path=public%2Ft__1.0.0');
   });
 });
