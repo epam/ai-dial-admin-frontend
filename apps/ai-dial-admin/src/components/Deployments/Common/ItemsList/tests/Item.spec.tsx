@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
@@ -35,10 +35,8 @@ describe('Common Item component', () => {
     await user.click(input);
     await user.paste('new-item');
 
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith('new-item', 1);
-      expect(validate).toHaveBeenCalled();
-    });
+    expect(onChange).toHaveBeenCalledWith('new-item', 1);
+    expect(validate).toHaveBeenCalled();
   });
 
   test('scrolls the item into view when a validation error appears', async () => {
@@ -61,10 +59,8 @@ describe('Common Item component', () => {
     await user.click(input);
     await user.paste('co');
 
-    await waitFor(() => {
-      expect(screen.getByText('too short')).toBeInTheDocument();
-      expect(scrollSpy).toHaveBeenCalled();
-    });
+    expect(await screen.findByText('too short')).toBeInTheDocument();
+    expect(scrollSpy).toHaveBeenCalled();
 
     scrollSpy.mockRestore();
   });
@@ -77,8 +73,6 @@ describe('Common Item component', () => {
 
     await user.click(button);
 
-    await waitFor(() => {
-      expect(onRemove).toHaveBeenCalledWith(1);
-    });
+    expect(onRemove).toHaveBeenCalledWith(1);
   });
 });

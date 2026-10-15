@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -126,14 +126,11 @@ describe('TestSuiteProperties', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(getDeploymentByIdMock).toHaveBeenCalledTimes(1);
-      expect(getDeploymentByIdMock).toHaveBeenCalledWith('gpt-4');
-    });
-
     const openButton = await screen.findByRole('button', { name: ButtonsI18nKey.Open });
     await user.click(openButton);
 
+    expect(getDeploymentByIdMock).toHaveBeenCalledOnce();
+    expect(getDeploymentByIdMock).toHaveBeenCalledWith('gpt-4');
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'gpt-4' });
     expect(getDeploymentsMock).not.toHaveBeenCalled();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();
@@ -171,10 +168,10 @@ describe('TestSuiteProperties', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(getDeploymentByIdMock).toHaveBeenCalled();
-    });
+    // The spinner stands where Open would be while the type is resolved; it going is the lookup having ended.
+    await waitForElementToBeRemoved(screen.getByRole('status'));
 
+    expect(getDeploymentByIdMock).toHaveBeenCalledWith('missing');
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).not.toBeInTheDocument();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
     expect(getAllDeploymentsMock).not.toHaveBeenCalled();

@@ -32,10 +32,10 @@ describe('AnalyticsConfigContent', () => {
     const user = userEvent.setup();
     renderContent();
 
-    await waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE));
+    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE));
     await user.click(screen.getByText(MenuI18nKey.Pipelines));
 
-    await waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.PIPELINE));
+    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.PIPELINE));
   });
 
   test('shows the selected count and the Add button for the open tab', async () => {
@@ -55,7 +55,7 @@ describe('AnalyticsConfigContent', () => {
 
     renderContent();
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith('Forbidden', 'No access to the registry', 'r-1'),
     );
   });
@@ -65,11 +65,11 @@ describe('AnalyticsConfigContent', () => {
     const user = userEvent.setup();
     renderContent();
 
-    await waitFor(() => expect(getErrorNotification).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(getErrorNotification).toHaveBeenCalledOnce());
     await user.click(screen.getByText(MenuI18nKey.Pipelines));
     await user.click(screen.getByText(MenuI18nKey.Tables));
 
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(
         vi.mocked(getAnalyticsEntities).mock.calls.filter(([tab]) => tab === AnalyticsExportEntityType.TABLE),
       ).toHaveLength(2),
@@ -80,8 +80,8 @@ describe('AnalyticsConfigContent', () => {
     vi.mocked(getAnalyticsEntities).mockRejectedValue(new Error('fetch failed'));
     renderContent();
 
-    await waitFor(() => expect(getErrorNotification).toHaveBeenCalledWith(ExportI18nKey.CandidatesReadFailed));
-    expect(screen.queryByRole('status')).toBeNull();
+    await vi.waitFor(() => expect(getErrorNotification).toHaveBeenCalledWith(ExportI18nKey.CandidatesReadFailed));
+    await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
   });
 
   test('lists every candidate with no Add button in Full mode', async () => {

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { DndProvider } from 'react-dnd';
@@ -48,7 +48,7 @@ describe('DraggableList', () => {
       expect(rowValues()).toEqual(['gamma']);
       await user.type(screen.getByRole('textbox'), '!');
 
-      await waitFor(() => expect(setItems).toHaveBeenLastCalledWith(['alpha', 'beta', 'gamma!']));
+      await vi.waitFor(() => expect(setItems).toHaveBeenLastCalledWith(['alpha', 'beta', 'gamma!']));
     });
 
     test('removing a visible row removes that item and keeps the hidden ones', async () => {
@@ -58,7 +58,7 @@ describe('DraggableList', () => {
       expect(rowValues()).toEqual(['beta']);
       await user.click(screen.getByRole('button'));
 
-      await waitFor(() => expect(setItems).toHaveBeenLastCalledWith(['alpha', 'gamma']));
+      await vi.waitFor(() => expect(setItems).toHaveBeenLastCalledWith(['alpha', 'gamma']));
     });
 
     test('clearing the term brings the hidden rows back', () => {
@@ -77,6 +77,6 @@ describe('DraggableList', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add value' }));
 
-    await waitFor(() => expect(setItems).toHaveBeenLastCalledWith([...ITEMS, '']));
+    await vi.waitFor(() => expect(setItems).toHaveBeenLastCalledWith([...ITEMS, '']));
   });
 });

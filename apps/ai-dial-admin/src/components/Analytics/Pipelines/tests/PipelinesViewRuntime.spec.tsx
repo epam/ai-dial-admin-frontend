@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -96,7 +96,7 @@ describe('PipelinesView — runtime column', () => {
   test('states each enabled pipeline as running or paused from one read of the runner', async () => {
     render(<PipelinesView initialPipelines={[pipeline(), PAUSED]} />);
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy());
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimePaused)).toBeTruthy();
     expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeRunning)).toBeTruthy();
     expect(getPausedPipelines).toHaveBeenCalledOnce();
     expect(getRunnerPipelines).toHaveBeenCalledOnce();
@@ -105,10 +105,8 @@ describe('PipelinesView — runtime column', () => {
   test('shows the runtime column by default, between enabled and generation', async () => {
     render(<PipelinesView initialPipelines={[PAUSED]} />);
 
-    await waitFor(() =>
-      expect(screen.getByText('cols:', { exact: false })).toHaveTextContent(
-        'name|kind|trigger|transform|enabled|runtime|generation|target|inputs|updatedAt',
-      ),
+    expect(await screen.findByText(/cols:.*\|enabled\|runtime\|generation/)).toHaveTextContent(
+      'name|kind|trigger|transform|enabled|runtime|generation|target|inputs|updatedAt',
     );
     expect(screen.getByText('runtime-hidden: false')).toBeInTheDocument();
   });
@@ -118,7 +116,7 @@ describe('PipelinesView — runtime column', () => {
     render(<PipelinesView initialPipelines={[PAUSED]} />);
 
     expect(screen.getByText(`storage: ${PIPELINES_NO_RUNTIME_STORAGE_KEY}`)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText(`storage: ${PIPELINES_STORAGE_KEY}`)).toBeInTheDocument());
+    expect(await screen.findByText(`storage: ${PIPELINES_STORAGE_KEY}`)).toBeInTheDocument();
   });
 
   // The runner is not driving a disabled pipeline at all, so "not running" would read as a fault where
@@ -126,10 +124,12 @@ describe('PipelinesView — runtime column', () => {
   test('leaves a disabled pipeline without a runtime answer', async () => {
     render(<PipelinesView initialPipelines={[DISABLED]} />);
 
-    await waitFor(() => expect(screen.getByText('cols:', { exact: false }).textContent).toContain('runtime'));
+    // The column set that carries runtime is swapped in only once the runner has answered.
+    await screen.findByText(`storage: ${PIPELINES_STORAGE_KEY}`);
     const row = screen.getByLabelText('row-session-topic');
     expect(row.textContent).not.toContain(AnalyticsPipelinesI18nKey.RuntimeRunning);
     expect(row.textContent).not.toContain(AnalyticsPipelinesI18nKey.RuntimePaused);
+    expect(row.textContent).not.toContain(AnalyticsPipelinesI18nKey.RuntimeNotTracked);
   });
 
   // Enabled in the registry, absent from the runner: the row that used to look perfectly healthy.
@@ -137,14 +137,15 @@ describe('PipelinesView — runtime column', () => {
     vi.mocked(getRunnerPipelines).mockResolvedValue({ success: true, response: [] });
     render(<PipelinesView initialPipelines={[pipeline()]} />);
 
-    await waitFor(() => expect(screen.getByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy());
+    expect(await screen.findByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeTruthy();
   });
 
   test('leaves an aggregate pipeline without a runtime answer', async () => {
     vi.mocked(getRunnerPipelines).mockResolvedValue({ success: true, response: [] });
     render(<PipelinesView initialPipelines={[pipeline({ name: 'sessions-rollup', kind: PipelineKind.Aggregate })]} />);
 
-    await waitFor(() => expect(getRunnerPipelines).toHaveBeenCalled());
+    // The runner answered (the runtime column set is in), and this row is still not called "not running".
+    await screen.findByText(`storage: ${PIPELINES_STORAGE_KEY}`);
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.RuntimeNotTracked)).toBeNull();
   });
 
@@ -174,7 +175,8 @@ describe('PipelinesView — runtime column', () => {
     vi.mocked(getPausedPipelines).mockResolvedValue({ success: false });
     render(<PipelinesView initialPipelines={[pipeline()]} />);
 
-    await waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getPausedPipelines).toHaveBeenCalled());
+    await act(async () => {});
     expect(screen.getByText('cols:', { exact: false }).textContent).not.toContain('runtime');
   });
 
@@ -182,7 +184,7 @@ describe('PipelinesView — runtime column', () => {
     asFullAdmin(false);
     render(<PipelinesView initialPipelines={[pipeline()]} />);
 
-    await waitFor(() => expect(screen.getByText('cols:', { exact: false })).toBeTruthy());
+    await screen.findByText('cols:', { exact: false });
     expect(getPausedPipelines).not.toHaveBeenCalled();
     expect(getRunnerPipelines).not.toHaveBeenCalled();
     expect(screen.getByText('cols:', { exact: false }).textContent).not.toContain('runtime');

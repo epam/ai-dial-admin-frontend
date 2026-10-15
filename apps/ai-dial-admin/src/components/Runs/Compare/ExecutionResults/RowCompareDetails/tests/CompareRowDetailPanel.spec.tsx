@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
@@ -64,9 +64,7 @@ describe('CompareRowDetailPanel', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(onDisplayTreeChange).toHaveBeenCalled();
-    });
+    await vi.waitFor(() => expect(onDisplayTreeChange).toHaveBeenCalled());
     expect(onDisplayTreeChange.mock.calls.at(-1)?.[0]).toEqual(expect.arrayContaining([expect.any(Object)]));
   });
 
@@ -101,8 +99,6 @@ describe('CompareRowDetailPanel', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('table:answer')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('table:answer')).toBeInTheDocument();
   });
 });

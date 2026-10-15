@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
@@ -93,7 +93,7 @@ describe('AppRunners (entity-mode side-effects)', () => {
 
     fireEvent.change(screen.getByTestId('select-sourceEntity'), { target: { value: 'urn:runner:1' } });
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       const last = onChange.mock.calls.at(-1)?.[0] as DialApplication | undefined;
       expect(last?.applicationProperties).toEqual({ propA: 'default-a' });
     });
@@ -114,7 +114,7 @@ describe('AppRunners (entity-mode side-effects)', () => {
 
     fireEvent.change(screen.getByTestId('select-sourceEntity'), { target: { value: 'urn:runner:1' } });
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       const last = onChange.mock.calls.at(-1)?.[0] as DialApplication | undefined;
       expect(last?.applicationProperties).toEqual({ propA: 'default-a' });
     });
@@ -144,7 +144,7 @@ describe('AppRunners (entity-mode side-effects)', () => {
 
     fireEvent.click(screen.getByTestId('immutable-apply-runner'));
 
-    await waitFor(() => {
+    await vi.waitFor(() => {
       const last = onChange.mock.calls.at(-1)?.[0] as DialApplication | undefined;
       expect(last?.source?.applicationTypeSchemaId).toBe('urn:runner:1');
     });
