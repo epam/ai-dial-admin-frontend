@@ -595,7 +595,11 @@ export default {
     Endpoints: 'Upstream Endpoints',
     EndpointsWithResponses: 'Chat completion endpoint',
     EndpointResponseCaption: 'Used only if the Responses endpoint in Source type is filled.',
-    Keys: 'Keys',
+    Key: 'Key',
+    AuthenticationType: 'Authentication type',
+    ApiKey: 'API key',
+    Bearer: 'Bearer',
+    BearerKey: 'Bearer key for upstream {index}',
   },
   ModelView: {
     InteractionLimit: {
